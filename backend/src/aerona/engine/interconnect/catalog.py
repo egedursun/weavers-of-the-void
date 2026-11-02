@@ -2,13 +2,16 @@ import inspect
 import re
 import sys
 
+from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.domain.enums.entity import EntityType
-from aerona.engine.interconnect.registry import MECHANICS, Coupling, Mechanic, Subsystem, Surface, register
+from aerona.engine.interconnect.registry import MECHANICS, Coupling, Exposure, Mechanic, Subsystem, Surface, register
 from aerona.engine.phase import Phase
 from aerona.engine.pipeline import PHASE_REGISTRY
 
 MECHANICS_SECTION = "section-mechanics"
+ENVIRONMENT_SECTION = "section-environment"
+SEASONS_SECTION = "section-seasons"
 
 BUILT_IN = (
     Mechanic(
@@ -46,6 +49,131 @@ BUILT_IN = (
         flows=("population -> army size", "army size -> population"),
         couplings=(Coupling(Subsystem.DEMOGRAPHY, "soldiers leave and return to their community"),),
     ),
+    Mechanic(
+        key="sub_clocks",
+        spec_item="F1",
+        title="Sampled years, campaign seasons and notable years",
+        subsystem=Subsystem.CORE,
+        phases=("harvest", "campaigns"),
+        surface=Surface(drawer=SEASONS_SECTION),
+        backfill="none: earlier epochs keep their single roll; sub-clocks run from the next epoch (K.2)",
+        templates=("environment.notable_year.hunger", "environment.notable_year.plenty", "environment.notable_year.weather"),
+        tables=(NotableYearRow.__tablename__,),
+        targets=("region", "army"),
+        couplings=(
+            Coupling(Subsystem.WAR, "each war lives through campaign seasons with a real season, year and weather"),
+            Coupling(Subsystem.ECONOMY, "the epoch's harvest is the mean of its sampled years"),
+            Coupling(Subsystem.CULTURE, "hungry years become famine records, remembered and fasted for"),
+        ),
+    ),
+    Mechanic(
+        key="region_environment",
+        spec_item="F2.1",
+        title="Region and place environment",
+        subsystem=Subsystem.ENVIRONMENT,
+        phases=("environment_survey", "environment_derive"),
+        surface=Surface(drawer=ENVIRONMENT_SECTION),
+        backfill="environment_survey: every region is profiled from its stored map; soil is solved so the derived fertility equals the stored stat",
+        fields=("fertility", "danger"),
+        tables=(RegionEnvironmentRow.__tablename__, PlaceEnvironmentRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("region", "place"),
+        couplings=(
+            Coupling(Subsystem.WAR, "defensibility, chokepoints, height advantage and battlefield scars"),
+            Coupling(Subsystem.DEMOGRAPHY, "water sources and passability shape capacity and migration"),
+            Coupling(Subsystem.ECONOMY, "mineral seams feed resources; route ease feeds trade"),
+            Coupling(Subsystem.ECOLOGY, "wild land carries wild species"),
+            Coupling(Subsystem.MAGIC, "magic density draws magic storms"),
+            Coupling(Subsystem.COSMOS, "the leak tears wounds into the land"),
+        ),
+    ),
+    Mechanic(
+        key="world_seasons",
+        spec_item="F2.2",
+        title="World seasons and calendars",
+        subsystem=Subsystem.ENVIRONMENT,
+        phases=("environment_survey", "calendars"),
+        surface=Surface(drawer=SEASONS_SECTION),
+        backfill="environment_survey: tilt, year, day, moons and seasons are generated for every world from its seed and orbit",
+        templates=("environment.calendar_adopted", "tools.son.reorder_seasons"),
+        tables=(WorldSeasonRow.__tablename__, CalendarRow.__tablename__),
+        exposure=Exposure.TOOL,
+        tools=("reorder_seasons",),
+        targets=("knowledge",),
+        couplings=(
+            Coupling(Subsystem.WAR, "season fitness for war"),
+            Coupling(Subsystem.ECONOMY, "season growth and travel"),
+            Coupling(Subsystem.KNOWLEDGE, "astronomy records keep calendars that plan the harvest"),
+            Coupling(Subsystem.CULTURE, "calendars keep fasts for hungry years"),
+            Coupling(Subsystem.COSMOS, "moons raise tides and eclipses"),
+        ),
+    ),
+    Mechanic(
+        key="weather",
+        spec_item="F2.3",
+        title="Weather on demand",
+        subsystem=Subsystem.ENVIRONMENT,
+        phases=("harvest", "campaigns", "travel"),
+        surface=Surface(drawer=ENVIRONMENT_SECTION),
+        backfill="none: weather is drawn when a mechanic needs it and never stored",
+        targets=("region", "army"),
+        couplings=(
+            Coupling(Subsystem.WAR, "footing, visibility, cold, heat and camp fever in every campaign season"),
+            Coupling(Subsystem.GODS, "omens read through the patron god's domains"),
+            Coupling(Subsystem.ECONOMY, "growth of the sampled year's harvest"),
+            Coupling(Subsystem.COSMOS, "wind at departure endangers journeys"),
+        ),
+    ),
+    Mechanic(
+        key="derived_environment",
+        spec_item="F2.4",
+        title="Derived fertility, harvest and passability",
+        subsystem=Subsystem.ENVIRONMENT,
+        phases=("environment_derive", "harvest", "society_economy"),
+        surface=Surface(drawer=ENVIRONMENT_SECTION),
+        backfill="environment_survey: fertility is kept as it was and its soil solved backwards",
+        fields=("fertility",),
+        targets=("region", "place", "people", "settlement"),
+        couplings=(
+            Coupling(Subsystem.ECONOMY, "food production follows the harvest"),
+            Coupling(Subsystem.DEMOGRAPHY, "carrying capacity follows fertility"),
+        ),
+    ),
+    Mechanic(
+        key="ley_lines",
+        spec_item="F2.6",
+        title="Ley lines and magic geography",
+        subsystem=Subsystem.MAGIC,
+        phases=("ley_lines", "magic_storms", "wizards"),
+        surface=Surface(drawer=ENVIRONMENT_SECTION),
+        backfill="ley_lines: lines and nexus are woven from the existing magic of neighbouring regions on the first run",
+        templates=("environment.ley_line_formed", "environment.nexus_formed", "tools.son.sever_ley"),
+        fields=("function",),
+        tables=(LeyLineRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("sever_ley",),
+        targets=("region", "place", "structure"),
+        couplings=(
+            Coupling(Subsystem.ENVIRONMENT, "ley convergence raises magic density; salted earth and leak wounds cut lines"),
+            Coupling(Subsystem.CULTURE, "works standing on ley lines and nexus gain function"),
+            Coupling(Subsystem.MAGIC, "magic storms run down the lines; wizards on a line act more often"),
+        ),
+    ),
+    Mechanic(
+        key="land_use",
+        spec_item="F2.5",
+        title="Land use and ecological pressure",
+        subsystem=Subsystem.ENVIRONMENT,
+        phases=("land_use", "resource_economy"),
+        surface=Surface(drawer=ENVIRONMENT_SECTION),
+        backfill="environment_survey: inhabited regions start at the land use their people already need",
+        targets=("region",),
+        couplings=(
+            Coupling(Subsystem.ECOLOGY, "clearing shrinks wild land"),
+            Coupling(Subsystem.ECONOMY, "erosion and overfarming wear out the soil"),
+            Coupling(Subsystem.DEMOGRAPHY, "building and crowding raise disease"),
+        ),
+    ),
 )
 
 MODULE_SUBSYSTEMS: dict[str, Subsystem] = {
@@ -78,6 +206,7 @@ MODULE_SUBSYSTEMS: dict[str, Subsystem] = {
     "trade": Subsystem.ECONOMY,
     "prosperity": Subsystem.ECONOMY,
     "resources": Subsystem.ECONOMY,
+    "environment": Subsystem.ENVIRONMENT,
     "economy": Subsystem.ECONOMY,
     "cosmic_economy": Subsystem.ECONOMY,
     "mechanics_assignment": Subsystem.ECONOMY,

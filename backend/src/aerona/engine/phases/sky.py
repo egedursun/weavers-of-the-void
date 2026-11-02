@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.worlds import SKY_EVENT_LABELS
@@ -225,14 +225,15 @@ async def sky_event(ctx: TickContext, kind: SkyEventKind, order: SkyOrder) -> Sk
     return SkyEventResult(kind, world.id, star_id, text)
 
 
-def spontaneous_bag(rules: Rules) -> list[SkyEventKind]:
+def spontaneous_bag(rules: Rules, moons: int = 0) -> list[SkyEventKind]:
     sky = rules.sky
     first_eclipse = min(1, sky.event_weight_eclipse)
+    moon_eclipses = sky.event_weight_eclipse * moons * rules.seasons.eclipse_per_moon_pct // PERCENT
     return [
         *[SkyEventKind.ECLIPSE] * first_eclipse,
         *[SkyEventKind.COMET] * sky.event_weight_comet,
         *[SkyEventKind.ALIGNMENT] * sky.event_weight_alignment,
-        *[SkyEventKind.ECLIPSE] * (sky.event_weight_eclipse - first_eclipse),
+        *[SkyEventKind.ECLIPSE] * (sky.event_weight_eclipse - first_eclipse + moon_eclipses),
         *[SkyEventKind.SUPERNOVA] * sky.event_weight_supernova,
         *[SkyEventKind.BLACK_SUN] * sky.event_weight_black_sun,
     ]
@@ -240,7 +241,8 @@ def spontaneous_bag(rules: Rules) -> list[SkyEventKind]:
 
 async def spontaneous_sky_event(ctx: TickContext) -> SkyEventResult | None:
     rng = ctx.rng("spontaneous")
-    bag = spontaneous_bag(ctx.rules)
+    moons = int(await ctx.session.scalar(select(func.max(WorldRow.moon_count))) or 0)
+    bag = spontaneous_bag(ctx.rules, moons)
     if not bag or not rng.chance(ctx.rules.sky.sky_event_chance):
         return None
     kind = bag[rng.die(len(bag)) - 1]

@@ -116,3 +116,5 @@ class WorldEffectsRules:
     mourning_power: int = rule(2, 1, 12, RuleGroup.HEROES_AND_MORTALS, "Power level of a mourning tradition")
     mourning_spread: int = rule(50, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Spread of a mourning tradition")
     mourning_rigidity: int = rule(40, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Rigidity of a mourning tradition")
+    migration_passable_min: int = rule(15, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Least passability on foot a land must offer to draw migrants")
+    migration_road_loss_pct: int = rule(20, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Migrants lost on the way per point of impassable ground (%)")

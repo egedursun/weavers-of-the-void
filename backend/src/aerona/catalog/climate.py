@@ -12,7 +12,8 @@ class ClimateSpec:
     era: ClimateEra
     label: str
     description: str
-    fertility_change: Callable[[Rules], int]
+    temperature_shift: Callable[[Rules], int]
+    rain_shift: Callable[[Rules], int]
     weight: Callable[[Rules], int]
 
 
@@ -21,7 +22,8 @@ class ClimateProfile:
     era: ClimateEra
     label: str
     description: str
-    fertility_change: int
+    temperature_shift: int
+    rain_shift: int
     weight: int
 
 
@@ -32,35 +34,40 @@ CLIMATES: dict[ClimateEra, ClimateSpec] = {
             ClimateEra.TEMPERATE,
             "Temperate age",
             "The seasons keep their places.",
-            lambda rules: rules.climate_effects.temperate_fertility,
+            lambda rules: rules.climate_effects.temperate_temperature,
+            lambda rules: rules.climate_effects.temperate_rain,
             lambda rules: rules.climate_effects.temperate_weight,
         ),
         ClimateSpec(
             ClimateEra.DROUGHT,
             "Drought century",
             "Rivers recede and the interiors scorch.",
-            lambda rules: rules.climate_effects.drought_century_fertility,
+            lambda rules: rules.climate_effects.drought_century_temperature,
+            lambda rules: rules.climate_effects.drought_century_rain,
             lambda rules: rules.climate_effects.drought_century_weight,
         ),
         ClimateSpec(
             ClimateEra.RAIN,
             "Rain age",
             "Rain without end: floods on the coasts, plenty in the plains.",
-            lambda rules: rules.climate_effects.rain_age_fertility,
+            lambda rules: rules.climate_effects.rain_age_temperature,
+            lambda rules: rules.climate_effects.rain_age_rain,
             lambda rules: rules.climate_effects.rain_age_weight,
         ),
         ClimateSpec(
             ClimateEra.ICE_AGE,
             "Ice age",
             "Winters lengthen and mountain passes close.",
-            lambda rules: rules.climate_effects.ice_age_fertility,
+            lambda rules: rules.climate_effects.ice_age_temperature,
+            lambda rules: rules.climate_effects.ice_age_rain,
             lambda rules: rules.climate_effects.ice_age_weight,
         ),
         ClimateSpec(
             ClimateEra.SCORCHING,
             "Scorching age",
             "The sun has lowered; disease and anger rise.",
-            lambda rules: rules.climate_effects.scorching_age_fertility,
+            lambda rules: rules.climate_effects.scorching_age_temperature,
+            lambda rules: rules.climate_effects.scorching_age_rain,
             lambda rules: rules.climate_effects.scorching_age_weight,
         ),
     )
@@ -99,7 +106,7 @@ WORLD_CLIMATE_MULTIPLIERS: dict[tuple[WorldType, ClimateEra], Callable[[Rules], 
 
 def climate_profile(rules: Rules, era: ClimateEra) -> ClimateProfile:
     spec = CLIMATES[era]
-    return ClimateProfile(era, spec.label, spec.description, spec.fertility_change(rules), spec.weight(rules))
+    return ClimateProfile(era, spec.label, spec.description, spec.temperature_shift(rules), spec.rain_shift(rules), spec.weight(rules))
 
 
 def climate_weight(rules: Rules, world_type: WorldType, era: ClimateEra) -> float:

@@ -89,6 +89,7 @@ class TickContext:
         cause_incident_id: int | None = None,
         place_entity_id: int | None = None,
         magnitude: int = 0,
+        year: int | None = None,
     ) -> ChronicleWrite:
         years = self.rules.time.years_per_epoch
         clock = ChronicleClock(
@@ -109,5 +110,6 @@ class TickContext:
             cause_incident_id=cause_incident_id,
             place_entity_id=place_entity_id,
             magnitude=magnitude,
+            year=year,
         )
         return await ChronicleRepository(self.session).append(draft, clock)

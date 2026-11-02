@@ -53,6 +53,7 @@ import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverl
 import { RecordGallery } from '@/features/pantheon/RecordGallery'
 import { mediaUrl } from '@/features/pantheon/media'
 import { CelestialDepthSection } from './CelestialDepthSection'
+import { WorldSeasonsSection } from './WorldSeasonsSection'
 import { type WorldWiki, useWorldWiki } from './api'
 
 const LEAK_MAX = 100
@@ -411,6 +412,7 @@ export function WorldWikiView({ worldId }: { worldId: number }) {
         </Section>
       )}
       <WorldSpecs wiki={data} />
+      <WorldSeasonsSection worldId={data.world.id} />
       <CelestialDepthSection
         kind='world'
         id={data.world.id}

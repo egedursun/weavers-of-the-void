@@ -18,6 +18,7 @@ from aerona.api.routers import (
     discovery,
     engine,
     entities,
+    environment,
     epochs,
     events,
     exchange,
@@ -99,6 +100,7 @@ ROUTERS: tuple[ModuleType, ...] = (
     maintenance,
     prompt_context,
     fate,
+    environment,
     mechanics,
     actions,
 )

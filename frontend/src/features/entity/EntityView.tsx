@@ -33,6 +33,7 @@ import { EntityChronicle } from './sections/EntityChronicle'
 import { EntityDepth } from './sections/EntityDepth'
 import { EntityDreams } from './sections/EntityDreams'
 import { EntityEditForm } from './sections/EntityEditForm'
+import { EntityEnvironment } from './sections/EntityEnvironment'
 import { EntityHero } from './sections/EntityHero'
 import { EntityImages } from './sections/EntityImages'
 import { EntityMechanics } from './sections/EntityMechanics'
@@ -64,6 +65,7 @@ const SECTION_LINKS = [
   { id: 'section-path', label: 'Connections' },
   { id: 'section-images', label: 'Images' },
   { id: 'section-chronicle', label: 'Chronicle' },
+  { id: 'section-environment', label: 'Environment' },
   { id: 'section-mechanics', label: 'Mechanics' },
   { id: 'section-edit', label: 'Edit' },
 ]
@@ -131,6 +133,8 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
   }, [])
   const present = new Set(SECTION_LINKS.map((link) => link.id))
   if (!detail.insight.society) present.delete('section-society')
+  if (entity.entity_type !== 'region' && entity.entity_type !== 'place')
+    present.delete('section-environment')
   const acts = entity.status === 'canon' && agentTypeOf(entity.entity_type)
   if (!acts) present.delete('section-opportunities')
   if (!isCommunity(ctx.type)) {
@@ -213,6 +217,11 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         entityId={entity.id}
         total={detail.chronicle_total}
         highlightEpoch={highlight}
+      />
+      <EntityEnvironment
+        entityId={entity.id}
+        entityType={entity.entity_type}
+        readOnlyReason={readOnly}
       />
       <EntityMechanics
         nodeId={entity.id}

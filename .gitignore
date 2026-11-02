@@ -1,6 +1,6 @@
 .DS_Store
 .env
-data/
+/data/
 backend/.venv/
 backend/.import_linter_cache/
 **/__pycache__/

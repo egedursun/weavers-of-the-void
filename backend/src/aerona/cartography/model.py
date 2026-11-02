@@ -6,6 +6,7 @@ from aerona.cartography.biomes import Biome
 from aerona.cartography.palette import WorldPalette
 from aerona.cartography.terrain import TerrainOverrides
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.world import WorldType
 
 Coordinates = tuple[float, float]
@@ -111,6 +112,20 @@ class ClimateShare(BaseModel):
     share_pct: int
 
 
+class RegionGeography(BaseModel):
+    biome_mix: list[int]
+    elevation_mean: int
+    roughness: int
+    moisture: int
+    latitude: int
+    forest: int
+    wetland: int
+    river_flow: float
+    river_class: RiverClass
+    coast_kind: CoastKind
+    land_share: int
+
+
 class RegionRecord(BaseModel):
     id: int
     parent_id: int | None
@@ -127,6 +142,7 @@ class RegionRecord(BaseModel):
     climate: list[ClimateShare]
     neighbours: list[int]
     bordering: list[int]
+    geography: RegionGeography | None = None
 
 
 class PlacedMarker(BaseModel):

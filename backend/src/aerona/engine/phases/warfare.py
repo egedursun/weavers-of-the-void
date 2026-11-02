@@ -15,11 +15,16 @@ from aerona.db.tables.warfare import ArmyRow, BattleRow, SiegeRow, WarRow
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.war import BattleOutcome, SiegeStatus, WarCause, WarEnding, WarStatus
+from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
+from aerona.engine.environment.battleground import BattleGround, attack_factor, defend_factor, night_chance, omen_morale, scar_battlefield, season_losses
+from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment, scar_region
+from aerona.engine.environment.years import grant_sub_steps
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.knowledge import LawBook
@@ -66,6 +71,7 @@ class Theatre:
     sides: SideIndex
     neighbourhood: Neighbourhood
     laws: LawBook
+    ground: EnvironmentBook
 
     @classmethod
     async def load(cls, ctx: TickContext) -> "Theatre":
@@ -75,7 +81,18 @@ class Theatre:
             await SideIndex.load(ctx.session, neighbourhood),
             neighbourhood,
             await ctx.laws(),
+            await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch),
         )
+
+    def battleground(self, ctx: TickContext, war: WarRow, defender: EntityRow, *, slot: str, season_index: int, year: int | None) -> BattleGround:
+        region = self.ground.region_of(defender.id)
+        place = self.ground.place_of(defender.location_id) or self.ground.place_of(defender.id)
+        season = self.ground.season_at(defender.world_id, season_index)
+        weather = self.ground.weather(ctx.environment.world_seed, ctx.epoch, region, season, slot) if region is not None else None
+        world = self.ground.worlds.get(defender.world_id)
+        chance = night_chance(ctx.rules, world.world_type, world.day_length_hours) if world is not None else 0.0
+        night = ctx.environment.rng(f"night.{war.id}.{slot}").chance(chance)
+        return BattleGround(region=region, place=place, season=season, weather=weather, year=year, night=night)
 
 
 @dataclass
@@ -423,15 +440,40 @@ async def _patron_effects(ctx: TickContext, theatre: Theatre, winner: EntityRow,
     return winner_patron.son.id
 
 
-async def fight_battle(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies: dict[int, tuple[EntityRow, ArmyRow]]) -> BattleReport | None:
+async def _omens(ctx: TickContext, theatre: Theatre, ground: BattleGround, sides: tuple[EntityRow, ...], armies: dict[int, tuple[EntityRow, ArmyRow]]) -> None:
+    for side in sides:
+        patron = (await theatre.strength.patron_bonus(side)).son
+        domains = frozenset({patron.domain_primary, patron.domain_secondary}) if patron is not None else frozenset()
+        shift = omen_morale(ctx.rules, ground.weather, domains, stat(side, "piety") or ctx.rules.campaigns.omen_default_piety)
+        if shift:
+            shift_stat(armies[side.id][0], "morale", shift)
+
+
+async def _mark_ground(ctx: TickContext, ground: BattleGround, gap: float, outcome: BattleOutcome) -> None:
+    region = ground.region
+    if region is None:
+        return
+    settings = ctx.rules.scars
+    depth = scar_battlefield(ctx.rules, region, gap)
+    if outcome is BattleOutcome.SIEGE_BREACHED:
+        add_scar(region, ScarKind.BURNED, settings.siege_burn_depth)
+    if depth >= settings.haunted_battlefield_depth and ctx.rng(f"haunted.{region.entity_id}").chance(settings.haunted_chance):
+        await scar_region(ctx.session, ctx.rules, region, ScarKind.HAUNTED, settings.haunted_depth)
+
+
+async def fight_battle(
+    ctx: TickContext, theatre: Theatre, item: OngoingWar, armies: dict[int, tuple[EntityRow, ArmyRow]], ground: BattleGround | None = None
+) -> BattleReport | None:
     campaigns = ctx.rules.campaigns
     war = item.war
     attacker, defender = await living_entity(ctx.session, item.attacker_id), await living_entity(ctx.session, item.defender_id)
     if attacker is None or defender is None:
         return None
+    ground = ground or BattleGround()
     besieged = _besieged(ctx.rules, defender)
-    attacker_power = await battle_power(ctx, theatre, attacker, *armies[attacker.id])
-    defender_power = await battle_power(ctx, theatre, defender, *armies[defender.id])
+    await _omens(ctx, theatre, ground, (attacker, defender), armies)
+    attacker_power = await battle_power(ctx, theatre, attacker, *armies[attacker.id]) * attack_factor(ctx.rules, ground)
+    defender_power = await battle_power(ctx, theatre, defender, *armies[defender.id]) * defend_factor(ctx.rules, ground)
     winner, loser = (attacker, defender) if attacker_power >= defender_power else (defender, attacker)
     gap = abs(attacker_power - defender_power)
     war.status = WarStatus.ONGOING
@@ -471,15 +513,45 @@ async def fight_battle(ctx: TickContext, theatre: Theatre, item: OngoingWar, arm
             outcome=outcome,
             gap=gap,
             siege_id=siege.id if siege is not None else None,
+            weather=ground.weather.kind if ground.weather is not None else None,
+            season_name=ground.season.name if ground.season is not None else None,
+            terrain=ground.terrain,
+            year=ground.year,
+            night=ground.night,
         )
     )
+    await _mark_ground(ctx, ground, gap, outcome)
     await _heroics(ctx, theatre, report)
     ids = [*([report.record.id] if report.record is not None else []), war.event_entity_id, winner.id, loser.id, *report.ids]
-    text = f"{event.name}: {summary}.{''.join(report.hero_texts)}"
-    await ctx.chronicle(ChronicleKind.WAR, text, template_key=f"war.battle.{outcome.value}", entity_ids=ids, son_id=son_id, feed_category=FeedCategory.WAR)
+    setting = ground.describe()
+    lead = f"{event.name}, {setting}" if setting else event.name
+    text = f"{lead}: {summary}.{''.join(report.hero_texts)}"
+    await ctx.chronicle(
+        ChronicleKind.WAR,
+        text,
+        template_key=f"war.battle.{outcome.value}",
+        entity_ids=ids,
+        son_id=son_id,
+        feed_category=FeedCategory.WAR,
+        place_entity_id=place.id if place is not None else None,
+        year=ground.year,
+    )
     ctx.count("battles")
     report.settlement = await check_war_end(ctx, item, attacker, defender, armies)
     return report
+
+
+async def _salt_earth(ctx: TickContext, war: WarRow, settlement: WarSettlement, loser: EntityRow) -> str:
+    settings = ctx.rules.scars
+    if settlement.ending is not WarEnding.CONQUEST or (war.violence or 0) < settings.salted_violence:
+        return ""
+    if not ctx.rng(f"salt.{war.id}").chance(settings.salted_chance):
+        return ""
+    ground = await region_environment(ctx.session, loser.id)
+    if ground is None:
+        return ""
+    add_scar(ground, ScarKind.SALTED_EARTH, settings.salted_depth)
+    return f" The conquerors salted the fields of {loser.name}."
 
 
 async def check_war_end(
@@ -519,10 +591,11 @@ async def check_war_end(
         )
         return settlement
     settlement = await end_war(ctx, war, WarEnding.VICTORY, victor_id=victor.id, loser_id=loser.id)
+    salted = await _salt_earth(ctx, war, settlement, loser)
     terms = f"conquered {loser.name}" if settlement.ending is WarEnding.CONQUEST else f"{loser.name} will pay tribute"
     rout = f" {armies[routed][0].name} disbanded." if routed is not None else ""
     extra = "".join(f" {note}" for note in settlement.notes)
-    text = f"{event.name} ended: {victor.name} won ({terms}).{rout}{extra}"
+    text = f"{event.name} ended: {victor.name} won ({terms}).{rout}{extra}{salted}"
     await ctx.chronicle(
         ChronicleKind.WAR,
         text,
@@ -550,6 +623,67 @@ async def _armies(ctx: TickContext, theatre: Theatre, war: WarRow, attacker: Ent
 def _battle_chance(ctx: TickContext, theatre: Theatre, attacker: EntityRow, defender: EntityRow) -> int:
     banned = theatre.laws.has(NaturalLaw.WAR_BAN, attacker.world_id) or theatre.laws.has(NaturalLaw.WAR_BAN, defender.world_id)
     return ctx.rules.campaigns.battle_chance_war_ban if banned else ctx.rules.campaigns.battle_chance
+
+
+def _acclimatised(ctx: TickContext, theatre: Theatre, side: EntityRow, ground: BattleGround) -> bool:
+    home = theatre.ground.region_of(side.id)
+    if home is None or ground.region is None:
+        return True
+    return abs(home.temperature - ground.region.temperature) <= ctx.rules.weather.acclimatised_within
+
+
+def _weather_losses(
+    ctx: TickContext, theatre: Theatre, ground: BattleGround, sides: tuple[EntityRow, ...], armies: dict[int, tuple[EntityRow, ArmyRow]]
+) -> int:
+    lost = 0
+    cap = ctx.rules.limits.army_soldier_cap
+    for side in sides:
+        army = armies[side.id][0]
+        size = stat(army, "size") or 0
+        share = season_losses(
+            ctx.rules, ground.weather, ground.region, armour_pct=stat(army, "equipment") or 0, acclimatised=_acclimatised(ctx, theatre, side, ground)
+        )
+        dead = round_half_up(size * share)
+        if dead:
+            set_stats(army, size=clamp_int(size - dead, 0, cap))
+            lost += dead
+    return lost
+
+
+async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies: dict[int, tuple[EntityRow, ArmyRow]], cap: int) -> int:
+    settings = ctx.rules.campaigns
+    war = item.war
+    attacker, defender = await living_entity(ctx.session, item.attacker_id), await living_entity(ctx.session, item.defender_id)
+    if attacker is None or defender is None:
+        return 0
+    seasons = grant_sub_steps(ctx.environment, settings.seasons_per_war_epoch)
+    if not seasons:
+        report = await fight_battle(ctx, theatre, item, armies)
+        return int(report is not None)
+    count = max(1, len(theatre.ground.seasons_of(defender.world_id)))
+    rng = ctx.rng(f"campaign.{war.id}")
+    start = rng.below(count)
+    years = ctx.rules.time.years_per_epoch
+    first_year = rng.below(years)
+    base = epoch_start_year(ctx.epoch, years)
+    fought = 0
+    lost = 0
+    for index in range(seasons):
+        year = base + min(years - 1, first_year + (start + index) // count)
+        ground = theatre.battleground(ctx, war, defender, slot=f"war.{war.id}.{index}", season_index=start + index, year=year)
+        lost += _weather_losses(ctx, theatre, ground, (attacker, defender), armies)
+        suitability = ground.season.campaign if ground.season is not None else PERCENT
+        if fought >= cap or not rng.chance(settings.season_engagement_pct * suitability / PERCENT):
+            continue
+        report = await fight_battle(ctx, theatre, item, armies, ground)
+        fought += 1
+        if report is None or report.settlement is not None:
+            break
+    if fought == 0 and war.status is WarStatus.ONGOING:
+        await check_war_end(ctx, item, attacker, defender, armies)
+    ctx.count("campaign_seasons", seasons)
+    ctx.count("weather_dead", lost)
+    return fought
 
 
 async def campaigns(ctx: TickContext) -> None:
@@ -589,12 +723,11 @@ async def campaigns(ctx: TickContext) -> None:
             if rules.campaigns.mobilization:
                 continue
         else:
-            battles += 1
             attacker, defender = await living_entity(ctx.session, item.attacker_id), await living_entity(ctx.session, item.defender_id)
             if attacker is None or defender is None:
                 continue
             armies = await _armies(ctx, theatre, item.war, attacker, defender)
-        await fight_battle(ctx, theatre, item, armies)
+        battles += await campaign(ctx, theatre, item, armies, max(1, rules.campaigns.battle_cap - battles))
 
 
 async def force_battle(ctx: TickContext, war_id: int) -> BattleReport:
@@ -603,7 +736,8 @@ async def force_battle(ctx: TickContext, war_id: int) -> BattleReport:
     if attacker is None or defender is None:
         raise ConflictError("Both sides must still stand to fight.")
     theatre = await Theatre.load(ctx)
-    report = await fight_battle(ctx, theatre, item, await _armies(ctx, theatre, item.war, attacker, defender))
+    ground = theatre.battleground(ctx, item.war, defender, slot=f"forced.{item.war.id}.{item.war.battles}", season_index=item.war.battles, year=None)
+    report = await fight_battle(ctx, theatre, item, await _armies(ctx, theatre, item.war, attacker, defender), ground)
     if report is None:
         raise ConflictError("The battle could not be fought.")
     return report

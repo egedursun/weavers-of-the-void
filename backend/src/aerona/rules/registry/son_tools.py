@@ -243,3 +243,7 @@ class SonToolsRules:
     reject_reverts_thread: int = rule(1, 0, 1, RuleGroup.SON_TOOLS, "A rejected creation's thread progress is taken back (1: on, 0: off)")
     repeat_names_shown: int = rule(4, 0, 50, RuleGroup.SON_TOOLS, "Similar earlier creations named when a creation counts as a repeat")
     choice_hints: int = rule(3, 1, 20, RuleGroup.SON_TOOLS, "Nearest valid values named when an agent writes an invalid choice (instead of the whole list)")
+    reorder_seasons_essence: int = rule(40, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to reorder the seasons of a world")
+    reorder_seasons_ap: int = rule(2, 1, 10, RuleGroup.SON_TOOLS, "reorder_seasons action cost")
+    reorder_seasons_per_epoch: int = rule(1, 0, 20, RuleGroup.SON_TOOLS, "Most times a son can reorder a world's seasons in one epoch")
+    sever_ley_essence: int = rule(30, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to cut a ley line")

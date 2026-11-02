@@ -12,13 +12,17 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
+from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment
+from aerona.engine.environment.profile import RIVER_RANK
 from aerona.engine.lifecycle.wounds import WoundOutcome, wound
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -238,7 +242,22 @@ def severity_roll(ctx: TickContext, stream: str) -> int:
     return settings.severity_base + ctx.rng(stream).die(settings.severity_die)
 
 
-def region_candidates(ctx: TickContext, region: EntityRow, atlas: RegionAtlas, population: int, laws: LawBook) -> list[tuple[Disaster, float]]:
+def flood_chance(rules: Rules, coastal: bool, ground: RegionEnvironmentRow | None, tidal: int) -> float:
+    settings = rules.disasters
+    if ground is None:
+        return float(settings.flood_chance) if coastal else 0.0
+    river = RIVER_RANK[ground.river_class]
+    if not coastal and river < RIVER_RANK[RiverClass.RIVER]:
+        return 0.0
+    boost = (
+        (tidal * settings.tide_flood_pct / PERCENT if coastal else 0) + river * settings.river_flood_pct + ground.erosion * settings.erosion_flood_pct / PERCENT
+    )
+    return settings.flood_chance * (1 + boost / PERCENT)
+
+
+def region_candidates(
+    ctx: TickContext, region: EntityRow, atlas: RegionAtlas, population: int, laws: LawBook, *, ground: RegionEnvironmentRow | None = None, tidal: int = 0
+) -> list[tuple[Disaster, float]]:
     settings = ctx.rules.disasters
     record = atlas.record(region.id)
     if record is None:
@@ -246,19 +265,41 @@ def region_candidates(ctx: TickContext, region: EntityRow, atlas: RegionAtlas, p
     candidates: list[tuple[Disaster, float]] = []
     if record.elevation_class in HIGHLANDS:
         candidates.append((Disaster.EARTHQUAKE, settings.earthquake_chance))
+    flood = flood_chance(ctx.rules, record.coastal, ground, tidal)
+    if flood:
+        candidates.append((Disaster.FLOOD, flood))
     if record.coastal:
-        candidates += [(Disaster.FLOOD, settings.flood_chance), (Disaster.STORM, settings.storm_chance)]
+        candidates.append((Disaster.STORM, settings.storm_chance))
     barren = stat_or(region, "fertility", ctx.rules.world_effects.unknown_fertility) < settings.drought_fertility_threshold
-    if barren or laws.has(NaturalLaw.DROUGHT, region.world_id):
+    dry = ground is not None and ground.rainfall < settings.drought_rainfall_below
+    if barren or dry or laws.has(NaturalLaw.DROUGHT, region.world_id):
         candidates.append((Disaster.DROUGHT, settings.drought_chance))
     if population >= settings.region_plague_population:
         crowding = min(float(settings.plague_crowd_max_pct), population / settings.plague_crowd_divisor * PERCENT)
-        candidates.append((Disaster.PLAGUE, settings.region_plague_chance + crowding))
+        disease = ground.disease_load * settings.disease_plague_pct / PERCENT if ground is not None else 0
+        candidates.append((Disaster.PLAGUE, settings.region_plague_chance + crowding + disease))
     return candidates
+
+
+SCARRING: dict[Disaster, tuple[ScarKind, str]] = {
+    Disaster.PLAGUE: (ScarKind.PLAGUE_GROUND, "plague_scar_pct"),
+    Disaster.EARTHQUAKE: (ScarKind.CRATER, "quake_crater_pct"),
+}
+
+
+async def scar_land(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: int) -> None:
+    found = SCARRING.get(disaster)
+    if found is None:
+        return
+    kind, key = found
+    ground = await region_environment(ctx.session, target.id)
+    if ground is not None:
+        add_scar(ground, kind, round_half_up(severity * getattr(ctx.rules.disasters, key) / PERCENT))
 
 
 async def strike(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: int) -> tuple[EntityRow, DisasterImpact]:
     impact = await apply_disaster(ctx, target, disaster, severity / ctx.rules.disasters.scale_divisor)
+    await scar_land(ctx, target, disaster, severity)
     return await record_disaster_event(ctx, target, disaster, severity, impact), impact
 
 
@@ -268,6 +309,7 @@ def _sentence(impact: DisasterImpact) -> str:
 
 async def _region_disasters(ctx: TickContext, world: DisasterWorld) -> None:
     atlas = await RegionAtlas.load(ctx.session)
+    grounds = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch, atlas)
     regional_population: dict[int, int] = {}
     for community in await canon(ctx.session, SOCIETY_TYPES):
         home = atlas.top_region(community.id)
@@ -279,7 +321,11 @@ async def _region_disasters(ctx: TickContext, world: DisasterWorld) -> None:
         if atlas.is_water(region.id) or region.is_water:
             continue
         rng = ctx.rng(f"region_disaster.{region.id}")
-        for disaster, chance in region_candidates(ctx, region, atlas, regional_population.get(region.id, 0), world.laws):
+        ground = grounds.regions.get(region.id)
+        planet = grounds.worlds.get(region.world_id)
+        tidal = (planet.tidal_strength or 0) if planet is not None else 0
+        candidates = region_candidates(ctx, region, atlas, regional_population.get(region.id, 0), world.laws, ground=ground, tidal=tidal)
+        for disaster, chance in candidates:
             climate = world.climate_mult(region.world_id) if disaster is Disaster.PLAGUE else 1.0
             if not rng.chance(chance * world.law_mult(ctx.rules, region.world_id) * climate):
                 continue

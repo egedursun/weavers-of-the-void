@@ -77,3 +77,6 @@ class ContextRules:
     thread_stale_penalty: int = rule(50, 0, 1000, RuleGroup.CONTEXT_BUDGETS, "Story priority: score lost per stagnant epoch (percentage points)")
     thread_progressed_score: int = rule(1, 0, 100, RuleGroup.CONTEXT_BUDGETS, "Story priority: score if it has progressed at all")
     apocalypse_warning_pct: int = rule(30, 0, 100, RuleGroup.APOCALYPSE, "Doomsday clock appears in the prompt at this percentage of the threshold")
+    harvest_poor_below_pct: int = rule(80, 0, 200, RuleGroup.CONTEXT_BUDGETS, "Harvest below which a region is described to the gods as hungry (%)")
+    harvest_rich_above_pct: int = rule(120, 0, 300, RuleGroup.CONTEXT_BUDGETS, "Harvest above which a region is described to the gods as rich (%)")
+    scar_shown_depth: int = rule(20, 0, 100, RuleGroup.CONTEXT_BUDGETS, "Least depth of a scar the gods are told about")

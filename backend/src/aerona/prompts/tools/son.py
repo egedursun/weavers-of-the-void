@@ -280,6 +280,17 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You turn to another world of the cosmos: from now on your creations and inspections happen there. Free.",
         {"world_id": "The id of the world you go to (from the OTHER WORLDS OF THE COSMOS list)"},
     ),
+    T.SEVER_LEY: ToolText(
+        "You cut a ley line between two regions: magic stops flowing along it, storms no longer run down it and works on it stop gaining power, "
+        "for {{ rules.environment.sever_ley_epochs }} ages. {{ rules.son_tools.sever_ley_essence }} essence, 1 action.",
+        {"line_id": "The ley line's id (see the region's ley lines)", "reason": "Why you cut it"},
+    ),
+    T.REORDER_SEASONS: ToolText(
+        "You reorder the seasons of a world: the year runs in the order you name, so harvests, campaigns, travel and festivals fall differently. "
+        "Only gods of sky, storm, time, sun, moon, harvest, ice or plants can do it. {{ rules.son_tools.reorder_seasons_essence }} essence, "
+        "{{ rules.son_tools.reorder_seasons_ap }} actions, {{ rules.son_tools.reorder_seasons_per_epoch }} per age.",
+        {"world_id": "The world's id", "order": "The current positions of the world's seasons (see SEASONS in the world summary), in the new order"},
+    ),
     T.DECLARE_HOLY_WORLD: ToolText(
         "You declare a world your holy world: in that world your name is invoked first. If it is another sibling's world, your relationship sours. Free, "
         "{{ rules.son_tools.holy_world_per_epoch }} per age.",

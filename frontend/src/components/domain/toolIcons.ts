@@ -1,5 +1,7 @@
 import {
   Anchor,
+  CalendarSync,
+  Scissors,
   ArrowLeftRight,
   Baby,
   Bandage,
@@ -161,6 +163,8 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   birth_child: Baby,
   adopt: Baby,
   move_to_world: Orbit,
+  reorder_seasons: CalendarSync,
+  sever_ley: Scissors,
   declare_holy_world: Sun,
   seal_gate: Lock,
   rekindle_star: Flame,

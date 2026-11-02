@@ -9,7 +9,6 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
-from aerona.domain.enums.world import ClimateEra
 from aerona.domain.models.entity_stats import ResourceStats
 from aerona.engine.phases.society_economy import (
     EconomyInputs,
@@ -38,7 +37,7 @@ RULES = Rules()
 
 
 BASE_INPUTS = EconomyInputs(
-    climate=ClimateEra.TEMPERATE,
+    harvest_pct=100,
     at_war=False,
     routes=0,
     pays_tribute=False,
@@ -76,10 +75,11 @@ def test_class_targets_follow_knowledge_war_and_godlessness() -> None:
     assert class_targets(RULES, inputs(routes=3))[SocialClass.MERCHANT] > base[SocialClass.MERCHANT]
 
 
-def test_food_rate_reacts_to_climate_and_law() -> None:
+def test_food_rate_reacts_to_harvest_and_law() -> None:
     settings = RULES.society
     temperate = food_rate(settings, inputs(), 55.0)
-    assert food_rate(settings, inputs(climate=ClimateEra.DROUGHT), 55.0) < temperate
+    assert food_rate(settings, inputs(harvest_pct=60), 55.0) < temperate
+    assert food_rate(settings, inputs(harvest_pct=130), 55.0) > temperate
     assert food_rate(settings, inputs(bounty_law=True), 55.0) > temperate
     assert food_rate(settings, inputs(), 0.0) == settings.food_rate_min_pct / 100
 

@@ -1,10 +1,13 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 
+from sqlalchemy import select
+
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityFlag, EntityType
 from aerona.domain.enums.society import CreatureTrait
@@ -25,11 +28,16 @@ ABUNDANCE_KEY = "abundance"
 class Habitat:
     regions: dict[int, EntityRow]
     atlas: RegionAtlas
+    wilds: dict[int, int] = field(default_factory=dict)
     population: dict[int, int] = field(default_factory=lambda: defaultdict(int))
     invasive: dict[int, int] = field(default_factory=lambda: defaultdict(int))
 
     def region_of(self, species: EntityRow) -> int | None:
         return self.atlas.top_region(species.id)
+
+    def wildness(self, species: EntityRow) -> int | None:
+        region = self.region_of(species)
+        return self.wilds.get(region) if region is not None else None
 
 
 async def fertility_of(ctx: TickContext, species: EntityRow, habitat: Habitat) -> int:
@@ -48,11 +56,16 @@ def initial_abundance(rules: Rules, fertility: int, megafauna: bool) -> int:
     return clamp_int(ecology.initial_base + fertility * ecology.initial_fertility_pct / 100, 1, 100)
 
 
-def carrying_capacity(rules: Rules, fertility: int, megafauna: bool) -> int:
+def carrying_capacity(rules: Rules, fertility: int, megafauna: bool, wildness: int | None = None) -> int:
     ecology = rules.ecology
     if megafauna:
         return ecology.megafauna_capacity
-    return clamp_int(ecology.capacity_base + fertility * ecology.capacity_fertility_pct / 100, 1, 100)
+    wild = 0 if wildness is None else (wildness - ecology.wildness_pivot) * ecology.capacity_wildness_pct / 100
+    return clamp_int(ecology.capacity_base + fertility * ecology.capacity_fertility_pct / 100 + wild, 1, 100)
+
+
+def wildness_of(forest_cover: int, cleared: int, wetland: int) -> int:
+    return clamp_int(forest_cover + wetland - cleared, 0, 100)
 
 
 def abundance(species: EntityRow) -> int:
@@ -60,7 +73,11 @@ def abundance(species: EntityRow) -> int:
 
 
 async def load_habitat(ctx: TickContext, species: list[EntityRow], invasive: set[int]) -> Habitat:
-    habitat = Habitat({region.id: region for region in await canon(ctx.session, [EntityType.REGION])}, await RegionAtlas.load(ctx.session))
+    grounds = await ctx.session.execute(
+        select(RegionEnvironmentRow.entity_id, RegionEnvironmentRow.forest_cover, RegionEnvironmentRow.cleared, RegionEnvironmentRow.wetland)
+    )
+    wilds = {region_id: wildness_of(forest, cleared, wetland) for region_id, forest, cleared, wetland in grounds}
+    habitat = Habitat({region.id: region for region in await canon(ctx.session, [EntityType.REGION])}, await RegionAtlas.load(ctx.session), wilds)
     for community in await canon(ctx.session, SOCIETY_TYPES):
         region = habitat.atlas.top_region(community.id)
         if region is not None:
@@ -136,7 +153,8 @@ async def planned_abundance(ctx: TickContext, item: EntityRow, web: FoodWeb, hab
     settings = ctx.rules.ecology
     current = abundance(item)
     is_megafauna = item.id in marks.megafauna
-    delta = (carrying_capacity(ctx.rules, await fertility_of(ctx, item, habitat), is_megafauna) - current) * settings.reversion_pct / 100
+    capacity = carrying_capacity(ctx.rules, await fertility_of(ctx, item, habitat), is_megafauna, habitat.wildness(item))
+    delta = (capacity - current) * settings.reversion_pct / 100
     for hunter in web.hunters_of[item.id]:
         delta -= settings.predation + abundance(hunter) / settings.predation_divisor
     eaten = web.prey_of[item.id]

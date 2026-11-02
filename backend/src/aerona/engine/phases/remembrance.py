@@ -30,7 +30,9 @@ EPOCH_SUFFIX = re.compile(r"\s*\(Epoch \d+\)\s*")
 LIVES_LOST = re.compile(r"(\d+) lives lost")
 MEMORIAL_TYPES = frozenset({EntityType.ARTWORK, EntityType.LEGEND, EntityType.TRADITION, EntityType.STRUCTURE})
 WAR_KINDS = frozenset({EngineKind.WAR, EngineKind.BATTLE, EngineKind.SIEGE})
-DISASTER_KINDS = frozenset({EngineKind.EARTHQUAKE, EngineKind.FLOOD, EngineKind.PLAGUE, EngineKind.DROUGHT, EngineKind.STORM, EngineKind.MAGIC_STORM})
+DISASTER_KINDS = frozenset(
+    {EngineKind.EARTHQUAKE, EngineKind.FLOOD, EngineKind.PLAGUE, EngineKind.DROUGHT, EngineKind.STORM, EngineKind.MAGIC_STORM, EngineKind.FAMINE}
+)
 PLAGUE_DOMAINS = DEATH_DOMAINS | {Domain.PLAGUE, Domain.LIFE}
 HERO_FLAGS = frozenset({EntityFlag.CHOSEN, EntityFlag.AGE_CHANGER, EntityFlag.PROPHET, EntityFlag.LEGENDARY})
 HOME_BONDS = (BondKind.LIVES_IN, BondKind.DESCENDS_FROM, BondKind.MEMBER_OF)

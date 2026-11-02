@@ -38,6 +38,16 @@ from aerona.rules.registry.ecology import EcologyRules
 from aerona.rules.registry.economy import EconomyRules
 from aerona.rules.registry.empty_world import EmptyWorldRules
 from aerona.rules.registry.engine_phases import EnginePhasesRules
+from aerona.rules.registry.environment import (
+    CalendarsRules,
+    EngineBudgetRules,
+    EnvironmentRules,
+    HarvestRules,
+    LandUseRules,
+    PassabilityRules,
+    ScarsRules,
+    SeasonsRules,
+)
 from aerona.rules.registry.epoch_flow import EpochFlowRules
 from aerona.rules.registry.espionage import EspionageRules
 from aerona.rules.registry.essence import EssenceRules
@@ -98,6 +108,7 @@ from aerona.rules.registry.trade import TradeRules
 from aerona.rules.registry.travel import TravelRules
 from aerona.rules.registry.travel_methods import TravelMethodsRules
 from aerona.rules.registry.ui import UiRules
+from aerona.rules.registry.weather import WeatherRules
 from aerona.rules.registry.wonders import WondersRules
 from aerona.rules.registry.world_balance import WorldBalanceRules
 from aerona.rules.registry.world_birth import WorldBirthRules
@@ -114,6 +125,15 @@ from aerona.rules.registry.world_war_strength import WorldWarStrengthRules
 class Rules:
     agents: AgentsRules = field(default_factory=AgentsRules)
     modifiers: ModifiersRules = field(default_factory=ModifiersRules)
+    environment: EnvironmentRules = field(default_factory=EnvironmentRules)
+    scars: ScarsRules = field(default_factory=ScarsRules)
+    passability: PassabilityRules = field(default_factory=PassabilityRules)
+    seasons: SeasonsRules = field(default_factory=SeasonsRules)
+    land_use: LandUseRules = field(default_factory=LandUseRules)
+    harvest: HarvestRules = field(default_factory=HarvestRules)
+    calendars: CalendarsRules = field(default_factory=CalendarsRules)
+    engine_budget: EngineBudgetRules = field(default_factory=EngineBudgetRules)
+    weather: WeatherRules = field(default_factory=WeatherRules)
     casualties: CasualtiesRules = field(default_factory=CasualtiesRules)
     ecology: EcologyRules = field(default_factory=EcologyRules)
     geography: GeographyRules = field(default_factory=GeographyRules)

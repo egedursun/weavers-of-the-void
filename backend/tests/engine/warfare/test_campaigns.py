@@ -21,6 +21,7 @@ QUIET = {
     "decisive_score": 50,
     "exhaustion_victory_margin": 50,
     "great_victory_diff": 1000,
+    "seasons_per_war_epoch": 0,
 }
 
 

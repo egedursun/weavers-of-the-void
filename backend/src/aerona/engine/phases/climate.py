@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.cartography.model import ElevationClass
 from aerona.catalog.climate import ClimateProfile, climate_profile, climate_weights
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -19,14 +18,12 @@ from aerona.engine.context import TickContext
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_economy import population_bounds
-from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up
+from aerona.engine.primitives.numbers import clamp_int, fraction
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.rules.registry import Rules
 
 LAND_TYPES = (EntityType.REGION, EntityType.PLACE)
-HIGHLANDS = frozenset({ElevationClass.MOUNTAINOUS, ElevationClass.HILLY})
 
 
 @dataclass(frozen=True)
@@ -49,43 +46,16 @@ def population_loss_pct(rules: Rules, era: ClimateEra) -> int:
     return rules.climate_effects.ice_age_population_loss if era is ClimateEra.ICE_AGE else 0
 
 
-def regional_change(rules: Rules, era: ClimateEra, coastal: bool, elevation: ElevationClass | None) -> int:
-    settings = rules.climate_effects
-    change = climate_profile(rules, era).fertility_change
-    if era is ClimateEra.DROUGHT and coastal:
-        change = round_half_up(change / settings.coast_drought_divisor)
-    if era is ClimateEra.RAIN and coastal:
-        change += settings.coast_rain_bonus
-    if era is ClimateEra.ICE_AGE and elevation in HIGHLANDS:
-        change -= settings.mountain_ice_loss
-    return change
-
-
-def drifted_fertility(rules: Rules, fertility: int, change: int) -> int:
-    settings = rules.climate_effects
-    equilibrium = settings.fertility_equilibrium
-    divisor = settings.fertility_recovery_divisor if fertility < equilibrium else settings.fertility_decline_divisor
-    return clamp_int(fertility + change + (equilibrium - fertility) / divisor, 0, PERCENT)
-
-
-async def apply_climate_effect(ctx: TickContext, world: WorldRow, era: ClimateEra, atlas: RegionAtlas) -> int:
-    changed = 0
-    for land in await canon(ctx.session, LAND_TYPES, world.id):
-        fertility = stat(land, "fertility")
-        if fertility is None:
-            continue
-        region_id = atlas.top_region(land.id) or land.id
-        record = atlas.record(region_id)
-        change = regional_change(ctx.rules, era, record.coastal if record else False, record.elevation_class if record else None)
-        set_stats(land, fertility=drifted_fertility(ctx.rules, fertility, change))
-        changed += 1
+async def apply_climate_effect(ctx: TickContext, world: WorldRow, era: ClimateEra) -> int:
     loss = population_loss_pct(ctx.rules, era)
+    changed = 0
     if loss:
         for community in await canon(ctx.session, SOCIETY_TYPES, world.id):
             population = stat(community, "population")
             if population is not None:
                 floor, ceiling = population_bounds(ctx.rules, community)
                 set_stats(community, population=clamp_int(population * (1 - fraction(loss)), floor, ceiling))
+                changed += 1
     return changed
 
 
@@ -119,11 +89,11 @@ async def announce_era(ctx: TickContext, world: WorldRow, era: ClimateEra, many_
     )
 
 
-async def advance_world(ctx: TickContext, world: WorldRow, atlas: RegionAtlas, many_worlds: bool) -> None:
+async def advance_world(ctx: TickContext, world: WorldRow, many_worlds: bool) -> None:
     era = ensure_climate(ctx, world)
     order = await ctx.session.get(ClimateOrderRow, world.id)
     if order is not None:
-        await apply_climate_effect(ctx, world, order.era, atlas)
+        await apply_climate_effect(ctx, world, order.era)
         await ctx.session.delete(order)
     left = (world.climate_epochs_left or 0) - 1
     if left <= 0:
@@ -135,14 +105,13 @@ async def advance_world(ctx: TickContext, world: WorldRow, atlas: RegionAtlas, m
         left = settings.duration + ctx.rng(f"era_length.{world.id}").die(settings.duration_die)
         await announce_era(ctx, world, era, many_worlds)
     world.climate_epochs_left = left
-    await apply_climate_effect(ctx, world, era, atlas)
+    await apply_climate_effect(ctx, world, era)
 
 
 async def climate_transition(ctx: TickContext) -> None:
     worlds = await WorldRepository(ctx.session).reachable_worlds()
-    atlas = await RegionAtlas.load(ctx.session)
     for world in worlds:
-        await advance_world(ctx, world, atlas, len(worlds) > 1)
+        await advance_world(ctx, world, len(worlds) > 1)
     await ctx.session.flush()
     ctx.count("worlds", len(worlds))
 

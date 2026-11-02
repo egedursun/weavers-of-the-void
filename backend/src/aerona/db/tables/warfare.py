@@ -1,8 +1,10 @@
-from sqlalchemy import CheckConstraint, ForeignKey, Index, Text, UniqueConstraint
+from sqlalchemy import CheckConstraint, ForeignKey, Index, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
+from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, enum_type
+from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.war import (
     BattleOutcome,
     CaptiveStatus,
@@ -97,6 +99,11 @@ class BattleRow(Base):
     outcome: Mapped[BattleOutcome] = mapped_column(enum_type(BattleOutcome, "outcome"))
     gap: Mapped[float]
     siege_id: Mapped[int | None] = mapped_column(ForeignKey("sieges.id", ondelete="SET NULL"))
+    weather: Mapped[WeatherKind | None] = mapped_column(enum_type(WeatherKind, "weather"))
+    season_name: Mapped[str | None] = mapped_column(String(NAME_MAX_LENGTH))
+    terrain: Mapped[TerrainKind | None] = mapped_column(enum_type(TerrainKind, "terrain"))
+    year: Mapped[int | None]
+    night: Mapped[bool] = mapped_column(default=False)
 
 
 class CaptiveRow(Base):

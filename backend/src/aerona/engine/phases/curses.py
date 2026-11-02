@@ -3,8 +3,10 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
+from aerona.engine.environment.book import add_scar, region_environment
 from aerona.engine.lifecycle.wounds import WoundOutcome, wound
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -15,6 +17,7 @@ from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat
 
 HEADCOUNT_KEYS = ("population", "followers")
 DECAYING_KEYS = ("prosperity", "fertility", "abundance", "strength", "wealth")
+BLIGHTABLE = frozenset({EntityType.REGION, EntityType.PLACE})
 CURSE_DEATH = "melted away under the curse and died"
 
 
@@ -42,6 +45,10 @@ async def curse_decay(ctx: TickContext) -> None:
             if value is not None:
                 updates[key] = clamp_int(value - effects.curse_stat_loss, 0, PERCENT)
         set_stats(entity, **updates)
+        if entity.entity_type in BLIGHTABLE:
+            ground = await region_environment(ctx.session, entity.id)
+            if ground is not None:
+                add_scar(ground, ScarKind.BLIGHTED, rules.scars.curse_blight_depth)
         ctx.count("cursed_decay")
         if entity.entity_type is EntityType.MORTAL and rules.world_engine.curse_hp_loss > 0:
             await wound(ctx, entity, rules.world_engine.curse_hp_loss, cause=CURSE_DEATH, killer_id=await curser_of(ctx, entity))

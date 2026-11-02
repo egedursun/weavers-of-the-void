@@ -24,6 +24,7 @@ class RuleGroup(StrEnum):
     DEATH_AND_RESURRECTION = "Death and resurrection"
     ECONOMY = "Economy"
     ENGINE_PHASES = "Engine phases"
+    ENVIRONMENT = "Environment and seasons"
     EPOCH_FLOW = "Epoch flow"
     EXPLORATION = "Exploration"
     FATE_AND_CHRONICLE = "Fate and chronicle"
@@ -59,3 +60,4 @@ class RuleGroup(StrEnum):
     THE_GODS_ACTIONS = "The god's actions"
     THE_GODS_POWER = "The god's power"
     WAR_AND_DIPLOMACY = "War and diplomacy"
+    WEATHER = "Weather"

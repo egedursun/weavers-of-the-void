@@ -2,10 +2,12 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.place_terrain import TERRAIN_NATURES
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import PlaceStats
@@ -51,10 +53,17 @@ class SeededPlace:
     text: str
 
 
+NATURES_BY_SUBTYPE: dict[str, Nature] = {nature.subtype: nature for group in (FERTILE, DANGEROUS, MAGICAL, COMMON, *WORLD_NATURES.values()) for nature in group}
+
+
 async def nature_of(ctx: TickContext, region: EntityRow) -> Nature:
     settings = ctx.rules.geography
     world = await ctx.session.get(WorldRow, region.world_id)
     pool = list(WORLD_NATURES.get(world.world_type, ())) if world is not None else []
+    ground = await ctx.session.get(RegionEnvironmentRow, region.id)
+    if ground is not None:
+        shaped = [NATURES_BY_SUBTYPE[subtype] for subtype in TERRAIN_NATURES.get(ground.dominant_terrain, ()) if subtype in NATURES_BY_SUBTYPE]
+        pool.extend(shaped * settings.terrain_nature_weight)
     if (stat(region, "fertility") or 0) >= settings.fertile_threshold:
         pool.extend(FERTILE)
     if (stat(region, "danger") or 0) >= settings.dangerous_threshold:

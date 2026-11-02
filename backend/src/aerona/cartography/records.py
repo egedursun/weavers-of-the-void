@@ -3,6 +3,7 @@ from numpy.typing import NDArray
 
 from aerona.cartography.biomes import Biome
 from aerona.cartography.context import MapContext
+from aerona.cartography.environment import flow_accumulation, latitudes, region_geography
 from aerona.cartography.flood import NO_OWNER
 from aerona.cartography.hierarchy import RegionHierarchy
 from aerona.cartography.model import ClimateShare, Coordinates, ElevationClass, RegionRecord
@@ -71,6 +72,8 @@ def build_records(
     profile: WorldTypeProfile,
 ) -> list[RegionRecord]:
     neighbours, bordering = adjacency
+    flow = flow_accumulation(context)
+    latitude = latitudes(context)
     records: dict[int, RegionRecord] = {}
     for region_id in hierarchy.breadth_first():
         region = hierarchy.regions[region_id]
@@ -108,5 +111,6 @@ def build_records(
             climate=climate,
             neighbours=sorted(neighbours.get(region_id, set())),
             bordering=sorted(bordering.get(region_id, set())),
+            geography=region_geography(context, cells, biomes=biomes, coastal=coastal_cells, flow=flow, latitude=latitude),
         )
     return [records[region_id] for region_id in sorted(records)]

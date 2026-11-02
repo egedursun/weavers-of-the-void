@@ -20,6 +20,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.environment import WeatherEffect
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, TravelMethod
@@ -46,6 +47,7 @@ from aerona.engine.cosmos.routes import (
     touches,
     world_name,
 )
+from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.culture_exchange import cultural_contact
@@ -357,9 +359,9 @@ async def bridge_collapse(ctx: TickContext) -> int:
     return collapsed
 
 
-def road_risk(rules: Rules, route: RouteRow, branches: set[KnowledgeBranch], vehicle: EntityRow | None, world_danger: int = 0) -> float:
+def road_risk(rules: Rules, route: RouteRow, branches: set[KnowledgeBranch], vehicle: EntityRow | None, world_danger: int = 0, *, wind: int = 0) -> float:
     travel = rules.travel
-    risk = route.danger / PERCENT + world_danger / PERCENT * travel.world_danger_risk_pct / PERCENT
+    risk = route.danger / PERCENT + world_danger / PERCENT * travel.world_danger_risk_pct / PERCENT + wind / PERCENT * travel.wind_risk_pct / PERCENT
     if KnowledgeBranch.SKY_NAVIGATION in branches:
         risk *= travel.sky_navigation_risk_pct / PERCENT
     if KnowledgeBranch.VOID_LIVING in branches:
@@ -374,7 +376,15 @@ class JourneyScene:
     book: RouteBook
     knowledge: KnowledgeMap
     rng: SeededRandom
+    ground: EnvironmentBook
     arrivals: list[int] = field(default_factory=list)
+
+    def departure_wind(self, ctx: TickContext, journey: JourneyRow, traveller: EntityRow) -> int:
+        region = self.ground.region_of(traveller.id)
+        if region is None:
+            return 0
+        season = self.ground.season_at(region.world_id, journey.id)
+        return self.ground.weather(ctx.environment.world_seed, ctx.epoch, region, season, f"journey.{journey.id}").effect(WeatherEffect.WIND)
 
 
 async def _ghost_ship(ctx: TickContext, journey: JourneyRow, traveller: EntityRow, vehicle: EntityRow) -> EntityRow:
@@ -431,7 +441,8 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
     vehicle = await ctx.session.get(EntityRow, journey.vehicle_entity_id) if journey.vehicle_entity_id is not None else None
     destination = await ctx.session.get(WorldRow, journey.destination_world_id)
     danger = destination.danger if destination is not None else 0
-    if not scene.rng.probability(road_risk(ctx.rules, route, scene.knowledge.branches(traveller.id), vehicle, danger)):
+    wind = scene.departure_wind(ctx, journey, traveller)
+    if not scene.rng.probability(road_risk(ctx.rules, route, scene.knowledge.branches(traveller.id), vehicle, danger, wind=wind)):
         return True
     kind = METHOD_EVENTS.get(route.method) or scene.rng.pick(COMMON_EVENTS)
     target = await world_name(ctx.session, journey.destination_world_id)
@@ -518,7 +529,12 @@ async def advance_journey(ctx: TickContext, scene: JourneyScene, journey: Journe
 
 
 async def journeys(ctx: TickContext) -> list[int]:
-    scene = JourneyScene(await RouteBook.load(ctx.session, ctx.rules, ctx.epoch), await KnowledgeMap.load(ctx.session), ctx.rng("journeys"))
+    scene = JourneyScene(
+        await RouteBook.load(ctx.session, ctx.rules, ctx.epoch),
+        await KnowledgeMap.load(ctx.session),
+        ctx.rng("journeys"),
+        await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch),
+    )
     statement = select(JourneyRow).where(JourneyRow.status.in_(list(LIVE_JOURNEYS))).order_by(JourneyRow.id)
     for journey in list(await ctx.session.scalars(statement)):
         await advance_journey(ctx, scene, journey)

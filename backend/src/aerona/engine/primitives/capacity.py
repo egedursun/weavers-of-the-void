@@ -2,11 +2,14 @@ import math
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import PlaceEnvironmentRow
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.environment import WaterSource
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -20,6 +23,7 @@ GROWING_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.
 LAND_COMMUNITY_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
 
 RegionKey = tuple[str, int]
+FRESH_WATERS = frozenset({WaterSource.RIVER, WaterSource.LAKE, WaterSource.SPRING})
 
 
 @dataclass
@@ -44,12 +48,22 @@ class CapacityReading:
 
 
 class CapacityModel:
-    def __init__(self, rules: Rules, atlas: RegionAtlas, knowledge: KnowledgeMap, physics: PhysicsTable, entities: dict[int, EntityRow]) -> None:
+    def __init__(
+        self,
+        rules: Rules,
+        atlas: RegionAtlas,
+        knowledge: KnowledgeMap,
+        physics: PhysicsTable,
+        entities: dict[int, EntityRow],
+        *,
+        water: dict[int, WaterSource] | None = None,
+    ) -> None:
         self.rules = rules
         self.atlas = atlas
         self.knowledge = knowledge
         self.physics = physics
         self.entities = entities
+        self.water = water or {}
 
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules) -> "CapacityModel":
@@ -57,7 +71,19 @@ class CapacityModel:
         knowledge = await KnowledgeMap.load(session)
         physics = await PhysicsTable.load(session, rules)
         places = await canon(session, [EntityType.REGION, EntityType.PLACE, EntityType.SETTLEMENT])
-        return cls(rules, atlas, knowledge, physics, {entity.id: entity for entity in places})
+        water = {entity_id: source for entity_id, source in await session.execute(select(PlaceEnvironmentRow.entity_id, PlaceEnvironmentRow.water_source))}
+        return cls(rules, atlas, knowledge, physics, {entity.id: entity for entity in places}, water=water)
+
+    def water_factor(self, community: EntityRow) -> float:
+        source = self.water.get(community.location_id or -1)
+        if source is None:
+            return 1.0
+        settings = self.rules.environment
+        if source is WaterSource.NONE:
+            return settings.dry_place_capacity_pct / PERCENT
+        if source in FRESH_WATERS:
+            return settings.fresh_water_capacity_pct / PERCENT
+        return 1.0
 
     def region_key(self, entity: EntityRow) -> RegionKey:
         region = self.atlas.top_region(entity.id)
@@ -114,6 +140,7 @@ class CapacityModel:
             * (1 + engine.capacity_agriculture_pct / PERCENT * farming_share)
             * architecture
             * crowding
+            * self.water_factor(community)
         )
 
 

@@ -15,6 +15,7 @@ from aerona.db.tables.entities import (
     LanguageProfileRow,
     NetworkReviewRow,
 )
+from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.epochs import (
     DeferredStepRow,
     EpochEnginePhaseRow,
@@ -74,6 +75,7 @@ __all__ = [
     "ArmyRow",
     "BattleRow",
     "BondRow",
+    "CalendarRow",
     "CanonFactRow",
     "CaptiveRow",
     "ChronicleEntityRow",
@@ -123,6 +125,7 @@ __all__ = [
     "LedgerEntryRow",
     "LegendaryQuestRow",
     "LexemeRow",
+    "LeyLineRow",
     "MapNoteRow",
     "MapSnapshotRow",
     "MessageRow",
@@ -131,8 +134,11 @@ __all__ = [
     "NameRegistryRow",
     "NetworkReviewRow",
     "NodeRow",
+    "NotableYearRow",
     "NotificationRow",
     "OuterBargainRow",
+    "PlaceEnvironmentRow",
+    "RegionEnvironmentRow",
     "ResourceCommodityRow",
     "ResourceMechanicRow",
     "ResurrectionOrderRow",
@@ -158,4 +164,5 @@ __all__ = [
     "WorldLeakItemRow",
     "WorldMapRow",
     "WorldRow",
+    "WorldSeasonRow",
 ]

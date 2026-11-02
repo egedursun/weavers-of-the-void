@@ -6,15 +6,23 @@ from aerona.catalog.climate import CLIMATES
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import WorldSeasonRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.prompts import PromptId, render
-from aerona.prompts.contexts.blocks import AgeStar, ClimateLine, CreatorMood, EpicSummary, LawLine, WorldHeaderContext
+from aerona.prompts.contexts.blocks import AgeStar, ClimateLine, CreatorMood, EpicSummary, LawLine, SeasonLine, WorldHeaderContext
 
 
 def target_world(scope: Scope, world_id: int | None) -> WorldRow | None:
     if world_id is not None and world_id in scope.worlds:
         return scope.worlds[world_id]
     return scope.primary_world
+
+
+async def season_lines(scope: Scope, world: WorldRow | None) -> list[SeasonLine]:
+    if world is None:
+        return []
+    rows = await scope.session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == world.id).order_by(WorldSeasonRow.position))
+    return [SeasonLine(position=row.position, name=row.name, growth=row.growth, campaign=row.campaign) for row in rows]
 
 
 def climate_line(world: WorldRow | None) -> ClimateLine | None:
@@ -81,6 +89,8 @@ async def world_header_context(scope: Scope, world_id: int | None = None, short:
         doom=cosmos.doom_clock,
         doom_threshold=scope.rules.balance.apocalypse_threshold,
         climate=climate_line(world),
+        seasons=await season_lines(scope, world),
+        year_days=world.year_length_days if world is not None else None,
         age_star=await age_star(scope, world, world_id),
         laws=await laws(scope, world),
     )

@@ -11,6 +11,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.foreign_gods import OuterBargainRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.routes import RouteRow
@@ -19,6 +20,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.son import SonStatus
@@ -30,6 +32,7 @@ from aerona.engine.cosmos.leak import apply_leak, leak_cap, leak_delta, record_b
 from aerona.engine.cosmos.routes import open_alignment
 from aerona.engine.cosmos.sanity import sanity_of, shift_sanity
 from aerona.engine.cosmos.world_types import mechanics_of
+from aerona.engine.environment.book import scar_region
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.doom import doom_share
@@ -96,6 +99,18 @@ WARNINGS = (
 )
 
 
+async def tear_land(ctx: TickContext, world_id: int, before: int, after: int) -> None:
+    settings = ctx.rules.scars
+    gained = after - max(before, settings.leak_wound_threshold)
+    if gained <= 0:
+        return
+    grounds = list(await ctx.session.scalars(select(RegionEnvironmentRow).where(RegionEnvironmentRow.world_id == world_id)))
+    if not grounds:
+        return
+    torn = max(grounds, key=lambda ground: (ground.magic_density, -ground.entity_id))
+    await scar_region(ctx.session, ctx.rules, torn, ScarKind.LEAK_WOUND, round(gained * settings.leak_wound_pct / PERCENT))
+
+
 async def update_leaks(ctx: TickContext, knowledge: KnowledgeMap) -> None:
     share = await doom_share(ctx.session, ctx.rules)
     horror = ctx.rules.cosmic_horror
@@ -104,6 +119,7 @@ async def update_leaks(ctx: TickContext, knowledge: KnowledgeMap) -> None:
         record_breakdown(ctx.session, ctx.epoch, world.id, change)
         before = world.leakage
         after = apply_leak(world, change.delta, leak_cap(ctx.rules, world, ctx.epoch))
+        await tear_land(ctx, world.id, before, after)
         for field_name, text, key in WARNINGS:
             threshold = getattr(horror, field_name)
             if before < threshold <= after:
@@ -316,7 +332,6 @@ async def summon_outer_being(ctx: TickContext, world: WorldRow) -> EntityRow | N
             location_id=region.id,
             subtype="the unnamed",
             flags=(EntityFlag.NAMELESS,),
-            pending=False,
         ),
     )
     world.leakage = max(0, world.leakage - horror.outer_being_entry_leak_drop)

@@ -46,6 +46,12 @@ class WorldRow(NodeRow):
         CheckConstraint("mirror_twin_id IS NULL OR mirror_twin_id <> id", name="not_own_twin"),
         CheckConstraint("mortal_agents IS NULL OR mortal_agents >= 0", name="mortal_agents_min"),
         CheckConstraint("climate_epochs_left IS NULL OR climate_epochs_left >= 0", name="climate_epochs_left_min"),
+        CheckConstraint("axial_tilt IS NULL OR axial_tilt BETWEEN 0 AND 90", name="axial_tilt_range"),
+        CheckConstraint("season_count IS NULL OR season_count BETWEEN 1 AND 6", name="season_count_range"),
+        CheckConstraint("year_length_days IS NULL OR year_length_days >= 1", name="year_length_positive"),
+        CheckConstraint("day_length_hours IS NULL OR day_length_hours >= 1", name="day_length_positive"),
+        CheckConstraint("moon_count IS NULL OR moon_count >= 0", name="moon_count_min"),
+        CheckConstraint("tidal_strength IS NULL OR tidal_strength BETWEEN 0 AND 100", name="tidal_strength_range"),
         Index("ix_worlds_discovery", "discovery"),
     )
     __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.WORLD})
@@ -82,6 +88,12 @@ class WorldRow(NodeRow):
     climate_imposed_by_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL", use_alter=True))
     consciousness_closed: Mapped[bool] = mapped_column(default=False)
     created_epoch: Mapped[int]
+    axial_tilt: Mapped[int | None]
+    year_length_days: Mapped[int | None]
+    season_count: Mapped[int | None]
+    day_length_hours: Mapped[int | None]
+    moon_count: Mapped[int | None]
+    tidal_strength: Mapped[int | None]
 
 
 class WorldMapRow(TimestampMixin, Base):

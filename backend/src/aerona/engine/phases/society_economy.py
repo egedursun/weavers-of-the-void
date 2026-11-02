@@ -10,13 +10,13 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.economy import ResourceCommodityRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.domain.enums.war import WarCause
-from aerona.domain.enums.world import ClimateEra
 from aerona.domain.models.entity_stats import FactionStats, ItemStats
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
@@ -63,11 +63,13 @@ class EconomyWorld:
     entities: Mapping[int, EntityRow]
     atlas: RegionAtlas
     faith: FaithIndex
+    harvests: Mapping[int, int] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, session: AsyncSession) -> "EconomyWorld":
         entities = {entity.id: entity for entity in await canon(session)}
-        return cls(await CommunityBook.load(session), entities, await RegionAtlas.load(session), await FaithIndex.load(session))
+        harvests = {region_id: value for region_id, value in await session.execute(select(RegionEnvironmentRow.entity_id, RegionEnvironmentRow.harvest_pct))}
+        return cls(await CommunityBook.load(session), entities, await RegionAtlas.load(session), await FaithIndex.load(session), harvests)
 
 
 @dataclass
@@ -81,7 +83,7 @@ class EconomyCounters:
 
 @dataclass(frozen=True)
 class EconomyInputs:
-    climate: ClimateEra | None
+    harvest_pct: int
     at_war: bool
     routes: int
     pays_tribute: bool
@@ -185,10 +187,7 @@ def food_rate(settings: SocietyRules, inputs: EconomyInputs, farmer_share: float
         production *= ratio_of(knowledge, level, settings.food_agriculture_pct) if knowledge is not None else fraction(settings.food_agriculture_pct)
     if inputs.bounty_law:
         production *= fraction(settings.food_bounty_law_pct)
-    if inputs.climate is ClimateEra.DROUGHT:
-        production *= fraction(settings.food_drought_pct)
-    elif inputs.climate is ClimateEra.RAIN:
-        production *= fraction(settings.food_rain_pct)
+    production *= 1 + (inputs.harvest_pct - PERCENT) * fraction(settings.food_harvest_weight_pct) / PERCENT
     return clamp_float(production, fraction(settings.food_rate_min_pct), fraction(settings.food_rate_max_pct))
 
 
@@ -313,7 +312,7 @@ async def gather_inputs(ctx: TickContext, entity: EntityRow, world: EconomyWorld
     book = world.book
     craft = stat(entity, "craft")
     return EconomyInputs(
-        climate=book.climate(entity.world_id),
+        harvest_pct=world.harvests.get(world.atlas.top_region(entity.id) or -1, PERCENT),
         at_war=book.at_war(entity.id),
         routes=book.routes(entity.id),
         pays_tribute=book.pays_tribute(entity.id),

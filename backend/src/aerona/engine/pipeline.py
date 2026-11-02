@@ -35,6 +35,7 @@ from aerona.engine.phases import (
     disasters,
     doom,
     ecology,
+    environment,
     espionage,
     exploration,
     factions,
@@ -106,6 +107,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + births.PHASES
     + casualties.PHASES
     + ecology.PHASES
+    + environment.PHASES
     + geography.PHASES
     + life_cycles.PHASES
     + institutions.PHASES
@@ -176,9 +178,10 @@ def stage(*names: str) -> tuple[Phase, ...]:
     return tuple(PHASE_REGISTRY[name] for name in names)
 
 
-CLEANUP_STAGE = stage("dead_bonds_opening", "modifier_upkeep", "world_maps", "expire_truces", "language_and_faith")
+CLEANUP_STAGE = stage("dead_bonds_opening", "modifier_upkeep", "world_maps", "environment_survey", "expire_truces", "language_and_faith")
 GRUDGE_STAGE = stage("divine_grudges")
 SUB_ENGINE_STAGE = stage(
+    "harvest",
     "diplomacy",
     "war_upkeep",
     "tribute",
@@ -253,6 +256,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "life_seed",
     "writing_systems",
     "knowledge_levels",
+    "calendars",
     "living_stats",
     "belief_and_memory",
     "espionage",
@@ -260,6 +264,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "dark_ages",
     "ruins",
     "settlement_cycles",
+    "land_use",
     "institution_cycles",
     "culture_cycles",
     "remembrance",
@@ -271,7 +276,7 @@ TICK_ORDER: tuple[Phase, ...] = (
 )
 
 PRE_TRANSITION_ORDER = stage("local_gods")
-GROWTH_STAGE = stage("law_fertility", "population_baseline", "climate_transition", "population_growth", "epoch_stars")
+GROWTH_STAGE = stage("law_fertility", "population_baseline", "climate_transition", "environment_derive", "ley_lines", "population_growth", "epoch_stars")
 GODS_STAGE = stage("sons_renewal", "gods_fate", "works_remember_gods", "domain_rivalry", "rebel_theft")
 CLOSING_STAGE = stage("doom_clock", "creator_essence", "epoch_statistics", "advance_epoch")
 

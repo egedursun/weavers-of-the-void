@@ -57,6 +57,8 @@ class SonToolId(StrEnum):
     DESTROY = "destroy"
     BIRTH_CHILD = "birth_child"
     MOVE_TO_WORLD = "move_to_world"
+    REORDER_SEASONS = "reorder_seasons"
+    SEVER_LEY = "sever_ley"
     DECLARE_HOLY_WORLD = "declare_holy_world"
     SEAL_GATE = "seal_gate"
     REKINDLE_STAR = "rekindle_star"

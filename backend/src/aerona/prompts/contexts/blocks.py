@@ -31,6 +31,13 @@ class ClimateLine(ContextItem):
     description: str
 
 
+class SeasonLine(ContextItem):
+    position: int
+    name: str
+    growth: int
+    campaign: int
+
+
 class AgeStar(ContextItem):
     id: int
     name: str
@@ -65,6 +72,8 @@ class WorldHeaderContext(RulesContext):
     doom: int = 0
     doom_threshold: int
     climate: ClimateLine | None = None
+    seasons: list[SeasonLine] = Field(default_factory=list)
+    year_days: int | None = None
     age_star: AgeStar | None = None
     laws: list[LawLine] = Field(default_factory=list)
 
@@ -290,6 +299,15 @@ class RegionGeography(ContextItem):
     size_label: str
     terrain: list[str] = Field(default_factory=list)
     neighbours: list[NamedRecord] = Field(default_factory=list)
+    land: str | None = None
+    soil: str | None = None
+    climate: str | None = None
+    river: str | None = None
+    scars: list[str] = Field(default_factory=list)
+    harvest: str | None = None
+    ley: list[NamedRecord] = Field(default_factory=list)
+    use: str | None = None
+    nexus: str | None = None
 
 
 class GeographyLinesContext(PromptContext):

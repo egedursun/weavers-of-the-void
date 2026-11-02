@@ -2,9 +2,11 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.environment import MovementMode
 from aerona.domain.enums.society import Commodity
 from aerona.domain.models.entity_stats import SettlementStats
 from aerona.engine.context import TickContext
+from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.settlements import resettle_ruin
@@ -28,20 +30,29 @@ async def is_hungry(ctx: TickContext, community: EntityRow) -> bool:
     return food < effects.hungry_food or (prosperity if prosperity is not None else effects.unknown_prosperity) < effects.famine_prosperity
 
 
-async def greener_region(ctx: TickContext, atlas: RegionAtlas, region: EntityRow) -> EntityRow | None:
+def walkable(ground: EnvironmentBook | None, region_id: int) -> int:
+    env = ground.regions.get(region_id) if ground is not None else None
+    return env.passability.get(MovementMode.ON_FOOT.value, PERCENT) if env is not None else PERCENT
+
+
+async def greener_region(ctx: TickContext, atlas: RegionAtlas, region: EntityRow, ground: EnvironmentBook | None = None) -> EntityRow | None:
     effects = ctx.rules.world_effects
     own = stat(region, "fertility")
     floor = (own if own is not None else effects.unknown_fertility) + effects.famine_fertility_margin
-    best: EntityRow | None = None
+    best: tuple[float, EntityRow] | None = None
     for neighbour_id in atlas.neighbour_regions(region.id):
         neighbour = await living_entity(ctx.session, neighbour_id)
         if neighbour is None or neighbour.entity_type is not EntityType.REGION or neighbour.world_id != region.world_id or atlas.is_water(neighbour.id):
             continue
+        passable = walkable(ground, neighbour.id)
+        if passable < ctx.rules.world_effects.migration_passable_min:
+            continue
         fertility = stat(neighbour, "fertility")
         value = fertility if fertility is not None else effects.unknown_fertility
-        if value > floor and (best is None or value > (stat(best, "fertility") or effects.unknown_fertility)):
-            best = neighbour
-    return best
+        appeal = value * (PERCENT + passable) / (2 * PERCENT)
+        if value > floor and (best is None or appeal > best[0]):
+            best = (appeal, neighbour)
+    return best[1] if best is not None else None
 
 
 async def migrate(ctx: TickContext, atlas: RegionAtlas, source: EntityRow, target: EntityRow, *, migrants: int, reason: str) -> tuple[EntityRow, bool]:
@@ -80,6 +91,7 @@ async def famine_migration(ctx: TickContext) -> None:
     effects = rules.world_effects
     rng = ctx.rng()
     atlas = await RegionAtlas.load(ctx.session)
+    ground = await EnvironmentBook.load(ctx.session, rules, ctx.epoch, atlas)
     moved = 0
     for community in await canon(ctx.session, [EntityType.SETTLEMENT, EntityType.PEOPLE]):
         if moved >= effects.famine_migration_cap:
@@ -90,10 +102,15 @@ async def famine_migration(ctx: TickContext) -> None:
         if not await is_hungry(ctx, community) or not rng.chance(rules.world_engine.famine_migration_chance):
             continue
         region = await living_entity(ctx.session, atlas.top_region(community.id))
-        target = await greener_region(ctx, atlas, region) if region is not None else None
+        target = await greener_region(ctx, atlas, region, ground) if region is not None else None
         if target is None:
             continue
-        migrants = round_half_up(population * rules.deep_world.famine_migration_share_pct / PERCENT)
+        leaving = round_half_up(population * rules.deep_world.famine_migration_share_pct / PERCENT)
+        lost = round_half_up(leaving * (PERCENT - walkable(ground, target.id)) * effects.migration_road_loss_pct / PERCENT / PERCENT)
+        migrants = max(1, leaving - lost)
+        if lost:
+            floor, cap = headcount_bounds(rules, community)
+            set_stats(community, population=max(floor, min(cap, population - lost)))
         settlement, rebuilt = await migrate(ctx, atlas, community, target, migrants=migrants, reason="famine")
         moved += 1
         if rebuilt:

@@ -21,3 +21,4 @@ class TradeRules:
     shared_currency_prosperity: int = rule(2, 0, 100, RuleGroup.ECONOMY, "Per-epoch prosperity gain of trade partners using a shared currency")
     coinage_chance: int = rule(25, 0, 100, RuleGroup.ECONOMY, "A wealthy community mints coins (%)")
     currency_adopt_chance: int = rule(30, 0, 100, RuleGroup.ECONOMY, "A trade partner adopts the currency (%)")
+    route_ease_floor_pct: int = rule(40, 0, 100, RuleGroup.ECONOMY, "Share of trade income kept on the hardest road (%)")

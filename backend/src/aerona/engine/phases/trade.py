@@ -11,10 +11,12 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.environment import MovementMode
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.context import TickContext
+from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -25,25 +27,50 @@ from aerona.engine.primitives.queries import BondIndex, canon
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.services.war import declare_war
+from aerona.rules.registry import Rules
 
 TRADER_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.FACTION, EntityType.PEOPLE})
 MINTER_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.FACTION})
 CURRENCY_SUBTYPE = "currency"
 
 
-def route_income(ctx: TickContext, entities: Mapping[int, EntityRow], bonds: BondIndex, knowledge: KnowledgeMap) -> dict[int, tuple[float, float]]:
+TRADE_MODES = (MovementMode.ON_FOOT, MovementMode.WHEELED, MovementMode.BOAT)
+
+
+def route_ease(rules: Rules, ground: EnvironmentBook | None, first: int, second: int) -> float:
+    if ground is None:
+        return 1.0
+    eases: list[float] = []
+    for endpoint in (first, second):
+        region = ground.region_of(endpoint)
+        if region is None:
+            continue
+        passable = max(region.passability.get(mode.value, PERCENT) for mode in TRADE_MODES)
+        seasons = ground.seasons_of(region.world_id)
+        travel = sum(season.travel for season in seasons) / len(seasons) if seasons else PERCENT
+        eases.append(passable * travel / PERCENT / PERCENT)
+    if not eases:
+        return 1.0
+    floor = rules.trade.route_ease_floor_pct / PERCENT
+    return floor + (1 - floor) * sum(eases) / len(eases)
+
+
+def route_income(
+    ctx: TickContext, entities: Mapping[int, EntityRow], bonds: BondIndex, knowledge: KnowledgeMap, ground: EnvironmentBook | None = None
+) -> dict[int, tuple[float, float]]:
     settings = ctx.rules.trade
     prosperity: dict[int, float] = defaultdict(float)
     wealth: dict[int, float] = defaultdict(float)
     for bond in bonds.bonds:
         if bond.kind is not BondKind.TRADES_WITH or not bond.active:
             continue
+        ease = route_ease(ctx.rules, ground, bond.source_node_id, bond.target_node_id)
         for endpoint in (bond.source_node_id, bond.target_node_id):
             if endpoint not in entities:
                 continue
-            multiplier = knowledge.times(ctx.rules, endpoint, KnowledgeBranch.TRADE, settings.knowledge_mult)
+            multiplier = knowledge.times(ctx.rules, endpoint, KnowledgeBranch.TRADE, settings.knowledge_mult) * ease
             prosperity[endpoint] += settings.route_prosperity * multiplier
-            wealth[endpoint] += settings.route_wealth
+            wealth[endpoint] += settings.route_wealth * ease
     return {entity_id: (prosperity[entity_id], wealth[entity_id]) for entity_id in prosperity}
 
 
@@ -52,7 +79,8 @@ async def trade_income(ctx: TickContext) -> None:
     entities = {entity.id: entity for entity in await canon(ctx.session)}
     bonds = await BondIndex.load(ctx.session, [BondKind.TRADES_WITH])
     knowledge = await KnowledgeMap.load(ctx.session)
-    for entity_id, (prosperity, wealth) in route_income(ctx, entities, bonds, knowledge).items():
+    ground = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch)
+    for entity_id, (prosperity, wealth) in route_income(ctx, entities, bonds, knowledge, ground).items():
         entity = entities[entity_id]
         add_prosperity(ctx.rules, entity, min(prosperity, settings.prosperity_cap))
         current = stat(entity, "wealth")

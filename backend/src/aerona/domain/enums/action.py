@@ -143,6 +143,8 @@ class ActionKind(StrEnum):
     SIBLING_SCHEME = "sibling_scheme"
     SCATTER_BONES = "scatter_bones"
     MOVE_TO_WORLD = "move_to_world"
+    REORDER_SEASONS = "reorder_seasons"
+    SEVER_LEY = "sever_ley"
     FOREIGN_GOD_TALK = "foreign_god_talk"
     WRITE_PLAN = "write_plan"
     ABANDON_SETTLEMENT = "abandon_settlement"

@@ -18,3 +18,4 @@ class GeographyRules:
     stat_shift: int = rule(15, 0, 100, G, "Shift of a born place's fertility, danger or mystery toward its nature")
     place_stat: int = rule(50, 0, 100, G, "Base fertility, danger and mystery of a place born in an empty region")
     place_stat_die: int = rule(30, 1, 100, G, "Stat swing of a place born in an empty region (plus or minus half of this)")
+    terrain_nature_weight: int = rule(2, 0, 100, G, "How many times more likely a place is to match its region's terrain")

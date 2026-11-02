@@ -24,6 +24,7 @@ from aerona.services.player import (
     diplomacy,
     divine,
     engine_control,
+    environment,
     fate_controls,
     foreign_gods,
     goals,
@@ -966,6 +967,99 @@ LIFE_CYCLE_ACTIONS = (
     _sync(Meta("place:swallow", "Let the earth swallow a place", G.WORLDS), life_cycles.swallow_place, life_cycles.PlaceTarget, end_cost_text, ()),
 )
 
+ENVIRONMENT_ACTIONS = (
+    _sync(
+        Meta("ley:sever", "Cut a ley line for some epochs", G.WORLDS),
+        environment.sever_ley_line,
+        environment.SeverLey,
+        free,
+        ("F2.6",),
+    ),
+    _sync(
+        Meta("ley:restore", "Let a cut ley line flow again", G.WORLDS),
+        environment.restore_ley_line,
+        environment.LeyTarget,
+        free,
+        ("F2.6",),
+    ),
+    _sync(
+        Meta("environment:set", "Set or hold a value of a region's environment", G.WORLDS),
+        environment.set_region_environment,
+        environment.SetRegionEnvironment,
+        free,
+        ("F2.1", "F2.4"),
+    ),
+    _sync(
+        Meta("environment:unlock", "Let a held environment value follow the world again", G.WORLDS),
+        environment.unlock_region_environment,
+        environment.UnlockRegionEnvironment,
+        free,
+        ("F2.1",),
+    ),
+    _sync(
+        Meta("environment:scar", "Scar or heal a region's land", G.WORLDS),
+        environment.set_region_scar,
+        environment.SetScar,
+        free,
+        ("F2.1",),
+    ),
+    _sync(
+        Meta("environment:mineral", "Set the richness of a mineral seam", G.WORLDS),
+        environment.set_region_mineral,
+        environment.SetMineral,
+        free,
+        ("F2.1",),
+    ),
+    _sync(
+        Meta("environment:place", "Set a place's terrain, cover, water, height or chokepoint", G.WORLDS),
+        environment.set_place_environment,
+        environment.SetPlaceEnvironment,
+        free,
+        ("F2.1",),
+    ),
+    _sync(
+        Meta("seasons:reorder", "Reorder the seasons of a world", G.WORLDS),
+        environment.reorder_world_seasons,
+        environment.ReorderSeasons,
+        free,
+        ("F2.2",),
+    ),
+    _sync(
+        Meta("seasons:edit", "Reshape one season of a world", G.WORLDS),
+        environment.edit_world_season,
+        environment.EditSeason,
+        free,
+        ("F2.2",),
+    ),
+    _sync(
+        Meta("seasons:calendar", "Set a world's axial tilt, year and day", G.WORLDS),
+        environment.set_world_calendar,
+        environment.SetWorldCalendar,
+        free,
+        ("F2.2",),
+    ),
+    _sync(
+        Meta("calendar:adopt", "Make an astronomy record keep a calendar", G.WORLDS),
+        environment.adopt_world_calendar,
+        environment.CalendarTarget,
+        free,
+        ("F2.2",),
+    ),
+    _sync(
+        Meta("calendar:drop", "Let an astronomy record stop keeping a calendar", G.WORLDS),
+        environment.drop_world_calendar,
+        environment.CalendarTarget,
+        free,
+        ("F2.2",),
+    ),
+    _sync(
+        Meta("calendar:rename", "Rename the months of a calendar", G.WORLDS),
+        environment.rename_calendar_months,
+        environment.RenameMonths,
+        free,
+        ("F2.2",),
+    ),
+)
 MECHANIC_ACTIONS = (
     _sync(Meta("lever:pin", "Pin a field so that no mechanic can change it", G.SETTINGS), levers.pin_field, levers.PinField, free, ("J.16c",)),
     _sync(Meta("lever:unpin", "Release a pinned field", G.SETTINGS), levers.unpin_field, levers.UnpinField, free, ("J.16c",)),
@@ -1020,6 +1114,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *FATE_ACTIONS,
     *LIFE_CYCLE_ACTIONS,
     *MECHANIC_ACTIONS,
+    *ENVIRONMENT_ACTIONS,
 )
 ACTIONS_BY_ID: dict[str, ActionSpec] = {spec.id: spec for spec in ACTIONS}
 

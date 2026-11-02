@@ -37,3 +37,10 @@ class DisastersRules:
     plague_spread_severity_pct: int = rule(
         60, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Severity of plague transmitted along routes (% of the original plague)"
     )
+    tide_flood_pct: int = rule(100, 0, 1000, RuleGroup.POPULATION_AND_GROWTH, "Flood chance added per point of tidal strength on the coast (%)")
+    river_flood_pct: int = rule(25, 0, 1000, RuleGroup.POPULATION_AND_GROWTH, "Flood chance added per river size class (%)")
+    erosion_flood_pct: int = rule(100, 0, 1000, RuleGroup.POPULATION_AND_GROWTH, "Flood chance added per point of erosion (%)")
+    drought_rainfall_below: int = rule(25, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Drought can occur in a region with rainfall below this")
+    disease_plague_pct: int = rule(15, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Plague chance added per point of disease load (%)")
+    plague_scar_pct: int = rule(50, 0, 200, RuleGroup.POPULATION_AND_GROWTH, "Plague ground left per point of plague severity (%)")
+    quake_crater_pct: int = rule(15, 0, 200, RuleGroup.POPULATION_AND_GROWTH, "Crater left per point of earthquake severity (%)")

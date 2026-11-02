@@ -37,6 +37,7 @@ class ChronicleDraft:
     cause_incident_id: int | None = None
     place_entity_id: int | None = None
     magnitude: int = 0
+    year: int | None = None
 
 
 @dataclass(frozen=True)
@@ -69,7 +70,13 @@ class ChronicleRepository(Repository):
             raise ValidationFailedError("A chronicle line cannot be empty.")
         entity_ids = list(dict.fromkeys(entity_id for entity_id in draft.entity_ids if entity_id > 0))
         world_id = draft.world_id if draft.world_id is not None else await self._derive_world(entity_ids, draft.son_id)
-        year = await self._stamp_year(draft.epoch, clock) if clock is not None else None
+        year = (
+            await self._exact_year(draft.epoch, draft.year)
+            if draft.year is not None
+            else await self._stamp_year(draft.epoch, clock)
+            if clock is not None
+            else None
+        )
         row = ChronicleRow(
             epoch=draft.epoch,
             year=year,
@@ -138,6 +145,14 @@ class ChronicleRepository(Repository):
     async def last_year(self, epoch: int) -> int | None:
         cursor = await self.session.get(EpochYearCursorRow, epoch)
         return cursor.last_year if cursor is not None else None
+
+    async def _exact_year(self, epoch: int, year: int) -> int:
+        cursor = await self.session.get(EpochYearCursorRow, epoch)
+        if cursor is None:
+            self.session.add(EpochYearCursorRow(epoch=epoch, last_year=year))
+        elif year > cursor.last_year:
+            cursor.last_year = year
+        return year
 
     async def _stamp_year(self, epoch: int, clock: ChronicleClock) -> int:
         cursor = await self.session.get(EpochYearCursorRow, epoch)

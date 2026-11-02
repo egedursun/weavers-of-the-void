@@ -7,11 +7,13 @@ from aerona.db.tables.climate import ClimateOrderRow
 from aerona.db.tables.entities import EntityFlagRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.environment import RiverClass
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
-from aerona.domain.enums.world import ClimateEra
+from aerona.domain.enums.world import ClimateEra, WorldType
 from aerona.domain.models.entity_stats import CultStats, PlaceStats, StructureStats
-from aerona.engine.phases.climate import climate_of, climate_transition, drifted_fertility, impose_climate, law_fertility, regional_change
+from aerona.engine.environment.profile import Geography, Surroundings, rainfall_of, temperature_of
+from aerona.engine.phases.climate import climate_of, climate_transition, impose_climate, law_fertility
 from aerona.engine.phases.disasters import apply_disaster, joined_names, natural_disasters, record_disaster_event, send_disaster
 from aerona.engine.phases.society_economy import set_stores
 from aerona.engine.primitives.stats import stat
@@ -36,13 +38,26 @@ from tests.engine.society.factories import (
 RULES = Rules()
 
 
-def test_regional_change_and_equilibrium() -> None:
+GEOGRAPHY = Geography(
+    biome_mix=[0] * 10, elevation_mean=20, roughness=20, latitude=30, moisture=50, base_forest=20, base_wetland=10, river_class=RiverClass.NONE
+)
+
+
+def around(era: ClimateEra | None, *, coastal: bool = False, highland: bool = False) -> Surroundings:
+    return Surroundings(world_type=WorldType.ORDINARY, era=era, coastal=coastal, highland=highland)
+
+
+def test_climate_ages_shift_temperature_and_rainfall() -> None:
     settings = RULES.climate_effects
-    assert regional_change(RULES, ClimateEra.RAIN, True, None) == settings.rain_age_fertility + settings.coast_rain_bonus
-    assert regional_change(RULES, ClimateEra.ICE_AGE, False, ElevationClass.MOUNTAINOUS) == settings.ice_age_fertility - settings.mountain_ice_loss
-    assert regional_change(RULES, ClimateEra.DROUGHT, True, None) == round(settings.drought_century_fertility / settings.coast_drought_divisor)
-    assert drifted_fertility(RULES, 10, 0) > 10
-    assert drifted_fertility(RULES, 90, 0) < 90
+    calm = rainfall_of(RULES, GEOGRAPHY, around(None))
+    assert rainfall_of(RULES, GEOGRAPHY, around(ClimateEra.DROUGHT)) == calm + settings.drought_century_rain
+    coastal = rainfall_of(RULES, GEOGRAPHY, around(None, coastal=True))
+    assert rainfall_of(RULES, GEOGRAPHY, around(ClimateEra.RAIN, coastal=True)) == min(100, coastal + settings.rain_age_rain + settings.coast_rain_bonus)
+    assert rainfall_of(RULES, GEOGRAPHY, around(ClimateEra.DROUGHT, coastal=True)) == coastal + round(
+        settings.drought_century_rain / settings.coast_drought_divisor
+    )
+    warm = temperature_of(RULES, GEOGRAPHY, around(None, highland=True))
+    assert temperature_of(RULES, GEOGRAPHY, around(ClimateEra.ICE_AGE, highland=True)) == warm + settings.ice_age_temperature - settings.mountain_ice_loss
 
 
 def test_names_join_in_english() -> None:

@@ -19,11 +19,13 @@ from aerona.db.repositories.names import NameRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import LeyLineRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, PendingJobKind, TurnCounter
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodPowerEffect, ForeignGodStatus
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
@@ -33,6 +35,7 @@ from aerona.engine.cosmos.actions import bargain_with_outer, seal_gate
 from aerona.engine.cosmos.foreign_gods import powers_of, stat_effect
 from aerona.engine.cosmos.stars import EXTINGUISHED_STAR_TYPES, extinguish_star, hang_star, rekindle_star
 from aerona.engine.cosmos.worlds import declare_holy_world
+from aerona.engine.environment.control import reorder_seasons, sever_ley, world_seasons
 from aerona.engine.phases.afterlife import soul_bind
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import CommonResult, SonResult, result
@@ -46,6 +49,7 @@ from aerona.tools.son.support import ensure_in_reach, grant, require_essence, sh
 from aerona.tools.son.war import known_god
 
 PERCENT = 100
+SEASON_DOMAINS = frozenset({Domain.SKY, Domain.STORM, Domain.TIME, Domain.SUN, Domain.MOON, Domain.HARVEST, Domain.ICE, Domain.PLANTS})
 INHABITANTS = (EntityType.PEOPLE, EntityType.SETTLEMENT)
 BINDABLE = frozenset({EntityType.ITEM, EntityType.VESSEL, EntityType.STRUCTURE})
 
@@ -54,6 +58,16 @@ class TalkIntent(StrEnum):
     ALLIANCE = "alliance"
     THREAT = "threat"
     BARGAIN = "bargain"
+
+
+class SeverLeyInput(ToolInput):
+    line_id: int
+    reason: Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
+
+
+class ReorderSeasonsInput(ToolInput):
+    world_id: int
+    order: list[int] = Field(min_length=1)
 
 
 class WorldInput(ToolInput):
@@ -139,6 +153,48 @@ async def move_to_world(call: SonCall, args: WorldInput) -> str:
     call.target(target.id)
     await call.chronicle(ChronicleKind.COSMIC, lines.MOVE, world_id=target.id, son=call.son.name, old=current.name if current else "", new=target.name)
     return result(SonResult.MOVED, name=target.name)
+
+
+async def sever_ley_line(call: SonCall, args: SeverLeyInput) -> str:
+    line = await call.session.get(LeyLineRow, args.line_id)
+    if line is None:
+        fail(SonResult.NO_SUCH_LEY, id=args.line_id)
+    if call.world_id != line.world_id and not await call.reachable_world(line.world_id):
+        fail(SonResult.LEY_OUT_OF_REACH)
+    cost = call.rules.son_tools.sever_ley_essence
+    require_essence(call, cost)
+    first, second = await call.session.get(EntityRow, line.region_a_id), await call.session.get(EntityRow, line.region_b_id)
+    epochs = call.rules.environment.sever_ley_epochs
+    call.target(line.region_a_id)
+    await sever_ley(call.session, line.id, until_epoch=call.tick.epoch + epochs - 1, son_id=call.son.id)
+    call.spend_essence(cost)
+    names = (first.name if first is not None else "", second.name if second is not None else "")
+    ids = [line.region_a_id, line.region_b_id]
+    await call.chronicle(
+        ChronicleKind.COSMIC, lines.SEVER_LEY, entity_ids=ids, world_id=line.world_id, son=call.son.name, first=names[0], second=names[1], reason=args.reason
+    )
+    return result(SonResult.LEY_SEVERED, first=names[0], second=names[1], epochs=epochs)
+
+
+async def reorder_world_seasons(call: SonCall, args: ReorderSeasonsInput) -> str:
+    tools = call.rules.son_tools
+    if not {call.son.domain_primary, call.son.domain_secondary} & SEASON_DOMAINS:
+        fail(SonResult.SEASONS_NOT_YOURS)
+    await call.within_limit(TurnCounter.SEASON_ORDER, tools.reorder_seasons_per_epoch, "son_tools.reorder_seasons_per_epoch", SonResult.SEASONS_LIMIT)
+    world = await _world(call, args.world_id)
+    if call.world_id != world.id and not await call.reachable_world(world.id):
+        fail(SonResult.SEASONS_OUT_OF_REACH, name=world.name)
+    require_essence(call, tools.reorder_seasons_essence)
+    current = await world_seasons(call.session, world.id)
+    if sorted(args.order) != [season.position for season in current]:
+        fail(SonResult.SEASONS_INVALID, name=world.name, seasons=", ".join(f"{season.position}: {season.name}" for season in current))
+    call.target(world.id)
+    seasons = await reorder_seasons(call.session, world.id, args.order)
+    order = ", ".join(season.name for season in seasons)
+    call.spend_essence(tools.reorder_seasons_essence)
+    await call.bump(TurnCounter.SEASON_ORDER)
+    await call.chronicle(ChronicleKind.COSMIC, lines.REORDER_SEASONS, world_id=world.id, son=call.son.name, world=world.name, order=order)
+    return result(SonResult.SEASONS_REORDERED, name=world.name, order=order)
 
 
 async def declare_holy(call: SonCall, args: WorldInput) -> str:
@@ -357,6 +413,30 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
     star_gate = gate(Gate.HANG_EXTINGUISH_STAR)
     return [
         ToolSpec(SonToolId.MOVE_TO_WORLD, son, WorldInput, ToolMeta(ActionKind.MOVE_TO_WORLD, no_cost), move_to_world),
+        ToolSpec(
+            SonToolId.SEVER_LEY,
+            son,
+            SeverLeyInput,
+            ToolMeta(
+                ActionKind.SEVER_LEY,
+                son_standard_action,
+                essence_cost=lambda rules: rules.son_tools.sever_ley_essence,
+                rarity_gate=gate(Gate.RARE_TOOLS),
+            ),
+            sever_ley_line,
+        ),
+        ToolSpec(
+            SonToolId.REORDER_SEASONS,
+            son,
+            ReorderSeasonsInput,
+            ToolMeta(
+                ActionKind.REORDER_SEASONS,
+                lambda rules: rules.son_tools.reorder_seasons_ap,
+                essence_cost=lambda rules: rules.son_tools.reorder_seasons_essence,
+                rarity_gate=gate(Gate.RARE_TOOLS),
+            ),
+            reorder_world_seasons,
+        ),
         ToolSpec(SonToolId.DECLARE_HOLY_WORLD, son, WorldInput, ToolMeta(ActionKind.HOLY_WORLD, no_cost, rarity_gate=gate(Gate.HOLY_WORLD)), declare_holy),
         ToolSpec(
             SonToolId.SEAL_GATE,

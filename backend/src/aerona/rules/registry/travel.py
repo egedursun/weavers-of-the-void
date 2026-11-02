@@ -116,3 +116,4 @@ class TravelRules:
     subjugation_defense_divisor: int = rule(200, 1, 10000, RuleGroup.COSMOS_AND_TRAVEL, "Natives' defense divided by this lowers the submission chance")
     pilgrimage_piety: int = rule(8, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Piety gained by a community whose pilgrims reach their holy site")
     pilgrimage_renown: int = rule(3, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Renown a pilgrimage brings to the community's patron son")
+    wind_risk_pct: int = rule(15, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Journey danger added per point of wind at departure (%)")

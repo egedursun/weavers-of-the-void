@@ -40,6 +40,7 @@ class Verdict(StrEnum):
 
 
 class TurnCounter(StrEnum):
+    SEASON_ORDER = "season_order"
     SIBLING_MESSAGES = "sibling_messages"
     NARRATIVE_BONDS = "narrative_bonds"
     PRAYERS = "prayers"

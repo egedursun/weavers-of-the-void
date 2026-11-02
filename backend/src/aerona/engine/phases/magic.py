@@ -5,6 +5,7 @@ from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, Ent
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
+from aerona.engine.environment.ley import LeyWeb
 from aerona.engine.gods.interventions import apply_abundance
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -25,11 +26,15 @@ async def magic_storms(ctx: TickContext) -> None:
     engine = rules.world_engine
     rng = ctx.rng()
     atlas = await RegionAtlas.load(ctx.session)
+    web = await LeyWeb.load(ctx.session)
     charged = await canon(ctx.session, [EntityType.RESOURCE, EntityType.ITEM])
-    for region in await canon(ctx.session, [EntityType.REGION]):
-        if (stat(region, "magic") or 0) < effects.magic_storm_min_magic or not rng.chance(engine.magic_storm_chance):
+    regions = {region.id: region for region in await canon(ctx.session, [EntityType.REGION])}
+    for region in regions.values():
+        chance = engine.magic_storm_chance * (rules.environment.ley_storm_pct / PERCENT if web.on_line(region.id) else 1)
+        if (stat(region, "magic") or 0) < effects.magic_storm_min_magic or not rng.chance(chance):
             continue
-        touched = [entity for entity in charged if atlas.top_region(entity.id) == region.id]
+        reached = [region.id] + [other for other in web.partners(region.id) if rng.chance(rules.environment.ley_storm_spread_pct)]
+        touched = [entity for entity in charged if atlas.top_region(entity.id) in reached]
         for entity in touched:
             set_stats(entity, might=clamp_int((stat(entity, "might") or 0) + effects.magic_storm_might_gain, 0, PERCENT))
             if rng.chance(engine.magic_storm_curse_chance):
@@ -49,11 +54,13 @@ async def magic_storms(ctx: TickContext) -> None:
                 engine_kind=EngineKind.MAGIC_STORM,
             ),
         )
+        along = [regions[other].name for other in reached[1:] if other in regions]
+        spread = f" It ran down the ley lines into {', '.join(along)}." if along else ""
         await note(
             ctx,
-            f"A magic storm broke out in {region.name}; {len(touched)} resources and items grew stronger.",
+            f"A magic storm broke out in {region.name}; {len(touched)} resources and items grew stronger.{spread}",
             key="magic.storm",
-            ids=[region.id, event.id],
+            ids=[region.id, event.id, *reached[1:]],
         )
 
 
@@ -83,6 +90,8 @@ async def wizards(ctx: TickContext) -> None:
     rules = ctx.rules
     rng = ctx.rng()
     knowledge = await KnowledgeMap.load(ctx.session)
+    web = await LeyWeb.load(ctx.session)
+    atlas = await RegionAtlas.load(ctx.session)
     for mortal in await canon(ctx.session, [EntityType.MORTAL]):
         if mortal.status is not EntityStatus.CANON or (stat(mortal, "intellect") or 0) < rules.world_effects.sorcerer_min_intellect:
             continue
@@ -91,7 +100,8 @@ async def wizards(ctx: TickContext) -> None:
         if not await has_flag(ctx.session, mortal.id, EntityFlag.WIZARD):
             await add_flag(ctx.session, mortal.id, EntityFlag.WIZARD, ctx.epoch)
             await note(ctx, f"{mortal.name} deciphered the language of magic; now a wizard.", key="magic.wizard", ids=[mortal.id])
-        if not rng.chance(rules.world_engine.sorcerer_act_chance):
+        ley = rules.environment.ley_wizard_pct / PERCENT if web.on_line(atlas.top_region(mortal.id)) else 1
+        if not rng.chance(rules.world_engine.sorcerer_act_chance * ley):
             continue
         home = await living_entity(ctx.session, mortal.location_id)
         enemy = await first_enemy(ctx, home.id) if home is not None else None

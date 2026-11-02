@@ -156,7 +156,7 @@ async def test_a_disabled_phase_is_skipped(database: Database) -> None:
     rules = Rules()
     rules = replace(rules, engine_phases=replace(rules.engine_phases, language_and_faith=0, divine_grudges=0))
     environment = await current_environment(database, rules=rules)
-    result = await run_tick(environment, database, phases=TICK_ORDER[:5])
+    result = await run_tick(environment, database, phases=TICK_ORDER[:6])
     assert "language_and_faith" not in result.stats.phase_seconds
     assert result.stats.counters["language_and_faith.disabled"] == 1
     assert "dead_bonds_opening" in result.stats.phase_seconds

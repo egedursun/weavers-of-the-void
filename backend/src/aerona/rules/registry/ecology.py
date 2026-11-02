@@ -29,3 +29,5 @@ class EcologyRules:
     last_herd: int = rule(1, 0, 100, G, "Abundance a species clings to when the extinction cap is full or it is protected")
     rewind_abundance: int = rule(20, 0, 100, G, "Abundance a time-rewinding species returns with in the epoch it would die out")
     warning_cap: int = rule(3, 0, 100, G, "Most endangered-species warnings written to the chronicle per epoch")
+    wildness_pivot: int = rule(40, 0, 100, RuleGroup.CREATURES, "Wild land (forest and wetland less clearing) at which wild species hold their usual numbers")
+    capacity_wildness_pct: int = rule(30, 0, 200, RuleGroup.CREATURES, "Carrying capacity gained per point of wild land above the pivot (%)")
