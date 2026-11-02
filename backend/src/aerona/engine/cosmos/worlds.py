@@ -16,10 +16,9 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.son import SonStatus
-from aerona.domain.enums.world import Discovery, WorldType
+from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, Discovery, WorldType
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import JourneyView, RouteBook, RouteStatus, SkyCalendar, journey_views
-from aerona.engine.cosmos.stars import EXTINGUISHED_STAR_TYPES
 from aerona.engine.cosmos.world_types import is_mirror
 from aerona.engine.primitives.physics import WorldPhysics, world_physics
 from aerona.rules.registry import Rules
@@ -224,20 +223,22 @@ async def cosmos_overview(session: AsyncSession, rules: Rules, epoch: int) -> Co
     for son in await SonRepository(session).living():
         if son.current_world_id is not None:
             sons_by_world[son.current_world_id].append(son.id)
+    star_rows = list(await session.scalars(select(StarRow).order_by(StarRow.id)))
+    stars = {star.id: star for star in star_rows}
     worlds = [
         WorldSummary(
             world,
             WORLD_TYPES[world.world_type].label,
             counts.get(world.id, WorldCounts()),
             tuple(sons_by_world.get(world.id, [])),
-            world_physics(rules, world),
+            world_physics(rules, world, stars.get(world.star_id) if world.star_id is not None else None),
         )
         for world in await WorldRepository(session).all_worlds()
     ]
     land = select(EntityRow).where(EntityRow.status == EntityStatus.CANON, EntityRow.entity_type.in_([EntityType.REGION, EntityType.PLACE]))
     communities = select(EntityRow).where(EntityRow.status == EntityStatus.CANON, EntityRow.entity_type.in_([*COMMUNITY_TYPES, EntityType.MORTAL]))
     return CosmosOverview(
-        stars=list(await session.scalars(select(StarRow).order_by(StarRow.id))),
+        stars=star_rows,
         worlds=worlds,
         region_targets=list(await session.scalars(land.order_by(EntityRow.name))),
         community_targets=list(await session.scalars(communities.order_by(EntityRow.name))),

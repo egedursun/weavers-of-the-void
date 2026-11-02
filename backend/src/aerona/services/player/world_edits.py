@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.cartography.terrain import default_terrain
+from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.names import NameRepository, normalize_name
@@ -10,6 +11,7 @@ from aerona.db.tables.routes import RouteRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.world import Atmosphere, Discovery, Gravity, WorldType
+from aerona.engine.cosmos.world_types import mechanics_of
 from aerona.engine.cosmos.worlds import forget_world, set_mirror_twin
 from aerona.engine.primitives.renames import rewrite_name
 from aerona.services.player import guards
@@ -88,7 +90,14 @@ def _physics(scope: PlayerScope, world: WorldRow, command: EditWorld, notes: lis
         world.terrain_sea = (terrain.sea_pct or 0) / PERCENT
         world.terrain_mountains = (terrain.mountains_pct or 0) / PERCENT
         world.terrain_humidity = max(-1.0, min(1.0, (terrain.moisture_pct or 0) / PERCENT))
-        notes.append(f"it became a {command.world_type.value.replace('_', ' ')} world")
+        notes.append(f"it became a {WORLD_TYPES[command.world_type].label.lower()}")
+        mechanics = mechanics_of(command.world_type)
+        if mechanics.forced_gravity is not None and command.gravity is None:
+            world.gravity = mechanics.forced_gravity
+            notes.append(f"its nature set gravity {mechanics.forced_gravity.value}")
+        if mechanics.forced_atmosphere is not None and command.atmosphere is None:
+            world.atmosphere = mechanics.forced_atmosphere
+            notes.append(f"its nature set atmosphere {mechanics.forced_atmosphere.value}")
     _terrain(world, command, notes)
     if command.gravity is not None:
         world.gravity = command.gravity

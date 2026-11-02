@@ -16,7 +16,7 @@ Status: **proposal, not implemented.** This document is the design that precedes
 
 - entity completeness (every type's lifecycle and roles);
 - stock and flow balance;
-- applicability to all 18 world types and to twelve non-human biologies (F45, F46);
+- applicability to every world type (34 since 14-cosmos-types.md) and to twelve non-human biologies (F45, F46);
 - architecture compliance: levers, UI, LLM exposure, templates, Fate checks and backfill for every mechanic, enforced by a CI compliance test (J.16);
 - a final Dewey Decimal sweep.
 
@@ -1239,7 +1239,7 @@ The domain sweeps of passes 5–6 converged: no standard classification produced
 |---|---|---|
 | A1 Entity completeness | does every entity type have creation, change, end, agency, memory, economic, conflict, faith and environmental roles, plus player levers and a UI? | a topic can be covered while one entity in it lacks a lifecycle stage |
 | A2 Stock and flow | does every accumulating quantity have both a source and a sink? | missing sinks cause runaway growth, and missing sources cause dead stocks |
-| A3 Applicability | does every mechanic say what it does on each of the 18 world types and for non-human biologies? | mechanics written for an ordinary world silently break on a gas giant or for an incorporeal people |
+| A3 Applicability | does every mechanic say what it does on each world type (34 since 14-cosmos-types.md) and for non-human biologies? | mechanics written for an ordinary world silently break on a gas giant or for an incorporeal people |
 | A4 Architecture compliance | does every mechanic satisfy architecture rule 6 (automatic, player override, UI) and decisions 21, 26, 41, 68 and 71 (typed tools, prompts in `prompts/`, Fate review, rule snapshots, English templates with localisation)? | the first passes specified mechanics but not always their levers, surfaces and narrative templates |
 | A5 Universal knowledge | does the Dewey Decimal Classification (100 divisions, the most-used universal classification of knowledge) expose any topic not yet covered? | the last domain check, from a library rather than a science |
 
@@ -1334,7 +1334,7 @@ All countable or accumulating quantities were listed with their sources and sink
 
 ### 1R.28 A3: applicability audit
 
-**World types.** Of the 18 world types in `domain/enums/world.py`, only the ordinary world was implicitly assumed by passes 1–6. The ringed and tidally locked types were partially handled (ring shadows, the terminator). The other 17 need explicit rules for every foundation family (regions, light, seasons and weather, food, materials, fire and water, disease and body, war, travel, settlement). → **F45**.
+**World types.** Of the 18 world types in `domain/enums/world.py`, only the ordinary world was implicitly assumed by passes 1–6. The ringed and tidally locked types were partially handled (ring shadows, the terminator). The other 17 need explicit rules for every foundation family (regions, light, seasons and weather, food, materials, fire and water, disease and body, war, travel, settlement). → **F45**. Spec 14 (14-cosmos-types.md) later added 16 world types, including the moon archetypes; their F45 rows are in the table below.
 
 **Biologies.** Peoples and species are not all humanoid, terrestrial and mortal. Twelve biological variants need explicit rules for bodies and harm, sustenance, reproduction, technology and culture, war, disease and death:
 
@@ -2775,6 +2775,22 @@ Every foundation reads the world type through one **world-type profile** (`world
 | god's palace | divine terraces, halls and gardens (existing geometry) | seasons and weather follow the resident god's mood and scales (F31) | servants are fed by the god; divine materials | the god's dominion is absolute; mortals are servitors or guests; disease and ageing as the god permits |
 | generation ship | regions are decks and sections (existing geometry); no geology | ship cycles in place of days and seasons; "weather" is system failures (air, heat, light) | closed ecology: conservation is strict (F28), recycling is the economy, mining is salvage | ship ageing (components, 7.3 reference pass 3), mutiny as revolution, lost purpose and myth of the destination (F33), disease in a closed population |
 | corpse-world | regions are the god's body parts (existing ribs geometry); decay soils | sky of the god's fading light; seasons of decay | rich, eerie soils; bone and godflesh materials (F3); spirits are many | necromancy cheap; the dead god's will as a phenomenon; pilgrims and grave-robbers |
+| super-earth | broad plains, low worn mountains and deep seas; large regions | thick air: strong storms, mild climates | heavy bodies need more food; deep weathered soils | high gravity (forced): flight costly, armies slower, missiles short, buildings squat; tectonic quakes ×1.5 |
+| ice giant | no surface: cloud bands and pressure layers, as on a gas giant | cold perpetual storms; extreme-tilt seasons | floating ice plankton; ice and gas harvesting | as a gas giant: sky war only, floating settlements; the pressure deep as a hazard; storms ×2 |
+| hot giant | no surface: a scorched day band, a dark night band and a living twilight belt | endless day toward its star (no night battles), supersonic winds, iron rain | glowing aerial life in the twilight belt | floating settlements only in the twilight belt; fire peoples (F46); storms ×2.5 |
+| iron world | metal plains, rust fields and iron cliffs; thin soils | thin air (forced), magnetic storms (navigation errors), auroras | ore yield ×2, iron and lead layers; food is scarce | metallurgy cheap and weapons abundant; high gravity (forced) |
+| diamond world | graphite plains, tar seas, diamond mountains | soot haze; dry ages | gems abundant (wealth, trade); ash soils | the diamond trade drives the economy; tar pits as hazards |
+| greenhouse world | baked basalt plains and volcanoes; almost no water | toxic crushing air (forced), acid rain, no seasons | water and food are the binding stocks; sulfur; fertility decays each epoch | life only in high cloud cities or sealed habitats; colonies without void living fail; droughts ×2.5 |
+| dwarf world | a small cratered body of frost plains and nitrogen glaciers | almost no air (thin, forced), a long winter and a short thaw (two seasons) | ice mining; food from vents or imports; ore yield ×0.7 | low gravity (forced); air as a stock; travel by cosmic mount; no storms or floods |
+| chthonian world | molten scars and iron plains: a giant's bared core | no air (forced), endless day toward a close star, no seasons | metal and gold abundant (ore yield ×1.8); no soil | survival habitats only; fire and construct peoples (F46); quakes ×2.5 |
+| steam-ocean world | nearly all ocean with rare rock isles and steam vents | hot, humid, dense air (forced), endless rains | fisheries and kelp under steam; salt | naval war; floating towns; heat attrition; storms ×2, floods ×1.5 |
+| jungle world | rainforest and swamp from pole to pole (jungle terrain, peat soils) | heavy rains, flood seasons | plant and animal abundance; amber; a high disease load (plague ×1.5) | ambush war, slow armies, floods ×1.5 |
+| forge-world | worked land: foundries, slag rivers, open-pit terraces | a dense soot sky (forced), scorched ages | ore yield ×1.6, iron and copper; soils poisoned by soot (fertility decay) | craft economies; pollution (F24); mining quakes ×1.5 |
+| fungal world | mycelium ground and giant fungus forests | spore fog, damp rain ages | fungal food; spores that carry disease (plague ×2) and dreams | sanity erosion; dream routes as hidden routes |
+| shattered world | floating continents around the burning wound of its heart (fragment map) | low gravity (forced), debris in its sky | star metal from the heart; thin soils; ore yield ×1.3 | travel between fragments by flight or mounts; falls are lethal; route danger +8; leak +1; quakes ×2 |
+| hollow world | the inside of a shell lit by an inner sun; polar openings | endless day, no seasons, no night battles | steady growing seasons; gems | the polar openings as gates to the outside; low gravity (forced); its shell repairs leak |
+| ice-shell world | an ice crust over a hidden ocean; geysers and vent gardens | thin air (forced), cold ages | life at the vents of the ocean below; salt | under-ice (aquatic, F46) peoples; cryoquakes ×1.5 |
+| methane world | methane lakes, haze dunes, cryovolcanoes | dense cold haze (forced), methane rain | hydrocarbon life (an exotic biochemistry, 10.9) | cold-adapted or exotic peoples; methane floods ×1.5 |
 | ordinary | defaults | defaults | defaults | defaults |
 
 Each row is data: the profile's fields override foundation parameters (rules), toggle mechanics (no fire without oxygen, no soil on asteroids), and replace spatial units (cloud bands, decks, strata) while keeping the same graph-based machinery.
@@ -2874,7 +2890,7 @@ The stocks and lifecycles that A1 and A2 found unbalanced get their missing ends
 
 | World type | Prehistory kind |
 |---|---|
-| ordinary, ocean, sand, ice, lava, crystal, ringed, tidally locked, asteroid belt, gas giant | the full accelerated run |
+| ordinary, ocean, sand, ice, lava, crystal, ringed, tidally locked, asteroid belt, gas giant, super-earth, ice giant, hot giant, iron, diamond, greenhouse, dwarf, chthonian, steam-ocean, jungle, forge, fungal, shattered, hollow, ice-shell, methane | the full accelerated run |
 | living world | the full run, plus the world's own mood history (its old wounds and favours) |
 | realm of the dead | the arrival history of souls: strata formed by the dead of its source world's prehistory, old judgements, ancient ghosts and lost kings of the dead |
 | dream world | no causal prehistory. A **dreamt past** is generated from the dreams and myths of the dreamers who reach it, and it changes as they change (10.2 reference pass 3) |
@@ -6466,7 +6482,7 @@ Outer beings use F30 packages for their touch (void taint), F22 deception (whisp
 
 ### 10.1 Star
 
-**Current.** 11 types, brightness and position. The type matters only through the dark and collapsible sets.
+**Current.** 32 types (the spectral classes, giants and supergiants, remnants and fantastic stars of 14-cosmos-types.md), brightness and position. Each type has a mechanics row (brightness band, heat, capacity, collapse and flare weights, remnant, eclipse weight, leak, sanity, sail danger, instability) that the engine reads today.
 
 #### Attributes
 
@@ -7694,7 +7710,7 @@ Every earlier wave also delivers its J.16 rows (levers, UI, LLM exposure, templa
 
 **Tests:**
 
-- **World-type tests:** a seeded run on each of the 18 world types completes 20 epochs with no foundation raising an applicability error, and each exotic rule shows up in incidents. Examples: no fires on an asteroid without air, cloud-band settlements on a gas giant, mutiny on a generation ship.
+- **World-type tests:** a seeded run on each world type (all 34) completes 20 epochs with no foundation raising an applicability error, and each exotic rule shows up in incidents. Examples: no fires on an asteroid without air, cloud-band settlements on a gas giant, mutiny on a generation ship.
 - **Biology tests:** each variant's people completes 20 epochs. Examples: aquatic peoples smelt only with vents or trade; constructs need power upkeep; ageless peoples' grudges never decay.
 - **Lifecycle-end tests:** every stock in A2 reaches zero or equilibrium under no input; there is no runaway growth over 200 epochs in LLM-free runs.
 

@@ -326,8 +326,15 @@ describe('voyage card', () => {
           ? {
               ...route,
               active: false,
-              closure: 'storm',
+              closure: 'severed',
               temp_closed_until_epoch: 9,
+              status: {
+                open: false,
+                state: 'severed',
+                reason: 'A storm severed the route.',
+                opens_epoch: 9,
+                closes_epoch: null,
+              },
             }
           : route
       ),

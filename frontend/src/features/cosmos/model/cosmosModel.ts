@@ -11,32 +11,27 @@ import {
 } from '../api'
 import { JOURNEY_STATUS_ORDER } from './labels'
 
-export type RouteStateKey =
-  | 'open'
-  | 'temporary'
-  | 'unaligned'
-  | 'sealed'
-  | 'severed'
-  | 'forgotten'
-  | 'collapsed'
-  | 'snapped'
+export type RouteStateKey = RouteRecord['status']['state']
 
 export type RouteState = {
   key: RouteStateKey
   open: boolean
   untilEpoch: number | null
   opensAtEpoch: number | null
+  reason: string
 }
 
 export const ROUTE_STATE_LABEL: Record<RouteStateKey, string> = {
   open: 'Open',
   temporary: 'Temporarily open',
-  unaligned: 'Not aligned',
+  misaligned: 'Not aligned',
   sealed: 'Sealed',
   severed: 'Severed',
   forgotten: 'In oblivion',
   collapsed: 'Collapsed',
   snapped: 'Snapped',
+  scorched: 'Scorched by a flare',
+  unstable: 'Throat shut',
 }
 
 export const RESTORABLE_ROUTE_STATES: ReadonlySet<RouteStateKey> = new Set([
@@ -44,29 +39,17 @@ export const RESTORABLE_ROUTE_STATES: ReadonlySet<RouteStateKey> = new Set([
   'severed',
   'collapsed',
   'snapped',
+  'scorched',
 ])
 
 export function routeState(route: RouteRecord): RouteState {
-  if (route.active) {
-    return {
-      key: route.temp_open_until_epoch !== null ? 'temporary' : 'open',
-      open: true,
-      untilEpoch: route.temp_open_until_epoch,
-      opensAtEpoch: null,
-    }
-  }
-  const closure = route.closure
-  const key: RouteStateKey =
-    closure === null
-      ? route.method === 'slingshot_orbit'
-        ? 'unaligned'
-        : 'sealed'
-      : closure
+  const status = route.status
   return {
-    key,
-    open: false,
-    untilEpoch: null,
-    opensAtEpoch: route.temp_closed_until_epoch,
+    key: status.state,
+    open: status.open,
+    untilEpoch: status.open ? status.closes_epoch : null,
+    opensAtEpoch: status.open ? null : status.opens_epoch,
+    reason: status.reason,
   }
 }
 

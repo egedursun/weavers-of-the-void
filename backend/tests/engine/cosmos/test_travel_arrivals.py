@@ -84,6 +84,7 @@ async def test_a_stowaway_species_invades_the_landing_region(session: AsyncSessi
     assert invader.world_id == journey.destination_world_id
     assert await EntityRepository(session).has_flag(invader.id, EntityFlag.INVASIVE)
     assert any("stowaway species" in text for text in await chronicle_texts(session))
+    assert JourneyEventKind.STOWAWAY in {event.kind for event in journey.events}
 
 
 async def test_exploration_raises_charisma_and_finds_the_original_resource_and_land(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
@@ -102,6 +103,7 @@ async def test_exploration_raises_charisma_and_finds_the_original_resource_and_l
     assert await BondRepository(session).exists_between(explorer.id, original.id, BondKind.DISCOVERED)
     land = await session.get(EntityRow, journey.result_entity_id)
     assert land is not None and land.world_id == other.id and await EntityRepository(session).has_flag(land.id, EntityFlag.DISCOVERY)
+    assert [event.kind for event in journey.events if event.kind is JourneyEventKind.DISCOVERY] == [JourneyEventKind.DISCOVERY] * 2
 
 
 async def test_a_trade_expedition_adds_prosperity(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:

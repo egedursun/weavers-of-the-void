@@ -43,6 +43,22 @@ WORLD_NATURES: dict[WorldType, tuple[Nature, ...]] = {
     WorldType.SAND: (Nature("oasis", "Oasis", "fertility"), Nature("dune", "Dune", "danger")),
     WorldType.ICE: (Nature("glacier", "Glacier", "danger"), Nature("hot spring", "Hot Spring", "fertility")),
     WorldType.LAVA: (Nature("lava lake", "Lava Lake", "danger"), Nature("ash plain", "Ash Plain", "mystery")),
+    WorldType.SUPER_EARTH: (Nature("great plain", "Great Plain", "fertility"), Nature("deep trench", "Deep Trench", "danger")),
+    WorldType.ICE_GIANT: (Nature("cloud reef", "Cloud Reef", "fertility"), Nature("dark spot", "Dark Spot", "danger")),
+    WorldType.HOT_GIANT: (Nature("glow band", "Glow Band", "danger"), Nature("night band", "Night Band", "mystery")),
+    WorldType.IRON: (Nature("lodestone", "Lodestone", "mystery"), Nature("rust field", "Rust Field", "danger")),
+    WorldType.CARBON: (Nature("diamond scarp", "Diamond Scarp", "fertility"), Nature("tar pit", "Tar Pit", "danger")),
+    WorldType.GREENHOUSE: (Nature("acid pool", "Acid Pool", "danger"), Nature("cloud summit", "Cloud Summit", "mystery")),
+    WorldType.DWARF_PLANET: (Nature("crater", "Crater", "danger"), Nature("frost plain", "Frost Plain", "mystery")),
+    WorldType.CHTHONIAN: (Nature("core vent", "Core Vent", "danger"), Nature("glass plain", "Glass Plain", "mystery")),
+    WorldType.HYCEAN: (Nature("steam vent", "Steam Vent", "danger"), Nature("rock isle", "Rock Isle", "fertility")),
+    WorldType.JUNGLE: (Nature("canopy", "Canopy", "fertility"), Nature("swamp", "Swamp", "danger")),
+    WorldType.FORGE: (Nature("ore vein", "Ore Vein", "fertility"), Nature("slag field", "Slag Field", "danger")),
+    WorldType.FUNGAL: (Nature("spore grove", "Spore Grove", "mystery"), Nature("mycelium mat", "Mycelium Mat", "fertility")),
+    WorldType.SHATTERED: (Nature("floating isle", "Floating Isle", "mystery"), Nature("sky rift", "Sky Rift", "danger")),
+    WorldType.HOLLOW: (Nature("polar opening", "Polar Opening", "danger"), Nature("shadow band", "Shadow Band", "mystery")),
+    WorldType.ICE_SHELL: (Nature("geyser", "Geyser", "danger"), Nature("vent garden", "Vent Garden", "fertility")),
+    WorldType.METHANE: (Nature("methane lake", "Methane Lake", "danger"), Nature("haze dune", "Haze Dune", "mystery")),
 }
 
 

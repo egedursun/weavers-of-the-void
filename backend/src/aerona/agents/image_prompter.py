@@ -7,7 +7,8 @@ from aerona.agents.context.scope import Scope, load_scope
 from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
 from aerona.catalog.entity_types import ENTITY_TYPES
-from aerona.catalog.worlds import STAR_TYPE_LABELS, WORLD_TYPES
+from aerona.catalog.stars import STAR_TYPE_LABELS, STAR_TYPES
+from aerona.catalog.worlds import WORLD_TYPES
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -23,6 +24,10 @@ from aerona.prompts.data.images import CosmosSubjectKind, fix_image_prompt
 from aerona.prompts.schemas.narrative import CosmosImagePromptsOutput, EntityImagePromptsOutput
 
 PROMPTABLE_STATUSES = (EntityStatus.CANON, EntityStatus.DEAD, EntityStatus.FULFILLED)
+
+
+def star_description(star: StarRow) -> str:
+    return " ".join(part for part in (STAR_TYPES[star.star_type].description, star.description) if part)
 
 
 def ambience(world: WorldRow | None) -> WorldAmbience | None:
@@ -167,7 +172,9 @@ async def cosmos_subjects(scope: Scope, ids: Sequence[int] | None = None) -> lis
                     kind=CosmosSubjectKind.STAR,
                     type_label=STAR_TYPE_LABELS[star.star_type],
                     name=star.name,
-                    description=(star.description or "")[: content.cosmic_prompt_other_chars],
+                    description=" ".join(part for part in (STAR_TYPES[star.star_type].description, star.description) if part)[
+                        : content.cosmic_prompt_other_chars
+                    ],
                 ),
             )
         )

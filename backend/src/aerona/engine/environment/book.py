@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
-from aerona.db.tables.celestial import SkyEventRow, WorldRow
+from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.domain.enums.environment import ScarKind, WeatherEffect
@@ -16,14 +16,23 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import shift_stat
 from aerona.rules.registry import Rules
 
+STAR_WIDE_SKY = frozenset({SkyEventKind.SUPERNOVA, SkyEventKind.BLACK_SUN, SkyEventKind.FLARE})
+
 
 async def active_sky(session: AsyncSession, epoch: int) -> dict[int | None, frozenset[SkyEventKind]]:
-    statement = select(SkyEventRow.world_id, SkyEventRow.kind).where(
+    statement = select(SkyEventRow.world_id, SkyEventRow.star_id, SkyEventRow.kind).where(
         SkyEventRow.epoch <= epoch, (SkyEventRow.until_epoch.is_(None)) | (SkyEventRow.until_epoch >= epoch)
     )
+    lit: dict[int, list[int]] = {}
+    for lit_world_id, lit_star in await session.execute(select(WorldRow.id, WorldRow.star_id).where(WorldRow.star_id.is_not(None))):
+        if lit_star is not None:
+            lit.setdefault(lit_star, []).append(lit_world_id)
     found: dict[int | None, set[SkyEventKind]] = {}
-    for world_id, kind in await session.execute(statement):
+    for world_id, star_id, kind in await session.execute(statement):
         found.setdefault(world_id, set()).add(kind)
+        if kind in STAR_WIDE_SKY and star_id is not None:
+            for lit_world in lit.get(star_id, []):
+                found.setdefault(lit_world, set()).add(kind)
     return {world_id: frozenset(kinds) for world_id, kinds in found.items()}
 
 
@@ -37,6 +46,7 @@ class EnvironmentBook:
     worlds: dict[int, WorldRow]
     calendars: dict[int, CalendarRow]
     sky: dict[int | None, frozenset[SkyEventKind]] = field(default_factory=dict)
+    stars: dict[int, StarRow] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules, epoch: int, atlas: RegionAtlas | None = None) -> "EnvironmentBook":
@@ -56,7 +66,11 @@ class EnvironmentBook:
             worlds=worlds,
             calendars=calendars,
             sky=await active_sky(session, epoch),
+            stars={row.id: row for row in await session.scalars(select(StarRow))},
         )
+
+    def star_of(self, world: WorldRow) -> StarRow | None:
+        return self.stars.get(world.star_id) if world.star_id is not None else None
 
     def region_of(self, entity_id: int | None) -> RegionEnvironmentRow | None:
         if entity_id is None:

@@ -16,8 +16,9 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, 
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.travel import TravelMethod
-from aerona.domain.enums.world import DARK_STAR_TYPES
+from aerona.domain.enums.world import DARK_STAR_TYPES, StarType
 from aerona.domain.models.records import LedgerItem
+from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.world_types import mechanics_of
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.queries import BondIndex, canon, flags_by_entity
@@ -42,6 +43,7 @@ class LeakSources:
     forbidden: int
     gates: int
     dark_star: bool
+    star_type: StarType | None
     godless: int
     addicted: int
     outer_cults: int
@@ -62,6 +64,7 @@ async def _sources(session: AsyncSession, world: WorldRow, knowledge: KnowledgeM
         forbidden=sum(1 for entity in entities if knowledge.knows(entity.id, KnowledgeBranch.FORBIDDEN)),
         gates=gates,
         dark_star=star is not None and star.star_type in DARK_STAR_TYPES,
+        star_type=star.star_type if star is not None else None,
         godless=len(ids & await flags_by_entity(session, EntityFlag.GODLESS)),
         addicted=len(ids & addicted),
         outer_cults=len(ids & await flags_by_entity(session, EntityFlag.OUTER_CULT)),
@@ -111,6 +114,7 @@ async def leak_delta(session: AsyncSession, rules: Rules, world: WorldRow, epoch
     horror = rules.cosmic_horror
     sources = await _sources(session, world, knowledge)
     mechanics = mechanics_of(world.world_type)
+    star = star_mechanics(sources.star_type) if sources.star_type is not None else None
 
     def capped(value: float) -> float:
         return min(float(horror.source_cap), value) if horror.source_cap > 0 else value
@@ -118,7 +122,7 @@ async def leak_delta(session: AsyncSession, rules: Rules, world: WorldRow, epoch
     increases = {
         "forbidden knowledge": capped(sources.forbidden * horror.forbidden_knowledge_leak),
         "gates": capped(sources.gates * horror.gate_leak),
-        "star": horror.dead_star_leak if sources.dark_star else 0,
+        "star": (horror.dead_star_leak if sources.dark_star else 0) + (star.leak(rules) if star is not None else 0),
         "godless": capped(sources.godless * horror.godless_leak),
         "addicted": capped(sources.addicted * horror.addicted_leak),
         "outer cults": capped(sources.outer_cults * horror.outer_cult_leak),
@@ -139,6 +143,7 @@ async def leak_delta(session: AsyncSession, rules: Rules, world: WorldRow, epoch
         "temples": min(horror.temple_cap, await _temples(session, world.id)) * scale_m,
         "priests": min(horror.priest_cap, await _priest_communities(session, rules, world.id)) * scale_m,
         "fabric repair": horror.fabric_self_repair + max(0.0, (world.leakage - horror.repair_threshold) / horror.repair_divisor) + mechanics.leak_repair(rules),
+        "star's hold": star.leak_repair(rules) if star is not None else 0,
     }
     items = {key: round(value * factor, BREAKDOWN_DECIMALS) for key, value in increases.items() if value}
     items.update({key: -round(value, BREAKDOWN_DECIMALS) for key, value in decreases.items() if value})

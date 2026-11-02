@@ -9,7 +9,7 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.worlds import WorldRepository
-from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.celestial import SkyEventRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.society import ArchiveHoldingRow, SoulRow
@@ -21,7 +21,7 @@ from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyStatus, TravelMethod
-from aerona.domain.enums.world import Discovery
+from aerona.domain.enums.world import Discovery, SkyEventKind
 from aerona.domain.models.entity_stats import MortalStats, SpeciesStats, SpiritStats, StructureStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.quests import abandon_quest, legendary_quests, live_archive, worlds_known
@@ -431,6 +431,12 @@ async def void_storm(ctx: TickContext) -> str | None:
     if route is None:
         return None
     result = await sever_route(ctx, route.id, write=False)
+    for world_id in (route.world_a_id, route.world_b_id):
+        ctx.session.add(
+            SkyEventRow(
+                kind=SkyEventKind.VOID_STORM, epoch=ctx.epoch, until_epoch=result.severed_until - 1, world_id=world_id, route_id=route.id, text=result.text
+            )
+        )
     text = "A void storm swallowed a hidden route but the route was revealed." if result.revealed else "A void storm swallowed a route."
     await note(ctx, f"{text} {result.text}", key="beyond.void_storm", feed=FeedCategory.GATE)
     return result.text

@@ -44,22 +44,44 @@ export const DISASTERS: readonly Disaster[] = disasterValues
 
 export const STAR_TYPE_LABEL: Record<StarType, string> = {
   yellow_dwarf: 'Yellow dwarf',
+  blue_star: 'Blue star',
+  blue_white_star: 'Blue-white star',
+  white_star: 'White star',
+  yellow_white_star: 'Yellow-white star',
+  orange_dwarf: 'Orange dwarf',
+  red_dwarf: 'Red dwarf',
+  brown_dwarf: 'Brown dwarf',
+  yellow_giant: 'Yellow giant',
   red_giant: 'Red giant',
   blue_giant: 'Blue giant',
-  binary: 'Twin star',
+  red_supergiant: 'Red supergiant',
+  blue_supergiant: 'Blue supergiant',
+  hypergiant: 'Hypergiant',
+  wolf_rayet: 'Wolf-Rayet star',
+  protostar: 'Protostar',
+  carbon_star: 'Carbon star',
   white_dwarf: 'White dwarf',
+  binary: 'Twin star',
+  trinary: 'Triple star',
+  variable_star: 'Variable star',
+  neutron_star: 'Neutron star',
+  pulsar: 'Pulsar',
+  magnetar: 'Magnetar',
+  black_hole: 'Black hole',
   dead_star: 'Dead star',
   black_sun: 'Black sun',
   broken_star: 'Broken star',
-  pulsar: 'Pulsar',
   star_remnant: 'Star remnant',
   reborn_star: 'Reborn star',
+  chained_star: 'Chained star',
+  watching_star: 'Watching star',
 }
 
 export const DEAD_STAR_TYPES: ReadonlySet<StarType> = new Set([
   'dead_star',
   'black_sun',
   'star_remnant',
+  'black_hole',
 ])
 
 export const TRAVEL_METHOD_LABEL: Record<TravelMethod, string> = {
@@ -72,6 +94,7 @@ export const TRAVEL_METHOD_LABEL: Record<TravelMethod, string> = {
   divine_bridge: 'Divine bridge',
   slingshot_orbit: 'Slingshot orbit',
   swallowed: 'Swallowing',
+  wormhole: 'Wormhole',
 }
 
 export const SKY_EVENT_LABEL: Record<SkyEventKind, string> = {
@@ -81,6 +104,7 @@ export const SKY_EVENT_LABEL: Record<SkyEventKind, string> = {
   supernova: 'Supernova',
   black_sun: 'Rise of a black sun',
   void_storm: 'Void storm',
+  flare: 'Stellar flare',
 }
 
 export const SKY_EVENT_DESCRIPTION: Record<SkyEventKind, string> = {
@@ -94,6 +118,8 @@ export const SKY_EVENT_DESCRIPTION: Record<SkyEventKind, string> = {
   black_sun: 'A star turns black and eats light; leakage rises in its worlds.',
   void_storm:
     'A storm of the void tears a route apart for a few epochs; voyages on it wait or are lost.',
+  flare:
+    'A star flares: its worlds lose harvest, auroras burn as omens, and light sails bound to it may be scorched shut.',
 }
 
 export const DISCOVERY_LABEL: Record<Discovery, string> = {
@@ -157,6 +183,7 @@ export const ROUTE_CLOSURE_LABEL: Record<RouteClosure, string> = {
   forgotten: 'In oblivion',
   collapsed: 'Collapsed',
   snapped: 'Snapped',
+  scorched: 'Scorched by a flare',
 }
 
 export const LEGENDARY_QUEST_LABEL: Record<LegendaryQuestKind, string> = {

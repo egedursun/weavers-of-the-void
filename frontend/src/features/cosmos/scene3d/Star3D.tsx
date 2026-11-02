@@ -4,7 +4,7 @@ import { type Group, type Mesh, type ShaderMaterial, Vector3 } from 'three'
 import { type StarRecord } from '../api'
 import { signedHash, unitHash } from '../model/hash'
 import { type StarBody } from '../model/layout3d'
-import { STAR_KIND_CODE, STAR_LOOK, TWIN_STAR_TOKEN } from '../model/looks'
+import { COMPANION_TOKENS, STAR_KIND_CODE, STAR_LOOK } from '../model/looks'
 import { billboardMaterial, shaderMaterial, uniform } from './materials'
 import { tokenColor } from './sceneColors'
 import { useScene } from './sceneContext'
@@ -32,7 +32,13 @@ const REMNANT_SHELL = 16
 const REBORN_SHOCK = 9
 const TWIN_SEPARATION = 1.9
 const TWIN_SPEED = 0.22
-const TWIN_SHARES = [0.44, 0.56] as const
+const BODY_SHARES: Record<number, readonly number[]> = {
+  1: [0.56, 0.44],
+  2: [0.5, 0.34, 0.3],
+}
+const BREATH_SPEED = 0.35
+const BREATH_SWELL = 0.12
+const MAGNETAR_FLICKER = 5.3
 const SHARD_COUNT = 8
 const SHARD_INNER = 1.28
 const SHARD_SPREAD = 0.55
@@ -73,30 +79,28 @@ export function Star3D({ star, body, hovered }: Star3DProps) {
         uHover: uniform(0),
       },
     })
-    const twin = look.twin
-      ? shaderMaterial({
-          vertex: STAR_VERTEX,
-          fragment: STAR_FRAGMENT,
-          uniforms: {
-            uColor: uniform(tokenColor(TWIN_STAR_TOKEN)),
-            uEdge: uniform(edge),
-            uIntensity: uniform(coreIntensity),
-            uTime: uniform(0),
-            uSeed: uniform(seed + 3),
-            uKind: uniform(0),
-            uPulse: uniform(0),
-            uHover: uniform(0),
-          },
-        })
-      : null
-    const coronaMode =
-      look.kind === 'black' ? 1 : look.kind === 'remnant' ? 2 : 0
+    const companions = Array.from({ length: look.companions }, (_, slot) =>
+      shaderMaterial({
+        vertex: STAR_VERTEX,
+        fragment: STAR_FRAGMENT,
+        uniforms: {
+          uColor: uniform(
+            tokenColor(COMPANION_TOKENS[slot % COMPANION_TOKENS.length])
+          ),
+          uEdge: uniform(edge),
+          uIntensity: uniform(coreIntensity),
+          uTime: uniform(0),
+          uSeed: uniform(seed + 3 + slot),
+          uKind: uniform(0),
+          uPulse: uniform(0),
+          uHover: uniform(0),
+        },
+      })
+    )
+    const shelled = look.kind === 'remnant' || look.shell
+    const coronaMode = look.kind === 'black' ? 1 : shelled ? 2 : 0
     const coronaScale =
-      look.kind === 'black'
-        ? PHOTON_RING
-        : look.kind === 'remnant'
-          ? REMNANT_SHELL
-          : coronaSize
+      look.kind === 'black' ? PHOTON_RING : shelled ? REMNANT_SHELL : coronaSize
     const corona = billboardMaterial(CORONA_FRAGMENT, {
       uColor: uniform(color),
       uIntensity: uniform(dim ? 0.45 : 0.75 + 0.5 * brightness),
@@ -151,7 +155,7 @@ export function Star3D({ star, body, hovered }: Star3DProps) {
           })
         : null
     const beam =
-      look.kind === 'pulse'
+      look.kind === 'pulse' || look.kind === 'magnetar'
         ? shaderMaterial({
             vertex: BEAM_VERTEX,
             fragment: BEAM_FRAGMENT,
@@ -159,16 +163,25 @@ export function Star3D({ star, body, hovered }: Star3DProps) {
             blend: 'additive',
           })
         : null
-    return { core, twin, corona, shock, dark, disk, beam }
+    return { core, companions, corona, shock, dark, disk, beam }
   }, [look, dim, brightness, seed, coronaSize, body.position])
   useEffect(
     () => () => {
-      for (const material of Object.values(materials)) material?.dispose()
+      for (const material of [
+        materials.core,
+        ...materials.companions,
+        materials.corona,
+        materials.shock,
+        materials.dark,
+        materials.disk,
+        materials.beam,
+      ])
+        material?.dispose()
     },
     [materials]
   )
-  const twinA = useRef<Mesh>(null)
-  const twinB = useRef<Mesh>(null)
+  const bodies = useRef<(Mesh | null)[]>([])
+  const breath = useRef<Group>(null)
   const beams = useRef<Group>(null)
   const shards = useRef<Group>(null)
   useFrame(() => {
@@ -177,11 +190,21 @@ export function Star3D({ star, body, hovered }: Star3DProps) {
     const pulse =
       look.kind === 'pulse'
         ? Math.pow(0.5 + 0.5 * Math.sin(time * PULSE_SPEED), 3)
-        : 0
+        : look.kind === 'magnetar'
+          ? Math.pow(
+              0.5 +
+                0.5 *
+                  Math.sin(time * PULSE_SPEED) *
+                  Math.sin(time * MAGNETAR_FLICKER),
+              4
+            )
+          : look.kind === 'breathing'
+            ? 0.5 + 0.5 * Math.sin(time * BREATH_SPEED)
+            : 0
     const hover = hovered ? 1 : 0
     const list: (ShaderMaterial | null)[] = [
       materials.core,
-      materials.twin,
+      ...materials.companions,
       materials.corona,
       materials.shock,
       materials.disk,
@@ -192,20 +215,19 @@ export function Star3D({ star, body, hovered }: Star3DProps) {
       if (material.uniforms.uPulse) material.uniforms.uPulse.value = pulse
       if (material.uniforms.uHover) material.uniforms.uHover.value = hover
     }
-    if (twinA.current && twinB.current) {
-      const angle = time * TWIN_SPEED
+    const count = bodies.current.length
+    if (look.companions > 0) {
       const distance = body.radius * TWIN_SEPARATION
-      twinA.current.position.set(
-        Math.cos(angle) * distance * TWIN_SHARES[1],
-        0,
-        Math.sin(angle) * distance * TWIN_SHARES[1]
-      )
-      twinB.current.position.set(
-        -Math.cos(angle) * distance * TWIN_SHARES[0],
-        0,
-        -Math.sin(angle) * distance * TWIN_SHARES[0]
-      )
+      const shares = BODY_SHARES[look.companions] ?? BODY_SHARES[1]
+      bodies.current.forEach((mesh, slot) => {
+        if (!mesh) return
+        const angle = time * TWIN_SPEED + (slot / count) * Math.PI * 2
+        const reach = distance * (1 - shares[slot])
+        mesh.position.set(Math.cos(angle) * reach, 0, Math.sin(angle) * reach)
+      })
     }
+    if (breath.current && look.kind === 'breathing')
+      breath.current.scale.setScalar(1 + BREATH_SWELL * (pulse - 0.5) * 2)
     if (beams.current) beams.current.rotation.y = time * BEAM_SPIN
     if (shards.current) shards.current.rotation.y = time * 0.05
   })
@@ -240,27 +262,28 @@ export function Star3D({ star, body, hovered }: Star3DProps) {
           frustumCulled={false}
         />
       )}
-      {look.twin && materials.twin ? (
-        <>
+      {look.companions > 0 ? (
+        [materials.core, ...materials.companions].map((material, slot) => (
           <mesh
-            ref={twinA}
+            key={slot}
+            ref={(mesh) => {
+              bodies.current[slot] = mesh
+            }}
+            geometry={geometries.sphere}
+            material={material}
+            scale={
+              radius * (BODY_SHARES[look.companions] ?? BODY_SHARES[1])[slot]
+            }
+          />
+        ))
+      ) : (
+        <group ref={breath}>
+          <mesh
             geometry={geometries.sphere}
             material={materials.core}
-            scale={radius * TWIN_SHARES[1]}
+            scale={radius}
           />
-          <mesh
-            ref={twinB}
-            geometry={geometries.sphere}
-            material={materials.twin}
-            scale={radius * TWIN_SHARES[0]}
-          />
-        </>
-      ) : (
-        <mesh
-          geometry={geometries.sphere}
-          material={materials.core}
-          scale={radius}
-        />
+        </group>
       )}
       <mesh
         geometry={geometries.plane}

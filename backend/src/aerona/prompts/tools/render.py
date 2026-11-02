@@ -3,6 +3,7 @@ from aerona.catalog.creatures import CREATURE_TRAITS
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.entity_types import ENTITY_TYPES, EntityTypeSpec
 from aerona.catalog.interventions import DISASTERS, MIRACLES
+from aerona.catalog.stars import STAR_TYPES
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.domain.enums.entity import LIVING_CREATION_TYPES, EntityType, LegendCategory
 from aerona.domain.enums.society import Commodity
@@ -63,6 +64,7 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "knowledge_branches": knowledge_branches(),
         "creature_traits": "; ".join(f"{trait} ({spec.effect})" for trait, spec in CREATURE_TRAITS.items()),
         "world_types": ", ".join(f"{kind} ({spec.label})" for kind, spec in WORLD_TYPES.items()),
+        "star_types": ", ".join(f"{kind} ({spec.label})" for kind, spec in STAR_TYPES.items()),
         "vessel_kinds": [kind.value for kind in VehicleKind],
         "legend_categories": [category.value for category in LegendCategory],
         "commodities": [commodity.value for commodity in Commodity],

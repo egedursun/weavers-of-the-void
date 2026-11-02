@@ -74,7 +74,8 @@ def weather_weights(rules: Rules, inputs: WeatherInputs) -> dict[WeatherKind, fl
         elif kind is WeatherKind.CLEAR:
             weight *= 1 + dry
         elif kind is WeatherKind.AURORA:
-            weight *= cold * inputs.latitude / PERCENT
+            flare = settings.flare_aurora_pct / PERCENT if SkyEventKind.FLARE in inputs.sky else 0.0
+            weight *= cold * inputs.latitude / PERCENT + flare
         elif kind is WeatherKind.MAGIC_STORM:
             weight *= _ramp(inputs.magic_density - settings.magic_storm_threshold, PERCENT - settings.magic_storm_threshold)
         elif kind is WeatherKind.ASH_FALL:

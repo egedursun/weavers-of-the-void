@@ -246,8 +246,7 @@ export function CreatorHandPanel({
               )
             }
           />
-          {(world.world_type === 'living' ||
-            world.world_type === 'corpse_world') && (
+          {world.world_type === 'living' && (
             <CosmicActionButton
               actionId='world:planet_stirs'
               label='Make the planet stir'

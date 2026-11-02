@@ -30,10 +30,10 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodPowerEffect, ForeignGodStatus
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.son import SonStatus, Stat
-from aerona.domain.enums.world import Discovery, StarType, WorldType
+from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, Discovery, StarType, WorldType
 from aerona.engine.cosmos.actions import bargain_with_outer, seal_gate
 from aerona.engine.cosmos.foreign_gods import powers_of, stat_effect
-from aerona.engine.cosmos.stars import EXTINGUISHED_STAR_TYPES, extinguish_star, hang_star, rekindle_star
+from aerona.engine.cosmos.stars import extinguish_star, hang_star, rekindle_star
 from aerona.engine.cosmos.worlds import declare_holy_world
 from aerona.engine.environment.control import reorder_seasons, sever_ley, world_seasons
 from aerona.engine.phases.afterlife import soul_bind

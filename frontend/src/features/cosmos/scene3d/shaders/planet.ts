@@ -48,7 +48,7 @@ void main(){
   vec3 base; float land = 0.0; float hgt = 0.0; float water = 0.0; float spec = 0.0; float specPow = 70.0;
   vec3 emis = vec3(0.0);
   float bumpAmt = 0.0;
-  if (uType == 9) {
+  if (uType == 9 || uType == 17) {
     float lat = p.y;
     float flow = uTime*0.012;
     float tw = flow*sin(lat*9.0);
@@ -62,6 +62,19 @@ void main(){
     float ed = length(p - eye);
     base = mix(base, uPal[8], (1.0 - smoothstep(0.05, 0.24, ed))*0.85);
     base = mix(base, uPal[9], (1.0 - smoothstep(0.0, 0.06, ed))*0.6);
+    if (uType == 17) {
+      float day = smoothstep(-0.2, 0.9, ndlG);
+      float seethe = 0.75 + 0.25*sin(uTime*0.8 + tur*9.0);
+      emis += uPal[0]*day*0.55*seethe + uPal[1]*(1.0 - day)*0.35;
+      base *= 0.65 + 0.35*day;
+    }
+  } else if (uType == 19) {
+    float drift = uTime*0.01;
+    float haze = fbm(q*1.6 + vec3(drift, 0.0, -drift*0.7), 6);
+    float band = sin(p.y*6.0 + haze*3.0 + uSeed)*0.5 + 0.5;
+    base = mix(mix(uPal[2], uPal[9], smoothstep(0.2, 0.8, band)), uPal[4], smoothstep(-0.3, 0.6, haze)*0.45);
+    emis += uPal[0]*pow(1.0 - nv, 3.0)*0.12;
+    spec = 0.0;
   } else if (uType == 12) {
     float swirl = fbm(q*2.0 + vec3(0.0, uTime*0.02, 0.0), 5);
     float spiral = sin(atan(p.z, p.x)*3.0 + p.y*6.0 + swirl*4.0 - uTime*0.3);
@@ -148,6 +161,42 @@ void main(){
       base = mix(base, uPal[9], 0.35);
       emis += uCopper * vein * 0.9 + uCopper * pow(1.0 - nv, 2.0) * 0.25;
       spec = 0.8; specPow = 60.0;
+    } else if (uType == 18) {
+      float rust = smoothstep(0.35, 0.75, fbm(q*5.0 + 3.0, 4) + 0.5);
+      base = mix(mix(uPal[8], uPal[9], hgt), uPal[3], rust*0.7);
+      spec = 1.0 - rust*0.7; specPow = 90.0;
+      float storm = smoothstep(0.92, 0.995, 1.0 - abs(snoise(q*3.0 + vec3(uTime*0.05))));
+      emis += vec3(0.45, 0.7, 1.0)*storm*0.35*(1.0 - term);
+    } else if (uType == 20) {
+      float pul = 0.7 + 0.3*sin(uTime*1.3 + e*10.0);
+      float grid = max(step(0.94, fract(atan(p.z, p.x)*12.0 + warp)), step(0.94, fract(p.y*14.0 + warp)));
+      float slag = smoothstep(0.9, 0.99, 1.0 - abs(snoise(q*6.0 + warp*1.3)))*land;
+      emis += uPal[0]*(slag*2.2 + (1.0 - land)*1.4)*pul + uCityColor*grid*land*(1.0 - term)*0.8;
+      base = mix(base, base*0.5, land);
+      spec = 0.15;
+    } else if (uType == 21) {
+      float glow = smoothstep(0.62, 0.92, snoise(q*11.0 + vec3(0.0, uTime*0.03, 0.0)))*land;
+      float br = 0.6 + 0.4*sin(uTime*0.7 + e*8.0);
+      emis += uPal[5]*glow*(0.6 + 0.8*br)*(1.0 - term*0.6) + uPal[9]*glow*0.15;
+      base *= 0.8 + 0.15*br;
+      spec = 0.2; specPow = 18.0;
+    } else if (uType == 22) {
+      vec2 w = worley(q*2.6);
+      float gap = 1.0 - smoothstep(0.02, 0.11, w.y - w.x);
+      base = mix(base, vec3(0.01, 0.01, 0.02), gap);
+      emis += uPal[0]*gap*(1.6 + 0.6*sin(uTime*0.6 + w.x*12.0));
+      land *= 1.0 - gap;
+    } else if (uType == 23) {
+      float pole = smoothstep(0.84, 0.93, abs(p.y));
+      base = mix(base, vec3(0.02), pole);
+      emis += uPal[9]*pole*(1.4 + 0.3*sin(uTime*0.5)) + uPal[9]*smoothstep(0.7, 0.88, abs(p.y))*(1.0 - pole)*0.25;
+      land *= 1.0 - pole;
+    } else if (uType == 24) {
+      float line1 = smoothstep(0.965, 0.995, 1.0 - abs(snoise(q*2.2 + 9.0)));
+      float line2 = smoothstep(0.97, 0.997, 1.0 - abs(snoise(q*4.8 + 2.0)));
+      base = mix(mix(uPal[3], uPal[9], 0.5), vec3(0.62, 0.36, 0.26), max(line1, line2)*0.85);
+      spec = 0.6 + 0.3*(1.0 - land); specPow = 48.0;
+      emis += uPal[0]*line1*0.12;
     }
   }
   if (bumpAmt > 0.0) N = bumpNormal(N, vPosW, hgt*bumpAmt*vRadius*0.03);

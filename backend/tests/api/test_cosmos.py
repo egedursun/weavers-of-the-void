@@ -1,6 +1,10 @@
+from aerona.db.repositories.worlds import WorldDraft, WorldRepository
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.society import AddictionRow
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.travel import TravelMethod
+from aerona.domain.enums.world import WorldType
 from aerona.domain.models.phonology import Phonology
 from tests.api.conftest import ApiWorld, seeded
 from tests.services.player.factories import make_entity, seed_player_world
@@ -63,3 +67,37 @@ async def test_world_records_carry_their_dialect(api: ApiWorld) -> None:
     assert guide["world"]["phonology"]["forbidden_sounds"] == ["z"]
     cosmos = (await api.http.get("/api/cosmos")).json()
     assert cosmos["worlds"][0]["world"]["phonology"]["preferred_endings"] == ["ar"]
+
+
+async def test_routes_carry_the_status_the_engine_derives(api: ApiWorld) -> None:
+    world = seeded(api).core.world
+    async with api.services.database.write() as session:
+        other = await WorldRepository(session).create_world(
+            WorldDraft(
+                name="Velmor",
+                world_type=WorldType.CORPSE_WORLD,
+                orbit=2.0,
+                terrain_seed="velmor",
+                terrain_sea=0.4,
+                terrain_mountains=1.0,
+                terrain_humidity=0.0,
+                danger=20,
+                created_epoch=1,
+            )
+        )
+        session.add(
+            RouteRow(
+                world_a_id=world.id,
+                world_b_id=other.id,
+                method=TravelMethod.SLINGSHOT_ORBIT,
+                duration_epochs=2,
+                danger=20,
+                known=True,
+                active=True,
+                created_epoch=1,
+            )
+        )
+    cosmos = (await api.http.get("/api/cosmos")).json()
+    status = cosmos["routes"][0]["status"]
+    assert status["state"] in {"open", "misaligned"} and status["reason"]
+    assert status["open"] is (status["state"] == "open")

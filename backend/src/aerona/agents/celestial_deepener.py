@@ -8,7 +8,8 @@ from aerona.agents.context.world_header import world_header
 from aerona.agents.deepener import normalize_depth
 from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
-from aerona.catalog.worlds import ATMOSPHERE_LABELS, DISCOVERY_LABELS, GRAVITY_LABELS, STAR_TYPE_LABELS, WORLD_TYPES
+from aerona.catalog.stars import STAR_TYPE_LABELS, STAR_TYPES
+from aerona.catalog.worlds import ATMOSPHERE_LABELS, DISCOVERY_LABELS, GRAVITY_LABELS, WORLD_TYPES
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
@@ -27,7 +28,7 @@ async def _world_lines(scope: Scope, world: WorldRow) -> tuple[list[str], list[s
     session = scope.session
     star = await session.get(StarRow, world.star_id) if world.star_id is not None else None
     details = [
-        f"Kind: {WORLD_TYPES[world.world_type].label}",
+        f"Kind: {WORLD_TYPES[world.world_type].label} ({WORLD_TYPES[world.world_type].description})",
         f"Gravity: {GRAVITY_LABELS[world.gravity]}",
         f"Atmosphere: {ATMOSPHERE_LABELS[world.atmosphere]}",
         f"Known to the gods: {DISCOVERY_LABELS[world.discovery]}",
@@ -38,7 +39,7 @@ async def _world_lines(scope: Scope, world: WorldRow) -> tuple[list[str], list[s
         details.append(f"Description: {world.description}")
     neighbours: list[str] = []
     if star is not None:
-        neighbours.append(f"Its star: {star.name} ({STAR_TYPE_LABELS[star.star_type]})")
+        neighbours.append(f"Its star: {star.name} ({STAR_TYPE_LABELS[star.star_type]}: {STAR_TYPES[star.star_type].description})")
     if world.patron_son_id is not None and (patron := await session.get(SonRow, world.patron_son_id)) is not None:
         neighbours.append(f"Its guardian son: {patron.name}")
     peoples = list(
@@ -52,7 +53,11 @@ async def _world_lines(scope: Scope, world: WorldRow) -> tuple[list[str], list[s
 
 
 async def _star_lines(scope: Scope, star: StarRow) -> tuple[list[str], list[str]]:
-    details = [f"Kind: {STAR_TYPE_LABELS[star.star_type]}", f"Kindled in age {star.created_epoch}"]
+    details = [
+        f"Kind: {STAR_TYPE_LABELS[star.star_type]} ({STAR_TYPES[star.star_type].description})",
+        f"Brightness: {star.brightness}/100",
+        f"Kindled in age {star.created_epoch}",
+    ]
     if star.description:
         details.append(f"Description: {star.description}")
     worlds = list(await scope.session.scalars(select(WorldRow).where(WorldRow.star_id == star.id).order_by(WorldRow.orbit)))

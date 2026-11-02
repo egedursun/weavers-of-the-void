@@ -17,7 +17,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.travel import TravelMethod
-from aerona.domain.enums.world import ClimateEra, Discovery, SkyEventKind, StarType
+from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, ClimateEra, Discovery, SkyEventKind, StarType
 from aerona.domain.models.profiles import TravelResource
 from aerona.engine.cosmos.actions import cleanse_leak as engine_cleanse_leak
 from aerona.engine.cosmos.actions import seal_gate as engine_seal_gate
@@ -26,7 +26,7 @@ from aerona.engine.cosmos.resources import define_cosmic_resource
 from aerona.engine.cosmos.routes import RouteSpec, reveal_hidden_route, sever_route, stitch_route
 from aerona.engine.cosmos.routes import open_route as engine_open_route
 from aerona.engine.cosmos.routes import recall_journey as engine_recall_journey
-from aerona.engine.cosmos.stars import EXTINGUISHED_STAR_TYPES, extinguish_star
+from aerona.engine.cosmos.stars import extinguish_star
 from aerona.engine.cosmos.stars import hang_star as engine_hang_star
 from aerona.engine.cosmos.stars import rekindle_star as engine_rekindle_star
 from aerona.engine.cosmos.worlds import align_moons, forget_world

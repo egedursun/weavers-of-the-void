@@ -83,6 +83,13 @@ const DATA: CosmosData = {
       closure: null,
       temp_open_until_epoch: null,
       temp_closed_until_epoch: null,
+      status: {
+        open: true,
+        state: 'open',
+        reason: 'The route is open.',
+        opens_epoch: null,
+        closes_epoch: null,
+      },
     },
   ],
   journeys: [],
@@ -147,6 +154,13 @@ describe('Cosmos2D', () => {
         closure: 'severed' as const,
         temp_closed_until_epoch: 9,
         description: 'The void cut the gate',
+        status: {
+          open: false,
+          state: 'severed' as const,
+          reason: 'A storm severed the route.',
+          opens_epoch: 9,
+          closes_epoch: null,
+        },
       },
       {
         ...base,

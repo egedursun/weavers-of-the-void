@@ -17,10 +17,9 @@ from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyStatus
-from aerona.domain.enums.world import Discovery
+from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, Discovery
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import forgotten_world_ids, world_name
-from aerona.engine.cosmos.stars import EXTINGUISHED_STAR_TYPES
 from aerona.engine.notes import note
 from aerona.engine.primitives.doom import advance_doom
 

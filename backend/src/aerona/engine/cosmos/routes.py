@@ -1,6 +1,6 @@
+import hashlib
 from collections.abc import Collection, Iterable, Sequence
 from dataclasses import dataclass
-from enum import StrEnum
 
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +13,7 @@ from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow, EntityTraitRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.sons import SonRow
@@ -22,13 +22,14 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
-from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, RouteClosure, TravelMethod, VehicleKind
+from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMethod, VehicleKind
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.records import JourneyEvent
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.resources import cosmic_access
+from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.vessels import owned_vessels
-from aerona.engine.cosmos.world_types import hidden_route_method, is_realm_of_dead, mechanics_of
+from aerona.engine.cosmos.world_types import hidden_route_method, mechanics_of, river_reaches
 from aerona.engine.gods.economy import spend_cosmic_resource
 from aerona.engine.primitives.knowledge import knows
 from aerona.engine.primitives.numbers import clamp_int
@@ -40,17 +41,7 @@ RANGE_KEY = "range"
 CREW_KEY = "crew"
 HP_KEY = "hp"
 LIVE_JOURNEYS = (JourneyStatus.UNDERWAY, JourneyStatus.WAITING)
-
-
-class RouteState(StrEnum):
-    OPEN = "open"
-    TEMPORARY = "temporary"
-    MISALIGNED = "misaligned"
-    SEALED = "sealed"
-    SEVERED = "severed"
-    COLLAPSED = "collapsed"
-    SNAPPED = "snapped"
-    FORGOTTEN = "forgotten"
+WORMHOLE_LOOKAHEAD = 20
 
 
 @dataclass(frozen=True)
@@ -63,6 +54,15 @@ class SkyCalendar:
     next_cycle: int
     opens_epoch: int | None
     closes_epoch: int | None
+    wormhole_open_pct: int = PERCENT
+
+    def throat_open(self, route_id: int, epoch: int | None = None) -> bool:
+        when = self.epoch if epoch is None else epoch
+        digest = hashlib.sha256(f"wormhole:{route_id}:{when}".encode()).digest()
+        return int.from_bytes(digest[:4], "little") % PERCENT < self.wormhole_open_pct
+
+    def throat_opens(self, route_id: int) -> int | None:
+        return next((epoch for epoch in range(self.epoch + 1, self.epoch + WORMHOLE_LOOKAHEAD + 1) if self.throat_open(route_id, epoch)), None)
 
     @property
     def text(self) -> str:
@@ -93,7 +93,7 @@ def sky_calendar(rules: Rules, epoch: int, alignment_until: int | None) -> SkyCa
             closes += 1
     if not aligned:
         opens = next_cycle
-    return SkyCalendar(epoch, period, aligned, cycle_aligned, alignment_until, next_cycle, opens, closes)
+    return SkyCalendar(epoch, period, aligned, cycle_aligned, alignment_until, next_cycle, opens, closes, rules.travel_methods.wormhole_open_pct)
 
 
 async def current_calendar(session: AsyncSession, rules: Rules, epoch: int) -> SkyCalendar:
@@ -112,17 +112,26 @@ class RouteStatus:
     hidden: bool = False
 
 
+def _shut_until(route: RouteRow) -> tuple[RouteState, str, int | None] | None:
+    until = route.temp_closed_until_epoch
+    if until is None:
+        return None
+    if route.closure is RouteClosure.SCORCHED:
+        return RouteState.SCORCHED, f"A stellar flare scorched the sail route shut; it cools by the start of Epoch {until}.", until
+    return RouteState.SEVERED, f"A storm severed the route; its stitch closes at the start of Epoch {until}.", until
+
+
 def _closed_status(route: RouteRow, forgotten: Collection[int]) -> tuple[RouteState, str, int | None] | None:
     if route.world_a_id in forgotten or route.world_b_id in forgotten:
         return RouteState.FORGOTTEN, "The world at the end of the route was forgotten; the route is in the mist.", None
     if route.active:
         return None
-    if route.temp_closed_until_epoch is not None:
-        until = route.temp_closed_until_epoch
-        return RouteState.SEVERED, f"A storm severed the route; its stitch closes at the start of Epoch {until}.", until
+    shut = _shut_until(route)
+    if shut is not None:
+        return shut
     if route.closure is RouteClosure.SNAPPED:
         return RouteState.SNAPPED, "The light sail snapped when the star lighting the route died.", None
-    if route.method is TravelMethod.DIVINE_BRIDGE and route.builder_son_id is not None:
+    if route.closure is RouteClosure.COLLAPSED or (route.method is TravelMethod.DIVINE_BRIDGE and route.builder_son_id is not None):
         return RouteState.COLLAPSED, "The divine bridge collapsed when its builder fell.", None
     return RouteState.SEALED, "The route is sealed; only an alignment (temporarily), the creator's hand, or a legendary quest breaks the seal.", None
 
@@ -138,6 +147,10 @@ def route_status(route: RouteRow, calendar: SkyCalendar, forgotten: Collection[i
     if slingshot and not calendar.aligned:
         reason = f"Slingshot orbit closed: planets align at the start of Epoch {calendar.opens_epoch}."
         return RouteStatus(False, RouteState.MISALIGNED, reason, opens_epoch=calendar.opens_epoch, aligned=aligned, hidden=hidden)
+    if route.method is TravelMethod.WORMHOLE and not calendar.throat_open(route.id):
+        opens = calendar.throat_opens(route.id)
+        when = f"; it may open again at the start of Epoch {opens}" if opens is not None else ""
+        return RouteStatus(False, RouteState.UNSTABLE, f"The wormhole's throat is shut this epoch{when}.", opens_epoch=opens, aligned=aligned, hidden=hidden)
     closes = [value for value in (route.temp_open_until_epoch, calendar.closes_epoch if slingshot else None) if value is not None]
     closes_epoch = min(closes) if closes else None
     if route.temp_open_until_epoch is not None:
@@ -253,6 +266,9 @@ async def open_route(session: AsyncSession, rules: Rules, rng: SeededRandom, epo
     travel = rules.travel
     profile = travel_method_profile(rules, spec.method)
     terrain = mechanics_of(first.world_type).route_danger(rules) + mechanics_of(second.world_type).route_danger(rules)
+    bound_star_id = await _star_of(session, first) if spec.method is TravelMethod.LIGHT_SAIL else None
+    bound_star = await session.get(StarRow, bound_star_id) if bound_star_id is not None else None
+    terrain += star_mechanics(bound_star.star_type).sail_danger(rules) if bound_star is not None else 0
     danger = clamp_int(
         profile.danger + rng.die(travel.route_danger_die) - travel.route_danger_shift + terrain, travel.route_danger_min, travel.route_danger_max
     )
@@ -266,7 +282,7 @@ async def open_route(session: AsyncSession, rules: Rules, rng: SeededRandom, epo
         controller_entity_id=spec.controller_id,
         vehicle_entity_id=spec.vehicle_id,
         builder_son_id=spec.builder_son_id,
-        bound_star_id=await _star_of(session, first) if spec.method is TravelMethod.LIGHT_SAIL else None,
+        bound_star_id=bound_star_id,
         description=spec.description,
         created_epoch=epoch,
         active=True,
@@ -358,8 +374,8 @@ async def _vehicle_problem(session: AsyncSession, traveller: EntityRow, route: R
 async def _passage_problem(session: AsyncSession, rules: Rules, traveller: EntityRow, route: RouteRow) -> str | None:
     if route.method is TravelMethod.RIVER_OF_DEAD:
         ends = [await session.get(WorldRow, route.world_a_id), await session.get(WorldRow, route.world_b_id)]
-        if not any(world is not None and is_realm_of_dead(world.world_type) for world in ends):
-            return "The river of the dead only passes through the realm of the dead."
+        if not any(world is not None and river_reaches(world.world_type) for world in ends):
+            return "The river of the dead only flows from the realm of the dead or the body of a dead god."
     if route.method is TravelMethod.SPACE_FOLD and await cosmic_access(session, traveller.id, rules.travel.fold_min_abundance) is None:
         return "To fold space you need access to the cosmic travel resource: own a deposit or trade with its owner."
     return None
@@ -711,6 +727,30 @@ async def snap_sail_routes(ctx: TickContext, star_id: int) -> int:
             journey.end_epoch = ctx.epoch if journey.status is JourneyStatus.LOST else None
     await session.flush()
     return snapped
+
+
+async def scorch_sail_routes(ctx: TickContext, star_id: int) -> int:
+    session, rules = ctx.session, ctx.rules
+    lit = await _star_worlds(session, star_id)
+    rng = ctx.rng("sail_scorch")
+    scorched = 0
+    statement = select(RouteRow).where(RouteRow.method == TravelMethod.LIGHT_SAIL, RouteRow.active.is_(True)).order_by(RouteRow.id)
+    for route in list(await session.scalars(statement)):
+        bound = route.bound_star_id == star_id or route.world_a_id in lit or route.world_b_id in lit
+        if not bound or not rng.chance(rules.sky.flare_sail_scorch_chance):
+            continue
+        route.active = False
+        route.closure = RouteClosure.SCORCHED
+        route.temp_closed_until_epoch = ctx.epoch + rules.sky.flare_sail_epochs
+        route.temp_open_until_epoch = None
+        scorched += 1
+        for journey in await session.scalars(select(JourneyRow).where(JourneyRow.route_id == route.id, JourneyRow.status.in_(LIVE_JOURNEYS))):
+            add_event(journey, ctx.epoch, JourneyEventKind.SAIL_SNAPPED, "the sail burned in a stellar flare")
+            lost = rng.chance(rules.travel_methods.sail_snap_loss_pct)
+            journey.status = JourneyStatus.LOST if lost else JourneyStatus.WAITING
+            journey.end_epoch = ctx.epoch if lost else None
+    await session.flush()
+    return scorched
 
 
 async def restore_sail_routes(session: AsyncSession, star_id: int) -> int:

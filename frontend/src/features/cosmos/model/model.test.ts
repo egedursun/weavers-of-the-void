@@ -95,7 +95,28 @@ function route(id: number, overrides: Partial<RouteRecord> = {}): RouteRecord {
     closure: null,
     temp_open_until_epoch: null,
     temp_closed_until_epoch: null,
+    status: {
+      open: true,
+      state: 'open',
+      reason: 'The route is open.',
+      opens_epoch: null,
+      closes_epoch: null,
+    },
     ...overrides,
+  }
+}
+
+function status(
+  state: RouteRecord['status']['state'],
+  open: boolean,
+  epochs: { opens?: number; closes?: number } = {}
+): RouteRecord['status'] {
+  return {
+    open,
+    state,
+    reason: state,
+    opens_epoch: epochs.opens ?? null,
+    closes_epoch: epochs.closes ?? null,
   }
 }
 
@@ -167,19 +188,40 @@ function cosmos(overrides: Partial<CosmosData> = {}): CosmosData {
 }
 
 describe('route state', () => {
-  it('reads open, temporary, sealed, unaligned and severed routes', () => {
+  it('reads the route status the backend derived', () => {
     expect(routeState(route(1)).key).toBe('open')
-    expect(routeState(route(1, { temp_open_until_epoch: 9 })).key).toBe(
-      'temporary'
+    const temporary = route(1, {
+      status: status('temporary', true, { closes: 9 }),
+    })
+    expect(routeState(temporary)).toMatchObject({
+      key: 'temporary',
+      open: true,
+      untilEpoch: 9,
+    })
+    expect(routeState(route(1, { status: status('sealed', false) })).key).toBe(
+      'sealed'
     )
-    expect(routeState(route(1, { active: false })).key).toBe('sealed')
     expect(
-      routeState(route(1, { active: false, method: 'slingshot_orbit' })).key
-    ).toBe('unaligned')
+      routeState(
+        route(1, {
+          method: 'slingshot_orbit',
+          status: status('misaligned', false, { opens: 10 }),
+        })
+      ).key
+    ).toBe('misaligned')
+    expect(
+      routeState(
+        route(1, {
+          method: 'wormhole',
+          status: status('unstable', false, { opens: 11 }),
+        })
+      )
+    ).toMatchObject({ key: 'unstable', open: false, opensAtEpoch: 11 })
     const severed = route(1, {
       active: false,
       closure: 'severed',
       temp_closed_until_epoch: 14,
+      status: status('severed', false, { opens: 14 }),
     })
     expect(routeState(severed)).toMatchObject({
       key: 'severed',

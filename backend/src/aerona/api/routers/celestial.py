@@ -6,14 +6,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.celestial_deepener import deepen_celestial
 from aerona.api.background import require_llm, submit
-from aerona.api.dependencies import ServicesDep, reader
+from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.celestial import OrbitingWorld, PeopleBrief, StarWiki, WorldWiki
 from aerona.api.schemas.common import JobAccepted
 from aerona.api.schemas.cosmos import SkyEventRecord
-from aerona.api.schemas.records import EntitySummary, RouteRecord, StarRecord, WorldRecord
+from aerona.api.schemas.records import EntitySummary, StarRecord, WorldRecord
 from aerona.api.views.celestial import population, world_counts
-from aerona.api.views.common import chronicle_lines, foreign_god_record, images_of, node_ref
-from aerona.catalog.worlds import STAR_TYPE_LABELS, WORLD_TYPES
+from aerona.api.views.common import chronicle_lines, foreign_god_record, images_of, node_ref, route_records
+from aerona.catalog.stars import STAR_TYPE_LABELS
+from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.api import WIKI_PEOPLES_SHOWN, WIKI_TIMELINE_LINES
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
@@ -95,7 +96,7 @@ async def world_wiki(services: ServicesDep, world_id: int = Path(ge=1)) -> World
             sons=[ref for son in sons if (ref := await node_ref(session, son.id)) is not None],
             patron=await node_ref(session, world.patron_son_id),
             foreign_gods=[await foreign_god_record(session, god) for god in gods],
-            routes=[RouteRecord.model_validate(route) for route in routes],
+            routes=await route_records(session, await world_rules(services, session), list(routes)),
             peoples=[
                 PeopleBrief(entity=EntitySummary.model_validate(people), population=round(stat(people, "population") or 0), cover=covers.get(people.id))
                 for people in shown

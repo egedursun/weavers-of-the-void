@@ -170,5 +170,6 @@ class WeatherRules:
     void_rain_threshold: int = rule(30, 0, 100, RuleGroup.WEATHER, "World leakage above which void rain can fall")
     void_storm_rain_pct: int = rule(300, 0, 10000, RuleGroup.WEATHER, "Weight of void rain while a void storm crosses the sky (%)")
     supernova_ash_pct: int = rule(200, 0, 10000, RuleGroup.WEATHER, "Weight of ash fall while a supernova burns in the sky (%)")
+    flare_aurora_pct: int = rule(300, 0, 10000, RuleGroup.WEATHER, "Extra weight of auroras while the world's star flares (%)")
     volcanic_ash_pct: int = rule(100, 0, 10000, RuleGroup.WEATHER, "Weight of ash fall over volcanic land (%)")
     acclimatised_within: int = rule(15, 0, 100, RuleGroup.WEATHER, "Temperature difference to home within which an army is acclimatised")

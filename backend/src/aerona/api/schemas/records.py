@@ -14,7 +14,7 @@ from aerona.domain.enums.meta import ImageMime, ImageOrigin
 from aerona.domain.enums.node import ActorKind, NodeKind
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.son import ExistenceBand, PowerEffect, ReputationLabel, SonDeathCause, SonStatus, Stat
-from aerona.domain.enums.travel import JourneyIntent, JourneyStatus, RouteClosure, TravelMethod
+from aerona.domain.enums.travel import JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMethod
 from aerona.domain.enums.war import DebtStatus
 from aerona.domain.enums.world import Atmosphere, ClimateEra, Discovery, FateMode, Gravity, LoreLanguage, SonDistribution, StarType, WorldType
 from aerona.domain.models.entity_stats import EntityStats
@@ -352,6 +352,14 @@ class BondView(BondRecord):
     other: NodeRef | None
 
 
+class RouteStatusRecord(ApiModel):
+    open: bool
+    state: RouteState
+    reason: str
+    opens_epoch: int | None
+    closes_epoch: int | None
+
+
 class RouteRecord(ApiModel):
     id: int
     world_a_id: int
@@ -370,6 +378,7 @@ class RouteRecord(ApiModel):
     closure: RouteClosure | None
     temp_open_until_epoch: int | None
     temp_closed_until_epoch: int | None
+    status: RouteStatusRecord
 
 
 class JourneyRecord(ApiModel):

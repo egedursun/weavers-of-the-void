@@ -23,7 +23,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, 
 from aerona.domain.enums.environment import WeatherEffect
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
-from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, TravelMethod
+from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMethod
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import KnowledgeStats, LegendStats, SettlementStats
 from aerona.engine.context import TickContext
@@ -34,7 +34,6 @@ from aerona.engine.cosmos.routes import (
     LIVE_JOURNEYS,
     JourneySpec,
     RouteBook,
-    RouteState,
     add_event,
     can_use_route,
     connect_world,
@@ -74,6 +73,7 @@ REVEAL_BRANCH: dict[TravelMethod, KnowledgeBranch] = {
     M.SLINGSHOT_ORBIT: KnowledgeBranch.SKY_NAVIGATION,
     M.SPACE_FOLD: KnowledgeBranch.PATHFINDING,
     M.DREAM_JOURNEY: KnowledgeBranch.MAGIC,
+    M.WORMHOLE: KnowledgeBranch.ASTRONOMY,
 }
 ROAD_EVENT_TEXT: dict[JourneyEventKind, str] = {
     JourneyEventKind.PIRATES: "void pirates attacked",
@@ -345,14 +345,23 @@ async def bridge_collapse(ctx: TickContext) -> int:
         if builder is not None and builder.status is SonStatus.ACTIVE:
             continue
         route.active = False
+        route.closure = RouteClosure.COLLAPSED
         state = "died" if builder is None or builder.status is SonStatus.DEAD else "fell asleep"
+        rng = ctx.rng(f"bridge_collapse.{route.id}")
+        for journey in await ctx.session.scalars(select(JourneyRow).where(JourneyRow.route_id == route.id, JourneyRow.status.in_(LIVE_JOURNEYS))):
+            fell = rng.chance(ctx.rules.travel_methods.bridge_collapse_loss_pct)
+            add_event(
+                journey, ctx.epoch, JourneyEventKind.BRIDGE_COLLAPSED, "the bridge fell from under them" if fell else "the bridge fell and they turned back"
+            )
+            journey.status = JourneyStatus.LOST if fell else JourneyStatus.RECALLED
+            journey.end_epoch = ctx.epoch
         vehicle = await ctx.session.get(EntityRow, route.vehicle_entity_id) if route.vehicle_entity_id is not None else None
         if vehicle is not None and vehicle.status is EntityStatus.CANON:
             await retire(ctx.session, vehicle, ctx.epoch, f"Epoch {ctx.epoch}: collapsed when its builder {builder.name if builder else 'a god'} {state}.")
         first, second = await world_name(ctx.session, route.world_a_id), await world_name(ctx.session, route.world_b_id)
         await note(
             ctx,
-            f"{builder.name if builder else 'A god'}'s divine bridge between {first} and {second} collapsed because he {state}.",
+            f"{builder.name if builder else 'A god'}'s divine bridge between {first} and {second} collapsed because its builder {state}.",
             key="travel.bridge_collapsed",
         )
         collapsed += 1
@@ -734,10 +743,13 @@ async def _explore_arrival(ctx: TickContext, arrival: Arrival) -> EntityRow | No
     ]
     if originals:
         await connect(ctx.session, traveller.id, originals[0].id, BondKind.DISCOVERED, ctx.epoch, description=f"on the {arrival.target.name} expedition")
+        add_event(arrival.journey, ctx.epoch, JourneyEventKind.DISCOVERY, f"they discovered {originals[0].name}")
     if arrival.journey.intent is JourneyIntent.EXPLORATION and ctx.rng(seed_of("land", arrival.journey.id)).chance(travel.exploration_land_chance):
         found = await find_land(
             ctx, LandSearch(arrival.target.id, explorer=traveller, near=arrival.region, pioneers=False, reason=f"on the {arrival.target.name} expedition")
         )
+        if found is not None:
+            add_event(arrival.journey, ctx.epoch, JourneyEventKind.DISCOVERY, f"they found {found.land.name}")
         return found.land if found is not None else None
     return None
 
@@ -755,6 +767,7 @@ async def arrive(ctx: TickContext, journey: JourneyRow, traveller: EntityRow, ro
         return None
     carried = await stowaway(ctx, journey.origin_world_id, region)
     if carried is not None:
+        add_event(journey, ctx.epoch, JourneyEventKind.STOWAWAY, f"{carried.name} came ashore with them")
         await note(
             ctx, f"{traveller.name}'s ships carried a stowaway species to {target.name}; it became invasive there.", key="travel.stowaway", ids=[carried.id]
         )

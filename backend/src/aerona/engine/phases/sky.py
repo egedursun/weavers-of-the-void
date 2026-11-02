@@ -19,12 +19,13 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory, ThreadLin
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.war import WarEnding
-from aerona.domain.enums.world import COLLAPSIBLE_STAR_TYPES, Discovery, SkyEventKind
+from aerona.domain.enums.world import Discovery, SkyEventKind
 from aerona.domain.models.entity_stats import CelestialStats, MortalStats, ProphecyStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import number_word, open_alignment, sever_route, touches
 from aerona.engine.cosmos.sanity import shift_sanity
-from aerona.engine.cosmos.stars import black_sun, require_star, supernova, worlds_of_star
+from aerona.engine.cosmos.star_types import star_mechanics
+from aerona.engine.cosmos.stars import black_sun, flare, require_star, supernova, worlds_of_star
 from aerona.engine.cosmos.world_types import mechanics_of
 from aerona.engine.cosmos.worlds import align_moons
 from aerona.engine.notes import note
@@ -39,7 +40,8 @@ from aerona.rules.registry import Rules
 
 INHABITANT_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.MORTAL})
 RELATED_PLACE_TYPES = frozenset({EntityType.REGION, EntityType.PLACE, EntityType.SETTLEMENT})
-STAR_EVENTS = frozenset({SkyEventKind.SUPERNOVA, SkyEventKind.BLACK_SUN})
+STAR_EVENTS = frozenset({SkyEventKind.SUPERNOVA, SkyEventKind.BLACK_SUN, SkyEventKind.FLARE})
+COLLAPSE_EVENTS = frozenset({SkyEventKind.SUPERNOVA, SkyEventKind.BLACK_SUN})
 PIETY_KEY = "piety"
 CHARISMA_KEY = "charisma"
 FERTILITY_KEY = "fertility"
@@ -198,7 +200,31 @@ async def _star_event(ctx: TickContext, kind: SkyEventKind, star_id: int | None)
     if star_id is None:
         raise ValidationFailedError(f"A {SKY_EVENT_LABELS[kind].lower()} needs a star.")
     star = await require_star(ctx.session, star_id)
-    return await supernova(ctx, star) if kind is SkyEventKind.SUPERNOVA else await black_sun(ctx, star)
+    if kind is SkyEventKind.SUPERNOVA:
+        return await supernova(ctx, star)
+    if kind is SkyEventKind.FLARE:
+        return await flare(ctx, star)
+    return await black_sun(ctx, star)
+
+
+async def lasting_until(ctx: TickContext, kind: SkyEventKind, order: SkyOrder) -> int | None:
+    sky = ctx.rules.sky
+    if kind is SkyEventKind.BLACK_SUN:
+        return None
+    if kind is SkyEventKind.ALIGNMENT:
+        cosmos = await CosmosRepository(ctx.session).get()
+        until = cosmos.alignment_until_epoch if cosmos is not None else None
+        return max(ctx.epoch, until - 1) if until is not None else ctx.epoch
+    if kind is SkyEventKind.VOID_STORM:
+        span = order.duration if order.duration is not None and order.duration > 0 else sky.god_storm_epochs
+        return ctx.epoch + span - 1
+    lasting = {
+        SkyEventKind.ECLIPSE: sky.eclipse_lasting_epochs,
+        SkyEventKind.FLARE: sky.flare_lasting_epochs,
+        SkyEventKind.COMET: sky.comet_lasting_epochs,
+        SkyEventKind.SUPERNOVA: sky.supernova_lasting_epochs,
+    }
+    return ctx.epoch + lasting[kind]
 
 
 async def sky_event(ctx: TickContext, kind: SkyEventKind, order: SkyOrder) -> SkyEventResult:
@@ -218,14 +244,15 @@ async def sky_event(ctx: TickContext, kind: SkyEventKind, order: SkyOrder) -> Sk
         text = await _void_storm(ctx, world, order, order.by or "The Creator")
     else:
         text = await _star_event(ctx, kind, order.star_id if order.star_id is not None else star_id)
-    ctx.session.add(SkyEventRow(kind=kind, epoch=ctx.epoch, world_id=world.id, star_id=star_id, route_id=order.route_id, text=text))
+    until = await lasting_until(ctx, kind, order)
+    ctx.session.add(SkyEventRow(kind=kind, epoch=ctx.epoch, until_epoch=until, world_id=world.id, star_id=star_id, route_id=order.route_id, text=text))
     prefix = f"{order.by} commanded the sky: " if order.by else ""
     await ctx.chronicle(ChronicleKind.SKY, prefix + text, template_key=f"sky.{kind.value}", world_id=world.id, feed_category=FeedCategory.SKY)
     ctx.count(f"event.{kind.value}")
     return SkyEventResult(kind, world.id, star_id, text)
 
 
-def spontaneous_bag(rules: Rules, moons: int = 0) -> list[SkyEventKind]:
+def spontaneous_bag(rules: Rules, moons: int = 0, companions: int = 0) -> list[SkyEventKind]:
     sky = rules.sky
     first_eclipse = min(1, sky.event_weight_eclipse)
     moon_eclipses = sky.event_weight_eclipse * moons * rules.seasons.eclipse_per_moon_pct // PERCENT
@@ -233,25 +260,51 @@ def spontaneous_bag(rules: Rules, moons: int = 0) -> list[SkyEventKind]:
         *[SkyEventKind.ECLIPSE] * first_eclipse,
         *[SkyEventKind.COMET] * sky.event_weight_comet,
         *[SkyEventKind.ALIGNMENT] * sky.event_weight_alignment,
-        *[SkyEventKind.ECLIPSE] * (sky.event_weight_eclipse - first_eclipse + moon_eclipses),
+        *[SkyEventKind.ECLIPSE] * (sky.event_weight_eclipse - first_eclipse + moon_eclipses + companions),
         *[SkyEventKind.SUPERNOVA] * sky.event_weight_supernova,
         *[SkyEventKind.BLACK_SUN] * sky.event_weight_black_sun,
+        *[SkyEventKind.FLARE] * sky.event_weight_flare,
     ]
+
+
+def star_event_weight(rules: Rules, kind: SkyEventKind, star: StarRow) -> int:
+    mechanics = star_mechanics(star.star_type)
+    return mechanics.collapse_weight(rules) if kind in COLLAPSE_EVENTS else mechanics.flare_weight(rules)
+
+
+async def eclipse_world(ctx: TickContext, stars: dict[int, StarRow]) -> WorldRow | None:
+    worlds = await WorldRepository(ctx.session).reachable_worlds()
+    if not worlds:
+        return None
+    rules = ctx.rules
+
+    def weight(world: WorldRow) -> int:
+        star = stars.get(world.star_id) if world.star_id is not None else None
+        companions = star_mechanics(star.star_type).eclipse_weight(rules) if star is not None else 0
+        return 1 + (world.moon_count or 0) * rules.sky.eclipse_moon_weight + companions
+
+    return ctx.rng("eclipse_world").weighted(worlds, [weight(world) for world in worlds])
 
 
 async def spontaneous_sky_event(ctx: TickContext) -> SkyEventResult | None:
     rng = ctx.rng("spontaneous")
     moons = int(await ctx.session.scalar(select(func.max(WorldRow.moon_count))) or 0)
-    bag = spontaneous_bag(ctx.rules, moons)
+    stars = {star.id: star for star in await ctx.session.scalars(select(StarRow).order_by(StarRow.id))}
+    lit = {world.star_id for world in await WorldRepository(ctx.session).reachable_worlds() if world.star_id is not None}
+    companions = max((star_mechanics(star.star_type).eclipse_weight(ctx.rules) for star_id, star in stars.items() if star_id in lit), default=0)
+    bag = spontaneous_bag(ctx.rules, moons, companions)
     if not bag or not rng.chance(ctx.rules.sky.sky_event_chance):
         return None
     kind = bag[rng.die(len(bag)) - 1]
     order = SkyOrder()
+    if kind is SkyEventKind.ECLIPSE:
+        world = await eclipse_world(ctx, stars)
+        order = SkyOrder(world_id=world.id if world is not None else None)
     if kind in STAR_EVENTS:
-        stars = list(await ctx.session.scalars(select(StarRow).where(StarRow.star_type.in_(list(COLLAPSIBLE_STAR_TYPES))).order_by(StarRow.id)))
-        star = rng.pick_or_none(stars)
-        if star is None or not rng.chance(ctx.rules.sky.star_event_chance):
+        candidates = [star for star in stars.values() if star_event_weight(ctx.rules, kind, star) > 0]
+        if not candidates or not rng.chance(ctx.rules.sky.star_event_chance):
             return None
+        star = rng.weighted(candidates, [star_event_weight(ctx.rules, kind, star) for star in candidates])
         order = SkyOrder(star_id=star.id)
     try:
         return await sky_event(ctx, kind, order)

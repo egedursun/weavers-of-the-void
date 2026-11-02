@@ -1,6 +1,8 @@
 from aerona.catalog.foreign_gods import FOREIGN_GOD_POWERS
 from aerona.catalog.knowledge import KNOWLEDGE_BRANCHES, NATURAL_LAWS, RESOURCE_MECHANICS
 from aerona.catalog.powers import POWERS
+from aerona.catalog.stars import STAR_TYPES
+from aerona.catalog.worlds import WORLD_TYPES
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.son import ExistenceMode
 from aerona.prompts.data.foreign_gods import foreign_power_effect
@@ -36,6 +38,14 @@ def foreign_god_powers(rules: Rules) -> str:
     return "; ".join(f"{effect} ({spec.label}: {foreign_power_effect(effect, rules)})" for effect, spec in FOREIGN_GOD_POWERS.items())
 
 
+def star_type_catalogue() -> str:
+    return "; ".join(f"{kind} ({spec.label}: {spec.description})" for kind, spec in STAR_TYPES.items())
+
+
+def world_type_catalogue() -> str:
+    return "; ".join(f"{kind} ({spec.label}: {spec.description})" for kind, spec in WORLD_TYPES.items())
+
+
 def description_variables(rules: Rules) -> dict[str, object]:
     return {
         "rules": rules,
@@ -48,4 +58,6 @@ def description_variables(rules: Rules) -> dict[str, object]:
         "foreign_god_powers": foreign_god_powers(rules),
         "entity_type_keys": ", ".join(EntityType),
         "existence_states": ", ".join(ExistenceMode),
+        "star_types": star_type_catalogue(),
+        "world_types": world_type_catalogue(),
     }

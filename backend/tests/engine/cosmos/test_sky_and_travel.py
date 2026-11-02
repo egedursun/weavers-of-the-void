@@ -35,6 +35,8 @@ def test_spontaneous_bag_order(rules: Rules) -> None:
         SkyEventKind.ECLIPSE,
         SkyEventKind.SUPERNOVA,
         SkyEventKind.BLACK_SUN,
+        SkyEventKind.FLARE,
+        SkyEventKind.FLARE,
     ]
 
 

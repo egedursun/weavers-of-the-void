@@ -128,6 +128,19 @@ export const METHOD_LOOK: Record<TravelMethod, MethodLook> = {
   swallowed: method('--cosmos-route-swallowed', [], 3.2, -0.1, 0.5, 8, 6, 1, {
     opacity: 0.55,
   }),
+  wormhole: method(
+    '--cosmos-route-wormhole',
+    [3, 2],
+    2.2,
+    0.05,
+    0.8,
+    9,
+    4.2,
+    1.2,
+    {
+      endRings: true,
+    }
+  ),
 }
 
 export const CLOSED_ROUTE_DASH: readonly number[] = [2, 6]
@@ -136,7 +149,19 @@ export const HIDDEN_ROUTE_OPACITY = 0.4
 export const LEGEND_LINE_MAX_WIDTH = 2.4
 
 export type StarKind =
-  'normal' | 'dead' | 'black' | 'broken' | 'pulse' | 'remnant' | 'reborn'
+  | 'normal'
+  | 'dead'
+  | 'black'
+  | 'broken'
+  | 'pulse'
+  | 'remnant'
+  | 'reborn'
+  | 'brown'
+  | 'cocoon'
+  | 'breathing'
+  | 'chained'
+  | 'eye'
+  | 'magnetar'
 
 export type StarLook = {
   token: string
@@ -146,7 +171,8 @@ export type StarLook = {
   kind: StarKind
   rays: number
   spike: number
-  twin: boolean
+  companions: number
+  shell: boolean
 }
 
 const star = (
@@ -155,7 +181,7 @@ const star = (
   kind: StarKind,
   rays: number,
   spike: number,
-  twin = false
+  extra: { companions?: number; shell?: boolean } = {}
 ): StarLook => {
   const name = type.replace(/_/g, '-')
   return {
@@ -166,25 +192,50 @@ const star = (
     kind,
     rays,
     spike,
-    twin,
+    companions: extra.companions ?? 0,
+    shell: extra.shell ?? false,
   }
 }
 
 export const STAR_LOOK: Record<StarType, StarLook> = {
   yellow_dwarf: star('yellow_dwarf', 1, 'normal', 0.75, 0.22),
+  blue_star: star('blue_star', 1.55, 'normal', 1.05, 0.6),
+  blue_white_star: star('blue_white_star', 1.25, 'normal', 0.9, 0.55),
+  white_star: star('white_star', 1.1, 'normal', 0.8, 0.45),
+  yellow_white_star: star('yellow_white_star', 1.05, 'normal', 0.78, 0.32),
+  orange_dwarf: star('orange_dwarf', 0.85, 'normal', 0.6, 0.15),
+  red_dwarf: star('red_dwarf', 0.6, 'normal', 0.45, 0.1),
+  brown_dwarf: star('brown_dwarf', 0.55, 'brown', 0.08, 0),
+  yellow_giant: star('yellow_giant', 1.5, 'normal', 0.9, 0.2),
   red_giant: star('red_giant', 1.75, 'normal', 0.95, 0.08),
   blue_giant: star('blue_giant', 1.4, 'normal', 0.85, 0.5),
+  red_supergiant: star('red_supergiant', 2.1, 'normal', 1.1, 0.06),
+  blue_supergiant: star('blue_supergiant', 1.85, 'normal', 1.25, 0.7),
+  hypergiant: star('hypergiant', 2.4, 'normal', 1.5, 0.4, { shell: true }),
+  wolf_rayet: star('wolf_rayet', 0.9, 'normal', 1.35, 0.8, { shell: true }),
+  protostar: star('protostar', 0.8, 'cocoon', 0.35, 0.05, { shell: true }),
+  carbon_star: star('carbon_star', 1.45, 'normal', 0.55, 0.04),
   white_dwarf: star('white_dwarf', 0.5, 'normal', 0.4, 0.65),
-  binary: star('binary', 0.74, 'normal', 0.6, 0.2, true),
+  binary: star('binary', 0.74, 'normal', 0.6, 0.2, { companions: 1 }),
+  trinary: star('trinary', 0.68, 'normal', 0.6, 0.2, { companions: 2 }),
+  variable_star: star('variable_star', 1.2, 'breathing', 0.8, 0.2),
+  neutron_star: star('neutron_star', 0.32, 'normal', 0.5, 0.9),
+  pulsar: star('pulsar', 0.6, 'pulse', 0.5, 0.7),
+  magnetar: star('magnetar', 0.45, 'magnetar', 0.7, 0.85),
+  black_hole: star('black_hole', 1.15, 'black', 0, 0),
   dead_star: star('dead_star', 0.85, 'dead', 0.05, 0),
   black_sun: star('black_sun', 1, 'black', 0, 0),
   broken_star: star('broken_star', 1.05, 'broken', 1.5, 0.3),
-  pulsar: star('pulsar', 0.6, 'pulse', 0.5, 0.7),
   star_remnant: star('star_remnant', 0.38, 'remnant', 0.2, 0.35),
   reborn_star: star('reborn_star', 0.95, 'reborn', 0.9, 0.4),
+  chained_star: star('chained_star', 1, 'chained', 0.5, 0.15),
+  watching_star: star('watching_star', 1.05, 'eye', 0.55, 0.1),
 }
 
-export const TWIN_STAR_TOKEN = '--cosmos-star-blue-giant'
+export const COMPANION_TOKENS: readonly string[] = [
+  '--cosmos-star-blue-giant',
+  '--cosmos-star-red-dwarf',
+]
 
 export const STAR_KIND_CODE: Record<StarKind, number> = {
   normal: 0,
@@ -194,6 +245,12 @@ export const STAR_KIND_CODE: Record<StarKind, number> = {
   pulse: 4,
   remnant: 5,
   reborn: 6,
+  brown: 7,
+  cocoon: 8,
+  breathing: 9,
+  chained: 10,
+  eye: 11,
+  magnetar: 12,
 }
 
 export type SurfaceCode =
@@ -214,6 +271,14 @@ export type SurfaceCode =
   | 'ship'
   | 'corpse'
   | 'belt'
+  | 'hotgas'
+  | 'metal'
+  | 'shroud'
+  | 'forge'
+  | 'fungal'
+  | 'shattered'
+  | 'hollow'
+  | 'lineae'
 
 export const SURFACE_CODE: Record<SurfaceCode, number> = {
   rocky: 0,
@@ -233,6 +298,14 @@ export const SURFACE_CODE: Record<SurfaceCode, number> = {
   ship: 14,
   corpse: 15,
   belt: 16,
+  hotgas: 17,
+  metal: 18,
+  shroud: 19,
+  forge: 20,
+  fungal: 21,
+  shattered: 22,
+  hollow: 23,
+  lineae: 24,
 }
 
 export type WorldBodyLook = {
@@ -275,6 +348,27 @@ export const WORLD_BODY: Record<WorldType, WorldBodyLook> = {
   gods_palace: body('palace', { cloudy: false }),
   generation_ship: body('ship', { cloudy: false }),
   corpse_world: body('corpse', { breath: true, cloudy: false }),
+  super_earth: body('rocky'),
+  ice_giant: body('gas', {
+    gas: true,
+    cities: false,
+    cloudy: false,
+    ring: true,
+  }),
+  hot_giant: body('hotgas', { gas: true, cities: false, cloudy: false }),
+  iron: body('metal', { cloudy: false }),
+  carbon: body('crystal', { cloudy: false }),
+  greenhouse: body('shroud', { cloudy: false }),
+  dwarf_planet: body('ice', { cloudy: false }),
+  chthonian: body('lava', { cloudy: false }),
+  hycean: body('ocean'),
+  jungle: body('rocky'),
+  forge: body('forge', { cloudy: false }),
+  fungal: body('fungal', { breath: true }),
+  shattered: body('shattered', { cloudy: false }),
+  hollow: body('hollow'),
+  ice_shell: body('lineae', { cloudy: false }),
+  methane: body('shroud', { cloudy: false }),
 }
 
 export type AtmosphereLook = {

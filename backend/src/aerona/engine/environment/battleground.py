@@ -9,7 +9,7 @@ from aerona.engine.environment.book import add_scar, season_attrition
 from aerona.engine.environment.weather import Weather
 from aerona.rules.registry import Rules
 
-ENDLESS_DAY_WORLDS = frozenset({WorldType.TIDALLY_LOCKED})
+ENDLESS_DAY_WORLDS = frozenset({WorldType.TIDALLY_LOCKED, WorldType.HOT_GIANT, WorldType.CHTHONIAN, WorldType.HOLLOW})
 
 
 @dataclass(frozen=True)

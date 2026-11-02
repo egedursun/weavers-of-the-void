@@ -69,6 +69,18 @@ const TERRAIN_SEA: Partial<Record<string, number>> = {
   ice: 0.4,
   lava: 0.45,
   dead: 0.3,
+  hycean: 0.85,
+  greenhouse: 0.05,
+  iron: 0.12,
+  chthonian: 0.1,
+  dwarf_planet: 0.15,
+  jungle: 0.35,
+  carbon: 0.25,
+  forge: 0.25,
+  fungal: 0.35,
+  shattered: 0.6,
+  ice_shell: 0.2,
+  methane: 0.3,
 }
 
 type World3DProps = {

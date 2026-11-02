@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.worlds import STAR_TYPE_LABELS
+from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
@@ -13,8 +13,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.son import SonStatus
-from aerona.domain.enums.world import SonDistribution
-from aerona.engine.cosmos.stars import EXTINGUISHED_STAR_TYPES
+from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, SonDistribution
 from aerona.prompts import SonToolId
 from aerona.prompts.contexts.cosmos import StarLine
 from aerona.rules.registry import Rules

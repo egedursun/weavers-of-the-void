@@ -20,8 +20,19 @@ SEASON_SHAPES: dict[int, tuple[tuple[str, int], ...]] = {
 }
 ICE_SHAPE = (("Long Winter", NEUTRAL), ("Short Thaw", WET))
 WARMEST: dict[int, int] = {1: 0, 2: 0, 3: 1, 4: 1, 5: 1, 6: 1}
-NO_SEASON_WORLDS = frozenset({WorldType.TIDALLY_LOCKED, WorldType.GENERATION_SHIP, WorldType.VOID_POCKET, WorldType.GODS_PALACE})
-TWO_SEASON_WORLDS = frozenset({WorldType.ICE})
+NO_SEASON_WORLDS = frozenset(
+    {
+        WorldType.TIDALLY_LOCKED,
+        WorldType.GENERATION_SHIP,
+        WorldType.VOID_POCKET,
+        WorldType.GODS_PALACE,
+        WorldType.HOT_GIANT,
+        WorldType.GREENHOUSE,
+        WorldType.CHTHONIAN,
+        WorldType.HOLLOW,
+    }
+)
+TWO_SEASON_WORLDS = frozenset({WorldType.ICE, WorldType.DWARF_PLANET})
 
 
 @dataclass(frozen=True)

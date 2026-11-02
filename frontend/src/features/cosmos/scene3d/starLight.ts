@@ -11,7 +11,7 @@ const PERCENT = 100
 
 export function isDimStar(star: StarRecord): boolean {
   const kind = STAR_LOOK[star.star_type].kind
-  return kind === 'dead' || kind === 'remnant'
+  return kind === 'dead' || kind === 'remnant' || kind === 'brown'
 }
 
 export function starLight(
@@ -22,7 +22,7 @@ export function starLight(
   const look = STAR_LOOK[type]
   const brightness = level / PERCENT
   const scale =
-    look.kind === 'dead' || look.kind === 'remnant'
+    look.kind === 'dead' || look.kind === 'remnant' || look.kind === 'brown'
       ? DIM_LIGHT
       : look.kind === 'black'
         ? BLACK_LIGHT

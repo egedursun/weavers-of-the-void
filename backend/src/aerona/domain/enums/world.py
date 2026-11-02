@@ -20,6 +20,22 @@ class WorldType(StrEnum):
     GODS_PALACE = "gods_palace"
     GENERATION_SHIP = "generation_ship"
     CORPSE_WORLD = "corpse_world"
+    SUPER_EARTH = "super_earth"
+    ICE_GIANT = "ice_giant"
+    HOT_GIANT = "hot_giant"
+    IRON = "iron"
+    CARBON = "carbon"
+    GREENHOUSE = "greenhouse"
+    DWARF_PLANET = "dwarf_planet"
+    CHTHONIAN = "chthonian"
+    HYCEAN = "hycean"
+    JUNGLE = "jungle"
+    FORGE = "forge"
+    FUNGAL = "fungal"
+    SHATTERED = "shattered"
+    HOLLOW = "hollow"
+    ICE_SHELL = "ice_shell"
+    METHANE = "methane"
 
 
 class Gravity(StrEnum):
@@ -55,10 +71,31 @@ class StarType(StrEnum):
     PULSAR = "pulsar"
     STAR_REMNANT = "star_remnant"
     REBORN_STAR = "reborn_star"
+    BLUE_STAR = "blue_star"
+    BLUE_WHITE_STAR = "blue_white_star"
+    WHITE_STAR = "white_star"
+    YELLOW_WHITE_STAR = "yellow_white_star"
+    ORANGE_DWARF = "orange_dwarf"
+    RED_DWARF = "red_dwarf"
+    BROWN_DWARF = "brown_dwarf"
+    YELLOW_GIANT = "yellow_giant"
+    RED_SUPERGIANT = "red_supergiant"
+    BLUE_SUPERGIANT = "blue_supergiant"
+    HYPERGIANT = "hypergiant"
+    WOLF_RAYET = "wolf_rayet"
+    PROTOSTAR = "protostar"
+    CARBON_STAR = "carbon_star"
+    NEUTRON_STAR = "neutron_star"
+    MAGNETAR = "magnetar"
+    BLACK_HOLE = "black_hole"
+    VARIABLE_STAR = "variable_star"
+    TRINARY = "trinary"
+    CHAINED_STAR = "chained_star"
+    WATCHING_STAR = "watching_star"
 
 
-DARK_STAR_TYPES = frozenset({StarType.DEAD_STAR, StarType.BLACK_SUN, StarType.BROKEN_STAR, StarType.STAR_REMNANT})
-COLLAPSIBLE_STAR_TYPES = frozenset({StarType.RED_GIANT, StarType.BLUE_GIANT, StarType.BROKEN_STAR, StarType.PULSAR})
+DARK_STAR_TYPES = frozenset({StarType.DEAD_STAR, StarType.BLACK_SUN, StarType.BROKEN_STAR, StarType.STAR_REMNANT, StarType.BLACK_HOLE})
+EXTINGUISHED_STAR_TYPES = frozenset({StarType.DEAD_STAR, StarType.BLACK_SUN, StarType.STAR_REMNANT, StarType.BLACK_HOLE})
 
 
 class ClimateEra(StrEnum):
@@ -76,6 +113,7 @@ class SkyEventKind(StrEnum):
     SUPERNOVA = "supernova"
     BLACK_SUN = "black_sun"
     VOID_STORM = "void_storm"
+    FLARE = "flare"
 
 
 class HorrorEventKind(StrEnum):
@@ -84,6 +122,8 @@ class HorrorEventKind(StrEnum):
     WAVE_OF_SILENCE = "wave_of_silence"
     REVERSE_RAIN = "reverse_rain"
     VISIT_OF_THE_VOID = "visit_of_the_void"
+    THE_DIMMING = "the_dimming"
+    WHISPERS_FROM_BEYOND = "whispers_from_beyond"
 
 
 class LoreLanguage(StrEnum):

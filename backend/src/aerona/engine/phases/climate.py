@@ -8,13 +8,14 @@ from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.worlds import WorldRepository
-from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.climate import ClimateOrderRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.world import ClimateEra
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_economy import population_bounds
@@ -89,6 +90,11 @@ async def announce_era(ctx: TickContext, world: WorldRow, era: ClimateEra, many_
     )
 
 
+async def star_instability(ctx: TickContext, world: WorldRow) -> int:
+    star = await ctx.session.get(StarRow, world.star_id) if world.star_id is not None else None
+    return star_mechanics(star.star_type).instability(ctx.rules) if star is not None else 0
+
+
 async def advance_world(ctx: TickContext, world: WorldRow, many_worlds: bool) -> None:
     era = ensure_climate(ctx, world)
     order = await ctx.session.get(ClimateOrderRow, world.id)
@@ -103,6 +109,7 @@ async def advance_world(ctx: TickContext, world: WorldRow, many_worlds: bool) ->
         world.climate_since_epoch = ctx.epoch
         world.climate_imposed_by_son_id = None
         left = settings.duration + ctx.rng(f"era_length.{world.id}").die(settings.duration_die)
+        left = max(1, left - await star_instability(ctx, world))
         await announce_era(ctx, world, era, many_worlds)
     world.climate_epochs_left = left
     await apply_climate_effect(ctx, world, era)

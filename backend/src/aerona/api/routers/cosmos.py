@@ -19,9 +19,9 @@ from aerona.api.schemas.cosmos import (
     WorldPulseView,
     WorldTypeLook,
 )
-from aerona.api.schemas.records import EntitySummary, JourneyRecord, NodeRef, RouteRecord, StarRecord, WorldRecord
+from aerona.api.schemas.records import EntitySummary, JourneyRecord, NodeRef, StarRecord, WorldRecord
 from aerona.api.views.celestial import count_types, world_counts
-from aerona.api.views.common import foreign_god_records, node_refs
+from aerona.api.views.common import foreign_god_records, node_refs, route_records
 from aerona.cartography.palette import palette_for
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.core.errors import NotFoundError
@@ -160,7 +160,7 @@ async def read_cosmos(services: ServicesDep) -> CosmosView:
             stars=[StarRecord.model_validate(row).model_copy(update={"cover": star_covers.get(row.id)}) for row in star_rows],
             worlds=cosmos_worlds,
             foreign_gods=await foreign_god_records(session),
-            routes=[RouteRecord.model_validate(row) for row in await session.scalars(select(RouteRow).order_by(RouteRow.id))],
+            routes=await route_records(session, await world_rules(services, session), list(await session.scalars(select(RouteRow).order_by(RouteRow.id)))),
             journeys=[JourneyRecord.model_validate(row) for row in await session.scalars(select(JourneyRow).order_by(JourneyRow.id.desc()))],
             sky_events=[SkyEventRecord.model_validate(row) for row in await session.scalars(select(SkyEventRow).order_by(SkyEventRow.id.desc()))],
             world_types=[WorldTypeLook(world_type=kind, label=spec.label, palette=palette_for(kind)) for kind, spec in WORLD_TYPES.items()],

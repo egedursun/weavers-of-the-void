@@ -102,6 +102,7 @@ from aerona.rules.registry.sky import SkyRules
 from aerona.rules.registry.society import SocietyRules
 from aerona.rules.registry.son_relations import SonRelationsRules
 from aerona.rules.registry.son_tools import SonToolsRules
+from aerona.rules.registry.star_types import StarTypeRules
 from aerona.rules.registry.summoning import SummoningRules
 from aerona.rules.registry.time import TimeRules
 from aerona.rules.registry.trade import TradeRules
@@ -222,6 +223,7 @@ class Rules:
     server: ServerRules = field(default_factory=ServerRules)
     setup_wizard: SetupWizardRules = field(default_factory=SetupWizardRules)
     sky: SkyRules = field(default_factory=SkyRules)
+    star_types: StarTypeRules = field(default_factory=StarTypeRules)
     society: SocietyRules = field(default_factory=SocietyRules)
     son_relations: SonRelationsRules = field(default_factory=SonRelationsRules)
     son_tools: SonToolsRules = field(default_factory=SonToolsRules)

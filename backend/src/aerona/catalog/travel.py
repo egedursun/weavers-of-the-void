@@ -114,6 +114,15 @@ TRAVEL_METHODS: dict[TravelMethod, TravelMethodSpec] = {
             lambda rules: rules.travel_methods.swallowed_duration,
             lambda rules: rules.travel_methods.swallowed_danger,
         ),
+        TravelMethodSpec(
+            M.WORMHOLE,
+            "Wormhole",
+            KnowledgeBranch.ASTRONOMY,
+            VehicleKind.SHIP,
+            "A natural tunnel through the void; its throat opens and shuts on its own and can close on a ship.",
+            lambda rules: rules.travel_methods.wormhole_duration,
+            lambda rules: rules.travel_methods.wormhole_danger,
+        ),
     )
 }
 

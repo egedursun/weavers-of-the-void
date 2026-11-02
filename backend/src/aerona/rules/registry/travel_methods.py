@@ -24,6 +24,12 @@ class TravelMethodsRules:
     slingshot_orbit_danger: int = rule(25, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Slingshot orbit: danger")
     swallowed_duration: int = rule(2, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Being swallowed: journey duration (epochs)")
     swallowed_danger: int = rule(60, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Being swallowed: danger")
+    wormhole_duration: int = rule(1, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Wormhole: journey duration (epochs)")
+    wormhole_danger: int = rule(40, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Wormhole: danger")
+    wormhole_open_pct: int = rule(60, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Wormhole: chance its throat is open in a given epoch (%)")
+    bridge_collapse_loss_pct: int = rule(
+        70, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Chance an expedition on a collapsing divine bridge falls into the void (%; the rest turn back)"
+    )
     gate_sacrifice_pct: int = rule(
         3, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Ancient gate: share of travellers sacrificed to open the gate when nobody in the party knows its true name (%)"
     )

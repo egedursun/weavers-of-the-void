@@ -1,5 +1,6 @@
 from aerona.agents.context.scope import Scope
-from aerona.catalog.worlds import ATMOSPHERE_LABELS, GRAVITY_LABELS, STAR_TYPE_LABELS, WORLD_TYPES
+from aerona.catalog.stars import STAR_TYPE_LABELS
+from aerona.catalog.worlds import ATMOSPHERE_LABELS, GRAVITY_LABELS, WORLD_TYPES
 from aerona.db.tables.celestial import StarRow
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import WorldLineContext

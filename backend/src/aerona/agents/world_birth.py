@@ -12,7 +12,8 @@ from aerona.agents.context.world_header import world_header
 from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
 from aerona.catalog.domains import DOMAIN_LABELS
-from aerona.catalog.worlds import STAR_TYPE_LABELS, WORLD_TYPES
+from aerona.catalog.stars import STAR_TYPE_LABELS
+from aerona.catalog.worlds import WORLD_TYPES
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow

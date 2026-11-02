@@ -388,6 +388,7 @@ async def route_method(ctx: TickContext, entity: EntityRow, knowledge: Knowledge
         (KnowledgeBranch.GATE_LORE, TravelMethod.ANCIENT_GATE),
         (KnowledgeBranch.PATHFINDING, TravelMethod.SPACE_FOLD),
         (KnowledgeBranch.SKY_NAVIGATION, TravelMethod.LIGHT_SAIL),
+        (KnowledgeBranch.ASTRONOMY, TravelMethod.WORMHOLE),
     ):
         if branch in known:
             return method

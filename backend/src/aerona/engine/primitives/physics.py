@@ -4,8 +4,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
-from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.domain.enums.world import Atmosphere, Gravity, WorldType
+from aerona.engine.cosmos.star_types import star_capacity_pct
 from aerona.engine.cosmos.world_types import mechanics_of
 from aerona.rules.registry import Rules
 
@@ -36,22 +37,27 @@ def gravity_war(rules: Rules, gravity: Gravity) -> int:
     ]
 
 
-def world_physics(rules: Rules, world: WorldRow | None) -> WorldPhysics:
+def world_physics(rules: Rules, world: WorldRow | None, star: StarRow | None = None) -> WorldPhysics:
     if world is None:
         return WorldPhysics()
     type_capacity = mechanics_of(world.world_type).capacity_pct
     capacity = capacity_pct(rules, world.atmosphere) / PERCENT * (type_capacity(rules) / PERCENT if type_capacity is not None else 1.0)
+    capacity *= star_capacity_pct(rules, star) / PERCENT
     return WorldPhysics(world.time_factor or 1.0, capacity, gravity_war(rules, world.gravity), world.world_type)
 
 
 class PhysicsTable:
-    def __init__(self, worlds: dict[int, WorldRow], rules: Rules) -> None:
-        self._physics = {world_id: world_physics(rules, world) for world_id, world in worlds.items()}
+    def __init__(self, worlds: dict[int, WorldRow], rules: Rules, stars: dict[int, StarRow] | None = None) -> None:
+        found = stars or {}
+        self._physics = {
+            world_id: world_physics(rules, world, found.get(world.star_id) if world.star_id is not None else None) for world_id, world in worlds.items()
+        }
 
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules) -> "PhysicsTable":
         worlds = {world.id: world for world in await session.scalars(select(WorldRow))}
-        return cls(worlds, rules)
+        stars = {star.id: star for star in await session.scalars(select(StarRow))}
+        return cls(worlds, rules, stars)
 
     def of(self, world_id: int | None) -> WorldPhysics:
         if world_id is None:

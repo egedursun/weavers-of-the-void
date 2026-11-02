@@ -11,8 +11,9 @@ from aerona.catalog.knowledge import KNOWLEDGE_BRANCHES, NATURAL_LAWS
 from aerona.catalog.powers import POWERS, power_unlock_levels
 from aerona.catalog.rarities import RARITY_LABELS, entity_rarity
 from aerona.catalog.scenarios import SCENARIOS
+from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.stats import PASSIONS, STATS
-from aerona.catalog.worlds import ATMOSPHERE_LABELS, GRAVITY_LABELS, STAR_TYPE_LABELS, WORLD_TYPES
+from aerona.catalog.worlds import ATMOSPHERE_LABELS, GRAVITY_LABELS, WORLD_TYPES
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow

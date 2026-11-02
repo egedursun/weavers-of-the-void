@@ -11,6 +11,7 @@ class TravelMethod(StrEnum):
     DIVINE_BRIDGE = "divine_bridge"
     SLINGSHOT_ORBIT = "slingshot_orbit"
     SWALLOWED = "swallowed"
+    WORMHOLE = "wormhole"
 
 
 class VehicleKind(StrEnum):
@@ -66,3 +67,17 @@ class RouteClosure(StrEnum):
     FORGOTTEN = "forgotten"
     COLLAPSED = "collapsed"
     SNAPPED = "snapped"
+    SCORCHED = "scorched"
+
+
+class RouteState(StrEnum):
+    OPEN = "open"
+    TEMPORARY = "temporary"
+    MISALIGNED = "misaligned"
+    SEALED = "sealed"
+    SEVERED = "severed"
+    COLLAPSED = "collapsed"
+    SNAPPED = "snapped"
+    SCORCHED = "scorched"
+    UNSTABLE = "unstable"
+    FORGOTTEN = "forgotten"

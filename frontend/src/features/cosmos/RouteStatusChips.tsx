@@ -19,7 +19,9 @@ type BadgeVariant =
 const STATE_VARIANT: Record<RouteStateKey, BadgeVariant> = {
   open: 'success',
   temporary: 'warning',
-  unaligned: 'outline',
+  misaligned: 'outline',
+  unstable: 'outline',
+  scorched: 'destructive',
   sealed: 'secondary',
   severed: 'destructive',
   forgotten: 'outline',

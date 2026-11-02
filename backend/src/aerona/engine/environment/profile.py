@@ -38,6 +38,22 @@ WORLD_TEMPERATURE: dict[WorldType, Callable[[Rules], int]] = {
     WorldType.GODS_PALACE: lambda rules: rules.environment.temperature_gods_palace,
     WorldType.GENERATION_SHIP: lambda rules: rules.environment.temperature_generation_ship,
     WorldType.CORPSE_WORLD: lambda rules: rules.environment.temperature_corpse_world,
+    WorldType.FORGE: lambda rules: rules.environment.temperature_forge,
+    WorldType.SUPER_EARTH: lambda rules: rules.environment.temperature_super_earth,
+    WorldType.ICE_GIANT: lambda rules: rules.environment.temperature_ice_giant,
+    WorldType.HOT_GIANT: lambda rules: rules.environment.temperature_hot_giant,
+    WorldType.IRON: lambda rules: rules.environment.temperature_iron,
+    WorldType.CARBON: lambda rules: rules.environment.temperature_carbon,
+    WorldType.GREENHOUSE: lambda rules: rules.environment.temperature_greenhouse,
+    WorldType.DWARF_PLANET: lambda rules: rules.environment.temperature_dwarf_planet,
+    WorldType.CHTHONIAN: lambda rules: rules.environment.temperature_chthonian,
+    WorldType.HYCEAN: lambda rules: rules.environment.temperature_hycean,
+    WorldType.JUNGLE: lambda rules: rules.environment.temperature_jungle,
+    WorldType.FUNGAL: lambda rules: rules.environment.temperature_fungal,
+    WorldType.SHATTERED: lambda rules: rules.environment.temperature_shattered,
+    WorldType.HOLLOW: lambda rules: rules.environment.temperature_hollow,
+    WorldType.ICE_SHELL: lambda rules: rules.environment.temperature_ice_shell,
+    WorldType.METHANE: lambda rules: rules.environment.temperature_methane,
 }
 
 WORLD_TERRAIN: dict[WorldType, TerrainKind] = {
@@ -48,6 +64,12 @@ WORLD_TERRAIN: dict[WorldType, TerrainKind] = {
     WorldType.VOID_POCKET: TerrainKind.VOID_SHORE,
     WorldType.GENERATION_SHIP: TerrainKind.UNDERGROUND,
     WorldType.ASTEROID_BELT: TerrainKind.CANYON,
+    WorldType.GREENHOUSE: TerrainKind.VOLCANIC,
+    WorldType.DWARF_PLANET: TerrainKind.ICE_SHEET,
+    WorldType.CHTHONIAN: TerrainKind.VOLCANIC,
+    WorldType.JUNGLE: TerrainKind.JUNGLE,
+    WorldType.ICE_SHELL: TerrainKind.ICE_SHEET,
+    WorldType.METHANE: TerrainKind.TUNDRA,
 }
 
 WORLD_SOIL: dict[WorldType, SoilKind] = {
@@ -59,6 +81,30 @@ WORLD_SOIL: dict[WorldType, SoilKind] = {
     WorldType.ICE: SoilKind.THIN,
     WorldType.ASTEROID_BELT: SoilKind.THIN,
     WorldType.VOID_POCKET: SoilKind.ASH,
+    WorldType.FORGE: SoilKind.ASH,
+    WorldType.IRON: SoilKind.THIN,
+    WorldType.CARBON: SoilKind.ASH,
+    WorldType.GREENHOUSE: SoilKind.VOLCANIC,
+    WorldType.DWARF_PLANET: SoilKind.THIN,
+    WorldType.CHTHONIAN: SoilKind.VOLCANIC,
+    WorldType.JUNGLE: SoilKind.PEAT,
+    WorldType.FUNGAL: SoilKind.PEAT,
+    WorldType.SHATTERED: SoilKind.THIN,
+    WorldType.ICE_SHELL: SoilKind.THIN,
+    WorldType.METHANE: SoilKind.THIN,
+}
+
+WORLD_MINERALS: dict[WorldType, tuple[MaterialKind, ...]] = {
+    WorldType.IRON: (MaterialKind.IRON, MaterialKind.LEAD),
+    WorldType.CARBON: (MaterialKind.GEMS,),
+    WorldType.GREENHOUSE: (MaterialKind.SULFUR,),
+    WorldType.CHTHONIAN: (MaterialKind.IRON, MaterialKind.GOLD),
+    WorldType.HYCEAN: (MaterialKind.SALT,),
+    WorldType.JUNGLE: (MaterialKind.AMBER,),
+    WorldType.FORGE: (MaterialKind.IRON, MaterialKind.COPPER),
+    WorldType.SHATTERED: (MaterialKind.STAR_METAL,),
+    WorldType.HOLLOW: (MaterialKind.GEMS,),
+    WorldType.ICE_SHELL: (MaterialKind.SALT,),
 }
 
 SOIL_FERTILITY: dict[SoilKind, Callable[[Rules], int]] = {
@@ -135,6 +181,7 @@ class Surroundings:
     highland: bool
     ruins: int = 0
     chokepoints: int = 0
+    star_heat: int = 0
 
 
 @dataclass(frozen=True)
@@ -157,6 +204,7 @@ def temperature_of(rules: Rules, geography: Geography, around: Surroundings) -> 
     settings = rules.environment
     value = (
         WORLD_TEMPERATURE[around.world_type](rules)
+        + around.star_heat
         - geography.latitude * settings.latitude_cooling_pct / PERCENT
         - geography.elevation_mean * settings.elevation_cooling_pct / PERCENT
     )
@@ -381,6 +429,8 @@ def mineral_layers(rules: Rules, rng: SeededRandom, geography: Geography, world_
         candidates[MaterialKind.CRYSTAL] = settings.crystal_mineral
     if world_type is WorldType.VOID_POCKET:
         candidates[MaterialKind.VOID_GLASS] = settings.void_mineral
+    for material in WORLD_MINERALS.get(world_type, ()):
+        candidates[material] = max(candidates.get(material, 0), settings.signature_mineral)
     layers: dict[str, int] = {}
     for material, presence in sorted(candidates.items(), key=lambda item: item[0].value):
         if presence < settings.mineral_presence_min:

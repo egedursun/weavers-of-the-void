@@ -19,8 +19,10 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, SOCIETY_
 from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
+from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.world_types import disaster_pct
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment
 from aerona.engine.environment.profile import RIVER_RANK
 from aerona.engine.lifecycle.wounds import WoundOutcome, wound
@@ -226,6 +228,11 @@ class DisasterWorld:
     laws: LawBook
     climates: Mapping[int, int]
     struck: int = 0
+    world_types: Mapping[int, WorldType] = field(default_factory=dict)
+
+    def nature_mult(self, rules: Rules, world_id: int | None, disaster: Disaster) -> float:
+        world_type = self.world_types.get(world_id) if world_id is not None else None
+        return fraction(disaster_pct(rules, world_type, disaster)) if world_type is not None else 1.0
 
     def law_mult(self, rules: Rules, world_id: int) -> float:
         return float(rules.disasters.law_mult) if self.laws.has(NaturalLaw.DISASTERS, world_id) else 1.0
@@ -327,7 +334,7 @@ async def _region_disasters(ctx: TickContext, world: DisasterWorld) -> None:
         candidates = region_candidates(ctx, region, atlas, regional_population.get(region.id, 0), world.laws, ground=ground, tidal=tidal)
         for disaster, chance in candidates:
             climate = world.climate_mult(region.world_id) if disaster is Disaster.PLAGUE else 1.0
-            if not rng.chance(chance * world.law_mult(ctx.rules, region.world_id) * climate):
+            if not rng.chance(chance * world.law_mult(ctx.rules, region.world_id) * climate * world.nature_mult(ctx.rules, region.world_id, disaster)):
                 continue
             event, impact = await strike(ctx, region, disaster, severity_roll(ctx, f"severity.{region.id}"))
             world.struck += 1
@@ -359,7 +366,8 @@ async def _city_plagues(ctx: TickContext, world: DisasterWorld) -> None:
         hungry = (await society_of(ctx.session, ctx.rules, city.id)).stocks[Commodity.FOOD] < effects.hungry_food
         war = city.id in at_war
         chance = (settings.city_plague_chance if crowded else 0) + (settings.hungry_plague_chance if hungry else 0) + (settings.war_plague_chance if war else 0)
-        if not chance or not ctx.rng(f"city_plague.{city.id}").chance(chance * world.plague_mult(ctx.rules, city.world_id)):
+        nature = world.nature_mult(ctx.rules, city.world_id, Disaster.PLAGUE)
+        if not chance or not ctx.rng(f"city_plague.{city.id}").chance(chance * world.plague_mult(ctx.rules, city.world_id) * nature):
             continue
         event, impact = await strike(ctx, city, Disaster.PLAGUE, severity_roll(ctx, f"city_severity.{city.id}"))
         world.struck += 1
@@ -419,7 +427,8 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
 
 
 async def natural_disasters(ctx: TickContext) -> None:
-    world = DisasterWorld(await ctx.laws(), await climate_plague_multipliers(ctx))
+    world_types = {world_id: world_type for world_id, world_type in await ctx.session.execute(select(WorldRow.id, WorldRow.world_type))}
+    world = DisasterWorld(await ctx.laws(), await climate_plague_multipliers(ctx), world_types=world_types)
     await _region_disasters(ctx, world)
     await _city_plagues(ctx, world)
     ctx.count("disasters", world.struck)

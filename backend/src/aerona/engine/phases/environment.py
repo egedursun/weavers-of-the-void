@@ -10,7 +10,7 @@ from aerona.catalog.weather import WEATHER
 from aerona.constants.cartography import BIOME_COUNT
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
-from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.domain.enums.bond import BondKind
@@ -22,6 +22,7 @@ from aerona.domain.enums.world import ClimateEra, Discovery
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.star_types import star_heat
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.ley import LeyWeb, candidate_lines, cut_by_land, pair
 from aerona.engine.environment.profile import (
@@ -129,6 +130,7 @@ class RegionContext:
     era: ClimateEra | None
     ruins: int
     chokepoints: int
+    star: StarRow | None = None
 
     def surroundings(self, rules: Rules, env: RegionEnvironmentRow) -> Surroundings:
         return Surroundings(
@@ -138,6 +140,7 @@ class RegionContext:
             highland=is_highland(rules, geography_of(env)),
             ruins=self.ruins,
             chokepoints=self.chokepoints,
+            star_heat=star_heat(rules, self.star),
         )
 
 
@@ -331,6 +334,7 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
             era=world.climate_era,
             ruins=ruins[region.id],
             chokepoints=chokepoints[region.id],
+            star=book.star_of(world),
         )
     return contexts
 

@@ -37,6 +37,31 @@ void main(){
     col = mix(plate, vec3(1.0, 0.93, 0.78) * uIntensity * 2.4, crack);
   } else if (uKind == 4) {
     col *= 0.55 + uPulse*1.1;
+  } else if (uKind == 7) {
+    float bands = 0.5 + 0.5*sin(p.y*11.0 + g1*2.6 + uSeed);
+    col = mix(uEdge*0.35, uColor*0.75, bands) * (0.45 + 0.55*pow(mu, 0.7));
+    col += uColor*pow(1.0 - mu, 4.0)*0.35;
+  } else if (uKind == 8) {
+    float dust = smoothstep(-0.25, 0.55, fbm(p*3.6 + vec3(uTime*0.02) + uSeed*2.0, 5));
+    col = mix(col, uEdge*0.22, dust*0.72);
+  } else if (uKind == 9) {
+    col *= 0.62 + 0.75*uPulse;
+  } else if (uKind == 10) {
+    float lon = atan(p.z, p.x);
+    float chain = smoothstep(0.9, 0.975, abs(sin(p.y*6.5 + sin(lon*3.0 + uSeed)*0.35)));
+    float link = step(0.5, fract(lon*9.0/6.2831 + p.y*2.0));
+    col = mix(col, vec3(0.04, 0.035, 0.03), chain*(0.75 + 0.25*link));
+    col += uColor*smoothstep(0.8, 0.9, abs(sin(p.y*6.5 + sin(lon*3.0 + uSeed)*0.35)))*(1.0 - chain)*0.9*(0.6 + 0.4*sin(uTime*1.1 + lon*4.0));
+  } else if (uKind == 11) {
+    float iris = smoothstep(0.62, 0.76, mu)*(1.0 - smoothstep(0.93, 0.965, mu));
+    float rays = 0.6 + 0.4*sin(atan(vObj.y, vObj.x)*28.0 + g1*4.0);
+    float pupil = smoothstep(0.955, 0.975, mu);
+    col = mix(col, uEdge*1.6*rays, iris);
+    col = mix(col, vec3(0.0), pupil*(0.9 + 0.1*sin(uTime*0.4)));
+  } else if (uKind == 12) {
+    float loops = smoothstep(0.95, 1.0, abs(sin(atan(p.y, length(p.xz))*7.0 + uTime*0.6)));
+    col *= 0.45 + uPulse*1.5;
+    col += vec3(0.6, 0.8, 1.0)*loops*0.6;
   }
   col += vec3(0.25, 0.2, 0.12) * uHover * pow(1.0 - mu, 2.0);
   gl_FragColor = vec4(col, 1.0);

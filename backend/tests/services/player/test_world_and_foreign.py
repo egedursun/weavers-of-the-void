@@ -5,7 +5,7 @@ from aerona.core.errors import ValidationFailedError
 from aerona.domain.enums.foreign_god import ForeignGodPowerEffect, ForeignGodStatus
 from aerona.domain.enums.son import Stat
 from aerona.domain.enums.travel import TravelMethod
-from aerona.domain.enums.world import Atmosphere, Discovery, WorldType
+from aerona.domain.enums.world import Atmosphere, Discovery, Gravity, WorldType
 from aerona.rules.registry import Rules
 from aerona.services.player import cosmic, creation, foreign_gods, world_edits
 from aerona.services.player.scope import PlayerScope
@@ -35,6 +35,13 @@ async def test_edit_world_physics_and_validation(scope: PlayerScope, session: As
         await world_edits.edit_world(scope, world_edits.EditWorld(world_id=world.world.id, time_factor=0))
     with pytest.raises(ValidationFailedError):
         await world_edits.edit_world(scope, world_edits.EditWorld(world_id=world.world.id, mortal_agents=rules.god_hand.mortal_agents_per_world_cap + 1))
+
+
+async def test_a_new_world_type_brings_its_forced_physics(scope: PlayerScope, world: PlayerWorld) -> None:
+    await world_edits.edit_world(scope, world_edits.EditWorld(world_id=world.world.id, world_type=WorldType.GREENHOUSE))
+    assert world.world.atmosphere is Atmosphere.TOXIC
+    await world_edits.edit_world(scope, world_edits.EditWorld(world_id=world.world.id, world_type=WorldType.SUPER_EARTH, atmosphere=Atmosphere.DENSE))
+    assert world.world.gravity is Gravity.HIGH and world.world.atmosphere is Atmosphere.DENSE
 
 
 async def test_forget_and_remember_world(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:

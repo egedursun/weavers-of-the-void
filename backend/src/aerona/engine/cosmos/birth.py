@@ -4,7 +4,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.cartography.terrain import default_terrain
-from aerona.catalog.worlds import STAR_TYPE_LABELS, WORLD_TYPES
+from aerona.catalog.stars import STAR_TYPE_LABELS
+from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.cosmos import (
     MOON_ORBIT_BASE,
     MOON_ORBIT_STEP,
@@ -173,7 +174,7 @@ async def _new_star(ctx: TickContext, output: NewWorldOutput, world_name: str, r
     star_type = requested or (output.star.type if output.star is not None and output.star.name.strip() else fallback_type)
     description = output.star.description if output.star is not None else None
     return await create_star(
-        ctx.session, ctx.rng("birth_star"), ctx.epoch, StarSpec(name, star_type, birth.star_brightness_base, birth.star_brightness_die, description)
+        ctx.session, ctx.rules, ctx.rng("birth_star"), ctx.epoch, StarSpec(name, star_type, birth.star_brightness_base, birth.star_brightness_die, description)
     )
 
 

@@ -32,7 +32,7 @@ from aerona.domain.enums.meta import AchievementKey, ScenarioKey, ScenarioStatus
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import HorizonStatus, JourneyStatus
-from aerona.domain.enums.world import DARK_STAR_TYPES, Discovery, StarType
+from aerona.domain.enums.world import DARK_STAR_TYPES, EXTINGUISHED_STAR_TYPES, Discovery, StarType
 from aerona.domain.models.records import ScoreBreakdown
 from aerona.engine.context import TickContext
 from aerona.engine.gods.queries import canon_count, cosmos_row, world_count
@@ -44,7 +44,6 @@ from aerona.engine.services.war import ongoing_war_count
 from aerona.rules.registry import Rules
 
 logger = logging.getLogger(__name__)
-LOST_STAR_DEAD_TYPES = frozenset({StarType.DEAD_STAR, StarType.BLACK_SUN, StarType.STAR_REMNANT})
 COMMUNITY_TIER_TYPES = (EntityType.PEOPLE, EntityType.SETTLEMENT)
 GOAL_SEVERITY = 3
 ACHIEVEMENT_SEVERITY = 2
@@ -176,7 +175,7 @@ async def _doom_far(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch
 
 async def _lost_star(session: AsyncSession, rules: Rules, row: ScenarioRow, epoch: int) -> ScenarioProgress:
     reborn = await star_count(session, frozenset({StarType.REBORN_STAR}))
-    dead = await star_count(session, LOST_STAR_DEAD_TYPES & DARK_STAR_TYPES)
+    dead = await star_count(session, EXTINGUISHED_STAR_TYPES & DARK_STAR_TYPES)
     if not reborn and not dead:
         return ScenarioProgress(0, "There is no dead star in the cosmos yet; one must die first.")
     done = reborn > (row.baseline_count or 0)

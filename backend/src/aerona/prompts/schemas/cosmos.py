@@ -25,7 +25,7 @@ class NativeKind(StrEnum):
 
 class NewStarOutput(OutputModel):
     name: str
-    type: StarType
+    type: StarType = Field(description="The kind of sun; its kind sets how hot, bright, stable and strange its worlds are: {{ star_types }}")
     description: str
 
 
@@ -102,7 +102,7 @@ class NewWorldOutput(OutputModel):
     placement: PlacementChoice = Field(
         description="existing_star: a new planet orbiting a star in the list (most worlds are like this; choose this if the light the world wants is in the list); new_star: if a sun of a kind NOT in the list is needed, a distant system with its own sun (then the star field is mandatory); moon: the moon of an existing world"
     )
-    type: WorldType
+    type: WorldType = Field(description="The kind of world (a moon takes a world kind too): {{ world_types }}")
     dialect: NamingRuleOutput = Field(
         description="BUILD THIS FIRST: this world's own naming dialect, with vowels, consonants, syllable patterns and endings DIFFERENT from the main world. All names below (world, regions, sky, resource, natives) are derived with this dialect."
     )

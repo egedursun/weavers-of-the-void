@@ -9,14 +9,15 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.worlds import WorldRepository
-from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.foreign_gods import OuterBargainRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
@@ -25,16 +26,18 @@ from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import RouteClosure, TravelMethod
-from aerona.domain.enums.world import Discovery, HorrorEventKind
-from aerona.domain.models.entity_stats import CultStats, OuterBeingStats
+from aerona.domain.enums.world import DARK_STAR_TYPES, Discovery, HorrorEventKind
+from aerona.domain.models.entity_stats import CultStats, KnowledgeStats, OuterBeingStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.leak import apply_leak, leak_cap, leak_delta, record_breakdown
 from aerona.engine.cosmos.routes import open_alignment
 from aerona.engine.cosmos.sanity import sanity_of, shift_sanity
+from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.world_types import mechanics_of
 from aerona.engine.environment.book import scar_region
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
+from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.doom import doom_share
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.manual import manual_context
@@ -52,6 +55,7 @@ EYE_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.MORT
 VOID_GUARDS = frozenset({*COMMUNITY_TYPES, EntityType.MORTAL})
 MADNESS_DOMAINS = frozenset({Domain.MADNESS, Domain.DREAM, Domain.SLEEP, Domain.SHADOW, Domain.LIES})
 INTEREST_KEY = "interest"
+WHISPERS_SUBTYPE = "whispers from beyond"
 
 
 class SanityBand(StrEnum):
@@ -67,11 +71,20 @@ async def reopen_severed(ctx: TickContext) -> int:
     for route in list(await ctx.session.scalars(statement)):
         if route.world_a_id in forgotten or route.world_b_id in forgotten:
             continue
+        scorched = route.closure is RouteClosure.SCORCHED
         route.active = True
         route.temp_closed_until_epoch = None
         route.closure = None
         reopened += 1
-        await note(ctx, f"The route severed by the void was stitched again (route#{route.id}).", key="horror.route_stitched", feed=FeedCategory.GATE)
+        if scorched:
+            await note(
+                ctx,
+                f"The light-sail route scorched by the flare cooled and opened again (route#{route.id}).",
+                key="horror.route_cooled",
+                feed=FeedCategory.GATE,
+            )
+        else:
+            await note(ctx, f"The route severed by the void was stitched again (route#{route.id}).", key="horror.route_stitched", feed=FeedCategory.GATE)
     return reopened
 
 
@@ -138,12 +151,17 @@ class SanityContext:
 
 async def _sanity_context(ctx: TickContext, knowledge: KnowledgeMap) -> SanityContext:
     worlds = await WorldRepository(ctx.session).all_worlds()
+    stars = {star.id: star.star_type for star in await ctx.session.scalars(select(StarRow))}
     outer = {entity.world_id for entity in await canon(ctx.session, [EntityType.OUTER_BEING])}
     index = await BondIndex.load(ctx.session, [BondKind.WORSHIPS])
     return SanityContext(
         leaks={world.id: world.leakage for world in worlds},
         outer_worlds=outer,
-        void_erosion={world.id: mechanics_of(world.world_type).sanity_erosion(ctx.rules) for world in worlds},
+        void_erosion={
+            world.id: mechanics_of(world.world_type).sanity_erosion(ctx.rules)
+            + (star_mechanics(stars[world.star_id]).sanity_erosion(ctx.rules) if world.star_id in stars else 0)
+            for world in worlds
+        },
         worshipping={bond.source_node_id for bond in index.bonds},
         knowledge=knowledge,
     )
@@ -442,6 +460,62 @@ async def visit_of_the_void(ctx: TickContext, world: WorldRow) -> str | None:
     return f"The Void visited {world.name}: {target.name} was erased from the map. In its place is a nothingness that tires the eye to look at."
 
 
+async def the_dimming(ctx: TickContext, world: WorldRow) -> str | None:
+    star = await ctx.session.get(StarRow, world.star_id) if world.star_id is not None else None
+    if star is None or star.star_type in DARK_STAR_TYPES or star.brightness <= 0:
+        return None
+    before = star.brightness
+    star.brightness = max(0, star.brightness - ctx.rules.cosmic_horror.dimming_brightness_loss)
+    await ctx.session.flush()
+    return (
+        f"Something drank from {star.name}: its light fell from {before} to {star.brightness}. "
+        f"{world.name} grew colder, and nobody could say what had stood between it and its sun."
+    )
+
+
+async def _whispered_knowledge(ctx: TickContext, world: WorldRow) -> EntityRow:
+    horror = ctx.rules.cosmic_horror
+    known = [item for item in await canon(ctx.session, [EntityType.KNOWLEDGE], world.id) if item.subtype == WHISPERS_SUBTYPE]
+    if known:
+        return known[0]
+    return await open_record(
+        ctx.session,
+        ctx.epoch,
+        RecordSpec(
+            name=f"Whispers from Beyond ({world.name})",
+            entity_type=EntityType.KNOWLEDGE,
+            body="Words that came from outside the world, heard in sleep and never spoken aloud by choice.",
+            stats=KnowledgeStats(level=horror.whispers_knowledge_level, spread=0),
+            power=horror.whispers_knowledge_power,
+            world_id=world.id,
+            subtype=WHISPERS_SUBTYPE,
+            knowledge_branch=KnowledgeBranch.FORBIDDEN,
+        ),
+    )
+
+
+async def whispers_from_beyond(ctx: TickContext, world: WorldRow) -> str | None:
+    horror = ctx.rules.cosmic_horror
+    knowledge = await _whispered_knowledge(ctx, world)
+    heard = set(
+        await ctx.session.scalars(
+            select(BondRow.source_node_id).where(BondRow.target_node_id == knowledge.id, BondRow.kind == BondKind.KNOWS, BondRow.state == BondState.ACTIVE)
+        )
+    )
+    mortals = [item for item in await canon(ctx.session, [EntityType.MORTAL], world.id) if item.id not in heard]
+    communities = [item for item in await canon(ctx.session, COMMUNITY_TYPES, world.id) if item.id not in heard]
+    if mortals:
+        listener = max(mortals, key=lambda item: (stat_or(item, "intellect", 0), -item.id))
+    elif communities:
+        listener = max(communities, key=lambda item: (item.importance or 0, -item.id))
+    else:
+        return None
+    if not await teach(ctx, listener.id, knowledge, "heard it whispered from beyond the world"):
+        return None
+    shift_sanity(ctx.rules, listener, -horror.whispers_sanity_loss)
+    return f"Whispers from beyond reached {listener.name} in {world.name}: they now know what should not be known, and they cannot stop listening."
+
+
 async def horror_event(ctx: TickContext, kind: HorrorEventKind, world: WorldRow) -> str | None:
     handlers = {
         HorrorEventKind.STARS_ALIGN: stars_align,
@@ -449,6 +523,8 @@ async def horror_event(ctx: TickContext, kind: HorrorEventKind, world: WorldRow)
         HorrorEventKind.WAVE_OF_SILENCE: wave_of_silence,
         HorrorEventKind.REVERSE_RAIN: reverse_rain,
         HorrorEventKind.VISIT_OF_THE_VOID: visit_of_the_void,
+        HorrorEventKind.THE_DIMMING: the_dimming,
+        HorrorEventKind.WHISPERS_FROM_BEYOND: whispers_from_beyond,
     }
     text = await handlers[kind](ctx, world)
     if text is not None:

@@ -9172,7 +9172,7 @@ export interface components {
             world_id: number;
             kind: components["schemas"]["HorrorEventKind"];
         };
-        HorrorEventKind: "stars_align" | "eye_in_the_sky" | "wave_of_silence" | "reverse_rain" | "visit_of_the_void";
+        HorrorEventKind: "stars_align" | "eye_in_the_sky" | "wave_of_silence" | "reverse_rain" | "visit_of_the_void" | "the_dimming" | "whispers_from_beyond";
         HorrorOuterBeingInput: {
             world_id: number;
         };
@@ -11171,7 +11171,7 @@ export interface components {
         RiteKind: "prayer" | "offering" | "blood" | "life" | "rite";
         RiverClass: "none" | "stream" | "river" | "great_river";
         RoadKind: "road" | "trade";
-        RouteClosure: "sealed" | "severed" | "forgotten" | "collapsed" | "snapped";
+        RouteClosure: "sealed" | "severed" | "forgotten" | "collapsed" | "snapped" | "scorched";
         RouteDangerInput: {
             route_id: number;
             danger: number;
@@ -11203,6 +11203,15 @@ export interface components {
             closure: components["schemas"]["RouteClosure"] | null;
             temp_open_until_epoch: number | null;
             temp_closed_until_epoch: number | null;
+            status: components["schemas"]["RouteStatusRecord"];
+        };
+        RouteState: "open" | "temporary" | "misaligned" | "sealed" | "severed" | "collapsed" | "snapped" | "scorched" | "unstable" | "forgotten";
+        RouteStatusRecord: {
+            open: boolean;
+            state: components["schemas"]["RouteState"];
+            reason: string;
+            opens_epoch: number | null;
+            closes_epoch: number | null;
         };
         RouteTeachInput: {
             community_id: number;
@@ -11424,7 +11433,7 @@ export interface components {
             score: number;
             reasons: string[];
         };
-        SkyEventKind: "eclipse" | "comet" | "alignment" | "supernova" | "black_sun" | "void_storm";
+        SkyEventKind: "eclipse" | "comet" | "alignment" | "supernova" | "black_sun" | "void_storm" | "flare";
         SkyEventRecord: {
             id: number;
             kind: components["schemas"]["SkyEventKind"];
@@ -11905,7 +11914,7 @@ export interface components {
             created_epoch: number;
             cover?: string | null;
         };
-        StarType: "yellow_dwarf" | "red_giant" | "blue_giant" | "binary" | "white_dwarf" | "dead_star" | "black_sun" | "broken_star" | "pulsar" | "star_remnant" | "reborn_star";
+        StarType: "yellow_dwarf" | "red_giant" | "blue_giant" | "binary" | "white_dwarf" | "dead_star" | "black_sun" | "broken_star" | "pulsar" | "star_remnant" | "reborn_star" | "blue_star" | "blue_white_star" | "white_star" | "yellow_white_star" | "orange_dwarf" | "red_dwarf" | "brown_dwarf" | "yellow_giant" | "red_supergiant" | "blue_supergiant" | "hypergiant" | "wolf_rayet" | "protostar" | "carbon_star" | "neutron_star" | "magnetar" | "black_hole" | "variable_star" | "trinary" | "chained_star" | "watching_star";
         StarWiki: {
             star: components["schemas"]["StarRecord"];
             type_label: string;
@@ -12093,7 +12102,7 @@ export interface components {
             new_words: components["schemas"]["NewWordOutput"][];
             note: string;
         };
-        TravelMethod: "ancient_gate" | "space_fold" | "light_sail" | "cosmic_mount" | "dream_journey" | "river_of_dead" | "divine_bridge" | "slingshot_orbit" | "swallowed";
+        TravelMethod: "ancient_gate" | "space_fold" | "light_sail" | "cosmic_mount" | "dream_journey" | "river_of_dead" | "divine_bridge" | "slingshot_orbit" | "swallowed" | "wormhole";
         TravelResource: {
             name: string;
             description: string;
@@ -12510,7 +12519,7 @@ export interface components {
             llm_enabled: boolean;
             image_generation: boolean;
         };
-        WorldType: "ordinary" | "ocean" | "sand" | "ice" | "lava" | "crystal" | "living" | "dead" | "dream" | "mirror" | "gas" | "ringed" | "asteroid_belt" | "tidally_locked" | "void_pocket" | "gods_palace" | "generation_ship" | "corpse_world";
+        WorldType: "ordinary" | "ocean" | "sand" | "ice" | "lava" | "crystal" | "living" | "dead" | "dream" | "mirror" | "gas" | "ringed" | "asteroid_belt" | "tidally_locked" | "void_pocket" | "gods_palace" | "generation_ship" | "corpse_world" | "super_earth" | "ice_giant" | "hot_giant" | "iron" | "carbon" | "greenhouse" | "dwarf_planet" | "chthonian" | "hycean" | "jungle" | "forge" | "fungal" | "shattered" | "hollow" | "ice_shell" | "methane";
         WorldTypeInfo: {
             key: string;
             label: string;
@@ -26369,7 +26378,7 @@ export const genesisTemplateValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const gravityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Gravity"]> = ["low", "normal", "high"];
 export const heroQuestKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HeroQuestKind"]> = ["hunt", "thread", "relic", "knowledge", "vengeance"];
 export const horizonStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HorizonStatus"]> = ["pending", "processing", "born", "wasted"];
-export const horrorEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HorrorEventKind"]> = ["stars_align", "eye_in_the_sky", "wave_of_silence", "reverse_rain", "visit_of_the_void"];
+export const horrorEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HorrorEventKind"]> = ["stars_align", "eye_in_the_sky", "wave_of_silence", "reverse_rain", "visit_of_the_void", "the_dimming", "whispers_from_beyond"];
 export const imageBulkLogEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageBulkLogEvent"]["kind"]> = ["image.bulk_log"];
 export const imageClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageClass"]> = ["manual", "bulk", "auto"];
 export const imageDoneEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageDoneEvent"]["kind"]> = ["image.done"];
@@ -26458,7 +26467,8 @@ export const resourceStatsKindValues: ReadonlyArray<FlattenedDeepRequired<compon
 export const riteKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RiteKind"]> = ["prayer", "offering", "blood", "life", "rite"];
 export const riverClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RiverClass"]> = ["none", "stream", "river", "great_river"];
 export const roadKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RoadKind"]> = ["road", "trade"];
-export const routeClosureValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RouteClosure"]> = ["sealed", "severed", "forgotten", "collapsed", "snapped"];
+export const routeClosureValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RouteClosure"]> = ["sealed", "severed", "forgotten", "collapsed", "snapped", "scorched"];
+export const routeStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RouteState"]> = ["open", "temporary", "misaligned", "sealed", "severed", "collapsed", "snapped", "scorched", "unstable", "forgotten"];
 export const rulesChangedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RulesChangedEvent"]["kind"]> = ["rules.changed"];
 export const scarKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ScarKind"]> = ["battlefield", "plague_ground", "salted_earth", "burned", "crater", "haunted", "blighted", "leak_wound"];
 export const scenarioKeyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ScenarioKey"]> = ["doom_far", "one_faith", "lost_star", "many_worlds", "long_peace", "cosmic_power", "loyal_pantheon", "new_horizons"];
@@ -26469,7 +26479,7 @@ export const searchCategoryValues: ReadonlyArray<FlattenedDeepRequired<component
 export const settlementStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SettlementStats"]["kind"]> = ["settlement"];
 export const settlementTierValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SettlementTier"]> = ["capital", "village", "town", "city", "great_city"];
 export const siegeStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SiegeStatus"]> = ["ongoing", "breached", "repulsed", "lifted"];
-export const skyEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SkyEventKind"]> = ["eclipse", "comet", "alignment", "supernova", "black_sun", "void_storm"];
+export const skyEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SkyEventKind"]> = ["eclipse", "comet", "alignment", "supernova", "black_sun", "void_storm", "flare"];
 export const socialClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SocialClass"]> = ["farmer", "artisan", "merchant", "priest", "warrior", "scribe"];
 export const soilKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SoilKind"]> = ["thin", "loam", "clay", "sand", "volcanic", "peat", "salt", "ash", "crystal", "bone"];
 export const sonAscendedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonAscendedEvent"]["kind"]> = ["son.ascended"];
@@ -26487,7 +26497,7 @@ export const speciesStatsKindValues: ReadonlyArray<FlattenedDeepRequired<compone
 export const spiritStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpiritStats"]["kind"]> = ["spirit"];
 export const spokenIntentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpokenIntent"]> = ["friendship", "alliance", "love", "threat", "mockery", "warning", "bargain"];
 export const spyOperationValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpyOperation"]> = ["steal", "sabotage"];
-export const starTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StarType"]> = ["yellow_dwarf", "red_giant", "blue_giant", "binary", "white_dwarf", "dead_star", "black_sun", "broken_star", "pulsar", "star_remnant", "reborn_star"];
+export const starTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StarType"]> = ["yellow_dwarf", "red_giant", "blue_giant", "binary", "white_dwarf", "dead_star", "black_sun", "broken_star", "pulsar", "star_remnant", "reborn_star", "blue_star", "blue_white_star", "white_star", "yellow_white_star", "orange_dwarf", "red_dwarf", "brown_dwarf", "yellow_giant", "red_supergiant", "blue_supergiant", "hypergiant", "wolf_rayet", "protostar", "carbon_star", "neutron_star", "magnetar", "black_hole", "variable_star", "trinary", "chained_star", "watching_star"];
 export const statValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Stat"]> = ["strength", "endurance", "agility", "wisdom", "cunning", "will", "creativity", "charisma", "might"];
 export const streamHelloEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StreamHelloEvent"]["kind"]> = ["stream.hello"];
 export const structureStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StructureStats"]["kind"]> = ["structure"];
@@ -26502,7 +26512,7 @@ export const terrainKindValues: ReadonlyArray<FlattenedDeepRequired<components>[
 export const threadStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ThreadStatus"]> = ["open", "closed"];
 export const toolBlockValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ToolBlock"]> = ["rarity", "actor_type", "civilization_tier", "world_state", "unwired"];
 export const traditionStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraditionStats"]["kind"]> = ["tradition"];
-export const travelMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TravelMethod"]> = ["ancient_gate", "space_fold", "light_sail", "cosmic_mount", "dream_journey", "river_of_dead", "divine_bridge", "slingshot_orbit", "swallowed"];
+export const travelMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TravelMethod"]> = ["ancient_gate", "space_fold", "light_sail", "cosmic_mount", "dream_journey", "river_of_dead", "divine_bridge", "slingshot_orbit", "swallowed", "wormhole"];
 export const tributeStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TributeStatus"]> = ["active", "ended", "revolted"];
 export const turnCounterValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TurnCounter"]> = ["season_order", "sibling_messages", "narrative_bonds", "prayers", "free_living_creation", "free_land_creation", "anchor_chosen", "words_coined", "gifts", "holy_world", "leak_stitched", "take_life", "intrigue", "outer_bargain", "harvests", "discoveries", "claims", "worship_changes", "learning", "prophecies", "commander_appointments", "adoptions", "explorations", "repeated_creations", "resurrection_rites", "languages_founded", "cultures_created", "land_rewards"];
 export const verdictChoiceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VerdictChoice"]> = ["accept", "reject"];
@@ -26519,5 +26529,5 @@ export const worldBornEventKindValues: ReadonlyArray<FlattenedDeepRequired<compo
 export const worldChangedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorldChangedEvent"]["kind"]> = ["world.changed"];
 export const worldChangesEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorldChangesEvent"]["kind"]> = ["world.changes"];
 export const worldReplacedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorldReplacedEvent"]["kind"]> = ["world.replaced"];
-export const worldTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorldType"]> = ["ordinary", "ocean", "sand", "ice", "lava", "crystal", "living", "dead", "dream", "mirror", "gas", "ringed", "asteroid_belt", "tidally_locked", "void_pocket", "gods_palace", "generation_ship", "corpse_world"];
+export const worldTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorldType"]> = ["ordinary", "ocean", "sand", "ice", "lava", "crystal", "living", "dead", "dream", "mirror", "gas", "ringed", "asteroid_belt", "tidally_locked", "void_pocket", "gods_palace", "generation_ship", "corpse_world", "super_earth", "ice_giant", "hot_giant", "iron", "carbon", "greenhouse", "dwarf_planet", "chthonian", "hycean", "jungle", "forge", "fungal", "shattered", "hollow", "ice_shell", "methane"];
 export const writingSystemValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WritingSystem"]> = ["alphabet", "syllabary", "pictographic", "knot", "notch"];

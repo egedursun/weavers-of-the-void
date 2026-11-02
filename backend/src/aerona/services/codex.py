@@ -6,8 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.climate import CLIMATES
 from aerona.catalog.entity_types import entity_type_spec
 from aerona.catalog.knowledge import RESOURCE_MECHANICS
+from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.travel import TRAVEL_METHODS
-from aerona.catalog.worlds import ATMOSPHERE_LABELS, DISCOVERY_LABELS, GRAVITY_LABELS, STAR_TYPE_LABELS, WORLD_TYPES
+from aerona.catalog.worlds import ATMOSPHERE_LABELS, DISCOVERY_LABELS, GRAVITY_LABELS, WORLD_TYPES
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow

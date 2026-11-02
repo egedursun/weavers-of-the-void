@@ -50,9 +50,33 @@ def test_every_enum_member_has_catalog_content() -> None:
 
 
 def test_designed_world_types_are_all_present() -> None:
-    designed = {"ringed", "asteroid_belt", "tidally_locked", "void_pocket", "gods_palace", "generation_ship", "corpse_world"}
+    designed = {
+        "ringed",
+        "asteroid_belt",
+        "tidally_locked",
+        "void_pocket",
+        "gods_palace",
+        "generation_ship",
+        "corpse_world",
+        "super_earth",
+        "ice_giant",
+        "hot_giant",
+        "iron",
+        "carbon",
+        "greenhouse",
+        "dwarf_planet",
+        "chthonian",
+        "hycean",
+        "jungle",
+        "forge",
+        "fungal",
+        "shattered",
+        "hollow",
+        "ice_shell",
+        "methane",
+    }
     assert designed <= {world_type.value for world_type in WorldType}
-    assert len(WorldType) == 18
+    assert len(WorldType) == 34
 
 
 def test_every_engine_kind_belongs_to_exactly_one_type() -> None:

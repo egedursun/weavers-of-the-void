@@ -314,7 +314,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.HANG_STAR: ToolText(
         "You hang a new star in the sky; new worlds may be born around it. {{ rules.cosmic_costs.ignite_star | share_of(rules.son_tools.cosmic_hang_star_pct) }} essence, "
         "{{ rules.son_tools.hang_star_ap }} actions.",
-        {"name": "The star's name", "type": "yellow_dwarf, red_giant, blue_giant, binary, white_dwarf…", "description": "What the star is like"},
+        {"name": "The star's name", "type": "Star type: {{ star_types }}", "description": "What the star is like"},
     ),
     T.EXTINGUISH_STAR: ToolText(
         "You extinguish a star: the worlds around it sink into darkness and cold, leakage rises, the apocalypse draws near. A terrible act; the whole cosmos remembers it. "

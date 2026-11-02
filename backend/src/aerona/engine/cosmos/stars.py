@@ -4,31 +4,32 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.worlds import STAR_TYPE_LABELS
+from aerona.catalog.stars import STAR_TYPE_LABELS, STAR_TYPES
 from aerona.constants.cosmos import STAR_MAP_BASE_RADIUS, STAR_MAP_RADIUS_STEP
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.names import NameRepository
 from aerona.db.repositories.worlds import StarDraft, WorldRepository
-from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
-from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.limits import PERCENT_MAX
-from aerona.domain.enums.world import DARK_STAR_TYPES, Discovery, StarType
+from aerona.domain.enums.world import DARK_STAR_TYPES, EXTINGUISHED_STAR_TYPES, Discovery, SkyEventKind, StarType
 from aerona.engine.context import TickContext
-from aerona.engine.cosmos.routes import restore_sail_routes, snap_sail_routes
+from aerona.engine.cosmos.routes import restore_sail_routes, scorch_sail_routes, snap_sail_routes
+from aerona.engine.cosmos.star_types import fitted_brightness, kindled_brightness
 from aerona.engine.primitives.doom import advance_doom
-from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.stats import scale_stat, shift_bounded, stat_or
+from aerona.rules.registry import Rules
 
-EXTINGUISHED_STAR_TYPES = frozenset({StarType.DEAD_STAR, StarType.BLACK_SUN, StarType.STAR_REMNANT})
 BRIGHTNESS_KEY = "brightness"
 FERTILITY_KEY = "fertility"
 POPULATION_KEY = "population"
 FOLLOWERS_KEY = "followers"
+PIETY_KEY = "piety"
 
 
 def star_label(star_type: StarType) -> str:
@@ -51,9 +52,9 @@ class StarSpec:
     description: str | None = None
 
 
-async def create_star(session: AsyncSession, rng: SeededRandom, epoch: int, spec: StarSpec) -> StarRow:
+async def create_star(session: AsyncSession, rules: Rules, rng: SeededRandom, epoch: int, spec: StarSpec) -> StarRow:
     name = await NameRepository(session).unique_name(spec.name)
-    brightness = 0 if spec.star_type is StarType.BLACK_SUN else clamp_percent(spec.brightness_base + rng.die(spec.brightness_die))
+    brightness = kindled_brightness(rules, spec.star_type, spec.brightness_base + rng.die(spec.brightness_die))
     x, y = await star_position(session, rng)
     return await WorldRepository(session).create_star(StarDraft(name, spec.star_type, brightness, x, y, epoch, spec.description))
 
@@ -121,8 +122,8 @@ def _add_leak(world: WorldRow, amount: int) -> None:
 
 async def supernova(ctx: TickContext, star: StarRow) -> str:
     sky = ctx.rules.sky
-    star.star_type = StarType.STAR_REMNANT
-    star.brightness = sky.supernova_remnant_brightness
+    star.star_type = STAR_TYPES[star.star_type].remnant
+    star.brightness = fitted_brightness(ctx.rules, star.star_type, sky.supernova_remnant_brightness)
     for world in await worlds_of_star(ctx.session, star.id):
         for entity in await canon(ctx.session, None, world.id):
             scale_stat(ctx.rules, entity, POPULATION_KEY, 1 - sky.supernova_population_loss_pct / PERCENT)
@@ -151,11 +152,28 @@ async def black_sun(ctx: TickContext, star: StarRow) -> str:
     return f"{star.name} turned into a black sun: it gives no light, it swallows light."
 
 
+async def flare(ctx: TickContext, star: StarRow) -> str:
+    sky = ctx.rules.sky
+    worlds = await worlds_of_star(ctx.session, star.id)
+    for world in worlds:
+        for region in await canon(ctx.session, [EntityType.REGION], world.id):
+            shift_bounded(ctx.rules, region, FERTILITY_KEY, -sky.flare_fertility_loss)
+        for community in await canon(ctx.session, COMMUNITY_TYPES, world.id):
+            shift_bounded(ctx.rules, community, PIETY_KEY, sky.flare_piety_gain)
+    scorched = await scorch_sail_routes(ctx, star.id)
+    names = ", ".join(world.name for world in worlds) or "the empty void around it"
+    text = f"{star.name} flared: its fire scorched the fields of {names}, and auroras burned in their skies like omens."
+    if scorched:
+        text += f" The flare scorched shut {scorched} light-sail route{'s' if scorched > 1 else ''} bound to it."
+    await ctx.session.flush()
+    return text
+
+
 async def extinguish_star(ctx: TickContext, star_id: int, by: str) -> str:
     pantheon = ctx.rules.pantheon
     star = await require_star(ctx.session, star_id)
     star.star_type = StarType.DEAD_STAR
-    star.brightness = pantheon.dead_star_brightness
+    star.brightness = fitted_brightness(ctx.rules, StarType.DEAD_STAR, pantheon.dead_star_brightness)
     worlds = await worlds_of_star(ctx.session, star.id)
     for world in worlds:
         _add_leak(world, pantheon.extinguish_leak)
@@ -176,10 +194,11 @@ async def rekindle_star(ctx: TickContext, star_id: int, by: str) -> str:
     if star.star_type not in EXTINGUISHED_STAR_TYPES:
         raise ValidationFailedError(f"{star.name} is already burning.")
     star.star_type = StarType.REBORN_STAR
-    star.brightness = hand.rekindle_brightness
+    star.brightness = fitted_brightness(ctx.rules, StarType.REBORN_STAR, hand.rekindle_brightness)
     for world in await worlds_of_star(ctx.session, star.id):
         _add_leak(world, -hand.rekindle_leak_drain)
     await restore_sail_routes(ctx.session, star.id)
+    await end_black_sun(ctx.session, star.id, ctx.epoch)
     text = f"{by} rekindled {star.name}; light returned to the worlds buried in darkness."
     await ctx.chronicle(ChronicleKind.SKY, text, template_key="sky.star_rekindled", feed_category=FeedCategory.SKY)
     await ctx.session.flush()
@@ -190,6 +209,7 @@ async def hang_star(ctx: TickContext, name: str, star_type: StarType, by: str, d
     pantheon = ctx.rules.pantheon
     star = await create_star(
         ctx.session,
+        ctx.rules,
         ctx.rng("hang_star"),
         ctx.epoch,
         StarSpec(name, star_type, pantheon.star_brightness_base, pantheon.star_brightness_die, description),
@@ -197,6 +217,12 @@ async def hang_star(ctx: TickContext, name: str, star_type: StarType, by: str, d
     text = f"{by} hung a new star in the sky: {star.name} ({star_label(star_type)})."
     await ctx.chronicle(ChronicleKind.COSMIC, text, template_key="sky.star_hung", feed_category=FeedCategory.SKY)
     return star
+
+
+async def end_black_sun(session: AsyncSession, star_id: int, epoch: int) -> None:
+    statement = select(SkyEventRow).where(SkyEventRow.star_id == star_id, SkyEventRow.kind == SkyEventKind.BLACK_SUN, SkyEventRow.until_epoch.is_(None))
+    for row in await session.scalars(statement):
+        row.until_epoch = max(row.epoch, epoch)
 
 
 def is_dark(star: StarRow | None) -> bool:

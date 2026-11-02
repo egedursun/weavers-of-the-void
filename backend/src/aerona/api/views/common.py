@@ -13,17 +13,23 @@ from aerona.api.schemas.records import (
     Kin,
     NodeRef,
     Requirement,
+    RouteRecord,
+    RouteStatusRecord,
     SonCard,
     SonPower,
     SonPublic,
     SonRecord,
 )
+from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow
 from aerona.db.tables.meta import ImageRow
 from aerona.db.tables.node import NodeRow
+from aerona.db.tables.routes import RouteRow
 from aerona.domain.enums.bond import VISIBLE_BOND_STATES, BondKind, BondState
+from aerona.engine.cosmos.routes import RouteBook, current_calendar, forgotten_world_ids
+from aerona.rules.registry import Rules
 from aerona.services.images.records import cover_of
 from aerona.services.state import SonView
 
@@ -155,3 +161,19 @@ async def foreign_god_record(session: AsyncSession, row: ForeignGodRow) -> Forei
 async def foreign_god_records(session: AsyncSession) -> list[ForeignGodRecord]:
     rows = await session.scalars(select(ForeignGodRow).order_by(ForeignGodRow.id))
     return [await foreign_god_record(session, row) for row in rows]
+
+
+async def route_records(session: AsyncSession, rules: Rules, routes: Sequence[RouteRow]) -> list[RouteRecord]:
+    epoch = (await CosmosRepository(session).require_cosmos()).epoch
+    book = RouteBook(routes, await current_calendar(session, rules, epoch), await forgotten_world_ids(session))
+    records = []
+    for route in routes:
+        status = book.status(route)
+        state = RouteStatusRecord(
+            open=status.is_open, state=status.state, reason=status.reason, opens_epoch=status.opens_epoch, closes_epoch=status.closes_epoch
+        )
+        records.append(RouteRecord.model_validate({**{key: getattr(route, key) for key in ROUTE_FIELDS}, "status": state}))
+    return records
+
+
+ROUTE_FIELDS = tuple(name for name in RouteRecord.model_fields if name != "status")

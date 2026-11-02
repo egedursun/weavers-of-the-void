@@ -124,7 +124,8 @@ void main(){
   vec2 dir = sb - sa; dir = length(dir) > 1e-5 ? normalize(dir) : vec2(1.0, 0.0);
   vec2 nrm = vec2(-dir.y, dir.x);
   float w = uWidth*(1.0 + uHover*0.7);
-  if (uStyle > 7.5) w *= 0.75 + 0.45*sin(aT*34.0 - uTime*2.6);
+  if (uStyle > 7.5 && uStyle < 8.5) w *= 0.75 + 0.45*sin(aT*34.0 - uTime*2.6);
+  if (uStyle > 8.5) w *= 0.85 + 0.3*abs(sin(aT*9.0 + uTime*0.8));
   c.xy += nrm*aSide*w/uResolution*c.w;
   vT = aT; vSide = aSide;
   gl_Position = c;
@@ -172,6 +173,11 @@ void main(){
     float f = fract(s/13.0 - tt*0.1);
     float dt = 1.0 - smoothstep(0.12, 0.32, length(vec2((f - 0.5)*2.0, vSide)));
     prof = dt; core = dt;
+  } else if (st == 9) {
+    float helix = 0.5 + 0.5*sin(s*0.22 + vSide*7.0 - tt*2.2);
+    float throat = 0.65 + 0.35*sin(uTime*0.9 + uSeed*6.0);
+    m = (0.35 + 0.9*pow(helix, 3.0))*throat;
+    col = mix(uColor, vec3(0.85, 0.75, 1.0), pow(helix, 6.0)*0.6);
   } else {
     m = 0.8 + 0.4*sin(vT*34.0 - uTime*2.6);
   }

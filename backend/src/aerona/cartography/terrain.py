@@ -74,6 +74,22 @@ def _defaults(world_type: WorldType, terrain: WorldTerrainRules) -> tuple[int, i
         WorldType.GODS_PALACE: (terrain.gods_palace_sea_pct, terrain.gods_palace_mountains_pct, terrain.gods_palace_moisture_pct),
         WorldType.GENERATION_SHIP: (terrain.generation_ship_sea_pct, terrain.generation_ship_mountains_pct, terrain.generation_ship_moisture_pct),
         WorldType.CORPSE_WORLD: (terrain.corpse_world_sea_pct, terrain.corpse_world_mountains_pct, terrain.corpse_world_moisture_pct),
+        WorldType.FORGE: (terrain.forge_sea_pct, terrain.forge_mountains_pct, terrain.forge_moisture_pct),
+        WorldType.SUPER_EARTH: (terrain.super_earth_sea_pct, terrain.super_earth_mountains_pct, terrain.super_earth_moisture_pct),
+        WorldType.ICE_GIANT: (terrain.ice_giant_sea_pct, terrain.ice_giant_mountains_pct, terrain.ice_giant_moisture_pct),
+        WorldType.HOT_GIANT: (terrain.hot_giant_sea_pct, terrain.hot_giant_mountains_pct, terrain.hot_giant_moisture_pct),
+        WorldType.IRON: (terrain.iron_sea_pct, terrain.iron_mountains_pct, terrain.iron_moisture_pct),
+        WorldType.CARBON: (terrain.carbon_sea_pct, terrain.carbon_mountains_pct, terrain.carbon_moisture_pct),
+        WorldType.GREENHOUSE: (terrain.greenhouse_sea_pct, terrain.greenhouse_mountains_pct, terrain.greenhouse_moisture_pct),
+        WorldType.DWARF_PLANET: (terrain.dwarf_planet_sea_pct, terrain.dwarf_planet_mountains_pct, terrain.dwarf_planet_moisture_pct),
+        WorldType.CHTHONIAN: (terrain.chthonian_sea_pct, terrain.chthonian_mountains_pct, terrain.chthonian_moisture_pct),
+        WorldType.HYCEAN: (terrain.hycean_sea_pct, terrain.hycean_mountains_pct, terrain.hycean_moisture_pct),
+        WorldType.JUNGLE: (terrain.jungle_sea_pct, terrain.jungle_mountains_pct, terrain.jungle_moisture_pct),
+        WorldType.FUNGAL: (terrain.fungal_sea_pct, terrain.fungal_mountains_pct, terrain.fungal_moisture_pct),
+        WorldType.SHATTERED: (terrain.shattered_sea_pct, terrain.shattered_mountains_pct, terrain.shattered_moisture_pct),
+        WorldType.HOLLOW: (terrain.hollow_sea_pct, terrain.hollow_mountains_pct, terrain.hollow_moisture_pct),
+        WorldType.ICE_SHELL: (terrain.ice_shell_sea_pct, terrain.ice_shell_mountains_pct, terrain.ice_shell_moisture_pct),
+        WorldType.METHANE: (terrain.methane_sea_pct, terrain.methane_mountains_pct, terrain.methane_moisture_pct),
     }
     return table[world_type]
 
