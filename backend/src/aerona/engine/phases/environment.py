@@ -241,6 +241,7 @@ def new_region_environment(ctx: TickContext, region: EntityRow, geography: Geogr
     fertility = stat(region, "fertility")
     if fertility is not None:
         env.soil_fertility = soil_for(fertility, factor_of(rules, env))
+        env.soil_base = env.soil_fertility
         env.derived_fertility = fertility
     return env
 

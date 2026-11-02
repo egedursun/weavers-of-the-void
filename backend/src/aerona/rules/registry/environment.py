@@ -210,7 +210,7 @@ class LandUseRules:
     drift_divisor: int = rule(3, 1, 100, RuleGroup.ENVIRONMENT, "Epochs over which land use closes on its target (divisor)")
     farm_target_pct: int = rule(90, 0, 300, RuleGroup.ENVIRONMENT, "Farmland per point of occupancy among farming peoples (%)")
     graze_target_pct: int = rule(70, 0, 300, RuleGroup.ENVIRONMENT, "Pasture per point of occupancy among herding peoples (%)")
-    built_population_per_pct: int = rule(400, 1, 1000000, RuleGroup.ENVIRONMENT, "Settled inhabitants per point of built-up land")
+    built_population_per_pct: int = rule(15000, 1, 1000000, RuleGroup.ENVIRONMENT, "Settled inhabitants per point of built-up land")
     cleared_built_pct: int = rule(100, 0, 300, RuleGroup.ENVIRONMENT, "Cleared land per point of built-up land (%)")
     cleared_grazed_pct: int = rule(40, 0, 300, RuleGroup.ENVIRONMENT, "Cleared land per point of pasture (%)")
     erosion_roughness: int = rule(40, 0, 100, RuleGroup.ENVIRONMENT, "Roughness above which cleared land erodes")

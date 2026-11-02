@@ -38,6 +38,7 @@ async def test_survey_profiles_regions_and_keeps_existing_fertility(realm: Realm
     ground = await surveyed(realm)
     assert (ground.surveyed and ground.dominant_terrain is TerrainKind.RIVER_VALLEY) or ground.dominant_terrain in set(TerrainKind)
     assert ground.passability and ground.mineral_layers is not None
+    assert ground.soil_base == ground.soil_fertility
     await environment_derive(context(realm.session))
     assert abs((stat(realm.region, "fertility") or 0) - 60) <= 1
     seasons = list(await realm.session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == realm.world.id)))
@@ -103,7 +104,7 @@ async def test_people_work_the_land_and_empty_land_grows_wild(realm: Realm) -> N
     ground = await surveyed(realm)
     far = await realm.session.get(RegionEnvironmentRow, realm.far_region.id)
     assert far is not None
-    await settlement(realm, "Hearth", population=20000)
+    await settlement(realm, "Hearth", population=400000)
     farmed = ground.farmed
     far.cleared = far.farmed = 40
     await land_use(context(realm.session))
