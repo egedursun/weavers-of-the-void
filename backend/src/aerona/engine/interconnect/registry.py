@@ -64,6 +64,7 @@ class Mechanic:
     flows: tuple[str, ...] = ()
     exposure: Exposure = Exposure.NONE
     tools: tuple[str, ...] = ()
+    targets: tuple[str, ...] = ()
     couplings: tuple[Coupling, ...] = field(default_factory=tuple)
 
 

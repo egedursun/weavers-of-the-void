@@ -23,7 +23,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.knowledge import LawBook
-from aerona.engine.primitives.levies import demobilise
+from aerona.engine.primitives.levies import demobilise, stand_down
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_float, clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
@@ -648,7 +648,7 @@ async def disband_army(ctx: TickContext, army_id: int) -> None:
     if row is None or army is None or row.disbanded_epoch is not None:
         raise NotFoundError("No such standing army.")
     row.disbanded_epoch = ctx.epoch
-    demobilise(ctx.rules, await living_entity(ctx.session, row.owner_entity_id), stat(army, "size") or 0)
+    stand_down(ctx.rules, army, await living_entity(ctx.session, row.owner_entity_id))
     await retire_in(ctx, army, "disbanded by decree", close_bonds=True)
 
 

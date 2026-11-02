@@ -1,3 +1,4 @@
+from collections import Counter
 from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
@@ -33,10 +34,15 @@ class GuardIndex:
         return cls(frozenset(pins), frozenset(suppressions))
 
 
+CONSERVED_KEYS = frozenset({"population", "followers", "size"})
+
+
 @dataclass(frozen=True)
 class GuardState:
     index: GuardIndex
     writers: frozenset[str]
+    phase: str = ""
+    flows: Counter[tuple[str, str, int]] | None = None
 
     def blocks(self, node_id: int, key: str) -> bool:
         if (node_id, key) in self.index.pins:
@@ -52,6 +58,12 @@ def blocked(node_id: int, key: str) -> bool:
     return state is not None and state.blocks(node_id, key)
 
 
+def record_flow(node_id: int, key: str, delta: int) -> None:
+    state = ACTIVE_GUARD.get()
+    if state is not None and state.flows is not None and key in CONSERVED_KEYS and delta:
+        state.flows[(state.phase, key, node_id)] += delta
+
+
 @contextmanager
 def guarded(state: GuardState) -> Iterator[None]:
     token = ACTIVE_GUARD.set(state)
@@ -62,6 +74,6 @@ def guarded(state: GuardState) -> Iterator[None]:
 
 
 async def run_guarded(phase: Phase, ctx: TickContext) -> None:
-    state = GuardState(await GuardIndex.load(ctx.session, ctx.epoch), mechanic_keys_for_phase(phase.name))
+    state = GuardState(await GuardIndex.load(ctx.session, ctx.epoch), mechanic_keys_for_phase(phase.name), phase.name, ctx.environment.stats.flows)
     with guarded(state):
         await phase.run(ctx)

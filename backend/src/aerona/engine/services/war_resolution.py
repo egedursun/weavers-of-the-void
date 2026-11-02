@@ -12,10 +12,9 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.war import SiegeStatus, WarEnding, WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.faith import change_religion, faith_dominance, faith_shares, living_patron
-from aerona.engine.primitives.levies import demobilise
+from aerona.engine.primitives.levies import stand_down
 from aerona.engine.primitives.queries import living_entity, spoken_language
 from aerona.engine.primitives.records import retire_in
-from aerona.engine.primitives.stats import stat
 from aerona.engine.services.community_relations import change_relation, remember_relation
 from aerona.engine.services.war import (
     ACTIVE_WAR_STATUSES,
@@ -98,7 +97,7 @@ async def close_war(ctx: TickContext, war: WarRow, ending: WarEnding, victor_id:
         army_row.disbanded_epoch = ctx.epoch
         army = await living_entity(ctx.session, army_row.entity_id)
         if army is not None:
-            demobilise(ctx.rules, await living_entity(ctx.session, army_row.owner_entity_id), stat(army, "size") or 0)
+            stand_down(ctx.rules, army, await living_entity(ctx.session, army_row.owner_entity_id))
             await retire_in(ctx, army, f"disbanded when {event.name} ended ({label})", close_bonds=True)
     await ctx.session.flush()
     ctx.count("wars_ended")

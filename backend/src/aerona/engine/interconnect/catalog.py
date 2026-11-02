@@ -1,4 +1,9 @@
+import inspect
+import re
+import sys
+
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
+from aerona.domain.enums.entity import EntityType
 from aerona.engine.interconnect.registry import MECHANICS, Coupling, Mechanic, Subsystem, Surface, register
 from aerona.engine.phase import Phase
 from aerona.engine.pipeline import PHASE_REGISTRY
@@ -32,6 +37,7 @@ BUILT_IN = (
         key="levies",
         spec_item="F28",
         title="Levies and demobilisation",
+        targets=("people", "settlement", "cult", "army"),
         subsystem=Subsystem.WAR,
         phases=("war_upkeep", "campaigns"),
         surface=Surface(drawer=MECHANICS_SECTION),
@@ -124,6 +130,15 @@ def subsystem_of(module: str) -> Subsystem:
     return next((PACKAGE_SUBSYSTEMS[part] for part in parts if part in PACKAGE_SUBSYSTEMS), Subsystem.CORE)
 
 
+ENTITY_TYPE_TOKEN = re.compile(r"\bEntityType\.([A-Z_]+)\b")
+
+
+def targets_of(module: str) -> tuple[str, ...]:
+    source = inspect.getsource(sys.modules[module])
+    names = {EntityType[name].value for name in ENTITY_TYPE_TOKEN.findall(source) if name in EntityType.__members__}
+    return tuple(sorted(names))
+
+
 def existing_mechanic(phase: Phase) -> Mechanic:
     return Mechanic(
         key=phase.name,
@@ -133,6 +148,7 @@ def existing_mechanic(phase: Phase) -> Mechanic:
         phases=(phase.name,),
         surface=Surface(drawer=MECHANICS_SECTION),
         backfill=EXISTING_BACKFILL,
+        targets=targets_of(phase.run.__module__),
     )
 
 

@@ -385,7 +385,7 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | F26 | foundation | Appearance and genetics | §F26 | — | — | — | — | — | — | — | — | planned |
 | F26/RP8 | reference-pass | the magical gift | §F26 reference pass 8 | — | — | — | — | — | — | — | — | planned |
 | F27 | foundation | Storyteller (deterministic drama pacing) | §F27 | — | — | — | — | — | — | — | — | planned |
-| F28 | foundation | Conservation and stock-flow invariants | §F28 | — | — | — | — | — | — | — | — | planned |
+| F28 | foundation | Conservation and stock-flow invariants | §F28 | engine/interconnect/guards.py (every conserved write is recorded per step and record), engine/interconnect/conservation.py (snapshot, residuals); levies stand_down zeroes army size when soldiers return | every engine step | — | — | — | — | — | tests/engine/interconnect/test_conservation.py | in-progress |
 | F29 | foundation | Households and dwellings | §F29 | — | — | — | — | — | — | — | — | planned |
 | F30 | foundation | Effect packages (syndromes) | §F30 | — | — | — | — | — | — | — | — | planned |
 | F31 | foundation | Dominion and scales (the spatial presence of gods) | §F31 | — | — | — | — | — | — | — | — | planned |
@@ -753,7 +753,7 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | J.4 | deliverable | Rules namespaces (new and extended) | §J.4 | — | — | — | — | — | — | — | — | planned |
 | J.5 | deliverable | Pipeline placement and performance | §J.5 | — | — | — | — | — | — | — | — | planned |
 | J.6 | deliverable | Testing | §J.6 | — | — | — | — | — | — | — | — | planned |
-| J.7 | deliverable | Depth metric: target | §J.7 | — | — | — | — | — | — | — | — | planned |
+| J.7 | deliverable | Depth metric: target | §J.7 | scripts/depth_metric.py writes docs/spec/13-depth-metric.md (baseline); mechanics declare targets, the original port's targets are inferred from their modules | — | — | — | — | — | — | tests/unit/test_depth_metric.py | in-progress |
 | J.8 | deliverable | LLM layer | §J.8 | — | — | — | — | — | — | — | — | planned |
 | J.9 | deliverable | UI surfaces (summary) | §J.9 | — | — | — | — | — | — | — | — | planned |
 | J.10 | deliverable | Second-pass integration addendum | §J.10 | — | — | — | — | — | — | — | — | planned |

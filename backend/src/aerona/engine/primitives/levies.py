@@ -1,6 +1,6 @@
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.engine.primitives.stats import headcount, headcount_bounds, headcount_key, headcount_value, put_stat
+from aerona.engine.primitives.stats import headcount, headcount_bounds, headcount_key, headcount_value, put_stat, set_stats, stat
 from aerona.rules.registry import Rules
 
 LEVY_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.CULT})
@@ -18,6 +18,12 @@ def levy(rules: Rules, community: EntityRow, wanted: int) -> int:
     taken = max(0, min(wanted, current - floor))
     put_stat(rules, community, headcount_key(community), current - taken)
     return taken
+
+
+def stand_down(rules: Rules, army: EntityRow, owner: EntityRow | None) -> int:
+    soldiers = stat(army, "size") or 0
+    set_stats(army, size=0)
+    return demobilise(rules, owner, soldiers)
 
 
 def demobilise(rules: Rules, owner: EntityRow | None, soldiers: int) -> int:
