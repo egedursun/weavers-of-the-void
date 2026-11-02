@@ -6,14 +6,22 @@ import { GoalsBlock } from './GoalsBlock'
 const GOALS = {
   scenarios: [
     {
-      key: 'population',
-      name: 'Populate the world',
+      key: 'many_worlds',
+      name: 'Populate the worlds',
       description: 'Reach a thousand souls.',
       points: 10,
-      history: [{ status: 'failed', start_epoch: 2, end_epoch: 4 }],
+      history: [
+        {
+          id: 1,
+          status: 'failed',
+          start_epoch: 2,
+          end_epoch: 4,
+          result: null,
+        },
+      ],
     },
     {
-      key: 'languages',
+      key: 'one_faith',
       name: 'Speak many tongues',
       description: 'Grow five languages.',
       points: 5,
@@ -23,7 +31,7 @@ const GOALS = {
   running: [
     {
       id: 9,
-      key: 'languages',
+      key: 'one_faith',
       name: 'Speak many tongues',
       start_epoch: 3,
       progress: {
@@ -36,7 +44,7 @@ const GOALS = {
   ],
   achievements: [
     {
-      key: 'a',
+      key: 'first_prayer',
       name: 'First son',
       description: 'Summon a son.',
       points: 3,
@@ -44,7 +52,7 @@ const GOALS = {
       epoch: 2,
     },
     {
-      key: 'b',
+      key: 'babel',
       name: 'Doomsayer',
       description: 'Reach doom.',
       points: 8,
@@ -55,7 +63,7 @@ const GOALS = {
   score: { parts: { population: 40, doomsday: -10 } },
   score_history: [
     [1, 10],
-    [2, 30],
+    [2, 20],
   ],
 }
 
@@ -130,7 +138,7 @@ describe('goals block', () => {
       .element(screen.getByText('You set yourself a new goal'))
       .toBeInTheDocument()
     expect(server.callsTo('POST /api/scenarios')[0].body).toEqual({
-      key: 'population',
+      key: 'many_worlds',
     })
   })
 
@@ -144,7 +152,9 @@ describe('goals block', () => {
       .toBeInTheDocument()
     await screen.getByRole('button', { name: 'Achievements · 1/2' }).click()
     await expect.element(screen.getByText('First son')).toBeInTheDocument()
-    await expect.element(screen.getByText('Epoch 2')).toBeInTheDocument()
+    await expect
+      .element(screen.getByText('Epoch 2', { exact: true }))
+      .toBeInTheDocument()
     await expect.element(screen.getByText('+8')).toBeInTheDocument()
   })
 

@@ -273,11 +273,11 @@ describe('feed sounds', () => {
   it('lists the categories that make a sound, mutes one and previews a tone', async () => {
     const { screen } = await renderScreen(<FeedSoundSettings />)
     await expect
-      .element(screen.getByText('Which events make a sound:'))
+      .element(screen.getByText('Which events make a sound'))
       .not.toBeInTheDocument()
     await screen.getByRole('switch', { name: 'Feed sounds' }).click()
     await expect
-      .element(screen.getByText('Which events make a sound:'))
+      .element(screen.getByText('Which events make a sound'))
       .toBeVisible()
     const war = screen.getByRole('switch', { name: 'Wars', exact: true })
     await expect.element(war).toHaveAttribute('aria-checked', 'true')

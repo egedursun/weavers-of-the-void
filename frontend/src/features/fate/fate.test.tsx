@@ -120,7 +120,12 @@ describe('fate model', () => {
 describe('fate controls page', () => {
   it('shows the ledger, step states, limbo and historian accounts', async () => {
     const { screen } = await renderScreen(<FateControlsPage />, routes())
-    await expect.element(screen.getByText('Owes epoch 5')).toBeInTheDocument()
+    await expect
+      .element(screen.getByText("Fate's debt", { exact: true }))
+      .toBeInTheDocument()
+    await expect
+      .element(screen.getByText('Epoch 5', { exact: true }))
+      .toBeInTheDocument()
     await expect
       .element(screen.getByText('The model did not answer.'))
       .toBeInTheDocument()

@@ -6,6 +6,9 @@ import cosmosFixture from '../../../e2e/fixtures/cosmos.json'
 import { GOD_STATE } from '../../../e2e/godMocks'
 import { WorldHeader } from './WorldHeader'
 
+const LONG_STAR =
+  'Vaelorithanqueduskmarrowenthalisorvaelunthrexiamorduskavethin'
+
 function routes(overrides: Record<string, unknown> = {}) {
   return godRoutes({ 'GET /api/cosmos': cosmosFixture.cosmos, ...overrides })
 }
@@ -23,22 +26,21 @@ describe('world header', () => {
     await expect
       .element(screen.getByText('A cosmos of drowned bells.'))
       .toBeVisible()
-    await expect.element(screen.getByText('Epoch 12 · year 1')).toBeVisible()
+    await expect
+      .element(screen.getByRole('link', { name: 'Epoch 12, year 1' }))
+      .toBeVisible()
   })
 
   it('shows the star of the epoch and the climate of a world with its cycle', async () => {
     const { screen } = await renderScreen(<WorldHeader />, routes())
+    const star = screen.getByRole('button', {
+      name: 'The bodies that rule the sky of each world this epoch',
+    })
+    await expect.element(star).toHaveTextContent(LONG_STAR)
+    await expect.element(screen.getByText('Rain age')).toBeVisible()
+    await screen.getByText('Rain age').hover()
     await expect
-      .poll(
-        () =>
-          screen.container.querySelector('[data-world-star] a')?.textContent ??
-          ''
-      )
-      .not.toBe('')
-    await expect.element(screen.getByText('Velar: Rain age')).toBeVisible()
-    await screen.getByText('Velar: Rain age').hover()
-    await expect
-      .element(screen.getByText('3 epochs left in this cycle').first())
+      .element(screen.getByText('3 epochs left').first())
       .toBeInTheDocument()
   })
 
@@ -50,7 +52,9 @@ describe('world header', () => {
     await expect.element(screen.getByText('Epoch refill')).toBeVisible()
     await expect.element(screen.getByText('+120')).toBeVisible()
     await expect.element(screen.getByText('−40')).toBeVisible()
-    await expect.element(screen.getByText('+80')).toBeVisible()
+    await expect
+      .element(screen.getByRole('dialog').getByText('+80'))
+      .toBeVisible()
     await expect
       .element(screen.getByText(/Essence refills every epoch/))
       .toBeVisible()
@@ -74,7 +78,7 @@ describe('world header', () => {
   it('colours the creator mood and lists the four mood values', async () => {
     const { screen, router } = await renderScreen(<WorldHeader />, routes())
     const mood = screen.getByRole('button', {
-      name: 'Creator mood, open the creator',
+      name: 'Creator mood Pleased, open the creator',
     })
     await expect.element(mood).toHaveTextContent('Pleased')
     await mood.hover()
@@ -122,8 +126,12 @@ describe('world header', () => {
     await expect
       .element(screen.getByText('Orvael', { exact: true }).first())
       .toBeVisible()
-    expect(screen.getByText('Epoch 12 · year 1').elements()).toHaveLength(0)
+    expect(
+      screen.getByRole('link', { name: 'Epoch 12, year 1' }).elements()
+    ).toHaveLength(0)
     await screen.getByRole('button', { name: 'Show world status' }).click()
-    await expect.element(screen.getByText('Epoch 12 · year 1')).toBeVisible()
+    await expect
+      .element(screen.getByRole('link', { name: 'Epoch 12, year 1' }))
+      .toBeVisible()
   })
 })
