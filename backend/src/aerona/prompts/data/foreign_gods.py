@@ -27,7 +27,7 @@ FOREIGN_POWER_EFFECTS: dict[ForeignGodPowerEffect, str] = {
     F.CALLER: "Chance to draw unclaimed communities +{{ rules.foreign_gods.power_caller }}%.",
     F.THIEF: "Chance to steal the sons' worshippers +{{ rules.foreign_gods.power_thief }}%.",
     F.DESTROYER: "When hostile, attack chance +{{ rules.foreign_gods.power_destroyer }}%.",
-    F.FERTILE: "When friendly, prosperity added to worshippers ×{{ '%g' | format(rules.foreign_gods.power_bountiful / 100) }}.",
+    F.FERTILE: "When friendly, prosperity added to worshippers x{{ '%g' | format(rules.foreign_gods.power_bountiful / 100) }}.",
     F.REVIVING: "When defeated, wake time drops to {{ rules.foreign_gods.power_reviving }}%.",
     F.DEATHLESS: "Even in a crushing defeat it does not die; it is only laid low.",
     F.SHARP_TONGUED: "The roll of a son who talks with it -{{ rules.foreign_gods.power_sharp_tongue }}.",
