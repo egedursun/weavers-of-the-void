@@ -98,6 +98,13 @@ const METRICS = {
   slow_threshold_ms: 30000,
 }
 
+function tileValue(label: string): string | null {
+  const tile = [
+    ...document.querySelectorAll<HTMLElement>('[data-domain="mini-stat"]'),
+  ].find((item) => item.textContent?.endsWith(label))
+  return tile?.querySelector('[title]')?.getAttribute('title') ?? null
+}
+
 const base = (metrics: unknown) => ({
   'GET /api/metrics/models': metrics,
   'GET /api/state': worldState(),
@@ -112,11 +119,12 @@ const base = (metrics: unknown) => ({
 describe('model metrics panel', () => {
   it('shows call, time, token and cost chips with the per-epoch table', async () => {
     const { screen } = await renderScreen(<ModelMetrics />, base(METRICS))
-    await expect.element(screen.getByText('1.5K calls')).toBeInTheDocument()
-    await expect
-      .element(screen.getByText(/2M in · 300K out tokens/))
-      .toBeInTheDocument()
-    await expect.element(screen.getByText(/API equivalent/)).toBeInTheDocument()
+    await expect.poll(() => tileValue('Calls')).toBe('1.5K')
+    await expect.poll(() => tileValue('Time spent')).toBe('1 min 30 s')
+    await expect.poll(() => tileValue('Tokens in')).toBe('2M')
+    await expect.poll(() => tileValue('Tokens out')).toBe('300K')
+    await expect.poll(() => tileValue('API equivalent')).toBe('$12.5')
+    await expect.poll(() => tileValue('Errors')).toBe('2')
     await expect
       .element(screen.getByRole('cell', { name: 'Epoch 2' }))
       .toBeInTheDocument()
@@ -168,9 +176,12 @@ describe('model metrics panel', () => {
     await expect
       .element(screen.getByText('No calls measured yet'))
       .toBeInTheDocument()
+    await expect.element(screen.getByText('An epoch takes')).toBeInTheDocument()
+    await expect.poll(() => tileValue('An epoch takes')).toBe('1 min 30 s')
+    await screen.getByText('An epoch takes').hover()
     await expect
-      .element(screen.getByText(/An epoch takes about .+ \(average of 4\)\./))
-      .toBeInTheDocument()
+      .element(screen.getByRole('tooltip'))
+      .toHaveTextContent('Average of 4 epochs')
   })
 
   it('finds the average of the first step whose name contains a needle', () => {

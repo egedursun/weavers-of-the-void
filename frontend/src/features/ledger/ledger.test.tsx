@@ -135,14 +135,23 @@ describe('action ledger list', () => {
         { id: 6, epoch: 2, undone: true, label: 'Cursed Valka', changes: 1 },
       ])
     )
-    await expect.element(screen.getByText('#7 · Epoch 3')).toBeInTheDocument()
-    await expect.element(screen.getByText('Blessed Ithren')).toBeInTheDocument()
+    const epochThree = screen.getByRole('region', { name: 'Epoch 3' })
+    await expect
+      .element(epochThree.getByText('#7', { exact: true }))
+      .toBeInTheDocument()
+    await expect
+      .element(epochThree.getByText('Blessed Ithren'))
+      .toBeInTheDocument()
     await expect.element(screen.getByText('3 changes')).toBeInTheDocument()
     await expect.element(screen.getByText('amount 20')).toBeInTheDocument()
     await expect
-      .element(screen.getByText('Undone', { exact: true }))
+      .element(
+        screen
+          .getByRole('region', { name: 'Epoch 2' })
+          .getByText('Undone', { exact: true })
+      )
       .toBeInTheDocument()
-    await screen.getByRole('button', { name: 'Details' }).click()
+    await screen.getByRole('button', { name: 'What changed · 1' }).click()
     await expect
       .element(screen.getByText('Ithren essence +20'))
       .toBeInTheDocument()
@@ -156,11 +165,19 @@ describe('action ledger list', () => {
       <ActionLedger />,
       ledgerRoutes([{ id: 7 }])
     )
-    await expect.element(screen.getByText('#7 · Epoch 3')).toBeInTheDocument()
-    await screen.getByRole('combobox', { name: 'Epoch' }).click()
-    await screen.getByRole('option', { name: 'Epoch 2 · 1 pages' }).click()
     await expect
-      .element(screen.getByText('No page matches this filter'))
+      .element(
+        screen
+          .getByRole('region', { name: 'Epoch 3' })
+          .getByText('#7', { exact: true })
+      )
+      .toBeInTheDocument()
+    const epochTwo = screen.getByRole('button', { name: /^Epoch 2/ })
+    await expect.element(epochTwo).toHaveTextContent('1 page')
+    await epochTwo.click()
+    await expect.element(epochTwo).toHaveAttribute('aria-pressed', 'true')
+    await expect
+      .element(screen.getByText('No page matches', { exact: true }))
       .toBeInTheDocument()
     expect(
       server
@@ -178,7 +195,7 @@ describe('action ledger list', () => {
         { sons: [{ son: { id: 4, name: 'Ithren' } }], creator: { name: 'Ana' } }
       )
     )
-    await screen.getByRole('combobox', { name: 'Who acted' }).click()
+    await screen.getByRole('combobox', { name: 'One son' }).click()
     await screen.getByRole('option', { name: 'Ithren' }).click()
     await expect
       .poll(() =>
@@ -206,11 +223,17 @@ describe('action ledger list', () => {
         }
       },
     })
-    await expect.element(screen.getByText('2 pages shown')).toBeInTheDocument()
+    await expect
+      .element(screen.getByText('2 of 2 loaded pages shown'))
+      .toBeInTheDocument()
     await screen.getByRole('button', { name: 'More older pages' }).click()
-    await expect.element(screen.getByText('4 pages shown')).toBeInTheDocument()
+    await expect
+      .element(screen.getByText('4 of 4 loaded pages shown'))
+      .toBeInTheDocument()
     await screen.getByRole('button', { name: 'More older pages' }).click()
-    await expect.element(screen.getByText('6 pages shown')).toBeInTheDocument()
+    await expect
+      .element(screen.getByText('6 of 6 loaded pages shown'))
+      .toBeInTheDocument()
     await expect
       .element(screen.getByText('Pick an epoch to see older pages.'))
       .toBeInTheDocument()
@@ -333,7 +356,10 @@ describe('undoing a ledger page', () => {
     )
     await expect
       .element(screen.getByRole('button', { name: 'Undo' }))
-      .toHaveAttribute('aria-description', 'This page changed nothing')
+      .toHaveAttribute(
+        'aria-description',
+        'Nothing on this page can be undone; it keeps only its story'
+      )
   })
 
   it('shows the server refusal', async () => {
@@ -436,7 +462,7 @@ describe('undo offer in the success toast', () => {
 describe('records screen', () => {
   const routes = {
     ...ledgerRoutes([{ id: 7 }]),
-    'GET /api/notes': { entity_notes: [] },
+    'GET /api/notes': { entity_notes: [], map_notes: [] },
     'GET /api/map-notes': [],
     'GET /api/notifications': {
       unread: 0,
@@ -446,6 +472,7 @@ describe('records screen', () => {
       items: [],
     },
     'GET /api/favorites': [],
+    'GET /api/favorites/board': { favorites: [], suggestions: [] },
   }
 
   it('opens on the ledger tab and remembers the chosen tab', async () => {
@@ -453,7 +480,7 @@ describe('records screen', () => {
     await expect
       .element(screen.getByRole('tab', { name: 'Ledger' }))
       .toHaveAttribute('aria-selected', 'true')
-    await screen.getByRole('tab', { name: 'Bookmarks' }).click()
+    await screen.getByRole('tab', { name: /^Bookmarks/ }).click()
     await expect
       .element(screen.getByText('No favourites yet'))
       .toBeInTheDocument()
@@ -464,7 +491,7 @@ describe('records screen', () => {
     localStorage.setItem('aerona.records-tab', 'notes')
     const { screen } = await renderScreen(<LedgerScreen />, routes)
     await expect
-      .element(screen.getByRole('tab', { name: 'Notes' }))
+      .element(screen.getByRole('tab', { name: /^Notes/ }))
       .toHaveAttribute('aria-selected', 'true')
     await expect
       .element(screen.getByText('No record notes yet'))
@@ -481,25 +508,56 @@ describe('records screen', () => {
 })
 
 describe('bookmarks tab', () => {
+  const card = (id: number, name: string, entityType: string) => ({
+    entity: {
+      id,
+      name,
+      title: null,
+      entity_type: entityType,
+      subtype: null,
+      status: 'active',
+      world_id: 1,
+      location_id: null,
+      power_level: 1,
+      birth_epoch: 2,
+      end_epoch: null,
+      importance: null,
+      favorite: true,
+      pending_name: false,
+    },
+    cover: null,
+  })
+
   it('lists favourite records with their type', async () => {
     const { screen } = await renderScreen(<Bookmarks />, {
-      'GET /api/favorites': [
-        { id: 3, name: 'Stonehold', entity_type: 'settlement' },
-        { id: 4, name: 'Old Nyx', entity_type: 'creature' },
-      ],
+      'GET /api/names': [],
+      'GET /api/favorites/board': {
+        favorites: [
+          card(3, 'Stonehold', 'settlement'),
+          card(4, 'Old Nyx', 'species'),
+        ],
+        suggestions: [],
+      },
     })
     await expect
-      .element(screen.getByText('Favourite records (2)'))
+      .element(screen.getByText('Favourite records · 2'))
       .toBeInTheDocument()
     await expect
       .element(screen.getByRole('link', { name: 'Stonehold' }))
       .toBeInTheDocument()
     await expect.element(screen.getByText('Settlement')).toBeInTheDocument()
+    await expect.element(screen.getByText('Species')).toBeInTheDocument()
+    await expect
+      .element(
+        screen.getByRole('button', { name: 'Remove Old Nyx from favourites' })
+      )
+      .toHaveAttribute('aria-pressed', 'true')
   })
 
   it('shows the error of a failed load', async () => {
     const { screen } = await renderScreen(<Bookmarks />, {
-      'GET /api/favorites': failure(500, 'No favourites today.'),
+      'GET /api/names': [],
+      'GET /api/favorites/board': failure(500, 'No favourites today.'),
     })
     await expect
       .element(screen.getByText('No favourites today.'))
@@ -510,7 +568,7 @@ describe('bookmarks tab', () => {
 describe('my notes', () => {
   const noteRoutes = (notes: unknown[] = []) => ({
     'GET /api/state': worldState({ worlds: [{ id: 1, name: 'Aerona' }] }),
-    'GET /api/notes': { entity_notes: notes },
+    'GET /api/notes': { entity_notes: notes, map_notes: [] },
     'GET /api/map-notes': [
       {
         id: 1,
@@ -519,7 +577,7 @@ describe('my notes', () => {
         y: 0,
         text: 'Camp here',
         color: null,
-        created_at: 'x',
+        created_at: '2026-01-01T12:00:00Z',
       },
     ],
     'GET /api/notifications': {
@@ -538,7 +596,7 @@ describe('my notes', () => {
           target_node_id: null,
           chronicle_id: null,
           is_read: false,
-          created_at: 'x',
+          created_at: '2026-01-01T12:00:00Z',
         },
       ],
     },
@@ -558,16 +616,16 @@ describe('my notes', () => {
       ])
     )
     await expect
-      .element(screen.getByText('Record notes (1)'))
+      .element(screen.getByText('Record notes · 1'))
       .toBeInTheDocument()
     await expect.element(screen.getByText('Wall is weak')).toBeInTheDocument()
     await expect
-      .element(screen.getByText('Notes to yourself (1)'))
+      .element(screen.getByText('Notes to yourself · 1'))
       .toBeInTheDocument()
     await expect
       .element(screen.getByText('Reconcile the sons'))
       .toBeInTheDocument()
-    await expect.element(screen.getByText('Map notes (1)')).toBeInTheDocument()
+    await expect.element(screen.getByText('Map notes · 1')).toBeInTheDocument()
     await expect.element(screen.getByText('Camp here')).toBeInTheDocument()
     await expect
       .element(screen.getByRole('link', { name: 'On the map' }))
@@ -586,7 +644,7 @@ describe('my notes', () => {
     ]
     const { screen, server } = await renderScreen(<MyNotes />, {
       ...noteRoutes(),
-      'GET /api/notes': () => ({ entity_notes: notes }),
+      'GET /api/notes': () => ({ entity_notes: notes, map_notes: [] }),
       'DELETE /api/entities/3/note': () => {
         notes.length = 0
         return {}
@@ -623,8 +681,14 @@ describe('my notes', () => {
       .element(screen.getByRole('link', { name: 'Open the atlas' }))
       .toBeInTheDocument()
     await expect
-      .element(screen.getByRole('link', { name: 'Open notifications' }))
+      .element(screen.getByText('No notes to yourself'))
       .toBeInTheDocument()
+    await expect
+      .element(screen.getByRole('textbox', { name: 'Note title' }))
+      .toBeInTheDocument()
+    await expect
+      .element(screen.getByRole('button', { name: 'Keep this note' }))
+      .toHaveAttribute('aria-description', 'Give the note a title first')
     await expect
       .element(screen.getByRole('link', { name: 'Open the map' }))
       .toBeInTheDocument()

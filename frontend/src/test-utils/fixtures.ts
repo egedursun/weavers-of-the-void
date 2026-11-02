@@ -81,6 +81,8 @@ export function jobRecord(overrides: Record<string, unknown> = {}) {
     created_at: '2026-01-01T12:00:00Z',
     started_at: '2026-01-01T12:00:00Z',
     finished_at: null,
+    label: null,
+    items: [],
     ...overrides,
   }
 }

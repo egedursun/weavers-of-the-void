@@ -71,6 +71,7 @@ export function FilePicker({
             <Muted variant='caption'>{formatBytes(file.size)}</Muted>
           </div>
           <Button
+            type='button'
             variant='ghost'
             size='sm'
             disabled={blocked}
@@ -93,6 +94,7 @@ export function FilePicker({
           <Text weight='medium'>{label}</Text>
           {hint && <Muted variant='caption'>{hint}</Muted>}
           <Button
+            type='button'
             variant='outline'
             size='sm'
             disabled={blocked}

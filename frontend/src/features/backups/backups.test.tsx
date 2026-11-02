@@ -192,16 +192,23 @@ describe('backups panel', () => {
 
 describe('share the world', () => {
   const packageFile = () => new File(['archive'], 'sky.aerona')
+  const pickPackage = () =>
+    userEvent.upload(
+      document.querySelector(
+        '[data-domain="file-picker"] input[type="file"]'
+      ) as HTMLInputElement,
+      packageFile()
+    )
 
   it('links the export with and without images', async () => {
     const { screen } = await renderScreen(
       <ShareWorld hasWorld readOnly={false} />
     )
     await expect
-      .element(screen.getByRole('link', { name: 'Export with images' }))
+      .element(screen.getByRole('link', { name: /^With images/ }))
       .toHaveAttribute('href', exportUrl(true))
     await expect
-      .element(screen.getByRole('link', { name: 'Without images' }))
+      .element(screen.getByRole('link', { name: /^Without images/ }))
       .toHaveAttribute('href', exportUrl(false))
   })
 
@@ -210,8 +217,11 @@ describe('share the world', () => {
       <ShareWorld hasWorld={false} readOnly={false} />
     )
     await expect
-      .element(screen.getByRole('link', { name: 'Export with images' }))
+      .element(screen.getByRole('link', { name: /^With images/ }))
       .not.toBeInTheDocument()
+    await expect
+      .element(screen.getByRole('button', { name: 'With images' }))
+      .toHaveAttribute('aria-description', 'There is no world to export yet')
   })
 
   it('needs a file before it can open anything', async () => {
@@ -234,7 +244,8 @@ describe('share the world', () => {
         },
       }
     )
-    await userEvent.upload(screen.getByLabelText('Package'), packageFile())
+    await pickPackage()
+    await expect.element(screen.getByText('sky.aerona')).toBeVisible()
     await screen.getByRole('button', { name: 'Open read-only' }).click()
     await expect
       .element(screen.getByText('Sky opened read-only'))
@@ -296,11 +307,9 @@ describe('share the world', () => {
         },
       }
     )
-    await userEvent.upload(screen.getByLabelText('Package'), packageFile())
-    await screen.getByRole('combobox').click()
-    await screen
-      .getByRole('option', { name: /Replace: it takes the place/ })
-      .click()
+    await pickPackage()
+    await expect.element(screen.getByText('sky.aerona')).toBeVisible()
+    await screen.getByRole('radio', { name: /^Replace/ }).click()
     await expect
       .element(
         screen.getByText(
@@ -329,11 +338,9 @@ describe('share the world', () => {
 
   it('blocks replacing and merging inside a guest world', async () => {
     const { screen } = await renderScreen(<ShareWorld hasWorld readOnly />)
-    await userEvent.upload(screen.getByLabelText('Package'), packageFile())
-    await screen.getByRole('combobox').click()
-    await screen
-      .getByRole('option', { name: /Merge: add its entities/ })
-      .click()
+    await pickPackage()
+    await expect.element(screen.getByText('sky.aerona')).toBeVisible()
+    await screen.getByRole('radio', { name: /^Merge/ }).click()
     await expect
       .element(screen.getByRole('button', { name: 'Merge into my world' }))
       .toHaveAttribute(

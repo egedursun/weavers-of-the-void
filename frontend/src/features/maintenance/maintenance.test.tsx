@@ -215,12 +215,17 @@ describe('maintenance page', () => {
       )
     )
     await expect
-      .element(
-        screen.getByText(
-          'Every portrait, power, prompt, name and narrative is in place.'
-        )
-      )
+      .element(screen.getByText('8 of 8 in place'))
       .toBeInTheDocument()
+    await expect
+      .element(screen.getByText('Complete', { exact: true }))
+      .toBeInTheDocument()
+    await expect
+      .element(screen.getByLabelText('Missing', { exact: true }))
+      .not.toBeInTheDocument()
+    await expect
+      .element(screen.getByRole('button', { name: 'Complete now' }))
+      .toHaveAttribute('aria-description', 'Nothing is missing.')
   })
 })
 

@@ -43,6 +43,7 @@ export function ChoiceTiles<T extends string>({
         return (
           <Button
             key={option.value}
+            type='button'
             role='radio'
             aria-checked={active}
             variant='outline'
