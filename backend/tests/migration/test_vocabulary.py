@@ -3,6 +3,7 @@ from enum import StrEnum
 import pytest
 
 from aerona.catalog.entity_types import engine_kind_owner
+from aerona.constants.agents import LEGACY_ENGINE_DESCRIPTION_PREFIX
 from aerona.domain.enums.agent import CouncilVote, MessageIntent, PrayerRequest
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.chronicle import ChronicleKind, NotificationCategory, PartOfSpeech, ThreadStatus, WritingSystem
@@ -130,3 +131,7 @@ def test_every_table_has_unique_physical_columns(vocabulary: Vocabulary) -> None
     for table in vocabulary.tables.values():
         assert len(set(table.columns.values())) == len(table.columns)
         assert set(table.required) <= set(table.columns)
+
+
+def test_the_legacy_engine_prefix_matches_the_vocabulary(vocabulary: Vocabulary) -> None:
+    assert vocabulary.texts.engine_prefix.strip() == LEGACY_ENGINE_DESCRIPTION_PREFIX

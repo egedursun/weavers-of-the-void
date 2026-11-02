@@ -1,9 +1,7 @@
 import re
 
-from aerona.constants.agents import ENGINE_DESCRIPTION_PREFIX
-from aerona.migration.legacy.vocabulary import load_vocabulary
+from aerona.constants.agents import ENGINE_DESCRIPTION_PREFIX, LEGACY_ENGINE_DESCRIPTION_PREFIX
 
-LEGACY_ENGINE_DESCRIPTION_PREFIX = load_vocabulary().texts.engine_prefix.strip()
 ENGINE_DESCRIPTION_PREFIXES = (ENGINE_DESCRIPTION_PREFIX, LEGACY_ENGINE_DESCRIPTION_PREFIX)
 
 WORD_QUOTED = re.compile(r"«([^»]+)»")

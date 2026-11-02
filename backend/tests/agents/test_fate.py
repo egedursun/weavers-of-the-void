@@ -7,7 +7,7 @@ from aerona.agents.fate.judge import run_fate
 from aerona.agents.fate.naming import name_pending_records, requeue_engine_drafts
 from aerona.agents.fate.rollback import roll_back_rejection
 from aerona.agents.runtime import AgentRuntime
-from aerona.agents.text import LEGACY_ENGINE_DESCRIPTION_PREFIX
+from aerona.constants.agents import LEGACY_ENGINE_DESCRIPTION_PREFIX
 from aerona.db.ledger_capture import LedgerDraft, capture_changes
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.session import Database
