@@ -34,10 +34,10 @@ describe('second backup folder', () => {
       .element(save)
       .toHaveAttribute('aria-description', 'Write a folder path first')
     await expect
-      .element(screen.getByText(/the last 5 copies are kept there/))
+      .element(screen.getByText(/The last 5 copies are kept there\./))
       .toBeVisible()
     await screen
-      .getByRole('textbox', { name: 'Second copy folder' })
+      .getByRole('textbox', { name: 'A second copy elsewhere' })
       .fill('~/Sync/aerona')
     await save.click()
     await expect

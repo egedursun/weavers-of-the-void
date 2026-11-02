@@ -150,8 +150,11 @@ describe('context blocks', () => {
           .some((call) => call.query.get('short') === 'true')
       )
       .toBe(true)
-    await screen.getByRole('combobox', { name: 'Block' }).click()
-    await screen.getByRole('option', { name: 'Entity detail' }).click()
+    const entityDetail = screen
+      .getByRole('radiogroup', { name: 'Block' })
+      .getByRole('radio', { name: /^Entity detail/ })
+    await entityDetail.click()
+    await expect.element(entityDetail).toHaveAttribute('aria-checked', 'true')
     await expect
       .element(screen.getByText('This block describes one record. Pick it.'))
       .toBeInTheDocument()

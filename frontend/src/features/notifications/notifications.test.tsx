@@ -151,12 +151,14 @@ describe('notifications screen', () => {
       item(3, 'prayer', false, 'Another prayer'),
     ])
     const { screen } = await renderScreen(<NotificationsScreen />, routes)
-    await expect.element(screen.getByText(/2 unread\./)).toBeInTheDocument()
     await expect
-      .element(screen.getByRole('radio', { name: 'Deaths 1/1' }))
+      .element(screen.getByText('2 unread', { exact: true }))
       .toBeInTheDocument()
     await expect
-      .element(screen.getByRole('radio', { name: 'Prayers 1/2' }))
+      .element(screen.getByRole('button', { name: /^Deaths\s*1 new · 1$/ }))
+      .toBeInTheDocument()
+    await expect
+      .element(screen.getByRole('button', { name: /^Prayers\s*1 new · 2$/ }))
       .toBeInTheDocument()
     await expect
       .element(screen.getByText('Ithren has died'))
@@ -173,7 +175,7 @@ describe('notifications screen', () => {
       item(3, 'prayer', false, 'Another prayer'),
     ])
     const { screen } = await renderScreen(<NotificationsScreen />, routes)
-    await screen.getByRole('radio', { name: 'Prayers 1/2' }).click()
+    await screen.getByRole('button', { name: /^Prayers/ }).click()
     await expect
       .element(screen.getByText('Ithren has died'))
       .not.toBeInTheDocument()
@@ -194,7 +196,7 @@ describe('notifications screen', () => {
     const { screen } = await renderScreen(<NotificationsScreen />, routes)
     await screen.getByRole('switch', { name: 'Only unread' }).click()
     await expect
-      .element(screen.getByText('No notification matches this filter'))
+      .element(screen.getByText('Nothing unread here'))
       .toBeInTheDocument()
   })
 
@@ -233,10 +235,8 @@ describe('notifications screen', () => {
       <NotificationsScreen />,
       routes
     )
-    await screen.getByRole('radio', { name: 'Prayers 2/2' }).click()
-    await screen
-      .getByRole('button', { name: 'Mark this category read' })
-      .click()
+    await screen.getByRole('button', { name: /^Prayers\s*2 new · 2$/ }).click()
+    await screen.getByRole('button', { name: 'Mark these read' }).click()
     await expect.element(screen.getByText('2 marked read')).toBeInTheDocument()
     expect(
       server.callsTo('POST /api/notifications/read')[0].body
@@ -248,7 +248,7 @@ describe('notifications screen', () => {
       1, 2,
     ])
     await expect
-      .element(screen.getByRole('button', { name: 'Mark this category read' }))
+      .element(screen.getByRole('button', { name: 'Mark these read' }))
       .toHaveAttribute('aria-disabled', 'true')
   })
 
@@ -264,22 +264,21 @@ describe('notifications screen', () => {
       routes
     )
     await expect
-      .element(screen.getByText('Prayer number 5'))
+      .element(screen.getByText('That is everything.'))
       .toBeInTheDocument()
-    await expect
-      .element(screen.getByText('Prayer number 3'))
-      .not.toBeInTheDocument()
-    await screen.getByRole('button', { name: 'Older notifications' }).click()
-    await expect
-      .element(screen.getByText('Prayer number 3'))
-      .toBeInTheDocument()
-    await expect
-      .element(screen.getByText('Prayer number 5'))
-      .toBeInTheDocument()
-    const paged = server
+    for (const id of [5, 4, 3, 2, 1]) {
+      await expect
+        .element(screen.getByText(`Prayer number ${id}`))
+        .toBeInTheDocument()
+    }
+    const feed = server
       .callsTo('GET /api/notifications')
-      .filter((call) => call.query.get('before'))
-    expect(paged[0].query.get('before')).toBe('4')
+      .filter((call) => call.query.get('limit') === '2')
+    expect(feed.map((call) => call.query.get('before'))).toEqual([
+      null,
+      '4',
+      '2',
+    ])
   })
 })
 
@@ -314,7 +313,7 @@ describe('notification settings', () => {
     const save = screen.getByRole('button', { name: 'Save preferences' })
     await expect.element(save).toHaveAttribute('aria-disabled', 'true')
     await expect
-      .element(screen.getByText('Importance 3 of 4'))
+      .element(screen.getByLabelText('Importance 3 of 4'))
       .toBeInTheDocument()
     await expect
       .element(

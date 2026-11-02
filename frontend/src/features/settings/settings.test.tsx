@@ -2,7 +2,7 @@ import { worldState } from '@/test-utils/fixtures'
 import { failure, type MockRequest } from '@/test-utils/mockServer'
 import { renderScreen } from '@/test-utils/renderScreen'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { userEvent } from 'vitest/browser'
+import { page, userEvent } from 'vitest/browser'
 import { useFeedPreferences } from '@/features/feed/feedStore'
 import { useOnboarding } from '@/features/onboarding/onboardingStore'
 import { FeedSoundSettings } from './FeedSoundSettings'
@@ -65,6 +65,14 @@ function gameRoutes(state: Record<string, unknown> = {}) {
   }
 }
 
+async function miniStat(label: string) {
+  const name = page.getByText(label, { exact: true })
+  await expect.element(name).toBeInTheDocument()
+  const card = name.element().closest('[data-domain="mini-stat"]')
+  expect(card).not.toBeNull()
+  return page.elementLocator(card as HTMLElement)
+}
+
 beforeEach(() => {
   useOnboarding.setState({ done: [], dismissed: false })
   useFeedPreferences.setState({
@@ -121,12 +129,16 @@ describe('game settings', () => {
         world: { id: 1, name: 'Aerona', epoch: 3, lore_language: 'turkish' },
       })
     )
-    await expect.element(screen.getByText('Turkish')).toBeInTheDocument()
+    const language = screen
+      .getByRole('region', { name: 'Model and lore language' })
+      .getByText('Turkish', { exact: true })
+    await expect.element(language).toBeInTheDocument()
+    await language.hover()
     await expect
       .element(
-        screen.getByText('Chosen once at genesis; it cannot be changed.')
+        screen.getByText('Chosen once at genesis; it cannot be changed').first()
       )
-      .toBeInTheDocument()
+      .toBeVisible()
   })
 
   it('counts missing image prompts and writes them all on request', async () => {
@@ -134,8 +146,12 @@ describe('game settings', () => {
       ...gameRoutes({ promptless_count: 7 }),
       'POST /api/entities/prompts/write-missing': {},
     })
+    const missing = screen.getByRole('region', { name: 'Image prompts' })
     await expect
-      .element(screen.getByText(/records are missing a prompt/))
+      .element(missing.getByText('Records without a prompt'))
+      .toBeInTheDocument()
+    await expect
+      .element(missing.getByText('7', { exact: true }))
       .toBeInTheDocument()
     await screen
       .getByRole('button', { name: 'Write all missing prompts now' })
@@ -187,7 +203,13 @@ describe('game settings', () => {
     await expect
       .element(screen.getByText(/At most 5,000 at once/))
       .toBeInTheDocument()
-    await expect.element(screen.getByText('250')).toBeInTheDocument()
+    await expect
+      .element(
+        screen
+          .getByRole('region', { name: 'Cheat: divine essence' })
+          .getByText('250', { exact: true })
+      )
+      .toBeInTheDocument()
     await screen.getByRole('button', { name: 'Add' }).click()
     await expect.element(screen.getByText('Added 1000')).toBeInTheDocument()
     expect(server.callsTo('POST /api/cheats/essence')[0].body).toEqual({
@@ -229,14 +251,17 @@ describe('records settings', () => {
       'GET /api/metrics/models': METRICS_EMPTY,
     })
     await expect
-      .element(screen.getByRole('link', { name: 'Open the action ledger' }))
+      .element(screen.getByRole('link', { name: /^Action ledger/ }))
       .toHaveAttribute('href', '/ledger')
     await expect
-      .element(screen.getByRole('link', { name: 'Open the book' }))
+      .element(screen.getByRole('link', { name: /^The book/ }))
       .toHaveAttribute('href', '/api/book')
     await expect
-      .element(screen.getByRole('link', { name: 'Download the codex' }))
+      .element(screen.getByRole('link', { name: /^Codex with pictures/ }))
       .toHaveAttribute('href', '/api/codex.zip')
+    await expect
+      .element(screen.getByRole('link', { name: /^Markdown only/ }))
+      .toHaveAttribute('href', '/api/codex.md')
   })
 
   it('disables the book before a world exists', async () => {
@@ -245,7 +270,7 @@ describe('records settings', () => {
       'GET /api/metrics/models': METRICS_EMPTY,
     })
     await expect
-      .element(screen.getByRole('button', { name: 'Open the book' }))
+      .element(screen.getByRole('button', { name: /^The book/ }))
       .toHaveAttribute(
         'aria-description',
         'There is no world to write down yet'
@@ -281,13 +306,13 @@ describe('feed and sound settings', () => {
   it('remembers the feed panel and reveals the per-category mute list with sounds', async () => {
     const { screen } = await renderScreen(<FeedSoundSettings />)
     await expect
-      .element(screen.getByText('Which events make a sound:'))
+      .element(screen.getByText('Which events make a sound', { exact: true }))
       .not.toBeInTheDocument()
     await screen.getByRole('switch', { name: 'Live feed open' }).click()
     expect(useFeedPreferences.getState().open).toBe(true)
     await screen.getByRole('switch', { name: 'Feed sounds' }).click()
     await expect
-      .element(screen.getByText('Which events make a sound:'))
+      .element(screen.getByText('Which events make a sound', { exact: true }))
       .toBeInTheDocument()
     await screen.getByRole('switch', { name: 'Wars' }).click()
     expect(useFeedPreferences.getState().muted).toEqual(['war'])
@@ -329,17 +354,28 @@ describe('health panel', () => {
     const { screen } = await renderScreen(<HealthPanel />, {
       'GET /api/health/report': { report },
     })
-    await expect.element(screen.getByText('Good')).toBeInTheDocument()
+    await expect.element(screen.getByText('All good')).toBeInTheDocument()
     await expect.element(screen.getByText('Read-only')).toBeInTheDocument()
+    const database = await miniStat('Database')
+    await expect.element(database.getByText('4 KB')).toBeInTheDocument()
+    await database.hover()
     await expect
-      .element(screen.getByText(/aerona\.db · 4 KB.*integrity sound/))
+      .element(screen.getByText('aerona.db with 1 KB of journal').first())
+      .toBeVisible()
+    const integrity = await miniStat('Integrity')
+    await expect.element(integrity.getByText('Sound')).toBeInTheDocument()
+    const backups = await miniStat('Backups')
+    await expect
+      .element(backups.getByText('4', { exact: true }))
       .toBeInTheDocument()
+    const last = await miniStat('Last backup')
+    await expect.element(last.getByText('5 min ago')).toBeInTheDocument()
+    await last.hover()
+    await expect.element(screen.getByText('epoch-3.db').first()).toBeVisible()
+    await screen.getByRole('button', { name: 'Show the recent error' }).click()
+    await expect.element(screen.getByText('12:00 · error')).toBeInTheDocument()
     await expect
-      .element(screen.getByText(/4 backups · last epoch-3\.db, 5 min ago/))
-      .toBeInTheDocument()
-    await screen.getByRole('button', { name: '1 recent error' }).click()
-    await expect
-      .element(screen.getByText('12:00 · error · The disk is slow'))
+      .element(screen.getByText('The disk is slow'))
       .toBeInTheDocument()
   })
 
@@ -357,13 +393,21 @@ describe('health panel', () => {
       },
     })
     await expect.element(screen.getByText('degraded')).toBeInTheDocument()
+    const integrity = await miniStat('Integrity')
     await expect
-      .element(screen.getByText(/integrity page 3 corrupt/))
+      .element(integrity.getByText('page 3 corrupt'))
       .toBeInTheDocument()
-    await expect.element(screen.getByText('None yet')).toBeInTheDocument()
+    const backups = await miniStat('Backups')
     await expect
-      .element(screen.getByText('No recent errors.'))
+      .element(backups.getByText('0', { exact: true }))
       .toBeInTheDocument()
+    const errors = await miniStat('Recent errors')
+    await expect
+      .element(errors.getByText('0', { exact: true }))
+      .toBeInTheDocument()
+    await expect
+      .element(screen.getByRole('button', { name: 'Show the recent error' }))
+      .not.toBeInTheDocument()
   })
 
   it('shows the server error when the report cannot load', async () => {
