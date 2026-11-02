@@ -350,6 +350,40 @@ describe('son sections', () => {
     })
   })
 
+  it('adjusts one stat, passion or resource at a time from the stats section', async () => {
+    const { screen, server } = await openSon(7)
+    await screen.getByRole('button', { name: 'Adjust stats' }).click()
+    const might = screen.getByRole('spinbutton', { name: 'Might (1–100)' })
+    await might.clear()
+    await might.fill('101')
+    await expect
+      .element(screen.getByRole('button', { name: 'Set Might' }))
+      .toBeDisabled()
+    await might.clear()
+    await might.fill('97')
+    await screen.getByRole('button', { name: 'Set Might' }).click()
+    await expect.poll(() => server.callsTo('PATCH /api/sons/7').length).toBe(1)
+    expect(server.callsTo('PATCH /api/sons/7')[0].body).toEqual({
+      stats: { might: 97 },
+    })
+    const wrath = screen.getByRole('spinbutton', { name: 'Wrath (0–100)' })
+    await wrath.clear()
+    await wrath.fill('3')
+    await screen.getByRole('button', { name: 'Set Wrath' }).click()
+    await expect.poll(() => server.callsTo('PATCH /api/sons/7').length).toBe(2)
+    expect(server.callsTo('PATCH /api/sons/7')[1].body).toEqual({
+      passions: { wrath: 3 },
+    })
+    const xp = screen.getByRole('spinbutton', { name: 'Experience (0+)' })
+    await xp.clear()
+    await xp.fill('1234')
+    await screen.getByRole('button', { name: 'Set Experience' }).click()
+    await expect.poll(() => server.callsTo('PATCH /api/sons/7').length).toBe(3)
+    expect(server.callsTo('PATCH /api/sons/7')[2].body).toEqual({
+      resources: { xp: 1234 },
+    })
+  })
+
   it('shows peoples accounts of him and writes one with the son fixed', async () => {
     const { screen, server } = await openSon(7)
     await expect.element(screen.getByText('"Bellfather"')).toBeVisible()

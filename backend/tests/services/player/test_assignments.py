@@ -125,6 +125,16 @@ async def test_edit_son_rename_propagates_and_clamps(scope: PlayerScope, session
         await assignments.edit_son(scope, assignments.EditSon(son_id=son.id, name="Iolen"))
 
 
+async def test_edit_son_sets_single_stats_and_resources(scope: PlayerScope, session: AsyncSession, world: PlayerWorld, rules: Rules) -> None:
+    son = await make_son(session, "Velkar", world.world.id)
+    await assignments.edit_son(scope, assignments.EditSon(son_id=son.id, stats={Stat.MIGHT: 77}))
+    assert son.might == 77
+    await assignments.edit_son(scope, assignments.EditSon(son_id=son.id, resources=assignments.SonResources(xp=-5, sanity=140)))
+    assert son.xp == 0 and son.sanity == 100
+    await assignments.edit_son(scope, assignments.EditSon(son_id=son.id, resources=assignments.SonResources(xp=42, sanity=30)))
+    assert son.xp == 42 and son.sanity == 30
+
+
 async def test_add_star_requirements_and_ascension(scope: PlayerScope, session: AsyncSession, world: PlayerWorld, rules: Rules) -> None:
     world.creator.essence = 1000
     son = await make_son(session, "Velkar", world.world.id, rarity=Rarity.RARE)

@@ -3,6 +3,7 @@ import { type MockRequest } from '@/test-utils/mockServer'
 import { renderScreen } from '@/test-utils/renderScreen'
 import { describe, expect, it } from 'vitest'
 import { NotificationBell } from './NotificationBell'
+import { NotificationSettings } from './NotificationSettings'
 import { NotificationsScreen } from './NotificationsScreen'
 import { SelfNoteForm } from './SelfNoteForm'
 
@@ -329,6 +330,47 @@ describe('notification settings', () => {
       .toBeInTheDocument()
     expect(server.callsTo('PUT /api/notifications/settings')).toHaveLength(1)
     expect(settings.note).toBe(true)
+  })
+})
+
+describe('notification settings in a narrow panel', () => {
+  it('wraps long category names beside the switch instead of under it', async () => {
+    const list = {
+      unread: 0,
+      counts: [],
+      settings: {},
+      items: [],
+      categories: [
+        {
+          category: 'apocalypse',
+          label: 'Omen of doomsday',
+          severity: 4,
+          enabled_by_default: true,
+        },
+        {
+          category: 'rebellion',
+          label: "Son's rebellion",
+          severity: 3,
+          enabled_by_default: true,
+        },
+      ],
+    }
+    const { screen } = await renderScreen(
+      <div className='w-48'>
+        <NotificationSettings list={list as never} />
+      </div>
+    )
+    for (const name of ['Omen of doomsday', "Son's rebellion"]) {
+      const toggle = screen.getByRole('switch', { name })
+      await expect.element(toggle).toBeVisible()
+      const label = screen.getByText(name, { exact: true }).element()
+      const row = toggle.element().closest('li')
+      expect(row).not.toBeNull()
+      expect(label.getBoundingClientRect().right).toBeLessThanOrEqual(
+        toggle.element().getBoundingClientRect().left
+      )
+      expect(row!.scrollWidth).toBeLessThanOrEqual(row!.clientWidth)
+    }
   })
 })
 

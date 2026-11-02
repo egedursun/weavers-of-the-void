@@ -234,6 +234,35 @@ describe('foreign god page', () => {
     })
   })
 
+  it('adjusts a stat, power or attitude on its own from the stats section', async () => {
+    const { screen, server } = await openGod()
+    await screen.getByRole('button', { name: 'Adjust stats' }).click()
+    const might = screen.getByRole('spinbutton', { name: 'Might (1–100)' })
+    await might.clear()
+    await might.fill('88')
+    await screen.getByRole('button', { name: 'Set Might' }).click()
+    await expect
+      .poll(() => server.callsTo('PATCH /api/foreign-gods/3').length)
+      .toBe(1)
+    expect(server.callsTo('PATCH /api/foreign-gods/3')[0].body).toEqual({
+      stats: { might: 88 },
+    })
+    const stance = screen.getByRole('spinbutton', {
+      name: 'Attitude to the pantheon (-100–100)',
+    })
+    await stance.clear()
+    await stance.fill('40')
+    await screen
+      .getByRole('button', { name: 'Set Attitude to the pantheon' })
+      .click()
+    await expect
+      .poll(() => server.callsTo('PATCH /api/foreign-gods/3').length)
+      .toBe(2)
+    expect(server.callsTo('PATCH /api/foreign-gods/3')[1].body).toEqual({
+      stance: 40,
+    })
+  })
+
   it('refuses to save without a name', async () => {
     const { screen } = await openGod()
     await screen

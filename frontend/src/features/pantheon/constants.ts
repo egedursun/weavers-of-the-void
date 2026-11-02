@@ -1,4 +1,7 @@
 export const STAT_SCALE = 100
+export const STAT_MIN = 1
+export const STARS_MIN = 1
+export const STARS_MAX = 5
 export const RELATION_SCALE = 100
 export const COMPARE_MAX = 3
 export const COMPARE_MIN = 2

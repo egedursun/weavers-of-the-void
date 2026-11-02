@@ -206,29 +206,33 @@ export function SonEditForm({ view }: { view: SonPublic }) {
             </FormRow>
           ))}
           <Label variant='overline'>Passions</Label>
-          {SON_PASSIONS.map((passion) => (
-            <NumberField
-              key={passion.key}
-              label={passion.label}
-              min={0}
-              max={STAT_SCALE}
-              value={passions[passion.key]}
-              onChange={(value) =>
-                setPassions({ ...passions, [passion.key]: value })
-              }
-            />
-          ))}
+          <div className='grid min-w-0 grid-cols-2 gap-3'>
+            {SON_PASSIONS.map((passion) => (
+              <NumberField
+                key={passion.key}
+                label={passion.label}
+                min={0}
+                max={STAT_SCALE}
+                value={passions[passion.key]}
+                onChange={(value) =>
+                  setPassions({ ...passions, [passion.key]: value })
+                }
+              />
+            ))}
+          </div>
           <Label variant='overline'>Stats</Label>
-          {STATS.map((stat) => (
-            <NumberField
-              key={stat.key}
-              label={stat.label}
-              min={1}
-              max={STAT_SCALE}
-              value={stats[stat.key]}
-              onChange={(value) => setStats({ ...stats, [stat.key]: value })}
-            />
-          ))}
+          <div className='grid min-w-0 grid-cols-2 gap-3'>
+            {STATS.map((stat) => (
+              <NumberField
+                key={stat.key}
+                label={stat.label}
+                min={1}
+                max={STAT_SCALE}
+                value={stats[stat.key]}
+                onChange={(value) => setStats({ ...stats, [stat.key]: value })}
+              />
+            ))}
+          </div>
           <Muted variant='caption'>
             Life and essence clamp to the new caps; every edit can be undone
             from the ledger.
@@ -256,17 +260,19 @@ export function SonEditForm({ view }: { view: SonPublic }) {
               </Select>
             )}
           </FormRow>
-          {RESOURCES.map((resource) => (
-            <NumberField
-              key={resource.key}
-              label={resource.label}
-              min={0}
-              value={resources[resource.key]}
-              onChange={(value) =>
-                setResources({ ...resources, [resource.key]: value })
-              }
-            />
-          ))}
+          <div className='grid min-w-0 grid-cols-2 gap-3'>
+            {RESOURCES.map((resource) => (
+              <NumberField
+                key={resource.key}
+                label={resource.label}
+                min={0}
+                value={resources[resource.key]}
+                onChange={(value) =>
+                  setResources({ ...resources, [resource.key]: value })
+                }
+              />
+            ))}
+          </div>
           <Muted variant='caption'>
             Changes are canon; he knows himself this way on his next turn.
           </Muted>

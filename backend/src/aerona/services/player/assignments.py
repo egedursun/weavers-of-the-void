@@ -159,6 +159,8 @@ class SonResources(Command):
     level: int | None = None
     stars: int | None = None
     existence: int | None = None
+    xp: int | None = None
+    sanity: int | None = None
 
 
 class EditSon(Command):
@@ -566,6 +568,12 @@ def _apply_resources(scope: PlayerScope, son: SonRow, resources: SonResources) -
     if resources.existence is not None:
         son.existence = max(PERCENT_MIN, min(PERCENT_MAX, resources.existence))
         changed.append("existence")
+    if resources.xp is not None:
+        son.xp = max(0, resources.xp)
+        changed.append("experience")
+    if resources.sanity is not None:
+        son.sanity = clamp_percent(resources.sanity)
+        changed.append("sanity")
     return changed
 
 

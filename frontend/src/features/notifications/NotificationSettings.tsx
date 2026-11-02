@@ -43,7 +43,7 @@ export function NotificationSettings({ list }: NotificationSettingsProps) {
       surface='card'
       level={3}
     >
-      <ul className='flex min-w-0 flex-col gap-1.5'>
+      <ul className='@container/notify flex min-w-0 flex-col gap-1.5'>
         {ordered.map((info) => {
           const on = draft[info.category] ?? info.enabled_by_default
           const id = `notify-${info.category}`
@@ -55,13 +55,20 @@ export function NotificationSettings({ list }: NotificationSettingsProps) {
                 on ? 'bg-background' : 'bg-muted/40'
               )}
             >
-              <Medallion
-                icon={CATEGORY_ICON[info.category]}
-                tone={on ? CATEGORY_TONE[info.category] : 'muted'}
-                size='sm'
-              />
+              <div className='hidden shrink-0 @3xs/notify:block'>
+                <Medallion
+                  icon={CATEGORY_ICON[info.category]}
+                  tone={on ? CATEGORY_TONE[info.category] : 'muted'}
+                  size='sm'
+                />
+              </div>
               <div className='flex min-w-0 flex-1 flex-col gap-1'>
-                <FieldLabel htmlFor={id}>{info.label}</FieldLabel>
+                <FieldLabel
+                  htmlFor={id}
+                  className='block min-w-0 wrap-break-word'
+                >
+                  {info.label}
+                </FieldLabel>
                 <span
                   className='flex items-center gap-0.5'
                   aria-label={`Importance ${info.severity} of 4`}

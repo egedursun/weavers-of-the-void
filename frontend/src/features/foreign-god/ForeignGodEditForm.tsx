@@ -269,32 +269,34 @@ export function ForeignGodEditForm({ detail }: { detail: ForeignGodDetail }) {
                 />
               )}
             </FormRow>
-            <FormRow label='Attitude' description='From enemy to friend.'>
-              {(id) => (
-                <Input
-                  id={id}
-                  type='number'
-                  min={-RELATION_SCALE}
-                  max={RELATION_SCALE}
-                  value={stance}
-                  className='w-32'
-                  onChange={(event) => setStance(event.target.value)}
-                />
-              )}
-            </FormRow>
-            <FormRow label='Power'>
-              {(id) => (
-                <Input
-                  id={id}
-                  type='number'
-                  min={0}
-                  max={STAT_SCALE}
-                  value={power}
-                  className='w-32'
-                  onChange={(event) => setPower(event.target.value)}
-                />
-              )}
-            </FormRow>
+            <div className='grid min-w-0 grid-cols-2 gap-3'>
+              <FormRow label='Attitude' description='From enemy to friend.'>
+                {(id) => (
+                  <Input
+                    id={id}
+                    type='number'
+                    min={-RELATION_SCALE}
+                    max={RELATION_SCALE}
+                    value={stance}
+                    className='w-32'
+                    onChange={(event) => setStance(event.target.value)}
+                  />
+                )}
+              </FormRow>
+              <FormRow label='Power'>
+                {(id) => (
+                  <Input
+                    id={id}
+                    type='number'
+                    min={0}
+                    max={STAT_SCALE}
+                    value={power}
+                    className='w-32'
+                    onChange={(event) => setPower(event.target.value)}
+                  />
+                )}
+              </FormRow>
+            </div>
             <FormRow label='Status'>
               {(id) => (
                 <Select
@@ -364,26 +366,28 @@ export function ForeignGodEditForm({ detail }: { detail: ForeignGodDetail }) {
         <CollapsibleContent>
           <Section title={`Shape ${god.name}`} surface='card' level={3}>
             <Label variant='overline'>Stats</Label>
-            {STATS.map((stat) => (
-              <FormRow key={stat.key} label={stat.label}>
-                {(id) => (
-                  <Input
-                    id={id}
-                    type='number'
-                    min={1}
-                    max={STAT_SCALE}
-                    value={stats[stat.key]}
-                    className='w-32'
-                    onChange={(event) =>
-                      setStats({
-                        ...stats,
-                        [stat.key]: Number(event.target.value),
-                      })
-                    }
-                  />
-                )}
-              </FormRow>
-            ))}
+            <div className='grid min-w-0 grid-cols-2 gap-3'>
+              {STATS.map((stat) => (
+                <FormRow key={stat.key} label={stat.label}>
+                  {(id) => (
+                    <Input
+                      id={id}
+                      type='number'
+                      min={1}
+                      max={STAT_SCALE}
+                      value={stats[stat.key]}
+                      className='w-32'
+                      onChange={(event) =>
+                        setStats({
+                          ...stats,
+                          [stat.key]: Number(event.target.value),
+                        })
+                      }
+                    />
+                  )}
+                </FormRow>
+              ))}
+            </div>
             <Label variant='overline'>Powers</Label>
             <Muted variant='caption'>
               Clearing a name removes that power; the last empty row adds a new

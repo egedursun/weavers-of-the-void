@@ -11,11 +11,20 @@ import {
   CloudFog,
   type LucideIcon,
 } from 'lucide-react'
+import { api } from '@/api/client'
+import { unwrap } from '@/api/errors'
+import { type components } from '@/api/generated/schema'
 import { formatDecimal } from '@/lib/format'
 import { Medallion, MiniStat, Section, StatBar } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
+import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { type SonPublic } from '@/features/pantheon/api'
-import { STAT_SCALE } from '@/features/pantheon/constants'
+import {
+  STARS_MAX,
+  STARS_MIN,
+  STAT_MIN,
+  STAT_SCALE,
+} from '@/features/pantheon/constants'
 import { useRuleLookup } from '@/features/pantheon/gate'
 import {
   BAND_LABEL,
@@ -27,10 +36,93 @@ import {
 } from '@/features/pantheon/labels'
 import { statValue, xpNeeded } from '@/features/pantheon/sonFacts'
 
+type Body = components['schemas']['PatchSonsSonIdBody']
+
 const GROUP_ICON: Record<StatGroup, LucideIcon> = {
   Body: PersonStanding,
   Mind: Brain,
   Soul: Brush,
+}
+
+const STAT_KEYS = new Set<string>(STATS.map((stat) => stat.key))
+const PASSION_KEYS = new Set<string>(SON_PASSIONS.map((passion) => passion.key))
+
+function editBody(key: string, value: number): Body {
+  if (STAT_KEYS.has(key)) return { stats: { [key]: value } }
+  if (PASSION_KEYS.has(key)) return { passions: { [key]: value } }
+  return { resources: { [key]: value } }
+}
+
+function adjustGroups(view: SonPublic): AdjustGroup[] {
+  const son = view.son
+  return [
+    {
+      title: 'Stats',
+      fields: STATS.map((stat) => ({
+        key: stat.key,
+        label: stat.label,
+        value: statValue(son, stat.key),
+        min: STAT_MIN,
+        max: STAT_SCALE,
+      })),
+    },
+    {
+      title: 'Passions',
+      fields: SON_PASSIONS.map((passion) => ({
+        key: passion.key,
+        label: passion.label,
+        value: son[passion.key],
+        min: 0,
+        max: STAT_SCALE,
+      })),
+    },
+    {
+      title: 'Resources',
+      fields: [
+        { key: 'hp', label: 'Life', value: son.hp, min: 0, max: view.max_hp },
+        {
+          key: 'essence',
+          label: 'Essence',
+          value: son.essence,
+          min: 0,
+          max: view.max_essence,
+        },
+        { key: 'fame', label: 'Fame', value: son.fame, min: 0 },
+        { key: 'xp', label: 'Experience', value: son.xp, min: 0 },
+        ...(son.sanity !== null
+          ? [
+              {
+                key: 'sanity',
+                label: 'Sanity',
+                value: son.sanity,
+                min: 0,
+                max: STAT_SCALE,
+              },
+            ]
+          : []),
+        {
+          key: 'existence',
+          label: 'Existence',
+          value: son.existence,
+          min: 0,
+          max: STAT_SCALE,
+        },
+      ],
+    },
+    {
+      title: 'Rank',
+      fields: [
+        { key: 'level', label: 'Level', value: son.level, min: 1 },
+        {
+          key: 'stars',
+          label: 'Stars',
+          value: son.stars,
+          min: STARS_MIN,
+          max: STARS_MAX,
+        },
+      ],
+    },
+  ]
 }
 
 export function SonStats({ view, faith }: { view: SonPublic; faith: number }) {
@@ -70,6 +162,19 @@ export function SonStats({ view, faith }: { view: SonPublic; faith: number }) {
             </div>
           ))}
         </div>
+        <AdjustStats
+          id={`son-${son.id}-stat`}
+          groups={adjustGroups(view)}
+          note='Life and essence clamp to the new caps; every change goes into the ledger and can be undone.'
+          run={({ key, value }) =>
+            unwrap(
+              api.PATCH('/api/sons/{son_id}', {
+                params: { path: { son_id: son.id } },
+                body: editBody(key, value),
+              })
+            )
+          }
+        />
       </Section>
       <Section
         title='Passions'
