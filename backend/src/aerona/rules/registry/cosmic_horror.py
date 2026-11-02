@@ -93,6 +93,9 @@ class CosmicHorrorRules:
     interest_die: int = rule(11, 1, 100, RuleGroup.COSMIC_HORROR, "Per-epoch interest die of an Outer Being")
     interest_decay: int = rule(4, 0, 100, RuleGroup.COSMIC_HORROR, "Subtracted from an Outer Being's interest each epoch")
     outer_being_victims: int = rule(3, 0, 100, RuleGroup.COSMIC_HORROR, "Neighbours whose sanity an Outer Being gnaws each epoch")
+    outer_being_size_per_victim: int = rule(
+        25, 0, 100, RuleGroup.COSMIC_HORROR, "Each this much Outer Being size adds one more gnawed neighbour (0 = size has no reach)"
+    )
     outer_being_sanity_divisor: int = rule(10, 1, 1000, RuleGroup.COSMIC_HORROR, "Neighbour's sanity loss: interest / this number")
     outer_being_mutation_divisor: int = rule(300, 1, 100000, RuleGroup.COSMIC_HORROR, "Mutation chance of a neighbouring species: interest / this number")
     apocalypse_event_divisor: int = rule(

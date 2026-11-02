@@ -6,7 +6,7 @@ from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, enum_type
 from aerona.domain.enums.bond import ROLE_BOND_KINDS, SYMMETRIC_BOND_KINDS, BondKind, BondRole, BondState
-from aerona.domain.enums.war import DebtStatus
+from aerona.domain.enums.war import DebtStatus, WarCause
 
 
 def _sql_list(values: frozenset[BondKind]) -> str:
@@ -42,6 +42,7 @@ class BondRow(CreatedAtMixin, Base):
         CheckConstraint("debt_amount IS NULL OR debt_amount >= 0", name="debt_amount_min"),
         CheckConstraint("kind = 'owes' OR (debt_amount IS NULL AND debt_due_epoch IS NULL AND debt_status IS NULL)", name="debt_only_on_owes"),
         CheckConstraint("kind = 'truce' OR truce_until_epoch IS NULL", name="truce_only_on_truce"),
+        CheckConstraint("kind = 'enemy' OR (war_cause IS NULL AND incited_by_son_id IS NULL)", name="war_cause_only_on_enemy"),
         Index("ix_bonds_source", "source_node_id", "kind", "state"),
         Index("ix_bonds_target", "target_node_id", "kind", "state"),
         Index("ix_bonds_pair", "source_node_id", "target_node_id"),
@@ -85,6 +86,8 @@ class BondRow(CreatedAtMixin, Base):
     debt_due_epoch: Mapped[int | None]
     debt_status: Mapped[DebtStatus | None] = mapped_column(enum_type(DebtStatus, "debt_status"))
     truce_until_epoch: Mapped[int | None]
+    war_cause: Mapped[WarCause | None] = mapped_column(enum_type(WarCause, "war_cause"))
+    incited_by_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
     pair_low: Mapped[int] = mapped_column(default=0)
     pair_high: Mapped[int] = mapped_column(default=0)
     role_key: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH), default="")

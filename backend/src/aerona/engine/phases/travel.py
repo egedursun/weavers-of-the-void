@@ -23,6 +23,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, 
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, TravelMethod
+from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import KnowledgeStats, LegendStats, SettlementStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.discovery import mark_world_discovered
@@ -356,9 +357,9 @@ async def bridge_collapse(ctx: TickContext) -> int:
     return collapsed
 
 
-def road_risk(rules: Rules, route: RouteRow, branches: set[KnowledgeBranch], vehicle: EntityRow | None) -> float:
+def road_risk(rules: Rules, route: RouteRow, branches: set[KnowledgeBranch], vehicle: EntityRow | None, world_danger: int = 0) -> float:
     travel = rules.travel
-    risk = route.danger / PERCENT
+    risk = route.danger / PERCENT + world_danger / PERCENT * travel.world_danger_risk_pct / PERCENT
     if KnowledgeBranch.SKY_NAVIGATION in branches:
         risk *= travel.sky_navigation_risk_pct / PERCENT
     if KnowledgeBranch.VOID_LIVING in branches:
@@ -428,7 +429,9 @@ async def _lost_caravan(ctx: TickContext, journey: JourneyRow, traveller: Entity
 async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow, traveller: EntityRow, route: RouteRow) -> bool:
     travel = ctx.rules.travel
     vehicle = await ctx.session.get(EntityRow, journey.vehicle_entity_id) if journey.vehicle_entity_id is not None else None
-    if not scene.rng.probability(road_risk(ctx.rules, route, scene.knowledge.branches(traveller.id), vehicle)):
+    destination = await ctx.session.get(WorldRow, journey.destination_world_id)
+    danger = destination.danger if destination is not None else 0
+    if not scene.rng.probability(road_risk(ctx.rules, route, scene.knowledge.branches(traveller.id), vehicle, danger)):
         return True
     kind = METHOD_EVENTS.get(route.method) or scene.rng.pick(COMMON_EVENTS)
     target = await world_name(ctx.session, journey.destination_world_id)
@@ -665,7 +668,7 @@ async def _contact(ctx: TickContext, arrival: Arrival, native: EntityRow) -> str
     invasion = journey.intent is JourneyIntent.CONQUEST or (journey.intent is JourneyIntent.COLONY and rng.chance(travel.colony_invasion_chance))
     if invasion:
         invader = arrival.colony or traveller
-        declared = await declare_war(ctx, invader.id, native.id, "first contact: invasion")
+        declared = await declare_war(ctx, invader.id, native.id, "first contact: invasion", cause=WarCause.CONQUEST_JOURNEY)
         await change_relation(ctx, traveller.id, native.id, -travel.invasion_relation_loss, "invasion")
         return f"{native.name} saw them as invaders" if declared else f"{native.name} looked at them with hostility"
     alive = traveller.status is EntityStatus.CANON

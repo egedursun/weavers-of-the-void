@@ -72,6 +72,8 @@ class CreatorRules:
         25, 1, 10000, RuleGroup.CREATOR_AND_ESSENCE, "When this many new living beings are born in an epoch the life contribution is half the cap"
     )
     content_action: int = rule(5, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Contribution to contentment of an epoch in which the god acted")
+    content_passion_max: int = rule(12, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Most contentment an epoch that answers the god's passions can bring")
+    content_passion_half: int = rule(5, 1, 1000, RuleGroup.CREATOR_AND_ESSENCE, "Matching events in an epoch that bring half of the passion contentment")
     mood_opposition_pct: int = rule(
         2, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Wrath and contentment soothe each other: each decreases every epoch by this percentage of the other"
     )

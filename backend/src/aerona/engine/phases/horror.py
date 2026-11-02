@@ -355,7 +355,8 @@ async def outer_influence(ctx: TickContext) -> None:
         neighbours = (
             [item for item in await repository.contents(being.location_id) if item.entity_type in OUTER_PREY_TYPES] if being.location_id is not None else []
         )
-        for victim in neighbours[: horror.outer_being_victims]:
+        reach = horror.outer_being_victims + (stat_or(being, "size", 0) // horror.outer_being_size_per_victim if horror.outer_being_size_per_victim else 0)
+        for victim in neighbours[:reach]:
             shift_sanity(ctx.rules, victim, -round(interest / horror.outer_being_sanity_divisor))
             if victim.entity_type is EntityType.SPECIES and rng.probability(interest / horror.outer_being_mutation_divisor):
                 await repository.add_flag(victim.id, EntityFlag.MUTATION, ctx.epoch)

@@ -129,7 +129,7 @@ async def redirect_uprisings(ctx: TickContext) -> int:
         target = ruled[0] if ruled else None
         if target is None or await can_open_war(ctx.session, ctx.rules, rebels.id, target.id, ctx.epoch, world_cap=False) is not None:
             continue
-        await declare_war(ctx, rebels.id, target.id, bond.description or "uprising", world_cap=False, since_epoch=bond.epoch)
+        await declare_war(ctx, rebels.id, target.id, bond.description or "uprising", cause=WarCause.UPRISING, world_cap=False, since_epoch=bond.epoch)
         redirected += 1
         text = f"{rebels.name} defies the rule of {overlord.name}; the revolt is now an open war with {target.name}."
         await ctx.chronicle(
@@ -697,7 +697,7 @@ async def incite_uprising(ctx: TickContext, community_id: int) -> bool:
     target = await uprising_target(ctx.session, community)
     if target.id == community.id:
         raise ConflictError(f"No one rules {community.name}; there is no one to rise against.")
-    return await declare_war(ctx, community.id, target.id, "uprising", world_cap=False)
+    return await declare_war(ctx, community.id, target.id, "uprising", cause=WarCause.UPRISING, world_cap=False)
 
 
 PHASES = (Phase("war_upkeep", war_upkeep), Phase("campaigns", campaigns))

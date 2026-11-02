@@ -14,7 +14,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import Commodity, ResourceMechanic
-from aerona.domain.enums.war import DebtStatus
+from aerona.domain.enums.war import DebtStatus, WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.gods.economy import depletion_price, mechanics_of
 from aerona.engine.gods.queries import owners_of
@@ -209,7 +209,7 @@ async def end_debt(ctx: TickContext, bond: BondRow, debtor: EntityRow, creditor:
         text = f"{creditor.name} seized {debtor.name}'s {resource.name} for the unpaid debt of {owed}."
         await _debt_chronicle(ctx, text, "debt_seized", [debtor.id, creditor.id, resource.id])
         return "seized"
-    if rng.chance(table.debt_war_chance) and await declare_war(ctx, creditor.id, debtor.id, f"the unpaid debt of {owed}"):
+    if rng.chance(table.debt_war_chance) and await declare_war(ctx, creditor.id, debtor.id, f"the unpaid debt of {owed}", cause=WarCause.DEBT):
         await close_debt(ctx, bond, "turned to war")
         await change_relation(ctx, creditor.id, debtor.id, -table.debt_grudge, "debt war")
         text = f"The unpaid debt of {owed} turned to war: {creditor.name} declared {debtor.name} its enemy to take it by the sword."

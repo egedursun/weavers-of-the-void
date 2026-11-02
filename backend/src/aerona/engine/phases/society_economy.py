@@ -15,6 +15,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw, SocialClass
+from aerona.domain.enums.war import WarCause
 from aerona.domain.enums.world import ClimateEra
 from aerona.domain.models.entity_stats import FactionStats, ItemStats
 from aerona.engine.context import TickContext
@@ -439,7 +440,7 @@ async def raise_class_uprising(ctx: TickContext, entity: EntityRow, society: Soc
         ),
     )
     target = await uprising_target(ctx.session, entity)
-    await declare_war(ctx, faction.id, target.id, f"{spec.plural.lower()} uprising", world_cap=False)
+    await declare_war(ctx, faction.id, target.id, f"{spec.plural.lower()} uprising", cause=WarCause.UPRISING, world_cap=False)
     language = spoken_language_id(world.book, entity.id)
     if language is not None:
         await BondRepository(ctx.session).connect(BondDraft(faction.id, language, BondKind.SPEAKS, ctx.epoch, "the tongue of the uprising"))

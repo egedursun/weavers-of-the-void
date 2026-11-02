@@ -12,6 +12,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import ROLE_BOND_KINDS, BondKind, BondRole, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.node import NodeKind
+from aerona.domain.enums.war import WarCause
 
 PATRON_KINDS = frozenset({NodeKind.SON, NodeKind.CREATOR})
 GOD_KINDS = frozenset({NodeKind.SON, NodeKind.CREATOR, NodeKind.FOREIGN_GOD})
@@ -30,6 +31,8 @@ class BondDraft:
     debt_what: str | None = None
     debt_due_epoch: int | None = None
     truce_until_epoch: int | None = None
+    war_cause: WarCause | None = None
+    incited_by_son_id: int | None = None
 
     def swapped(self) -> "BondDraft":
         return replace(self, source_node_id=self.target_node_id, target_node_id=self.source_node_id)
@@ -65,6 +68,8 @@ class BondRepository(Repository):
             debt_what=normalized.debt_what,
             debt_due_epoch=normalized.debt_due_epoch,
             truce_until_epoch=normalized.truce_until_epoch,
+            war_cause=normalized.war_cause,
+            incited_by_son_id=normalized.incited_by_son_id,
             state=BondState.ACTIVE,
         )
         return await self.insert(bond)

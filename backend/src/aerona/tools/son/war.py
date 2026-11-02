@@ -16,6 +16,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.war import WarCause
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.conflict import foreign_god_war
 from aerona.engine.services.war import can_open_war, declare_war, has_truce
@@ -82,7 +83,7 @@ async def incite_war(call: SonCall, args: InciteInput) -> str:
     call.spend_essence(call.rules.costs.incite_war)
     call.target(first.id)
     roll = call.die(PERCENT, "incite")
-    if roll > chance or not await declare_war(call.tick, first.id, second.id, args.pretext):
+    if roll > chance or not await declare_war(call.tick, first.id, second.id, args.pretext, cause=WarCause.INCITED, incited_by_son_id=call.son.id):
         return result(SonResult.INCITE_FAILED, roll=roll, chance=chance)
     bonds = BondRepository(call.session)
     for side in (first, second):

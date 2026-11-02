@@ -21,7 +21,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, ThreadLinkRole, ThreadS
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.entity import COMMUNITY_TYPES, CivilizationTier, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
-from aerona.domain.enums.war import CaptiveStatus, DebtStatus
+from aerona.domain.enums.war import CaptiveStatus, DebtStatus, WarCause
 from aerona.domain.models.entity_stats import FactionStats, ItemStats, KnowledgeStats, PlaceStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import RouteBook, method_label, world_name
@@ -123,7 +123,7 @@ async def declare_independence(ctx: TickContext, colony: EntityRow, mother: Enti
     await BondRepository(ctx.session).deactivate(bond, ctx.epoch, "independence")
     await repository.remove_flag(colony.id, EntityFlag.COLONY)
     await repository.add_flag(colony.id, EntityFlag.INDEPENDENT, ctx.epoch)
-    fought = war and await declare_war(ctx, mother.id, colony.id, "war of independence")
+    fought = war and await declare_war(ctx, mother.id, colony.id, "war of independence", cause=WarCause.INDEPENDENCE)
     tail = "; the motherland declared it an enemy" if fought else " and the motherland had to let it go"
     text = f"{colony.name} declared its independence from {mother.name}{tail}."
     await ctx.chronicle(ChronicleKind.CIVILIZATION, text, template_key="civilization.independence", entity_ids=[colony.id, mother.id])

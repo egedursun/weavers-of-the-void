@@ -99,7 +99,7 @@
 {% if world.world.cosmology %}<p class="sublabel">What its peoples believe</p>{{ world.world.cosmology | paragraphs }}{% endif %}
 {{ entity_depth(world.world.depth) }}
 {% set guide = world.guide %}
-{% if guide.dangers or guide.peoples or guide.resources or guide.routes or guide.foreign_gods or guide.sky %}
+{% if guide.climate or guide.dangers or guide.peoples or guide.resources or guide.routes or guide.foreign_gods or guide.sky %}
 <div class="box"><span class="label">Traveller's guide</span>
 {% if guide.climate %}<p><b class="small">Climate.</b> {{ guide.climate }}{% if guide.climate_epochs_left %} <span class="meta">for {{ guide.climate_epochs_left }} more epochs</span>{% endif %}</p>{% endif %}
 {% if guide.dangers %}<p><b class="small">Dangers.</b> {% for danger in guide.dangers %}{{ danger.name }} <span class="meta">({{ danger.reason }})</span>{% if not loop.last %}; {% endif %}{% endfor %}</p>{% endif %}
@@ -138,7 +138,7 @@
 {% set world_names = book.cosmic | map(attribute="worlds") | sum(start=[]) | map(attribute="name") | unique | list %}
 <h3 class="bm2">The cosmic chronicle</h3>
 <table><thead><tr><th>Epoch</th>{% for name in world_names %}<th>{{ name }}</th>{% endfor %}</tr></thead><tbody>
-{% for epoch in book.cosmic %}<tr><td>{{ epoch.epoch }}{% if epoch.name %}<br><span class="meta small">{{ epoch.name }}</span>{% endif %}</td>{% for name in world_names %}{% set found = epoch.worlds | selectattr("name", "equalto", name) | list %}<td class="small">{{ found[0].headlines[:2] | join("; ") if found else "" }}</td>{% endfor %}</tr>{% endfor %}
+{% for epoch in book.cosmic %}<tr><td>{{ epoch.epoch }}{% if epoch.name %}<br><span class="meta small">{{ epoch.name }}</span>{% endif %}</td>{% for name in world_names %}{% set found = epoch.worlds | selectattr("name", "equalto", name) | list %}<td class="small">{{ found[0].headlines | join("; ") if found else "" }}</td>{% endfor %}</tr>{% endfor %}
 </tbody></table>
 {% endif %}
 {% for chapter in book.chapters %}

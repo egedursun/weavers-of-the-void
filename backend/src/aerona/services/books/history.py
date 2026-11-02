@@ -13,7 +13,6 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import GodConflictOutcome
-from aerona.rules.registry import Rules
 from aerona.services.narrative import clean_lore
 
 CREATOR_HAND_KINDS = (ChronicleKind.CREATOR_HAND, ChronicleKind.DIVINE_SIGN, ChronicleKind.ORDER)
@@ -60,7 +59,7 @@ async def creator_hand(session: AsyncSession) -> list[HandEpoch]:
     return [epochs[epoch] for epoch in sorted(epochs)]
 
 
-async def son_fate(session: AsyncSession, rules: Rules, son: SonRow, names: dict[int, str]) -> list[str]:
+async def son_fate(session: AsyncSession, son: SonRow, names: dict[int, str]) -> list[str]:
     lines: list[str] = [f"Status: {son.status.value.replace('_', ' ')}"]
     if son.status is SonStatus.DEAD and son.death_epoch is not None:
         cause = f" ({son.death_cause.value.replace('_', ' ')})" if son.death_cause is not None else ""
@@ -86,13 +85,12 @@ async def son_fate(session: AsyncSession, rules: Rules, son: SonRow, names: dict
         select(ChronicleRow)
         .where(ChronicleRow.son_id == son.id, ChronicleRow.kind.in_(SON_FATE_KINDS), ChronicleRow.visible.is_(True))
         .order_by(ChronicleRow.id)
-        .limit(rules.guide.book_son_fate_lines)
     )
     lines.extend(f"Epoch {row.epoch}: {clean_lore(row.text)}" for row in rows)
     return lines
 
 
-async def god_fate(session: AsyncSession, rules: Rules, god: ForeignGodRow, names: dict[int, str]) -> list[str]:
+async def god_fate(session: AsyncSession, god: ForeignGodRow, names: dict[int, str]) -> list[str]:
     lines = [f"Status: {god.status.value}", f"Arose in Epoch {god.created_epoch}"]
     if god.defeated_epoch is not None:
         lines.append(f"Defeated in Epoch {god.defeated_epoch}")
@@ -101,7 +99,6 @@ async def god_fate(session: AsyncSession, rules: Rules, god: ForeignGodRow, name
             select(GodConflictRow)
             .where(or_(GodConflictRow.attacker_node_id == god.id, GodConflictRow.defender_node_id == god.id))
             .order_by(GodConflictRow.epoch, GodConflictRow.id)
-            .limit(rules.guide.book_god_lines)
         )
     )
     killer: int | None = None

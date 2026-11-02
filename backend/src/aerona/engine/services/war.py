@@ -228,7 +228,16 @@ async def can_open_war(
 
 
 async def declare_war(
-    ctx: TickContext, first_id: int, second_id: int, reason: str, *, world_cap: bool = True, community_cap: bool = False, since_epoch: int | None = None
+    ctx: TickContext,
+    first_id: int,
+    second_id: int,
+    reason: str,
+    *,
+    cause: WarCause = WarCause.HOSTILITY,
+    incited_by_son_id: int | None = None,
+    world_cap: bool = True,
+    community_cap: bool = False,
+    since_epoch: int | None = None,
 ) -> bool:
     counters = ctx.environment.stats.counters
     if world_cap and counters[DECLARATIONS_COUNTER] >= ctx.rules.diplomacy.declarations_cap:
@@ -237,7 +246,8 @@ async def declare_war(
         return False
     bonds = BondRepository(ctx.session)
     await bonds.close_between(first_id, second_id, [BondKind.ALLY, BondKind.TRADES_WITH], ctx.epoch, "war declared")
-    await bonds.connect(BondDraft(first_id, second_id, BondKind.ENEMY, since_epoch if since_epoch is not None else ctx.epoch, reason))
+    epoch = since_epoch if since_epoch is not None else ctx.epoch
+    await bonds.connect(BondDraft(first_id, second_id, BondKind.ENEMY, epoch, reason, war_cause=cause, incited_by_son_id=incited_by_son_id))
     ctx.count("hostilities_declared")
     if world_cap:
         counters[DECLARATIONS_COUNTER] += 1
@@ -256,6 +266,11 @@ async def hostility_reason(session: AsyncSession, first: int, second: int) -> st
     return described[0] if described else None
 
 
+async def hostility_origin(session: AsyncSession, first: int, second: int) -> BondRow | None:
+    bonds = await BondRepository(session).active_between(first, second, [BondKind.ENEMY])
+    return max(bonds, key=lambda bond: bond.id, default=None)
+
+
 async def open_war(
     ctx: TickContext,
     attacker: EntityRow,
@@ -267,6 +282,11 @@ async def open_war(
 ) -> WarRow:
     campaigns = ctx.rules.campaigns
     reason = cause_text or await hostility_reason(ctx.session, attacker.id, defender.id) or "old hostility"
+    origin = await hostility_origin(ctx.session, attacker.id, defender.id)
+    if cause is WarCause.HOSTILITY and origin is not None and origin.war_cause is not None:
+        cause = origin.war_cause
+    if incited_by_son_id is None and origin is not None:
+        incited_by_son_id = origin.incited_by_son_id
     location = defender.id if defender.entity_type is EntityType.SETTLEMENT else defender.location_id
     namer = Namer(ctx.session, ctx.rules)
     seed = seed_of(attacker.id, defender.id, ctx.epoch, "war")

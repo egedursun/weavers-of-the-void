@@ -6,6 +6,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityType
+from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
@@ -74,7 +75,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
         ),
     )
     target = await uprising_target(ctx.session, settlement)
-    await declare_war(ctx, rebels.id, target.id, "uprising", world_cap=False)
+    await declare_war(ctx, rebels.id, target.id, "uprising", cause=WarCause.UPRISING, world_cap=False)
     language = await spoken_language(ctx.session, settlement.id)
     if language is not None:
         await BondRepository(ctx.session).connect(BondDraft(rebels.id, language.id, BondKind.SPEAKS, ctx.epoch, "the tongue of the city"))

@@ -5,6 +5,7 @@ from itertools import combinations, product
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -27,7 +28,7 @@ class Feud:
 async def leak(ctx: TickContext, feud: Feud, first: EntityRow, second: EntityRow) -> bool:
     holy = EntityType.CULT in (first.entity_type, second.entity_type)
     reason = f"holy war: {feud.gods}" if holy else f"the grudge between {feud.gods}"
-    if not await declare_war(ctx, first.id, second.id, reason):
+    if not await declare_war(ctx, first.id, second.id, reason, cause=WarCause.DIVINE_GRUDGE):
         return False
     if holy:
         text = f"The grudge between {feud.gods} turned into a holy war: {first.name} and {second.name} drew swords on each other."

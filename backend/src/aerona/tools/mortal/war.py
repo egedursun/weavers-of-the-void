@@ -9,6 +9,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.war import WarCause
 from aerona.engine.lifecycle.wounds import WoundOutcome, wound
 from aerona.engine.primitives.faith import patron_son
 from aerona.engine.primitives.stats import set_stats, stat
@@ -60,7 +61,7 @@ async def declare(call: MortalCall, args: DeclareWarInput) -> str:
             if template is not None:
                 fail(template)
             fail(MortalResult.WAR_BLOCKED, reason=block.value.replace("_", " "))
-        await declare_war(call.tick, call.me.id, target.id, args.reason)
+        await declare_war(call.tick, call.me.id, target.id, args.reason, cause=WarCause.DECLARED)
         await change_relation(call.tick, call.me.id, target.id, -tools.war_declare_relation, args.reason[:KEY_MAX_LENGTH])
         await _sour_patrons(call, target)
     await call.chronicle(ChronicleKind.WAR, lines.WAR, entity_ids=[call.me.id, target.id], me=call.me.name, target=target.name, reason=args.reason)
@@ -157,7 +158,7 @@ async def build_spy_network(call: MortalCall, args: SpyInput) -> str:
         relation = -tools.spy_war_threshold
         if is_community(call.me):
             relation = await change_relation(call.tick, target.id, call.me.id, -tools.spy_caught_relation, lines.SPIES_CAUGHT_EVENT)
-        war = relation <= -tools.spy_war_threshold and await declare_war(call.tick, target.id, call.me.id, lines.SPIES_CAUGHT_EVENT)
+        war = relation <= -tools.spy_war_threshold and await declare_war(call.tick, target.id, call.me.id, lines.SPIES_CAUGHT_EVENT, cause=WarCause.ESPIONAGE)
         await call.chronicle(ChronicleKind.INTRIGUE, lines.SPIES_CAUGHT, entity_ids=[call.me.id, target.id], me=call.me.name, target=target.name)
         return result(MortalResult.SPIES_CAUGHT, name=target.name, mine=mine, theirs=theirs, war=war)
     await bonds.connect(BondDraft(call.me.id, target.id, BondKind.SPY_NETWORK, call.epoch, args.cover))

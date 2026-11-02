@@ -11,6 +11,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import CreatureTrait
+from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.mortal_death import die
@@ -212,7 +213,7 @@ async def _hero_loses(ctx: TickContext, hero: EntityRow, monster: EntityRow, pat
         hp = stat(hero, "hp")
         set_stats(hero, hp=clamp_int((hp or hunt.unknown_hp) - hunt.armor_save_hp_loss, 1, ctx.rules.limits.hp_cap))
         set_stats(armor, protection=clamp_int(protection - hunt.armor_save_wear, 0, PERCENT))
-        await declare_war(ctx, monster.id, hero.id, context, world_cap=False)
+        await declare_war(ctx, monster.id, hero.id, context, cause=WarCause.BEAST, world_cap=False)
         await note(
             ctx,
             f"{hero.name} was defeated by {monster.name} but {armor.name} saved them from death; they withdrew gravely wounded.",

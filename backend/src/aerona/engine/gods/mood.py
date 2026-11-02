@@ -13,7 +13,7 @@ from aerona.db.tables.lore import MessageRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.creator import CreatorMoodAxis, CreatorMoodLabel
+from aerona.domain.enums.creator import CreatorMoodAxis, CreatorMoodLabel, CreatorPassion
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import SonStatus
@@ -43,6 +43,7 @@ class MoodItem:
     LEAK = "leak"
     TEMPERAMENT = "temperament"
     STIR = "stir"
+    PASSIONS = "passions"
 
 
 @dataclass(frozen=True)
@@ -72,6 +73,9 @@ class MoodInputs:
     temperament_roll: float = HALF
     anger_roll: float = HALF
     content_roll: float = HALF
+    passions: tuple[CreatorPassion, ...] = ()
+    discoveries: int = 0
+    works: int = 0
 
 
 @dataclass(frozen=True)
@@ -123,6 +127,21 @@ def swing(roll: float, width: int) -> float:
     return (roll * 2 - 1) * width
 
 
+def passion_matches(rules: Rules, inputs: MoodInputs) -> float:
+    calm = rules.creator.content_passion_half
+    matches = {
+        CreatorPassion.WAR: inputs.battles,
+        CreatorPassion.CHAOS: inputs.wars + inputs.killings,
+        CreatorPassion.ORDER: max(0, calm - inputs.wars),
+        CreatorPassion.CREATION: inputs.new_life,
+        CreatorPassion.KNOWLEDGE: inputs.discoveries,
+        CreatorPassion.BEAUTY: inputs.works,
+        CreatorPassion.MERCY: max(0, calm - inputs.killings),
+        CreatorPassion.SILENCE: max(0, calm - inputs.actions),
+    }
+    return float(sum(matches[passion] for passion in inputs.passions))
+
+
 def compute_mood_update(rules: Rules, state: MoodState, inputs: MoodInputs) -> MoodUpdate:
     creator = rules.creator
     war_cap = max(1, rules.diplomacy.world_war_cap)
@@ -145,6 +164,7 @@ def compute_mood_update(rules: Rules, state: MoodState, inputs: MoodInputs) -> M
         (MoodItem.CULT, saturating(inputs.cult, creator.content_cult_half, creator.content_cult_max)),
         (MoodItem.NEW_LIFE, saturating(inputs.new_life, creator.content_new_life_half, creator.content_new_life_max)),
         (MoodItem.ACTED, float(creator.content_action) if inputs.actions else 0.0),
+        (MoodItem.PASSIONS, saturating(passion_matches(rules, inputs), creator.content_passion_half, creator.content_passion_max) if inputs.passions else 0.0),
         (MoodItem.SHADOW_OF_ANGER, -state.anger * creator.mood_opposition_pct / PERCENT),
         (MoodItem.TEMPERAMENT, -temperament * creator.temperament_content_pct / PERCENT),
         (MoodItem.STIR, swing(inputs.content_roll, creator.mood_jitter)),
@@ -211,7 +231,14 @@ async def gather_mood_inputs(session: AsyncSession, rules: Rules, old_epoch: int
     )
     killings = int(await session.scalar(select(func.count(BondRow.id)).where(BondRow.kind == BondKind.KILLED, BondRow.epoch == old_epoch)) or 0)
     leak = float(await session.scalar(select(func.avg(WorldRow.leakage))) or 0.0)
+    born = select(func.count(EntityRow.id)).where(EntityRow.birth_epoch == old_epoch, EntityRow.status == EntityStatus.CANON)
+    discoveries = int(await session.scalar(born.where(EntityRow.entity_type == EntityType.KNOWLEDGE)) or 0)
+    works = int(await session.scalar(born.where(EntityRow.entity_type.in_([EntityType.ARTWORK, EntityType.STRUCTURE]))) or 0)
+    creator_row = await session.scalar(select(CreatorRow).limit(1))
     return MoodInputs(
+        passions=tuple(creator_row.passions) if creator_row is not None else (),
+        discoveries=discoveries,
+        works=works,
         battles=battles,
         killings=killings,
         mean_leak=leak,

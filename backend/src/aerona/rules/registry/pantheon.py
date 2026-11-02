@@ -94,6 +94,7 @@ class PantheonRules:
     )
     rival_relation: int = rule(60, 0, 100, RuleGroup.CIVILIZATION, "Rival clash: two active siblings with relation below minus this may clash on their own")
     rival_chance: int = rule(15, 0, 100, RuleGroup.CIVILIZATION, "Rival clash: chance of a suitable rival pair clashing in one epoch (%)")
+    rival_mercy_restraint_pct: int = rule(50, 0, 100, RuleGroup.CIVILIZATION, "Rival clash: how much of a son's mercy holds it back from starting a feud clash (%)")
     rival_cap: int = rule(1, 0, 50, RuleGroup.CIVILIZATION, "Rival clash: maximum spontaneous clashes in one epoch (0: off)")
     rival_cooldown_epochs: int = rule(3, 0, 100, RuleGroup.CIVILIZATION, "Rival clash: epochs that must pass before the same two siblings clash again")
     rival_soften: int = rule(

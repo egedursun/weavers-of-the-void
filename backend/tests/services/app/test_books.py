@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -106,3 +108,28 @@ async def test_book_and_codex_write_the_creators_hand_and_fates(session: AsyncSe
     assert "The sky dimmed over the salt." in codex
     assert "**Fate**" in codex
     assert "- Status: active" in codex
+
+
+async def test_book_is_never_truncated(session: AsyncSession, rules: Rules, world: Cosmos) -> None:
+    other = await make_world(session, "Dusk")
+    tight = replace(rules, server=replace(rules.server, cosmic_chronicle_default=1), guide=replace(rules.guide, people_list=0, danger_list=0))
+    long_line = "The Velari Folk went to war " + "again and again " * 20
+    for epoch in (1, 2, 3):
+        for index in range(6):
+            await ChronicleRepository(session).append(
+                ChronicleDraft(epoch=epoch, kind=ChronicleKind.WAR, text=f"{long_line}{epoch}-{index}", entity_ids=[world.people.id], world_id=world.world.id)
+            )
+    await make_entity(session, "Ashfield", EntityType.REGION, world_id=other.id)
+    await session.flush()
+    assert len(await cosmic_chronicle(session, tight)) == 1
+    assert (await traveller_guide(session, tight, world.world.id)).peoples == []
+    book = await build_book(session, tight)
+    assert book is not None
+    assert [epoch.epoch for epoch in book.cosmic] == [1, 2, 3]
+    headlines = book.cosmic[0].worlds[0].headlines
+    assert len(headlines) == 6
+    assert headlines[-1] == " ".join(f"{long_line}1-5".split())
+    guide = next(article.guide for section in book.stars for article in section.worlds if article.world.id == world.world.id)
+    assert [people.name for people in guide.peoples] == ["Velari Folk"]
+    page = render_book(book, tight).html
+    assert " ".join(f"{long_line}3-5".split()) in page

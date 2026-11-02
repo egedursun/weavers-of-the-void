@@ -12,6 +12,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
@@ -82,7 +83,7 @@ async def _rivalry(ctx: TickContext, first: EntityRow, second: EntityRow) -> Non
     rng = ctx.rng("rivalry")
     if not rng.chance(ctx.rules.trade.rivalry_war_chance):
         return
-    if await declare_war(ctx, first.id, second.id, "rivalry over the same resource"):
+    if await declare_war(ctx, first.id, second.id, "rivalry over the same resource", cause=WarCause.RIVALRY):
         await note(
             ctx,
             f"{first.name} and {second.name} fell out over the same resource.",

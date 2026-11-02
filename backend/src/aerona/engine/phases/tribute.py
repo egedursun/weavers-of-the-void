@@ -8,7 +8,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import TributeRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
-from aerona.domain.enums.war import TributeStatus
+from aerona.domain.enums.war import TributeStatus, WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.numbers import round_half_up
@@ -94,7 +94,7 @@ async def tribute(ctx: TickContext) -> None:
         ):
             await end_tribute(ctx, row, TributeStatus.REVOLTED, "tribute revolt")
             await change_relation(ctx, payer.id, receiver.id, -rules.tribute_revolt_relation, "tribute revolt")
-            war = await declare_war(ctx, payer.id, receiver.id, "tribute revolt")
+            war = await declare_war(ctx, payer.id, receiver.id, "tribute revolt", cause=WarCause.TRIBUTE_REVOLT)
             tail = "; the two sides declared each other enemies" if war else ""
             await _note(ctx, f"{payer.name} grew strong and refused to pay tribute to {receiver.name}{tail}.", "tribute.revolt", (payer.id, receiver.id))
             ctx.count("tribute_revolts")

@@ -15,7 +15,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.travel import JourneyIntent, JourneyStatus
-from aerona.domain.enums.war import WarEnding
+from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.cosmos.routes import can_use_route
 from aerona.engine.gods.devotion import RiteKind
@@ -118,7 +118,7 @@ async def decree(scope: PlayerScope, command: Decree) -> Effect:
         block = await can_open_war(scope.session, scope.rules, first.id, second.id, ctx.epoch)
         if block is not None and block is not WarBlock.ALREADY_ENEMIES:
             raise ConflictError(f"No war can be commanded between {first.name} and {second.name}: {block.value.replace('_', ' ')}.")
-        await declare_war(ctx, first.id, second.id, DECREE_REASON)
+        await declare_war(ctx, first.id, second.id, DECREE_REASON, cause=WarCause.DECLARED)
         await change_relation(ctx, first.id, second.id, -hand_rules.decree_war_relation, DECREE_REASON)
         kind = ActionKind.DECLARE_WAR
     elif command.kind is DecreeKind.PEACE:

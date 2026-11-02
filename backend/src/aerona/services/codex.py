@@ -148,17 +148,18 @@ async def _first_target_name(session: AsyncSession, source_id: int, kind: BondKi
     return await NodeRepository(session).name_of(target) if target is not None else None
 
 
-async def _dangers(session: AsyncSession, rules: Rules, world: WorldRow) -> list[Danger]:
+async def _dangers(session: AsyncSession, rules: Rules, world: WorldRow, complete: bool) -> list[Danger]:
     guide = rules.guide
+    shown = None if complete else guide.danger_list
     places = [
         entity for entity in await _canon(session, world.id, [EntityType.REGION, EntityType.PLACE]) if (stat(entity, "danger") or 0) >= guide.dangerous_place
     ]
     places.sort(key=lambda entity: -(stat(entity, "danger") or 0))
-    dangers = [Danger(entity.id, entity.name, f"danger {stat(entity, 'danger')}") for entity in places[: guide.danger_list]]
+    dangers = [Danger(entity.id, entity.name, f"danger {stat(entity, 'danger')}") for entity in places[:shown]]
     species = [entity for entity in await _canon(session, world.id, [EntityType.SPECIES]) if (stat(entity, "danger") or 0) >= guide.dangerous_species]
     species.sort(key=lambda entity: -(stat(entity, "danger") or 0))
     megafauna = set(await session.scalars(select(EntityFlagRow.entity_id).where(EntityFlagRow.flag == EntityFlag.MEGAFAUNA)))
-    for entity in species[: guide.danger_list]:
+    for entity in species[:shown]:
         suffix = f", {MEGAFAUNA}" if entity.id in megafauna else ""
         dangers.append(Danger(entity.id, entity.name, f"predator (danger {stat(entity, 'danger')}){suffix}"))
     dangers += [Danger(entity.id, entity.name, OUTER_BEING) for entity in await _canon(session, world.id, [EntityType.OUTER_BEING])]
@@ -167,7 +168,7 @@ async def _dangers(session: AsyncSession, rules: Rules, world: WorldRow) -> list
     return dangers
 
 
-async def _peoples(session: AsyncSession, rules: Rules, world_id: int) -> list[PeopleLine]:
+async def _peoples(session: AsyncSession, rules: Rules, world_id: int, complete: bool) -> list[PeopleLine]:
     communities = await _canon(session, world_id, list(COMMUNITY_TYPES))
     communities.sort(key=lambda entity: -((stat(entity, "population") or 0) + (stat(entity, "followers") or 0)))
     return [
@@ -179,17 +180,17 @@ async def _peoples(session: AsyncSession, rules: Rules, world_id: int) -> list[P
             await _first_target_name(session, entity.id, BondKind.SPEAKS),
             await _first_target_name(session, entity.id, BondKind.WORSHIPS),
         )
-        for entity in communities[: rules.guide.people_list]
+        for entity in communities[: None if complete else rules.guide.people_list]
     ]
 
 
-async def _resources(session: AsyncSession, world_id: int) -> list[ResourceLine]:
+async def _resources(session: AsyncSession, world_id: int, complete: bool) -> list[ResourceLine]:
     original = set(await session.scalars(select(EntityFlagRow.entity_id).where(EntityFlagRow.flag == EntityFlag.ORIGINAL_RESOURCE)))
     return [
         ResourceLine(
             entity.id,
             entity.name,
-            entity.description[:DESCRIPTION_PREVIEW],
+            entity.description if complete else entity.description[:DESCRIPTION_PREVIEW],
             RESOURCE_MECHANICS[entity.resource_mechanic].label if entity.resource_mechanic is not None else None,
             entity.id in original,
         )
@@ -197,11 +198,11 @@ async def _resources(session: AsyncSession, world_id: int) -> list[ResourceLine]
     ]
 
 
-async def _routes(session: AsyncSession, world_id: int) -> list[RouteLine]:
+async def _routes(session: AsyncSession, world_id: int, complete: bool) -> list[RouteLine]:
     routes = await session.scalars(select(RouteRow).where(or_(RouteRow.world_a_id == world_id, RouteRow.world_b_id == world_id)).order_by(RouteRow.id))
     lines: list[RouteLine] = []
     for route in routes:
-        if not route.known:
+        if not route.known and not complete:
             continue
         other = route.world_b_id if route.world_a_id == world_id else route.world_a_id
         name = await NodeRepository(session).name_of(other) or ""
@@ -209,7 +210,7 @@ async def _routes(session: AsyncSession, world_id: int) -> list[RouteLine]:
     return lines
 
 
-async def traveller_guide(session: AsyncSession, rules: Rules, world_id: int) -> TravellerGuide:
+async def traveller_guide(session: AsyncSession, rules: Rules, world_id: int, *, complete: bool = False) -> TravellerGuide:
     world = await session.get(WorldRow, world_id)
     if world is None:
         raise NotFoundError("No such world.")
@@ -227,10 +228,10 @@ async def traveller_guide(session: AsyncSession, rules: Rules, world_id: int) ->
         discovery=DISCOVERY_LABELS[world.discovery],
         climate=CLIMATES[world.climate_era].label if world.climate_era is not None else None,
         climate_epochs_left=world.climate_epochs_left,
-        dangers=await _dangers(session, rules, world),
-        peoples=await _peoples(session, rules, world_id),
-        resources=await _resources(session, world_id),
-        routes=await _routes(session, world_id),
+        dangers=await _dangers(session, rules, world, complete),
+        peoples=await _peoples(session, rules, world_id, complete),
+        resources=await _resources(session, world_id, complete),
+        routes=await _routes(session, world_id, complete),
         foreign_gods=[GodLine(god.id, god.name, god.title, god.status.value, god.stance) for god in gods],
         sky=await _canon(session, world_id, [EntityType.CELESTIAL]),
     )
@@ -258,8 +259,15 @@ def guide_markdown(guide: TravellerGuide) -> str:
     if guide.routes:
         lines.append(
             "**Roads:** "
-            + "; ".join(f"{route.target} ({route.method}, {route.duration} epochs" + ("" if route.active else ", closed") + ")" for route in guide.routes)
+            + "; ".join(
+                f"{route.target} ({route.method}, {route.duration} epochs" + ("" if route.active else ", closed") + ("" if route.known else ", unknown") + ")"
+                for route in guide.routes
+            )
         )
+    if guide.foreign_gods:
+        lines.append("**Gods of this world:** " + "; ".join(god.name + (f" ({god.title})" if god.title else "") for god in guide.foreign_gods))
+    if guide.sky:
+        lines.append("**In the sky:** " + "; ".join(body.name for body in guide.sky))
     return "\n\n".join(lines)
 
 
@@ -272,9 +280,11 @@ async def _world_of_line(session: AsyncSession, line: ChronicleRow) -> int | Non
     return None
 
 
-async def cosmic_chronicle(session: AsyncSession, rules: Rules, last: int | None = None) -> list[CosmicEpoch]:
+async def cosmic_chronicle(session: AsyncSession, rules: Rules, last: int | None = None, *, complete: bool = False) -> list[CosmicEpoch]:
     count = max(1, min(last or rules.server.cosmic_chronicle_default, rules.server.cosmic_chronicle_max))
-    epochs = sorted(set(await session.scalars(select(ChronicleRow.epoch).distinct())))[-count:]
+    epochs = sorted(set(await session.scalars(select(ChronicleRow.epoch).distinct())))
+    if not complete:
+        epochs = epochs[-count:]
     names = {world.id: world.name for world in await session.scalars(select(WorldRow))}
     result: list[CosmicEpoch] = []
     for epoch in epochs:
@@ -286,7 +296,9 @@ async def cosmic_chronicle(session: AsyncSession, rules: Rules, last: int | None
         narratives = {row.world_id: row for row in await session.scalars(select(EpochWorldNarrativeRow).where(EpochWorldNarrativeRow.epoch == epoch))}
         worlds = []
         for world_id, lines in sorted(grouped.items()):
-            headlines = [" ".join(line.text.split())[:HEADLINE_LENGTH] for line in lines if line.kind in HEADLINE_KINDS][:HEADLINES_PER_WORLD]
+            headlines = [" ".join(line.text.split()) for line in lines if line.kind in HEADLINE_KINDS]
+            if not complete:
+                headlines = [headline[:HEADLINE_LENGTH] for headline in headlines[:HEADLINES_PER_WORLD]]
             narrative = narratives.get(world_id)
             worlds.append(
                 WorldChronicle(

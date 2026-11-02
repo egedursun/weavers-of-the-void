@@ -51,6 +51,7 @@ class TravelRules:
     sky_navigation_risk_pct: int = rule(60, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Route risk multiplier for those knowing sky navigation (%)")
     void_life_risk_pct: int = rule(80, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Route risk multiplier for those knowing life in the void (%)")
     armor_risk_divisor: int = rule(250, 1, 10000, RuleGroup.COSMOS_AND_TRAVEL, "Vessel armor reduces risk: armor / this number")
+    world_danger_risk_pct: int = rule(50, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Share of the destination world's danger added to a journey's road risk (%)")
     ghost_ship_legend_power: int = rule(4, 1, 12, RuleGroup.COSMOS_AND_TRAVEL, "Power level of the ghost-ship legend")
     ghost_ship_legend_spread: int = rule(50, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Spread of the ghost-ship legend")
     road_loss_base_pct: int = rule(10, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Base share of travellers lost in a road event (%)")

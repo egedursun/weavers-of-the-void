@@ -8,6 +8,7 @@ from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CosmosRow
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -22,6 +23,7 @@ from aerona.engine.primitives.faith import has_unlocked_power, son_faith, worshi
 from aerona.engine.primitives.ledger import LedgerKey, record
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, entity, living_entity, living_sons
+from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
 
 ANCHOR_ALIVE_STATUSES = frozenset({EntityStatus.CANON, EntityStatus.FULFILLED})
@@ -46,17 +48,27 @@ def step_toward(current: int, target: int, step: int) -> int:
     return max(target, current - step)
 
 
-async def star_domains(ctx: TickContext, son: SonRow) -> set[Domain]:
+async def epoch_star(ctx: TickContext, son: SonRow) -> EntityRow | None:
     cosmos = await ctx.session.get(CosmosRow, SINGLETON_ID)
     world_ids = [son.current_world_id, cosmos.primary_world_id if cosmos is not None else None]
-    domains: set[Domain] = set()
     for world_id in world_ids:
         world = await ctx.session.get(WorldRow, world_id) if world_id is not None else None
         star = await entity(ctx.session, world.epoch_star_entity_id) if world is not None else None
         if star is not None and star.domain is not None:
-            domains.add(star.domain)
-            break
-    return domains
+            return star
+    return None
+
+
+async def star_domains(ctx: TickContext, son: SonRow) -> set[Domain]:
+    star = await epoch_star(ctx, son)
+    return {star.domain} if star is not None and star.domain is not None else set()
+
+
+def star_bonus(rules: Rules, star: EntityRow) -> int:
+    transition = rules.world_epoch_transition
+    influence = stat(star, "influence")
+    weight = transition.star_influence_pivot if influence is None else influence
+    return round_half_up(transition.star_domain_essence_bonus * weight / transition.star_influence_pivot)
 
 
 async def wake_or_heal(ctx: TickContext, son: SonRow) -> None:
@@ -104,8 +116,9 @@ async def regenerate_essence(ctx: TickContext, son: SonRow, faith: int, band: Ex
         regen += transition.essence_spring_bonus
     if band is ExistenceBand.RADIANT:
         regen += transition.radiant_essence_bonus
-    if set(son.domains) & await star_domains(ctx, son):
-        regen += transition.star_domain_essence_bonus
+    star = await epoch_star(ctx, son)
+    if star is not None and star.domain in son.domains:
+        regen += star_bonus(rules, star)
     if son.status is SonStatus.EXILED:
         regen = regen * rules.essence.exile_regen_pct // PERCENT
     son.essence = min(max_essence(rules, son.might), son.essence + regen)
@@ -134,6 +147,12 @@ async def works_remember_gods(ctx: TickContext) -> None:
                 continue
             son.fame += transition.artwork_renown
             son.existence = min(PERCENT, son.existence + transition.artwork_existence)
+        for bond in await active_bonds(ctx.session, [BondKind.WORSHIPS], targets=[son.id]):
+            work = await living_entity(ctx.session, bond.source_node_id)
+            if work is None or work.entity_type is not EntityType.STRUCTURE:
+                continue
+            son.fame += transition.dedicated_work_renown
+            son.existence = min(PERCENT, son.existence + transition.dedicated_work_existence)
 
 
 async def domain_rivalry(ctx: TickContext) -> None:

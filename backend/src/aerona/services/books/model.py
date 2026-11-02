@@ -69,7 +69,6 @@ ENCYCLOPEDIA_ORDER: tuple[EntityType, ...] = (
 )
 NESTING_TYPES = frozenset({EntityType.REGION, EntityType.PLACE, EntityType.SETTLEMENT})
 HIDDEN_BOND_KINDS = frozenset({BondKind.INSIDE})
-PLATES_PER_EPOCH = 6
 MAX_HEADING_DEPTH = 6
 UNKNOWN_WORLD = "World unknown"
 CREATED_BY_GOD = "the god created"
@@ -136,6 +135,7 @@ class SonArticle:
     passions: list[Labelled]
     relations: list[Labelled]
     bonds: list[str]
+    past_bonds: list[str]
     creations: list[tuple[int, str]]
     cover: str | None
     fate: list[str] = field(default_factory=list)
@@ -410,7 +410,7 @@ class BookBuilder:
             meta.append(f"died in Epoch {son.death_epoch}")
         personality = [Labelled(label, value) for label, value in son.personality.model_dump().items() if value]
         own = [(row.son_b_id if row.son_a_id == son.id else row.son_a_id, row.value) for row in relations if son.id in (row.son_a_id, row.son_b_id)]
-        active, _ = self.bond_lines(son.id)
+        active, past = self.bond_lines(son.id)
         creations = [
             (entity_id, name)
             for entity_id, name in await self.session.execute(
@@ -427,9 +427,10 @@ class BookBuilder:
             passions=[Labelled(PASSIONS[passion].label, str(getattr(son, passion.value))) for passion in Passion],
             relations=[Labelled(self.son_names.get(other, "?"), str(value)) for other, value in sorted(own, key=lambda item: -item[1])],
             bonds=active,
+            past_bonds=past,
             creations=creations,
             cover=await cover_of(self.session, son.id),
-            fate=await son_fate(self.session, self.rules, son, self.names),
+            fate=await son_fate(self.session, son, self.names),
         )
 
     async def world_tree(self, epoch: int) -> list[StarSection]:
@@ -496,7 +497,7 @@ class BookBuilder:
             depth_level=level,
             meta=meta,
             cover=await cover_of(self.session, world.id),
-            guide=await traveller_guide(self.session, self.rules, world.id),
+            guide=await traveller_guide(self.session, self.rules, world.id, complete=True),
             picture=await map_picture(self.session, self.rules, world.id, epoch),
             facts=facts,
         )
@@ -514,7 +515,7 @@ class BookBuilder:
                     .order_by(EntityRow.power_level.desc(), EntityRow.id)
                 )
             )
-            plates = [(entity.id, entity.name, cover) for entity in born if (cover := await cover_of(self.session, entity.id))][:PLATES_PER_EPOCH]
+            plates = [(entity.id, entity.name, cover) for entity in born if (cover := await cover_of(self.session, entity.id))]
             worlds = [
                 (self.names.get(row.world_id, "?"), row)
                 for row in await self.session.scalars(select(EpochWorldNarrativeRow).where(EpochWorldNarrativeRow.epoch == epoch))
@@ -713,7 +714,7 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
             Labelled(power.name, power.description) for power in await session.scalars(select(ForeignGodPowerRow).where(ForeignGodPowerRow.god_id == god.id))
         ]
         stats = [Labelled(STATS[stat].label, str(getattr(god, stat.value))) for stat in Stat]
-        fate = await god_fate(session, rules, god, builder.names)
+        fate = await god_fate(session, god, builder.names)
         gods.append(GodArticle(god, builder.names.get(god.world_id, "?"), powers, stats, await cover_of(session, god.id), fate, god_anchor(god.id)))
     routes = [
         (builder.names.get(route.world_a_id, "?"), builder.names.get(route.world_b_id, "?"), route)
@@ -766,21 +767,20 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
         multi_world=multi_world,
         names=builder.names,
         knowledge=await builder.knowledge(),
-        cosmic=await cosmic_chronicle(session, rules) if multi_world else [],
+        cosmic=await cosmic_chronicle(session, rules, complete=True) if multi_world else [],
         creator_hand=await creator_hand(session),
         wars=await builder.wars(),
     )
 
 
-async def entry_chronicle(session: AsyncSession, rules: Rules, *, son_id: int | None, entity_id: int | None) -> list[ChronicleLine]:
-    limit = rules.guide.book_entry_chronicle_lines
+async def entry_chronicle(session: AsyncSession, *, son_id: int | None, entity_id: int | None) -> list[ChronicleLine]:
     statement = select(ChronicleRow).where(ChronicleRow.kind != ChronicleKind.ENGINE_RAW)
     if entity_id is not None:
         statement = statement.join(ChronicleEntityRow, ChronicleEntityRow.chronicle_id == ChronicleRow.id).where(ChronicleEntityRow.entity_id == entity_id)
     else:
         statement = statement.where(ChronicleRow.son_id == son_id)
-    rows = list(await session.scalars(statement.order_by(ChronicleRow.id.desc()).limit(limit)))
-    return [ChronicleLine(row.kind.value.replace("_", " "), row.year, clean_lore(row.text), row.son_id) for row in reversed(rows)]
+    rows = await session.scalars(statement.order_by(ChronicleRow.id))
+    return [ChronicleLine(row.kind.value.replace("_", " "), row.year, clean_lore(row.text), row.son_id) for row in rows]
 
 
 def natural_law_label(entity: EntityRow) -> str | None:

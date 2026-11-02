@@ -34,6 +34,18 @@ class WarCause(StrEnum):
     BETRAYAL = "betrayal"
     CONQUEST_JOURNEY = "conquest_journey"
     FOREIGN_GOD = "foreign_god"
+    INDEPENDENCE = "independence"
+    VENDETTA = "vendetta"
+    GRUDGE = "grudge"
+    DIVINE_GRUDGE = "divine_grudge"
+    RIVALRY = "rivalry"
+    DEBT = "debt"
+    ESPIONAGE = "espionage"
+    SABOTAGE = "sabotage"
+    ENVY = "envy"
+    SCHISM = "schism"
+    BEAST = "beast"
+    RESOURCE = "resource"
 
 
 class SiegeStatus(StrEnum):

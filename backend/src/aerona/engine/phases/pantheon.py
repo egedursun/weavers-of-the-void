@@ -262,7 +262,9 @@ async def rival_clashes(ctx: TickContext) -> int:
         ):
             await repository.change_relation(first.id, second.id, rival_soften(ctx.rules, value) - value)
             continue
-        attacker = rng.weighted([first, second], [first.wrath + first.ambition + 1, second.wrath + second.ambition + 1])
+        restraint = pantheon.rival_mercy_restraint_pct / PERCENT
+        weights = [max(0.0, son.wrath + son.ambition - son.mercy * restraint) + 1 for son in (first, second)]
+        attacker = rng.weighted([first, second], weights)
         defender = second if attacker.id == first.id else first
         stat = rng.weighted(list(ARENA_STATS), [(attacker.stat(item) + defender.stat(item)) / 2 + 1 for item in ARENA_STATS])
         result = await son_duel(ctx, attacker, defender, stat, "old feud")

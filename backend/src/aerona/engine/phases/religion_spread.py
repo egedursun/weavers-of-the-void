@@ -14,6 +14,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.son import SonStatus
+from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import CultStats
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
@@ -87,7 +88,7 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
             subtype=SCHISM_SUBTYPE,
         ),
     )
-    await declare_war(ctx, sect.id, cult.id, "schism")
+    await declare_war(ctx, sect.id, cult.id, "schism", cause=WarCause.SCHISM)
     bonds = BondRepository(ctx.session)
     await bonds.connect(BondDraft(sect.id, candidate.id, BondKind.WORSHIPS, ctx.epoch, "schism"))
     language = await spoken_language(ctx.session, cult.id)

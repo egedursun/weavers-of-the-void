@@ -15,6 +15,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
+from aerona.domain.enums.war import WarCause
 from aerona.engine.phases.society_economy import set_resource_commodity
 from aerona.engine.primitives.mechanics import assign_mechanics
 from aerona.engine.primitives.queries import spoken_language
@@ -345,7 +346,7 @@ async def claim_resource(call: MortalCall, args: ClaimInput) -> str:
             else -tools.seize_war_threshold
         )
         if grudge <= -tools.seize_war_threshold:
-            await declare_war(call.tick, owner.id, call.me.id, reason)
+            await declare_war(call.tick, owner.id, call.me.id, reason, cause=WarCause.RESOURCE)
     await bonds.connect(BondDraft(call.me.id, resource.id, BondKind.OWNS, call.epoch))
     call.target(resource.id)
     await call.bump(TurnCounter.CLAIMS)

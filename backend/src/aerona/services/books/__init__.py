@@ -18,7 +18,7 @@ async def book_page(
     entity = find_entity(model, entity_id) if entity_id is not None else None
     if son is None and entity is None:
         raise NotFoundError("No such entry in the book.")
-    model.single_chronicle = await entry_chronicle(session, rules, son_id=son.son.id if son else None, entity_id=entity.entity.id if entity else None)
+    model.single_chronicle = await entry_chronicle(session, son_id=son.son.id if son else None, entity_id=entity.entity.id if entity else None)
     return render_entry(model, rules, son=son, entity=entity)
 
 

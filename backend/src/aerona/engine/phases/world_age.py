@@ -5,6 +5,7 @@ from sqlalchemy import or_, select
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -51,6 +52,9 @@ async def enter_golden_age(ctx: TickContext, world: WorldRow, communities: list[
     for community in communities:
         await add_flag(ctx.session, community.id, EntityFlag.GOLDEN_AGE, ctx.epoch)
         add_prosperity(rules, community, rules.deep_life.golden_age_prosperity_gain)
+        society = await ctx.session.get(CommunitySocietyRow, community.id)
+        if society is not None and society.golden_age_since_epoch is None:
+            society.golden_age_since_epoch = ctx.epoch
     if newly and announce:
         links = [community.id for community in communities[: rules.deep_life.golden_age_record_links]]
         await note(
@@ -64,12 +68,18 @@ async def enter_golden_age(ctx: TickContext, world: WorldRow, communities: list[
 
 async def end_golden_age_in(ctx: TickContext, world: WorldRow, communities: list[EntityRow]) -> bool:
     ended = False
+    began: list[int] = []
     for community in communities:
         ended = await remove_flag(ctx.session, community.id, EntityFlag.GOLDEN_AGE) or ended
+        society = await ctx.session.get(CommunitySocietyRow, community.id)
+        if society is not None and society.golden_age_since_epoch is not None:
+            began.append(society.golden_age_since_epoch)
+            society.golden_age_since_epoch = None
     if ended:
+        span = f" It lasted {ctx.epoch - min(began)} epochs." if began and ctx.epoch > min(began) else ""
         await note(
             ctx,
-            f"{world.name}'s golden age has ended.",
+            f"{world.name}'s golden age has ended.{span}",
             key="world_age.golden_age_ended",
             ids=[community.id for community in communities[:1]],
             kind=ChronicleKind.WORLD_AGE,

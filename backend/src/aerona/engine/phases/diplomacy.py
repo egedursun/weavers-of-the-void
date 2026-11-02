@@ -10,7 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.war import WarEnding
+from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.engine.context import TickContext
 from aerona.engine.phase import Phase
 from aerona.engine.phases.afterlife import cosmic_court
@@ -188,7 +188,7 @@ async def betray(ctx: TickContext, first: EntityRow, second: EntityRow, neighbou
     traitor, victim = (first, second) if _weight(ctx, first) >= _weight(ctx, second) else (second, first)
     await change_relation(ctx, first.id, second.id, -rules.betrayal_relation, "betrayal")
     if war_roll:
-        await declare_war(ctx, traitor.id, victim.id, "betrayal")
+        await declare_war(ctx, traitor.id, victim.id, "betrayal", cause=WarCause.BETRAYAL)
     text = f"{traitor.name} stabbed its ally {victim.name} in the back; the oath was broken."
     await _note(ctx, text, "diplomacy.betrayal", (traitor.id, victim.id))
     await cosmic_court(ctx, traitor.id, victim.id)
@@ -275,7 +275,9 @@ async def _neighbour_pair(
         and await ongoing_war_count(ctx.session, first.id) < cap
         and await ongoing_war_count(ctx.session, second.id) < cap
         and rng.chance(rules.war_declaration_chance)
-        and await declare_war(ctx, first.id, second.id, "blood feud turned to war" if feud else "accumulated grudge")
+        and await declare_war(
+            ctx, first.id, second.id, "blood feud turned to war" if feud else "accumulated grudge", cause=WarCause.VENDETTA if feud else WarCause.GRUDGE
+        )
     ):
         counters.declared += 1
         tail = "; the blood feud is now a campaign" if feud else ""

@@ -39,6 +39,11 @@ class WorldEpochTransitionRules:
     star_domain_essence_bonus: int = rule(3, 0, 100, RuleGroup.SKY, "Extra essence income of a son bearing the domain of the epoch's star")
     artwork_renown: int = rule(1, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Per-epoch renown contribution of an artwork depicting a god")
     artwork_existence: int = rule(1, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Per-epoch existence contribution of an artwork depicting a god")
+    dedicated_work_renown: int = rule(1, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Per-epoch fame a son gains from each standing structure dedicated to it")
+    dedicated_work_existence: int = rule(
+        1, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Per-epoch existence a son gains from each standing structure dedicated to it"
+    )
+    star_influence_pivot: int = rule(50, 1, 100, RuleGroup.SKY, "Celestial influence at which the epoch star gives its full essence bonus")
     domain_rivalry: int = rule(3, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Per-epoch relation loss of sons sharing the same domain (per shared domain)")
     domain_rivalry_floor: int = rule(
         70,

@@ -445,6 +445,10 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 **Ties.** {{ article.bonds | join("; ") }}
 
 {% endif %}
+{% if article.past_bonds %}
+*Once: {{ article.past_bonds | join("; ") }}*
+
+{% endif %}
 {{ bullets("Fate", article.fate) }}
 {% if article.creations %}
 **Creations ({{ article.creations | length }}).** {% for id, name in article.creations %}[{{ name }}](#entity-{{ id }}){% if not loop.last %} · {% endif %}{% endfor %}
@@ -468,7 +472,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 |---|{% for name in world_names %}---|{% endfor %}
 
 {% for epoch in book.cosmic %}
-| {{ epoch.epoch }}{% if epoch.name %} · {{ epoch.name | cell }}{% endif %} | {% for name in world_names %}{% set found = epoch.worlds | selectattr("name", "equalto", name) | list %}{{ (found[0].headlines[:2] | join("; ") if found else "") | cell }} | {% endfor %}
+| {{ epoch.epoch }}{% if epoch.name %} · {{ epoch.name | cell }}{% endif %} | {% for name in world_names %}{% set found = epoch.worlds | selectattr("name", "equalto", name) | list %}{{ (found[0].headlines | join("; ") if found else "") | cell }} | {% endfor %}
 
 {% endfor %}
 
