@@ -33,7 +33,9 @@ describe('son card', () => {
     const card = screen.getByRole('link', { name: 'Thalassir' })
     await expect.element(card).toBeVisible()
     await expect.element(screen.getByText('Legendary').first()).toBeVisible()
-    await expect.element(screen.getByText('★★★').first()).toBeVisible()
+    await expect
+      .element(screen.getByRole('img', { name: '3 stars' }))
+      .toBeVisible()
     await expect
       .element(screen.getByText('Keeper of the Drowned Bells'))
       .toBeVisible()
@@ -41,7 +43,7 @@ describe('son card', () => {
     await expect
       .element(screen.getByText('Oath', { exact: true }))
       .toBeVisible()
-    await expect.element(screen.getByText('Lv 5')).toBeVisible()
+    await expect.element(screen.getByText('Level 5')).toBeVisible()
     await expect.element(screen.getByText('Thessaly Deep')).toBeVisible()
     for (const stat of ['Life', 'Essence', 'Existence · Solid'])
       await expect
@@ -49,7 +51,12 @@ describe('son card', () => {
         .toBeVisible()
     for (const power of ['Tide Ledger', 'Bell of Return', 'Oathbinder'])
       await expect.element(screen.getByText(power)).toBeVisible()
-    await expect.element(screen.getByText('340/500')).toBeVisible()
+    await expect.element(screen.getByText('/ 500 XP')).toBeVisible()
+    expect(
+      document.querySelector(
+        '[data-son-card="7"] [data-domain="level-meter"] data[value="340"]'
+      )
+    ).not.toBeNull()
     const statBars = document.querySelectorAll(
       '[data-son-card="7"] [data-slot="progress"]'
     )
@@ -135,15 +142,16 @@ describe('son reveal overlay', () => {
     )
     emit('son.new', { son_id: 7, rarity: 'legendary' })
     const dialog = screen.getByRole('dialog')
+    await expect.element(dialog.getByText('A new son arrives')).toBeVisible()
     await expect
-      .element(dialog.getByRole('heading', { name: 'A legendary son arrived' }))
+      .element(dialog.getByRole('heading', { name: 'Legendary' }))
       .toBeVisible()
     await expect
       .element(dialog.getByText('Thalassir, Keeper of the Drowned Bells'))
       .toBeVisible()
     await expect.element(dialog.getByText('Tide Ledger')).toBeVisible()
     const openCard = dialog
-      .getByRole('button', { name: 'Open card' })
+      .getByRole('button', { name: 'Open his page' })
       .element() as HTMLElement
     openCard.click()
     await expect.element(screen.getByRole('dialog')).not.toBeInTheDocument()
@@ -158,8 +166,9 @@ describe('son reveal overlay', () => {
       godRoutes()
     )
     emit('son.ascended', { son_id: 8, rarity: 'mythic' })
+    await expect.element(screen.getByText('Ascension')).toBeVisible()
     await expect
-      .element(screen.getByRole('heading', { name: 'Ascension · Mythic' }))
+      .element(screen.getByRole('heading', { name: 'Mythic' }))
       .toBeVisible()
     await userEvent.keyboard('{Escape}')
     await expect.element(screen.getByRole('dialog')).not.toBeInTheDocument()
@@ -177,24 +186,25 @@ describe('this epoch box', () => {
       .element(screen.getByText('2 prayers await an answer.'))
       .toBeVisible()
     await expect
-      .element(screen.getByRole('link', { name: 'Go to prayers' }))
-      .toBeVisible()
+      .element(screen.getByRole('link', { name: 'Answer' }))
+      .toHaveAttribute('href', '/prayers')
     await expect
       .element(screen.getByText(/1 son has not acted this epoch yet/))
       .toBeVisible()
-    await expect
-      .element(
-        screen.getByText(
-          /186 essence can be spent: reveal \(25\), summon a son \(30\), convene the council \(20\), awaken peoples \(35\)/
-        )
-      )
-      .toBeVisible()
+    await expect.element(screen.getByText('186 essence to spend')).toBeVisible()
+    for (const spend of [
+      'reveal · 25',
+      'summon a son · 30',
+      'convene the council · 20',
+      'awaken peoples · 35',
+    ])
+      await expect.element(screen.getByText(spend)).toBeVisible()
     await expect
       .element(screen.getByText('3 unread notifications.'))
       .toBeVisible()
     await expect
-      .element(screen.getByRole('link', { name: 'Notifications' }))
-      .toBeVisible()
+      .element(screen.getByRole('link', { name: 'Read' }))
+      .toHaveAttribute('href', '/notifications')
     await expect
       .element(screen.getByRole('link', { name: 'Action ledger' }))
       .toBeVisible()
@@ -310,12 +320,21 @@ describe('creator panel on the pantheon', () => {
     await expect
       .element(screen.getByText('Whole cosmos · 2 worlds'))
       .toBeVisible()
-    await expect.element(screen.getByText('Sons: Respected')).toBeVisible()
-    await expect.element(screen.getByText('Doom clock 62/100')).toBeVisible()
+    await expect.element(screen.getByText('Sons see: Respected')).toBeVisible()
+    await expect.element(screen.getByText('62/100')).toBeVisible()
     await expect
-      .element(screen.getByText('3 godless communities'))
+      .element(screen.getByRole('progressbar', { name: 'Doom clock' }))
       .toBeVisible()
-    await expect.element(screen.getByText('1 rebel sons')).toBeVisible()
+    const godless = screen.getByText('Godless communities')
+    await expect.element(godless).toBeVisible()
+    expect(
+      godless
+        .element()
+        .closest('[data-domain="mini-stat"]')
+        ?.querySelector('data')
+        ?.getAttribute('value')
+    ).toBe('3')
+    await expect.element(screen.getByText('1 in rebellion')).toBeVisible()
     await expect
       .element(
         screen.getByText('Curious, slow to anger, terrible when roused.')
@@ -430,12 +449,15 @@ describe('pantheon screen', () => {
           .first()
       )
       .toBeVisible()
-    await expect
-      .element(screen.getByRole('link', { name: 'People · 6' }))
-      .toBeVisible()
-    await expect
-      .element(screen.getByRole('link', { name: 'Settlement · 14' }))
-      .toBeVisible()
+    for (const [type, label, count] of [
+      ['people', 'People', '6'],
+      ['settlement', 'Settlement', '14'],
+    ]) {
+      const tile = screen.getByRole('link', {
+        name: new RegExp(`^${count}\\s*${label}$`),
+      })
+      await expect.element(tile).toHaveAttribute('href', `/atlas?type=${type}`)
+    }
     await expect
       .element(screen.getByText(/Three worlds turn around a pale star/))
       .toBeVisible()

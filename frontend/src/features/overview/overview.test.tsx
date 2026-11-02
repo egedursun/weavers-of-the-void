@@ -36,9 +36,9 @@ describe('world summary', () => {
       <WorldSummary state={summaryState({ pending_son_ids: [1, 2] })} />,
       SUMMARY_ROUTES
     )
-    await expect.element(screen.getByText('2 waiting')).toBeInTheDocument()
+    await expect.element(screen.getByText('2 still to act')).toBeInTheDocument()
     await expect
-      .element(screen.getByText('Previous: The Long Dusk'))
+      .element(screen.getByText('After The Long Dusk'))
       .toBeInTheDocument()
   })
 
@@ -78,6 +78,23 @@ describe('world summary', () => {
   })
 })
 
+function chipFacts(chip: Element | null | undefined) {
+  if (!(chip instanceof HTMLElement)) return null
+  return {
+    direction: chip.dataset.change,
+    text: chip.textContent,
+    good: chip.classList.contains('text-success'),
+  }
+}
+
+function changeOf(field: string) {
+  return chipFacts(
+    document.querySelector(
+      `[data-measure="${field}"] [data-domain="change-chip"]`
+    )
+  )
+}
+
 describe('epoch breakdown popover', () => {
   const current = {
     population: 120,
@@ -114,15 +131,33 @@ describe('epoch breakdown popover', () => {
         },
       }
     )
+    await expect.element(screen.getByText('from 100')).toBeInTheDocument()
+    expect(changeOf('population')).toEqual({
+      direction: 'up',
+      text: '20',
+      good: true,
+    })
+    expect(changeOf('wars')).toEqual({
+      direction: 'down',
+      text: '1',
+      good: true,
+    })
+    const warLosses = screen.getByText('War losses')
+    await expect.element(warLosses).toBeInTheDocument()
     await expect
-      .element(screen.getByRole('cell', { name: 'Population' }))
+      .element(screen.getByRole('progressbar', { name: 'War losses +5' }))
       .toBeInTheDocument()
-    await expect.element(screen.getByText('+20')).toBeInTheDocument()
-    await expect.element(screen.getByText('−1')).toBeInTheDocument()
-    await expect.element(screen.getByText('War losses')).toBeInTheDocument()
     await expect
-      .element(screen.getByText('+3', { exact: true }))
+      .element(screen.getByRole('progressbar', { name: 'Prayers answered −2' }))
       .toBeInTheDocument()
+    expect(
+      chipFacts(
+        warLosses
+          .element()
+          .closest('ul')
+          ?.parentElement?.querySelector('[data-domain="change-chip"]')
+      )
+    ).toEqual({ direction: 'up', text: '3', good: false })
     await expect.element(screen.getByText('Son #7')).toBeInTheDocument()
     expect(server.callsTo('GET /api/epochs/{epoch}/breakdown')[0].path).toBe(
       '/api/epochs/4/breakdown'

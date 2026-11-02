@@ -1,6 +1,7 @@
 import { godRoutes } from '@/test-utils/godRoutes'
 import { type MockRoutes } from '@/test-utils/mockServer'
 import { renderScreen } from '@/test-utils/renderScreen'
+import { toast } from 'sonner'
 import { afterEach, describe, expect, it } from 'vitest'
 import { SonPage } from './SonPage'
 
@@ -52,6 +53,18 @@ async function confirm(
     .click()
 }
 
+function heroStats() {
+  return Object.fromEntries(
+    Array.from(
+      document.querySelectorAll('header [data-domain="mini-stat"] data'),
+      (stat) => [
+        stat.nextElementSibling?.textContent ?? '',
+        stat.getAttribute('value'),
+      ]
+    )
+  )
+}
+
 afterEach(() => localStorage.clear())
 
 describe('son hero', () => {
@@ -60,17 +73,19 @@ describe('son hero', () => {
     await expect
       .element(screen.getByRole('heading', { name: 'Thalassir', exact: true }))
       .toBeVisible()
-    await expect.element(screen.getByText('★★★ · Level 5')).toBeVisible()
-    await expect.element(screen.getByText('Life 120/140')).toBeVisible()
-    await expect.element(screen.getByText('Essence 64/150')).toBeVisible()
-    await expect.element(screen.getByText('Faith 18.4')).toBeVisible()
+    await expect.element(screen.getByText('★★★')).toBeVisible()
     await expect
-      .element(screen.getByText('Fame 46', { exact: true }))
+      .element(screen.getByText('Level 5', { exact: true }))
       .toBeVisible()
-    await expect.element(screen.getByText('Solid 72')).toBeVisible()
-    await expect
-      .element(screen.getByText('3 actions · power cap 7'))
-      .toBeVisible()
+    await expect.poll(heroStats).toEqual({
+      Life: '120/140',
+      Essence: '64/150',
+      Faith: '18.4',
+      Fame: '46',
+      Solid: '72',
+      Actions: '3',
+      'Power cap': '7',
+    })
     await expect
       .element(screen.getByText('Anchor', { exact: true }).first())
       .toBeVisible()
@@ -461,6 +476,10 @@ describe('son sections', () => {
     expect(server.callsTo('DELETE /api/links/{id}')[0].path).toBe(
       '/api/links/501'
     )
+    const broken = screen.getByText('The bond was broken')
+    await expect.element(broken).toBeVisible()
+    toast.dismiss()
+    await expect.element(broken).not.toBeInTheDocument()
     await screen.getByRole('button', { name: 'Create a bond' }).click()
     await screen.getByRole('combobox', { name: 'Kind' }).click()
     await screen.getByRole('option', { name: 'Protects' }).click()

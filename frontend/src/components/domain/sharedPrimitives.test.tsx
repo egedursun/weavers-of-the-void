@@ -61,7 +61,7 @@ function Choice({ onChange }: { onChange: (next: string[]) => void }) {
 }
 
 describe('LineChart', () => {
-  it('draws one line per series with end labels, a legend and a hover tooltip', async () => {
+  it('draws one line per series with end dots, a legend and a hover tooltip', async () => {
     const { screen } = await renderScreen(
       <LineChart title='Records and knowledge' series={SERIES} />
     )
@@ -69,14 +69,18 @@ describe('LineChart', () => {
       .element(screen.getByRole('img', { name: 'Records and knowledge' }))
       .toBeVisible()
     expect(document.querySelectorAll('polyline[data-series]')).toHaveLength(2)
+    expect(document.querySelectorAll('svg[role="img"] circle')).toHaveLength(2)
+    expect(document.querySelector('[data-direct-label]')).toBeNull()
+    const legend = screen.getByRole('list', {
+      name: 'Records and knowledge legend',
+    })
+    await expect.element(legend).toBeVisible()
     expect(
-      document.querySelector('[data-direct-label="followers"]')?.textContent
-    ).toBe('Disciples')
-    await expect
-      .element(
-        screen.getByRole('list', { name: 'Records and knowledge legend' })
-      )
-      .toBeVisible()
+      legend
+        .getByRole('listitem')
+        .elements()
+        .map((item) => item.textContent)
+    ).toEqual(['Population', 'Disciples'])
     expect(
       [...document.querySelectorAll('svg text')].map((node) => node.textContent)
     ).toContain('200')

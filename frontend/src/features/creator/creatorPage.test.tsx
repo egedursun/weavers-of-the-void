@@ -34,6 +34,18 @@ async function openCreator(overrides: Record<string, unknown> = {}) {
   )
 }
 
+function heroStats() {
+  return Object.fromEntries(
+    Array.from(
+      document.querySelectorAll('header [data-domain="mini-stat"] data'),
+      (stat) => [
+        stat.nextElementSibling?.textContent ?? '',
+        stat.getAttribute('value'),
+      ]
+    )
+  )
+}
+
 afterEach(() => localStorage.clear())
 
 describe('creator page', () => {
@@ -45,11 +57,11 @@ describe('creator page', () => {
     await expect
       .element(screen.getByText('The Unwritten Dawn').first())
       .toBeVisible()
-    await expect.element(screen.getByText('12.6 faith')).toBeVisible()
-    await expect
-      .element(screen.getByText('1 community worship', { exact: true }))
-      .toBeVisible()
-    await expect.element(screen.getByText('186 essence').first()).toBeVisible()
+    await expect.poll(heroStats).toEqual({
+      Essence: '186',
+      Faith: '12.6',
+      'Community worships': '1',
+    })
     await expect
       .element(
         screen

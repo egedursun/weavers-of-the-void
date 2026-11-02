@@ -167,12 +167,16 @@ describe("the gods' turn order", () => {
     const place = screen.getByRole('spinbutton', {
       name: 'Place in the turn for Ithren',
     })
+    const pin = screen.getByRole('button', { name: 'Pin' })
+    const release = screen.getByRole('button', { name: 'Release' })
+    await expect.element(release.first()).toBeVisible()
+    expect(release.elements()).toHaveLength(2)
     await place.fill('0')
     await expect
-      .element(screen.getByRole('button', { name: 'Pin' }).nth(2))
+      .element(pin)
       .toHaveAttribute('aria-description', 'Give a place of 1 or more.')
     await place.fill('1')
-    await screen.getByRole('button', { name: 'Pin' }).nth(2).click()
+    await pin.click()
     await expect
       .poll(() => server.callsTo('POST /api/actions/son:turn_rank').length)
       .toBe(1)
@@ -180,7 +184,7 @@ describe("the gods' turn order", () => {
       son_id: 7,
       rank: 1,
     })
-    await screen.getByRole('button', { name: 'Release' }).first().click()
+    await release.first().click()
     await expect
       .poll(() => server.callsTo('POST /api/actions/son:turn_rank').length)
       .toBe(2)

@@ -8,7 +8,9 @@ import {
   createRoute,
   createRouter,
 } from '@tanstack/react-router'
+import { RealtimeProvider } from '@/realtime'
 import '@/styles/index.css'
+import { FakeEventSource } from '@/test-utils/fakeEventSource'
 import { renderScreen } from '@/test-utils/renderScreen'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-react'
@@ -31,14 +33,16 @@ async function renderRoutes(shell: ReactNode, path: string) {
   const root = createRootRoute({
     component: () => (
       <QueryClientProvider client={new QueryClient()}>
-        <TooltipProvider>
-          <div className='flex min-h-svh w-full'>
-            <main className='flex min-w-0 flex-1 flex-col'>
-              <Outlet />
-            </main>
-            {shell}
-          </div>
-        </TooltipProvider>
+        <RealtimeProvider createSource={(url) => new FakeEventSource(url)}>
+          <TooltipProvider>
+            <div className='flex min-h-svh w-full'>
+              <main className='flex min-w-0 flex-1 flex-col'>
+                <Outlet />
+              </main>
+              {shell}
+            </div>
+          </TooltipProvider>
+        </RealtimeProvider>
       </QueryClientProvider>
     ),
   })
