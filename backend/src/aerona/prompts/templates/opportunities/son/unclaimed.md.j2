@@ -1,0 +1,4 @@
+{% from "opportunities/_macros.md.j2" import records, choices %}
+{% set win = offered(available_tools, [("miracle", "miracle"), ("teach_knowledge", "teach_knowledge"), ("send_dream", "send_dream")]) %}
+{% set found = offered(available_tools, [("create_people", "found a neighbouring people with create_people")]) %}
+Communities that worship no one ({% if win %}win them with {{ choices(win) }}{% endif %}{% if win and found %}; or {% endif %}{{ found[0] if found else "" }}{% if not win and not found %}they wait for a god{% endif %}): {{ records(line.communities[:rules.opportunities.list_max]) }}

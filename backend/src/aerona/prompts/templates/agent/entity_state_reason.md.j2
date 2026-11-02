@@ -1,0 +1,15 @@
+{% if kind == "unselected" %}
+No record selected: write an id from the list.
+{% elif kind == "missing" %}
+There is no record numbered #{{ id }}.
+{% elif kind == "dead" %}
+#{{ id }} {{ name }} is dead{% if age is not none %} (died in Age {{ age }}){% endif %}; this action cannot be done to the dead.
+{% elif kind == "destroyed" %}
+#{{ id }} {{ name }} was destroyed{% if age is not none %} (Age {{ age }}){% endif %}; it is no longer in the world.
+{% elif kind == "rejected" %}
+#{{ id }} {{ name }} was rejected by Fate; it counts as never having existed.
+{% elif kind == "fulfilled" %}
+#{{ id }} {{ name }} has been fulfilled; it is no longer a pending prophecy.
+{% else %}
+#{{ id }} {{ name }} is currently {{ state_label }}; this action cannot be done to it.
+{% endif %}

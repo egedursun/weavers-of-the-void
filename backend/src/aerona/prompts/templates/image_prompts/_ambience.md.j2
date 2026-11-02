@@ -1,0 +1,3 @@
+{% macro ambience_line(ambience) -%}
+{% if ambience %} World type: {{ ambience.type_label }}{% if ambience.leading_biomes %} (terrain such as {{ ambience.leading_biomes | join(", ") }}){% endif %}. Let its palette and atmosphere show.{% endif %}
+{%- endmacro %}

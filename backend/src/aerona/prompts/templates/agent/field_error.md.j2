@@ -1,0 +1,12 @@
+{% set bound = "%g" | format(limit) if limit is not none else "" %}
+{% if kind == "missing" %}
+{{ field }} was left empty: this field is required, write a number (if it is an id, an id from the list).
+{% elif kind == "too_small" %}
+{{ field }} must be at least {{ bound }} ({{ given }} was written).
+{% elif kind == "too_big" %}
+{{ field }} can be at most {{ bound }} ({{ given }} was written).
+{% elif kind == "not_integer" %}
+{{ field }} must be an integer ({{ given }} was written).
+{% else %}
+{{ field }} must be a number ({{ given[:50] }} was written).
+{% endif %}

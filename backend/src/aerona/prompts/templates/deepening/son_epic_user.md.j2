@@ -1,0 +1,19 @@
+{% from "shared/macros.md.j2" import chronicle_rows %}
+{{ world_header }}
+
+SON: {{ name }}, {{ title }} ({{ rarity_label }} {{ stars | stars }}, {{ domain_1 }}/{{ domain_2 }})
+Temperament: {{ temperament }}
+Obsession: {{ obsession }}
+Secret (as much as the bard senses): {{ secret }}
+Plan: {{ plan if plan else "-" }}
+
+CREATIONS: {% if creations %}{% for item in creations %}{{ item.name }} ({{ item.type_label }}{% if item.subtype %}/{{ item.subtype }}{% endif %}, A{{ item.age }}{% if item.status_label %}, {{ item.status_label }}{% endif %}){% if not loop.last %}; {% endif %}{% endfor %}{% else %}none{% endif %}
+
+
+RECORDS:
+{{ chronicle_rows(records) if records else "(none)" }}
+
+{% include "shared/_epic_rule.md.j2" %}
+Write this son's epic.{% if listed_ages %}
+
+THE PREVIOUS WRITING came out as a list of records (it counted the age numbers {{ listed_ages }} times). Write the same events again as scenes, without counting the ages.{% endif %}

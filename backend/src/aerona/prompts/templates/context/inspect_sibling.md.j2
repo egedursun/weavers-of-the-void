@@ -1,0 +1,23 @@
+{% from "shared/macros.md.j2" import entity_line %}
+son#{{ id }} {{ name }}, {{ title }} — {{ rarity_label }}, domains {{ domain_1 }}/{{ domain_2 }}, Level {{ level }}, state {{ status_label }}
+{% if appearance %}
+Appearance: {{ appearance }}
+{% endif %}
+{% if temperament %}
+Temperament: {{ temperament }}
+{% endif %}
+{% if speech %}
+Speech: {{ speech }}
+{% endif %}
+Known powers: {{ known_powers | join(", ") if known_powers else "none" }}
+Strength {{ strength }}, Wisdom {{ wisdom }}, Cunning {{ cunning }}, Charisma {{ charisma }}, Will {{ will }} · Life {{ hp }}/{{ max_hp }} · Faith {{ faith }} · Fame {{ fame }}
+Towards you: {{ relation.label }} ({{ relation.value }}){% if covenant %} · there is a covenant between you{% endif %}
+
+Creations:
+{% if creations %}
+{% for item in creations %}
+{{ entity_line(item) }}
+{% endfor %}
+{% else %}
+(none)
+{% endif %}

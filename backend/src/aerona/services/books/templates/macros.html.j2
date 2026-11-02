@@ -1,0 +1,169 @@
+{% macro link(kind, id, name, single) -%}
+{% if single %}<a href="?{{ kind }}_id={{ id }}">{{ name }}</a>{% else %}<a href="#{{ kind }}-{{ id }}">{{ name }}</a>{% endif %}
+{%- endmacro %}
+
+{% macro facts(items) -%}
+{% if items %}<dl class="facts">{% for item in items %}<div><dt>{{ item.label }}</dt><dd>{{ item.value }}</dd></div>{% endfor %}</dl>{% endif %}
+{%- endmacro %}
+
+{% macro stats(items) -%}
+{% if items %}<ul class="stats">{% for item in items %}<li>{{ item.label }}<b>{{ item.value }}</b></li>{% endfor %}</ul>{% endif %}
+{%- endmacro %}
+
+{% macro chips(items) -%}
+{% if items %}<ul class="chips">{% for item in items %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+{%- endmacro %}
+
+{% macro thumb(file, name, links, wide=false) -%}
+{% if file %}<figure class="thumb{% if wide %} wide{% endif %}"><img src="{{ links.media(file, 'article') }}" alt="{{ name }}" loading="lazy" decoding="async"></figure>{% endif %}
+{%- endmacro %}
+
+{% macro sayings(items) -%}
+{% for saying in items %}<blockquote>{{ saying.text }}{% if saying.form %}<cite>{{ saying.form }}</cite>{% endif %}</blockquote>{% endfor %}
+{%- endmacro %}
+
+{% macro entity_depth(depth) -%}
+{% if depth %}
+{% if depth.history %}<p class="sublabel">History</p>{{ depth.history | paragraphs }}{% endif %}
+{% if depth.details %}<p class="sublabel">Particulars</p><ul>{% for detail in depth.details %}<li>{{ detail }}</li>{% endfor %}</ul>{% endif %}
+{% if depth.specifics %}<dl class="specifics">{% for key, value in depth.specifics.items() %}<dt>{{ key | replace("_", " ") | capitalize }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>{% endif %}
+{{ sayings(depth.sayings) }}
+{% if depth.rumours %}<p class="sublabel">Rumours</p><ul>{% for rumour in depth.rumours %}<li><i>{{ rumour }}</i></li>{% endfor %}</ul>{% endif %}
+{% if depth.hidden_truth %}<div class="secret"><span class="label">Hidden truth</span>{{ depth.hidden_truth }}</div>{% endif %}
+{% endif %}
+{%- endmacro %}
+
+{% macro god_depth(depth) -%}
+{% if depth %}
+{% if depth.history %}<p class="sublabel">History</p>{{ depth.history | paragraphs }}{% endif %}
+{% if depth.names %}<p class="sublabel">Names</p><ul>{% for name in depth.names %}<li><b>{{ name.name }}</b>{% if name.used_by %} <span class="meta">among {{ name.used_by }}</span>{% endif %}{% if name.meaning %} — {{ name.meaning }}{% endif %}</li>{% endfor %}</ul>{% endif %}
+{% if depth.desire %}<div class="box"><span class="label">Desire</span>{{ depth.desire }}</div>{% endif %}
+{% for label, items in (("Gifts", depth.gifts), ("Fears", depth.fears), ("Taboos", depth.taboos)) if items %}<p class="sublabel">{{ label }}</p><ul>{% for item in items %}<li>{{ item }}</li>{% endfor %}</ul>{% endfor %}
+{{ sayings(depth.sayings) }}
+{% if depth.rumours %}<p class="sublabel">Rumours</p><ul>{% for rumour in depth.rumours %}<li><i>{{ rumour }}</i></li>{% endfor %}</ul>{% endif %}
+{% for secret in depth.secrets %}<div class="secret"><span class="label">Secret</span>{{ secret }}</div>{% endfor %}
+{% endif %}
+{%- endmacro %}
+
+{% macro personality(profile) -%}
+{% if profile %}
+{% set parts = [("Appearance", profile.appearance), ("Temperament", profile.temperament), ("Obsession", profile.obsession), ("Fear", profile.fear), ("Voice", profile.speech_style)] %}
+{% for label, value in parts if value %}<p><b class="small">{{ label }}.</b> {{ value }}</p>{% endfor %}
+{% if profile.secret %}<div class="secret"><span class="label">Secret</span>{{ profile.secret }}</div>{% endif %}
+{% endif %}
+{%- endmacro %}
+
+{% macro existence(profile) -%}
+{% if profile and (profile.nature or profile.manifestation or profile.true_name) %}
+<div class="box"><span class="label">Nature of being</span>{% if profile.nature %}{{ profile.nature }} {% endif %}{% if profile.manifestation %}{{ profile.manifestation }}{% endif %}{% if profile.true_name %}<br><span class="meta">True name: {{ profile.true_name }}</span>{% endif %}</div>
+{% endif %}
+{%- endmacro %}
+
+{% macro epic(value) -%}
+{% if value %}
+<h4>{{ value.title }}</h4>
+{% if value.verse %}<p class="verse">{{ value.verse }}</p>{% endif %}
+{{ value.body | paragraphs }}
+{% for chapter in value.chapters %}<h5>{{ chapter.title }} <span class="meta small">Epochs {{ chapter.epoch_start }}–{{ chapter.epoch_end }}</span></h5>{{ chapter.text | paragraphs }}{% endfor %}
+{% endif %}
+{%- endmacro %}
+
+{% macro picture(map, links, caption) -%}
+{% if map %}
+<figure class="map">
+<div class="sheet" style="background:{{ map.halo }}">
+<svg viewBox="{{ map.view_box }}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" aria-label="Map">
+<image href="{{ links.terrain(map) }}" xlink:href="{{ links.terrain(map) }}" x="{{ map.x }}" y="{{ map.y }}" width="{{ map.width }}" height="{{ map.height }}" preserveAspectRatio="none"/>
+{% for stroke in map.strokes %}<path d="{{ stroke.d }}" fill="none" stroke="{{ stroke.colour }}" stroke-width="{{ stroke.width }}" stroke-opacity="{{ stroke.opacity }}" stroke-linecap="round" stroke-linejoin="round"{% if stroke.dash %} stroke-dasharray="{{ stroke.dash }}"{% endif %}/>{% endfor %}
+{% for place in map.settlements %}{% if place.tier == "capital" %}<rect x="{{ place.x - place.radius }}" y="{{ place.y - place.radius }}" width="{{ place.radius * 2 }}" height="{{ place.radius * 2 }}" transform="rotate(45 {{ place.x }} {{ place.y }})" fill="#e3b64f" stroke="{{ map.halo }}" stroke-width="{{ map.unit * 0.8 }}"/>{% elif place.tier == "village" %}<circle cx="{{ place.x }}" cy="{{ place.y }}" r="{{ place.radius }}" fill="{{ map.ink }}" fill-opacity="0.7"/>{% else %}<circle cx="{{ place.x }}" cy="{{ place.y }}" r="{{ place.radius }}" fill="{{ map.halo }}" stroke="{{ map.ink }}" stroke-width="{{ map.unit * 0.9 }}"/><circle cx="{{ place.x }}" cy="{{ place.y }}" r="{{ place.radius * 0.45 }}" fill="{{ map.ink }}"/>{% endif %}{% endfor %}
+{% for label in map.labels %}{% set colour = map.water_ink if label.water else map.ink %}{% set spacing = label.size * 0.16 if label.region else 0 %}
+<text x="{{ label.x }}" y="{{ label.y }}" font-size="{{ label.size }}" text-anchor="{{ label.anchor }}" font-family="Book Display, Cormorant Garamond, Georgia, serif" font-weight="{{ 700 if label.region else 600 }}"{% if label.water %} font-style="italic"{% endif %} letter-spacing="{{ spacing }}" fill="{{ map.halo }}" stroke="{{ map.halo }}" stroke-width="{{ map.halo_width }}" stroke-linejoin="round" opacity="0.8">{{ label.text }}</text>
+<text x="{{ label.x }}" y="{{ label.y }}" font-size="{{ label.size }}" text-anchor="{{ label.anchor }}" font-family="Book Display, Cormorant Garamond, Georgia, serif" font-weight="{{ 700 if label.region else 600 }}"{% if label.water %} font-style="italic"{% endif %} letter-spacing="{{ spacing }}" fill="{{ colour }}"{% if label.region %} fill-opacity="0.85"{% endif %}>{{ label.text }}</text>
+{% endfor %}
+{% if map.compass %}{% set cx, cy, size = map.compass %}
+<g opacity="0.9"><circle cx="{{ cx }}" cy="{{ cy }}" r="{{ size / 2 }}" fill="none" stroke="{{ map.ink }}" stroke-width="{{ map.unit * 0.6 }}" stroke-opacity="0.6"/><path d="M{{ cx }} {{ cy - size / 2 }}L{{ cx + size * 0.12 }} {{ cy }}L{{ cx }} {{ cy + size / 2 }}L{{ cx - size * 0.12 }} {{ cy }}Z" fill="{{ map.ink }}" fill-opacity="0.75"/><path d="M{{ cx }} {{ cy - size / 2 }}L{{ cx + size * 0.12 }} {{ cy }}L{{ cx - size * 0.12 }} {{ cy }}Z" fill="#e3b64f"/><text x="{{ cx }}" y="{{ cy - size / 2 - map.unit * 2 }}" font-size="{{ map.unit * 8 }}" text-anchor="middle" font-family="Book Display, Georgia, serif" font-weight="700" fill="{{ map.ink }}">N</text></g>
+{% endif %}
+</svg>
+</div>
+<figcaption>
+<span class="name">{{ caption }}</span>
+{% for tier in map.legend %}<span class="legend"><svg viewBox="-6 -6 12 12">{% if tier == "capital" %}<rect x="-3.6" y="-3.6" width="7.2" height="7.2" transform="rotate(45)" fill="#e3b64f"/>{% elif tier == "village" %}<circle r="1.8" fill="currentColor"/>{% else %}<circle r="3.6" fill="none" stroke="currentColor" stroke-width="1.2"/><circle r="1.5" fill="currentColor"/>{% endif %}</svg>{{ tier | replace("_", " ") | capitalize }}</span>{% endfor %}
+<span class="legend"><svg viewBox="0 -6 16 12"><path d="M0 0H16" stroke="currentColor" stroke-dasharray="3 2" stroke-width="1.2"/></svg>Border</span>
+<span class="legend"><svg viewBox="0 -6 16 12"><path d="M0 0H16" stroke="currentColor" stroke-dasharray="1.6 1.4" stroke-width="1"/></svg>Road</span>
+</figcaption>
+</figure>
+{% endif %}
+{%- endmacro %}
+
+{% macro entity_article(article, single, links) -%}
+{% set level = [3 + article.depth_level, 6] | min %}
+<article class="entry" id="{{ article.anchor }}">
+<div class="head"><h{{ level }}>{{ article.entity.name }}{% if article.entity.status.value in ("dead", "destroyed") %} <span class="dagger">&#8224;</span>{% endif %}</h{{ level }}><span class="kind">{{ article.type_label }}</span></div>
+{% if article.entity.title %}<p class="subtitle">{{ article.entity.title }}</p>{% endif %}
+{{ thumb(article.cover, article.entity.name, links) }}
+<p class="meta small">{{ article.meta | join(" · ") }}</p>
+{{ article.description | paragraphs }}
+{{ stats(article.stats) }}
+{{ entity_depth(article.entity.depth) }}
+{% if article.ending %}<div class="box"><span class="label">Ending</span>{{ article.ending }}</div>{% elif article.entity.fate_note %}<div class="box"><span class="label">Fate's judgement</span>{{ article.entity.fate_note }}</div>{% endif %}
+{% if article.bonds or article.past_bonds %}<p class="sublabel">Ties</p><ul class="bonds">{% for bond in article.bonds %}<li>{{ bond }}</li>{% endfor %}{% for bond in article.past_bonds %}<li class="muted"><span class="relation">once</span>{{ bond }}</li>{% endfor %}</ul>{% endif %}
+{{ chips(article.tags) }}
+<div class="clear"></div>
+{% if article.children %}<div class="children">{% for child in article.children %}{{ entity_article(child, single, links) }}{% endfor %}</div>{% endif %}
+</article>
+{%- endmacro %}
+
+{% macro son_article(article, single, links) -%}
+<article class="entry" id="{{ article.anchor }}">
+<div class="head"><h3 class="bm2">{{ article.son.name }}{% if article.son.status.value == "dead" %} <span class="dagger">&#8224;</span>{% endif %}</h3><span class="kind">{{ article.son.rarity.value | replace("_", " ") }}</span></div>
+<div class="portrait-hero">
+{% if article.cover %}<img src="{{ links.media(article.cover, 'portrait') }}" alt="{{ article.son.name }}" loading="lazy" decoding="async">{% else %}<div></div>{% endif %}
+<div>
+<p class="subtitle">{{ article.meta | join(" · ") }}</p>
+{{ stats(article.stats) }}
+<ul class="stats"><li>Fame<b>{{ article.son.fame }}</b></li><li>Faith<b>{{ article.son.faith }}</b></li><li>Level<b>{{ article.son.level }}</b></li></ul>
+{% if article.passions %}<p class="sublabel">Passions</p>{{ stats(article.passions) }}{% endif %}
+</div>
+</div>
+{{ personality(article.son.personality) }}
+{{ existence(article.son.existence_profile) }}
+{% if article.powers %}<p class="sublabel">Powers</p><ul>{% for power in article.powers %}<li><b>{{ power.label }}</b>: {{ power.value }}</li>{% endfor %}</ul>{% endif %}
+{% if article.son.plan %}<div class="box"><span class="label">Plan</span>{{ article.son.plan }}</div>{% endif %}
+{% if article.son.standing_order %}<div class="box"><span class="label">Standing order{% if article.son.order_absolute %}, absolute{% endif %}</span>{{ article.son.standing_order }}</div>{% endif %}
+{{ epic(article.son.epic) }}
+{% if article.relations %}<p class="sublabel">Brothers and sisters</p>{{ stats(article.relations) }}{% endif %}
+{% if article.bonds %}<p class="sublabel">Ties</p><ul class="bonds">{% for bond in article.bonds %}<li>{{ bond }}</li>{% endfor %}</ul>{% endif %}
+{% if article.fate %}<p class="sublabel">Fate</p><ul class="timeline">{% for line in article.fate %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
+{% if article.creations %}<p class="sublabel">Creations · {{ article.creations | length }}</p><p class="small">{% for id, name in article.creations %}{{ link("entity", id, name, single) }}{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+</article>
+{%- endmacro %}
+
+{% macro god_article(article, links) -%}
+<article class="entry" id="{{ article.anchor }}">
+<div class="head"><h4 class="bm3">{{ article.god.name }}</h4><span class="kind">{{ article.god.status.value | replace("_", " ") }}</span></div>
+{% if article.god.title %}<p class="subtitle">{{ article.god.title }}</p>{% endif %}
+{{ thumb(article.cover, article.god.name, links, true) }}
+<ul class="stats"><li>World<b>{{ article.world }}</b></li><li>Power<b>{{ article.god.power }}</b></li><li>Faith<b>{{ article.god.faith }}</b></li><li>Attitude<b>{{ article.god.stance }}</b></li></ul>
+{{ article.god.description | paragraphs }}
+{{ stats(article.stats) }}
+{{ personality(article.god.personality) }}
+{{ existence(article.god.existence_profile) }}
+{% if article.powers %}<p class="sublabel">Powers</p><ul>{% for power in article.powers %}<li><b>{{ power.label }}</b>: {{ power.value }}</li>{% endfor %}</ul>{% endif %}
+{{ god_depth(article.god.depth) }}
+{% if article.fate %}<p class="sublabel">Fate</p><ul class="timeline">{% for line in article.fate %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
+<div class="clear"></div>
+</article>
+{%- endmacro %}
+
+{% macro chronicle_lines(lines, book, single) -%}
+{% if lines %}<ul class="timeline">{% for line in lines %}<li><span class="when">{{ line.kind }}{% if line.year is not none %} · year {{ line.year }}{% endif %}</span>{{ line.text }}{% if line.son_id %} <span class="meta">— {{ link("son", line.son_id, book.names.get(line.son_id, "?"), single) }}</span>{% endif %}</li>{% endfor %}</ul>{% endif %}
+{%- endmacro %}
+
+{% macro chapter_head(id, numeral, title, lede=None) -%}
+<header class="chapter-head">
+<p class="part">Part {{ numeral }}</p>
+<h2>{{ title }}</h2>
+{% if lede %}<p class="lede meta">{{ lede }}</p>{% endif %}
+<span class="ornament">&#10087;</span>
+</header>
+{%- endmacro %}

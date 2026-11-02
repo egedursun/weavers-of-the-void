@@ -1,0 +1,21 @@
+{% from "deepening/_god.md.j2" import god_known, traces_block %}
+{{ world_header }}
+
+THE GOD {{ god_name }}:
+{{ god_known(known) }}
+
+COSMOLOGY: {{ cosmology }}
+
+{% if epic_line %}
+THE ESSENCE OF HIS EPIC: {{ epic_line }}
+
+{% endif %}
+HIS SONS: {% if sons %}{% for son in sons %}{{ son.name }} ({{ son.domain_1 }}/{{ son.domain_2 }}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}
+
+
+HIS TRACES IN THE RECORDS:
+{{ traces_block(traces) | trim }}
+
+Deepen the creator god.
+
+{% include "shared/section_keys_rule.md.j2" %}

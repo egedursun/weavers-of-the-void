@@ -1,0 +1,46 @@
+import { type components } from '@/api/generated/schema'
+
+type Schemas = components['schemas']
+
+export type EntityDetail = Schemas['EntityDetail']
+export type EntityRecord = Schemas['EntityRecord']
+export type EntitySummary = Schemas['EntitySummary']
+export type EntityType = Schemas['EntityType']
+export type EntityFlag = Schemas['EntityFlag']
+export type EntityStatus = Schemas['EntityStatus']
+export type EntityDepth = Schemas['EntityDepth']
+export type BondView = Schemas['BondView']
+export type BondKind = Schemas['BondKind']
+export type NodeRef = Schemas['NodeRef']
+export type NodeKind = Schemas['NodeKind']
+export type FactView = Schemas['FactView']
+export type SimilarRecord = Schemas['SimilarRecord']
+export type Perspective = Schemas['Perspective']
+export type ImageRecord = Schemas['ImageRecord']
+export type ChronicleLine = Schemas['ChronicleLineRecord']
+export type ChronicleKind = Schemas['ChronicleKind']
+export type NameEntry = Schemas['NameEntry']
+export type PathResult = Schemas['PathResult']
+export type Catalogue = Schemas['Catalogue']
+export type EntityTypeInfo = Schemas['EntityTypeInfo']
+export type BondKindInfo = Schemas['BondKindInfo']
+export type ActionCatalogueItem = Schemas['ActionCatalogueItem']
+export type ActionResponse = Schemas['ActionResponse']
+export type WorldState = Schemas['StateResponse']
+export type SonPublic = Schemas['SonPublic']
+export type CosmosView = Schemas['CosmosView']
+export type ForeignGodRecord = Schemas['ForeignGodRecord']
+export type RouteRecord = Schemas['RouteRecord']
+export type JourneyRecord = Schemas['JourneyRecord']
+export type KnowledgeView = Schemas['KnowledgeView']
+export type LanguageView = Schemas['LanguageView']
+export type ThreadRecord = Schemas['ThreadRecord']
+export type Importance = Schemas['Importance']
+export type ArchiveMode = Schemas['ArchiveMode']
+export type JobAccepted = Schemas['JobAccepted']
+export type Page<T> = {
+  items: T[]
+  total: number
+  offset: number
+  limit: number
+}

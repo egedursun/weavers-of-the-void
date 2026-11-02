@@ -1,0 +1,1 @@
+Knowledge you could learn from neighbours{% if offered(available_tools, [("learn_knowledge", "learn_knowledge")]) %} (learn_knowledge){% endif %}: {% for item in line.knowledge[:rules.opportunities.list_max] %}#{{ item.id }} {{ item.name }} ({{ item.patron }} knows it){% if not loop.last %}, {% endif %}{% endfor %}

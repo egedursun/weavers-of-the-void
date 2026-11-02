@@ -1,0 +1,475 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import './theme.css';
+
+@custom-variant dark (&:is(.dark *):not(.dark .light *));
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  html {
+    @apply overflow-x-hidden;
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    @apply min-h-svh w-full bg-background text-body text-foreground antialiased has-[div[data-variant='inset']]:bg-sidebar;
+    font-variant-numeric: lining-nums;
+    background-image: radial-gradient(
+      ellipse 80% 50% at 50% -10%,
+      var(--app-glow),
+      transparent 70%
+    );
+    background-attachment: fixed;
+  }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@utility no-scrollbar {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.CollapsibleContent {
+  overflow: hidden;
+}
+.CollapsibleContent[data-state='open'] {
+  animation: slideDown 300ms ease-out;
+}
+.CollapsibleContent[data-state='closed'] {
+  animation: slideUp 300ms ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    height: var(--radix-collapsible-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+@keyframes indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+@utility animate-indeterminate {
+  animation: indeterminate 1.4s ease-in-out infinite;
+}
+
+@utility grid-cols-label-track {
+  grid-template-columns: minmax(0, var(--spacing-label-track)) minmax(0, 1fr);
+}
+
+@keyframes reveal-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes reveal-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes reveal-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(1deg);
+  }
+}
+
+@keyframes reveal-charge {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-2px, 1px);
+  }
+  50% {
+    transform: translate(2px, -1px);
+  }
+  75% {
+    transform: translate(-1px, -2px);
+  }
+}
+
+@keyframes reveal-burst {
+  0% {
+    transform: scale(0.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+@keyframes reveal-spark {
+  0% {
+    transform: rotate(var(--angle)) translateY(0) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--angle)) translateY(calc(var(--reach) * -1))
+      scale(0.2);
+    opacity: 0;
+  }
+}
+
+@keyframes reveal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reveal-letters {
+  from {
+    letter-spacing: 0.9em;
+    opacity: 0;
+    filter: blur(6px);
+  }
+  to {
+    letter-spacing: 0.32em;
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes reveal-sheen {
+  0%,
+  55% {
+    transform: translateX(-130%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(230%) skewX(-18deg);
+  }
+}
+
+.reveal-stage {
+  position: relative;
+  isolation: isolate;
+}
+
+.reveal-rays {
+  position: absolute;
+  inset: -60%;
+  pointer-events: none;
+  background: repeating-conic-gradient(
+    from 0deg,
+    color-mix(in oklch, currentColor 30%, transparent) 0deg 4deg,
+    transparent 4deg 15deg
+  );
+  mask-image: radial-gradient(circle, #000 8%, transparent 58%);
+  animation: reveal-spin 28s linear infinite;
+  opacity: 0.55;
+  transition: opacity 600ms ease;
+}
+
+.reveal-rays[data-strong] {
+  opacity: 1;
+  animation-duration: 9s;
+}
+
+.reveal-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at center,
+    color-mix(in oklch, currentColor 45%, transparent) 0%,
+    transparent 52%
+  );
+  animation: reveal-pulse 2.2s ease-in-out infinite;
+}
+
+.reveal-burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 70vmin;
+  height: 70vmin;
+  margin: -35vmin 0 0 -35vmin;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, currentColor 60%, white) 0%,
+    color-mix(in oklch, currentColor 45%, transparent) 32%,
+    transparent 68%
+  );
+  animation: reveal-burst 1100ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+
+.reveal-sparks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.reveal-sparks > span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 9999px;
+  background: currentColor;
+  box-shadow:
+    0 0 10px currentColor,
+    0 0 22px currentColor;
+  opacity: 0;
+  animation: reveal-spark 1500ms cubic-bezier(0.1, 0.7, 0.3, 1) forwards;
+}
+
+.reveal-sparks > span:nth-child(1) {
+  --angle: 0deg;
+  --reach: 38vmin;
+  animation-delay: 0ms;
+}
+.reveal-sparks > span:nth-child(2) {
+  --angle: 29.5deg;
+  --reach: 45vmin;
+  animation-delay: 53ms;
+}
+.reveal-sparks > span:nth-child(3) {
+  --angle: 45deg;
+  --reach: 52vmin;
+  animation-delay: 106ms;
+}
+.reveal-sparks > span:nth-child(4) {
+  --angle: 74.5deg;
+  --reach: 41vmin;
+  animation-delay: 159ms;
+}
+.reveal-sparks > span:nth-child(5) {
+  --angle: 90deg;
+  --reach: 48vmin;
+  animation-delay: 212ms;
+}
+.reveal-sparks > span:nth-child(6) {
+  --angle: 119.5deg;
+  --reach: 55vmin;
+  animation-delay: 265ms;
+}
+.reveal-sparks > span:nth-child(7) {
+  --angle: 135deg;
+  --reach: 44vmin;
+  animation-delay: 318ms;
+}
+.reveal-sparks > span:nth-child(8) {
+  --angle: 164.5deg;
+  --reach: 51vmin;
+  animation-delay: 51ms;
+}
+.reveal-sparks > span:nth-child(9) {
+  --angle: 180deg;
+  --reach: 40vmin;
+  animation-delay: 104ms;
+}
+.reveal-sparks > span:nth-child(10) {
+  --angle: 209.5deg;
+  --reach: 47vmin;
+  animation-delay: 157ms;
+}
+.reveal-sparks > span:nth-child(11) {
+  --angle: 225deg;
+  --reach: 54vmin;
+  animation-delay: 210ms;
+}
+.reveal-sparks > span:nth-child(12) {
+  --angle: 254.5deg;
+  --reach: 43vmin;
+  animation-delay: 263ms;
+}
+.reveal-sparks > span:nth-child(13) {
+  --angle: 270deg;
+  --reach: 50vmin;
+  animation-delay: 316ms;
+}
+.reveal-sparks > span:nth-child(14) {
+  --angle: 299.5deg;
+  --reach: 39vmin;
+  animation-delay: 49ms;
+}
+.reveal-sparks > span:nth-child(15) {
+  --angle: 315deg;
+  --reach: 46vmin;
+  animation-delay: 102ms;
+}
+.reveal-sparks > span:nth-child(16) {
+  --angle: 344.5deg;
+  --reach: 53vmin;
+  animation-delay: 155ms;
+}
+
+.reveal-float {
+  animation: reveal-float 3.2s ease-in-out infinite;
+}
+
+.reveal-charge {
+  animation: reveal-charge 140ms linear infinite;
+}
+
+.reveal-rise {
+  animation: reveal-rise 650ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.reveal-rise-late {
+  animation: reveal-rise 650ms cubic-bezier(0.2, 0.8, 0.2, 1) 450ms both;
+}
+
+.reveal-title {
+  animation: reveal-letters 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  text-shadow: 0 0 24px color-mix(in oklch, currentColor 60%, transparent);
+}
+
+.reveal-flip {
+  perspective: 1800px;
+}
+
+.reveal-flip-inner {
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform 950ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.reveal-flip-inner[data-flipped] {
+  transform: rotateY(180deg);
+}
+
+.reveal-face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.reveal-face-front {
+  transform: rotateY(180deg);
+}
+
+.card-foil {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-foil::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    color-mix(in oklch, var(--foil, white) 22%, transparent) 50%,
+    transparent 70%
+  );
+  animation: reveal-sheen 6s ease-in-out infinite;
+}
+
+.about-sigil-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  padding: 3px;
+  background: conic-gradient(
+    from 0deg,
+    var(--brand-gold),
+    var(--brand-magenta),
+    var(--brand-violet),
+    var(--brand-azure),
+    var(--brand-gold)
+  );
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: reveal-spin 10s linear infinite;
+}
+
+@keyframes about-flow {
+  to {
+    stroke-dashoffset: -40;
+  }
+}
+
+.about-web-edge {
+  stroke-dasharray: 3 7;
+  animation: about-flow 2.4s linear infinite;
+}
+
+.about-web-node {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: reveal-pulse 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-rays,
+  .reveal-glow,
+  .reveal-float,
+  .reveal-charge,
+  .card-foil::after,
+  .about-sigil-ring,
+  .about-web-edge,
+  .about-web-node {
+    animation: none;
+  }
+  .reveal-flip-inner {
+    transition: none;
+  }
+}

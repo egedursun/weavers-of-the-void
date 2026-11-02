@@ -1,0 +1,9 @@
+API_PREFIX = "/api"
+HEALTH_PATH = "/health"
+EVENTS_PATH = "/events"
+JOBS_PATH = "/jobs"
+LAST_EVENT_ID_HEADER = "last-event-id"
+CORRELATION_ID_HEADER = "x-correlation-id"
+RULES_PATH = "/rules"
+GZIP_MINIMUM_BYTES = 1024
+GZIP_LEVEL = 6

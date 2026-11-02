@@ -1,0 +1,49 @@
+{% from "shared/macros.md.j2" import chronicle_rows, naming_rule %}
+{{ world_header }}
+
+{% if home_world %}
+ITS WORLD: {{ home_world.name }} ({{ home_world.type_label }})
+{% if home_world.dialect %}
+DIALECT: {{ naming_rule(home_world.dialect) }}
+{% endif %}
+{% if home_world.cosmology %}
+COSMOLOGY: {{ home_world.cosmology }}
+{% endif %}
+
+{% endif %}
+FOREIGN GOD {{ name }}:
+{% if known.title %}
+Title: {{ known.title }}
+{% endif %}
+{% if known.domains %}
+Domains: {{ known.domains }}
+{% endif %}
+{% if known.description %}
+Description (canon): {{ known.description }}
+{% endif %}
+{% if known.dead %}
+DIED{% if known.death_age %} (Age {{ known.death_age }}){% endif %}: write every text in the PAST TENSE; what it wanted, how it looked on things, how it was worshipped must be told as "used to want", "used to look", "was worshipped", and its history ends with its death. Do not write numbers, scores or record numbers.
+{% endif %}
+State: {{ known.status_label }}; power {{ known.power }}; attitude to the pantheon {{ known.attitude }} (-100 enemy, +100 friend); {{ "has made contact with the pantheon" if known.contact else "has not yet made contact with the pantheon" }}
+{% if known.stats %}
+Stats: {% for stat in known.stats %}{{ stat.label }} {{ stat.value }}{% if not loop.last %}, {% endif %}{% endfor %}
+
+{% endif %}
+{% if known.powers %}
+Existing powers (keep them, describe them by name): {% for power in known.powers %}{{ power.name }} ({{ power.effect_label }}){% if not loop.last %}, {% endif %}{% endfor %}
+
+{% endif %}
+{% if known.personality %}
+Personality (the fields the god wrote are canon): {% for item in known.personality %}{{ item.label }}: {{ item.value }}{% if not loop.last %} | {% endif %}{% endfor %}
+
+{% endif %}
+
+WORSHIPPERS: {% if worshippers %}{% for item in worshippers %}{{ item.name }} ({{ item.type_label }}{% if item.subtype %}, {{ item.subtype }}{% endif %}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}none at the moment{% endif %}
+
+
+RECORDS IN THE CHRONICLE THAT MENTION ITS NAME:
+{{ chronicle_rows(chronicle) if chronicle else "(none)" }}
+
+Deepen this foreign god.
+
+{% include "shared/section_keys_rule.md.j2" %}

@@ -1,0 +1,5 @@
+{{ known_regions }} known regions.
+{% for region in regions %}
+- #{{ region.id }} {{ region.name }}: {{ region.elevation_label }}{% if region.coastal %}, coastal{% endif %}, {{ region.size_label }}{% if region.terrain %}; terrain {{ region.terrain | join(", ") }}{% endif %}; neighbours: {% if region.neighbours %}{% for neighbour in region.neighbours %}#{{ neighbour.id }} {{ neighbour.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}
+
+{% endfor %}

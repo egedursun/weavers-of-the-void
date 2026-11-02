@@ -1,0 +1,5 @@
+from pydantic import BaseModel, ConfigDict
+
+
+class ValueObject(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid", use_enum_values=False)

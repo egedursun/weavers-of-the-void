@@ -1,0 +1,11 @@
+{% from "network_repair/_node.md.j2" import node_line %}
+{% for record in records %}
+RECORD {{ node_line(record.node, rules.link_graph) }}
+CANDIDATES:
+{% for candidate in record.candidates %}
+- {{ node_line(candidate.node, rules.link_graph) }} ({% if candidate.reason == "mentioned_together" %}mentioned together in the chronicle {{ candidate.mentions }} times{% elif candidate.reason == "location" %}its location{% elif candidate.reason == "maker" %}its maker{% elif candidate.reason == "creator" %}its creator{% elif candidate.reason == "same_place" %}in the same place{% else %}a notable of its world{% endif %})
+{% endfor %}
+{% if not loop.last %}
+
+{% endif %}
+{% endfor %}

@@ -1,0 +1,7 @@
+{% if line.knowledge %}
+{% if offered(available_tools, [("teach_knowledge", "teach_knowledge")]) %}
+Knowledge you can teach your worshippers (with teach_knowledge): {% for item in line.knowledge[:rules.opportunities.list_max] %}#{{ item.id }} {{ item.name }} ({{ item.branch_label if item.branch_label else "?" }}){% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}
+{% else %}
+There is no knowledge in the world yet; you could inspire the mortals' first knowledge{% if offered(available_tools, [("inspire_knowledge", "inspire_knowledge")]) %} with inspire_knowledge{% endif %}.
+{% endif %}

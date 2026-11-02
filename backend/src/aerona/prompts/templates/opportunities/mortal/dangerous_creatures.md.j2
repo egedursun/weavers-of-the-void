@@ -1,0 +1,2 @@
+{% from "opportunities/_macros.md.j2" import records %}
+Dangerous creatures on your land (weapons, walls, war to hunt them): {{ records(line.species[:rules.opportunities.list_max]) }}

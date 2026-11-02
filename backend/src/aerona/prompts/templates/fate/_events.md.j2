@@ -1,0 +1,22 @@
+{% macro event_rows(rows) -%}
+{% for row in rows %}
+{{ row.text }}{% if row.repeats > 1 %} (this age {{ row.repeats }} times){% endif %}{% if not loop.last %}{{ "\n" }}{% endif %}
+{% endfor %}
+{%- endmacro %}
+{% macro events_by_world(sections, limit, trim) -%}
+{% if sections | length < 2 %}
+{% set only = event_rows(sections[0].rows) if sections else "" %}
+{{ budget(only, limit, "rest in the chronicle", trim) }}
+{% else %}
+{% set bodies = [] %}
+{% for section in sections %}{% set _ = bodies.append(event_rows(section.rows) | string) %}{% endfor %}
+{% set shares = fair_shares(bodies | map("length") | list, limit) %}
+{% for section in sections %}
+— {% if section.world_name %}{{ section.world_name }} (world#{{ section.world_id }}){% else %}Cosmos and sky{% endif %} —
+{{ budget(bodies[loop.index0], [shares[loop.index0], 1] | max, "rest in the chronicle", trim) if bodies[loop.index0] else "(no events recorded this age: tell of its silence)" }}
+{% if not loop.last %}
+
+{% endif %}
+{% endfor %}
+{% endif %}
+{%- endmacro %}

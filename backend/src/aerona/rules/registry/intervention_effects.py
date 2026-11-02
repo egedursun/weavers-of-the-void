@@ -1,0 +1,41 @@
+from dataclasses import dataclass
+
+from aerona.rules.groups import RuleGroup
+from aerona.rules.model import rule
+
+
+@dataclass(frozen=True)
+class InterventionEffectsRules:
+    knowledge_spread_gain: int = rule(8, 0, 100, RuleGroup.INTERVENTION, "Spread increase of taught knowledge")
+    astronomy_disaster_severity: int = rule(50, 0, 100, RuleGroup.INTERVENTION, "Disaster severity for those who know astronomy (%)")
+    earthquake_population_loss: int = rule(10, 0, 100, RuleGroup.INTERVENTION, "Earthquake: population loss (%)")
+    earthquake_durability_loss: int = rule(25, 0, 100, RuleGroup.INTERVENTION, "Earthquake: durability loss of structures")
+    architecture_quake_severity: int = rule(50, 0, 100, RuleGroup.INTERVENTION, "Earthquake severity on structures of those who know architecture (%)")
+    flood_prosperity_loss: int = rule(12, 0, 100, RuleGroup.INTERVENTION, "Flood: prosperity loss")
+    flood_population_loss: int = rule(5, 0, 100, RuleGroup.INTERVENTION, "Flood: population loss (%)")
+    flood_fertility_after: int = rule(5, 0, 100, RuleGroup.INTERVENTION, "Flood: fertility gained afterwards")
+    plague_population_loss: int = rule(18, 0, 100, RuleGroup.INTERVENTION, "Plague: population loss (%)")
+    plague_follower_loss: int = rule(10, 0, 100, RuleGroup.INTERVENTION, "Plague: follower loss (%)")
+    medicine_plague_severity: int = rule(50, 0, 100, RuleGroup.INTERVENTION, "Plague severity for those who know medicine (%)")
+    drought_fertility_loss: int = rule(20, 0, 100, RuleGroup.INTERVENTION, "Drought: fertility loss")
+    drought_population_loss: int = rule(6, 0, 100, RuleGroup.INTERVENTION, "Drought: population loss (%)")
+    agriculture_drought_severity: int = rule(50, 0, 100, RuleGroup.INTERVENTION, "Drought severity for those who know agriculture (%)")
+    storm_defense_loss: int = rule(10, 0, 100, RuleGroup.INTERVENTION, "Storm: defense loss")
+    storm_prosperity_loss: int = rule(8, 0, 100, RuleGroup.INTERVENTION, "Storm: prosperity loss")
+    healing_growth_pct: int = rule(10, 0, 1000, RuleGroup.INTERVENTION, "Healing miracle: population and follower increase (%)")
+    healing_hp: int = rule(100, 1, 100000, RuleGroup.INTERVENTION, "Healing miracle: value a mortal's HP is raised to")
+    bounty_fertility_gain: int = rule(20, 0, 100, RuleGroup.INTERVENTION, "Bounty miracle: land fertility increase")
+    bounty_prosperity_gain: int = rule(15, 0, 100, RuleGroup.INTERVENTION, "Bounty miracle: prosperity increase for targets without fertility")
+    bounty_abundance_gain: int = rule(25, 0, 100, RuleGroup.INTERVENTION, "Bounty miracle: resource abundance increase")
+    protection_defense_gain: int = rule(20, 0, 100, RuleGroup.INTERVENTION, "Protection miracle: defense increase")
+    resurrection_cult_devotion_gain: int = rule(25, 0, 200, RuleGroup.INTERVENTION, "Devotion increase from a miracle landing on a resurrection cult")
+    disaster_event_power_divisor: int = rule(12, 1, 100, RuleGroup.INTERVENTION, "Power level of a disaster event: severity / this number")
+    disaster_event_power_min: int = rule(2, 1, 12, RuleGroup.INTERVENTION, "Minimum power level of a disaster event")
+    disaster_event_power_max: int = rule(9, 1, 12, RuleGroup.INTERVENTION, "Maximum power level of a disaster event")
+    earthquake_mortal_death_chance: int = rule(12, 0, 100, RuleGroup.INTERVENTION, "Earthquake: chance a named mortal where it strikes dies (%)")
+    flood_mortal_death_chance: int = rule(8, 0, 100, RuleGroup.INTERVENTION, "Flood: chance a named mortal dies (%)")
+    plague_mortal_death_chance: int = rule(15, 0, 100, RuleGroup.INTERVENTION, "Plague: chance a named mortal dies (%; medicine mitigates)")
+    drought_mortal_death_chance: int = rule(4, 0, 100, RuleGroup.INTERVENTION, "Drought: chance a named mortal dies (%)")
+    storm_mortal_death_chance: int = rule(5, 0, 100, RuleGroup.INTERVENTION, "Storm: chance a named mortal dies (%)")
+    disaster_injury_chance: int = rule(30, 0, 100, RuleGroup.INTERVENTION, "Chance a named mortal surviving a disaster is injured (%)")
+    disaster_injury_hp: int = rule(25, 0, 1000, RuleGroup.INTERVENTION, "HP lost by an injured mortal (scaled by severity)")

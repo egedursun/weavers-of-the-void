@@ -1,0 +1,2 @@
+{% from "fate/_events.md.j2" import event_rows %}
+{{ budget(event_rows(rows) | string, limit, "rest in the chronicle", trim_min) }}

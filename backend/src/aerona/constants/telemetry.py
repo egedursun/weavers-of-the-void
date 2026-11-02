@@ -1,0 +1,1 @@
+TELEMETRY_DATABASE_FILENAME = "telemetry.db"

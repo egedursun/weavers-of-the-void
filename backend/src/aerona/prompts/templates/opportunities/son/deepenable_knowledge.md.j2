@@ -1,0 +1,3 @@
+{% if offered(available_tools, [("advance_knowledge", "advance_knowledge")]) %}
+Knowledge of your worshippers you can deepen (with advance_knowledge; do not create a second knowledge in the same branch): {% for item in line.knowledge[:rules.opportunities.list_max] %}#{{ item.id }} {{ item.name }} (level {{ item.level }}){% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}

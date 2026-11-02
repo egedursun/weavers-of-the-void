@@ -1,0 +1,1 @@
+Your worshippers' ongoing wars (bless their side, strengthen their army, send a disaster on the enemy, or a peace miracle): {% for war in line.wars[:rules.opportunities.list_short] %}#{{ war.id }} {{ war.name }}{% if not loop.last %}; {% endif %}{% endfor %}

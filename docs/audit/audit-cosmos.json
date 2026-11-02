@@ -1,0 +1,1878 @@
+[
+  {
+    "id": "INT-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/knowledge.py:known_branches; services/player/interventions.py:known_knowledge; frontend/src/features/entity/sections/KnowledgeLawPanel.tsx",
+    "test": "backend/tests/services/player/test_interventions.py::test_teach_and_forget_knowledge",
+    "note": ""
+  },
+  {
+    "id": "INT-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/knowledge.py:KnowledgeMap.knows (branch from EntityRow.knowledge_branch)",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_medicine_softens_plague",
+    "note": ""
+  },
+  {
+    "id": "INT-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/interventions.py:intervene (teach) -> engine/phases/society_support/knowledge.py:teach; PUT /entities/{id}/knowledge",
+    "test": "backend/tests/services/player/test_interventions.py::test_teach_and_forget_knowledge",
+    "note": ""
+  },
+  {
+    "id": "INT-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/knowledge.py:LawBook.load; tags editor frontend/src/features/entity/sections/TagEditor.tsx",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_laws_shift_land_fertility",
+    "note": ""
+  },
+  {
+    "id": "INT-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/knowledge.py:54 LawBook.load (re-queried in each phase, no per-step shared resolver); no law list in frontend/src/features/cosmos/*",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_laws_shift_land_fertility",
+    "note": "Re-verified 2026-11-02: GET /api/worlds/{world_id}/laws in the world card."
+  },
+  {
+    "id": "INT-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/disasters.py:63 affected_entities (BFS, seen-set)",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_disaster_effects_protection_and_collapse",
+    "note": ""
+  },
+  {
+    "id": "INT-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/disasters.py:apply_disaster (remove_flag PROTECTED_FROM_DISASTER)",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_disaster_effects_protection_and_collapse",
+    "note": ""
+  },
+  {
+    "id": "INT-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/disasters.py:apply_disaster (scale * astronomy_disaster_severity)",
+    "test": null,
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "INT-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/disasters.py:_strike_mortal",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_mortals_can_perish",
+    "note": ""
+  },
+  {
+    "id": "INT-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/disasters.py:_quake_structure",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_disaster_effects_protection_and_collapse",
+    "note": ""
+  },
+  {
+    "id": "INT-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/disasters.py:_strike_stats (flood)",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_medicine_softens_plague / flood case line 119",
+    "note": ""
+  },
+  {
+    "id": "INT-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/disasters.py:_strike_stats (plague, medicine)",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_medicine_softens_plague",
+    "note": ""
+  },
+  {
+    "id": "INT-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/disasters.py:_strike_stats (drought, agriculture)",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_manual_disaster_validates_target (send_disaster DROUGHT); effect values not asserted",
+    "note": "Exercised but only weakly asserted."
+  },
+  {
+    "id": "INT-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/disasters.py:_strike_stats (storm)",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_manual_disaster_validates_target (send_disaster STORM)",
+    "note": "Exercised but only weakly asserted."
+  },
+  {
+    "id": "INT-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/disasters.py:DisasterImpact; services/player/interventions.py:intervene",
+    "test": "backend/tests/services/player/test_interventions.py::test_disaster_creates_event_and_bonds",
+    "note": ""
+  },
+  {
+    "id": "INT-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/interventions.py:bump_devotion / apply_abundance",
+    "test": null,
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "INT-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/interventions.py:_healing",
+    "test": null,
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "INT-018",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/interventions.py:apply_abundance",
+    "test": null,
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "INT-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/interventions.py:miracle_of_peace (also wars, decision 43)",
+    "test": "backend/tests/services/player/test_interventions.py::test_peace_miracle_ends_wars_and_hostility",
+    "note": ""
+  },
+  {
+    "id": "INT-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/interventions.py:_protection",
+    "test": "backend/tests/services/player/test_interventions.py::test_protection_miracle_shields",
+    "note": ""
+  },
+  {
+    "id": "INT-021",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/disasters.py:188 record_disaster_event (pending_name default True)",
+    "test": "backend/tests/services/player/test_interventions.py::test_disaster_creates_event_and_bonds",
+    "note": ""
+  },
+  {
+    "id": "INT-022",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/disasters.py:record_disaster_event (CAUSED bonds, INSIDE via EntityRepository.create); POST /links",
+    "test": "backend/tests/services/player/test_interventions.py::test_disaster_creates_event_and_bonds",
+    "note": ""
+  },
+  {
+    "id": "LANG-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/syllables.py:syllabify",
+    "test": "backend/tests/unit/language/test_phonology.py::test_syllabifier_splits_onset_nucleus_coda",
+    "note": ""
+  },
+  {
+    "id": "LANG-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/corpus.py:50 world_alphabet; engine/primitives/naming.py:36 Namer._world_alphabet (recomputed per Namer, not cached per world and epoch)",
+    "test": "backend/tests/unit/language/test_phonology.py::test_world_alphabet_needs_enough_samples_and_drops_rare_letters",
+    "note": "Re-verified 2026-11-02: language:signature, language:epoch_words and the alphabet in features/languages/Dictionary.tsx."
+  },
+  {
+    "id": "LANG-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/corpus.py:CorpusSources.naming_samples; engine/primitives/naming.py:63 (naming_samples never passed)",
+    "test": "backend/tests/unit/language/test_phonology.py::test_corpus_is_topped_up_in_order_until_the_minimum",
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "LANG-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/lineage.py:19 phonology_lineage (unused outside tests); engine/primitives/naming.py:46 (own lexicon only)",
+    "test": "backend/tests/unit/language/test_signature.py::test_phonology_lineage_is_limited_by_ancestry_depth",
+    "note": "Re-verified 2026-11-02: the namer reads ancestor lexicons through parent_language_id (engine/primitives/naming.py)."
+  },
+  {
+    "id": "LANG-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/corpus.py:31 assemble_corpus; engine/primitives/naming.py:63",
+    "test": "backend/tests/unit/language/test_phonology.py::test_corpus_is_topped_up_in_order_until_the_minimum",
+    "note": "Re-verified 2026-11-02: dialect samples feed the corpus (naming_samples) and engine-generated place names are skipped (engine/primitives/naming.py)."
+  },
+  {
+    "id": "LANG-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/phonology.py:38 build_phonology",
+    "test": "backend/tests/unit/language/test_phonology.py::test_phonology_counts_initial_medial_and_final_syllables",
+    "note": ""
+  },
+  {
+    "id": "LANG-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/signature.py:76 derive_signature; engine/primitives/naming.py:66 build_voice (derives each build)",
+    "test": "backend/tests/unit/language/test_signature.py::test_signature_is_deterministic_and_bounded",
+    "note": "Re-verified 2026-11-02: language:signature, language:epoch_words and the alphabet in features/languages/Dictionary.tsx."
+  },
+  {
+    "id": "LANG-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/signature.py:27 _inherit; language/lineage.py:23 resolve_signature (never called live); engine/primitives/naming.py:66",
+    "test": "backend/tests/unit/language/test_signature.py::test_child_signature_inherits_cluster_and_length_bias",
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "LANG-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/signature.py:LanguageSignature (round trip tested); db/tables/entities.py:142 LanguageProfileRow has no signature column",
+    "test": "backend/tests/unit/language/test_signature.py::test_signature_round_trips_losslessly",
+    "note": "Re-verified 2026-11-02: language:signature, language:epoch_words and the alphabet in features/languages/Dictionary.tsx."
+  },
+  {
+    "id": "LANG-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/phonology.py:77 restrict_to_consonants",
+    "test": "backend/tests/unit/language/test_phonology.py::test_signature_filter_keeps_unfiltered_when_too_few_remain",
+    "note": ""
+  },
+  {
+    "id": "LANG-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/ugliness.py:is_ugly_name",
+    "test": "backend/tests/unit/language/test_names.py::test_ugly_names_are_detected",
+    "note": ""
+  },
+  {
+    "id": "LANG-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/generator.py:84 generate_name (keyed_random per language, kind, seed, attempt)",
+    "test": "backend/tests/unit/language/test_names.py::test_generation_is_deterministic",
+    "note": ""
+  },
+  {
+    "id": "LANG-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/generator.py:_append_syllable/_compose",
+    "test": "backend/tests/unit/language/test_names.py::test_generated_names_pass_every_quality_filter",
+    "note": ""
+  },
+  {
+    "id": "LANG-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/generator.py:_compose (ending and cluster)",
+    "test": "backend/tests/unit/language/test_names.py::test_generated_names_pass_every_quality_filter",
+    "note": ""
+  },
+  {
+    "id": "LANG-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/generator.py:_compose/generate_name (smoothing, min and max letters, capitalise_first)",
+    "test": "backend/tests/unit/language/test_names.py::test_names_from_a_foreign_lexicon_contain_no_turkish_letters",
+    "note": ""
+  },
+  {
+    "id": "LANG-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/generator.py:84 generate_name (is_taken, similar_to family fallback); rename via record:edit",
+    "test": "backend/tests/unit/language/test_names.py::test_taken_names_are_never_returned, test_name_pool_similarity_and_family_cap",
+    "note": ""
+  },
+  {
+    "id": "LANG-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/naming.py:Namer.from_speaker/person; engine/primitives/queries.py:spoken_language",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_world_birth_creates_the_whole_world (misfit rename); engine/core/test_society_phases.py",
+    "note": ""
+  },
+  {
+    "id": "LANG-018",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/lexicon.py:51 cognates; api/routers/languages.py:language_tree; frontend/src/features/languages/LanguageTree.tsx",
+    "test": "backend/tests/unit/language/test_lexicon_and_lifecycle.py::test_cognates_match_equal_words_and_shared_roots",
+    "note": ""
+  },
+  {
+    "id": "LANG-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/writing.py; engine/phases/writing.py:25 writing_systems (wired in SOCIETY_ENGINE_STAGE)",
+    "test": "backend/tests/unit/language/test_lexicon_and_lifecycle.py::test_writing_system_choice_follows_weights (pure function only)",
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "LANG-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/epoch/phases/transition.py:39 add_epoch_words (select ... order_by(EntityRow.id)), wired in transition()",
+    "test": "backend/tests/unit/language/test_lexicon_and_lifecycle.py::test_epoch_words_respect_caps_and_part_of_speech (pure plan only)",
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "LANG-021",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/epoch_words.py:85 plan_epoch_words; epoch/phases/transition.py:add_epoch_words",
+    "test": "backend/tests/unit/language/test_lexicon_and_lifecycle.py::test_epoch_words_respect_caps_and_part_of_speech",
+    "note": "Re-verified 2026-11-02: language:signature, language:epoch_words and the alphabet in features/languages/Dictionary.tsx."
+  },
+  {
+    "id": "LANG-022",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/epoch/phases/transition.py:29 world_languages (first canon language of the world); language/succession.py:13 local_language unused",
+    "test": "backend/tests/unit/language/test_lexicon_and_lifecycle.py::test_local_language_walks_the_location_chain_within_depth (pure only)",
+    "note": "Re-verified 2026-11-02: local_language_of follows spoken, maker, then the community chain up the locations (engine/primitives/local_language.py)."
+  },
+  {
+    "id": "LANG-023",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/titles.py:holder_title_of; engine/lifecycle/succession.py:56",
+    "test": "backend/tests/unit/language/test_lexicon_and_lifecycle.py::test_titles_and_community_phrases",
+    "note": ""
+  },
+  {
+    "id": "LANG-024",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/titles.py:40 community_phrase and services/narrative.py:278 community_phrase (duplicate, no callers)",
+    "test": "backend/tests/unit/language/test_lexicon_and_lifecycle.py::test_titles_and_community_phrases",
+    "note": "Re-verified 2026-11-02: community_phrase is used by dialect and language-death lines (language/dialect.py, engine/phases/language_death.py)."
+  },
+  {
+    "id": "MAP-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/core/keyed_random.py (FNV-1a, Mulberry32); cartography/generator.py; world:map action",
+    "test": "backend/tests/unit/language/test_keyed_random.py::test_fnv1a_matches_reference_vectors",
+    "note": "Re-verified 2026-11-02: EditWorld accepts terrain_seed and terrain (services/player/world_edits.py)."
+  },
+  {
+    "id": "MAP-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/noise.py:ValueNoise.fractal",
+    "test": "backend/tests/unit/cartography/test_primitives.py::test_value_noise_matches_reference_vectors",
+    "note": "Re-verified 2026-11-02: EditWorld accepts terrain_seed and terrain (services/player/world_edits.py)."
+  },
+  {
+    "id": "MAP-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/terrain.py:TerrainField; world_edits.py:59 (type resets terrain)",
+    "test": "backend/tests/unit/cartography/test_primitives.py::test_terrain_defaults_come_from_the_rules_and_overrides_win",
+    "note": ""
+  },
+  {
+    "id": "MAP-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/terrain.py (sea level quantile, normalise)",
+    "test": "backend/tests/unit/cartography/test_primitives.py::test_terrain_defaults_come_from_the_rules_and_overrides_win",
+    "note": ""
+  },
+  {
+    "id": "MAP-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/mesh.py:map_window",
+    "test": "backend/tests/unit/cartography/test_world_map.py::test_empty_world_frames_the_centre",
+    "note": ""
+  },
+  {
+    "id": "MAP-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/mesh.py:build_mesh",
+    "test": "backend/tests/unit/cartography/test_world_map.py::test_same_seed_gives_identical_maps",
+    "note": ""
+  },
+  {
+    "id": "MAP-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/mesh.py:build_mesh; cartography/adjacency.py",
+    "test": "backend/tests/unit/cartography/test_routing.py::test_neighbours_match_the_generator_mesh",
+    "note": ""
+  },
+  {
+    "id": "MAP-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/generator.py:_context",
+    "test": "backend/tests/unit/cartography/test_world_map.py::test_every_world_type_generates_a_consistent_map",
+    "note": ""
+  },
+  {
+    "id": "MAP-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/hierarchy.py:build_hierarchy",
+    "test": "backend/tests/unit/cartography/test_world_map.py::test_third_level_regions_receive_cells",
+    "note": ""
+  },
+  {
+    "id": "MAP-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/flood.py:water_components",
+    "test": "backend/tests/unit/cartography/test_flood.py::test_water_components_measure_connected_water",
+    "note": ""
+  },
+  {
+    "id": "MAP-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/territories.py:grow_territories; cartography/seeding.py; PUT /entities/{id}/map-position (frontend/src/features/map/api.ts)",
+    "test": "backend/tests/unit/cartography/test_world_map.py::test_water_region_on_land_is_moved_to_water",
+    "note": ""
+  },
+  {
+    "id": "MAP-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/seeding.py",
+    "test": "backend/tests/unit/cartography/test_world_map.py::test_regions_with_the_same_position_get_distinct_seeds",
+    "note": ""
+  },
+  {
+    "id": "MAP-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/flood.py nearest fill; cartography/territories.py",
+    "test": "backend/tests/unit/cartography/test_flood.py::test_nearest_fill_labels_every_cell_and_keeps_existing_labels",
+    "note": ""
+  },
+  {
+    "id": "MAP-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/territories.py (sub-regions inside parent)",
+    "test": "backend/tests/unit/cartography/test_world_map.py::test_third_level_regions_receive_cells",
+    "note": ""
+  },
+  {
+    "id": "MAP-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/records.py:build_records",
+    "test": "backend/tests/unit/cartography/test_world_map.py::test_world_map_round_trips_through_json",
+    "note": ""
+  },
+  {
+    "id": "MAP-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/tables/entities.py:110 is_water (column, consumed by cartography/territories.py:42 and engine/cosmos/maps.py:56); no writer",
+    "test": "backend/tests/unit/cartography/test_world_map.py::test_water_region_on_land_is_moved_to_water (pure input)",
+    "note": "Re-verified 2026-11-02: is_water is written by the son creation tool option 'water' and by entity edits (tools/son/creation.py, services/player/canon.py)."
+  },
+  {
+    "id": "MAP-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/placement.py:MarkerPlacer",
+    "test": "backend/tests/unit/cartography/test_world_map.py::test_marker_positions_are_kept_inside_and_relocated_outside",
+    "note": ""
+  },
+  {
+    "id": "MAP-018",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/placement.py (candidates)",
+    "test": "backend/tests/unit/cartography/test_world_map.py::test_markers_land_inside_their_parent_region",
+    "note": ""
+  },
+  {
+    "id": "MAP-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/placement.py; cartography/model.py:placement_preference",
+    "test": "backend/tests/unit/cartography/test_world_map.py::test_markers_land_inside_their_parent_region",
+    "note": ""
+  },
+  {
+    "id": "MAP-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/layers.py:known_cells/known_extent",
+    "test": "backend/tests/unit/cartography/test_world_map.py::test_known_area_and_borders",
+    "note": "Re-verified 2026-11-02: fog overlay toggle in the map toolbar."
+  },
+  {
+    "id": "MAP-021",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/records.py; engine/primitives/distance.py:RegionAtlas; GET /worlds/{id}/map",
+    "test": "backend/tests/engine/cosmos/test_maps.py::test_worlds_get_a_persisted_map_with_region_adjacency",
+    "note": ""
+  },
+  {
+    "id": "MAP-022",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/biomes.py:classify_biomes; cartography/world_types.py",
+    "test": "backend/tests/unit/cartography/test_primitives.py::test_biome_classifier_follows_thresholds",
+    "note": ""
+  },
+  {
+    "id": "MAP-023",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/catalog/worlds.py:WORLD_TYPES; services/player/world_edits.py:59; frontend WorldEditForm",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_world_birth_forced_type_mechanics_and_new_star",
+    "note": ""
+  },
+  {
+    "id": "MAP-024",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/palette.py:palette_for; frontend/src/features/cosmos/WorldCard.tsx PaletteStrip",
+    "test": "backend/tests/unit/cartography/test_primitives.py::test_every_world_type_has_a_profile_and_a_palette",
+    "note": ""
+  },
+  {
+    "id": "MAP-025",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/world_types.py (18 profiles incl. the seven designed types)",
+    "test": "backend/tests/unit/cartography/test_world_map.py::test_every_world_type_generates_a_consistent_map",
+    "note": ""
+  },
+  {
+    "id": "MAP-026",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/maps.py:74 world_entities (status == CANON only)",
+    "test": null,
+    "note": "Re-verified 2026-11-02: maps include dead and fulfilled records and the cache is keyed by a full map signature (engine/cosmos/maps.py)."
+  },
+  {
+    "id": "MAP-027",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/maps.py:118 map_is_stale (stored region ids vs canon region ids); api/routers/map.py:50 geometry",
+    "test": "backend/tests/engine/cosmos/test_maps.py::test_new_regions_redraw_the_map_on_the_next_tick",
+    "note": "Re-verified 2026-11-02: maps include dead and fulfilled records and the cache is keyed by a full map signature (engine/cosmos/maps.py)."
+  },
+  {
+    "id": "MAP-028",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/maps.py:store_world_map/_apply_positions",
+    "test": "backend/tests/unit/cartography/test_world_map.py::test_unpositioned_regions_receive_new_positions",
+    "note": ""
+  },
+  {
+    "id": "MAP-029",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/map_store.py:stored_regions; engine/primitives/distance.py:RegionAtlas.load",
+    "test": "backend/tests/engine/cosmos/test_maps.py::test_worlds_get_a_persisted_map_with_region_adjacency",
+    "note": ""
+  },
+  {
+    "id": "MAP-030",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/maps.py:118; services/player/world_edits.py:159 and assignments.py:340 only bump Cosmos.map_version (never read)",
+    "test": null,
+    "note": "Re-verified 2026-11-02: the map cache is keyed by a signature of the full map request including world type, terrain and positions, so world edits redraw it (engine/cosmos/maps.py)."
+  },
+  {
+    "id": "MAP-031",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/context/geography.py",
+    "test": null,
+    "note": "Re-verified 2026-11-02: GET /api/prompt-context/{kind}, /catalogue and /son-prompt/{son_id} with features/prompts."
+  },
+  {
+    "id": "MAP-032",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/cartography/roads.py:trace_road; api/routers/map.py routed_roads; frontend/src/features/map/MapCanvas.tsx",
+    "test": "backend/tests/unit/cartography/test_world_map.py::test_roads_follow_neighbouring_cells; test_routing.py",
+    "note": ""
+  },
+  {
+    "id": "COS-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/worlds.py:cosmos_overview; GET /cosmos; frontend/src/features/cosmos/CosmosView.tsx",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_overview_counts",
+    "note": ""
+  },
+  {
+    "id": "COS-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/worlds.py:201 quest_availability; region_targets/community_targets; frontend LegendaryQuestForm.tsx",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_overview_counts",
+    "note": "Availability flags have no dedicated assertion."
+  },
+  {
+    "id": "COS-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/world_birth.py:birth_world; create_world action; frontend CreateWorldForm.tsx",
+    "test": "backend/tests/agents/test_roles.py (birth_world)",
+    "note": ""
+  },
+  {
+    "id": "COS-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/birth.py:process_world_birth (forced_type or output.type or ORDINARY)",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_world_birth_forced_type_mechanics_and_new_star",
+    "note": ""
+  },
+  {
+    "id": "COS-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/birth.py:_requested_placement/_placement",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_world_birth_honours_the_requested_star_type",
+    "note": ""
+  },
+  {
+    "id": "COS-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/birth.py:_new_star; engine/cosmos/stars.py:create_star",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_narrative_star_and_phoneme_fit",
+    "note": ""
+  },
+  {
+    "id": "COS-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/birth.py:_insert_world/_orbit",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_world_birth_creates_the_whole_world",
+    "note": ""
+  },
+  {
+    "id": "COS-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/birth.py:_regions",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_world_birth_needs_regions_and_a_name",
+    "note": ""
+  },
+  {
+    "id": "COS-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/birth.py:_sky_and_resource",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_world_birth_creates_the_whole_world",
+    "note": ""
+  },
+  {
+    "id": "COS-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/birth.py:_sky_and_resource (set_mechanics, max tags)",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_world_birth_creates_the_whole_world",
+    "note": ""
+  },
+  {
+    "id": "COS-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/birth.py:314 _cosmic_resource (defined at first birth that supplies one); agents/genesis.py:109 write_genesis defines no cosmic resource; frontend CosmicResourceForm.tsx",
+    "test": "backend/tests/engine/cosmos/test_actions.py::test_manual_services (define_cosmic_resource)",
+    "note": "Re-verified 2026-11-02: genesis output schema defines the cosmic travel resource."
+  },
+  {
+    "id": "COS-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/birth.py:_language",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_world_birth_creates_the_whole_world",
+    "note": ""
+  },
+  {
+    "id": "COS-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/birth.py:fits/_rename_misfits",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_narrative_star_and_phoneme_fit",
+    "note": ""
+  },
+  {
+    "id": "COS-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/birth.py:_natives",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_world_birth_creates_the_whole_world",
+    "note": ""
+  },
+  {
+    "id": "COS-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/birth.py:_old_god; engine/cosmos/foreign_gods.py:add_foreign_god",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_world_birth_creates_the_whole_world",
+    "note": ""
+  },
+  {
+    "id": "COS-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/birth.py:_son_claims; connect_world(previous)",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_world_birth_creates_the_whole_world",
+    "note": ""
+  },
+  {
+    "id": "COS-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/birth.py:process_world_birth (ChronicleKind.WORLD_BIRTH)",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_world_birth_creates_the_whole_world",
+    "note": ""
+  },
+  {
+    "id": "COS-018",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/worlds.py:assign_mirror_twin; world:edit mirror_twin_id",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_mirror_twin_prefers_same_star",
+    "note": ""
+  },
+  {
+    "id": "COS-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/worlds.py:pair_mirrors; engine/startup.py:18",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_mirror_twin_prefers_same_star",
+    "note": "pair_mirrors itself has no direct test."
+  },
+  {
+    "id": "COS-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/physics.py:world_physics; engine/lifecycle/aging.py:82; engine/phases/population.py:78; engine/phases/mortals.py:69",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_world_physics_includes_world_type",
+    "note": ""
+  },
+  {
+    "id": "COS-021",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/physics.py:capacity_pct; engine/primitives/capacity.py:110",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_world_physics_includes_world_type",
+    "note": ""
+  },
+  {
+    "id": "COS-022",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/physics.py:gravity_war; engine/primitives/strength.py:168",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_world_physics_includes_world_type",
+    "note": ""
+  },
+  {
+    "id": "TRV-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:sky_calendar; frontend SkyCalendarChip.tsx; cosmic:sky_event alignment",
+    "test": "backend/tests/engine/cosmos/test_routes.py::test_calendar_aligns_on_the_cycle",
+    "note": ""
+  },
+  {
+    "id": "TRV-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:route_status/_closed_status",
+    "test": "backend/tests/engine/cosmos/test_routes.py::test_route_status_priority",
+    "note": ""
+  },
+  {
+    "id": "TRV-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:open_route; POST /routes",
+    "test": "backend/tests/engine/cosmos/test_routes.py::test_open_route_reuses_and_bounds_danger",
+    "note": ""
+  },
+  {
+    "id": "TRV-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:route_views/route_lines; GET /cosmos; frontend RouteList.tsx",
+    "test": "backend/tests/engine/cosmos/test_routes.py::test_route_status_priority",
+    "note": ""
+  },
+  {
+    "id": "TRV-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:_knowledge_problem",
+    "test": "backend/tests/engine/cosmos/test_routes.py::test_trade_with_controller_waives_knowledge",
+    "note": ""
+  },
+  {
+    "id": "TRV-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:_vehicle_problem",
+    "test": "backend/tests/engine/cosmos/test_routes.py::test_can_use_route_requirements",
+    "note": ""
+  },
+  {
+    "id": "TRV-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:_passage_problem",
+    "test": "backend/tests/engine/cosmos/test_routes.py::test_can_use_route_requirements",
+    "note": ""
+  },
+  {
+    "id": "TRV-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:can_use_route (status.is_open); POST /routes/{id}/restore",
+    "test": "backend/tests/engine/cosmos/test_routes.py::test_can_use_route_requirements",
+    "note": ""
+  },
+  {
+    "id": "TRV-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:start_journey; POST /entities/{id}/expedition; frontend SendVoyageForm.tsx",
+    "test": "backend/tests/engine/cosmos/test_routes.py::test_start_journey_moves_people_and_charges_the_gate",
+    "note": ""
+  },
+  {
+    "id": "TRV-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:start_journey/_gate_sacrifice",
+    "test": "backend/tests/engine/cosmos/test_routes.py::test_start_journey_moves_people_and_charges_the_gate",
+    "note": ""
+  },
+  {
+    "id": "TRV-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:advance_journey; engine/cosmos/routes.py:add_event (JOURNEY_EVENT_LIMIT); POST /voyages/{id}/recall; frontend VoyageCard.tsx",
+    "test": "backend/tests/engine/cosmos/test_routes.py (recall_journey)",
+    "note": "Missing-traveller branch has no test."
+  },
+  {
+    "id": "TRV-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:_closed_route",
+    "test": "backend/tests/engine/cosmos/test_routes.py::test_sever_and_stitch (waiting journeys)",
+    "note": ""
+  },
+  {
+    "id": "TRV-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:advance_journey/arrive; engine/cosmos/discovery.py",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_colony_journey_arrives_and_meets_natives",
+    "note": ""
+  },
+  {
+    "id": "TRV-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:journey_views; GET /cosmos; frontend VoyagesPanel.tsx",
+    "test": "backend/tests/api/test_cosmos.py",
+    "note": ""
+  },
+  {
+    "id": "TRV-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:connect_world; engine/phases/travel.py:hidden_routes; startup",
+    "test": "backend/tests/engine/cosmos/test_routes.py::test_connect_world_stitches_isolated_worlds",
+    "note": ""
+  },
+  {
+    "id": "TRV-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/discovery.py:mark_world_discovered; world:edit discovery",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_hidden_routes_reveal_with_certain_chance",
+    "note": ""
+  },
+  {
+    "id": "TRV-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:hidden_routes; POST /routes/{id}/reveal; frontend RouteActions.tsx",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_hidden_routes_reveal_with_certain_chance",
+    "note": ""
+  },
+  {
+    "id": "TRV-018",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:709 travel_phase (order identical to legacy); 770 run_travel_phase has no caller outside tests",
+    "test": "backend/tests/engine/cosmos/test_simulation.py::test_manual_phase_runs",
+    "note": "Re-verified 2026-11-02: engine:run_phase action and GET /api/engine/phases, surfaced in features/engine."
+  },
+  {
+    "id": "TRV-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:route_knowledge/teach_route; action route:teach (frontend RouteActions.tsx)",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_route_knowledge_is_learned",
+    "note": ""
+  },
+  {
+    "id": "TRV-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:expedition_pressure/spontaneous_expeditions; POST /entities/{id}/expedition",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_spontaneous_expedition_needs_a_civilization",
+    "note": ""
+  },
+  {
+    "id": "TRV-021",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:weighted_route",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_spontaneous_expedition_needs_a_civilization",
+    "note": "Exercised only through the single-route case (weighted_route returns early for one route)."
+  },
+  {
+    "id": "TRV-022",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:choose_intent; expedition action intent field",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_spontaneous_expedition_needs_a_civilization",
+    "note": "Intent roulette not asserted."
+  },
+  {
+    "id": "TRV-023",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:bridge_collapse",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_bridge_collapses_when_builder_sleeps",
+    "note": ""
+  },
+  {
+    "id": "TRV-024",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:road_risk",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py (journeys run in colony tests; risk value not asserted)",
+    "note": "road_risk is faithful to legacy but has no direct assertion."
+  },
+  {
+    "id": "TRV-025",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:405 `journey.epochs_left += 1` for LOST_WAY",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Legacy kayip event that does not swallow the journey only costs people; new code also lengthens the journey by one epoch. Not in decisions.md. Event kind selection and method events are otherwise faithful but untested."
+  },
+  {
+    "id": "TRV-026",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:road_event/_ghost_ship",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Swallowed-in-void branch, vehicle death and ghost-ship legend are implemented but never exercised by a test."
+  },
+  {
+    "id": "TRV-027",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:road_event (loss share, armour wear)",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py (journeys run in colony tests)",
+    "note": "Loss and armour wear not asserted."
+  },
+  {
+    "id": "TRV-028",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:kinship",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_colony_journey_arrives_and_meets_natives",
+    "note": ""
+  },
+  {
+    "id": "TRV-029",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:landing_region",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_colony_journey_arrives_and_meets_natives",
+    "note": ""
+  },
+  {
+    "id": "TRV-030",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:arrive (stowaway); engine/cosmos/fauna.py:stowaway",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_stowaway_crosses_worlds (stowaway only)",
+    "note": "Behaviour present; dedicated test missing. The arrival hook is never exercised: travel tests set stowaway_chance=0."
+  },
+  {
+    "id": "TRV-031",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:_found_colony",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_harsh_sky_kills_unprepared_colonies",
+    "note": ""
+  },
+  {
+    "id": "TRV-032",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:_found_colony/_bind_colony",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_colony_journey_arrives_and_meets_natives",
+    "note": ""
+  },
+  {
+    "id": "TRV-033",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:_explore_arrival",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Exploration/pilgrimage charisma gain and original-resource discovery are untested."
+  },
+  {
+    "id": "TRV-034",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:_explore_arrival -> exploration.find_land",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Exploration-land chance on arrival is untested."
+  },
+  {
+    "id": "TRV-035",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:arrive (TRADE prosperity)",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Trade-arrival prosperity gain is untested."
+  },
+  {
+    "id": "TRV-036",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:_arrival_note; engine/phases/sky.py:time_difference",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_two_timed_hero_and_time_difference",
+    "note": ""
+  },
+  {
+    "id": "TRV-037",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:first_contact",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_colony_journey_arrives_and_meets_natives",
+    "note": ""
+  },
+  {
+    "id": "TRV-038",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:_contact (invasion branch, declare_war)",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Conquest and colony-as-invaders war declaration is untested."
+  },
+  {
+    "id": "TRV-039",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:_contact (trade, alliance); engine/phases/culture_exchange.py:187 cultural_contact(first_contact=True) is never called from travel",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_colony_journey_arrives_and_meets_natives (trade only)",
+    "note": "Re-verified 2026-11-02: first contact runs cultural_contact both ways (engine/phases/travel.py)."
+  },
+  {
+    "id": "TRV-040",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/travel.py:_contact (uneasy branch)",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Uneasy first contact relation loss is untested."
+  },
+  {
+    "id": "EXP-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:land_measure; GET /discovery-summary; frontend HorizonSection.tsx",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_land_measure_counts_crowding",
+    "note": ""
+  },
+  {
+    "id": "EXP-002",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:exploration_pressure",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Faithful to kesifBaskisi but no test asserts the pressure or reasons; only executed incidentally by the multi-epoch simulation."
+  },
+  {
+    "id": "EXP-003",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:exploration_pressure (is_explorer, knowledge)",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Same gap as EXP-002."
+  },
+  {
+    "id": "EXP-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:exploration_sentence",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_exploration_sentence_never_shows_measures",
+    "note": ""
+  },
+  {
+    "id": "EXP-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:find_land; explore action (frontend entity registry)",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_find_land_and_pioneers",
+    "note": ""
+  },
+  {
+    "id": "EXP-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:land_stats",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_find_land_and_pioneers",
+    "note": ""
+  },
+  {
+    "id": "EXP-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:position_region; cartography/frontier.py; PUT /entities/{id}/map-position",
+    "test": "backend/tests/unit/cartography/test_frontier.py",
+    "note": ""
+  },
+  {
+    "id": "EXP-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:place_region",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_find_land_and_pioneers",
+    "note": ""
+  },
+  {
+    "id": "EXP-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:_discovery_bonds",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_find_land_and_pioneers",
+    "note": ""
+  },
+  {
+    "id": "EXP-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:_maybe_pioneers",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_find_land_and_pioneers",
+    "note": ""
+  },
+  {
+    "id": "EXP-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:pioneers",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_find_land_and_pioneers",
+    "note": ""
+  },
+  {
+    "id": "EXP-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:route_method; seek_route action",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_route_search_finds_a_route_or_senses_a_world",
+    "note": ""
+  },
+  {
+    "id": "EXP-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:search_route",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_route_search_finds_a_route_or_senses_a_world",
+    "note": ""
+  },
+  {
+    "id": "EXP-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:_gate_vehicle",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_route_search_finds_a_route_or_senses_a_world",
+    "note": "Gate vehicle branch not asserted."
+  },
+  {
+    "id": "EXP-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:can_birth_world/search_route",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_route_search_finds_a_route_or_senses_a_world",
+    "note": ""
+  },
+  {
+    "id": "EXP-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:record_intuition (HorizonIntuitionRow + DeferredStepRow)",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_route_search_finds_a_route_or_senses_a_world",
+    "note": ""
+  },
+  {
+    "id": "EXP-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:settle_intuition; agents/world_birth.py:200 process_intuitions",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_route_search_finds_a_route_or_senses_a_world (settle only)",
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "EXP-018",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/world_birth.py:200 process_intuitions; epoch/phases/deferred.py:deferred_worlds (skips without LLM)",
+    "test": null,
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "EXP-019",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:recover_intuitions; engine/startup.py:26",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Wired into startup recovery but untested."
+  },
+  {
+    "id": "EXP-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:679 exploration_phase (order matches); run_exploration_phase unreachable from API",
+    "test": "backend/tests/engine/cosmos/test_simulation.py::test_manual_phase_runs",
+    "note": "Re-verified 2026-11-02: engine:run_phase action and GET /api/engine/phases, surfaced in features/engine."
+  },
+  {
+    "id": "EXP-021",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:planet_exploration; discovery_round action (frontend HorizonSection.tsx)",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Candidate selection, one expedition per explorer and cap are not asserted by any test (exploration_round, planet_exploration untested)."
+  },
+  {
+    "id": "EXP-022",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:cosmic_exploration",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Shuffled capped route search is untested."
+  },
+  {
+    "id": "EXP-023",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:foreign_god_land; action foreign_god:raise_land (frontend ForeignGodPowerPanel.tsx)",
+    "test": "backend/tests/services/player/test_engine_controls.py::test_pantheon_and_divine_controls",
+    "note": ""
+  },
+  {
+    "id": "EXP-024",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/exploration.py:exploration_summary; GET /discovery-summary",
+    "test": "backend/tests/engine/cosmos/test_world_life.py::test_exploration_summary",
+    "note": ""
+  },
+  {
+    "id": "SKY-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/stars.py:choose_epoch_stars/set_epoch_star; world:epoch_star (frontend CosmicOrdersForm.tsx)",
+    "test": "backend/tests/engine/cosmos/test_stars_and_gods.py::test_epoch_star_is_a_sky_body_of_the_world",
+    "note": ""
+  },
+  {
+    "id": "SKY-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:open_alignment",
+    "test": "backend/tests/engine/cosmos/test_routes.py::test_alignment_reveals_and_unseals",
+    "note": ""
+  },
+  {
+    "id": "SKY-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:open_alignment",
+    "test": "backend/tests/engine/cosmos/test_routes.py::test_alignment_reveals_and_unseals",
+    "note": ""
+  },
+  {
+    "id": "SKY-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:367 stars_align -> open_alignment(danger)",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_horror_events",
+    "note": ""
+  },
+  {
+    "id": "SKY-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:open_alignment (alignment_until)",
+    "test": "backend/tests/engine/cosmos/test_routes.py::test_calendar_aligns_on_the_cycle",
+    "note": ""
+  },
+  {
+    "id": "SKY-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sky.py:sky_event/_resolve_world; POST /cosmic/sky-event (frontend SkyEventForm.tsx)",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_forgotten_world_refuses_sky_events",
+    "note": ""
+  },
+  {
+    "id": "SKY-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sky.py:_eclipse",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_eclipse_whispers_a_prophecy",
+    "note": ""
+  },
+  {
+    "id": "SKY-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sky.py:eclipse_seers",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_eclipse_whispers_a_prophecy",
+    "note": ""
+  },
+  {
+    "id": "SKY-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sky.py:_comet",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_comet_can_end_a_war",
+    "note": ""
+  },
+  {
+    "id": "SKY-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sky.py:_alignment",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_creator_alignment_needs_something_to_open",
+    "note": ""
+  },
+  {
+    "id": "SKY-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/stars.py:supernova",
+    "test": "backend/tests/engine/cosmos/test_stars_and_gods.py::test_supernova_burns_worlds_and_advances_doom",
+    "note": ""
+  },
+  {
+    "id": "SKY-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/stars.py:black_sun",
+    "test": "backend/tests/engine/cosmos/test_stars_and_gods.py::test_black_sun_feeds_outer_cults",
+    "note": ""
+  },
+  {
+    "id": "SKY-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sky.py:_void_storm -> sever_route",
+    "test": "backend/tests/services/player/test_cosmic.py",
+    "note": "Sky-ordered storm path only indirectly tested."
+  },
+  {
+    "id": "SKY-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sky.py:spontaneous_bag/spontaneous_sky_event",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_spontaneous_bag_order",
+    "note": ""
+  },
+  {
+    "id": "SKY-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sky.py:spontaneous_sky_event (COLLAPSIBLE_STAR_TYPES, star_event_chance)",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_spontaneous_bag_order",
+    "note": "Star restriction not asserted."
+  },
+  {
+    "id": "SKY-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sky.py:time_echo/_time_traveller; sky:time_echo action",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_time_echo_brings_a_traveller",
+    "note": ""
+  },
+  {
+    "id": "SKY-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sky.py:_echo_prophecy",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_time_echo_brings_a_traveller",
+    "note": ""
+  },
+  {
+    "id": "SKY-018",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sky.py:two_timed_hero",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_two_timed_hero_and_time_difference",
+    "note": ""
+  },
+  {
+    "id": "SKY-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sky.py:time_difference (called from travel._arrival_note)",
+    "test": "backend/tests/engine/cosmos/test_sky_and_travel.py::test_two_timed_hero_and_time_difference",
+    "note": ""
+  },
+  {
+    "id": "BEY-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:soul_bind/_golem; POST /cosmic/soul-bind",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_soul_binding_makes_a_golem",
+    "note": ""
+  },
+  {
+    "id": "BEY-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:_bind_object",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_soul_binding_makes_a_golem",
+    "note": "Item/vehicle branch not asserted."
+  },
+  {
+    "id": "BEY-003",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:188 soul_buildup (any world with descended souls, not only realms of the dead)",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Untested, and legacy applied it only to worlds of type dead (tur='olu')."
+  },
+  {
+    "id": "BEY-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:119 realm_regions / 164 soul_descent",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_souls_descend_to_their_own_world",
+    "note": "Re-verified 2026-11-02: soul descent reaches any dead-realm world with a per-realm cap (engine/phases/afterlife.py soul_descent)."
+  },
+  {
+    "id": "BEY-005",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:harvest_soul/soul_harvest (manual: soul:harvest)",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Cult soul harvest has no test (only the player-control name list)."
+  },
+  {
+    "id": "BEY-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:planet_acts (earthquake via apply_disaster)",
+    "test": "backend/tests/engine/cosmos/test_world_life.py::test_living_planet_acts",
+    "note": ""
+  },
+  {
+    "id": "BEY-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:planet_acts (worshipper feed)",
+    "test": "backend/tests/engine/cosmos/test_world_life.py::test_living_planet_acts",
+    "note": ""
+  },
+  {
+    "id": "BEY-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:_toggle_skin",
+    "test": "backend/tests/engine/cosmos/test_world_life.py::test_living_planet_acts",
+    "note": ""
+  },
+  {
+    "id": "BEY-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:290 planet_worship called every epoch outside the act-chance roll",
+    "test": "backend/tests/engine/cosmos/test_world_life.py::test_living_planet_acts",
+    "note": "Re-verified 2026-11-02: planet worship rolls only after the planet's act chance (engine/phases/afterlife.py planetary_consciousness)."
+  },
+  {
+    "id": "BEY-010",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:293 raise_archive/346 cosmic_archive (manual: archive:raise)",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Archive appearance has no test."
+  },
+  {
+    "id": "BEY-011",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:325 read_archive (manual: archive:read)",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Archive reading and per-epoch cap have no test."
+  },
+  {
+    "id": "BEY-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:archive_burned/_burn_holdings",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_archive_burns_only_what_it_held",
+    "note": ""
+  },
+  {
+    "id": "BEY-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:cosmic_plague/infect",
+    "test": "backend/tests/engine/cosmos/test_world_life.py::test_plague_and_void_storm",
+    "note": ""
+  },
+  {
+    "id": "BEY-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:void_storm; POST /routes/{id}/sever",
+    "test": "backend/tests/engine/cosmos/test_world_life.py::test_plague_and_void_storm",
+    "note": ""
+  },
+  {
+    "id": "BEY-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:sever_route",
+    "test": "backend/tests/engine/cosmos/test_routes.py::test_sever_and_stitch",
+    "note": ""
+  },
+  {
+    "id": "BEY-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:sever_route (journeys swallowed or waiting)",
+    "test": "backend/tests/engine/cosmos/test_routes.py::test_sever_and_stitch",
+    "note": ""
+  },
+  {
+    "id": "BEY-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:mirror_worlds/mirror_birth",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_mirror_world_births_inverses",
+    "note": ""
+  },
+  {
+    "id": "BEY-018",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/quests.py:_completed/_invalid_reason; POST /cosmic/rekindle-star",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_legendary_quest_lifecycle",
+    "note": ""
+  },
+  {
+    "id": "BEY-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/quests.py:_completed (SEALED_GATE)",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_legendary_quest_lifecycle",
+    "note": ""
+  },
+  {
+    "id": "BEY-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/quests.py:_completed (ARCHIVE, prior_journey_ids)",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_legendary_quest_lifecycle",
+    "note": ""
+  },
+  {
+    "id": "BEY-021",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/quests.py:_completed (expel outer)",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_legendary_quest_lifecycle",
+    "note": ""
+  },
+  {
+    "id": "BEY-022",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/quests.py:open_quest; POST /cosmic/legendary-quest (frontend LegendaryQuestForm.tsx)",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_legendary_quest_lifecycle",
+    "note": ""
+  },
+  {
+    "id": "BEY-023",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/quests.py:207 legendary_quests",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_legendary_quest_lifecycle",
+    "note": ""
+  },
+  {
+    "id": "BEY-024",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/quests.py:settle_quest (INVALIDATED); quest:abandon",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_legendary_quest_lifecycle",
+    "note": ""
+  },
+  {
+    "id": "BEY-025",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/quests.py:_reward",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_legendary_quest_lifecycle",
+    "note": ""
+  },
+  {
+    "id": "BEY-026",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/quests.py:_punish",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_legendary_quest_lifecycle",
+    "note": ""
+  },
+  {
+    "id": "BEY-027",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:cosmic_court/pardon",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_cosmic_court_and_immortality",
+    "note": ""
+  },
+  {
+    "id": "BEY-028",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:pursuit_of_immortality; mortal:immortal",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_cosmic_court_and_immortality",
+    "note": ""
+  },
+  {
+    "id": "BEY-029",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/afterlife.py:564 beyond_phase (order matches; back-fill replaced by end_epoch at death); run_beyond_phase unreachable from API",
+    "test": "backend/tests/engine/cosmos/test_simulation.py::test_manual_phase_runs",
+    "note": "Re-verified 2026-11-02: engine:run_phase action and GET /api/engine/phases, surfaced in features/engine."
+  },
+  {
+    "id": "FGD-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/foreign_gods.py:seeded_stats/add_foreign_god; foreign_god:edit",
+    "test": "backend/tests/engine/cosmos/test_stars_and_gods.py::test_seeded_stats_are_stable",
+    "note": ""
+  },
+  {
+    "id": "FGD-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/foreign_gods.py:stat_effect",
+    "test": "backend/tests/engine/cosmos/test_stars_and_gods.py::test_war_power_and_stat_effect",
+    "note": ""
+  },
+  {
+    "id": "FGD-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/foreign_gods.py:war_power",
+    "test": "backend/tests/engine/cosmos/test_stars_and_gods.py::test_war_power_and_stat_effect",
+    "note": ""
+  },
+  {
+    "id": "FGD-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/foreign_gods.py:power_amount; catalog/foreign_gods.py",
+    "test": "backend/tests/engine/cosmos/test_stars_and_gods.py::test_god_war_spares_the_deathless_and_wounds_losers",
+    "note": ""
+  },
+  {
+    "id": "FGD-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/prompts/data/foreign_gods.py:foreign_stat_effect; GET /rules",
+    "test": "backend/tests/prompts/test_data.py",
+    "note": ""
+  },
+  {
+    "id": "FGD-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/deepener.py:deepen_foreign_god; POST /foreign-gods/{id}/deepen",
+    "test": "backend/tests/agents/test_roles.py (deepen_foreign_god)",
+    "note": ""
+  },
+  {
+    "id": "FGD-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/startup_completion.py:67 god_needs_depth",
+    "test": "backend/tests/services/app/test_jobs.py",
+    "note": "UI is only a job label (frontend/src/constants/jobs.ts)."
+  },
+  {
+    "id": "FGD-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/foreign_gods.py:88 clean_stats (no caller)",
+    "test": "backend/tests/engine/cosmos/test_stars_and_gods.py::test_sanitizers",
+    "note": "Re-verified 2026-11-02: clean_stats is the shared sanitizer used by services/player/foreign_gods.py."
+  },
+  {
+    "id": "FGD-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/foreign_gods.py:unwrap_text; agents/deepener.py",
+    "test": "backend/tests/engine/cosmos/test_stars_and_gods.py::test_sanitizers",
+    "note": ""
+  },
+  {
+    "id": "HOR-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/leak.py:leak_delta (plus world-type source, decision 45)",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_leak_rises_with_forbidden_knowledge",
+    "note": ""
+  },
+  {
+    "id": "HOR-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/leak.py:leak_delta (repair terms)",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_leak_rises_with_forbidden_knowledge",
+    "note": "Repair side not asserted."
+  },
+  {
+    "id": "HOR-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/leak.py:leak_delta (young factor)",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_young_world_leak_cap",
+    "note": "Young growth factor itself not asserted."
+  },
+  {
+    "id": "HOR-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/leak.py:record_breakdown; engine/snapshot.py:95; GET /epochs/{n}/breakdown",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_leak_rises_with_forbidden_knowledge",
+    "note": ""
+  },
+  {
+    "id": "HOR-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/leak.py:leak_cap/apply_leak",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_young_world_leak_cap",
+    "note": ""
+  },
+  {
+    "id": "HOR-006",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:99 update_leaks (WARNINGS)",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Threshold-crossing warning notes have no test."
+  },
+  {
+    "id": "HOR-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:reopen_severed",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_routes_reopen_and_reseal",
+    "note": ""
+  },
+  {
+    "id": "HOR-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:reseal_temporary",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_routes_reopen_and_reseal",
+    "note": ""
+  },
+  {
+    "id": "HOR-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:sanity_drift/update_sanity",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_outer_being_arrives_and_gnaws",
+    "note": ""
+  },
+  {
+    "id": "HOR-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:update_sanity (clouding note)",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_madness_births_whisperers",
+    "note": ""
+  },
+  {
+    "id": "HOR-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:birth_whisperers; horror:cult / horror:suppress_cult",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_madness_births_whisperers",
+    "note": ""
+  },
+  {
+    "id": "HOR-012",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:196 _madness (population loss branch)",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Madness epidemic branch is untested (whisperers chance forced to 100 in the only madness test)."
+  },
+  {
+    "id": "HOR-013",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:228 feed_madness_sons",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Essence and existence feed for madness-domain sons has no test."
+  },
+  {
+    "id": "HOR-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:summon_outer_being/outer_arrivals; horror:outer_being; cosmic:cleanse_leak",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_outer_being_arrives_and_gnaws",
+    "note": ""
+  },
+  {
+    "id": "HOR-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:outer_influence",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_outer_being_arrives_and_gnaws",
+    "note": ""
+  },
+  {
+    "id": "HOR-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:outer_influence (sanity erosion, mutation)",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_outer_being_arrives_and_gnaws",
+    "note": ""
+  },
+  {
+    "id": "HOR-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:outer_influence (WORSHIPS bond)",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_outer_being_arrives_and_gnaws",
+    "note": ""
+  },
+  {
+    "id": "HOR-018",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:442 spontaneous_horror; horror:event action",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_horror_events (events invoked directly)",
+    "note": "Behaviour present; dedicated test missing. The per-epoch leakiest-world roll and chance formula are untested."
+  },
+  {
+    "id": "HOR-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:stars_align",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_horror_events",
+    "note": ""
+  },
+  {
+    "id": "HOR-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:eye_in_the_sky",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_horror_events",
+    "note": ""
+  },
+  {
+    "id": "HOR-021",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:wave_of_silence",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_horror_events",
+    "note": ""
+  },
+  {
+    "id": "HOR-022",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:reverse_rain",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_horror_events",
+    "note": ""
+  },
+  {
+    "id": "HOR-023",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/horror.py:visit_of_the_void",
+    "test": "backend/tests/engine/cosmos/test_horizon_and_horror.py::test_horror_events",
+    "note": ""
+  },
+  {
+    "id": "HOR-024",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/transition.py:58 doom_calling; engine/phases/doom.py:133; doom:apocalypse",
+    "test": "backend/tests/engine/core/test_transition.py::test_doom_turns_into_a_calling_when_worlds_leak",
+    "note": ""
+  },
+  {
+    "id": "PAN-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/foreign_gods.py:add_foreign_god; POST /foreign-gods; frontend PlaceForeignGodForm.tsx",
+    "test": "backend/tests/engine/cosmos/test_stars_and_gods.py::test_seeded_stats_are_stable",
+    "note": ""
+  },
+  {
+    "id": "PAN-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/foreign_gods.py:worshippers/god_faith; PUT /entities/{id}/patron",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_defeated_god_wakes_after_its_time",
+    "note": ""
+  },
+  {
+    "id": "PAN-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/pantheon.py:473 pantheon_phase (order matches); run_pantheon_phase unreachable from API",
+    "test": "backend/tests/engine/cosmos/test_simulation.py::test_manual_phase_runs",
+    "note": "Re-verified 2026-11-02: engine:run_phase action and GET /api/engine/phases, surfaced in features/engine."
+  },
+  {
+    "id": "PAN-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/pantheon.py:defeated_waking",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_defeated_god_wakes_after_its_time",
+    "note": ""
+  },
+  {
+    "id": "PAN-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/pantheon.py:wake_noise/wake_points",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_sleeping_god_wakes_from_noise",
+    "note": ""
+  },
+  {
+    "id": "PAN-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/pantheon.py:sleep_waking",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_sleeping_god_wakes_from_noise",
+    "note": ""
+  },
+  {
+    "id": "PAN-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/pantheon.py:auto_holy_worlds",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_auto_holy_world_and_outer_gnaw",
+    "note": ""
+  },
+  {
+    "id": "PAN-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/worlds.py:declare_holy_world; world:edit guardian_son_id (frontend WorldEditForm.tsx)",
+    "test": "backend/tests/engine/cosmos/test_worlds.py::test_holy_world_trampling_costs_relation",
+    "note": ""
+  },
+  {
+    "id": "PAN-009",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/pantheon.py:236 _rival_pairs/248 rival_clashes; engine/cosmos/duels.py:son_duel; son:duel",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_duels_are_recorded_and_rivals_soften (son_duel only)",
+    "note": "Behaviour present; dedicated test missing. Pair selection and weighted attacker/arena choice in rival_clashes are untested."
+  },
+  {
+    "id": "PAN-010",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/pantheon.py:275 _loss_streak",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Withdrawal after repeated losses is untested."
+  },
+  {
+    "id": "PAN-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/pantheon.py:rival_soften; son:relation",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_duels_are_recorded_and_rivals_soften",
+    "note": ""
+  },
+  {
+    "id": "PAN-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/pantheon.py:attract",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_awake_god_contact_attraction_and_theft",
+    "note": ""
+  },
+  {
+    "id": "PAN-013",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/pantheon.py:309 grow_power",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Faith-driven power growth is untested."
+  },
+  {
+    "id": "PAN-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/pantheon.py:first_contact",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_awake_god_contact_attraction_and_theft",
+    "note": ""
+  },
+  {
+    "id": "PAN-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/pantheon.py:steal_worshipper/hostile_act",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_awake_god_contact_attraction_and_theft",
+    "note": ""
+  },
+  {
+    "id": "PAN-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/pantheon.py:hostile_act; foreign_god:raid_temple",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_hostile_god_destroys_temples",
+    "note": ""
+  },
+  {
+    "id": "PAN-017",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/pantheon.py:394 friendly_help",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Friendly prosperity gifts untested."
+  },
+  {
+    "id": "PAN-018",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/pantheon.py:407 attitude_drift",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Attitude drift untested."
+  },
+  {
+    "id": "PAN-019",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/pantheon.py:436 spontaneous_god_war; son:god_war",
+    "test": null,
+    "note": "Behaviour present; dedicated test missing. Spontaneous war selection is untested (resolver is tested via PAN-020)."
+  },
+  {
+    "id": "PAN-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/conflict.py:foreign_god_war; engine/cosmos/foreign_gods.py:resolve_god_war",
+    "test": "backend/tests/engine/cosmos/test_stars_and_gods.py::test_god_war_kills_without_deathless, test_god_war_spares_the_deathless_and_wounds_losers",
+    "note": ""
+  },
+  {
+    "id": "PAN-021",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/pantheon.py:outer_gnaw; cosmic:cleanse_leak",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_auto_holy_world_and_outer_gnaw",
+    "note": ""
+  },
+  {
+    "id": "PAN-022",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/cosmos.py:309 bargain_with_outer (son tool only)",
+    "test": "backend/tests/engine/cosmos/test_actions.py::test_bargain_with_outer",
+    "note": "Re-verified 2026-11-02: son:outer_bargain action (forbid or allow)."
+  },
+  {
+    "id": "PAN-023",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/stars.py:154 extinguish_star; tools/son/cosmos.py:235 (son tool only)",
+    "test": "backend/tests/engine/cosmos/test_stars_and_gods.py::test_extinguish_and_rekindle",
+    "note": "Re-verified 2026-11-02: cosmic:extinguish_star action."
+  }
+]

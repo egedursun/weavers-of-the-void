@@ -1,0 +1,5 @@
+{% from "opportunities/_macros.md.j2" import records %}
+{% set uses = offered(available_tools, [("harvest_resource", "harvest with harvest_resource"), ("forge_item", "forge an item from it with forge_item")]) %}
+{% if uses %}
+Unowned resources ({{ uses | join(" or ") }}): {{ records(line.resources[:rules.opportunities.list_max]) }}
+{% endif %}

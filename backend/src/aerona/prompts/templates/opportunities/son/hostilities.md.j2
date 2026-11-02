@@ -1,0 +1,2 @@
+{% set moves = offered(available_tools, [("miracle", "bless one side or make peace with miracle"), ("incite_war", "fan the flames with incite_war"), ("start_event", "settle it with start_event")]) %}
+Ongoing hostilities{% if moves %} ({{ moves | join(", ") }}){% endif %}: {% for pair in line.pairs[:rules.opportunities.list_wide] %}#{{ pair.a.id }} {{ pair.a.name }} ↔ #{{ pair.b.id }} {{ pair.b.name }}{% if not loop.last %}; {% endif %}{% endfor %}

@@ -1,0 +1,4 @@
+{% from "opportunities/_macros.md.j2" import choices %}
+{% set moves = offered(available_tools, [("challenge", "challenge openly with challenge"), ("curse", "curse his creation or worshipper with curse"), ("incite_war", "incite your worshippers against his with incite_war"), ("send_dream", "steal his worshippers with send_dream")]) %}
+{% set peace = offered(available_tools, [("swear_covenant", "make a peace covenant with swear_covenant")]) %}
+RIVAL SIBLINGS: {% for rival in line.rivals[:rules.opportunities.list_short] %}son#{{ rival.id }} {{ rival.name }} (relation {{ rival.value }}){% if not loop.last %}, {% endif %}{% endfor %}. Tell this feud{% if moves %}: {{ moves | join(", ") }}{% endif %}{% if peace %}{{ "; or " if moves else ": " }}{{ peace[0] }}{% endif %}.

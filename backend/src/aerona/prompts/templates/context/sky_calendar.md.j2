@@ -1,0 +1,7 @@
+{% set cycle = [period, 1] | max %}
+{% set left = (cycle - age % cycle) % cycle %}
+{% if left == 0 %}
+the planets are aligned this age; slingshot orbits are open now (Age {{ age }}), then they open again in Age {{ age + cycle }}
+{% else %}
+slingshot orbits open in Age {{ age + left }} ({{ left }} ages from now; the planets align every {{ cycle }} ages)
+{% endif %}

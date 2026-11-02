@@ -1,0 +1,4 @@
+{% from "fate/_prescreen.md.j2" import prescreen_line %}
+{% if warnings %}
+{{ prescreen_line(warnings) }}
+{% endif %}

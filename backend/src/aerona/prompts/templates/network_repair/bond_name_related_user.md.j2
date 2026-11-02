@@ -1,0 +1,6 @@
+{% from "network_repair/_node.md.j2" import node_line %}
+{% for bond in bonds %}
+no {{ loop.index }}: {{ node_line(bond.source, rules.link_graph) }}
+   → {{ node_line(bond.target, rules.link_graph) }}
+{% if bond.reason %}   earlier reason: {{ bond.reason }}
+{% endif %}{% endfor %}

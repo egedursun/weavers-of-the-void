@@ -1,0 +1,11 @@
+LOG_FLOOR = 10
+WAR_NAME_TEMPLATE = "War of {first} and {second}"
+ARMY_NAME_TEMPLATE = "{root} Army"
+BATTLE_NAME_TEMPLATE = "Battle of {root}"
+SIEGE_NAME_TEMPLATE = "Siege of {root}"
+CORPSE_NAME_TEMPLATE = "Bones of {son}"
+SHADE_NAME_TEMPLATE = "Shade of {son}"
+ORDER_NAME_TEMPLATE = "Those Who Await the Return of {son}"
+FACTION_NAME_TEMPLATE = "{root} {suffix}"
+HISTORY_TAIL = 3
+MULTI_WORLD_COSMOS = 2

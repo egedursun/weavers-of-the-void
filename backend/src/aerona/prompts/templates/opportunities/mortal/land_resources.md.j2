@@ -1,0 +1,2 @@
+{% from "opportunities/_macros.md.j2" import records %}
+Resources on your land (claim them{% if offered(available_tools, [("claim_resource", "claim_resource")]) %} with claim_resource{% endif %}, then produce): {{ records(line.resources[:rules.opportunities.list_max]) }}

@@ -1,0 +1,17 @@
+=== YOUR TURN WAS LEFT HALF-DONE ({% if reason == "connection_error" %}connection error{% if error_detail %} ({{ error_detail | cut(120) }}){% endif %}{% elif reason == "timeout" %}timeout{% elif reason == "step_limit" %}step limit reached{% else %}you finished without saying your word{% endif %}) ===
+
+{% if done %}
+=== WHAT YOU ALREADY DID THIS AGE (it stands in the world; do not repeat it, build on it; your word should carry the tone of this age but must not list what you did) ===
+{% for action in done %}
+- {{ action.tool }} → {{ action.summary }}
+{% endfor %}
+{% else %}
+=== NONE OF YOUR ACTIONS HAS TAKEN EFFECT IN THE WORLD YET THIS AGE ===
+{% endif %}
+{% if long_jobs %}
+
+=== LONG WORKS YOU SET IN MOTION (their outcome is already settled; build on it, do not start them again) ===
+{% for job in long_jobs %}
+- {{ job.tool }} → {{ job.summary }}
+{% endfor %}
+{% endif %}

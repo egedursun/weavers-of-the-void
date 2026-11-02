@@ -1,0 +1,10 @@
+{% from "shared/macros.md.j2" import thread_line %}
+{% for thread in threads %}
+{{ thread_line(thread) }}
+{% endfor %}
+{% if more > 0 %}
+… ({{ more }} more open stories; the closest to you are above)
+{% endif %}
+{% if elsewhere > 0 %}
+({{ elsewhere }} open stories are in other worlds; you cannot advance them without going there)
+{% endif %}

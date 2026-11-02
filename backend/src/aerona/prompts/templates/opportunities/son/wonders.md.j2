@@ -1,0 +1,2 @@
+{% from "opportunities/_macros.md.j2" import records %}
+The world's wonders (bless, curse, mark as a target): {{ records(line.wonders[:rules.opportunities.list_short]) }}

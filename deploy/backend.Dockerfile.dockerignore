@@ -1,0 +1,10 @@
+**
+!backend/pyproject.toml
+!backend/uv.lock
+!backend/src/**
+**/__pycache__
+**/*.pyc
+**/.mypy_cache
+**/.ruff_cache
+**/.pytest_cache
+**/.import_linter_cache

@@ -1,0 +1,52 @@
+import {
+  Archive,
+  BookOpen,
+  Bot,
+  Eye,
+  FileInput,
+  FlaskConical,
+  Globe,
+  Hourglass,
+  ImageIcon,
+  Layers,
+  type LucideIcon,
+  PenLine,
+  RotateCw,
+  Sparkles,
+  Sunrise,
+  Tag,
+  Wand2,
+  Wrench,
+} from 'lucide-react'
+import { type JobKind, type JobStatus } from '@/constants/jobs'
+import { type KpiTone } from '@/components/domain'
+
+export const JOB_KIND_ICON: Record<JobKind, LucideIcon> = {
+  epoch: Hourglass,
+  genesis: Sparkles,
+  deepen: Layers,
+  summon: Wand2,
+  image: ImageIcon,
+  backup: Archive,
+  book: BookOpen,
+  import: FileInput,
+  simulation: FlaskConical,
+  son_turn: Bot,
+  naming: Tag,
+  completion: PenLine,
+  revelation: Eye,
+  world_creation: Globe,
+  awakening: Sunrise,
+  content: PenLine,
+  retry: RotateCw,
+  maintenance: Wrench,
+}
+
+export const JOB_STATUS_TONE: Record<JobStatus, KpiTone> = {
+  queued: 'muted',
+  running: 'gold',
+  succeeded: 'success',
+  failed: 'danger',
+  cancelled: 'muted',
+  interrupted: 'warning',
+}

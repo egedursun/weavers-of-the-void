@@ -1,0 +1,6 @@
+{% from "opportunities/_macros.md.j2" import records %}
+{% if line.communities %}
+Communities without a language{% if offered(available_tools, [("create_language", "create_language")]) %} (create one with create_language; give the "speaks" bond to that community){% endif %}: {{ records(line.communities[:rules.opportunities.list_short]) }}
+{% else %}
+There is no language in the world yet.
+{% endif %}

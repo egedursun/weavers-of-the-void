@@ -1,0 +1,47 @@
+{% from "shared/macros.md.j2" import entity_line %}
+{% from "fate/_events.md.j2" import events_by_world %}
+{% set distortions = [
+  "ties a detail to the wrong person or place (confuses who did it)",
+  "reverses the order of an event",
+  "never mentions the god's price or wound, only his gift",
+  "says a ban or rite was set by its own ancestors, not by the god",
+  "magnifies a small event, shrinks a great loss",
+  "confuses the god with another god, a hero or an animal",
+  "misunderstands a word and builds the whole belief on that misunderstanding",
+  "attributes something the god did to a natural phenomenon (the wind, drought, salt)"
+] %}
+{{ world_header }}
+
+{% if world_events %}
+WHAT REALLY HAPPENED DURING AGE {{ age }} (world by world; a people lived only what happened in its own world):
+{{ events_by_world(world_events, rules.fate.voices_events_chars, rules.context.budget_trim_min_chars) | trim }}
+{% else %}
+WHAT REALLY HAPPENED DURING AGE {{ age }}:
+{{ age_events[:rules.fate.voices_events_chars] if age_events else "(a quiet age)" }}
+{% endif %}
+
+{% if historians %}
+HISTORIANS (for each, this age's account through its own people's eyes; do not open with "We …", do not repeat the opening of the previous account; the previous historian continues or their apprentice takes over{% if world_events %}; every historian tells as "we" ONLY the events of its own world, never another world's event as if it befell its own people, at most as news from afar{% endif %}):
+{% for entry in historians %}
+people_id {{ entry.people.id }}{% if entry.world %} (its world: {{ entry.world }}){% endif %}: {{ entity_line(entry.people) }}
+{% if entry.society %}
+{{ entry.society }}
+{% endif %}
+{% if entry.previous_opening %}
+Previous historian: {{ entry.previous_historian if entry.previous_historian else "name unknown" }} (Age {{ entry.previous_age }}); the previous account opened like this: «{{ entry.previous_opening[:rules.fate.historian_opening_chars] }}…»
+{% endif %}
+{% if not loop.last %}
+
+{% endif %}
+{% endfor %}
+
+{% endif %}
+{% if beliefs %}
+BELIEFS (how each people tells of this god by the name it gave him; each belief's distortion is written in the form given to it, no two beliefs use the same sentence construction):
+{% for pair in beliefs %}
+people_id {{ pair.people_id }} {{ pair.people_name }} → son_id {{ pair.son_id }}, in truth {{ pair.son_name }}, {{ pair.son_title }} ({{ pair.domain_1 }}/{{ pair.domain_2 }}); {% if pair.known_name %}this people calls him "{{ pair.known_name }}"{% else %}this people has not yet given him a name: give one with the sounds of the {{ pair.people_name }} people's language{% endif %}. Form of distortion: {{ distortions[(pair.people_id + pair.son_id + loop.index0) % (distortions | length)] }}.{% if pair.son_id == 0 %} He is the father of all the gods, the creator; they know him as distant, old and incomprehensible.{% elif pair.worshipped %} They worship him.{% else %} They do not worship him; they know him with hostility or fear.{% endif %}
+
+{% endfor %}
+
+{% endif %}
+Historians should use their own peoples' names and lexicon. Beliefs should name the god by the name the people gave him; they must not know the whole truth.

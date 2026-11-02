@@ -1,0 +1,88 @@
+import { Ghost } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState, Section } from '@/components/domain'
+import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
+import { Muted, Text } from '@/components/typography'
+import { ChronicleList } from '@/features/pantheon/ChronicleList'
+import { RecordGallery } from '@/features/pantheon/RecordGallery'
+import { AttitudeBar } from './AttitudeBar'
+import { ForeignGodDepth } from './ForeignGodDepth'
+import { ForeignGodEditForm } from './ForeignGodEditForm'
+import { ForeignGodHero } from './ForeignGodHero'
+import { ForeignGodPowerPanel } from './ForeignGodPowerPanel'
+import { ForeignGodProfile } from './ForeignGodProfile'
+import { ForeignGodRelations } from './ForeignGodRelations'
+import { editForeignGod, useForeignGod } from './api'
+
+export function ForeignGodPage({ id }: DrawerPageProps) {
+  const godId = Number(id)
+  const detail = useForeignGod(godId)
+  if (!Number.isInteger(godId) || godId <= 0)
+    return (
+      <EmptyState
+        icon={Ghost}
+        title='No such foreign god'
+        description='This link does not point to a foreign god.'
+      />
+    )
+  if (detail.isPending)
+    return (
+      <div className='flex flex-col gap-4'>
+        <Skeleton className='h-control-lg w-2/3' />
+        <Skeleton className='h-textarea w-full' />
+      </div>
+    )
+  if (detail.isError)
+    return (
+      <Alert variant='destructive'>
+        <Ghost />
+        <AlertTitle>This foreign god could not be read</AlertTitle>
+        <AlertDescription>{detail.error.message}</AlertDescription>
+      </Alert>
+    )
+  const data = detail.data
+  const god = data.god
+  return (
+    <div className='flex min-w-0 flex-col gap-6'>
+      <ForeignGodHero detail={data} />
+      <Section title='Description' level={3}>
+        {god.description ? (
+          <Text variant='prose'>{god.description}</Text>
+        ) : (
+          <Muted>No description yet; you can write one below.</Muted>
+        )}
+      </Section>
+      <Section title='Attitude to the pantheon' level={3}>
+        <AttitudeBar stance={god.stance} />
+      </Section>
+      <ForeignGodPowerPanel detail={data} />
+      <ForeignGodProfile detail={data} />
+      <ForeignGodDepth god={god} />
+      <ForeignGodRelations detail={data} />
+      <RecordGallery
+        key={god.image_prompt ?? ''}
+        title='Images'
+        nodeId={god.id}
+        name={god.name}
+        images={data.images}
+        prompt={god.image_prompt}
+        promptLabel='Image prompt'
+        onSavePrompt={(prompt) =>
+          editForeignGod(god.id, { image_prompt: prompt })
+        }
+      />
+      <ChronicleList
+        title='In the chronicle'
+        description='Recent records about this god and their world.'
+        lines={data.chronicle}
+        emptyTitle='Not in the chronicle yet'
+        emptyText='The name does not appear in the chronicle yet.'
+      />
+      <ForeignGodEditForm
+        key={`${god.id}:${god.name}:${god.status}:${god.stance}:${god.power}`}
+        detail={data}
+      />
+    </div>
+  )
+}

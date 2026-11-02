@@ -1,0 +1,15 @@
+.DS_Store
+.env
+data/
+backend/.venv/
+backend/.import_linter_cache/
+**/__pycache__/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+frontend/node_modules/
+frontend/dist/
+image-worker/.venv/
+data-fresh/
+frontend/.vitest-attachments/
+*.tmp.mjs

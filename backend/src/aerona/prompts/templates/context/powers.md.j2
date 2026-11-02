@@ -1,0 +1,7 @@
+{% if powers %}
+{% for power in powers %}
+- {{ power.name }}{% if power.effect_text %} [{{ power.effect_text }}]{% endif %}{% if power.unlock_level %} (unlocks at Lv{{ power.unlock_level }}){% endif %}: {{ power.description }}
+{% endfor %}
+{% else %}
+(not yet awakened)
+{% endif %}

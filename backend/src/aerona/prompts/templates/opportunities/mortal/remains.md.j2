@@ -1,0 +1,2 @@
+{% from "opportunities/_macros.md.j2" import records %}
+Ruins on your land{% if offered(available_tools, [("search_ruins", "search_ruins")]) %} (search_ruins){% endif %}: {{ records(line.remains[:rules.opportunities.list_short]) }}

@@ -1,0 +1,3 @@
+{% macro node_line(node, link_graph) -%}
+{% if node.kind == "son" %}{{ node.key }} [son] {{ node.name }}{% if node.title %}, {{ node.title }}{% endif %}{% else %}{{ node.key }} [{{ node.type_label }}{% if node.subtype %} / {{ node.subtype }}{% endif %}{% if node.status_label %}, {{ node.status_label }}{% endif %}] {{ node.name }}: {{ (node.description.split() | join(" "))[:link_graph.description_trim_chars // 2] }}{% endif %}
+{%- endmacro %}

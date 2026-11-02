@@ -1,0 +1,31 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { api } from '@/api/client'
+import { unwrap } from '@/api/errors'
+import { type components } from '@/api/generated/schema'
+import { queryKeys } from '@/api/queryKeys'
+
+export type BookPdfStatus = components['schemas']['BookPdfStatus']
+
+export const BOOK_PDF_URL = '/api/book.pdf'
+const POLL_MS = 2000
+
+export const bookKeys = {
+  pdf: [...queryKeys.world.all, 'book', 'pdf'] as const,
+}
+
+export function useBookPdf() {
+  return useQuery({
+    queryKey: bookKeys.pdf,
+    queryFn: () => unwrap(api.GET('/api/book/pdf')),
+    refetchInterval: (query) => (query.state.data?.job_id ? POLL_MS : false),
+  })
+}
+
+export function usePrintBook() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => unwrap(api.POST('/api/book/pdf')),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: bookKeys.pdf }),
+  })
+}

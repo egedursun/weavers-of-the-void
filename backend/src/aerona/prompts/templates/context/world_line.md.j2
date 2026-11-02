@@ -1,0 +1,4 @@
+YOUR CURRENT WORLD: world#{{ id }} {{ name }} — {{ type_label }}{% if star_name %}, orbiting {{ star_name }}{% if star_type %} ({{ star_type }}){% endif %}{% endif %}; gravity {{ gravity }}, atmosphere {{ atmosphere }}, time ×{{ "%g" | format(time_factor) }}{% if leak > 0 %}; LEAK {{ leak }}/100 (something is seeping in from outside){% endif %}.
+{% if cosmology %}
+THIS WORLD'S COSMOLOGY: {{ cosmology }}
+{% endif %}

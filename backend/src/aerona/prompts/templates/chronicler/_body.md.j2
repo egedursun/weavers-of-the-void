@@ -1,0 +1,85 @@
+{% from "shared/macros.md.j2" import tired_images as tired_images_block, entity_line %}
+{% from "fate/_events.md.j2" import events_by_world %}
+{% from "chronicler/_facts.md.j2" import fact_sheet %}
+{% set f = rules.fate %}
+{% set trim = rules.context.budget_trim_min_chars %}
+{% set multi_world = worlds | length > 1 %}
+{% set rules_block %}
+{{ world_header }}
+
+=== RULES ===
+TASK: {{ task }}
+{% include "shared/lore_language.md.j2" %}
+
+{% if multi_world %}
+WORLDS: {% for world in worlds %}world#{{ world.id }} {{ world.name }}{% if not loop.last %}, {% endif %}{% endfor %}. In the "worlds" field write a separate section for EVERY world (skip none). Each world's section tells ONLY the events under that world's heading; do not carry another world's people, city or person into that world. For a world with few events, tell of its silence, its waiting, its everyday life; do not add invented great events.
+{% endif %}
+{% if previous_names %}
+NAMES OF PREVIOUS AGES (DO NOT REPEAT or imitate): {{ previous_names[-f.previous_epoch_names_shown:] | join("; ") }}
+{% endif %}
+{% if piled_roots %}
+DO NOT USE IN THE AGE NAME (piled up in previous names): {% for root in piled_roots %}{{ root }}-{% if not loop.last %}, {% endif %}{% endfor %}.
+{% endif %}
+{% if not continuity.current %}
+Put the mortal who writes this narrative in the "chronicler" field.
+{% elif continuity.streak >= f.chronicler_min_tenure %}
+CHRONICLER: {{ continuity.current.name }} has been writing for {{ continuity.streak }} ages; this age they may hand the pen to a successor (the successor introduces themselves and whom they took over from in one sentence) or keep writing. Chain: {% for link in continuity.chain %}Age {{ link.age }}: {{ link.name }} ({{ link.who }}){% if not loop.last %} → {% endif %}{% endfor %}
+
+{% else %}
+CHRONICLER: this age too is written by {{ continuity.current.name }} ({{ continuity.current.who }}): write the SAME name and identity in the "chronicler" field; do not introduce yourself again, do not say the previous record was lost. Chain: {% for link in continuity.chain %}Age {{ link.age }}: {{ link.name }} ({{ link.who }}){% if not loop.last %} → {% endif %}{% endfor %}
+
+{% endif %}
+OPENING: do NOT open the narrative with the sky, the star of the age, a celestial sign, or the "Age N" / "at the beginning of the age" pattern; enter from inside a person, a place, an object or a sound.{% if opening_patterns %} These patterns piled up in recent openings are FORBIDDEN in the first sentence: {% for pattern in opening_patterns %}«{{ pattern }}»{% if not loop.last %}, {% endif %}{% endfor %}.{% endif %}
+
+Do NOT copy verbatim the world engine's sentences, the council minutes or the stock phrases of the events; tell the fact with the chronicler's own eyes and own words; an event folded as "(this age N times)" is told once, with its repetition. Do not write record numbers (#12), stat names or values in the text (not even in words: "his anger at seventy-five", "twenty-two life"), star glyphs, mood scores; do not mention ledger lines such as bond counts.
+{% if tired_images.present %}
+{{ tired_images_block(tired_images) }}
+{% endif %}
+{% if facts %}
+
+{{ budget(fact_sheet(facts) | trim, rules.chronicle_audit.budget_chars, "rest in the chronicle", trim) }}
+{% endif %}
+{% endset %}
+{% set head = rules_block | trim %}
+{% set data_budget = [f.budget_chronicler_engine_chars, f.budget_chronicler_prompt_chars - (head | length)] | max %}
+{% set side = (data_budget * f.chronicler_side_share_pct // 100) %}
+{% set engine_text = budget(engine_notes | join("\n"), [f.budget_chronicler_engine_chars, side] | min, "rest in the chronicle", trim) %}
+{% set pending_body %}
+{% for item in pending %}
+{{ entity_line(item) }}
+{% endfor %}
+{% endset %}
+{% set pending_text = budget(pending_body | trim, side, "the rest in the naming round", trim) %}
+{% set events_room = [1, data_budget - (engine_text | length) - (pending_text | length)] | max %}
+{% set verdicts_text = budget(previous_verdicts | join("\n"), f.budget_previous_judgments_chars, "in the chronicle", trim) %}
+{% set kinds_body %}
+{% for kind in name_kinds %}
+{{ kind.name }}: {{ kind.type_label }}{% if kind.mortal %} (a single person, not a people){% elif kind.subtype %} ({{ kind.subtype }}){% endif %}
+
+{% endfor %}
+{% endset %}
+{% set kinds_text = budget(kinds_body | trim, f.budget_name_type_chars, "in the chronicle", trim) %}
+{% set events_limit = [f.budget_epoch_events_chars, [1, events_room - (verdicts_text | length) - (kinds_text | length)] | max] | min %}
+{% set events_text = events_by_world(events, events_limit, trim) | trim if events else "" %}
+{{ head }}
+
+{% if kinds_text %}
+WHAT THE NAMES ARE (do not make a person into a people or a people into a person):
+{{ kinds_text }}
+
+{% endif %}
+{% if verdicts_text %}
+STORIES THAT ADVANCED IN THE PREVIOUS AGE (mention them where they continue):
+{{ verdicts_text }}
+
+{% endif %}
+WHAT HAPPENED DURING AGE {{ age }}{% if multi_world %} (world by world){% endif %}:
+{{ events_text if events_text else "(nothing)" }}
+{% if include_engine %}
+
+RESULTS OF THE WORLD ENGINE:
+{{ engine_text if engine_text else "(none)" }}
+
+BORN OF THE WORLD'S OWN COURSE:
+{{ pending_text if pending_text else "(none)" }}
+{% endif %}

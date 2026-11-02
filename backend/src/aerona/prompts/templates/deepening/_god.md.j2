@@ -1,0 +1,17 @@
+{% macro god_known(known) -%}
+{% set lines = [] %}
+{% if known.title %}{% set _ = lines.append("Title: " ~ known.title) %}{% endif %}
+{% if known.appearance %}{% set _ = lines.append("Appearance: " ~ known.appearance) %}{% endif %}
+{% if known.temperament %}{% set _ = lines.append("Temperament: " ~ known.temperament) %}{% endif %}
+{% if known.note %}{% set _ = lines.append("The god's own note (canon, you must follow it): " ~ known.note) %}{% endif %}
+{{ lines | join("\n") if lines else "(nothing is known yet)" }}
+{%- endmacro %}
+{% macro traces_block(traces) -%}
+{% if traces %}
+{% for row in traces %}
+[Age {{ row.age }}, year {{ row.year }}] {{ row.text }}{% if not loop.last %}{{ "\n" }}{% endif %}
+{% endfor %}
+{% else %}
+(none)
+{% endif %}
+{%- endmacro %}

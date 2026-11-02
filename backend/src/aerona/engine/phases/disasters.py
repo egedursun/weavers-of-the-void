@@ -1,0 +1,402 @@
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, field
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from aerona.cartography.model import ElevationClass
+from aerona.catalog.interventions import DISASTERS
+from aerona.constants.units import PERCENT
+from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
+from aerona.domain.models.entity_stats import EventStats
+from aerona.engine.context import TickContext
+from aerona.engine.lifecycle.wounds import WoundOutcome, wound
+from aerona.engine.notes import note
+from aerona.engine.phase import Phase
+from aerona.engine.phases.climate import plague_pct
+from aerona.engine.phases.society_economy import population_bounds, society_of
+from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.knowledge import KnowledgeMap, LawBook
+from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up
+from aerona.engine.primitives.queries import BondIndex, canon
+from aerona.engine.primitives.records import RecordSpec, create_record, indefinite
+from aerona.engine.primitives.stats import FOLLOWERS_KEY, POPULATION_KEY, headcount_value, set_stats, stat, stat_or
+from aerona.engine.primitives.thresholds import relative_threshold
+from aerona.engine.records import death_path
+from aerona.rules.registry import Rules
+
+DISASTER_KINDS: dict[Disaster, EngineKind] = {
+    Disaster.EARTHQUAKE: EngineKind.EARTHQUAKE,
+    Disaster.FLOOD: EngineKind.FLOOD,
+    Disaster.PLAGUE: EngineKind.PLAGUE,
+    Disaster.DROUGHT: EngineKind.DROUGHT,
+    Disaster.STORM: EngineKind.STORM,
+}
+STRUCK_TYPES = frozenset({*COMMUNITY_TYPES, EntityType.STRUCTURE})
+SPREAD_BOND_KINDS = (BondKind.TRADES_WITH, BondKind.PAYS_TRIBUTE, BondKind.RULES)
+HIGHLANDS = frozenset({ElevationClass.MOUNTAINOUS, ElevationClass.HILLY})
+
+
+@dataclass
+class DisasterImpact:
+    notes: list[str] = field(default_factory=list)
+    losses: dict[int, int | None] = field(default_factory=dict)
+    dead: list[EntityRow] = field(default_factory=list)
+    destroyed: list[EntityRow] = field(default_factory=list)
+
+
+def joined_names(names: Sequence[str]) -> str:
+    if len(names) <= 1:
+        return "".join(names)
+    return f"{', '.join(names[:-1])} and {names[-1]}"
+
+
+async def affected_entities(session: AsyncSession, target: EntityRow) -> list[EntityRow]:
+    found = [target]
+    seen = {target.id}
+    frontier = [target.id]
+    while frontier:
+        children = list(
+            await session.scalars(select(EntityRow).where(EntityRow.location_id.in_(frontier), EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id))
+        )
+        frontier = []
+        for child in children:
+            if child.id not in seen:
+                seen.add(child.id)
+                found.append(child)
+                frontier.append(child.id)
+    return found
+
+
+def _reduce(rules: Rules, entity: EntityRow, key: str, loss: float) -> None:
+    current = stat(entity, key)
+    if current is None:
+        return
+    if key == FOLLOWERS_KEY:
+        set_stats(entity, followers=clamp_int(current * (1 - loss), 1, rules.limits.cult_follower_cap))
+        return
+    floor, ceiling = population_bounds(rules, entity)
+    set_stats(entity, population=clamp_int(current * (1 - loss), floor, ceiling))
+
+
+def _drop(entity: EntityRow, key: str, amount: float) -> None:
+    current = stat(entity, key)
+    if current is not None:
+        set_stats(entity, **{key: clamp_int(current - amount, 0, PERCENT)})
+
+
+async def _strike_mortal(ctx: TickContext, mortal: EntityRow, disaster: Disaster, scale: float, knowledge: KnowledgeMap) -> bool:
+    effects = ctx.rules.intervention_effects
+    death_chances = {
+        Disaster.EARTHQUAKE: effects.earthquake_mortal_death_chance,
+        Disaster.FLOOD: effects.flood_mortal_death_chance,
+        Disaster.PLAGUE: effects.plague_mortal_death_chance,
+        Disaster.DROUGHT: effects.drought_mortal_death_chance,
+        Disaster.STORM: effects.storm_mortal_death_chance,
+    }
+    medicine = knowledge.ratio(ctx.rules, mortal.id, KnowledgeBranch.MEDICINE, effects.medicine_plague_severity) if disaster is Disaster.PLAGUE else 1.0
+    rng = ctx.rng(f"disaster_mortal.{mortal.id}")
+    phrase = DISASTERS[disaster].death_phrase
+    if rng.chance(death_chances[disaster] * scale * medicine):
+        return await death_path(ctx, mortal, phrase)
+    if not rng.chance(effects.disaster_injury_chance):
+        return False
+    label = DISASTERS[disaster].label.lower()
+    outcome = await wound(ctx, mortal, round_half_up(effects.disaster_injury_hp * scale), cause=f"died of wounds suffered in the {label}")
+    return outcome is WoundOutcome.DIED
+
+
+async def _quake_structure(ctx: TickContext, structure: EntityRow, scale: float, knowledge: KnowledgeMap) -> bool:
+    effects = ctx.rules.intervention_effects
+    durability = stat(structure, "durability")
+    if durability is None:
+        return False
+    sturdy = structure.maker_entity_id is not None and knowledge.knows(structure.maker_entity_id, KnowledgeBranch.ARCHITECTURE)
+    loss = effects.earthquake_durability_loss * (fraction(effects.architecture_quake_severity) if sturdy else 1.0) * scale
+    remaining = clamp_int(durability - loss, 0, PERCENT)
+    set_stats(structure, durability=remaining)
+    if remaining > 0:
+        return False
+    await EntityRepository(ctx.session).set_status(structure, EntityStatus.DESTROYED, ctx.epoch, "Collapsed in the earthquake.")
+    return True
+
+
+def _strike_stats(rules: Rules, entity: EntityRow, disaster: Disaster, scale: float, knowledge: KnowledgeMap) -> None:
+    effects = rules.intervention_effects
+    if disaster is Disaster.EARTHQUAKE:
+        _reduce(rules, entity, POPULATION_KEY, fraction(effects.earthquake_population_loss) * scale)
+    elif disaster is Disaster.FLOOD:
+        _drop(entity, "prosperity", effects.flood_prosperity_loss * scale)
+        _reduce(rules, entity, POPULATION_KEY, fraction(effects.flood_population_loss) * scale)
+        _drop(entity, "fertility", -effects.flood_fertility_after)
+    elif disaster is Disaster.PLAGUE:
+        medicine = knowledge.ratio(rules, entity.id, KnowledgeBranch.MEDICINE, effects.medicine_plague_severity)
+        _reduce(rules, entity, POPULATION_KEY, fraction(effects.plague_population_loss) * scale * medicine)
+        _reduce(rules, entity, FOLLOWERS_KEY, fraction(effects.plague_follower_loss) * scale * medicine)
+    elif disaster is Disaster.DROUGHT:
+        farming = knowledge.ratio(rules, entity.id, KnowledgeBranch.AGRICULTURE, effects.agriculture_drought_severity)
+        _drop(entity, "fertility", effects.drought_fertility_loss * scale * farming)
+        _reduce(rules, entity, POPULATION_KEY, fraction(effects.drought_population_loss) * scale * farming)
+    else:
+        _drop(entity, "defense", effects.storm_defense_loss * scale)
+        _drop(entity, "prosperity", effects.storm_prosperity_loss * scale)
+
+
+def disaster_phrase(disaster: Disaster) -> str:
+    return indefinite(DISASTERS[disaster].label.lower())
+
+
+async def apply_disaster(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: float) -> DisasterImpact:
+    impact = DisasterImpact()
+    knowledge = await KnowledgeMap.load(ctx.session)
+    repository = EntityRepository(ctx.session)
+    effects = ctx.rules.intervention_effects
+    for entity in await affected_entities(ctx.session, target):
+        if await repository.remove_flag(entity.id, EntityFlag.PROTECTED_FROM_DISASTER):
+            impact.notes.append(f"{entity.name} was protected")
+            continue
+        scale = severity * knowledge.ratio(ctx.rules, entity.id, KnowledgeBranch.ASTRONOMY, effects.astronomy_disaster_severity)
+        if entity.entity_type is EntityType.MORTAL:
+            if entity.status is EntityStatus.CANON and await _strike_mortal(ctx, entity, disaster, scale, knowledge):
+                impact.dead.append(entity)
+            continue
+        before = headcount_value(entity)
+        if disaster is Disaster.EARTHQUAKE and entity.entity_type is EntityType.STRUCTURE and await _quake_structure(ctx, entity, scale, knowledge):
+            impact.destroyed.append(entity)
+            continue
+        _strike_stats(ctx.rules, entity, disaster, scale, knowledge)
+        after = headcount_value(entity)
+        if entity.entity_type in STRUCK_TYPES:
+            impact.losses[entity.id] = max(0, before - after) if before is not None and after is not None else None
+    if impact.destroyed:
+        impact.notes.append(f"{joined_names([item.name for item in impact.destroyed])} collapsed")
+    if impact.dead:
+        impact.notes.append(f"{joined_names([item.name for item in impact.dead])} perished")
+    await ctx.session.flush()
+    return impact
+
+
+async def record_disaster_event(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: int, impact: DisasterImpact | None = None) -> EntityRow:
+    effects = ctx.rules.intervention_effects
+    label = DISASTERS[disaster].label
+    event = await create_record(
+        ctx,
+        RecordSpec(
+            name=f"{target.name} {label} (Epoch {ctx.epoch})",
+            entity_type=EntityType.EVENT,
+            stats=EventStats(severity=clamp_int(severity, 0, PERCENT)),
+            body=f"{label} over {target.name}.",
+            power=clamp_int(severity / effects.disaster_event_power_divisor, effects.disaster_event_power_min, effects.disaster_event_power_max),
+            world_id=target.world_id,
+            location_id=target.id if target.entity_type in LOCATION_TYPES else target.location_id,
+            subtype=label.lower(),
+            engine_kind=DISASTER_KINDS[disaster],
+            flags=(EntityFlag.DISASTER,),
+        ),
+    )
+    bonds = BondRepository(ctx.session)
+    await bonds.connect(BondDraft(event.id, target.id, BondKind.CAUSED, ctx.epoch))
+    if impact is not None:
+        for entity_id, loss in impact.losses.items():
+            if entity_id != target.id:
+                await bonds.connect(BondDraft(event.id, entity_id, BondKind.CAUSED, ctx.epoch, f"{loss} lives lost" if loss else "struck"))
+        for mortal in impact.dead:
+            mortal.death_event_entity_id = event.id
+            await bonds.connect(BondDraft(event.id, mortal.id, BondKind.CAUSED, ctx.epoch, "died there"))
+        for structure in impact.destroyed:
+            await bonds.connect(BondDraft(event.id, structure.id, BondKind.CAUSED, ctx.epoch, "was destroyed"))
+    return event
+
+
+@dataclass
+class DisasterWorld:
+    laws: LawBook
+    climates: Mapping[int, int]
+    struck: int = 0
+
+    def law_mult(self, rules: Rules, world_id: int) -> float:
+        return float(rules.disasters.law_mult) if self.laws.has(NaturalLaw.DISASTERS, world_id) else 1.0
+
+    def climate_mult(self, world_id: int) -> float:
+        return fraction(self.climates.get(world_id, PERCENT))
+
+    def plague_mult(self, rules: Rules, world_id: int) -> float:
+        return self.climate_mult(world_id) * self.law_mult(rules, world_id)
+
+
+def severity_roll(ctx: TickContext, stream: str) -> int:
+    settings = ctx.rules.disasters
+    return settings.severity_base + ctx.rng(stream).die(settings.severity_die)
+
+
+def region_candidates(ctx: TickContext, region: EntityRow, atlas: RegionAtlas, population: int, laws: LawBook) -> list[tuple[Disaster, float]]:
+    settings = ctx.rules.disasters
+    record = atlas.record(region.id)
+    if record is None:
+        return []
+    candidates: list[tuple[Disaster, float]] = []
+    if record.elevation_class in HIGHLANDS:
+        candidates.append((Disaster.EARTHQUAKE, settings.earthquake_chance))
+    if record.coastal:
+        candidates += [(Disaster.FLOOD, settings.flood_chance), (Disaster.STORM, settings.storm_chance)]
+    barren = stat_or(region, "fertility", ctx.rules.world_effects.unknown_fertility) < settings.drought_fertility_threshold
+    if barren or laws.has(NaturalLaw.DROUGHT, region.world_id):
+        candidates.append((Disaster.DROUGHT, settings.drought_chance))
+    if population >= settings.region_plague_population:
+        crowding = min(float(settings.plague_crowd_max_pct), population / settings.plague_crowd_divisor * PERCENT)
+        candidates.append((Disaster.PLAGUE, settings.region_plague_chance + crowding))
+    return candidates
+
+
+async def strike(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: int) -> tuple[EntityRow, DisasterImpact]:
+    impact = await apply_disaster(ctx, target, disaster, severity / ctx.rules.disasters.scale_divisor)
+    return await record_disaster_event(ctx, target, disaster, severity, impact), impact
+
+
+def _sentence(impact: DisasterImpact) -> str:
+    return f" {'; '.join(impact.notes)}." if impact.notes else ""
+
+
+async def _region_disasters(ctx: TickContext, world: DisasterWorld) -> None:
+    atlas = await RegionAtlas.load(ctx.session)
+    regional_population: dict[int, int] = {}
+    for community in await canon(ctx.session, SOCIETY_TYPES):
+        home = atlas.top_region(community.id)
+        if home is not None:
+            regional_population[home] = regional_population.get(home, 0) + stat_or(community, "population", 0)
+    for region in await canon(ctx.session, [EntityType.REGION]):
+        if world.struck >= ctx.rules.disasters.cap:
+            return
+        if atlas.is_water(region.id) or region.is_water:
+            continue
+        rng = ctx.rng(f"region_disaster.{region.id}")
+        for disaster, chance in region_candidates(ctx, region, atlas, regional_population.get(region.id, 0), world.laws):
+            climate = world.climate_mult(region.world_id) if disaster is Disaster.PLAGUE else 1.0
+            if not rng.chance(chance * world.law_mult(ctx.rules, region.world_id) * climate):
+                continue
+            event, impact = await strike(ctx, region, disaster, severity_roll(ctx, f"severity.{region.id}"))
+            world.struck += 1
+            await note(
+                ctx,
+                f"Nature raged over {region.name}: {DISASTERS[disaster].label.lower()}.{_sentence(impact)}",
+                key=f"disasters.{disaster.value}",
+                ids=[region.id, event.id],
+                feed=FeedCategory.DISASTER,
+                kind=ChronicleKind.DISASTER,
+            )
+            break
+
+
+async def _city_plagues(ctx: TickContext, world: DisasterWorld) -> None:
+    settings = ctx.rules.disasters
+    cities = await canon(ctx.session, [EntityType.SETTLEMENT])
+    crowd = relative_threshold(
+        cities, "population", fraction(settings.city_plague_top_pct), settings.city_plague_crowd_floor, settings.city_plague_always_population
+    )
+    hostility = (await BondIndex.load(ctx.session, [BondKind.ENEMY])).bonds
+    at_war = {bond.source_node_id for bond in hostility} | {bond.target_node_id for bond in hostility}
+    effects = ctx.rules.world_effects
+    for city in cities:
+        population = stat_or(city, "population", 0)
+        if population < settings.city_plague_min_population or world.struck >= settings.cap:
+            continue
+        crowded = population >= crowd(city)
+        hungry = (await society_of(ctx.session, ctx.rules, city.id)).stocks[Commodity.FOOD] < effects.hungry_food
+        war = city.id in at_war
+        chance = (settings.city_plague_chance if crowded else 0) + (settings.hungry_plague_chance if hungry else 0) + (settings.war_plague_chance if war else 0)
+        if not chance or not ctx.rng(f"city_plague.{city.id}").chance(chance * world.plague_mult(ctx.rules, city.world_id)):
+            continue
+        event, impact = await strike(ctx, city, Disaster.PLAGUE, severity_roll(ctx, f"city_severity.{city.id}"))
+        world.struck += 1
+        await note(
+            ctx,
+            f"An epidemic broke out in crowded {city.name}.{_sentence(impact)}",
+            key="disasters.city_plague",
+            ids=[city.id, event.id],
+            feed=FeedCategory.DISASTER,
+            kind=ChronicleKind.DISASTER,
+        )
+
+
+async def _plague_spread(ctx: TickContext) -> int:
+    settings = ctx.rules.disasters
+    session = ctx.session
+    plagues = [
+        event
+        for event in await canon(session, [EntityType.EVENT])
+        if event.engine_kind is EngineKind.PLAGUE and event.birth_epoch >= ctx.epoch - settings.plague_spread_epochs
+    ]
+    links = await BondIndex.load(session, [*SPREAD_BOND_KINDS, BondKind.CAUSED])
+    knowledge = await KnowledgeMap.load(session)
+    spread = 0
+    for plague in plagues:
+        caused = links.outgoing(plague.id, BondKind.CAUSED)
+        if not caused:
+            continue
+        source, struck = caused[0].target_node_id, {bond.target_node_id for bond in caused}
+        partners = sorted({bond.other_end(source) for kind in SPREAD_BOND_KINDS for bond in links.touching(source, kind)} - struck - {source})
+        for partner_id in partners:
+            partner = await session.get(EntityRow, partner_id)
+            if partner is None or partner.status is not EntityStatus.CANON or partner.entity_type not in COMMUNITY_TYPES:
+                continue
+            medicine = knowledge.knows(partner.id, KnowledgeBranch.MEDICINE)
+            if not ctx.rng(f"plague_spread.{plague.id}.{partner.id}").chance(
+                settings.plague_spread_medicine_chance if medicine else settings.plague_spread_chance
+            ):
+                continue
+            await apply_disaster(ctx, partner, Disaster.PLAGUE, fraction(settings.plague_spread_severity_pct))
+            links.add(await BondRepository(session).connect(BondDraft(plague.id, partner.id, BondKind.CAUSED, ctx.epoch, "spread along the roads")))
+            spread += 1
+            await note(
+                ctx,
+                f"{plague.name} jumped to {partner.name}; merchants, tribute caravans and governors carried the disease too.",
+                key="disasters.plague_spread",
+                ids=[plague.id, partner.id],
+                feed=FeedCategory.DISASTER,
+                kind=ChronicleKind.DISASTER,
+            )
+    return spread
+
+
+async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
+    rows = await ctx.session.execute(select(WorldRow.id, WorldRow.climate_era))
+    return {world_id: plague_pct(ctx.rules, era) for world_id, era in rows if era is not None}
+
+
+async def natural_disasters(ctx: TickContext) -> None:
+    world = DisasterWorld(await ctx.laws(), await climate_plague_multipliers(ctx))
+    await _region_disasters(ctx, world)
+    await _city_plagues(ctx, world)
+    ctx.count("disasters", world.struck)
+    ctx.count("plague_spread", await _plague_spread(ctx))
+
+
+async def send_disaster(ctx: TickContext, target_id: int, disaster: Disaster, severity: int | None = None) -> EntityRow:
+    target = await ctx.session.get(EntityRow, target_id)
+    if target is None:
+        raise NotFoundError("No such place.")
+    if target.entity_type not in LOCATION_TYPES or target.status is not EntityStatus.CANON:
+        raise ValidationFailedError("Disasters strike regions, places and settlements.")
+    rolled = severity if severity is not None else severity_roll(ctx, f"manual_severity.{target.id}")
+    event, impact = await strike(ctx, target, disaster, rolled)
+    await note(
+        ctx,
+        f"{DISASTERS[disaster].label} struck {target.name}.{_sentence(impact)}",
+        key=f"disasters.manual_{disaster.value}",
+        ids=[target.id, event.id],
+        feed=FeedCategory.DISASTER,
+        kind=ChronicleKind.DISASTER,
+    )
+    return event
+
+
+PHASES = (Phase("natural_disasters", natural_disasters),)

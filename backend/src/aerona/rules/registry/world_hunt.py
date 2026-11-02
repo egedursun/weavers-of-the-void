@@ -1,0 +1,40 @@
+from dataclasses import dataclass
+
+from aerona.rules.groups import RuleGroup
+from aerona.rules.model import rule
+
+
+@dataclass(frozen=True)
+class WorldHuntRules:
+    intellect_divisor: int = rule(3, 1, 100, RuleGroup.HEROES_AND_MORTALS, "Intellect contribution to the hero's strength: intellect / this number")
+    agility_divisor: int = rule(2, 1, 100, RuleGroup.HEROES_AND_MORTALS, "Agility contribution in the encounter: agility / this number")
+    danger_divisor: int = rule(2, 1, 100, RuleGroup.HEROES_AND_MORTALS, "Danger contribution to the monster's strength: danger / this number")
+    die: int = rule(20, 1, 100, RuleGroup.HEROES_AND_MORTALS, "Encounter die (1\u2013X)")
+    die_mult: int = rule(3, 0, 20, RuleGroup.HEROES_AND_MORTALS, "Multiplier of the encounter die")
+    patron_charisma_divisor: int = rule(10, 1, 1000, RuleGroup.HEROES_AND_MORTALS, "Patron god's contribution to the hero: charisma / this number")
+    weapon_mult: int = rule(2, 0, 20, RuleGroup.HEROES_AND_MORTALS, "Multiplier of the hero's weapons in the encounter (times)")
+    sorcerer_intellect_divisor: int = rule(3, 1, 100, RuleGroup.HEROES_AND_MORTALS, "Extra strength of a sorcerer hero: intellect / this number")
+    megafauna_bonus: int = rule(40, 0, 500, RuleGroup.CREATURES, "Extra strength of megafauna in the encounter")
+    singular_power: int = rule(5, 1, 12, RuleGroup.CREATURES, "A monster at this power level dies after a single defeat")
+    defeat_danger_loss: int = rule(25, 0, 100, RuleGroup.CREATURES, "Danger loss of a defeated monster")
+    death_danger: int = rule(5, 0, 100, RuleGroup.CREATURES, "A monster whose danger falls to this dies")
+    rewind_danger_gain: int = rule(20, 0, 100, RuleGroup.CREATURES, "Danger gained on return by a time-rewinding creature")
+    megafauna_slayer_power_gain: int = rule(2, 0, 12, RuleGroup.HEROES_AND_MORTALS, "Power-level gain of a megafauna slayer")
+    power_cap: int = rule(10, 1, 12, RuleGroup.HEROES_AND_MORTALS, "Power-level cap of heroes and items")
+    epic_power: int = rule(8, 1, 12, RuleGroup.HEROES_AND_MORTALS, "Power level of an age-changing epic")
+    epic_spread: int = rule(90, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Spread of an age-changing epic")
+    victory_charisma: int = rule(5, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Charisma gain of a victorious hero")
+    patron_renown: int = rule(4, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Patron god's renown gain from the hero's victory")
+    patron_xp: int = rule(12, 0, 1000, RuleGroup.HEROES_AND_MORTALS, "Patron god's XP gain from the hero's victory")
+    weapon_might_gain: int = rule(6, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Might gain of the hero's weapon on victory")
+    legendary_weapon_victories: int = rule(2, 1, 100, RuleGroup.HEROES_AND_MORTALS, "Victories needed for a weapon to become legendary")
+    ballad_power: int = rule(3, 1, 12, RuleGroup.HEROES_AND_MORTALS, "Power level of a heroic ballad")
+    ballad_spread: int = rule(55, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Spread of a heroic ballad")
+    armor_save_min_protection: int = rule(40, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Minimum protection of armor able to turn death into a wound")
+    armor_save_base_pct: int = rule(50, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Chance armor protects the hero from death: base (%)")
+    armor_save_divisor: int = rule(250, 1, 10000, RuleGroup.HEROES_AND_MORTALS, "Armor contribution to the save chance: protection / this number")
+    armor_save_hp_loss: int = rule(60, 0, 1000, RuleGroup.HEROES_AND_MORTALS, "HP loss of a hero saved by their armor")
+    unknown_hp: int = rule(100, 1, 1000, RuleGroup.HEROES_AND_MORTALS, "HP before armor damage of a hero with no recorded HP")
+    armor_save_wear: int = rule(15, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Protection loss of the armor that saved the hero")
+    lament_power: int = rule(2, 1, 12, RuleGroup.HEROES_AND_MORTALS, "Power level of the fallen hero's lament")
+    lament_spread: int = rule(45, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Spread of the fallen hero's lament")

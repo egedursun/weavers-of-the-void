@@ -1,0 +1,24 @@
+{% from "council/_persona.md.j2" import persona %}
+{{ world_header }}
+
+AGENDA{% if god_asked %} (in their father's own words; do not quote it verbatim in the minutes or the agenda field, summarize in the third person){% endif %}: {{ topic }}
+
+ATTENDANCE: {{ members | length | count_word }} sons in the council{% if absent %}; absent: {{ absent | join(", ") }}{% endif %}.
+
+COUNCIL MEMBERS (each refers to places only of the world they are on as "here"):
+{% for member in members %}
+{{ persona(member, rules.council) }}{% if multi_world and member.current_world %} Current world: {{ member.current_world }}.{% endif %}
+
+{% endfor %}
+
+RELATIONSHIPS BETWEEN THEM:
+{% if relationships %}
+{% for relation in relationships %}
+{{ relation.a }}–{{ relation.b }}: {{ relation.label }} ({{ relation.value }}){% if relation.covenant %}, covenanted{% endif %}
+
+{% endfor %}
+{% else %}
+(nothing notable)
+{% endif %}
+
+Every son speaks at least once; then a single concrete motion is put to a vote. The votes fit the personalities and relationships. Alliances may be formed or broken.

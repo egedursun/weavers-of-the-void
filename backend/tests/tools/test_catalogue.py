@@ -1,0 +1,83 @@
+from typing import Any
+
+import jinja2.meta
+import pytest
+from pydantic import BaseModel
+
+from aerona.prompts import MortalToolId, SonToolId, tool_text
+from aerona.prompts.environment import environment
+from aerona.prompts.tools.context import ToolTextContext
+from aerona.prompts.tools.results import CommonResult, MortalResult, SonResult, result
+from aerona.rules.registry import Rules
+from aerona.tools.framework.inputs import ToolInput, _sequence_item, _unwrap
+from aerona.tools.framework.schema import input_schema
+from aerona.tools.mortal.registry import mortal_specs
+from aerona.tools.son.registry import son_specs
+
+RULES = Rules()
+CONTEXT = ToolTextContext(power_ceiling=5, example_cost=7)
+SPECS: list[Any] = [*son_specs(), *mortal_specs()]
+
+
+def _nested(annotation: Any) -> type[BaseModel] | None:
+    item = _sequence_item(annotation)
+    for candidate in _unwrap(item if item is not None else annotation):
+        if isinstance(candidate, type) and issubclass(candidate, ToolInput):
+            return candidate
+    return None
+
+
+def field_paths(model: type[BaseModel], prefix: str = "") -> list[str]:
+    paths: list[str] = []
+    for name, field in model.model_fields.items():
+        path = f"{prefix}{name}"
+        paths.append(path)
+        nested = _nested(field.annotation)
+        if nested is not None:
+            paths.extend(field_paths(nested, f"{path}."))
+    return paths
+
+
+def test_every_son_tool_has_exactly_one_spec() -> None:
+    names = [spec.name for spec in son_specs()]
+    assert sorted(names) == sorted(tool.value for tool in SonToolId)
+
+
+def test_every_mortal_tool_has_exactly_one_spec() -> None:
+    names = [spec.name for spec in mortal_specs()]
+    assert sorted(names) == sorted(tool.value for tool in MortalToolId)
+
+
+@pytest.mark.parametrize("spec", SPECS, ids=lambda spec: f"{spec.agent.value}.{spec.name}")
+def test_input_fields_are_described_by_the_prompt_catalog(spec: Any) -> None:
+    tool_id = SonToolId(spec.name) if spec.agent.value == "son" else MortalToolId(spec.name)
+    text = tool_text(tool_id, RULES, CONTEXT)
+    missing = [path for path in field_paths(spec.input_model) if path not in text.fields]
+    assert not missing
+    schema = input_schema(spec.input_model, text.fields)
+    assert schema["type"] == "object"
+    assert "$defs" not in str(schema.keys())
+
+
+@pytest.mark.parametrize("spec", SPECS, ids=lambda spec: f"{spec.agent.value}.{spec.name}")
+def test_metadata_is_explicit(spec: Any) -> None:
+    meta = spec.meta
+    assert meta.actions(RULES) >= 0
+    assert meta.essence(RULES) >= 0
+    if meta.read_only:
+        assert meta.actions(RULES) == 0
+
+
+@pytest.mark.parametrize("template", [*CommonResult, *SonResult, *MortalResult], ids=lambda template: f"{type(template).__name__}.{template.name}")
+def test_every_result_text_renders(template: Any) -> None:
+    names = jinja2.meta.find_undeclared_variables(environment().parse(template.value))
+    text = result(template, **dict.fromkeys(names, "7"))
+    assert text
+    assert "{{" not in text
+
+
+def test_rarity_gates_follow_rules() -> None:
+    by_name = {spec.name: spec for spec in son_specs()}
+    assert by_name["birth_world"].meta.minimum_rarity(RULES) is not None
+    assert by_name["world_summary"].meta.minimum_rarity(RULES) is None
+    assert by_name["create_region"].meta.minimum_rarity(RULES).rank > by_name["create_place"].meta.minimum_rarity(RULES).rank

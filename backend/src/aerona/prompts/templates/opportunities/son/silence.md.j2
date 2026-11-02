@@ -1,0 +1,4 @@
+{% set free = offered(available_tools, [("call_sibling", "call_sibling"), ("swear_covenant", "swear_covenant"), ("pray_to_father", "pray_to_father")]) %}
+{% if free %}
+{{ "You have never spoken with your siblings" if line.never_spoken else line.ages ~ " ages you have not said a word to your siblings" }}: {{ free | join(", ") }} spend no action; alliances and debts are made with them.
+{% endif %}

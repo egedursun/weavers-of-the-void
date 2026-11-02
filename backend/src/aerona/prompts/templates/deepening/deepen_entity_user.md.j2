@@ -1,0 +1,34 @@
+{% from "shared/macros.md.j2" import tired_images as tired_images_block %}
+{% set special = special_section(entity_type) %}
+{{ world_header }}
+
+ENTITY:
+{{ entity_detail }}
+
+{% if creator_son %}
+ITS CREATOR: {{ creator_son.name }}{% if creator_son.title %}, {{ creator_son.title }}{% endif %}. (The creator's obsession is not this entity's subject; the entity is told by its own nature.)
+
+{% endif %}
+NEIGHBOURING BONDS:
+{{ bond_lines[:rules.content.deepen_neighbor_links] | join("\n") if bond_lines else "(none)" }}
+
+Recent events:
+{{ recent_events if recent_events else "(none)" }}
+{% if tired_images.present %}
+
+{{ tired_images_block(tired_images) }}
+{% endif %}
+
+Deepen this entity. The output consists of SEPARATE KEYS; never write one inside another key:
+- history: only the history through the ages (2 to 4 paragraphs of prose; NO headings like "Rumours:", "Details:" inside it)
+- rumours: array; each item one rumour sentence
+- sayings: array; each item { kind, text }
+- details: array; each item one concrete detail
+- hidden_truth: a single paragraph
+{% if special %}
+- special: object; fields {% for field in special.fields %}{{ field.key }}{% if not loop.last %}, {% endif %}{% endfor %}
+
+{% endif %}
+Fate's note is a writing note: do not carry into the narrative that Fate fixed, rewrote or struck the record against a ban. Do not open the history with "In Age N" and do not count the age numbers again and again: the record's age is already known; tell time through an event, a season, a generation. Do not describe the world's sound rules (vowels, diphthongs, suffixes). Do not write record numbers (like #12), stat names and values (like power 75), star glyphs or percentages in the text; say everything in the language of the narrative. If it has died or vanished, tell it in the past tense.
+
+{% include "shared/section_keys_rule.md.j2" %}

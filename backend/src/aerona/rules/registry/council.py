@@ -1,0 +1,42 @@
+from dataclasses import dataclass
+
+from aerona.rules.groups import RuleGroup
+from aerona.rules.model import rule
+
+
+@dataclass(frozen=True)
+class CouncilRules:
+    max_members: int = rule(9, 2, 30, RuleGroup.COUNCIL, "Maximum sons joining the council")
+    min_members: int = rule(2, 2, 30, RuleGroup.COUNCIL, "Minimum sons required for the council to convene")
+    same_vote_closeness: int = rule(3, 0, 50, RuleGroup.COUNCIL, "Rapprochement between those casting the same vote")
+    covenant_relation: int = rule(12, 0, 100, RuleGroup.COUNCIL, "Relation contribution of a council covenant")
+    rupture_relation: int = rule(15, 0, 100, RuleGroup.COUNCIL, "Relation cost of a rupture in the council")
+    apocalypse_motion_push: int = rule(10, 0, 100, RuleGroup.COUNCIL, "Clock push-back of an accepted motion against the apocalypse")
+    blessing_existence: int = rule(5, 0, 100, RuleGroup.COUNCIL, "Contribution of a joint blessing to existence")
+    censure_renown_cost: int = rule(10, 0, 200, RuleGroup.COUNCIL, "Renown cost of censuring a rebel")
+    agenda_apocalypse_pct: int = rule(50, 0, 100, RuleGroup.COUNCIL, "Apocalypse comes onto the agenda at this percentage of the threshold")
+    timeout: int = rule(240, 30, 3600, RuleGroup.AGENTS_AND_MODEL, "Council timeout (s)")
+    relation_min_magnitude: int = rule(20, 0, 100, RuleGroup.COUNCIL, "Minimum magnitude (\u00b1) of sibling relations written into the council prompt")
+    alliance_rupture_cap: int = rule(3, 0, 20, RuleGroup.COUNCIL, "Maximum alliances or ruptures in one council")
+    default_interval: int = rule(4, 0, 100, RuleGroup.COUNCIL, "On a world with no set council frequency, a council convenes once every this many epochs")
+    agenda_thread_max_chars: int = rule(260, 20, 5000, RuleGroup.CONTEXT_BUDGETS, "Maximum length of an open story taken onto the agenda (characters)")
+    agenda_cut_chars: int = rule(250, 10, 5000, RuleGroup.CONTEXT_BUDGETS, "A long story is cut at the last space before this character")
+    persona_temperament_chars: int = rule(160, 0, 5000, RuleGroup.CONTEXT_BUDGETS, "Council and chat: son's temperament (characters)")
+    persona_style_chars: int = rule(120, 0, 5000, RuleGroup.CONTEXT_BUDGETS, "Council and chat: son's style (characters)")
+    persona_obsession_chars: int = rule(100, 0, 5000, RuleGroup.CONTEXT_BUDGETS, "Council and chat: son's obsession (characters)")
+    persona_plan_chars: int = rule(160, 0, 5000, RuleGroup.CONTEXT_BUDGETS, "Council and chat: son's plan (characters)")
+    chat_appearance_chars: int = rule(200, 0, 5000, RuleGroup.CONTEXT_BUDGETS, "Chat: son's appearance (characters)")
+    chat_fear_secret_chars: int = rule(120, 0, 5000, RuleGroup.CONTEXT_BUDGETS, "Chat: son's fear and secret (characters, each)")
+    chat_memory_chars: int = rule(3500, 200, 100000, RuleGroup.CONTEXT_BUDGETS, "Chat: son's memory (characters)")
+    chat_history_messages: int = rule(10, 0, 200, RuleGroup.CONTEXT_BUDGETS, "Chat: number of previous messages in the prompt")
+    chat_list_messages: int = rule(40, 1, 1000, RuleGroup.INTERFACE, "Messages shown in chat history")
+    chat_max_chars: int = rule(800, 10, 20000, RuleGroup.COUNCIL, "Longest word the god can say to his son (characters)")
+    chat_loyalty_max_change: int = rule(6, 0, 100, RuleGroup.COUNCIL, "Maximum amount a chat changes the son's loyalty (\u00b1)")
+    chat_timeout: int = rule(120, 10, 3600, RuleGroup.AGENTS_AND_MODEL, "Chat timeout (s)")
+    dream_max_chars: int = rule(600, 10, 20000, RuleGroup.COUNCIL, "Longest text of a dream sent to a mortal (characters)")
+    dream_min_chars: int = rule(5, 1, 1000, RuleGroup.COUNCIL, "Shortest text of a dream (characters)")
+    translate_max_chars: int = rule(300, 10, 20000, RuleGroup.LANGUAGE_AND_NAMES, "Longest sentence to be translated (characters)")
+    translate_lexicon_words: int = rule(250, 0, 10000, RuleGroup.LANGUAGE_AND_NAMES, "Lexicon words sent to the translation prompt")
+    translate_syllables: int = rule(12, 0, 200, RuleGroup.LANGUAGE_AND_NAMES, "Frequent initial and final syllables sent to the translation prompt (each)")
+    translate_new_words_max: int = rule(6, 0, 100, RuleGroup.LANGUAGE_AND_NAMES, "Maximum new words that can be added to the lexicon in one translation")
+    translate_timeout: int = rule(120, 10, 3600, RuleGroup.AGENTS_AND_MODEL, "Translation timeout (s)")

@@ -1,0 +1,75 @@
+[project]
+name = "aerona-image-worker"
+version = "0.1.0"
+description = "Aerona image worker: a single-GPU text-to-image queue behind a small HTTP contract"
+authors = [
+    { name = "Ege Dogan Dursun" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.162.0",
+    "pillow>=13.0.0",
+    "pydantic>=2.14.2",
+    "pydantic-settings>=2.16.2",
+    "sse-starlette>=3.6.0",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[project.optional-dependencies]
+mlx = [
+    "mflux>=0.24.0; sys_platform == 'darwin' and platform_machine == 'arm64'",
+]
+diffusers = [
+    "accelerate>=1.15.0",
+    "bitsandbytes>=0.50.2; sys_platform == 'linux'",
+    "diffusers>=0.42.1",
+    "torch>=2.15.0",
+    "transformers>=5.22.1",
+]
+
+[project.scripts]
+aerona-image-worker = "aerona_image_worker.__main__:main"
+
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+conflicts = [
+    [
+        { extra = "mlx" },
+        { extra = "diffusers" },
+    ],
+]
+
+[dependency-groups]
+dev = [
+    "asgi-lifespan>=2.1.0",
+    "httpx>=0.28.1",
+    "mypy>=2.4.1",
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.4.1",
+    "ruff>=0.17.3",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 160
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "ASYNC", "PL", "N"]
+ignore = ["PLR0913", "PLR2004"]
+
+[tool.mypy]
+strict = true
+plugins = ["pydantic.mypy"]
+mypy_path = "src"
+
+[[tool.mypy.overrides]]
+module = ["mflux", "mflux.*", "mlx", "mlx.*", "torch", "torch.*", "diffusers", "diffusers.*"]
+ignore_missing_imports = true

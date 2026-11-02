@@ -1,0 +1,13 @@
+{
+  "name": "Weavers of the Void® · Worldbuilding Studio",
+  "short_name": "Weavers of the Void",
+  "description": "A self-generating pantheon and lore engine.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#13111d",
+  "theme_color": "#13111d",
+  "icons": [
+    { "src": "/brand/logo-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/brand/logo-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

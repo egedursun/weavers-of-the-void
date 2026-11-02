@@ -1,0 +1,8 @@
+{% extends "layout.html.j2" %}
+{% from "macros.html.j2" import entity_article, son_article, chronicle_lines %}
+{% block title %}{% if son %}{{ son.son.name }}{% else %}{{ entity.entity.name }}{% endif %} · {{ book.cosmos.name }}{% endblock %}
+{% block body %}
+<p class="overline"><a href="/api/book">{{ book.cosmos.name }}</a></p>
+{% if son %}{{ son_article(son, true, links) }}{% else %}{{ entity_article(entity, true, links) }}{% endif %}
+{% if book.single_chronicle %}<h4>In the chronicle</h4>{{ chronicle_lines(book.single_chronicle, book, true) }}{% endif %}
+{% endblock %}

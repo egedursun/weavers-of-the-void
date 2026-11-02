@@ -1,0 +1,698 @@
+{% macro image(file, name) -%}
+{% if file %}![{{ name | cell }}]({{ links.media(file) }})
+
+{% endif %}
+{%- endmacro %}
+{% macro inline_stats(items) -%}
+{% for item in items %}{{ item.label }} **{{ item.value }}**{% if not loop.last %} · {% endif %}{% endfor %}
+{%- endmacro %}
+{% macro facts_table(items) -%}
+{% if items %}
+| {% for item in items %}{{ item.label | cell }} | {% endfor %}
+
+|{% for item in items %}---|{% endfor %}
+
+| {% for item in items %}{{ item.value | cell }} | {% endfor %}
+
+
+{% endif %}
+{%- endmacro %}
+{% macro sayings(items) -%}
+{% for saying in items %}
+> *{{ saying.text }}*{% if saying.form %}
+> — {{ saying.form }}{% endif %}
+
+{% endfor %}
+{%- endmacro %}
+{% macro bullets(title, items, italic=false) -%}
+{% if items %}
+**{{ title }}**
+
+{% for item in items %}
+- {% if italic %}*{{ item }}*{% else %}{{ item }}{% endif %}
+
+{% endfor %}
+
+{% endif %}
+{%- endmacro %}
+{% macro entity_depth(depth) -%}
+{% if depth %}
+{% if depth.history %}
+**History.** {{ depth.history | prose }}
+
+{% endif %}
+{{ bullets("Particulars", depth.details) }}
+{% for key, value in depth.specifics.items() %}
+**{{ key | replace("_", " ") | capitalize }}.** {{ value | prose }}
+
+{% endfor %}
+{{ sayings(depth.sayings) }}
+{{ bullets("Rumours", depth.rumours, true) }}
+{% if depth.hidden_truth %}
+> 🔒 **Hidden truth.** {{ depth.hidden_truth }}
+
+{% endif %}
+{% endif %}
+{%- endmacro %}
+{% macro god_depth(depth) -%}
+{% if depth %}
+{% if depth.history %}
+**History.** {{ depth.history | prose }}
+
+{% endif %}
+{% if depth.names %}
+**Names**
+
+{% for name in depth.names %}
+- **{{ name.name }}**{% if name.used_by %} — among {{ name.used_by }}{% endif %}{% if name.meaning %}: {{ name.meaning }}{% endif %}
+
+{% endfor %}
+
+{% endif %}
+{% if depth.desire %}
+**Desire.** {{ depth.desire }}
+
+{% endif %}
+{{ bullets("Gifts", depth.gifts) }}
+{{ bullets("Fears", depth.fears) }}
+{{ bullets("Taboos", depth.taboos) }}
+{{ sayings(depth.sayings) }}
+{{ bullets("Rumours", depth.rumours, true) }}
+{% for secret in depth.secrets %}
+> 🔒 **Secret.** {{ secret }}
+
+{% endfor %}
+{% endif %}
+{%- endmacro %}
+{% macro personality(profile) -%}
+{% if profile %}
+{% for label, value in [("Appearance", profile.appearance), ("Temperament", profile.temperament), ("Obsession", profile.obsession), ("Fear", profile.fear), ("Voice", profile.speech_style)] if value %}
+**{{ label }}.** {{ value }}
+
+{% endfor %}
+{% if profile.secret %}
+> 🔒 **Secret.** {{ profile.secret }}
+
+{% endif %}
+{% endif %}
+{%- endmacro %}
+{% macro existence(profile) -%}
+{% if profile and (profile.nature or profile.manifestation or profile.true_name) %}
+**Nature of being.** {{ profile.nature }} {{ profile.manifestation }}{% if profile.true_name %} *True name: {{ profile.true_name }}.*{% endif %}
+
+
+{% endif %}
+{%- endmacro %}
+{% macro epic(value, level) -%}
+{% if value %}
+{{ level | heading }} {{ value.title }}
+
+{% if value.verse %}
+> *{{ value.verse | replace("\n", "*  \n> *") }}*
+
+{% endif %}
+{% if value.body %}
+{{ value.body | prose }}
+
+{% endif %}
+{% for chapter in value.chapters %}
+{{ (level + 1) | heading }} {{ chapter.title }} · epochs {{ chapter.epoch_start }}–{{ chapter.epoch_end }}
+
+{{ chapter.text | prose }}
+
+{% endfor %}
+{% endif %}
+{%- endmacro %}
+{% macro codex_entity(article) -%}
+<a id="{{ article.anchor }}"></a>
+
+{{ (3 + article.depth_level) | heading }} {{ article.entity.name }}{% if article.entity.status.value in ("dead", "destroyed") %} †{% endif %}
+
+
+{% if article.entity.title %}
+*{{ article.entity.title }}*
+
+{% endif %}
+{{ image(article.cover, article.entity.name) }}
+`{{ article.type_label }}` · {{ article.meta[1:] | join(" · ") }}
+
+{% if article.description %}
+{{ article.description | prose }}
+
+{% endif %}
+{% if article.stats %}
+{{ inline_stats(article.stats) }}
+
+{% endif %}
+{{ entity_depth(article.entity.depth) }}
+{% if article.ending %}
+*{{ article.ending }}*
+
+{% elif article.entity.fate_note %}
+**Fate's judgement.** {{ article.entity.fate_note }}
+
+{% endif %}
+{% if article.bonds %}
+**Ties.** {{ article.bonds | join("; ") }}
+
+{% endif %}
+{% if article.past_bonds %}
+*Once: {{ article.past_bonds | join("; ") }}*
+
+{% endif %}
+{% if article.tags %}
+{% for tag in article.tags %}`#{{ tag | replace(" ", "-") }}` {% endfor %}
+
+
+{% endif %}
+{% for child in article.children %}{{ codex_entity(child) }}{% endfor %}
+{%- endmacro %}
+{% if not book %}
+# There is no world yet
+{% else %}
+{% set world_count = book.stars | sum(attribute="worlds", start=[]) | length %}
+# {{ book.cosmos.name }}
+
+{% if book.creator %}
+*The book of {{ book.cosmos.name }}, as witnessed by {{ book.creator.name }}{% if book.creator.title %}, {{ book.creator.title }}{% endif %}*
+
+{% endif %}
+{{ image(book.cover, book.cosmos.name) }}
+| Epochs | Years | Children | Worlds | Records |
+|---|---|---|---|---|
+| {{ book.epochs_count }} | {{ book.world_year }} | {{ book.sons | length }} | {{ world_count }} | {{ book.record_count }} |
+
+## Contents
+
+- [Cosmology](#cosmology)
+{% if book.creator %}
+- [{{ book.creator.name }}](#creator)
+{% endif %}
+- [The Heavens](#cosmos)
+{% if book.foreign_gods %}
+- [Foreign Gods](#foreign-gods)
+{% endif %}
+{% if book.sons %}
+- [The Pantheon](#pantheon)
+{% endif %}
+{% if book.chapters %}
+- [The Epochs](#epochs)
+{% endif %}
+{% if book.wars %}
+- [Wars](#wars)
+{% endif %}
+- [Encyclopedia](#encyclopedia)
+{% if book.knowledge %}
+- [Knowledge](#knowledge)
+{% endif %}
+{% if book.languages %}
+- [Tongues and Dictionaries](#languages)
+{% endif %}
+- [Stories, Facts and Prayers](#stories)
+- [Deeds and Trials](#achievements)
+{% if book.ledger %}
+- [Fate's Ledger](#ledger)
+{% endif %}
+
+---
+
+<a id="cosmology"></a>
+
+## Cosmology
+
+{% if book.cosmos.tone %}
+*{{ book.cosmos.tone }}*
+
+{% endif %}
+{% if book.cosmos.cosmology %}
+{{ book.cosmos.cosmology | prose }}
+
+{% endif %}
+{% if book.cosmos.seed_idea %}
+> **The seed of creation.** {{ book.cosmos.seed_idea }}
+
+{% endif %}
+{% if book.laws %}
+### Laws of nature
+
+{% for law in book.laws %}
+- **{{ law.entity.name }}.** {{ law.description }}{% if law.entity.natural_law %} *(Mechanism: {{ law.entity.natural_law.value | replace("_", " ") }})*{% endif %}
+
+{% endfor %}
+
+{% endif %}
+{% if book.creator %}
+---
+
+<a id="creator"></a>
+
+## {{ book.creator.name }}{% if book.creator.title %}, {{ book.creator.title }}{% endif %}
+
+
+{{ image(book.creator_cover, book.creator.name) }}
+Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.mood_anger }}** · Interest **{{ book.creator.mood_interest }}** · Loneliness **{{ book.creator.mood_loneliness }}**
+
+{% if book.creator.passions %}
+*Passions: {{ book.creator.passions | join(", ") }}*
+
+{% endif %}
+{% if book.creator.appearance %}
+**Appearance.** {{ book.creator.appearance | prose }}
+
+{% endif %}
+{% if book.creator.temperament %}
+**Temperament.** {{ book.creator.temperament | prose }}
+
+{% endif %}
+{% if book.creator.note %}
+> **The creator's own note.** {{ book.creator.note }}
+
+{% endif %}
+{{ epic(book.creator.epic, 3) }}
+{{ god_depth(book.creator.depth) }}
+{% if book.creator_beliefs %}
+### Through the peoples' eyes
+
+{% for belief in book.creator_beliefs %}
+- **{{ book.names.get(belief.people_entity_id, "?") }}** call {{ book.creator.name }} “{{ belief.local_name or book.creator.name }}”: {{ belief.account }}{% if belief.misconception %} *(Misconception: {{ belief.misconception }})*{% endif %}
+
+{% endfor %}
+
+{% endif %}
+{% if book.creator_hand %}
+### The Creator's hand
+
+{% for hand in book.creator_hand %}
+**Epoch {{ hand.epoch }}**
+
+{% for deed in hand.deeds %}
+- {{ deed.text }}{% if deed.undone %} *(undone)*{% endif %}{% if deed.unledgered %} *(of its own accord)*{% endif %}
+
+{% endfor %}
+
+{% endfor %}
+{% endif %}
+{% endif %}
+---
+
+<a id="cosmos"></a>
+
+## The Heavens
+
+{% for section in book.stars %}
+{% if section.star %}
+<a id="{{ section.anchor }}"></a>
+
+### ☉ {{ section.star.name }}
+
+{{ image(section.cover, section.star.name) }}
+{{ facts_table(section.facts) }}
+{% if section.star.description %}
+{{ section.star.description | prose }}
+
+{% endif %}
+{{ entity_depth(section.star.depth) }}
+{% elif section.worlds %}
+### Wandering worlds
+
+{% endif %}
+{% for world in section.worlds %}
+<a id="{{ world.anchor }}"></a>
+
+{{ [4 + world.depth_level, 6] | min | heading }} {{ world.world.name }}
+
+*{{ world.meta | join(" · ") }}*
+
+{{ image(world.cover, world.world.name) }}
+{% if world.world.description %}
+{{ world.world.description | prose }}
+
+{% endif %}
+{{ facts_table(world.facts) }}
+{% if world.picture %}
+![{{ world.world.name }}: the known world]({{ links.terrain(world.picture) }})
+
+{% endif %}
+{% if world.world.cosmology %}
+**What its peoples believe.** {{ world.world.cosmology | prose }}
+
+{% endif %}
+{{ entity_depth(world.world.depth) }}
+**Traveller's guide.**
+
+{{ guide_markdown(world.guide) }}
+
+{% endfor %}
+{% endfor %}
+{% if book.routes %}
+### Roads between worlds
+
+| Between | Way | Epochs | Danger | Opened |
+|---|---|---|---|---|
+{% for first, second, route in book.routes %}
+| {{ first | cell }} ↔ {{ second | cell }}{% if route.description %} — {{ route.description | cell }}{% endif %} | {{ route.method.value | replace("_", " ") }}{% if not route.active %}, sealed{% endif %}{% if not route.known %}, unknown{% endif %} | {{ route.duration_epochs }} | {{ route.danger }} | {{ route.created_epoch }} |
+{% endfor %}
+
+{% endif %}
+{% if book.journeys %}
+### Journeys
+
+{% for traveller, journey in book.journeys %}
+- **Epoch {{ journey.start_epoch }}.** {{ traveller }} · {{ journey.intent.value | replace("_", " ") }} · *{{ journey.status.value | replace("_", " ") }}*
+{% endfor %}
+
+{% endif %}
+{% if book.foreign_gods %}
+---
+
+<a id="foreign-gods"></a>
+
+## Foreign Gods
+
+{% for article in book.foreign_gods %}
+<a id="{{ article.anchor }}"></a>
+
+### {{ article.god.name }}{% if article.god.title %}, {{ article.god.title }}{% endif %}
+
+
+{{ image(article.cover, article.god.name) }}
+*{{ article.world }} · {{ article.god.status.value | replace("_", " ") }}* · Power **{{ article.god.power }}** · Faith **{{ article.god.faith }}** · Attitude **{{ article.god.stance }}**
+
+{% if article.god.description %}
+{{ article.god.description | prose }}
+
+{% endif %}
+{{ inline_stats(article.stats) }}
+
+{{ personality(article.god.personality) }}
+{{ existence(article.god.existence_profile) }}
+{% if article.powers %}
+**Powers**
+
+{% for power in article.powers %}
+- **{{ power.label }}.** {{ power.value }}
+{% endfor %}
+
+{% endif %}
+{{ god_depth(article.god.depth) }}
+{{ bullets("Fate", article.fate) }}
+{% endfor %}
+{% endif %}
+{% if book.sons %}
+---
+
+<a id="pantheon"></a>
+
+## The Pantheon
+
+{% for article in book.sons %}
+<a id="{{ article.anchor }}"></a>
+
+### {{ article.son.name }}{% if article.son.status.value == "dead" %} †{% endif %}
+
+
+{{ image(article.cover, article.son.name) }}
+*{{ article.meta | join(" · ") }}*
+
+{{ inline_stats(article.stats) }} · Fame **{{ article.son.fame }}** · Faith **{{ article.son.faith }}**
+
+*Passions:* {{ inline_stats(article.passions) }}
+
+{{ personality(article.son.personality) }}
+{{ existence(article.son.existence_profile) }}
+{% if article.powers %}
+**Powers**
+
+{% for power in article.powers %}
+- **{{ power.label }}.** {{ power.value }}
+{% endfor %}
+
+{% endif %}
+{% if article.son.plan %}
+> **Plan.** {{ article.son.plan }}
+
+{% endif %}
+{% if article.son.standing_order %}
+> **Standing order{% if article.son.order_absolute %}, absolute{% endif %}.** {{ article.son.standing_order }}
+
+{% endif %}
+{{ epic(article.son.epic, 4) }}
+{% if article.relations %}
+**Brothers and sisters.** {{ inline_stats(article.relations) }}
+
+{% endif %}
+{% if article.bonds %}
+**Ties.** {{ article.bonds | join("; ") }}
+
+{% endif %}
+{{ bullets("Fate", article.fate) }}
+{% if article.creations %}
+**Creations ({{ article.creations | length }}).** {% for id, name in article.creations %}[{{ name }}](#entity-{{ id }}){% if not loop.last %} · {% endif %}{% endfor %}
+
+
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if book.chapters %}
+---
+
+<a id="epochs"></a>
+
+## The Epochs
+
+{% if book.cosmic %}
+{% set world_names = book.cosmic | map(attribute="worlds") | sum(start=[]) | map(attribute="name") | unique | list %}
+### The cosmic chronicle
+
+| Epoch | {{ world_names | join(" | ") }} |
+|---|{% for name in world_names %}---|{% endfor %}
+
+{% for epoch in book.cosmic %}
+| {{ epoch.epoch }}{% if epoch.name %} · {{ epoch.name | cell }}{% endif %} | {% for name in world_names %}{% set found = epoch.worlds | selectattr("name", "equalto", name) | list %}{{ (found[0].headlines[:2] | join("; ") if found else "") | cell }} | {% endfor %}
+
+{% endfor %}
+
+{% endif %}
+{% for chapter in book.chapters %}
+<a id="{{ chapter.anchor }}"></a>
+
+### {{ chapter.numeral }}. {% if chapter.row and chapter.row.name %}{{ chapter.row.name }}{% else %}Epoch {{ chapter.epoch }}{% endif %}
+
+
+*Epoch {{ chapter.epoch }}{% if chapter.row and chapter.row.year_start is not none %} · years {{ chapter.row.year_start }}–{{ chapter.row.year_end }}{% endif %}{% if chapter.row and chapter.row.chronicler_name %} · set down by {{ chapter.row.chronicler_name }}{% if chapter.row.chronicler_identity %}, {{ chapter.row.chronicler_identity }}{% endif %}{% endif %}*
+
+{% if chapter.row and chapter.row.summary %}
+> {{ chapter.row.summary }}
+
+{% endif %}
+{% if chapter.row and chapter.row.narrative %}
+{{ chapter.row.narrative | prose }}
+
+{% endif %}
+{% for world_name, narrative in chapter.world_chapters %}
+**On {{ world_name }}.** {{ narrative.narrative | prose }}
+
+{% endfor %}
+{% if chapter.stats %}
+| Population | Followers | Records | Languages | Words | Knowledge | Wars | Trade | Alliances | Dead |
+|---|---|---|---|---|---|---|---|---|---|
+| {{ chapter.stats.population }} | {{ chapter.stats.followers }} | {{ chapter.stats.entities }} | {{ chapter.stats.languages }} | {{ chapter.stats.words }} | {{ chapter.stats.knowledge }} | {{ chapter.stats.wars }} | {{ chapter.stats.trade_routes }} | {{ chapter.stats.alliances }} | {{ chapter.stats.dead }} |
+
+{% endif %}
+{% for people, view in chapter.perspectives %}
+> *{{ view.text }}*
+> — as {{ people }}'s historian tells it{% if view.historian %} · {{ view.historian }}{% endif %}
+
+
+{% endfor %}
+{% for council in chapter.councils %}
+**Council: {{ council.topic }}**
+
+{% for speech in council.minutes.speeches %}
+- **{{ speech.name }}.** {{ speech.words }}
+{% endfor %}
+
+*{{ council.minutes.motion }}* — **{{ "passed" if council.passed else "rejected" }}.** {{ council.minutes.decision }}
+
+{% endfor %}
+{% if chapter.lines %}
+{% for line in chapter.lines %}
+- `{{ line.kind }}{% if line.year is not none %} · year {{ line.year }}{% endif %}` {{ line.text }}{% if line.son_id %} — *{{ book.names.get(line.son_id, "?") }}*{% endif %}
+
+{% endfor %}
+
+{% endif %}
+{% if chapter.born %}
+*Born in this epoch: {% for id, name in chapter.born %}[{{ name }}](#entity-{{ id }}){% if not loop.last %}, {% endif %}{% endfor %}*
+
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if book.wars %}
+---
+
+<a id="wars"></a>
+
+## Wars
+
+{% for war in book.wars %}
+<a id="{{ war.anchor }}"></a>
+
+### ⚔ {{ war.name }}
+
+*{{ war.world }} · {{ war.war.cause.value | replace("_", " ") }} · {% if war.war.ended_epoch is not none %}epochs {{ war.war.started_epoch }}–{{ war.war.ended_epoch }}{% else %}since epoch {{ war.war.started_epoch }}, {{ war.war.status.value }}{% endif %}{% if war.war.ending %} · ended in {{ war.war.ending.value | replace("_", " ") }}{% endif %}{% if war.instigator %} · stirred by {{ war.instigator }}{% endif %}*
+
+{% if war.war.cause_text %}
+{{ war.war.cause_text }}
+
+{% endif %}
+| Attackers | Defenders |
+|---|---|
+| {{ war.attackers | join(", ") | cell }} | {{ war.defenders | join(", ") | cell }} |
+
+Battles **{{ war.war.battles }}** · Momentum **{{ war.war.score }}**{% if war.war.violence is not none %} · Violence **{{ war.war.violence }}**{% endif %}{% if war.victor %} · Victor **{{ war.victor }}**{% endif %}
+
+
+{% if war.battles %}
+| Epoch | Battle | Victor | Defeated | Outcome |
+|---|---|---|---|---|
+{% for battle in war.battles %}
+| {{ battle.epoch }} | {{ (battle.name or ("Battle " ~ battle.sequence)) | cell }}{% if battle.place %} at {{ battle.place | cell }}{% endif %} | {{ battle.winner | cell }} | {{ battle.loser | cell }} | {{ battle.outcome }} |
+{% endfor %}
+
+{% endif %}
+{% for siege in war.sieges %}
+- **Siege, epoch {{ siege.started_epoch }}{% if siege.ended_epoch is not none %}–{{ siege.ended_epoch }}{% endif %}.** {{ siege.besieger }} besieged {{ siege.besieged }}: {{ siege.status | lower }}, {{ siege.rounds }} rounds.
+{% endfor %}
+
+{% endfor %}
+{% endif %}
+---
+
+<a id="encyclopedia"></a>
+
+## Encyclopedia
+
+{% for group in book.encyclopedia %}
+{% if group.name %}
+## {{ group.name }}
+
+{% endif %}
+{% for label, articles in group.groups %}
+### {{ label }} · {{ articles | length }}
+
+{% for article in articles %}{{ codex_entity(article) }}{% endfor %}
+{% endfor %}
+{% endfor %}
+{% if book.knowledge %}
+---
+
+<a id="knowledge"></a>
+
+## Knowledge
+
+| Discovery | Branch | Level | Known by |
+|---|---|---|---|
+{% for item, branch, level, knowers in book.knowledge %}
+| [{{ item.name | cell }}](#entity-{{ item.id }}) | {{ (branch or "") | cell }} | {{ level if level is not none else "" }} | {{ knowers | join(", ") | cell }} |
+{% endfor %}
+
+{% endif %}
+{% if book.languages %}
+---
+
+<a id="languages"></a>
+
+## Tongues and Dictionaries
+
+{% for language in book.languages %}
+{{ codex_entity(language.article) }}
+*{{ language.words | length }} words · {% if language.speakers %}spoken by {{ language.speakers | join(", ") }}{% else %}a dead language{% endif %}*
+
+{% if language.words %}
+| Word | Kind | Meaning | Origin | Example |
+|---|---|---|---|---|
+{% for word in language.words %}
+| **{{ word.word | cell }}** | {{ (word.part_of_speech.value if word.part_of_speech else "") | cell }} | {{ word.meaning | cell }} | {{ word.etymology | cell }} | {{ word.example | cell }} |
+{% endfor %}
+
+{% endif %}
+{% endfor %}
+{% endif %}
+---
+
+<a id="stories"></a>
+
+## Stories, Facts and Prayers
+
+{% if book.open_threads %}
+### Stories still unfolding
+
+{% for thread in book.open_threads %}
+- **Epoch {{ thread.epoch }}.** {{ thread.text }}
+{% endfor %}
+
+{% endif %}
+{% if book.closed_threads %}
+### Stories that ended
+
+{% for thread in book.closed_threads %}
+- **Epochs {{ thread.epoch }}–{{ thread.closed_epoch }}.** {{ thread.text }}{% if thread.closing_text %} *— {{ thread.closing_text }}*{% endif %}
+
+{% endfor %}
+
+{% endif %}
+{% if book.facts %}
+### Canon facts
+
+| Subject | Fact | Object | Epoch |
+|---|---|---|---|
+{% for subject, fact, target in book.facts %}
+| {{ subject | cell }} | *{{ fact.predicate | replace("_", " ") | cell }}* | {{ target | cell }} | {{ fact.epoch }} |
+{% endfor %}
+
+{% endif %}
+{% if book.prayers %}
+### Prayers and answers
+
+{% for sender, recipient, message in book.prayers %}
+> **{{ sender }} → {{ recipient }}** · *{{ message.intent.value | replace("_", " ") }}{% if message.request %} · {{ message.request.value | replace("_", " ") }}{% endif %}*
+> {{ message.text | replace("\n", " ") }}
+
+{% endfor %}
+{% endif %}
+---
+
+<a id="achievements"></a>
+
+## Deeds and Trials
+
+{% if book.scores %}
+Score **{{ book.scores[-1].total }}** · Achievements **{{ book.achievements | length }}**
+
+{% endif %}
+{% for name, epoch in book.achievements %}
+- 🏆 **{{ name }}** · epoch {{ epoch }}
+{% endfor %}
+
+{% if book.scenarios %}
+| Trial | State | Epochs |
+|---|---|---|
+{% for name, scenario in book.scenarios %}
+| {{ name | cell }} | {{ scenario.status.value | replace("_", " ") }} | {{ scenario.start_epoch }}{% if scenario.end_epoch %}–{{ scenario.end_epoch }}{% endif %} |
+{% endfor %}
+
+{% endif %}
+{% if book.ledger %}
+---
+
+<a id="ledger"></a>
+
+## Fate's Ledger
+
+{% for entry in book.ledger %}
+- **Epoch {{ entry.epoch }}.** {{ entry.actor_name }} · {{ entry.tool | replace("_", " ") | replace(":", " ") }}{% if entry.undone %} *(undone)*{% endif %}{% if entry.input_summary %} — {{ entry.input_summary }}{% endif %}
+
+{% endfor %}
+{% endif %}
+{% endif %}

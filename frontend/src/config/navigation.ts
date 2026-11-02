@@ -1,0 +1,353 @@
+import {
+  Archive,
+  Bell,
+  BookOpen,
+  Cpu,
+  FileText,
+  Crown,
+  Gamepad2,
+  HandHeart,
+  Hourglass,
+  ImagePlus,
+  Images,
+  Languages,
+  LayoutDashboard,
+  type LucideIcon,
+  Map as MapIcon,
+  NotebookPen,
+  Orbit,
+  Palette,
+  Scale,
+  ScrollText,
+  Settings,
+  SlidersHorizontal,
+  Sparkles,
+  Swords,
+  SunMoon,
+  Target,
+  UsersRound,
+  Waypoints,
+  Wrench,
+} from 'lucide-react'
+
+export type NavRoute =
+  | '/'
+  | '/epoch'
+  | '/pantheon'
+  | '/goals'
+  | '/council'
+  | '/prayers'
+  | '/cosmos'
+  | '/map'
+  | '/atlas'
+  | '/network'
+  | '/wars'
+  | '/chronicle'
+  | '/languages'
+  | '/gallery'
+  | '/ledger'
+  | '/notifications'
+  | '/settings/appearance'
+  | '/settings/game'
+  | '/settings/records'
+  | '/settings/data'
+  | '/settings/world-rules'
+  | '/settings/engine'
+  | '/settings/fate'
+  | '/settings/prompts'
+  | '/settings/maintenance'
+  | '/settings/images'
+  | '/design'
+  | '/genesis'
+
+export type NavItem = {
+  id: string
+  title: string
+  to: NavRoute
+  icon: LucideIcon
+  description: string
+  shortcut?: string
+}
+
+export type NavSection = NavItem & {
+  children?: NavItem[]
+}
+
+export type NavGroup = {
+  title: string
+  items: NavSection[]
+}
+
+export const SETTINGS_TABS: NavItem[] = [
+  {
+    id: 'settings-appearance',
+    title: 'Appearance',
+    to: '/settings/appearance',
+    icon: SunMoon,
+    description: 'Theme, font and motion preferences for this browser.',
+  },
+  {
+    id: 'settings-game',
+    title: 'Game',
+    to: '/settings/game',
+    icon: Gamepad2,
+    description: 'Fate, sons, councils, mortal agents and guide settings.',
+  },
+  {
+    id: 'settings-records',
+    title: 'Records',
+    to: '/settings/records',
+    icon: NotebookPen,
+    description: 'Model metrics, book and codex exports.',
+  },
+  {
+    id: 'settings-data',
+    title: 'Data',
+    to: '/settings/data',
+    icon: Archive,
+    description: 'Backups, import, export, health and world reset.',
+  },
+  {
+    id: 'settings-world-rules',
+    title: 'World rules',
+    to: '/settings/world-rules',
+    icon: SlidersHorizontal,
+    description: 'Every tunable number of the world, grouped and searchable.',
+  },
+  {
+    id: 'settings-engine',
+    title: 'Engine',
+    to: '/settings/engine',
+    icon: Cpu,
+    description:
+      'Switch world-engine steps on or off, run one now, and check integrity.',
+  },
+  {
+    id: 'settings-fate',
+    title: 'Fate',
+    to: '/settings/fate',
+    icon: Scale,
+    description:
+      "Fate's debt, limbo, retries, overruled verdicts and historian accounts.",
+  },
+  {
+    id: 'settings-prompts',
+    title: 'Prompts',
+    to: '/settings/prompts',
+    icon: FileText,
+    description:
+      'Son prompts, context blocks, the prompt catalogue and tired motifs.',
+  },
+  {
+    id: 'settings-images',
+    title: 'Images',
+    to: '/settings/images',
+    icon: ImagePlus,
+    description: 'Bulk image generation, missing images and the image worker.',
+  },
+  {
+    id: 'settings-maintenance',
+    title: 'Maintenance',
+    to: '/settings/maintenance',
+    icon: Wrench,
+    description: 'Missing content, writing jobs and every housekeeping task.',
+  },
+]
+
+export const NAV_GROUPS: NavGroup[] = [
+  {
+    title: 'Pantheon',
+    items: [
+      {
+        id: 'overview',
+        title: 'Overview',
+        to: '/',
+        icon: LayoutDashboard,
+        description: 'The state of your cosmos at a glance.',
+      },
+      {
+        id: 'epoch',
+        title: 'Epoch',
+        to: '/epoch',
+        icon: Hourglass,
+        description: 'Run, stop and resume the epoch, or let one son act.',
+      },
+      {
+        id: 'pantheon',
+        title: 'Pantheon',
+        to: '/pantheon',
+        icon: Crown,
+        description: 'Your sons, their cards, threads and rivalries.',
+        shortcut: '1',
+      },
+      {
+        id: 'goals',
+        title: 'Goals',
+        to: '/goals',
+        icon: Target,
+        description: 'Scenario goals, score and achievements.',
+      },
+      {
+        id: 'council',
+        title: 'Council',
+        to: '/council',
+        icon: UsersRound,
+        description: 'Councils of the brothers and their verdicts.',
+      },
+      {
+        id: 'prayers',
+        title: 'Prayers',
+        to: '/prayers',
+        icon: HandHeart,
+        description: 'Wishes from sons and mortals awaiting your answer.',
+        shortcut: '9',
+      },
+    ],
+  },
+  {
+    title: 'World',
+    items: [
+      {
+        id: 'cosmos',
+        title: 'Cosmos',
+        to: '/cosmos',
+        icon: Orbit,
+        description: 'Stars, worlds, routes, voyages and foreign gods.',
+        shortcut: '2',
+      },
+      {
+        id: 'map',
+        title: 'Map',
+        to: '/map',
+        icon: MapIcon,
+        description: 'Regions, settlements, peoples, roads and wars.',
+        shortcut: '3',
+      },
+      {
+        id: 'atlas',
+        title: 'Atlas',
+        to: '/atlas',
+        icon: BookOpen,
+        description: 'Every record of the world, by type and family.',
+        shortcut: '4',
+      },
+      {
+        id: 'network',
+        title: 'Network',
+        to: '/network',
+        icon: Waypoints,
+        description: 'The knowledge graph of records and their bonds.',
+        shortcut: '5',
+      },
+      {
+        id: 'wars',
+        title: 'Wars',
+        to: '/wars',
+        icon: Swords,
+        description: 'Wars, armies, battles, sieges, captives and tributes.',
+      },
+    ],
+  },
+  {
+    title: 'History',
+    items: [
+      {
+        id: 'chronicle',
+        title: 'Chronicle',
+        to: '/chronicle',
+        icon: ScrollText,
+        description: 'Epoch by epoch, the history Fate has written.',
+        shortcut: '6',
+      },
+      {
+        id: 'languages',
+        title: 'Languages',
+        to: '/languages',
+        icon: Languages,
+        description: 'Dictionaries, language families and knowledge.',
+        shortcut: '7',
+      },
+      {
+        id: 'gallery',
+        title: 'Gallery',
+        to: '/gallery',
+        icon: Images,
+        description: 'Every image of the world and the missing ones.',
+        shortcut: '8',
+      },
+    ],
+  },
+  {
+    title: 'Records',
+    items: [
+      {
+        id: 'ledger',
+        title: 'Ledger',
+        to: '/ledger',
+        icon: NotebookPen,
+        description: 'Your actions with undo, notes and bookmarks.',
+      },
+      {
+        id: 'notifications',
+        title: 'Notifications',
+        to: '/notifications',
+        icon: Bell,
+        description: 'What happened while you were away.',
+      },
+    ],
+  },
+  {
+    title: 'System',
+    items: [
+      {
+        id: 'settings',
+        title: 'Settings',
+        to: '/settings/appearance',
+        icon: Settings,
+        description: 'Preferences, game options, data and world rules.',
+        children: SETTINGS_TABS,
+      },
+      {
+        id: 'design',
+        title: 'Design reference',
+        to: '/design',
+        icon: Palette,
+        description: 'Every component and text role in both themes.',
+      },
+    ],
+  },
+]
+
+export const GENESIS_ITEM: NavItem = {
+  id: 'genesis',
+  title: 'Genesis',
+  to: '/genesis',
+  icon: Sparkles,
+  description: 'Create a new world, its Creator and the first sons.',
+}
+
+export function allNavItems(): NavItem[] {
+  return [
+    ...NAV_GROUPS.flatMap((group) =>
+      group.items.flatMap((item) => [item, ...(item.children ?? [])])
+    ),
+    GENESIS_ITEM,
+  ]
+}
+
+export function shortcutItems(): NavItem[] {
+  return allNavItems()
+    .filter((item) => item.shortcut !== undefined)
+    .sort((left, right) => Number(left.shortcut) - Number(right.shortcut))
+}
+
+export function navItem(id: string): NavItem {
+  const found = allNavItems().find((item) => item.id === id)
+  if (!found) throw new Error(`Unknown navigation item: ${id}`)
+  return found
+}
+
+export function isNavItemActive(pathname: string, item: NavItem): boolean {
+  if (item.to === '/') return pathname === '/'
+  return pathname === item.to || pathname.startsWith(`${item.to}/`)
+}

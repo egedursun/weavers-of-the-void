@@ -1,0 +1,39 @@
+{% macro records(items) -%}
+{% for item in items %}#{{ item.id }} {{ item.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+{%- endmacro %}
+{% macro valued(items) -%}
+{% for item in items %}#{{ item.id }} {{ item.name }} ({{ item.value }}){% if not loop.last %}, {% endif %}{% endfor %}
+{%- endmacro %}
+{% macro choices(options) -%}
+{% if options | length > 1 %}{{ options[:-1] | join(", ") }} or {{ options[-1] }}{% elif options %}{{ options[0] }}{% endif %}
+{%- endmacro %}
+{% macro suggestion(item) -%}
+{%- set target = ("#" ~ item.target.id ~ " " ~ item.target.name) if item.target else "" -%}
+{%- set second = ("#" ~ item.second.id ~ " " ~ item.second.name) if item.second else "" -%}
+{{ item.tool }}{% if target %} {{ target }}{% endif %}{% if second %} and {{ second }}{% endif %} (
+{%- if item.reason == "rival_creation" %}your rival's creation
+{%- elif item.reason == "rival_settlement" %}a settlement worshipping {{ item.label }}
+{%- elif item.reason == "rival_worshipper" %}your rival's worshipper{% if item.value is not none %}; chance about {{ item.value }}%{% endif %}
+{%- elif item.reason == "own_and_neighbour" %}your worshipper and its neighbour
+{%- elif item.reason == "poor_worshipper" %}your worshipper's prosperity is {{ item.value }}
+{%- elif item.reason == "rebelled_against_you" %}it rose against you
+{%- elif item.reason == "hostile_pair" %}pour this enmity into an event
+{%- elif item.reason == "rich_essence" %}your essence is {{ item.value }}
+{%- elif item.reason == "few_celestials" %}this world's sky holds only {{ item.value }} bodies
+{%- elif item.reason == "few_laws" %}this world has only {{ item.value }} natural laws
+{%- elif item.reason == "no_road" %}no known road leaves your world
+{%- elif item.reason == "no_faction" %}a settlement of yours without any faction or guild
+{%- elif item.reason == "unclaimed" %}it worships no one
+{%- elif item.reason == "own_mortal" %}a mortal who worships you
+{%- elif item.reason == "hungry" %}your worshippers go hungry
+{%- elif item.reason == "godless" %}it is godless
+{%- elif item.reason == "best_stat" %}your {{ item.label }} {{ item.value }} is your strongest edge
+{%- elif item.reason == "speak" %}threat or bargain; no action spent
+{%- elif item.reason == "tense_neighbour" %}your relation is {{ item.value }}
+{%- elif item.reason == "poorer_neighbour" %}their wealth is {{ item.value }}; a debtor who repays becomes a friend
+{%- elif item.reason == "shipless" %}you know shipbuilding but have no ship
+{%- elif item.reason == "open_route" %}a road to {{ item.label }}
+{%- elif item.reason == "other_faith" %}{{ item.label }}
+{%- elif item.reason == "enemy" %}your enemy or a soured neighbour
+{%- endif %})
+{%- endmacro %}

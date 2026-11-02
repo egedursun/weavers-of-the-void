@@ -1,0 +1,178 @@
+from itertools import combinations
+
+from aerona.catalog.rarities import build_rarity_table
+from aerona.catalog.stats import EXISTENCE_BAND_LABELS, existence_band, max_essence, max_hp
+from aerona.constants.schema import SINGLETON_ID
+from aerona.constants.units import PERCENT
+from aerona.core.errors import ValidationFailedError
+from aerona.db.repositories.sons import SonRepository
+from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.cosmos import CosmosRow
+from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
+from aerona.domain.enums.son import ExistenceBand, PowerEffect, SonStatus
+from aerona.engine.context import TickContext
+from aerona.engine.notes import note
+from aerona.engine.phase import Phase
+from aerona.engine.primitives.faith import has_unlocked_power, son_faith, worshipper_count
+from aerona.engine.primitives.ledger import LedgerKey, record
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import active_bonds, entity, living_entity, living_sons
+from aerona.rules.registry import Rules
+
+ANCHOR_ALIVE_STATUSES = frozenset({EntityStatus.CANON, EntityStatus.FULFILLED})
+REMEMBERING_TYPES = frozenset({EntityType.ARTWORK, EntityType.LEGEND})
+
+
+def existence_target(rules: Rules, faith: int, fame: int, anchor_alive: bool, worshippers: int) -> int:
+    core = rules.core_rules
+    value = (
+        core.existence_base
+        + min(core.existence_faith_cap, faith / core.existence_faith_divisor)
+        + min(core.existence_renown_cap, fame / core.existence_renown_divisor)
+        + (core.existence_anchor_bonus if anchor_alive else -core.existence_anchorless_penalty)
+        - (0 if worshippers else core.existence_no_worshipper_penalty)
+    )
+    return clamp_int(value, 0, PERCENT)
+
+
+def step_toward(current: int, target: int, step: int) -> int:
+    if target > current:
+        return min(target, current + step)
+    return max(target, current - step)
+
+
+async def star_domains(ctx: TickContext, son: SonRow) -> set[Domain]:
+    cosmos = await ctx.session.get(CosmosRow, SINGLETON_ID)
+    world_ids = [son.current_world_id, cosmos.primary_world_id if cosmos is not None else None]
+    domains: set[Domain] = set()
+    for world_id in world_ids:
+        world = await ctx.session.get(WorldRow, world_id) if world_id is not None else None
+        star = await entity(ctx.session, world.epoch_star_entity_id) if world is not None else None
+        if star is not None and star.domain is not None:
+            domains.add(star.domain)
+            break
+    return domains
+
+
+async def wake_or_heal(ctx: TickContext, son: SonRow) -> None:
+    transition = ctx.rules.world_epoch_transition
+    ceiling = max_hp(ctx.rules, son.endurance)
+    if son.status is SonStatus.ASLEEP:
+        son.sleep_epochs_left = max(0, son.sleep_epochs_left - 1)
+        if son.sleep_epochs_left == 0:
+            son.status = SonStatus.ACTIVE
+            son.hp = round_half_up(ceiling / transition.wake_hp_divisor)
+            await note(ctx, f"{son.name} woke from their sleep.", key="sons.woke", son_id=son.id, kind=ChronicleKind.SYSTEM)
+        return
+    son.hp = min(ceiling, son.hp + transition.heal_base + round_half_up(son.endurance / transition.heal_endurance_divisor))
+
+
+async def renew_existence(ctx: TickContext, son: SonRow, faith: int) -> ExistenceBand:
+    rules = ctx.rules
+    anchor = await entity(ctx.session, son.anchor_entity_id)
+    anchor_alive = anchor is None or anchor.status in ANCHOR_ALIVE_STATUSES
+    target = existence_target(rules, faith, son.fame, anchor_alive, await worshipper_count(ctx.session, son.id))
+    before = existence_band(rules, son.existence)
+    son.existence = step_toward(son.existence, target, rules.world_epoch_transition.existence_step)
+    after = existence_band(rules, son.existence)
+    if after is not before:
+        tail = " Because their anchor perished, they began to fade." if not anchor_alive else ""
+        await note(
+            ctx,
+            f"{son.name}'s existence became {EXISTENCE_BAND_LABELS[after].lower()}.{tail}",
+            key="sons.existence",
+            son_id=son.id,
+            kind=ChronicleKind.EXISTENCE,
+        )
+    return after
+
+
+async def regenerate_essence(ctx: TickContext, son: SonRow, faith: int, band: ExistenceBand) -> None:
+    rules = ctx.rules
+    transition = rules.world_epoch_transition
+    faith_income = faith // transition.faith_essence_divisor
+    cap_pct = rules.faith.essence_income_cap_pct
+    if cap_pct > 0:
+        faith_income = min(faith_income, max_essence(rules, son.might) * cap_pct // PERCENT)
+    regen = build_rarity_table(rules)[son.rarity].essence_regen + faith_income
+    if await has_unlocked_power(ctx.session, rules, son, PowerEffect.ESSENCE_SPRING):
+        regen += transition.essence_spring_bonus
+    if band is ExistenceBand.RADIANT:
+        regen += transition.radiant_essence_bonus
+    if set(son.domains) & await star_domains(ctx, son):
+        regen += transition.star_domain_essence_bonus
+    if son.status is SonStatus.EXILED:
+        regen = regen * rules.essence.exile_regen_pct // PERCENT
+    son.essence = min(max_essence(rules, son.might), son.essence + regen)
+
+
+async def sons_renewal(ctx: TickContext) -> None:
+    total = 0
+    for son in await living_sons(ctx.session):
+        son.chained = False
+        await wake_or_heal(ctx, son)
+        faith = await son_faith(ctx.session, ctx.rules, son)
+        son.faith = faith
+        total += faith
+        son.fame = son.fame * ctx.rules.essence.renown_keep_pct // PERCENT
+        band = await renew_existence(ctx, son, faith)
+        await regenerate_essence(ctx, son, faith, band)
+    record(ctx, LedgerKey.TOTAL_FAITH, total)
+
+
+async def works_remember_gods(ctx: TickContext) -> None:
+    transition = ctx.rules.world_epoch_transition
+    for son in await living_sons(ctx.session):
+        for bond in await active_bonds(ctx.session, [BondKind.TELLS_OF], targets=[son.id]):
+            work = await living_entity(ctx.session, bond.source_node_id)
+            if work is None or work.entity_type not in REMEMBERING_TYPES:
+                continue
+            son.fame += transition.artwork_renown
+            son.existence = min(PERCENT, son.existence + transition.artwork_existence)
+
+
+async def domain_rivalry(ctx: TickContext) -> None:
+    transition = ctx.rules.world_epoch_transition
+    repository = SonRepository(ctx.session)
+    for first, second in combinations(await living_sons(ctx.session), 2):
+        shared = len(set(first.domains) & set(second.domains))
+        if not shared:
+            continue
+        relation = await repository.relation(first.id, second.id)
+        if relation > -transition.domain_rivalry_floor:
+            await repository.change_relation(first.id, second.id, -min(transition.domain_rivalry * shared, relation + transition.domain_rivalry_floor))
+
+
+async def rebel_theft(ctx: TickContext) -> None:
+    transition = ctx.rules.world_epoch_transition
+    stolen = 0
+    for son in await living_sons(ctx.session):
+        if not son.rebel or son.status is not SonStatus.ACTIVE:
+            continue
+        amount = transition.rebel_steal_base + son.level * transition.rebel_steal_per_level
+        son.essence += amount
+        stolen += amount
+        await note(ctx, f"Rebel {son.name} stole {amount} from their father's essence.", key="sons.rebel_theft", son_id=son.id, kind=ChronicleKind.REBELLION)
+    record(ctx, LedgerKey.STOLEN_ESSENCE, stolen)
+
+
+async def set_son_relation(ctx: TickContext, first_id: int, second_id: int, value: int) -> int:
+    if first_id == second_id:
+        raise ValidationFailedError("A son has no relation with himself.")
+    if not RELATION_MIN <= value <= RELATION_MAX:
+        raise ValidationFailedError(f"A relation lies between {RELATION_MIN} and {RELATION_MAX}.")
+    repository = SonRepository(ctx.session)
+    current = await repository.relation(first_id, second_id)
+    return await repository.change_relation(first_id, second_id, value - current, "set by the Creator")
+
+
+RENEWAL_PHASES = (Phase("sons_renewal", sons_renewal),)
+REMEMBRANCE_PHASES = (Phase("works_remember_gods", works_remember_gods),)
+RIVALRY_PHASES = (Phase("domain_rivalry", domain_rivalry),)
+REBEL_PHASES = (Phase("rebel_theft", rebel_theft),)
+PHASES = RENEWAL_PHASES + REMEMBRANCE_PHASES + RIVALRY_PHASES + REBEL_PHASES

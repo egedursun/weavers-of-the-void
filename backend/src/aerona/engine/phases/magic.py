@@ -1,0 +1,126 @@
+from aerona.constants.units import PERCENT
+from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
+from aerona.domain.models.entity_stats import EventStats
+from aerona.engine.context import TickContext
+from aerona.engine.gods.interventions import apply_abundance
+from aerona.engine.notes import note
+from aerona.engine.phase import Phase
+from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.knowledge import KnowledgeMap
+from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.queries import active_bonds, add_flag, canon, connect, has_flag, living_entity
+from aerona.engine.primitives.records import RecordSpec, open_record
+from aerona.engine.primitives.stats import set_stats, stat
+
+MAGIC_STORM_SUBTYPE = "magic storm"
+WARDED_HOME_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.PLACE})
+
+
+async def magic_storms(ctx: TickContext) -> None:
+    rules = ctx.rules
+    effects = rules.world_effects
+    engine = rules.world_engine
+    rng = ctx.rng()
+    atlas = await RegionAtlas.load(ctx.session)
+    charged = await canon(ctx.session, [EntityType.RESOURCE, EntityType.ITEM])
+    for region in await canon(ctx.session, [EntityType.REGION]):
+        if (stat(region, "magic") or 0) < effects.magic_storm_min_magic or not rng.chance(engine.magic_storm_chance):
+            continue
+        touched = [entity for entity in charged if atlas.top_region(entity.id) == region.id]
+        for entity in touched:
+            set_stats(entity, might=clamp_int((stat(entity, "might") or 0) + effects.magic_storm_might_gain, 0, PERCENT))
+            if rng.chance(engine.magic_storm_curse_chance):
+                set_stats(entity, curse=clamp_int((stat(entity, "curse") or 0) + effects.magic_storm_curse_gain, 0, PERCENT))
+        event = await open_record(
+            ctx.session,
+            ctx.epoch,
+            RecordSpec(
+                entity_type=EntityType.EVENT,
+                name=f"{region.name} Magic Storm",
+                body=f"The dense magic of {region.name} overflowed; resources and items grew stronger, some were cursed.",
+                stats=EventStats(severity=clamp_int(effects.magic_storm_severity_base + rng.die(effects.magic_storm_severity_die), 0, PERCENT)),
+                power=effects.magic_storm_power,
+                location_id=region.id,
+                world_id=region.world_id,
+                subtype=MAGIC_STORM_SUBTYPE,
+                engine_kind=EngineKind.MAGIC_STORM,
+            ),
+        )
+        await note(
+            ctx,
+            f"A magic storm broke out in {region.name}; {len(touched)} resources and items grew stronger.",
+            key="magic.storm",
+            ids=[region.id, event.id],
+        )
+
+
+async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
+    bonds = await active_bonds(ctx.session, [BondKind.ENEMY], sources=[entity_id]) + await active_bonds(ctx.session, [BondKind.ENEMY], targets=[entity_id])
+    for bond in sorted(bonds, key=lambda item: item.id):
+        enemy = await living_entity(ctx.session, bond.other_end(entity_id))
+        if enemy is not None:
+            return enemy
+    return None
+
+
+async def ward_home(ctx: TickContext, wizard: EntityRow, home: EntityRow, protective: bool) -> None:
+    if protective:
+        defense = stat(home, "defense")
+        if defense is not None:
+            set_stats(home, defense=clamp_int(defense + ctx.rules.intervention_effects.protection_defense_gain, 0, PERCENT))
+        await add_flag(ctx.session, home.id, EntityFlag.PROTECTED, ctx.epoch)
+        text = f"Wizard {wizard.name} wove a protective spell over {home.name}."
+    else:
+        await apply_abundance(ctx, home)
+        text = f"Wizard {wizard.name} wove a spell of plenty over {home.name}."
+    await note(ctx, text, key="magic.ward" if protective else "magic.plenty", ids=[wizard.id, home.id])
+
+
+async def wizards(ctx: TickContext) -> None:
+    rules = ctx.rules
+    rng = ctx.rng()
+    knowledge = await KnowledgeMap.load(ctx.session)
+    for mortal in await canon(ctx.session, [EntityType.MORTAL]):
+        if mortal.status is not EntityStatus.CANON or (stat(mortal, "intellect") or 0) < rules.world_effects.sorcerer_min_intellect:
+            continue
+        if not knowledge.knows(mortal.id, KnowledgeBranch.MAGIC):
+            continue
+        if not await has_flag(ctx.session, mortal.id, EntityFlag.WIZARD):
+            await add_flag(ctx.session, mortal.id, EntityFlag.WIZARD, ctx.epoch)
+            await note(ctx, f"{mortal.name} deciphered the language of magic; now a wizard.", key="magic.wizard", ids=[mortal.id])
+        if not rng.chance(rules.world_engine.sorcerer_act_chance):
+            continue
+        home = await living_entity(ctx.session, mortal.location_id)
+        enemy = await first_enemy(ctx, home.id) if home is not None else None
+        if home is not None and enemy is not None and rng.chance(rules.world_engine.sorcerer_curse_chance):
+            await add_flag(ctx.session, enemy.id, EntityFlag.CURSED, ctx.epoch)
+            await connect(ctx.session, mortal.id, enemy.id, BondKind.CURSED, ctx.epoch, description="by magic")
+            await note(ctx, f"Wizard {mortal.name} cursed {home.name}'s enemy {enemy.name}.", key="magic.curse", ids=[mortal.id, enemy.id])
+        elif home is not None and home.entity_type in WARDED_HOME_TYPES:
+            await ward_home(ctx, mortal, home, rng.chance(rules.world_effects.sorcerer_protect_chance))
+
+
+async def price_of_magic(ctx: TickContext) -> None:
+    laws = await ctx.laws()
+    if not laws.anywhere(NaturalLaw.MAGIC_PRICE):
+        return
+    effects = ctx.rules.world_effects
+    limits = ctx.rules.limits
+    for people in await canon(ctx.session, [EntityType.PEOPLE]):
+        if (stat(people, "magic") or 0) <= effects.magic_price_min_magic or not laws.has(NaturalLaw.MAGIC_PRICE, people.world_id):
+            continue
+        population = stat(people, "population") or 0
+        set_stats(
+            people,
+            population=clamp_int(population * effects.magic_price_population_kept_pct / PERCENT, limits.people_population_floor, limits.people_population_cap),
+        )
+        ctx.count("magic_price_paid")
+
+
+STORM_PHASES = (Phase("magic_storms", magic_storms),)
+SOCIETY_PHASES = (Phase("wizards", wizards),)
+LAW_PHASES = (Phase("price_of_magic", price_of_magic),)
+PHASES = STORM_PHASES + SOCIETY_PHASES + LAW_PHASES

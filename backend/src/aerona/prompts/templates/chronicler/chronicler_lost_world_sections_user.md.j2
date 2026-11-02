@@ -1,0 +1,4 @@
+{% set listed %}{% for world in missing_worlds %}world#{{ world.id }} {{ world.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% endset %}
+{% set task = "Age " ~ age ~ " has a main narrative but the sections of these worlds were never written: " ~ listed ~ ". Write only these worlds' sections (each with only the events under its own heading; if there are none, tell of that world's silent age)." %}
+{% set include_engine = false %}
+{% include "chronicler/_body.md.j2" %}

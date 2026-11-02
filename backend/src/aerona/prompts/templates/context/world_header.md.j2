@@ -1,0 +1,46 @@
+{% from "shared/macros.md.j2" import dialect_block, naming_rule as naming_rule_text %}
+WORLD: {{ world_name }} — Age {{ age }} (world year {{ world_year }}). Creator god: {{ god_name }}{% if god_title %}, {{ god_title }}{% endif %}.
+{% if not short and god_temperament %}
+GOD'S TEMPERAMENT: {{ god_temperament }}
+{% endif %}
+{% if not short and god_note %}
+THE GOD'S OWN WORD (canon): {{ god_note }}
+{% endif %}
+{% if not short and mood %}
+CREATOR'S MOOD (sensed from the sky; not a number, an intuition): contentment {{ mood.contentment | mood_level }}, anger {{ mood.anger | mood_level }}, attention {{ mood.attention | mood_level }}, loneliness {{ mood.loneliness | mood_level }}. If his anger overflows, punishment falls on godless and cursed lands; if he is content, favour falls on his worshippers; if he is silent, his sons feel abandoned.
+{% endif %}
+{% if not short and epic %}
+THE GOD'S EPIC: "{{ epic.title }}" — its best-known line: {{ epic.line }}
+{% endif %}
+{% if prohibitions %}
+THE GOD'S PROHIBITIONS: {{ prohibitions | join(" · ") }}
+{% endif %}
+{% if not short and desire %}
+THE GOD'S DESIRE (his sons sense it): {{ desire }}
+{% endif %}
+COSMOLOGY: {{ cosmology | cut_at_word(rules.context.short_cosmology_chars) if short else cosmology }}
+TONE: {{ tone }}
+{% if dialect_world %}
+NAMING LANGUAGE ({{ dialect_world.name }} dialect; the main world's rule does not apply here): {{ naming_rule_text(dialect_world.naming) }}
+{% elif dialects %}
+{{ dialect_block(dialects) }}
+{% else %}
+NAMING LANGUAGE: {{ naming_rule_text(naming_rule) }}
+{% endif %}
+{% if doom > 0 and doom * 100 >= doom_threshold * rules.context.apocalypse_warning_pct %}
+DOOM CLOCK: {{ doom }}/{{ doom_threshold }}. Godlessness, rebellion, curses, restless spirits and wars advance it; faith and miracles push it back. At {{ doom_threshold }} the world is torn apart by catastrophes.
+{% endif %}
+{% if climate %}
+CLIMATE: {{ climate.name }} (since Age {{ climate.since_age }}; {{ climate.description }}).
+{% endif %}
+{% if age_star %}
+STAR OF THE AGE{% if age_star.sky_world %} ({{ age_star.sky_world }} sky){% endif %}: #{{ age_star.id }} {{ age_star.name }}; creations in the {{ age_star.domain if age_star.domain else "its" }} domain are {{ rules.son_tools.star_domain_cost_pct | percent_complement }}% cheaper this age.
+{% endif %}
+{% if laws %}
+LAWS OF NATURE (inviolable):
+{% for law in laws %}
+- #{{ law.id }} {{ law.name }}: {{ law.description }}
+{% endfor %}
+{% else %}
+LAWS OF NATURE: not yet laid down.
+{% endif %}

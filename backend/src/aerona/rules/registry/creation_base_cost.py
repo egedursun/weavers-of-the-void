@@ -1,0 +1,33 @@
+from dataclasses import dataclass
+
+from aerona.rules.groups import RuleGroup
+from aerona.rules.model import rule
+
+
+@dataclass(frozen=True)
+class CreationBaseCostRules:
+    region: int = rule(20, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of creating a region")
+    place: int = rule(6, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of creating a place")
+    resource: int = rule(7, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of creating a resource")
+    settlement: int = rule(6, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of founding a settlement")
+    species: int = rule(5, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of creating a species")
+    people: int = rule(9, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of creating a people")
+    mortal: int = rule(5, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of creating a mortal")
+    item: int = rule(10, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of forging an item")
+    structure: int = rule(9, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of building a structure")
+    language: int = rule(8, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of creating a language")
+    legend: int = rule(4, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of telling a legend")
+    tradition: int = rule(5, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of founding a tradition")
+    cult: int = rule(9, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of founding a cult")
+    faction: int = rule(9, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of founding a faction")
+    celestial: int = rule(14, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of hanging a celestial body")
+    artwork: int = rule(5, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of creating an artwork")
+    law: int = rule(7, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of decreeing a law")
+    spirit: int = rule(8, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of summoning a spirit")
+    knowledge: int = rule(12, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of inspiring knowledge")
+    prophecy: int = rule(10, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of uttering a prophecy")
+    event: int = rule(18, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of starting an event")
+    vessel: int = rule(14, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of creating a vessel")
+    outer_being: int = rule(0, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of an Outer Being")
+    army: int = rule(0, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of an army")
+    natural_law: int = rule(30, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of decreeing a natural law")

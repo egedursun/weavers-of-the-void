@@ -1,0 +1,43 @@
+{% from "deepening/_god.md.j2" import god_known, traces_block %}
+{{ world_header }}
+
+THE GOD {{ god_name }}:
+{{ god_known(known) }}
+
+COSMOLOGY: {{ cosmology }}
+
+HIS SONS:
+{% if sons %}
+{% for son in sons %}
+{{ son.name }}, {{ son.title }} ({{ son.rarity_label }}, {{ son.domain_1 }}/{{ son.domain_2 }}{% if son.status_label %}, {{ son.status_label }}{% endif %}{% if son.rebel %}, REBEL{% endif %}; loyalty {{ son.loyalty }})
+{% endfor %}
+{% else %}
+(none)
+{% endif %}
+
+HIS WORLDS: {% if worlds %}{% for world in worlds %}{{ world.name }} ({{ world.type_label }}, Age {{ world.age }}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}
+
+
+AGES:
+{% if ages %}
+{% for item in ages %}
+Age {{ item.age }}: {{ item.name }} — {{ item.summary }}
+{% endfor %}
+{% else %}
+(no age has closed yet)
+{% endif %}
+
+HIS TRACES IN THE RECORDS:
+{{ traces_block(traces) | trim }}
+
+{% if beliefs %}
+HOW THE PEOPLES TELL OF HIM:
+{% for belief in beliefs %}
+{{ belief.people }} calls him "{{ belief.name }}": {{ belief.story }}
+{% endfor %}
+
+{% endif %}
+{% include "shared/_epic_rule.md.j2" %}
+Write the creator god's epic in sections, from the first light to today.{% if listed_ages %}
+
+THE PREVIOUS WRITING came out as a list of records (it counted the age numbers {{ listed_ages }} times). Write the same events again as scenes, without counting the ages.{% endif %}

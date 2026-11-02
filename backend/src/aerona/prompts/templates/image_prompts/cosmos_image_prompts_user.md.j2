@@ -1,0 +1,25 @@
+{% from "image_prompts/_ambience.md.j2" import ambience_line %}
+COSMOLOGY: {{ cosmology }}
+TONE: {{ tone }}
+
+{% for subject in subjects %}
+{% if subject.kind == "world" %}
+no {{ subject.number }}: [world / {{ subject.type_label }}] {{ subject.name }}: {{ subject.description[:rules.content.cosmic_prompt_world_chars] }}
+GUIDE: {{ subject.direction }}.{{ ambience_line(subject.ambience) }}
+{% elif subject.kind == "star" %}
+no {{ subject.number }}: [star / {{ subject.type_label }}] {{ subject.name }}: {{ subject.description[:rules.content.cosmic_prompt_other_chars] }}
+GUIDE: {{ subject.direction }}
+{% elif subject.kind == "son" %}
+no {{ subject.number }}: [son of the creator] {{ subject.name }}{% if subject.title %}, {{ subject.title }}{% endif %}: {{ subject.description[:rules.content.cosmic_prompt_other_chars] }}
+GUIDE: {{ subject.direction }}
+{% elif subject.kind == "creator" %}
+no {{ subject.number }}: [the creator] {{ subject.name }}{% if subject.title %}, {{ subject.title }}{% endif %}: {{ subject.description[:rules.content.cosmic_prompt_other_chars] }}
+GUIDE: {{ subject.direction }}
+{% else %}
+no {{ subject.number }}: [foreign god] {{ subject.name }}{% if subject.title %}, {{ subject.title }}{% endif %}: {{ subject.description[:rules.content.cosmic_prompt_other_chars] }}
+GUIDE: {{ subject.direction }}
+{% endif %}
+{% if not loop.last %}
+
+{% endif %}
+{% endfor %}

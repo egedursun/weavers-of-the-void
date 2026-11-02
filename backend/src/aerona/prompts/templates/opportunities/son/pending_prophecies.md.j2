@@ -1,0 +1,1 @@
+Prophecies awaiting fulfilment (fulfil with a creation or event, get them misread, or make them come to nothing; Fate sees): {% for prophecy in line.prophecies[:rules.opportunities.list_narrow] %}#{{ prophecy.id }} {{ prophecy.name }} (Age {{ prophecy.age }}{% if prophecy.own %}, yours{% endif %}){% if not loop.last %}, {% endif %}{% endfor %}

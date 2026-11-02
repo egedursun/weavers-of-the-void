@@ -1,0 +1,6 @@
+{% for line in ordered %}
+{% set text %}{% include "opportunities/son/" ~ line.kind ~ ".md.j2" %}{% endset %}
+{% if text | trim %}
+- {{ text | trim }}
+{% endif %}
+{% endfor %}

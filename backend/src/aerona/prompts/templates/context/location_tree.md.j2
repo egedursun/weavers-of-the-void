@@ -1,0 +1,4 @@
+{% from "shared/macros.md.j2" import entity_line %}
+{% for node in nodes %}
+{{ "  " * node.depth }}- {{ entity_line(node.entity, false) }}
+{% endfor %}

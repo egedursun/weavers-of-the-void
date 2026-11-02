@@ -1,0 +1,15 @@
+export const MAX_DRAWER_DEPTH = 8
+export const DRAWER_SEARCH_KEY = 'drawer'
+export const DRAWER_ENTRY_SEPARATOR = ','
+export const DRAWER_ID_SEPARATOR = ':'
+export const QUERY_STALE_TIME_MS = 10_000
+export const REALTIME_RETRY_BASE_MS = 1_000
+export const REALTIME_RETRY_MAX_MS = 30_000
+export const TOAST_DURATION_MS = 3_000
+export const IDLE_QUIET_MS = 1_500
+export const FEED_STREAM_THROTTLE_MS = 250
+export const STREAM_COLLAPSE_CHARS = 240
+export const HEADER_COLLAPSE_SCROLL_PX = 60
+export const HEADER_COLLAPSE_QUERY = '(max-width: 600px)'
+export const RULES_STALE_TIME_MS = 300_000
+export const WORLD_REFRESH_MIN_MS = 4_000

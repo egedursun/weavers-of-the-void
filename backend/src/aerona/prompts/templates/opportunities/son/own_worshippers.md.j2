@@ -1,0 +1,3 @@
+{% from "opportunities/_macros.md.j2" import records, choices %}
+{% set gifts = offered(available_tools, [("miracle", "miracle"), ("declare_chosen", "declare_chosen"), ("teach_knowledge", "teach_knowledge"), ("create_mortal", "create_mortal")]) %}
+Your worshippers{% if gifts %} (with {{ choices(gifts) }} give them a hero or a blessing){% endif %}: {{ records(line.communities[:rules.opportunities.list_max]) }}

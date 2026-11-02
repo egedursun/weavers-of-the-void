@@ -1,0 +1,153 @@
+from collections import defaultdict
+
+from aerona.constants.units import PERCENT
+from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityType
+from aerona.domain.models.entity_stats import FactionStats
+from aerona.engine.context import TickContext
+from aerona.engine.notes import note
+from aerona.engine.phase import Phase
+from aerona.engine.phases.society_support.community import CommunityBook
+from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.first_bonds import bind_language_and_faith
+from aerona.engine.primitives.numbers import clamp_int, fraction
+from aerona.engine.primitives.queries import canon, flags_by_entity, spoken_language
+from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.primitives.stats import shift_stat, stat, stat_or
+from aerona.engine.primitives.thresholds import relative_threshold
+from aerona.engine.services.war import declare_war, uprising_target
+
+BOOTSTRAP_EXCLUDED_FLAGS = (EntityFlag.GODLESS, EntityFlag.WORSHIPS_PLANET)
+REBELS_SUBTYPE = "rebels"
+
+
+async def language_and_faith(ctx: TickContext) -> None:
+    session = ctx.session
+    excluded: set[int] = set()
+    for flag in BOOTSTRAP_EXCLUDED_FLAGS:
+        excluded |= await flags_by_entity(session, flag)
+    seeking = await flags_by_entity(session, EntityFlag.SEEKING_GOD)
+    bonds = BondRepository(session)
+    bound = 0
+    atlas = await RegionAtlas.load(session)
+    for community in await canon(session, COMMUNITY_TYPES):
+        if bound >= ctx.rules.society.language_faith_adopt_cap:
+            break
+        if community.id in excluded:
+            continue
+        speaks = bool(await bonds.outgoing(community.id, BondKind.SPEAKS))
+        worships = bool(await bonds.outgoing(community.id, BondKind.WORSHIPS))
+        if speaks and (worships or community.id in seeking):
+            continue
+        await bind_language_and_faith(ctx, community, atlas)
+        bound += 1
+    ctx.count("bound", bound)
+
+
+def _just_law_present(book: CommunityBook, settlement: EntityRow, threshold: int) -> bool:
+    return any(value >= threshold for value in book.justice_values(settlement.id))
+
+
+async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityBook, entities: dict[int, EntityRow]) -> EntityRow:
+    settings = ctx.rules.society
+    rng = ctx.rng(f"rebels.{settlement.id}")
+    rebels = await create_record(
+        ctx,
+        RecordSpec(
+            name=f"{settlement.name} Rebels",
+            entity_type=EntityType.FACTION,
+            stats=FactionStats(
+                strength=clamp_int(settings.rebel_strength_base + rng.die(settings.rebel_strength_die), 0, PERCENT),
+                wealth=clamp_int(settings.rebel_wealth_base + rng.die(settings.rebel_wealth_die), 0, PERCENT),
+                sway=clamp_int(settings.rebel_sway_base + rng.die(settings.rebel_sway_die), 0, PERCENT),
+            ),
+            body=f"Poverty and crowding in {settlement.name} gave birth to an uprising.",
+            power=settings.rebel_power,
+            world_id=settlement.world_id,
+            location_id=settlement.id,
+            subtype=REBELS_SUBTYPE,
+            engine_kind=EngineKind.REBELS,
+            affiliated_entity_id=settlement.id,
+        ),
+    )
+    target = await uprising_target(ctx.session, settlement)
+    await declare_war(ctx, rebels.id, target.id, "uprising", world_cap=False)
+    language = await spoken_language(ctx.session, settlement.id)
+    if language is not None:
+        await BondRepository(ctx.session).connect(BondDraft(rebels.id, language.id, BondKind.SPEAKS, ctx.epoch, "the tongue of the city"))
+    unknown = ctx.rules.world_effects.unknown_stat
+    shift_stat(settlement, "defense", -settings.poverty_revolt_defense_loss, unknown)
+    shift_stat(settlement, "prosperity", -settings.poverty_revolt_prosperity_loss, unknown)
+    rulers = [entities[bond.source_node_id] for bond in book.bonds.incoming(settlement.id, BondKind.RULES) if bond.source_node_id in entities]
+    defied = f"the rule of {rulers[0].name}" if rulers else "the order of the city"
+    await note(
+        ctx,
+        f"Poverty in {settlement.name} turned into an uprising; the rebels defied {defied}.",
+        key="society.poverty_uprising",
+        ids=[settlement.id, rebels.id],
+        feed=FeedCategory.WAR,
+        kind=ChronicleKind.WORLD,
+    )
+    return rebels
+
+
+async def uprisings(ctx: TickContext) -> None:
+    settings = ctx.rules.society
+    session = ctx.session
+    settlements = await canon(session, [EntityType.SETTLEMENT])
+    threshold = relative_threshold(
+        settlements, "population", fraction(settings.poverty_revolt_top_pct), settings.poverty_revolt_min_population, settings.poverty_revolt_always_population
+    )
+    entities = {entity.id: entity for entity in await canon(session)}
+    book = await CommunityBook.load(session)
+    rng = ctx.rng("uprising")
+    raised = 0
+    for settlement in settlements:
+        if raised >= settings.poverty_revolt_cap:
+            break
+        poor = stat_or(settlement, "prosperity", ctx.rules.world_effects.unknown_prosperity) < settings.poverty_revolt_prosperity
+        if not poor or stat_or(settlement, "population", 0) < threshold(settlement):
+            continue
+        just = _just_law_present(book, settlement, settings.just_law_threshold)
+        if not rng.chance(settings.poverty_revolt_just_law_chance if just else settings.poverty_revolt_chance):
+            continue
+        await raise_rebels(ctx, settlement, book, entities)
+        raised += 1
+    ctx.count("uprisings", raised)
+
+
+async def love_and_rivalry(ctx: TickContext) -> None:
+    settings = ctx.rules.society
+    session = ctx.session
+    by_place: dict[int, list[EntityRow]] = defaultdict(list)
+    for mortal in await canon(session, [EntityType.MORTAL]):
+        age = stat(mortal, "age")
+        if mortal.location_id is not None and age is not None and age >= settings.love_min_age:
+            by_place[mortal.location_id].append(mortal)
+    bonds = BondRepository(session)
+    rng = ctx.rng("love")
+    formed = 0
+    for place in sorted(by_place):
+        group = by_place[place]
+        for index, first in enumerate(group):
+            for second in group[index + 1 :]:
+                if await bonds.exists_between(first.id, second.id, BondKind.LOVES) or await bonds.exists_between(first.id, second.id, BondKind.ENEMY):
+                    continue
+                if not rng.chance(settings.love_rivalry_chance):
+                    continue
+                love = rng.chance(settings.love_share_pct)
+                await bonds.connect(BondDraft(first.id, second.id, BondKind.LOVES if love else BondKind.ENEMY, ctx.epoch, "love" if love else "rivalry"))
+                text = f"Love blossomed between {first.name} and {second.name}." if love else f"A rivalry began between {first.name} and {second.name}."
+                await note(ctx, text, key="society.love" if love else "society.rivalry", ids=[first.id, second.id], kind=ChronicleKind.LINEAGE)
+                formed += 1
+    ctx.count("pairs", formed)
+
+
+PHASES = (
+    Phase("language_and_faith", language_and_faith),
+    Phase("uprisings", uprisings),
+    Phase("love_and_rivalry", love_and_rivalry),
+)

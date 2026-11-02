@@ -1,0 +1,13 @@
+{% from "image_prompts/_ambience.md.j2" import ambience_line %}
+WORLD: {{ cosmology }}
+TONE: {{ tone }}
+
+Write one prompt for each entity below; follow each entity's GUIDE exactly (an Outer Being must never be shown fully).
+
+{% for subject in subjects %}
+#{{ subject.id }} [{{ subject.type_label }}{% if subject.subtype %} / {{ subject.subtype }}{% endif %}] {{ subject.name }}: {{ subject.description[:rules.content.image_prompt_description_chars] }}
+GUIDE: {{ subject.direction }}.{{ ambience_line(subject.ambience) }}
+{% if not loop.last %}
+
+{% endif %}
+{% endfor %}

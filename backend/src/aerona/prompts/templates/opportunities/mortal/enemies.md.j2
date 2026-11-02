@@ -1,0 +1,3 @@
+{% from "opportunities/_macros.md.j2" import records %}
+{% set strikes = offered(available_tools, ([("declare_war", "open war with declare_war")] if line.can_declare_war else []) + ([("sabotage", "strike secretly with sabotage")] if line.can_sabotage else []) + [("build_spy_network", "learn their secrets with build_spy_network")]) %}
+Your enemies ({% if strikes %}{{ strikes | join(", ") }}; or {% endif %}offer peace, make weapons, seek allies): {{ records(line.enemies[:rules.opportunities.list_max]) }}

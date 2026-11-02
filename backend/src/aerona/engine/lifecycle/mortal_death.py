@@ -1,0 +1,292 @@
+from dataclasses import dataclass
+
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from aerona.catalog.stats import max_essence
+from aerona.catalog.worlds import WORLD_TYPES
+from aerona.constants.schema import SINGLETON_ID
+from aerona.constants.units import PERCENT
+from aerona.core.errors import ValidationFailedError
+from aerona.db.repositories.entities import EntityRepository
+from aerona.db.repositories.nodes import NodeRepository
+from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.cosmos import CosmosRow
+from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.domain import DEATH_DOMAINS
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.node import NodeKind
+from aerona.domain.models.entity_stats import SpiritStats, TraditionStats
+from aerona.engine.context import TickContext
+from aerona.engine.lifecycle.aging import immortal, raise_lifespan_to_death_age
+from aerona.engine.lifecycle.succession import dynasty_root, pass_rule
+from aerona.engine.notes import note
+from aerona.engine.primitives.naming import seed_of
+from aerona.engine.primitives.numbers import clamp_int, scaled_cap
+from aerona.engine.primitives.queries import active_bonds, close, connect, count_communities, living_entity, living_sons
+from aerona.engine.primitives.records import RecordSpec, append_sentence, open_record, sweep_dead_bonds
+from aerona.engine.primitives.stats import set_stats, stat
+
+LIVING_DEATH_STATUSES = frozenset({EntityStatus.CANON, EntityStatus.FULFILLED})
+RESTLESS_SPIRIT_SUBTYPE = "restless spirit"
+ANCESTOR_SPIRIT_SUBTYPE = "ancestor spirit"
+MOURNING_SUBTYPE = "mourning rite"
+SPIRIT_SUBTYPES = (RESTLESS_SPIRIT_SUBTYPE, ANCESTOR_SPIRIT_SUBTYPE)
+MOURNING_HOME_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.PEOPLE})
+DEFAULT_CAUSE = "died"
+
+
+@dataclass(frozen=True)
+class DeathResult:
+    entity: EntityRow
+    heir: EntityRow | None
+    text: str
+
+
+async def world_year(session: AsyncSession) -> int:
+    cosmos = await session.get(CosmosRow, SINGLETON_ID)
+    return cosmos.epoch_start_year if cosmos is not None else 0
+
+
+async def die(
+    ctx: TickContext,
+    mortal: EntityRow,
+    *,
+    cause: str = DEFAULT_CAUSE,
+    killer_id: int | None = None,
+    year: int | None = None,
+    natural: bool = False,
+    forced: bool = False,
+    event_id: int | None = None,
+) -> DeathResult | None:
+    session = ctx.session
+    if mortal.entity_type is not EntityType.MORTAL or mortal.status not in LIVING_DEATH_STATUSES:
+        return None
+    flags = await EntityRepository(session).flags(mortal.id)
+    if not forced and immortal(flags):
+        return None
+    rng = ctx.rng(seed_of("death", mortal.id))
+    death_year = year if year is not None else await world_year(session) + rng.die(ctx.rules.time.years_per_epoch) - 1
+    set_stats(mortal, death_year=death_year)
+    age = stat(mortal, "age")
+    age_text = str(age) if age is not None else "unknown"
+    fate = (
+        f"Epoch {ctx.epoch}, world year {death_year}: died at age {age_text}."
+        if natural
+        else f"Epoch {ctx.epoch}, world year {death_year}: {cause} (age {age_text})."
+    )
+    ending = f"Died in epoch {ctx.epoch}, at age {age_text}." if natural else f"In epoch {ctx.epoch} {cause} (age {age_text})."
+    mortal.description = append_sentence(mortal.description, ending)
+    await EntityRepository(session).set_status(mortal, EntityStatus.DEAD, ctx.epoch, append_sentence(mortal.fate_note, fate))
+    if event_id is not None:
+        mortal.death_event_entity_id = event_id
+    killer_kind = await NodeRepository(session).kind_of(killer_id) if killer_id is not None else None
+    if killer_id is not None and killer_kind is not None:
+        await connect(session, killer_id, mortal.id, BondKind.KILLED, ctx.epoch, description=cause)
+    heir = await pass_rule(ctx, mortal)
+    if natural:
+        tail = "; an heir took their place" if heir is not None else ". Their name now lives only in the tales"
+        text = f"{mortal.name} died at age {age_text}{tail}."
+    else:
+        text = f"{mortal.name} {cause}{'; an heir took their place' if heir is not None else ''}."
+    ids = [mortal.id] + ([heir.id] if heir is not None else []) + ([killer_id] if killer_id is not None and killer_kind is NodeKind.ENTITY else [])
+    son_id = killer_id if killer_kind is NodeKind.SON else mortal.creator_son_id
+    await note(ctx, text, key="mortal.death.natural" if natural else "mortal.death.cause", ids=ids, son_id=son_id)
+    await after_death(ctx, mortal)
+    await sweep_dead_bonds(session, ctx.epoch, mortal.id)
+    if await raise_lifespan_to_death_age(session, ctx.rules, mortal):
+        ctx.count("lifespans_raised")
+    ctx.count("deaths")
+    return DeathResult(mortal, heir, text)
+
+
+async def underworld_of(session: AsyncSession, mortal: EntityRow) -> EntityRow | None:
+    statement = select(EntityRow).where(
+        EntityRow.entity_type == EntityType.REGION,
+        EntityRow.status == EntityStatus.CANON,
+        EntityRow.is_underworld.is_(True),
+        EntityRow.world_id == mortal.world_id,
+    )
+    found: EntityRow | None = await session.scalar(statement.order_by(EntityRow.id).limit(1))
+    if found is not None:
+        return found
+    world = await session.get(WorldRow, mortal.world_id)
+    if world is None or not WORLD_TYPES[world.world_type].realm_of_dead:
+        return None
+    region: EntityRow | None = await session.scalar(
+        select(EntityRow)
+        .where(EntityRow.entity_type == EntityType.REGION, EntityRow.status == EntityStatus.CANON, EntityRow.world_id == mortal.world_id)
+        .order_by(EntityRow.id)
+        .limit(1)
+    )
+    return region
+
+
+async def _reward_death_domains(ctx: TickContext) -> None:
+    effects = ctx.rules.world_effects
+    for son in await living_sons(ctx.session):
+        if not set(son.domains) & DEATH_DOMAINS:
+            continue
+        son.essence = min(max_essence(ctx.rules, son.might), son.essence + effects.death_domain_essence)
+        son.existence = min(PERCENT, son.existence + effects.death_domain_existence)
+
+
+async def _bequeath(ctx: TickContext, mortal: EntityRow) -> None:
+    session = ctx.session
+    items = await active_bonds(session, [BondKind.OWNS], sources=[mortal.id])
+    if not items:
+        return
+    receiver: EntityRow | None = None
+    for bond in reversed(await active_bonds(session, [BondKind.DESCENDS_FROM], targets=[mortal.id])):
+        receiver = await living_entity(session, bond.source_node_id)
+        if receiver is not None:
+            break
+    if receiver is None:
+        place = await living_entity(session, mortal.location_id)
+        receiver = place if place is not None and place.entity_type in COMMUNITY_TYPES else None
+    for bond in items:
+        await close(session, bond, ctx.epoch, "inheritance")
+        if receiver is not None:
+            await connect(session, receiver.id, bond.target_node_id, BondKind.OWNS, ctx.epoch, description=f"inherited from {mortal.name}")
+    item_ids = [bond.target_node_id for bond in items]
+    if receiver is not None:
+        text = f"{len(items)} items of {mortal.name} passed to {receiver.name}."
+        ids = [mortal.id, *item_ids, receiver.id]
+    else:
+        text = f"{len(items)} items of {mortal.name} were left ownerless; they wait in the grave or on the battlefield."
+        ids = [mortal.id, *item_ids]
+    await note(ctx, text, key="mortal.inheritance", ids=ids)
+
+
+async def _born_this_epoch(session: AsyncSession, entity_type: EntityType, subtypes: tuple[str, ...], epoch: int) -> int:
+    statement = (
+        select(func.count())
+        .select_from(EntityRow)
+        .where(
+            EntityRow.entity_type == entity_type,
+            EntityRow.origin == EntityOrigin.ENGINE,
+            EntityRow.birth_epoch == epoch,
+            EntityRow.subtype.in_(list(subtypes)),
+        )
+    )
+    return int(await session.scalar(statement) or 0)
+
+
+async def _spirits_at(session: AsyncSession, place_id: int | None) -> int:
+    if place_id is None:
+        return 0
+    statement = (
+        select(func.count())
+        .select_from(EntityRow)
+        .where(EntityRow.entity_type == EntityType.SPIRIT, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == place_id)
+    )
+    return int(await session.scalar(statement) or 0)
+
+
+async def _is_famous(ctx: TickContext, mortal: EntityRow, flags: set[EntityFlag]) -> bool:
+    charisma = stat(mortal, "charisma")
+    if charisma is not None and charisma >= ctx.rules.world_effects.famous_min_charisma:
+        return True
+    if EntityFlag.CHOSEN in flags:
+        return True
+    return bool(await active_bonds(ctx.session, [BondKind.KILLED], sources=[mortal.id]))
+
+
+async def _leave_spirit(ctx: TickContext, mortal: EntityRow, underworld: EntityRow | None) -> None:
+    session = ctx.session
+    effects = ctx.rules.world_effects
+    rng = ctx.rng(seed_of("spirit", mortal.id))
+    place_id = underworld.id if underworld is not None else mortal.location_id
+    if not rng.chance(ctx.rules.world_engine.famous_spirit_chance):
+        return
+    if await _spirits_at(session, place_id) >= ctx.rules.deep_world.spirits_per_place_cap:
+        return
+    if await _born_this_epoch(session, EntityType.SPIRIT, SPIRIT_SUBTYPES, ctx.epoch) >= scaled_cap(
+        effects.afterdeath_cap, effects.afterdeath_cap_community_divisor, await count_communities(session)
+    ):
+        return
+    murdered = bool(await active_bonds(session, [BondKind.KILLED], targets=[mortal.id]))
+    base = effects.spirit_unrest_murdered if murdered else effects.spirit_unrest_natural
+    restless = base > effects.spirit_restless_threshold
+    strength = stat(mortal, "strength")
+    origin = f"refused to descend to {underworld.name} or returned from there" if underworld is not None else "returned from the world"
+    spirit = await open_record(
+        session,
+        ctx.epoch,
+        RecordSpec(
+            entity_type=EntityType.SPIRIT,
+            name=f"Spirit of {mortal.name}",
+            body=f"After {mortal.name} died, their spirit {origin}.",
+            stats=SpiritStats(
+                strength=clamp_int(
+                    (strength if strength is not None else effects.inheritance_default_stat) / effects.spirit_strength_divisor + effects.spirit_strength_bonus,
+                    0,
+                    PERCENT,
+                ),
+                unrest=clamp_int(base + rng.die(effects.spirit_unrest_die), 0, PERCENT),
+            ),
+            power=max(effects.split_min_power, mortal.power_level - 1),
+            location_id=place_id,
+            world_id=mortal.world_id,
+            subtype=RESTLESS_SPIRIT_SUBTYPE if restless else ANCESTOR_SPIRIT_SUBTYPE,
+        ),
+    )
+    await connect(session, spirit.id, mortal.id, BondKind.DESCENDS_FROM, ctx.epoch, description="their spirit")
+    manner = "as a restless spirit" if restless else "among the ancestors"
+    await note(ctx, f"The spirit of {mortal.name} found no rest; it wanders {manner}.", key="mortal.spirit", ids=[mortal.id, spirit.id])
+
+
+async def _start_mourning(ctx: TickContext, mortal: EntityRow) -> None:
+    session = ctx.session
+    effects = ctx.rules.world_effects
+    place = await living_entity(session, mortal.location_id)
+    if place is None:
+        return
+    rng = ctx.rng(seed_of("mourning", mortal.id))
+    if not rng.chance(ctx.rules.world_engine.mourning_tradition_chance):
+        return
+    if await _born_this_epoch(session, EntityType.TRADITION, (MOURNING_SUBTYPE,), ctx.epoch) >= scaled_cap(
+        effects.afterdeath_cap, effects.afterdeath_cap_community_divisor, await count_communities(session)
+    ):
+        return
+    tradition = await open_record(
+        session,
+        ctx.epoch,
+        RecordSpec(
+            entity_type=EntityType.TRADITION,
+            name=f"Mourning of {dynasty_root(mortal.name)}",
+            body=f"After the death of {mortal.name}, the people of {place.name} began to commemorate them every year.",
+            stats=TraditionStats(spread=effects.mourning_spread, rigidity=effects.mourning_rigidity),
+            power=effects.mourning_power,
+            world_id=mortal.world_id,
+            subtype=MOURNING_SUBTYPE,
+        ),
+    )
+    await connect(session, tradition.id, mortal.id, BondKind.TELLS_OF, ctx.epoch)
+    if place.entity_type in MOURNING_HOME_TYPES:
+        await connect(session, place.id, tradition.id, BondKind.CELEBRATES, ctx.epoch)
+    await note(ctx, f"{place.name} began a mourning tradition for {mortal.name}.", key="mortal.mourning", ids=[mortal.id, place.id, tradition.id])
+
+
+async def after_death(ctx: TickContext, mortal: EntityRow) -> None:
+    underworld = await underworld_of(ctx.session, mortal)
+    if underworld is not None:
+        await connect(ctx.session, mortal.id, underworld.id, BondKind.SOUL_DESCENDED_TO, ctx.epoch, description="the soul descended there")
+    await _reward_death_domains(ctx)
+    await _bequeath(ctx, mortal)
+    flags = await EntityRepository(ctx.session).flags(mortal.id)
+    if not await _is_famous(ctx, mortal, flags):
+        return
+    await _leave_spirit(ctx, mortal, underworld)
+    await _start_mourning(ctx, mortal)
+
+
+async def force_death(ctx: TickContext, mortal_id: int, cause: str) -> DeathResult:
+    mortal = await living_entity(ctx.session, mortal_id)
+    if mortal is None or mortal.entity_type is not EntityType.MORTAL:
+        raise ValidationFailedError("Only a living, named mortal's life can be taken.")
+    result = await die(ctx, mortal, cause=cause, forced=True)
+    if result is None:
+        raise ValidationFailedError("Only a living, named mortal's life can be taken.")
+    return result

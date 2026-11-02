@@ -1,0 +1,15 @@
+{% from "shared/macros.md.j2" import naming_rule as naming_rule_text %}
+LANGUAGE: {{ language_name }} ({{ language_subtype if language_subtype else "language" }}). {{ language_description }}
+THE LANGUAGE'S NAMING RULE: {{ naming_rule_text(naming_rule) }}
+COMMON SYLLABLES: {{ syllables[:rules.council.translate_syllables * 2] | join(", ") if syllables else "unknown" }}
+LEXICON:
+{% if lexicon %}
+{% for word in lexicon[:rules.council.translate_lexicon_words] %}
+{{ word.word }} = {{ word.meaning }}{% if word.kind %} ({{ word.kind }}){% endif %}
+
+{% endfor %}
+{% else %}
+(empty)
+{% endif %}
+
+TO TRANSLATE: "{{ text[:rules.council.translate_max_chars] }}"

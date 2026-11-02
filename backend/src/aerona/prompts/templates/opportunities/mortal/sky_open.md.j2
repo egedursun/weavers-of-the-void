@@ -1,0 +1,3 @@
+{% if offered(available_tools, [("find_route", "find_route")]) %}
+The sky is open to you: search for the way to other worlds with find_route{% if line.roadless_worlds %} (worlds whose way no one knows: {{ line.roadless_worlds[:rules.opportunities.list_short] | join(", ") }}){% endif %}; rarely you sense a world no one knows.
+{% endif %}

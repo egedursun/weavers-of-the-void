@@ -1,0 +1,3194 @@
+[
+  {
+    "id": "MORT-022",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/read.py:43 knowable",
+    "test": "backend/tests/tools/test_mortal_tools.py::test_read_tools_respect_the_knowledge_horizon",
+    "note": "Own region plus neighbour regions plus bonded; context horizon in agents/context/mortal.py:37."
+  },
+  {
+    "id": "MORT-024",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/mortal/registry.py:50 TIER_GATES",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_tier_unlock_table",
+    "note": "Behaviour present; dedicated test missing. Gating wired in registry.py:117 and editable via rules, but no test exercises a tier-gated mortal tool being hidden or rejected."
+  },
+  {
+    "id": "ENG-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/pipeline.py:225 TICK_ORDER",
+    "test": "backend/tests/engine/core/test_wiring.py::test_order_constraints_hold",
+    "note": "Re-verified 2026-11-02: engine:run_phase action and GET /api/engine/phases, surfaced in features/engine."
+  },
+  {
+    "id": "ENG-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/epoch/phases/engine_tick.py:66 engine_tick",
+    "test": "backend/tests/engine/core/test_pipeline.py::test_failing_phase_names_the_step_and_rolls_back; backend/tests/epoch/test_epoch_engine_only.py",
+    "note": "Per-phase done marker is mark_engine_phase (epoch_engine_phases table); resume skips done phases. No canon cache needed (decision 23)."
+  },
+  {
+    "id": "ENG-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/notes.py:25 note",
+    "test": "backend/tests/engine/core/test_note_feed_category.py; backend/tests/engine/core/test_pipeline.py",
+    "note": "Publishes engine.note events consumed by frontend/src/features/feed/feedModel.ts."
+  },
+  {
+    "id": "ENG-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/notes.py:71 fold_tick_lines",
+    "test": "backend/tests/engine/core/test_pipeline.py::test_tick_folds_repeated_lines_and_records_timing",
+    "note": "Typed-kind rows hide same template_key plus entity-set WORLD duplicates (hidden_as_duplicate), keyed by template_key not text (decision 16/71)."
+  },
+  {
+    "id": "ENG-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/notes.py:71 fold_tick_lines",
+    "test": "backend/tests/engine/core/test_pipeline.py::test_tick_folds_repeated_lines_and_records_timing",
+    "note": "Threshold is rules world_engine.chronicle_fold_threshold; grouping by template_key instead of name/number-stripped text."
+  },
+  {
+    "id": "ENG-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/society.py:27 language_and_faith",
+    "test": "backend/tests/engine/society/test_society.py::test_bootstrap_adopts_nearest_language_and_first_faith",
+    "note": "Cap society.language_faith_adopt_cap; godless and planet-worshipping excluded; seekers skipped."
+  },
+  {
+    "id": "ENG-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/grudges.py:57 divine_grudges",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_divine_grudges_leak_to_worshippers",
+    "note": "Cap, distance, relation threshold and spill chance are rules; holy war when a cult is involved."
+  },
+  {
+    "id": "ENG-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroism.py:51 monsters_of",
+    "test": "backend/tests/engine/core/test_primitives.py::test_relative_threshold_is_per_world; backend/tests/engine/core/test_tick_phases.py",
+    "note": "Per-world percentile via relative_threshold with floor and ceiling."
+  },
+  {
+    "id": "ENG-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/monsters.py:21 raid",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_monster_raid_hurts_and_protector_fights",
+    "note": "Re-verified 2026-11-02: engine:run_phase action and GET /api/engine/phases, surfaced in features/engine."
+  },
+  {
+    "id": "ENG-010",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/monsters.py:21 raid",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Protector interception branch (PROTECTS bond -> encounter) has no test; test_monster_raid_hurts_and_protector_fights never creates a protector."
+  },
+  {
+    "id": "ENG-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroism.py:252 sworn_hunts",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_sworn_and_glory_hunts",
+    "note": "Hunts bond closed then encounter, matches legacy."
+  },
+  {
+    "id": "ENG-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroism.py:262 glory_hunts",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_sworn_and_glory_hunts",
+    "note": "Re-verified 2026-11-02: engine:run_phase action and GET /api/engine/phases, surfaced in features/engine."
+  },
+  {
+    "id": "ENG-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroism.py:96 hero_power",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_heroes_win_lose_and_rewind",
+    "note": "Formula terms match legacy kahramanlik (strength, agility/div, intellect/div, die, patron charisma, weapons, wizard); manual hero:hunt -> send_hero_to_hunt."
+  },
+  {
+    "id": "ENG-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroism.py:133 _hero_wins",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_heroes_win_lose_and_rewind",
+    "note": "Danger loss and death floor/singular power as legacy; manual hero:hunt."
+  },
+  {
+    "id": "ENG-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroism.py:133 _hero_wins",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_heroes_win_lose_and_rewind",
+    "note": "TIME_REWINDER trait returns once with extra danger and TIME_RETURNED flag."
+  },
+  {
+    "id": "ENG-016",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/heroism.py:133 _hero_wins",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Megafauna-slayer branch (age-changer flag, power gain, age-changing epic, age_change chronicle) is never exercised: test species has no MEGAFAUNA flag; key heroism.age_change absent from tests."
+  },
+  {
+    "id": "ENG-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroism.py:133 _hero_wins",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_heroes_win_lose_and_rewind",
+    "note": "Title asserted; charisma gain, KILLED bond and patron fame/xp implemented."
+  },
+  {
+    "id": "ENG-018",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/heroism.py:119 _reward_weapon",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Weapon might gain, victory count and legendary flag are implemented but no test asserts them (key heroism.legendary_weapon absent)."
+  },
+  {
+    "id": "ENG-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroism.py:77 _legend",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_heroes_win_lose_and_rewind",
+    "note": "Ballad legend asserted; carried through TELLS_OF by legend_carrier."
+  },
+  {
+    "id": "ENG-020",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/heroism.py:200 _hero_loses",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Armor-save branch has no dedicated test; test_sworn_and_glory_hunts accepts armor_save as one of three possible keys without forcing it."
+  },
+  {
+    "id": "ENG-021",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroism.py:200 _hero_loses",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_heroes_win_lose_and_rewind",
+    "note": "Death through die(), lament legend created."
+  },
+  {
+    "id": "ENG-022",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/heroism.py:58 legend_carrier",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Carrier selection (location community, then lives-in/descends-from) has no test."
+  },
+  {
+    "id": "ENG-023",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/trade.py:49 trade_income",
+    "test": "backend/tests/engine/society/test_trade.py::test_routes_bring_prosperity_and_wealth",
+    "note": "Gain summed per entity and capped; decree trade exists via decree action."
+  },
+  {
+    "id": "ENG-024",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/resources.py:14 resource_economy",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_resources_feed_owners_and_regrow",
+    "note": "Owners gain wealth and prosperity, abundance depletes per owner."
+  },
+  {
+    "id": "ENG-025",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/prosperity.py:14 prosperity_reversion",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_prosperity_reverts_toward_equilibrium",
+    "note": "Share and target are rules."
+  },
+  {
+    "id": "ENG-026",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/trade.py:107 barter_and_rivalry",
+    "test": "backend/tests/engine/society/test_trade.py::test_different_resources_open_barter",
+    "note": ""
+  },
+  {
+    "id": "ENG-027",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/trade.py:107 barter_and_rivalry",
+    "test": "backend/tests/engine/society/test_trade.py::test_same_resources_breed_rivalry",
+    "note": ""
+  },
+  {
+    "id": "ENG-028",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/resources.py:38 resource_regeneration",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_resources_feed_owners_and_regrow",
+    "note": ""
+  },
+  {
+    "id": "ENG-029",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/curses.py:30 curse_decay",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_curses_decay_lift_and_spread",
+    "note": ""
+  },
+  {
+    "id": "ENG-030",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/curses.py:30 curse_decay",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Mortal curse death (wound with curser as killer) is implemented but untested: tests never curse a MORTAL."
+  },
+  {
+    "id": "ENG-031",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/curses.py:50 lift_curses",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_curses_decay_lift_and_spread",
+    "note": "Magic and medicine bonus implemented; only the base chance is asserted."
+  },
+  {
+    "id": "ENG-032",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/curses.py:69 cursed_items",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_curses_decay_lift_and_spread",
+    "note": "Behaviour present; dedicated test missing. Only contagion is asserted; HP, prosperity, defense damage and mortal owner life drain are untested."
+  },
+  {
+    "id": "ENG-033",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/curses.py:69 cursed_items",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_curses_decay_lift_and_spread",
+    "note": "Contagion to owner asserted."
+  },
+  {
+    "id": "ENG-034",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/magic.py:22 magic_storms",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_magic_storms_wizards_and_price",
+    "note": "Re-verified 2026-11-02: engine:run_phase action and GET /api/engine/phases, surfaced in features/engine."
+  },
+  {
+    "id": "ENG-035",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/religion_spread.py:116 schisms",
+    "test": "backend/tests/engine/society/test_culture_religion.py::test_schism_splits_a_zealous_cult",
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "ENG-036",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:455 creature_migration",
+    "test": "backend/tests/engine/cosmos/test_world_life.py::test_creature_migration_without_a_map_stays_home",
+    "note": "Behaviour present; dedicated test missing. Only the no-map branch is tested; actual spread into a neighbouring region is untested."
+  },
+  {
+    "id": "ENG-037",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:495 creature_rebellion",
+    "test": "backend/tests/engine/cosmos/test_world_life.py::test_creature_rebellion_and_speciation",
+    "note": "Re-verified 2026-11-02: engine:run_phase action and GET /api/engine/phases, surfaced in features/engine."
+  },
+  {
+    "id": "ENG-038",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:524 speciation",
+    "test": "backend/tests/engine/cosmos/test_world_life.py::test_creature_rebellion_and_speciation",
+    "note": "Re-verified 2026-11-02: engine:run_phase action and GET /api/engine/phases, surfaced in features/engine."
+  },
+  {
+    "id": "ENG-039",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:417 hero_births",
+    "test": "backend/tests/engine/society/test_heroes.py::test_populous_people_bear_heroes",
+    "note": "Manual hero:raise."
+  },
+  {
+    "id": "ENG-040",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/culture_exchange.py:92 knowledge_diffusion",
+    "test": "backend/tests/engine/society/test_culture_religion.py::test_knowledge_and_language_diffuse_along_trade",
+    "note": "Manual intervene (teach)."
+  },
+  {
+    "id": "ENG-041",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/culture_exchange.py:71 _spread_language",
+    "test": "backend/tests/engine/society/test_culture_religion.py::test_knowledge_and_language_diffuse_along_trade",
+    "note": ""
+  },
+  {
+    "id": "ENG-042",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/dialects.py:56 dialect_divergence",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_isolated_settlement_forms_a_dialect",
+    "note": "Re-verified 2026-11-02: engine:run_phase action and GET /api/engine/phases, surfaced in features/engine."
+  },
+  {
+    "id": "ENG-043",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/disasters.py:375 natural_disasters",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_region_disasters_need_terrain",
+    "note": "Manual intervene (disaster) and send_disaster."
+  },
+  {
+    "id": "ENG-044",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/disasters.py:269 _region_disasters",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_disaster_effects_protection_and_collapse",
+    "note": ""
+  },
+  {
+    "id": "ENG-045",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/disasters.py:299 _city_plagues",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_city_plague_and_spread",
+    "note": ""
+  },
+  {
+    "id": "ENG-046",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/disasters.py:330 _plague_spread",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_medicine_softens_plague",
+    "note": ""
+  },
+  {
+    "id": "ENG-047",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/migration.py:78 famine_migration",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_famine_drives_migrants_to_greener_lands",
+    "note": "Re-verified 2026-11-02: engine:run_phase action and GET /api/engine/phases, surfaced in features/engine."
+  },
+  {
+    "id": "ENG-048",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/society.py:97 uprisings",
+    "test": "backend/tests/engine/society/test_society.py::test_poverty_raises_rebels",
+    "note": "Manual community:rise_up and society:uprising."
+  },
+  {
+    "id": "ENG-049",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/spirits.py:87 hauntings",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_spirits_rest_cross_and_haunt",
+    "note": ""
+  },
+  {
+    "id": "ENG-050",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/settlements.py:80 settlement_laws",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_laws_and_architecture_shape_walls",
+    "note": ""
+  },
+  {
+    "id": "ENG-051",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/trade.py:217 currency",
+    "test": "backend/tests/engine/society/test_trade.py::test_minting_adoption_and_shared_coin",
+    "note": "Manual community:mint -> order_minting."
+  },
+  {
+    "id": "ENG-052",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/trade.py:185 _adopt",
+    "test": "backend/tests/engine/society/test_trade.py::test_minting_adoption_and_shared_coin",
+    "note": ""
+  },
+  {
+    "id": "ENG-053",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/trade.py:192 _spread_round",
+    "test": "backend/tests/engine/society/test_trade.py::test_minting_adoption_and_shared_coin",
+    "note": ""
+  },
+  {
+    "id": "ENG-054",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/magic.py:82 wizards",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_magic_storms_wizards_and_price",
+    "note": ""
+  },
+  {
+    "id": "ENG-055",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/magic.py:82 wizards",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_magic_storms_wizards_and_price",
+    "note": "Re-verified 2026-11-02: engine:run_phase action and GET /api/engine/phases, surfaced in features/engine."
+  },
+  {
+    "id": "ENG-056",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/magic.py:106 price_of_magic",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_magic_storms_wizards_and_price",
+    "note": ""
+  },
+  {
+    "id": "ENG-057",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/religion_spread.py:141 godlessness",
+    "test": "backend/tests/engine/society/test_culture_religion.py::test_weak_faith_turns_godless",
+    "note": ""
+  },
+  {
+    "id": "ENG-058",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/births.py:693 couples_bear_children",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_couples_and_single_rule",
+    "note": "Manual mortal:child -> bless_with_child."
+  },
+  {
+    "id": "ENG-059",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/society.py:122 love_and_rivalry",
+    "test": "backend/tests/engine/society/test_society.py::test_co_located_adults_fall_in_love_or_rivalry",
+    "note": ""
+  },
+  {
+    "id": "ENG-060",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/settlements.py:103 architecture",
+    "test": "backend/tests/engine/core/test_tick_phases.py::test_laws_and_architecture_shape_walls",
+    "note": ""
+  },
+  {
+    "id": "ENG-061",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/mortals.py:32 mortal_wounds",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_mortal_phase_kills_wounded_and_ages",
+    "note": ""
+  },
+  {
+    "id": "ENG-062",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/lifecycle/aging.py:48 is_immortal",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_laws_freeze_or_haunt_the_old",
+    "note": ""
+  },
+  {
+    "id": "ENG-063",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/mortals.py:94 mortal_aging",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_newborn_too_old_is_rejuvenated",
+    "note": ""
+  },
+  {
+    "id": "ENG-064",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/mortals.py:56 age_one",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_mortal_phase_kills_wounded_and_ages",
+    "note": ""
+  },
+  {
+    "id": "ENG-065",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/mortals.py:94 mortal_aging",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_mortal_phase_kills_wounded_and_ages",
+    "note": ""
+  },
+  {
+    "id": "ENG-066",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/mortals.py:94 mortal_aging",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_laws_freeze_or_haunt_the_old",
+    "note": "Ghost return asserted (EntityFlag.GHOST)."
+  },
+  {
+    "id": "ENG-067",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/lifecycle/aging.py:66 effective_lifespan",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_effective_lifespan_and_life_info",
+    "note": ""
+  },
+  {
+    "id": "ENG-068",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/lifecycle/wounds.py:18 wound",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_wounds_respect_immortality",
+    "note": ""
+  },
+  {
+    "id": "ENG-069",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/lifecycle/wounds.py:18 wound",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_mortal_phase_kills_wounded_and_ages",
+    "note": ""
+  },
+  {
+    "id": "ENG-070",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/lifecycle/mortal_death.py:52 die",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_single_death_path_records_fate_killer_and_heir",
+    "note": ""
+  },
+  {
+    "id": "ENG-071",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/lifecycle/mortal_death.py:266 after_death",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_after_death_soul_items_and_death_gods",
+    "note": ""
+  },
+  {
+    "id": "ENG-072",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/integrity/age_consistency.py:12 raise_lifespans",
+    "test": "backend/tests/services/app/test_integrity.py::test_age_consistency",
+    "note": "Re-verified 2026-11-02: POST /api/maintenance/tasks/{task}/run (data repairs, history repairs, importance, endings, narrative sweep, certain facts, planner statistics, prune and checkpoint) in Settings > Maintenance."
+  },
+  {
+    "id": "ENG-073",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/lifecycle/succession.py:30 _shared_throne",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_shared_throne_passes_without_an_heir",
+    "note": ""
+  },
+  {
+    "id": "ENG-074",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/lifecycle/succession.py:49 _spawn_heir",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_designated_heir_takes_the_throne",
+    "note": "Manual ruler:heir -> designate_heir."
+  },
+  {
+    "id": "ENG-075",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/lifecycle/succession.py:49 _spawn_heir",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_single_death_path_records_fate_killer_and_heir",
+    "note": ""
+  },
+  {
+    "id": "ENG-076",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/lifecycle/mortal_death.py:102 underworld_of",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_souls_descend_to_their_own_world",
+    "note": "Decision 50."
+  },
+  {
+    "id": "ENG-077",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/lifecycle/mortal_death.py:124 _reward_death_domains",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_after_death_soul_items_and_death_gods",
+    "note": ""
+  },
+  {
+    "id": "ENG-078",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/lifecycle/mortal_death.py:133 _bequeath",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_after_death_soul_items_and_death_gods",
+    "note": ""
+  },
+  {
+    "id": "ENG-079",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/lifecycle/mortal_death.py:194 _leave_spirit",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_after_death_soul_items_and_death_gods",
+    "note": "Re-verified 2026-11-02: engine:run_phase action and GET /api/engine/phases, surfaced in features/engine."
+  },
+  {
+    "id": "ENG-080",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/lifecycle/mortal_death.py:236 _start_mourning",
+    "test": "backend/tests/engine/core/test_lifecycle.py::test_after_death_soul_items_and_death_gods",
+    "note": "mortal.mourning asserted."
+  },
+  {
+    "id": "ENG-081",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/distance.py:23 RegionAtlas",
+    "test": "backend/tests/engine/core/test_primitives.py::test_region_atlas_hops_and_reach",
+    "note": "Region hop distance per decision 39."
+  },
+  {
+    "id": "ENG-082",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/strength.py:153 military_strength",
+    "test": "backend/tests/engine/core/test_primitives.py::test_military_strength_counts_weapons_knowledge_and_allies",
+    "note": ""
+  },
+  {
+    "id": "ENG-083",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/strength.py:44 patron_bonus",
+    "test": "backend/tests/engine/core/test_primitives.py::test_tamed_beasts_and_war_father",
+    "note": ""
+  },
+  {
+    "id": "ENG-084",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/strength.py:71 weapon_power",
+    "test": "backend/tests/engine/core/test_primitives.py::test_military_strength_counts_weapons_knowledge_and_allies",
+    "note": ""
+  },
+  {
+    "id": "ENG-085",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/strength.py:172 ally_strength",
+    "test": "backend/tests/engine/core/test_primitives.py::test_military_strength_counts_weapons_knowledge_and_allies",
+    "note": ""
+  },
+  {
+    "id": "ENG-086",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/prosperity.py:17 add_prosperity",
+    "test": "backend/tests/engine/core/test_primitives.py::test_prosperity_gain_diminishes_above_equilibrium",
+    "note": "Decision 53."
+  },
+  {
+    "id": "ENG-087",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/essence.py:20 overflow_to_land",
+    "test": "backend/tests/engine/core/test_primitives.py::test_overflow_fertilises_the_most_barren_regions",
+    "note": "Manual essence:pour."
+  },
+  {
+    "id": "ENG-088",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/capacity.py:120 carrying_capacity",
+    "test": "backend/tests/engine/core/test_primitives.py::test_capacity_blends_place_and_region",
+    "note": ""
+  },
+  {
+    "id": "ENG-089",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/capacity.py:120 carrying_capacity",
+    "test": "backend/tests/engine/core/test_primitives.py::test_capacity_blends_place_and_region",
+    "note": ""
+  },
+  {
+    "id": "ENG-090",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/api/views/insight.py:51 capacity_insight",
+    "test": "backend/tests/engine/core/test_primitives.py::test_capacity_blends_place_and_region",
+    "note": "Served in entity detail insight."
+  },
+  {
+    "id": "ENG-091",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/snapshot.py:109 record_statistics",
+    "test": "backend/tests/engine/core/test_transition.py::test_statistics_and_advance",
+    "note": "GET /api/stats/epochs."
+  },
+  {
+    "id": "ENG-092",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/pipeline.py:234 TRANSITION_ORDER",
+    "test": "backend/tests/engine/core/test_wiring.py::test_order_constraints_hold",
+    "note": "Order verified by constraint test; world_age is called inside doom_clock."
+  },
+  {
+    "id": "ENG-093",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/pipeline.py:344 run_epoch_transition",
+    "test": "backend/tests/engine/core/test_pipeline.py::test_tolerant_transition_steps_are_logged_not_fatal",
+    "note": ""
+  },
+  {
+    "id": "ENG-094",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/climate.py:151 law_fertility",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_laws_shift_land_fertility",
+    "note": ""
+  },
+  {
+    "id": "ENG-095",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/population.py:95 population_growth",
+    "test": "backend/tests/engine/core/test_transition.py::test_population_grows_logistically_and_cults_convert",
+    "note": ""
+  },
+  {
+    "id": "ENG-096",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/population.py:34 grow_cult",
+    "test": "backend/tests/engine/core/test_transition.py::test_population_grows_logistically_and_cults_convert",
+    "note": ""
+  },
+  {
+    "id": "ENG-097",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/stars.py:81 choose_epoch_stars",
+    "test": "backend/tests/engine/cosmos/test_stars_and_gods.py::test_epoch_star_is_a_sky_body_of_the_world",
+    "note": "Manual world:epoch_star."
+  },
+  {
+    "id": "ENG-098",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/transition.py:105 advance_epoch",
+    "test": "backend/tests/engine/core/test_transition.py::test_statistics_and_advance",
+    "note": ""
+  },
+  {
+    "id": "ENG-099",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sons.py:110 sons_renewal",
+    "test": "backend/tests/engine/core/test_transition.py::test_sons_renewal_wakes_heals_and_regenerates",
+    "note": ""
+  },
+  {
+    "id": "ENG-100",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sons.py:110 sons_renewal",
+    "test": "backend/tests/engine/core/test_primitives.py::test_son_faith_counts_worshippers_and_multiplier",
+    "note": ""
+  },
+  {
+    "id": "ENG-101",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sons.py:31 existence_target",
+    "test": "backend/tests/engine/core/test_transition.py::test_existence_moves_toward_its_target",
+    "note": ""
+  },
+  {
+    "id": "ENG-102",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sons.py:95 regenerate_essence",
+    "test": "backend/tests/engine/core/test_transition.py::test_sons_renewal_wakes_heals_and_regenerates",
+    "note": ""
+  },
+  {
+    "id": "ENG-103",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sons.py:124 works_remember_gods",
+    "test": "backend/tests/engine/core/test_transition.py::test_remembrance_rivalry_and_rebels",
+    "note": ""
+  },
+  {
+    "id": "ENG-104",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sons.py:135 domain_rivalry",
+    "test": "backend/tests/engine/core/test_transition.py::test_remembrance_rivalry_and_rebels",
+    "note": "Manual son:relation -> set_son_relation."
+  },
+  {
+    "id": "ENG-105",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/sons.py:147 rebel_theft",
+    "test": "backend/tests/engine/core/test_transition.py::test_remembrance_rivalry_and_rebels",
+    "note": ""
+  },
+  {
+    "id": "ENG-106",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/doom.py:115 doom_clock",
+    "test": "backend/tests/engine/core/test_transition.py::test_doom_clock_counts_and_destroys",
+    "note": "Items match legacy kalemler; text-regex temple detection replaced by EngineKind.TEMPLE."
+  },
+  {
+    "id": "ENG-107",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/doom.py:115 doom_clock",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Omen thresholds are implemented (doom.omen_*) but no test asserts the omen chronicle lines."
+  },
+  {
+    "id": "ENG-108",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/transition.py:58 doom_calling",
+    "test": "backend/tests/engine/core/test_transition.py::test_doom_turns_into_a_calling_when_worlds_leak",
+    "note": ""
+  },
+  {
+    "id": "ENG-109",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/doom.py:94 destroy_leakiest_world",
+    "test": "backend/tests/engine/core/test_transition.py::test_doom_clock_counts_and_destroys",
+    "note": "Manual doom:apocalypse -> trigger_apocalypse."
+  },
+  {
+    "id": "ENG-110",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/transition.py:73 creator_essence",
+    "test": "backend/tests/engine/core/test_transition.py::test_creator_essence_soft_cap_and_overflow",
+    "note": "Manual cheat:essence."
+  },
+  {
+    "id": "ENG-111",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/transition.py:73 creator_essence",
+    "test": "backend/tests/engine/core/test_transition.py::test_creator_essence_soft_cap_and_overflow",
+    "note": ""
+  },
+  {
+    "id": "ENG-112",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/snapshot.py:109 record_statistics",
+    "test": "backend/tests/engine/core/test_transition.py::test_statistics_and_advance",
+    "note": "GET /api/epochs/{epoch}/breakdown."
+  },
+  {
+    "id": "DEEP-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/records.py:165 open_record",
+    "test": "backend/tests/engine/core/test_records.py::test_engine_records_are_pending_unique_and_placed",
+    "note": ""
+  },
+  {
+    "id": "DEEP-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/records.py:149 introduce",
+    "test": "backend/tests/engine/core/test_records.py::test_introduction_names_kind_and_place",
+    "note": "Manual record:edit."
+  },
+  {
+    "id": "DEEP-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/repositories/names.py:70 NameRepository",
+    "test": "backend/tests/db/test_names.py::test_unique_name_appends_roman_numerals",
+    "note": "Decision 57; manual rename via record:edit."
+  },
+  {
+    "id": "DEEP-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/records.py:42 retire_record",
+    "test": "backend/tests/engine/core/test_records.py::test_retire_record_by_hand",
+    "note": "Manual record:retire."
+  },
+  {
+    "id": "DEEP-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/records.py:13 death_path",
+    "test": "backend/tests/engine/core/test_records.py::test_death_path_for_other_records_leaves_a_killed_bond",
+    "note": "Manual take_life."
+  },
+  {
+    "id": "DEEP-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/records.py:276 sweep_dead_bonds",
+    "test": "backend/tests/engine/core/test_records.py::test_dead_bond_sweep_passes_property_and_closes_state",
+    "note": "Re-verified 2026-11-02: POST /api/maintenance/tasks/{task}/run (data repairs, history repairs, importance, endings, narrative sweep, certain facts, planner statistics, prune and checkpoint) in Settings > Maintenance."
+  },
+  {
+    "id": "DEEP-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/records.py:276 sweep_dead_bonds",
+    "test": "backend/tests/engine/core/test_records.py::test_dead_bond_sweep_passes_property_and_closes_state",
+    "note": "Re-verified 2026-11-02: POST /api/maintenance/tasks/{task}/run (data repairs, history repairs, importance, endings, narrative sweep, certain facts, planner statistics, prune and checkpoint) in Settings > Maintenance."
+  },
+  {
+    "id": "DEEP-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/records.py:244 heir_of",
+    "test": "backend/tests/engine/core/test_records.py::test_dead_bond_sweep_passes_property_and_closes_state",
+    "note": ""
+  },
+  {
+    "id": "DEEP-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/records.py:276 sweep_dead_bonds",
+    "test": "backend/tests/engine/core/test_records.py::test_dead_bond_sweep_passes_property_and_closes_state",
+    "note": "Route control handed to heir community or freed (records.py:310)."
+  },
+  {
+    "id": "DEEP-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war.py:89 has_truce",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_truce_only_after_a_fought_war_and_expires",
+    "note": "Manual decree peace."
+  },
+  {
+    "id": "DEEP-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war.py:93 expire_truces",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_truce_only_after_a_fought_war_and_expires",
+    "note": "Manual bond:remove."
+  },
+  {
+    "id": "DEEP-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war.py:104 ever_fought",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_truce_only_after_a_fought_war_and_expires",
+    "note": "Re-verified 2026-11-02: GET/PUT /api/entities/{entity_id}/relations, relation:set, feud:start and features/relations/CommunityRelations.tsx."
+  },
+  {
+    "id": "DEEP-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war_resolution.py:71 make_peace",
+    "test": "backend/tests/engine/warfare/test_diplomacy.py::test_softened_enemies_make_peace_and_end_their_war",
+    "note": "Manual decree (peace)."
+  },
+  {
+    "id": "DEEP-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/integrity/war_truces.py:13 close_unfought_truces",
+    "test": "backend/tests/services/app/test_integrity.py::test_full_startup_maintenance",
+    "note": "Re-verified 2026-11-02: POST /api/maintenance/tasks/{task}/run (data repairs, history repairs, importance, endings, narrative sweep, certain facts, planner statistics, prune and checkpoint) in Settings > Maintenance."
+  },
+  {
+    "id": "DEEP-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/integrity/location_bonds.py:21 add_missing_inside_bonds",
+    "test": "backend/tests/services/app/test_integrity.py::test_missing_inside_and_epoch_years",
+    "note": "Manual entity:move."
+  },
+  {
+    "id": "DEEP-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war.py:178 hostile_pair_count",
+    "test": "backend/tests/engine/warfare/test_war_service.py",
+    "note": "Feeds doom clock; counts appear in epoch pulse statistics."
+  },
+  {
+    "id": "DEEP-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war.py:142 ongoing_wars",
+    "test": "backend/tests/engine/warfare/test_war_service.py",
+    "note": ""
+  },
+  {
+    "id": "DEEP-018",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war.py:215 can_open_war",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_declare_war_breaks_alliance_and_blocks_repeat",
+    "note": ""
+  },
+  {
+    "id": "DEEP-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war.py:225 declare_war",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_declare_war_breaks_alliance_and_blocks_repeat",
+    "note": "Decision 35; manual decree war and war:open."
+  },
+  {
+    "id": "DEEP-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/faith.py:150 change_religion",
+    "test": "backend/tests/engine/core/test_primitives.py::test_religion_change_and_syncretism",
+    "note": "Decision 54; manual entity:patron."
+  },
+  {
+    "id": "DEEP-021",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/entities.py:51 add_tags",
+    "test": "backend/tests/db/test_entities.py::test_flags_and_tags",
+    "note": "Manual entity:tags."
+  },
+  {
+    "id": "DEEP-022",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/distance.py:23 RegionAtlas",
+    "test": "backend/tests/engine/core/test_primitives.py::test_region_atlas_hops_and_reach",
+    "note": "Replaced by region hop distance (decision 39); GET /api/graph/path exists."
+  },
+  {
+    "id": "DEEP-023",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/distance.py:23 RegionAtlas",
+    "test": "backend/tests/engine/core/test_primitives.py::test_region_atlas_hops_and_reach",
+    "note": ""
+  },
+  {
+    "id": "DEEP-024",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/community_relations.py:43 initial_relation",
+    "test": "backend/tests/engine/warfare/test_relations_and_sides.py::test_initial_relation_counts_shared_god_language_and_bonds",
+    "note": "Re-verified 2026-11-02: GET/PUT /api/entities/{entity_id}/relations, relation:set, feud:start and features/relations/CommunityRelations.tsx."
+  },
+  {
+    "id": "DEEP-025",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/community_relations.py:84 relation",
+    "test": "backend/tests/engine/warfare/test_relations_and_sides.py::test_change_relation_keeps_capped_history_and_clamps",
+    "note": "Re-verified 2026-11-02: GET/PUT /api/entities/{entity_id}/relations, relation:set, feud:start and features/relations/CommunityRelations.tsx."
+  },
+  {
+    "id": "DEEP-026",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/community_relations.py:101 change_relation",
+    "test": "backend/tests/engine/warfare/test_relations_and_sides.py::test_change_relation_keeps_capped_history_and_clamps",
+    "note": "Manual decree."
+  },
+  {
+    "id": "DEEP-027",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/community_relations.py:129 start_blood_feud",
+    "test": "backend/tests/engine/warfare/test_relations_and_sides.py::test_blood_feud_penalty_and_labels",
+    "note": "Re-verified 2026-11-02: GET/PUT /api/entities/{entity_id}/relations, relation:set, feud:start and features/relations/CommunityRelations.tsx."
+  },
+  {
+    "id": "DEEP-028",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/community_relations.py:172 relation_list",
+    "test": "backend/tests/engine/warfare/test_relations_and_sides.py::test_blood_feud_penalty_and_labels",
+    "note": "Re-verified 2026-11-02: GET/PUT /api/entities/{entity_id}/relations, relation:set, feud:start and features/relations/CommunityRelations.tsx."
+  },
+  {
+    "id": "DEEP-029",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/community_relations.py:191 revert_extreme_relations",
+    "test": "backend/tests/engine/warfare/test_relations_and_sides.py::test_mean_reversion_pulls_extremes_toward_threshold",
+    "note": "Re-verified 2026-11-02: engine:run_phase action and GET /api/engine/phases, surfaced in features/engine."
+  },
+  {
+    "id": "DEEP-030",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/sides.py:74 side_of",
+    "test": "backend/tests/engine/warfare/test_relations_and_sides.py::test_sides_resolve_protected_ruled_and_located",
+    "note": ""
+  },
+  {
+    "id": "DEEP-031",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/sides.py:79 heroes_of",
+    "test": "backend/tests/engine/warfare/test_relations_and_sides.py::test_sides_resolve_protected_ruled_and_located",
+    "note": "Re-verified 2026-11-02: GET /api/wars/{war_id}/battles and GET /api/entities/{entity_id}/heroes with features/wars."
+  },
+  {
+    "id": "DEEP-032",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/diplomacy.py:90 grudge_limits",
+    "test": "backend/tests/engine/warfare/test_diplomacy.py::test_grudge_pool_widens_fading_when_hostility_overflows",
+    "note": "Re-verified 2026-11-02: engine:run_phase action and GET /api/engine/phases, surfaced in features/engine."
+  },
+  {
+    "id": "DEEP-033",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/diplomacy.py:304 diplomacy",
+    "test": "backend/tests/engine/warfare/test_diplomacy.py::test_old_grudges_fade_when_relations_improve",
+    "note": ""
+  },
+  {
+    "id": "DEEP-034",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/diplomacy.py:61 forget_mortal_grudges",
+    "test": "backend/tests/engine/warfare/test_diplomacy.py::test_mortal_grudges_are_forgotten",
+    "note": ""
+  },
+  {
+    "id": "DEEP-035",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war_resolution.py:201 settle_peace",
+    "test": "backend/tests/engine/warfare/test_diplomacy.py::test_long_wars_end_in_exhaustion_peace",
+    "note": ""
+  },
+  {
+    "id": "DEEP-036",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/diplomacy.py:304 diplomacy",
+    "test": "backend/tests/engine/warfare/test_diplomacy.py::test_grudging_neighbours_declare_war",
+    "note": "Drift terms are not asserted individually."
+  },
+  {
+    "id": "DEEP-037",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/diplomacy.py:304 diplomacy",
+    "test": "backend/tests/engine/warfare/test_diplomacy.py::test_long_wars_end_in_exhaustion_peace",
+    "note": ""
+  },
+  {
+    "id": "DEEP-038",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/diplomacy.py:304 diplomacy",
+    "test": "backend/tests/engine/warfare/test_diplomacy.py::test_grudging_neighbours_declare_war",
+    "note": ""
+  },
+  {
+    "id": "DEEP-039",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war_resolution.py:201 settle_peace",
+    "test": "backend/tests/engine/warfare/test_diplomacy.py::test_softened_enemies_make_peace_and_end_their_war",
+    "note": ""
+  },
+  {
+    "id": "DEEP-040",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/diplomacy.py:154 form_alliance",
+    "test": "backend/tests/engine/warfare/test_diplomacy.py::test_friendly_neighbours_form_marriage_alliance",
+    "note": "Manual decree alliance."
+  },
+  {
+    "id": "DEEP-041",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/diplomacy.py:154 form_alliance",
+    "test": "backend/tests/engine/warfare/test_diplomacy.py::test_friendly_neighbours_form_marriage_alliance",
+    "note": "Manual alliance:marriage."
+  },
+  {
+    "id": "DEEP-042",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/diplomacy.py:185 betray",
+    "test": "backend/tests/engine/warfare/test_diplomacy.py::test_decrees_for_peace_alliance_and_truce_expiry",
+    "note": "Manual alliance:betray -> decree_betrayal."
+  },
+  {
+    "id": "DEEP-043",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/diplomacy.py:185 betray",
+    "test": "backend/tests/engine/warfare/test_diplomacy.py::test_betrayal_in_a_multi_world_cosmos_goes_to_the_cosmic_court",
+    "note": "Court is convened by alliance:betray; no standalone convene action."
+  },
+  {
+    "id": "DEEP-044",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war.py:159 current_war",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_open_war_records_typed_rows_sides_and_armies",
+    "note": ""
+  },
+  {
+    "id": "DEEP-045",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war.py:328 soldier_count",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_open_war_records_typed_rows_sides_and_armies",
+    "note": ""
+  },
+  {
+    "id": "DEEP-046",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war.py:361 raise_army",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_open_war_records_typed_rows_sides_and_armies",
+    "note": "Manual war:army and army:disband; no dedicated war panel UI (palette actions only)."
+  },
+  {
+    "id": "DEEP-047",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war_resolution.py:80 close_war",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_victory_over_settlement_by_people_is_conquest",
+    "note": ""
+  },
+  {
+    "id": "DEEP-048",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war_resolution.py:159 end_war",
+    "test": "backend/tests/engine/warfare/test_diplomacy.py::test_softened_enemies_make_peace_and_end_their_war",
+    "note": "Manual war:end."
+  },
+  {
+    "id": "DEEP-049",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war_resolution.py:227 close_wars_over_caps",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_war_caps_close_quietest_wars",
+    "note": ""
+  },
+  {
+    "id": "DEEP-050",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war_resolution.py:227 close_wars_over_caps",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_war_caps_close_quietest_wars",
+    "note": ""
+  },
+  {
+    "id": "DEEP-051",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war_resolution.py:227 close_wars_over_caps",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_war_caps_close_quietest_wars",
+    "note": ""
+  },
+  {
+    "id": "DEEP-052",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war_resolution.py:255 close_stale_wars",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_stale_wars_close_duplicates_and_peaceful_pairs",
+    "note": ""
+  },
+  {
+    "id": "DEEP-053",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war_resolution.py:255 close_stale_wars",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_stale_wars_close_duplicates_and_peaceful_pairs",
+    "note": ""
+  },
+  {
+    "id": "DEEP-054",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war.py:74 uprising_target",
+    "test": "backend/tests/engine/society/test_society.py::test_poverty_raises_rebels",
+    "note": "Manual community:rise_up."
+  },
+  {
+    "id": "DEEP-055",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:96 redirect_uprisings",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_upkeep_ends_wars_with_subjects_and_redirects_uprisings",
+    "note": ""
+  },
+  {
+    "id": "DEEP-056",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:131 end_wars_with_subjects",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_upkeep_ends_wars_with_subjects_and_redirects_uprisings",
+    "note": ""
+  },
+  {
+    "id": "DEEP-057",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:512 campaigns",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_new_war_mobilises_then_clashes_next_epoch",
+    "note": "Ordering of ongoing-war pairs first is not asserted; manual war:battle."
+  },
+  {
+    "id": "DEEP-058",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:512 campaigns",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_new_war_mobilises_then_clashes_next_epoch",
+    "note": "Caps are rules campaigns.*."
+  },
+  {
+    "id": "DEEP-059",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:512 campaigns",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. War-ban law lowering battle chance (warfare.py:508) has no test (NaturalLaw.WAR_BAN absent from tests)."
+  },
+  {
+    "id": "DEEP-060",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war.py:249 open_war",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_open_war_records_typed_rows_sides_and_armies",
+    "note": "Manual war:open."
+  },
+  {
+    "id": "DEEP-061",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war.py:413 army_or_raise",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_new_war_mobilises_then_clashes_next_epoch",
+    "note": ""
+  },
+  {
+    "id": "DEEP-062",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:512 campaigns",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_new_war_mobilises_then_clashes_next_epoch",
+    "note": "Mobilisation switch in rules."
+  },
+  {
+    "id": "DEEP-063",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:147 battle_power",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_rout_ends_war_with_tribute",
+    "note": "Formula terms match legacy guc (community share, allies, log size, morale, equipment, experience, commander, patron, die). Manual army:bless."
+  },
+  {
+    "id": "DEEP-064",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:383 fight_battle",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_rout_ends_war_with_tribute",
+    "note": ""
+  },
+  {
+    "id": "DEEP-065",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:188 _siege",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Defender-wins (siege repulsed) branch is implemented but untested: test_siege_starvation_costs_the_attacker_morale only covers the starvation round."
+  },
+  {
+    "id": "DEEP-066",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:188 _siege",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_siege_starvation_costs_the_attacker_morale",
+    "note": "Behaviour present; dedicated test missing. Breach branch is untested (the test forces the breach chance to 0)."
+  },
+  {
+    "id": "DEEP-067",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:188 _siege",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_siege_starvation_costs_the_attacker_morale",
+    "note": "Decision 52."
+  },
+  {
+    "id": "DEEP-068",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:383 fight_battle",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_rout_ends_war_with_tribute",
+    "note": ""
+  },
+  {
+    "id": "DEEP-069",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:232 _casualties",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_rout_ends_war_with_tribute",
+    "note": ""
+  },
+  {
+    "id": "DEEP-070",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:246 _community_losses",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_rout_ends_war_with_tribute",
+    "note": ""
+  },
+  {
+    "id": "DEEP-071",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:370 _patron_effects",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_rout_ends_war_with_tribute",
+    "note": "Manual son:edit."
+  },
+  {
+    "id": "DEEP-072",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:273 _record",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_rout_ends_war_with_tribute",
+    "note": "Re-verified 2026-11-02: GET /api/wars/{war_id}/battles and GET /api/entities/{entity_id}/heroes with features/wars."
+  },
+  {
+    "id": "DEEP-073",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:325 duel",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_duel_to_the_death_starts_a_blood_feud",
+    "note": "Manual war:duel."
+  },
+  {
+    "id": "DEEP-074",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:325 duel",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_duel_to_the_death_starts_a_blood_feud",
+    "note": ""
+  },
+  {
+    "id": "DEEP-075",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:325 duel",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Duel wound (loser loses hp instead of dying) branch untested."
+  },
+  {
+    "id": "DEEP-076",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:352 _heroics",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_capture_takes_a_hero_prisoner_with_synced_bond",
+    "note": ""
+  },
+  {
+    "id": "DEEP-077",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:383 fight_battle",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_rout_ends_war_with_tribute",
+    "note": "Chronicle row carries son_id of the winning patron."
+  },
+  {
+    "id": "DEEP-078",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/warfare.py:442 check_war_end",
+    "test": "backend/tests/engine/warfare/test_campaigns.py::test_rout_ends_war_with_tribute",
+    "note": ""
+  },
+  {
+    "id": "DEEP-079",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war_resolution.py:146 impose_victory",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_victory_over_settlement_by_people_is_conquest",
+    "note": "Manual war:victory."
+  },
+  {
+    "id": "DEEP-080",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war_resolution.py:146 impose_victory",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_victory_otherwise_imposes_tribute_row_and_bond",
+    "note": ""
+  },
+  {
+    "id": "DEEP-081",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/services/war_resolution.py:127 _convert_loser",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Loser conversion/syncretism after conquest or tribute is implemented but no test in warfare/ exercises it."
+  },
+  {
+    "id": "DEEP-082",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war_resolution.py:58 relation_effect",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_relation_effect_table_covers_every_peaceful_ending",
+    "note": "Decision 56."
+  },
+  {
+    "id": "DEEP-083",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/services/war_resolution.py:80 close_war",
+    "test": "backend/tests/engine/warfare/test_war_service.py::test_victory_over_settlement_by_people_is_conquest",
+    "note": ""
+  },
+  {
+    "id": "DEEP-084",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/tribute.py:64 tribute",
+    "test": "backend/tests/engine/warfare/test_tribute_and_prisoners.py::test_tribute_flows_through_diminishing_returns",
+    "note": "Duplicate and dead-side closure at tribute.py:72-80."
+  },
+  {
+    "id": "DEEP-085",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/tribute.py:64 tribute",
+    "test": "backend/tests/engine/warfare/test_tribute_and_prisoners.py::test_tribute_ends_after_its_term_and_revolts_close_the_row",
+    "note": ""
+  },
+  {
+    "id": "DEEP-086",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/tribute.py:44 _flow",
+    "test": "backend/tests/engine/warfare/test_tribute_and_prisoners.py::test_tribute_flows_through_diminishing_returns",
+    "note": "Manual tribute:impose/forgive."
+  },
+  {
+    "id": "DEEP-087",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/tribute.py:44 _flow",
+    "test": "backend/tests/engine/warfare/test_tribute_and_prisoners.py::test_tribute_flows_through_diminishing_returns",
+    "note": ""
+  },
+  {
+    "id": "DEEP-088",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/tribute.py:64 tribute",
+    "test": "backend/tests/engine/warfare/test_tribute_and_prisoners.py::test_tribute_ends_after_its_term_and_revolts_close_the_row",
+    "note": ""
+  },
+  {
+    "id": "DEEP-089",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/prisoners.py:93 prisoners",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Release of a dead captive / scattered captors (prisoners.py:96-102) has no test."
+  },
+  {
+    "id": "DEEP-090",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/prisoners.py:42 pay_ransom",
+    "test": "backend/tests/engine/warfare/test_tribute_and_prisoners.py::test_ransom_pays_captor_and_frees_prisoner",
+    "note": "Manual captive:ransom."
+  },
+  {
+    "id": "DEEP-091",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/prisoners.py:65 _fate",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Escape-by-agility/intellect branch has no test; manual captive:free exists."
+  },
+  {
+    "id": "DEEP-092",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/prisoners.py:65 _fate",
+    "test": "backend/tests/engine/warfare/test_tribute_and_prisoners.py::test_execution_kills_prisoner_and_starts_feud",
+    "note": ""
+  },
+  {
+    "id": "DEEP-093",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/prisoners.py:54 defect",
+    "test": "backend/tests/engine/warfare/test_tribute_and_prisoners.py::test_long_captivity_turns_prisoner",
+    "note": ""
+  },
+  {
+    "id": "DEEP-094",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/society_economy.py:110 default_society",
+    "test": "backend/tests/engine/society/test_society_economy.py::test_phase_creates_societies_and_moves_stocks",
+    "note": ""
+  },
+  {
+    "id": "DEEP-095",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/society_economy.py:149 class_targets",
+    "test": "backend/tests/engine/society/test_society_economy.py::test_class_targets_follow_knowledge_war_and_godlessness",
+    "note": "Manual society:shares."
+  },
+  {
+    "id": "DEEP-096",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/society_economy.py:277 land_fertility",
+    "test": "backend/tests/engine/society/test_society_economy.py::test_phase_creates_societies_and_moves_stocks",
+    "note": ""
+  },
+  {
+    "id": "DEEP-097",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/society_economy.py:177 food_rate",
+    "test": "backend/tests/engine/society/test_society_economy.py::test_food_rate_reacts_to_climate_and_law",
+    "note": ""
+  },
+  {
+    "id": "DEEP-098",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/society_economy.py:291 ore_income",
+    "test": "backend/tests/engine/society/test_society_economy.py::test_forges_and_ore_mines",
+    "note": ""
+  },
+  {
+    "id": "DEEP-099",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/society_economy.py:196 craft_output",
+    "test": "backend/tests/engine/society/test_society_economy.py::test_forges_and_ore_mines",
+    "note": ""
+  },
+  {
+    "id": "DEEP-100",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/society_economy.py:205 market_prices",
+    "test": "backend/tests/engine/society/test_society_economy.py::test_prices_rise_in_scarcity",
+    "note": ""
+  },
+  {
+    "id": "DEEP-101",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/society_economy.py:230 satisfaction_targets",
+    "test": "backend/tests/engine/society/test_society_economy.py::test_satisfaction_targets_punish_hunger_tribute_and_reward_justice",
+    "note": ""
+  },
+  {
+    "id": "DEEP-102",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/society_economy.py:329 apply_class_effects",
+    "test": "backend/tests/engine/society/test_society_economy.py::test_phase_creates_societies_and_moves_stocks",
+    "note": ""
+  },
+  {
+    "id": "DEEP-103",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/society_economy.py:343 strike_famine",
+    "test": "backend/tests/engine/society/test_society_economy.py::test_famine_strikes_empty_granaries",
+    "note": "Manual society:famine."
+  },
+  {
+    "id": "DEEP-104",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/society_economy.py:361 forge_weapons",
+    "test": "backend/tests/engine/society/test_society_economy.py::test_forges_and_ore_mines",
+    "note": "Manual society:forge."
+  },
+  {
+    "id": "DEEP-105",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/society_economy.py:391 bankrupt_guilds",
+    "test": "backend/tests/engine/society/test_society_economy.py::test_bankruptcy_hits_merchants_without_routes",
+    "note": ""
+  },
+  {
+    "id": "DEEP-106",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/society_economy.py:411 raise_class_uprising",
+    "test": "backend/tests/engine/society/test_society_economy.py::test_class_uprising_starts_a_civil_war",
+    "note": "Manual society:uprising."
+  },
+  {
+    "id": "DEEP-107",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/society_economy.py:501 trade_flows",
+    "test": "backend/tests/engine/society/test_society_economy.py::test_trade_flows_level_stores",
+    "note": ""
+  },
+  {
+    "id": "DEEP-108",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:62 is_hero",
+    "test": "backend/tests/engine/society/test_heroes.py::test_hero_test_and_success_chance",
+    "note": ""
+  },
+  {
+    "id": "DEEP-109",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:95 start_quest",
+    "test": "backend/tests/engine/society/test_heroes.py::test_knowledge_quest_starts_and_succeeds",
+    "note": "Manual hero:quest."
+  },
+  {
+    "id": "DEEP-110",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:358 heroes",
+    "test": "backend/tests/engine/society/test_heroes.py::test_knowledge_quest_starts_and_succeeds",
+    "note": "Manual hero:resolve."
+  },
+  {
+    "id": "DEEP-111",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:211 choose_quest",
+    "test": "backend/tests/engine/society/test_heroes.py::test_hunt_quest_ends_in_an_encounter",
+    "note": ""
+  },
+  {
+    "id": "DEEP-112",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:211 choose_quest",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Thread-quest kind has no test (only knowledge, hunt and vengeance quests are tested)."
+  },
+  {
+    "id": "DEEP-113",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:211 choose_quest",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Relic-quest kind has no test."
+  },
+  {
+    "id": "DEEP-114",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:211 choose_quest",
+    "test": "backend/tests/engine/society/test_heroes.py::test_knowledge_quest_starts_and_succeeds",
+    "note": ""
+  },
+  {
+    "id": "DEEP-115",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:211 choose_quest",
+    "test": "backend/tests/engine/society/test_heroes.py::test_vengeance_quest_kills_the_feud_enemy",
+    "note": ""
+  },
+  {
+    "id": "DEEP-116",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:211 choose_quest",
+    "test": "backend/tests/engine/society/test_heroes.py::test_knowledge_quest_starts_and_succeeds",
+    "note": ""
+  },
+  {
+    "id": "DEEP-117",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:186 resolve_quest_now",
+    "test": "backend/tests/engine/society/test_heroes.py::test_hunt_quest_ends_in_an_encounter",
+    "note": ""
+  },
+  {
+    "id": "DEEP-118",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:123 success_chance",
+    "test": "backend/tests/engine/society/test_heroes.py::test_hero_test_and_success_chance",
+    "note": ""
+  },
+  {
+    "id": "DEEP-119",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:152 _claim_prize",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Relic success (hero owns the item) untested."
+  },
+  {
+    "id": "DEEP-120",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:152 _claim_prize",
+    "test": "backend/tests/engine/society/test_heroes.py::test_knowledge_quest_starts_and_succeeds",
+    "note": ""
+  },
+  {
+    "id": "DEEP-121",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:152 _claim_prize",
+    "test": "backend/tests/engine/society/test_heroes.py::test_vengeance_quest_kills_the_feud_enemy",
+    "note": ""
+  },
+  {
+    "id": "DEEP-122",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:152 _claim_prize",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Thread-quest success (hidden truth learned) untested."
+  },
+  {
+    "id": "DEEP-123",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:168 _quest_failed",
+    "test": "backend/tests/engine/society/test_heroes.py::test_failed_quest_can_kill_or_wound",
+    "note": ""
+  },
+  {
+    "id": "DEEP-124",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:481 recall_hero",
+    "test": "backend/tests/engine/society/test_heroes.py::test_manual_hero_controls",
+    "note": "Manual hero:recall."
+  },
+  {
+    "id": "DEEP-125",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:168 _quest_failed",
+    "test": "backend/tests/engine/society/test_heroes.py::test_failed_quest_can_kill_or_wound",
+    "note": ""
+  },
+  {
+    "id": "DEEP-126",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:236 _companion_round",
+    "test": "backend/tests/engine/society/test_heroes.py::test_companions_and_apprentices",
+    "note": ""
+  },
+  {
+    "id": "DEEP-127",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:296 train_apprentice",
+    "test": "backend/tests/engine/society/test_heroes.py::test_companions_and_apprentices",
+    "note": "Manual hero:apprentice."
+  },
+  {
+    "id": "DEEP-128",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/heroes.py:281 _bequeath_weapon",
+    "test": "backend/tests/engine/society/test_heroes.py::test_companions_and_apprentices",
+    "note": ""
+  },
+  {
+    "id": "DEEP-129",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/dark_ages.py:74 is_devastated",
+    "test": "backend/tests/engine/society/test_knowledge_wonders.py::test_devastated_communities_forget_and_knowledge_gets_lost",
+    "note": ""
+  },
+  {
+    "id": "DEEP-130",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/dark_ages.py:92 is_protected",
+    "test": "backend/tests/engine/society/test_knowledge_wonders.py::test_scribes_protect_and_rediscover",
+    "note": ""
+  },
+  {
+    "id": "DEEP-131",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/dark_ages.py:99 forget_knowledge",
+    "test": "backend/tests/engine/society/test_knowledge_wonders.py::test_devastated_communities_forget_and_knowledge_gets_lost",
+    "note": ""
+  },
+  {
+    "id": "DEEP-132",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/dark_ages.py:216 dark_ages",
+    "test": "backend/tests/engine/society/test_knowledge_wonders.py::test_devastated_communities_forget_and_knowledge_gets_lost",
+    "note": ""
+  },
+  {
+    "id": "DEEP-133",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/dark_ages.py:160 drift_spread",
+    "test": "backend/tests/engine/society/test_knowledge_wonders.py::test_spread_drifts_toward_knowers",
+    "note": ""
+  },
+  {
+    "id": "DEEP-134",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/dark_ages.py:181 _rediscovery",
+    "test": "backend/tests/engine/society/test_knowledge_wonders.py::test_scribes_protect_and_rediscover",
+    "note": ""
+  },
+  {
+    "id": "DEEP-135",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/espionage.py:49 found_networks",
+    "test": "backend/tests/engine/warfare/test_factions_espionage_conflict.py::test_influential_faction_weaves_a_network_and_gets_caught",
+    "note": ""
+  },
+  {
+    "id": "DEEP-136",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/espionage.py:70 capture_chance",
+    "test": "backend/tests/engine/warfare/test_factions_espionage_conflict.py::test_influential_faction_weaves_a_network_and_gets_caught",
+    "note": ""
+  },
+  {
+    "id": "DEEP-137",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/espionage.py:87 perform_operation",
+    "test": "backend/tests/engine/warfare/test_factions_espionage_conflict.py::test_ordered_spy_operation_steals_knowledge",
+    "note": "Manual faction:spy."
+  },
+  {
+    "id": "DEEP-138",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/espionage.py:87 perform_operation",
+    "test": "backend/tests/engine/warfare/test_factions_espionage_conflict.py::test_ordered_spy_operation_steals_knowledge",
+    "note": "Sabotage branch not separately asserted."
+  },
+  {
+    "id": "DEEP-139",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/wonders.py:40 promote_wonders",
+    "test": "backend/tests/engine/society/test_knowledge_wonders.py::test_wonders_reward_owners_and_stir_envy",
+    "note": ""
+  },
+  {
+    "id": "DEEP-140",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/wonders.py:83 wonders",
+    "test": "backend/tests/engine/society/test_knowledge_wonders.py::test_wonders_reward_owners_and_stir_envy",
+    "note": ""
+  },
+  {
+    "id": "DEEP-141",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/wonders.py:59 envy",
+    "test": "backend/tests/engine/society/test_knowledge_wonders.py::test_wonders_reward_owners_and_stir_envy",
+    "note": ""
+  },
+  {
+    "id": "DEEP-142",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/wonders.py:59 envy",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Envy war branch (wonders.envy_war) is not asserted by any test."
+  },
+  {
+    "id": "DEEP-143",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/ruins.py:25 abandonment",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_ruins_fall_and_rise_again",
+    "note": "Manual settlement:abandon and settlement:shelter."
+  },
+  {
+    "id": "DEEP-144",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/climate.py:101 ensure_climate",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_first_climate_and_era_change",
+    "note": ""
+  },
+  {
+    "id": "DEEP-145",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/climate.py:142 climate_transition",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_imposed_climate_applies_once_more_at_transition",
+    "note": "Manual climate action."
+  },
+  {
+    "id": "DEEP-146",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/climate.py:123 advance_world",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_first_climate_and_era_change",
+    "note": ""
+  },
+  {
+    "id": "DEEP-147",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/climate.py:123 advance_world",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_first_climate_and_era_change",
+    "note": ""
+  },
+  {
+    "id": "DEEP-148",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/climate.py:72 apply_climate_effect",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_regional_change_and_equilibrium",
+    "note": ""
+  },
+  {
+    "id": "DEEP-149",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/climate.py:49 population_loss_pct",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_regional_change_and_equilibrium",
+    "note": ""
+  },
+  {
+    "id": "DEEP-150",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/climate.py:169 climate_of",
+    "test": "backend/tests/engine/society/test_climate_disasters.py::test_first_climate_and_era_change",
+    "note": ""
+  },
+  {
+    "id": "DEEP-151",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/god_death.py:247 creator_kills_son",
+    "test": "backend/tests/engine/gods/test_death.py::test_god_death_builds_corpse_shade_order",
+    "note": "Manual kill:son."
+  },
+  {
+    "id": "DEEP-152",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/god_death.py:91 god_death",
+    "test": "backend/tests/engine/gods/test_death.py::test_god_death_builds_corpse_shade_order",
+    "note": ""
+  },
+  {
+    "id": "DEEP-153",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/god_death.py:91 god_death",
+    "test": "backend/tests/engine/gods/test_death.py::test_god_death_builds_corpse_shade_order",
+    "note": ""
+  },
+  {
+    "id": "DEEP-154",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/god_death.py:186 create_order",
+    "test": "backend/tests/engine/gods/test_death.py::test_god_death_builds_corpse_shade_order",
+    "note": ""
+  },
+  {
+    "id": "DEEP-155",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/god_death.py:91 god_death",
+    "test": "backend/tests/engine/gods/test_death.py::test_god_death_builds_corpse_shade_order",
+    "note": ""
+  },
+  {
+    "id": "DEEP-156",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/god_death.py:91 god_death",
+    "test": "backend/tests/engine/gods/test_death.py::test_god_death_builds_corpse_shade_order",
+    "note": ""
+  },
+  {
+    "id": "DEEP-157",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/god_death.py:91 god_death",
+    "test": "backend/tests/engine/gods/test_death.py::test_god_death_builds_corpse_shade_order",
+    "note": ""
+  },
+  {
+    "id": "DEEP-158",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/god_death.py:91 god_death",
+    "test": "backend/tests/engine/gods/test_death.py::test_god_death_builds_corpse_shade_order",
+    "note": ""
+  },
+  {
+    "id": "DEEP-159",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/gods/death.py:92 resurrect",
+    "test": "backend/tests/engine/gods/test_death.py::test_auto_resurrection_and_fading",
+    "note": "Manual resurrect:son."
+  },
+  {
+    "id": "DEEP-160",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/gods/death.py:92 resurrect",
+    "test": "backend/tests/engine/gods/test_death.py::test_auto_resurrection_and_fading",
+    "note": ""
+  },
+  {
+    "id": "DEEP-161",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/god_death.py:262 fading_status",
+    "test": "backend/tests/engine/gods/test_death.py::test_auto_resurrection_and_fading",
+    "note": ""
+  },
+  {
+    "id": "DEEP-162",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/god_death.py:294 tend_dead_son",
+    "test": "backend/tests/engine/gods/test_death.py::test_rites_schemes_and_scatter",
+    "note": ""
+  },
+  {
+    "id": "DEEP-163",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/god_death.py:294 tend_dead_son",
+    "test": "backend/tests/engine/gods/test_death.py::test_auto_resurrection_and_fading",
+    "note": ""
+  },
+  {
+    "id": "DEEP-164",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/gods/death.py:165 restore_existence; backend/src/aerona/engine/gods/god_death.py:309 tend_living_son",
+    "test": "backend/tests/engine/gods/test_death.py::test_auto_resurrection_and_fading",
+    "note": "Manual son:edit."
+  },
+  {
+    "id": "DEEP-165",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/god_death.py:309 tend_living_son",
+    "test": "backend/tests/engine/gods/test_death.py::test_auto_resurrection_and_fading",
+    "note": ""
+  },
+  {
+    "id": "DEEP-166",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/naming.py:76 from_speaker",
+    "test": "backend/tests/unit/language",
+    "note": "Manual rename via record:edit."
+  },
+  {
+    "id": "DEEP-167",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/births.py:195 born_mortal",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_births_fill_communities",
+    "note": ""
+  },
+  {
+    "id": "DEEP-168",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/births.py:234 has_ruler",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_couples_and_single_rule",
+    "note": ""
+  },
+  {
+    "id": "DEEP-169",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/births.py:241 single_rule",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_couples_and_single_rule",
+    "note": ""
+  },
+  {
+    "id": "DEEP-170",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/births.py:481 ethnogenesis",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_manual_births",
+    "note": ""
+  },
+  {
+    "id": "DEEP-171",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/integrity/single_ruler.py:14 homeland_to_lives_in",
+    "test": "backend/tests/services/app/test_integrity.py::test_bond_level_repairs",
+    "note": "Re-verified 2026-11-02: POST /api/maintenance/tasks/{task}/run (data repairs, history repairs, importance, endings, narrative sweep, certain facts, planner statistics, prune and checkpoint) in Settings > Maintenance."
+  },
+  {
+    "id": "DEEP-172",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/births.py:318 notables",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_births_fill_communities",
+    "note": "Manual community:notable."
+  },
+  {
+    "id": "DEEP-173",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/births.py:280 pick_class",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_manual_births",
+    "note": ""
+  },
+  {
+    "id": "DEEP-174",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/births.py:360 rulers",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_births_fill_communities",
+    "note": "Manual community:crown."
+  },
+  {
+    "id": "DEEP-175",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/births.py:454 villages",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_births_fill_communities",
+    "note": "Manual people:village."
+  },
+  {
+    "id": "DEEP-176",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/births.py:448 village_migrants",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Ruin-resettling branch (births.village_ruin) untested."
+  },
+  {
+    "id": "DEEP-177",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/births.py:393 found_settlement",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_manual_births",
+    "note": ""
+  },
+  {
+    "id": "DEEP-178",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/births.py:541 ethnogeneses",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_manual_births",
+    "note": "Manual trigger tested; automatic detection untested. Manual settlement:ethnogenesis."
+  },
+  {
+    "id": "DEEP-179",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/births.py:611 sapience",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_manual_births",
+    "note": "Manual species:awaken tested via awaken_species; automatic uplift untested."
+  },
+  {
+    "id": "DEEP-180",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/writing.py:25 writing_systems",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_languages_die_revive_and_gain_scripts",
+    "note": ""
+  },
+  {
+    "id": "DEEP-181",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/belief_memory.py:105 legend_spread",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_belief_and_memory",
+    "note": ""
+  },
+  {
+    "id": "DEEP-182",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/belief_memory.py:123 traditions",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_belief_and_memory",
+    "note": ""
+  },
+  {
+    "id": "DEEP-183",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/belief_memory.py:294 fairy_tales",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_belief_and_memory",
+    "note": "Manual legend:forget/revive."
+  },
+  {
+    "id": "DEEP-184",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/belief_memory.py:156 forgotten_prophecies",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_belief_and_memory",
+    "note": "Manual prophecy:fulfil/forget."
+  },
+  {
+    "id": "DEEP-185",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/belief_memory.py:215 manifestations",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_belief_and_memory",
+    "note": "Manual legend:manifest."
+  },
+  {
+    "id": "DEEP-186",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/belief_memory.py:269 legendification",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_belief_and_memory",
+    "note": "Manual legend:from_event."
+  },
+  {
+    "id": "DEEP-187",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/belief_memory.py:294 fairy_tales",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_belief_and_memory",
+    "note": ""
+  },
+  {
+    "id": "DEEP-188",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/life_seed.py:42 native_people",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_empty_worlds_come_alive",
+    "note": "Manual awaken_peoples."
+  },
+  {
+    "id": "DEEP-189",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/life_seed.py:79 native_species",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_empty_worlds_come_alive",
+    "note": "Re-verified 2026-11-02: species:seed action (services/player/creatures.py seed -> life_seed.seed_life) with Seed native life / Raise a native people buttons in the cosmos Creator's hand panel and a test."
+  },
+  {
+    "id": "DEEP-190",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/thresholds.py:26 relative_threshold",
+    "test": "backend/tests/engine/core/test_primitives.py::test_percentile_threshold_stays_within_bounds",
+    "note": ""
+  },
+  {
+    "id": "DEEP-191",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/succession.py:29 nearest_language",
+    "test": "backend/tests/unit/language",
+    "note": ""
+  },
+  {
+    "id": "DEEP-192",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/language/primitive.py:36 plan_primitive_language",
+    "test": "backend/tests/unit/language",
+    "note": "No direct creator action; languages are created by sons' tools and the engine."
+  },
+  {
+    "id": "DEEP-193",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/faith.py:66 suggested_first_god",
+    "test": "backend/tests/engine/core/test_primitives.py::test_worship_creator_and_first_god",
+    "note": "Manual faith:first."
+  },
+  {
+    "id": "DEEP-194",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/first_bonds.py:166 bind_language_and_faith",
+    "test": "backend/tests/engine/society/test_society.py::test_lonely_people_invent_a_tongue_and_seek_a_god",
+    "note": ""
+  },
+  {
+    "id": "DEEP-195",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/first_bonds.py:166 bind_language_and_faith",
+    "test": "backend/tests/engine/society/test_society.py::test_bootstrap_adopts_nearest_language_and_first_faith",
+    "note": ""
+  },
+  {
+    "id": "DEEP-196",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/first_bonds.py:166 bind_language_and_faith",
+    "test": "backend/tests/engine/society/test_society.py::test_lonely_people_invent_a_tongue_and_seek_a_god",
+    "note": ""
+  },
+  {
+    "id": "DEEP-197",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/settlements.py:56 restore_ruin",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_ruins_fall_and_rise_again",
+    "note": "Manual settlement:resettle."
+  },
+  {
+    "id": "DEEP-198",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/refugees.py:36 defeated_this_epoch",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_refugees_flee_war_and_the_gods_will",
+    "note": "Manual community:exodus."
+  },
+  {
+    "id": "DEEP-199",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/refugees.py:63 shelter_score",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_refugees_flee_war_and_the_gods_will",
+    "note": ""
+  },
+  {
+    "id": "DEEP-200",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/refugees.py:91 flee",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_refugees_flee_war_and_the_gods_will",
+    "note": ""
+  },
+  {
+    "id": "DEEP-201",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/spirits.py:34 spirits_rest",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_spirits_rest_cross_and_haunt",
+    "note": ""
+  },
+  {
+    "id": "DEEP-202",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/spirits.py:110 lay_spirit_to_rest",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_spirits_rest_cross_and_haunt",
+    "note": "Manual spirit:rest."
+  },
+  {
+    "id": "DEEP-203",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/spirits.py:34 spirits_rest",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_spirits_rest_cross_and_haunt",
+    "note": ""
+  },
+  {
+    "id": "DEEP-204",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/spirits.py:34 spirits_rest",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_spirits_rest_cross_and_haunt",
+    "note": ""
+  },
+  {
+    "id": "DEEP-205",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/language_death.py:20 language_death",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_languages_die_revive_and_gain_scripts",
+    "note": ""
+  },
+  {
+    "id": "DEEP-206",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/language_death.py:20 language_death",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_languages_die_revive_and_gain_scripts",
+    "note": ""
+  },
+  {
+    "id": "DEEP-207",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/works.py:187 engine_works",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_works_rise_and_grow_in_splendor",
+    "note": "Manual community:work."
+  },
+  {
+    "id": "DEEP-208",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/works.py:180 can_build",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_works_rise_and_grow_in_splendor",
+    "note": ""
+  },
+  {
+    "id": "DEEP-209",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/works.py:59 _temple_ok",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_works_rise_and_grow_in_splendor",
+    "note": ""
+  },
+  {
+    "id": "DEEP-210",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/works.py:69 _walls_ok",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_works_rise_and_grow_in_splendor",
+    "note": ""
+  },
+  {
+    "id": "DEEP-211",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/works.py:77 _library_ok",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_works_rise_and_grow_in_splendor",
+    "note": "commission_work(LIBRARY) asserted."
+  },
+  {
+    "id": "DEEP-212",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/works.py:127 build",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_works_rise_and_grow_in_splendor",
+    "note": ""
+  },
+  {
+    "id": "DEEP-213",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/works.py:217 splendor_growth",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_works_rise_and_grow_in_splendor",
+    "note": ""
+  },
+  {
+    "id": "DEEP-214",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/factions.py:68 disband_uprisings",
+    "test": "backend/tests/engine/warfare/test_factions_espionage_conflict.py::test_idle_uprisings_disband_and_factions_can_be_dissolved",
+    "note": "Manual faction:dissolve."
+  },
+  {
+    "id": "DEEP-215",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/factions.py:95 eligible_kinds",
+    "test": "backend/tests/engine/warfare/test_factions_espionage_conflict.py::test_warrior_society_founds_a_brotherhood",
+    "note": "Manual faction:found."
+  },
+  {
+    "id": "DEEP-216",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/factions.py:51 blueprint",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Merchant-guild founding conditions have no test (only the warrior brotherhood is tested)."
+  },
+  {
+    "id": "DEEP-217",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/factions.py:51 blueprint",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Priests-council founding conditions have no test."
+  },
+  {
+    "id": "DEEP-218",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/factions.py:51 blueprint",
+    "test": "backend/tests/engine/warfare/test_factions_espionage_conflict.py::test_warrior_society_founds_a_brotherhood",
+    "note": ""
+  },
+  {
+    "id": "DEEP-219",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/factions.py:112 found_faction",
+    "test": "backend/tests/engine/warfare/test_factions_espionage_conflict.py::test_warrior_society_founds_a_brotherhood",
+    "note": ""
+  },
+  {
+    "id": "DEEP-220",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/religion_spread.py:37 dominance_multiplier",
+    "test": "backend/tests/engine/society/test_culture_religion.py::test_dominance_multiplier_falls_after_threshold",
+    "note": ""
+  },
+  {
+    "id": "DEEP-221",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/religion_spread.py:206 preaching_pull",
+    "test": "backend/tests/engine/society/test_culture_religion.py::test_preaching_converts_and_syncretism_adds_reverence",
+    "note": ""
+  },
+  {
+    "id": "DEEP-222",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/religion_spread.py:206 preaching_pull",
+    "test": "backend/tests/engine/society/test_culture_religion.py::test_preaching_converts_and_syncretism_adds_reverence",
+    "note": ""
+  },
+  {
+    "id": "DEEP-223",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/religion_spread.py:235 best_source",
+    "test": "backend/tests/engine/society/test_culture_religion.py::test_preaching_converts_and_syncretism_adds_reverence",
+    "note": ""
+  },
+  {
+    "id": "DEEP-224",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/religion_spread.py:270 religion_spread",
+    "test": "backend/tests/engine/society/test_culture_religion.py::test_preaching_converts_and_syncretism_adds_reverence",
+    "note": "Decision 54."
+  },
+  {
+    "id": "DEEP-225",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/culture_exchange.py:109 borrow_word",
+    "test": "backend/tests/engine/society/test_culture_religion.py::test_cultural_contact_passes_words_traditions_knowledge_and_gods",
+    "note": ""
+  },
+  {
+    "id": "DEEP-226",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/culture_exchange.py:187 cultural_contact",
+    "test": "backend/tests/engine/society/test_culture_religion.py::test_cultural_contact_passes_words_traditions_knowledge_and_gods",
+    "note": "Manual community:contact."
+  },
+  {
+    "id": "DEEP-227",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/culture_exchange.py:146 _pass_tradition",
+    "test": "backend/tests/engine/society/test_culture_religion.py::test_cultural_contact_passes_words_traditions_knowledge_and_gods",
+    "note": ""
+  },
+  {
+    "id": "DEEP-228",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/culture_exchange.py:157 _pass_knowledge",
+    "test": "backend/tests/engine/society/test_culture_religion.py::test_cultural_contact_passes_words_traditions_knowledge_and_gods",
+    "note": ""
+  },
+  {
+    "id": "DEEP-229",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/culture_exchange.py:173 _pass_god",
+    "test": "backend/tests/engine/society/test_culture_religion.py::test_cultural_contact_passes_words_traditions_knowledge_and_gods",
+    "note": ""
+  },
+  {
+    "id": "DEEP-230",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/culture_exchange.py:220 cultural_exchange",
+    "test": "backend/tests/engine/society/test_culture_religion.py::test_trade_route_exchange_is_capped",
+    "note": ""
+  },
+  {
+    "id": "DEEP-231",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/world_age.py:80 world_age",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_world_age_and_golden_ages",
+    "note": "Called from doom_clock; tuning via rules deep_world.*."
+  },
+  {
+    "id": "DEEP-232",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/world_age.py:80 world_age",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_world_age_and_golden_ages",
+    "note": ""
+  },
+  {
+    "id": "DEEP-233",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/world_age.py:120 proclaim_golden_age",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_world_age_and_golden_ages",
+    "note": "Manual world:golden_age."
+  },
+  {
+    "id": "DEEP-234",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/world_age.py:131 end_golden_age",
+    "test": "backend/tests/engine/core/test_society_phases.py::test_world_age_and_golden_ages",
+    "note": "Manual world:end_golden_age."
+  },
+  {
+    "id": "MORT-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/distance.py:40 RegionAtlas.top_region",
+    "test": "backend/tests/engine/core/test_primitives.py::test_region_atlas_hops_and_reach",
+    "note": "Atlas is loaded per use instead of cached per location version."
+  },
+  {
+    "id": "MORT-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/distance.py:62 same_region",
+    "test": "backend/tests/engine/core/test_primitives.py::test_region_atlas_hops_and_reach",
+    "note": ""
+  },
+  {
+    "id": "MORT-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/distance.py:88 near",
+    "test": "backend/tests/engine/core/test_primitives.py::test_region_atlas_hops_and_reach",
+    "note": "seafaring_reach honours sea-ban law (tools/mortal/support.py:84)."
+  },
+  {
+    "id": "MORT-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/support.py:42 craft_of",
+    "test": "backend/tests/tools/test_mortal_tools.py::test_language_and_production",
+    "note": ""
+  },
+  {
+    "id": "MORT-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/mortal.py:72 candidates",
+    "test": "backend/tests/agents/test_roles.py::test_mortal_selection_and_turn",
+    "note": "Species threshold uses rules mortal_agents.creature_min_intelligence; filters are not asserted individually."
+  },
+  {
+    "id": "MORT-006",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/agents/mortal.py:155 choose_mortal_agents",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Multi-world grouping and forced-pick append are untested (the test runs a single-world cosmos)."
+  },
+  {
+    "id": "MORT-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/mortal.py:135 world_shares",
+    "test": "backend/tests/agents/test_roles.py::test_mortal_selection_and_turn",
+    "note": ""
+  },
+  {
+    "id": "MORT-008",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/agents/mortal.py:100 score",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Scoring (power, log crowd, chosen, wait cap, die, dream bonus) is untested."
+  },
+  {
+    "id": "MORT-009",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/agents/mortal.py:112 pick",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Diversity pass per entity type is untested."
+  },
+  {
+    "id": "MORT-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/mortal.py:257 finish_mortal_turn",
+    "test": "backend/tests/agents/test_roles.py::test_mortal_selection_and_turn",
+    "note": "Manual entity:agent sets AGENT_SELECTED."
+  },
+  {
+    "id": "MORT-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/epoch/phases/mortal_turns.py:33 mortal_turns",
+    "test": "backend/tests/epoch/test_epoch_llm.py",
+    "note": "Persisted picks (epoch_agents), re-filter, bounded pool, one retry; retry path untested."
+  },
+  {
+    "id": "MORT-012",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/agents/turns/state.py:31 begin_turn",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Resume-with-saved-AP branch of begin_turn is not covered by any test."
+  },
+  {
+    "id": "MORT-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/mortal.py:183 start_mortal_turn",
+    "test": "backend/tests/agents/test_roles.py::test_mortal_selection_and_turn",
+    "note": "late_debts runs before each turn."
+  },
+  {
+    "id": "MORT-014",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/agents/mortal.py:257 finish_mortal_turn",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Dream/manifestation read-marking after the turn is untested."
+  },
+  {
+    "id": "MORT-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/mortal.py:277 run_mortal_turn",
+    "test": "backend/tests/agents/test_roles.py::test_mortal_selection_and_turn",
+    "note": "entity:agent only flags the mortal for the next selection; same as legacy."
+  },
+  {
+    "id": "MORT-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/mortal.py:257 finish_mortal_turn",
+    "test": "backend/tests/agents/test_roles.py::test_mortal_selection_and_turn",
+    "note": "600-char constant MORTAL_WORD_CHRONICLE_CHARS; links all creations."
+  },
+  {
+    "id": "MORT-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/mortal.py:277 run_mortal_turn",
+    "test": "backend/tests/agents/test_roles.py::test_mortal_selection_and_turn",
+    "note": "MORTAL_TURN_STARTED/FINISHED published."
+  },
+  {
+    "id": "MORT-018",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/agents/fate/selection.py",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Batch Fate review of mortal-origin creations (rules fate.review_mortal_creations) has no test exercising EntityOrigin.MORTAL; manual canon:set exists."
+  },
+  {
+    "id": "MORT-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/mortal.py:209 mortal_prompts",
+    "test": "backend/tests/agents/test_roles.py::test_mortal_selection_and_turn",
+    "note": "Clouded flag, captor, AP, paid/free tools, tics, tired images."
+  },
+  {
+    "id": "MORT-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/mortal.py:209 mortal_prompts",
+    "test": "backend/tests/agents/test_roles.py::test_mortal_selection_and_turn",
+    "note": ""
+  },
+  {
+    "id": "MORT-021",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/context/mortal.py:106 mortal_context",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/agent-context surfaced in the entity drawer."
+  },
+  {
+    "id": "MORT-023",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/registry.py:112 mortal_may_use",
+    "test": "backend/tests/tools/test_mortal_tools.py::test_tool_availability_follows_actor_type",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/tools with features/son/SonTools.tsx (availability, read-only badges, rendered descriptions)."
+  },
+  {
+    "id": "MORT-025",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/framework/call.py",
+    "test": "backend/tests/tools/test_runtime.py::test_identity_and_choice_sanitation",
+    "note": ""
+  },
+  {
+    "id": "MORT-026",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/framework/runtime.py",
+    "test": "backend/tests/tools/test_runtime.py::test_failure_refunds_essence_and_actions",
+    "note": ""
+  },
+  {
+    "id": "MORT-027",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/framework/call.py",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Per-epoch tool counters/caps for mortal tools are untested (only son_tools.anchor_per_epoch is asserted)."
+  },
+  {
+    "id": "MORT-028",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/support.py:121 create_record",
+    "test": "backend/tests/tools/test_mortal_tools.py::test_language_and_production",
+    "note": ""
+  },
+  {
+    "id": "MORT-029",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/mortal/support.py:62 creation_power",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Creation power clamp has no test."
+  },
+  {
+    "id": "MORT-030",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/framework/runtime.py",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Mid-turn loss of canon status (mortal gate) is untested; only the sleeping-son and captive gates are tested."
+  },
+  {
+    "id": "MORT-031",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/registry.py:112 mortal_may_use",
+    "test": "backend/tests/tools/test_runtime.py::test_captive_mortal_may_only_escape",
+    "note": ""
+  },
+  {
+    "id": "MORT-032",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/framework/runtime.py",
+    "test": "backend/tests/tools/test_runtime.py::test_success_records_ledger_status_and_actions",
+    "note": "Manual undo via POST /api/ledger/{entry_id}/undo."
+  },
+  {
+    "id": "MORT-033",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/registry.py:100 mortal_specs",
+    "test": "backend/tests/tools/test_catalogue.py",
+    "note": "Decision 21 explicit per-tool cost metadata."
+  },
+  {
+    "id": "CRE-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/fauna.py:52 trait_war",
+    "test": "backend/tests/engine/core/test_primitives.py::test_tamed_beasts_and_war_father; backend/tests/engine/cosmos/test_life_and_beyond.py::test_trait_hints",
+    "note": "Traits stored as entity_traits rows; war bonus summed in strength.py::species_trait_bonus."
+  },
+  {
+    "id": "CRE-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/fauna.py:56 assign_traits",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_assign_traits_and_hive_mind",
+    "note": "Keyword hints via hinted_traits, random fallback, hive mind raises intelligence."
+  },
+  {
+    "id": "CRE-003",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:83 trait_effects",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. RADIANT effect on location danger and fertility is implemented but no test covers it."
+  },
+  {
+    "id": "CRE-004",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:68 _soul_eating",
+    "test": "backend/tests/engine/cosmos/test_world_life.py::test_the_creator_orders_a_soul_eater_to_feed_or_spares_a_soul",
+    "note": "Behaviour present; dedicated test missing. Manual feed/spare is tested; the automatic per-epoch swallow chance in the phase is not."
+  },
+  {
+    "id": "CRE-005",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:74 _gnaw_minds",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Sanity erosion by mind-readers and soul-eaters is implemented but untested."
+  },
+  {
+    "id": "CRE-006",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:83 trait_effects",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Fission danger growth is implemented but untested."
+  },
+  {
+    "id": "CRE-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:98 _mutation_chance",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_mutation_and_chimera",
+    "note": "Re-verified 2026-11-02: mutation chance includes might (engine/phases/creatures.py)."
+  },
+  {
+    "id": "CRE-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:163 split_changed_people",
+    "test": "backend/tests/services/player/test_engine_controls.py (force_people_split); backend/tests/engine/cosmos/test_simulation.py",
+    "note": "Manual people:split. Automatic trigger people_mutation has no direct test."
+  },
+  {
+    "id": "CRE-009",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:207 hybridize",
+    "test": "backend/tests/engine/cosmos/test_actions.py (cross_species via weave_chimera)",
+    "note": "Behaviour present; dedicated test missing. hybridize() (same-location natural hybrids, one per epoch) has no test; the shared weave_chimera and manual cross_species are tested."
+  },
+  {
+    "id": "CRE-010",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:248 weave_spontaneously",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Spontaneous biomancer weaving (weave_spontaneously, _weaving_candidate) is untested; mortal tool and weave_chimera are tested."
+  },
+  {
+    "id": "CRE-011",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:264 chimera_escapes",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Chimera escape and hunting the weaver is implemented but untested."
+  },
+  {
+    "id": "CRE-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/fauna.py:87 weave_chimera",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_mutation_and_chimera",
+    "note": "Manual cross_species / mortal tool."
+  },
+  {
+    "id": "CRE-013",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:317 megafauna",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Megafauna tagging by power level is implemented but only reached via samples; no test asserts the flag or the note."
+  },
+  {
+    "id": "CRE-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:287 megafauna_trail",
+    "test": "backend/tests/services/player/test_engine_controls.py (place_megafauna_trail)",
+    "note": "Manual species:trail; cosmic-resource addiction branch chosen via travel_resource."
+  },
+  {
+    "id": "CRE-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:351 predator_bonds",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_predators_hunt_starve_and_revert",
+    "note": ""
+  },
+  {
+    "id": "CRE-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:384 predation_pressure",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_predators_hunt_starve_and_revert",
+    "note": "Manual species:cull and species:spare_prey."
+  },
+  {
+    "id": "CRE-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:400 danger_reversion",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_predators_hunt_starve_and_revert",
+    "note": ""
+  },
+  {
+    "id": "CRE-018",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:410 starving_predators",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_predators_hunt_starve_and_revert",
+    "note": ""
+  },
+  {
+    "id": "CRE-019",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/creatures.py:428 invasive_pressure",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Invasive fertility loss implemented but untested."
+  },
+  {
+    "id": "CRE-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/strength.py:79 tamed_power",
+    "test": "backend/tests/engine/core/test_primitives.py::test_tamed_beasts_and_war_father",
+    "note": ""
+  },
+  {
+    "id": "CRE-021",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/fauna.py:125 stowaway",
+    "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_stowaway_crosses_worlds",
+    "note": "Called from travel.py:674 on arrival; manual species:introduce."
+  },
+  {
+    "id": "CIV-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/civilization.py:64 apply_tier",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_tiers_rise_with_hysteresis_and_dwell",
+    "note": "Manual civilization:tier (set/lock); tier-unlock table decision 48."
+  },
+  {
+    "id": "CIV-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/tiers.py:120 base_tier",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_tiers_rise_with_hysteresis_and_dwell",
+    "note": ""
+  },
+  {
+    "id": "CIV-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/tiers.py:140 is_empire",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_tiers_rise_with_hysteresis_and_dwell",
+    "note": ""
+  },
+  {
+    "id": "CIV-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/tiers.py:162 compute_tier",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_tiers_rise_with_hysteresis_and_dwell",
+    "note": ""
+  },
+  {
+    "id": "CIV-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/civilization.py:64 apply_tier",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_tiers_rise_with_hysteresis_and_dwell",
+    "note": ""
+  },
+  {
+    "id": "CIV-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/civilization.py:99 colony_independence",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_colony_declares_independence",
+    "note": "Manual civilization:independence and civilization:reclaim."
+  },
+  {
+    "id": "CIV-007",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/civilization.py:166 federations",
+    "test": "backend/tests/services/player/test_diplomacy.py::test_federation",
+    "note": "Behaviour present; dedicated test missing. Manual found_federation (POST /api/federations) is tested; the spontaneous federations() phase step (cap, one membership each) is untested."
+  },
+  {
+    "id": "CIV-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/civilization.py:190 reveal_previous_creation",
+    "test": "backend/tests/services/player/test_engine_controls.py (order_previous_creation)",
+    "note": "Manual world:previous_creation; once-per-world automatic path in previous_creations."
+  },
+  {
+    "id": "CIV-009",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/civilization.py:577 civilization_phase",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_adoption_and_treaty",
+    "note": "Behaviour present; dedicated test missing. Phase calls spontaneous_loans/barter/adoption/treaty once each; spontaneous_barter and spontaneous_loans are untested."
+  },
+  {
+    "id": "CIV-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/civilization.py:354 late_debts",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_loans_fall_due_and_get_paid",
+    "note": "Manual civilization:forgive_debt and enforce_debt."
+  },
+  {
+    "id": "CIV-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/civilization.py:337 repayments",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_loans_fall_due_and_get_paid",
+    "note": ""
+  },
+  {
+    "id": "CIV-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/civilization.py:412 spontaneous_loans",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_loans_fall_due_and_get_paid",
+    "note": "Manual civilization:loan."
+  },
+  {
+    "id": "CIV-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/civilization.py:465 spontaneous_barter",
+    "test": "backend/tests/services/player/test_engine_controls.py (order_barter)",
+    "note": "Manual civilization:barter exercises swap_goods; the spontaneous candidate search is untested."
+  },
+  {
+    "id": "CIV-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/civilization.py:515 spontaneous_adoption",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_adoption_and_treaty",
+    "note": "Manual civilization:adoption."
+  },
+  {
+    "id": "CIV-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/civilization.py:562 spontaneous_treaty",
+    "test": "backend/tests/engine/cosmos/test_pantheon_and_civilization.py::test_adoption_and_treaty",
+    "note": "Manual civilization:treaty."
+  },
+  {
+    "id": "DATA-001",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/db/session.py:20 Database._configure_connection",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. WAL and foreign_keys are set but PRAGMA trusted_schema=OFF (legacy db.js L15) is missing; no test asserts the pragmas."
+  },
+  {
+    "id": "DATA-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/tables/cosmos.py:23 CosmosRow",
+    "test": "backend/tests/db/test_schema.py::test_cosmos_is_a_singleton",
+    "note": ""
+  },
+  {
+    "id": "DATA-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/tables/sons.py:21 SonRow",
+    "test": "backend/tests/db/test_sons_and_cosmos.py::test_son_powers_and_relations",
+    "note": ""
+  },
+  {
+    "id": "DATA-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/tables/entities.py:37 EntityRow",
+    "test": "backend/tests/db/test_entities.py",
+    "note": ""
+  },
+  {
+    "id": "DATA-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/tables/bonds.py:20 BondRow",
+    "test": "backend/tests/db/test_bonds.py",
+    "note": ""
+  },
+  {
+    "id": "DATA-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/tables/sons.py:130 SonRelationRow",
+    "test": "backend/tests/db/test_sons_and_cosmos.py::test_son_powers_and_relations",
+    "note": "CheckConstraint son_a_id < son_b_id."
+  },
+  {
+    "id": "DATA-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/tables/lore.py:34 ChronicleRow",
+    "test": "backend/tests/db/test_chronicle.py",
+    "note": ""
+  },
+  {
+    "id": "DATA-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/tables/society.py:58 CommunityRelationRow",
+    "test": "backend/tests/engine/warfare/test_relations_and_sides.py",
+    "note": ""
+  },
+  {
+    "id": "DATA-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/tables/lore.py:156 LexemeRow",
+    "test": "backend/tests/db/test_schema.py::test_migration_matches_models",
+    "note": "images, lexemes, folk_beliefs, historian_views, councils tables exist."
+  },
+  {
+    "id": "DATA-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/tables/celestial.py:33 WorldRow",
+    "test": "backend/tests/db/test_sons_and_cosmos.py",
+    "note": ""
+  },
+  {
+    "id": "DATA-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/tables/lore.py:96 CanonFactRow",
+    "test": "backend/tests/db/test_schema.py::test_migration_matches_models",
+    "note": ""
+  },
+  {
+    "id": "DATA-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/telemetry/tables.py",
+    "test": "backend/tests/unit/test_telemetry_db.py",
+    "note": "Decision 63: llm_calls and live_events live in telemetry.db; ledger, epoch_stats and threads in the main database."
+  },
+  {
+    "id": "DATA-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/tables/epochs.py:92 EpochWorldNarrativeRow",
+    "test": "backend/tests/db/test_schema.py::test_migration_matches_models",
+    "note": ""
+  },
+  {
+    "id": "DATA-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/alembic/versions/64ed626d21c2_initial_schema.py",
+    "test": "backend/tests/db/test_schema.py::test_single_initial_migration",
+    "note": "Legacy additive migrations replaced by one Alembic initial schema (decision 2, no import)."
+  },
+  {
+    "id": "DATA-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/tables/sons.py:21 SonRow",
+    "test": "backend/tests/db/test_schema.py::test_migration_matches_models",
+    "note": "No gameplay defaults in the schema (stars default is the structural MIN_STARS); start values live in rules."
+  },
+  {
+    "id": "DATA-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/migrations.py:23 upgrade_to_head",
+    "test": "backend/tests/api/test_backups.py",
+    "note": "Run at startup (lifespan.py:100) and after restore (backups.py:322); world_changed triggers maintenance."
+  },
+  {
+    "id": "DATA-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/tables/bonds.py:20 BondRow",
+    "test": "backend/tests/db/test_schema.py::test_migration_matches_models",
+    "note": "ix_bonds_pair and ix_bonds_pair_reverse."
+  },
+  {
+    "id": "DATA-018",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/entities.py:29 resolved_origin",
+    "test": "backend/tests/db/test_entities.py::test_son_creations_start_unjudged",
+    "note": ""
+  },
+  {
+    "id": "DATA-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/entities.py:35 resolve_world",
+    "test": "backend/tests/db/test_entities.py::test_world_is_inherited_from_location_then_son",
+    "note": "Manual entity:move."
+  },
+  {
+    "id": "DATA-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/repositories/entities.py:142 move",
+    "test": "backend/tests/db/test_bonds.py::test_location_bond_follows_moves",
+    "note": ""
+  },
+  {
+    "id": "DATA-021",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/names.py",
+    "test": "backend/tests/db/test_entities.py::test_title_is_split_from_the_name",
+    "note": "Manual record:edit."
+  },
+  {
+    "id": "DATA-022",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/worlds.py:109 forget_world",
+    "test": "backend/tests/db/test_sons_and_cosmos.py::test_forgetting_a_world_closes_and_remembering_reopens_routes",
+    "note": "Manual cosmic:forget_world."
+  },
+  {
+    "id": "DATA-023",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/routes.py:147 forgotten_world_ids",
+    "test": "backend/tests/db/test_sons_and_cosmos.py::test_forgetting_a_world_closes_and_remembering_reopens_routes",
+    "note": "Manual world:edit."
+  },
+  {
+    "id": "DATA-024",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/cosmos/worlds.py:81 align_moons",
+    "test": "backend/tests/db/test_sons_and_cosmos.py::test_moons_inherit_the_root_star",
+    "note": "Manual world:edit."
+  },
+  {
+    "id": "DATA-025",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/repositories/chronicle.py:44 ChronicleRepository.append",
+    "test": "backend/tests/db/test_chronicle.py::test_append_keeps_entity_order_and_derives_world",
+    "note": ""
+  },
+  {
+    "id": "DATA-026",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/integrity/epoch_years.py:11 align_epoch_years",
+    "test": "backend/tests/db/test_chronicle.py::test_epoch_years; backend/tests/services/app/test_integrity.py::test_missing_inside_and_epoch_years",
+    "note": "Years-per-epoch rule time.years_per_epoch."
+  },
+  {
+    "id": "DATA-027",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/integrity/data_repairs.py:123 refresh_planner_statistics",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: POST /api/maintenance/tasks/{task}/run (data repairs, history repairs, importance, endings, narrative sweep, certain facts, planner statistics, prune and checkpoint) in Settings > Maintenance."
+  },
+  {
+    "id": "DATA-028",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/integrity/data_repairs.py:130 checkpoint",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: POST /api/maintenance/tasks/{task}/run (data repairs, history repairs, importance, endings, narrative sweep, certain facts, planner statistics, prune and checkpoint) in Settings > Maintenance."
+  },
+  {
+    "id": "DATA-029",
+    "verdict": "NOT-PORTED-OK",
+    "evidence": "backend/src/aerona/db/session.py:34 Database.write",
+    "test": "backend/tests/engine/core/test_pipeline.py::test_failing_phase_names_the_step_and_rolls_back",
+    "note": "Decision 75: write units never join an open transaction."
+  },
+  {
+    "id": "DATA-030",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/pipeline.py:288 run_phase",
+    "test": "backend/tests/engine/core/test_pipeline.py::test_failing_phase_names_the_step_and_rolls_back",
+    "note": "EnginePhaseError names the step; yields via asyncio.sleep(0)."
+  },
+  {
+    "id": "DATA-031",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/world.py:63 reset_world",
+    "test": "backend/tests/services/app/test_core.py; backend/tests/api/test_backups.py",
+    "note": "POST /api/world/reset with typed confirmation."
+  },
+  {
+    "id": "DATA-032",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/ledger_capture.py",
+    "test": "backend/tests/db/test_ledger_capture.py::test_capture_skips_untracked_tables",
+    "note": "Capture is a blacklist (LEDGER_TABLES/TURN_TABLES untracked) instead of the legacy whitelist; covers all gameplay tables per decision 61."
+  },
+  {
+    "id": "RULE-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/rules/model.py:17 rule",
+    "test": "backend/tests/unit/test_rule_constraints.py; backend/tests/api/test_rules.py::test_rules_can_be_listed_updated_and_reset",
+    "note": "Typed dataclass registry (default, min, max, group, label)."
+  },
+  {
+    "id": "RULE-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/rules/registry/__init__.py:102 Rules",
+    "test": "backend/tests/api/test_rules.py::test_rules_can_be_listed_updated_and_reset",
+    "note": "Per-subsystem rule modules; services/rules.py keeps live values."
+  },
+  {
+    "id": "RULE-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/rules/registry/costs.py",
+    "test": "backend/tests/unit/test_catalog.py",
+    "note": "Costs, rarities, mortal agents, travel, power unlock levels, creature traits are flattened rules (decision 67)."
+  },
+  {
+    "id": "RULE-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/rules.py:25 RulesService.load",
+    "test": "backend/tests/services/app/test_application.py",
+    "note": "Overrides applied to defaults; world snapshot reapplied via rules_from_snapshot."
+  },
+  {
+    "id": "RULE-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/rules.py:31 RulesService.catalog",
+    "test": "backend/tests/api/test_rules.py::test_rules_can_be_listed_updated_and_reset",
+    "note": "GET /api/rules returns label, group, bounds, value and default; changed flag derivable client-side."
+  },
+  {
+    "id": "RULE-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/rules/snapshot.py:20 coerce",
+    "test": "backend/tests/api/test_rules.py::test_rules_can_be_listed_updated_and_reset",
+    "note": "Re-verified 2026-11-02: coerce rounds integers half up and enforces only the minimum (rules/snapshot.py)."
+  },
+  {
+    "id": "RULE-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/rules.py:34 RulesService.set_value",
+    "test": "backend/tests/api/test_rules.py::test_batch_rule_update_reaches_the_world_snapshot",
+    "note": "Re-verified 2026-11-02: a value equal to the default deletes the override (services/rules.py is_default)."
+  },
+  {
+    "id": "RULE-008",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/services/rules.py:68 RulesService.reset_all",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. DELETE /api/rules and PATCH reset_all exist with a frontend caller but no test exercises reset-all."
+  },
+  {
+    "id": "RULE-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/db/tables/rule_override.py:7 RuleOverrideRow",
+    "test": "backend/tests/api/test_rules.py::test_batch_rule_update_reaches_the_world_snapshot",
+    "note": "Overrides live in the world database and the cosmos rules_snapshot (decision 68), so backups and exports carry them."
+  }
+]

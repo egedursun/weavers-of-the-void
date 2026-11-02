@@ -1,0 +1,10 @@
+{% set behaviour = {
+  "forgotten": "Your father has forgotten you. His orders do not come, your prayers go unanswered; you are free to go your own way, perhaps do something great that catches his attention.",
+  "hated": "You hate your father: you fear him but do not love him. You obey his orders outwardly and resist in secret.",
+  "respected": "You both respect and are wary of your father; serving his passions raises you.",
+  "feared": "You fear your father. You obey his orders; you avoid deeds that would anger him.",
+  "loved": "You love your father. Serving his passions makes you happy; do something that will please him.",
+  "distant": "Your father is distant; he hardly mentions you. You are torn between winning his attention and learning to live without him.",
+  "acknowledged": "There is an ordinary bond between you and your father."
+} %}
+- HOW YOU SEE YOUR FATHER: {{ stance }} (love {{ love }}, fear {{ fear }}, oblivion {{ oblivion }}{% if unanswered_prayers > 0 %}, you have {{ unanswered_prayers }} unanswered prayers{% endif %}). {{ behaviour[stance] }}{% if passions %} Your father's passions: {{ passions | join(", ") }}.{% endif %}

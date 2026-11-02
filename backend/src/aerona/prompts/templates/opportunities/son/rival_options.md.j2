@@ -1,0 +1,5 @@
+{% from "opportunities/_macros.md.j2" import suggestion %}
+{% set usable = line.options | selectattr("tool", "in", available_tools or line.options | map(attribute="tool") | list) | list %}
+{% if usable %}
+WHAT YOU CAN DO AGAINST son#{{ line.rival.id }} {{ line.rival.name }}: {% for item in usable[:rules.opportunities.rival_options] %}{{ suggestion(item) }}{% if not loop.last %}; {% endif %}{% endfor %}
+{% endif %}

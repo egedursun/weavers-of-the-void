@@ -1,0 +1,25048 @@
+export interface paths {
+    "/api/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["health_api_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/health/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["report_api_health_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_jobs_api_jobs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_job_api_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancel_job_api_jobs__job_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_rules_api_rules_get"];
+        put?: never;
+        post?: never;
+        delete: operations["reset_all_rules_api_rules_delete"];
+        options?: never;
+        head?: never;
+        patch: operations["update_rules_api_rules_patch"];
+        trace?: never;
+    };
+    "/api/rules/{namespace}/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["update_rule_api_rules__namespace___key__put"];
+        post?: never;
+        delete: operations["reset_rule_api_rules__namespace___key__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["stream_events_api_events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/activity-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["activity_log_api_activity_log_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_state_api_state_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_changes_api_changes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalogue/enums": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_enums_api_catalogue_enums_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalogue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_catalogue_api_catalogue_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/names": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_names_api_names_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["search_world_api_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/genesis/wizard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["wizard_options_api_genesis_wizard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/genesis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["start_genesis_api_genesis_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/genesis/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["saved_genesis_api_genesis_settings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/epochs/current/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["complete_epoch_api_epochs_current_complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/epochs/current/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["stop_epoch_api_epochs_current_stop_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/epochs/current/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["epoch_estimate_api_epochs_current_estimate_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/epochs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_epochs_api_epochs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/epochs/{epoch}/breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["epoch_breakdown_api_epochs__epoch__breakdown_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stats/epochs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["epoch_statistics_api_stats_epochs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stats/lore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["lore_statistics_api_stats_lore_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/creator": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_creator_api_creator_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patch_creator_api_creator_patch"];
+        trace?: never;
+    };
+    "/api/creator/reputation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_reputation_api_creator_reputation_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/creator/note": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_creator_note_api_creator_note_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/creator/mood": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_creator_mood_api_creator_mood_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/creator/passions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_creator_passions_api_creator_passions_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/creator/portrait": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_creator_portrait_api_creator_portrait_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/creator/epic": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_creator_epic_api_creator_epic_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/creator/deepen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_creator_deepen_api_creator_deepen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/reputation-nudge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_son_id_reputation_nudge_api_sons__son_id__reputation_nudge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/revelations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_revelations_api_revelations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_sons_api_sons_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/relations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_relations_api_sons_relations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/distribution-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["distribution_preview_view_api_sons_distribution_preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_son_api_sons__son_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patch_sons_son_id_api_sons__son_id__patch"];
+        trace?: never;
+    };
+    "/api/sons/{son_id}/resurrection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_dead_son_panel_api_sons__son_id__resurrection_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_chat_api_sons__son_id__chat_get"];
+        put?: never;
+        post: operations["chat_api_sons__son_id__chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/act": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["act_api_sons__son_id__act_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/summon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_summon_api_sons_summon_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/distribute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_distribute_api_sons_distribute_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_sons_son_id_order_api_sons__son_id__order_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/bless": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_son_id_bless_api_sons__son_id__bless_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/punish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_son_id_punish_api_sons__son_id__punish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/star": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_son_id_star_api_sons__son_id__star_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/ascend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_son_id_ascend_api_sons__son_id__ascend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/epic": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_son_id_epic_api_sons__son_id__epic_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/resurrect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_son_id_resurrect_api_sons__son_id__resurrect_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/kill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_son_id_kill_api_sons__son_id__kill_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/devour": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_son_id_devour_api_sons__son_id__devour_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/drain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_son_id_drain_api_sons__son_id__drain_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/absolute-command": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_son_id_absolute_command_api_sons__son_id__absolute_command_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/demote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_son_id_demote_api_sons__son_id__demote_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/strip-power": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_son_id_strip_power_api_sons__son_id__strip_power_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/rebellion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_son_id_rebellion_api_sons__son_id__rebellion_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/scheme": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_son_id_scheme_api_sons__son_id__scheme_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/scatter-bones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_son_id_scatter_bones_api_sons__son_id__scatter_bones_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/world": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_sons_son_id_world_api_sons__son_id__world_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/protection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_sons_son_id_protection_api_sons__son_id__protection_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/reset-counters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sons_son_id_reset_counters_api_sons__son_id__reset_counters_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/image-prompt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_sons_son_id_image_prompt_api_sons__son_id__image_prompt_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_entities_api_entities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/favorites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_favorites_api_favorites_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/favorites/board": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["favorite_board_api_favorites_board_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_entity_api_entities__entity_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patch_entities_entity_id_api_entities__entity_id__patch"];
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/bonds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["entity_bonds_api_entities__entity_id__bonds_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/chronicle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["entity_chronicle_api_entities__entity_id__chronicle_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["set_archive_api_entities__entity_id__archive_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/deepen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["deepen_api_entities__entity_id__deepen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/image-prompt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["write_image_prompt_api_entities__entity_id__image_prompt_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/suggest-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["suggest_links_api_entities__entity_id__suggest_links_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/canon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_entities_entity_id_canon_api_entities__entity_id__canon_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/intervene": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_intervene_api_entities__entity_id__intervene_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/knowledge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_entities_entity_id_knowledge_api_entities__entity_id__knowledge_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/dream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_dream_api_entities__entity_id__dream_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/favorite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_entities_entity_id_favorite_api_entities__entity_id__favorite_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/note": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_note_api_entities__entity_id__note_get"];
+        put: operations["put_entities_entity_id_note_api_entities__entity_id__note_put"];
+        post?: never;
+        delete: operations["delete_entities_entity_id_note_api_entities__entity_id__note_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_merge_api_entities__entity_id__merge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/stat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_entities_entity_id_stat_api_entities__entity_id__stat_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patch_entities_entity_id_tags_api_entities__entity_id__tags_patch"];
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/location": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_entities_entity_id_location_api_entities__entity_id__location_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/patron": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_entities_entity_id_patron_api_entities__entity_id__patron_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/decree": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_decree_api_entities__entity_id__decree_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/agent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_entities_entity_id_agent_api_entities__entity_id__agent_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/explore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_explore_api_entities__entity_id__explore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/seek-route": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_seek_route_api_entities__entity_id__seek_route_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/expedition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_expedition_api_entities__entity_id__expedition_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/exile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_exile_api_entities__entity_id__exile_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/pardon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_pardon_api_entities__entity_id__pardon_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/rite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_rite_api_entities__entity_id__rite_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/take-life": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_take_life_api_entities__entity_id__take_life_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/drain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_drain_api_entities__entity_id__drain_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/harvest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_harvest_api_entities__entity_id__harvest_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/resurrect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_resurrect_api_entities__entity_id__resurrect_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/deify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_deify_api_entities__entity_id__deify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/prophet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_prophet_api_entities__entity_id__prophet_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/manifest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_manifest_api_entities__entity_id__manifest_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/bloodline-curse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_bloodline_curse_api_entities__entity_id__bloodline_curse_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/convert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_convert_api_entities__entity_id__convert_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/wrath": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_wrath_api_entities__entity_id__wrath_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_links_api_links_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/links/{bond_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_links_bond_id_api_links__bond_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/facts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_facts_api_facts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/facts/{fact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_facts_fact_id_api_facts__fact_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/beliefs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_beliefs_api_beliefs_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/opportunities/creator": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["creator_opportunities_api_opportunities_creator_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/opportunities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["son_opportunities_api_sons__son_id__opportunities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/opportunities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["entity_opportunities_api_entities__entity_id__opportunities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/tools": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["son_tools_api_sons__son_id__tools_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/agent-context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["entity_agent_context_api_entities__entity_id__agent_context_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/dreams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["entity_dreams_api_entities__entity_id__dreams_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/engine/phases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["phases_api_engine_phases_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/engine/seed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["engine_seed_api_engine_seed_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrity/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["integrity_tasks_api_integrity_tasks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrity/{task}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["run_integrity_api_integrity__task__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/relations/{other_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["relation_between_api_entities__entity_id__relations__other_id__get"];
+        put: operations["put_entities_entity_id_relations_other_id_api_entities__entity_id__relations__other_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/relations/{other_id}/feud": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_entities_entity_id_relations_other_id_feud_api_entities__entity_id__relations__other_id__feud_post"];
+        delete: operations["delete_entities_entity_id_relations_other_id_feud_api_entities__entity_id__relations__other_id__feud_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/relations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["community_relations_api_entities__entity_id__relations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/wars": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_wars_api_wars_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/wars/{war_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_war_api_wars__war_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/wars/{war_id}/armies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["war_armies_api_wars__war_id__armies_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/wars/{war_id}/battles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["war_battles_api_wars__war_id__battles_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/wars/{war_id}/sieges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["war_sieges_api_wars__war_id__sieges_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/captives": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_captives_api_captives_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tributes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_tributes_api_tributes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/wars": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["community_wars_api_entities__entity_id__wars_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/heroes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["community_heroes_api_entities__entity_id__heroes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/foreign-gods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_foreign_gods_api_foreign_gods_get"];
+        put?: never;
+        post: operations["post_foreign_gods_api_foreign_gods_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/foreign-gods/{god_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_foreign_god_api_foreign_gods__god_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patch_foreign_gods_god_id_api_foreign_gods__god_id__patch"];
+        trace?: never;
+    };
+    "/api/foreign-gods/{god_id}/deepen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_foreign_gods_god_id_deepen_api_foreign_gods__god_id__deepen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/foreign-gods/{god_id}/drain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_foreign_gods_god_id_drain_api_foreign_gods__god_id__drain_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/foreign-gods/{god_id}/kill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_foreign_gods_god_id_kill_api_foreign_gods__god_id__kill_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/worlds/{world_id}/laws": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["world_laws_api_worlds__world_id__laws_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/addictions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["addictions_api_addictions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/doom": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_doom_api_doom_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cosmos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_cosmos_api_cosmos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/discovery-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["discovery_summary_api_discovery_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/worlds/{world_id}/guide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["world_guide_api_worlds__world_id__guide_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/worlds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_worlds_api_worlds_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/worlds/{world_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patch_worlds_world_id_api_worlds__world_id__patch"];
+        trace?: never;
+    };
+    "/api/worlds/{world_id}/orbit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_worlds_world_id_orbit_api_worlds__world_id__orbit_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/worlds/{world_id}/wrath": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_worlds_world_id_wrath_api_worlds__world_id__wrath_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/worlds/{world_id}/discovery-round": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_worlds_world_id_discovery_round_api_worlds__world_id__discovery_round_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stars/{star_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_stars_star_id_api_stars__star_id__delete"];
+        options?: never;
+        head?: never;
+        patch: operations["patch_stars_star_id_api_stars__star_id__patch"];
+        trace?: never;
+    };
+    "/api/routes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_routes_api_routes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/routes/{route_id}/sever": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_routes_route_id_sever_api_routes__route_id__sever_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/routes/{route_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_routes_route_id_restore_api_routes__route_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/routes/{route_id}/reveal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_routes_route_id_reveal_api_routes__route_id__reveal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/voyages/{journey_id}/recall": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_voyages_journey_id_recall_api_voyages__journey_id__recall_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/climate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_climate_api_climate_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cosmic-resource": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_cosmic_resource_api_cosmic_resource_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cosmic-resource/deposits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_cosmic_resource_deposits_api_cosmic_resource_deposits_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cosmic/hang-star": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_cosmic_hang_star_api_cosmic_hang_star_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cosmic/seal-gate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_cosmic_seal_gate_api_cosmic_seal_gate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cosmic/cleanse-leak": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_cosmic_cleanse_leak_api_cosmic_cleanse_leak_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cosmic/forget-world": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_cosmic_forget_world_api_cosmic_forget_world_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cosmic/sky-event": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_cosmic_sky_event_api_cosmic_sky_event_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cosmic/rekindle-star": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_cosmic_rekindle_star_api_cosmic_rekindle_star_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cosmic/soul-bind": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_cosmic_soul_bind_api_cosmic_soul_bind_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cosmic/legendary-quest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_cosmic_legendary_quest_api_cosmic_legendary_quest_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/worlds/{world_id}/pulse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["world_pulse_view_api_worlds__world_id__pulse_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/worlds/{world_id}/wiki": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["world_wiki_api_worlds__world_id__wiki_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stars/{star_id}/wiki": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["star_wiki_api_stars__star_id__wiki_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/worlds/{world_id}/deepen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["deepen_world_api_worlds__world_id__deepen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stars/{star_id}/deepen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["deepen_star_api_stars__star_id__deepen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cosmos/epoch-star": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_epoch_star_api_cosmos_epoch_star_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/expeditions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_expeditions_api_expeditions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/worlds/{world_id}/map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_map_api_worlds__world_id__map_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/worlds/{world_id}/geography": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["geography_preview_api_worlds__world_id__geography_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/map-notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_map_notes_api_map_notes_get"];
+        put?: never;
+        post: operations["post_map_notes_api_map_notes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/map-position": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["set_map_position_api_entities__entity_id__map_position_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/map-notes/{note_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_map_notes_note_id_api_map_notes__note_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chronicle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_chronicle_api_chronicle_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chronicle/epochs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["chronicle_epochs_api_chronicle_epochs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chronicle/perspectives": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["perspectives_api_chronicle_perspectives_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chronicle/cosmic": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["cosmic_api_chronicle_cosmic_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["threads_api_threads_get"];
+        put?: never;
+        post: operations["post_threads_api_threads_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/threads/{thread_id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_threads_thread_id_close_api_threads__thread_id__close_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/codex.md": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["codex_api_codex_md_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/codex.zip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["codex_archive_api_codex_zip_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/book": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["book_api_book_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/book/maps/{world_id}.jpg": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["book_map_api_book_maps__world_id__jpg_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/book/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["book_pdf_status_api_book_pdf_get"];
+        put?: never;
+        post: operations["print_book_api_book_pdf_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/book.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["download_book_api_book_pdf_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/prayers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_prayers_api_prayers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/prayers/{message_id}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_prayers_message_id_answer_api_prayers__message_id__answer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/councils": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_councils_api_councils_get"];
+        put?: never;
+        post: operations["convene_api_councils_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_graph_api_graph_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/graph/path": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_path_api_graph_path_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/graph/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_health_api_graph_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/graph/repair": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["repair_graph_api_graph_repair_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/graph/fate-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["fate_link_api_graph_fate_link_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/graph/fate-link/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["stop_fate_link_api_graph_fate_link_stop_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/languages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_languages_api_languages_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/languages/tree": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["language_tree_api_languages_tree_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/languages/dialect-fit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["dialect_fit_api_languages_dialect_fit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/languages/{language_id}/sample-names": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["preview_sample_names_api_languages__language_id__sample_names_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/languages/{language_id}/translate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["translate_text_api_languages__language_id__translate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/knowledge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_knowledge_api_knowledge_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/languages/{language_id}/words": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_languages_language_id_words_api_languages__language_id__words_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/media/{file_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["media_api_media__file_name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["images_api_images_get"];
+        put?: never;
+        post: operations["upload_image_api_images_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/images/{image_id}/cover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["set_cover_api_images__image_id__cover_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/images/{image_id}/caption": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["set_caption_api_images__image_id__caption_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/images/{image_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_image_api_images__image_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gallery/missing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["gallery_missing_api_gallery_missing_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/image-gen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["image_gen_status_api_image_gen_get"];
+        put?: never;
+        post: operations["generate_image_api_image_gen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/image-gen/batch/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["start_batch_api_image_gen_batch_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/image-gen/batch/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["stop_batch_api_image_gen_batch_stop_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/prompts/write-missing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["write_missing_prompts_api_entities_prompts_write_missing_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/batch-deepen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["batch_status_api_batch_deepen_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/batch-deepen/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["start_batch_api_batch_deepen_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/batch-deepen/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["stop_batch_api_batch_deepen_stop_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/names/assign-missing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["assign_missing_names_api_names_assign_missing_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_notes_api_notes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["notifications_api_notifications_get"];
+        put?: never;
+        post: operations["add_note_api_notifications_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["read_notifications_api_notifications_read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["notification_settings_api_notifications_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/from-chronicle/{chronicle_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["pin_chronicle_line_api_notifications_from_chronicle__chronicle_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_ledger_api_ledger_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ledger/{entry_id}/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["undo_api_ledger__entry_id__undo_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/goals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["goals_api_goals_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/opportunities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["opportunities_api_opportunities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/scenarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_scenarios_api_scenarios_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/scenarios/{scenario_id}/abandon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_scenarios_scenario_id_abandon_api_scenarios__scenario_id__abandon_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_settings_api_settings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patch_settings_api_settings_patch"];
+        trace?: never;
+    };
+    "/api/peoples/awaken": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_peoples_awaken_api_peoples_awaken_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/federations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_federations_api_federations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cheats/essence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_cheats_essence_api_cheats_essence_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/backups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_backups_api_backups_get"];
+        put?: never;
+        post: operations["take_backup_api_backups_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/backups/secondary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["secondary_target_api_backups_secondary_get"];
+        put: operations["set_secondary_target_api_backups_secondary_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/backups/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["restore_backup_api_backups_restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/backups/{file_name}/database": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["download_backup_api_backups__file_name__database_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/backups/{file_name}/package": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["download_package_api_backups__file_name__package_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/world/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reset_world_api_world_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/world/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["export_world_api_world_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/world/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["import_world_api_world_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/discovery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["discovery_status_api_discovery_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/discovery/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["end_discovery_api_discovery_end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/metrics/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["model_metrics_api_metrics_models_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/maintenance/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_tasks_api_maintenance_tasks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/maintenance/tasks/{task}/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["run_task_api_maintenance_tasks__task__run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/maintenance/missing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["missing_content_api_maintenance_missing_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/maintenance/backups/{file_name}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["verify_backup_api_maintenance_backups__file_name__verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/maintenance/sons/{son_id}/powers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["regenerate_powers_api_maintenance_sons__son_id__powers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/maintenance/cosmos-prompts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["write_cosmos_prompts_api_maintenance_cosmos_prompts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/maintenance/chronicles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["write_missing_chronicles_api_maintenance_chronicles_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/prompt-context/blocks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_blocks_api_prompt_context_blocks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/prompt-context/catalogue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["prompt_catalogue_api_prompt_context_catalogue_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/prompt-context/catalogue/{prompt_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["prompt_detail_api_prompt_context_catalogue__prompt_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/prompt-context/son-prompt/{son_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["son_prompt_api_prompt_context_son_prompt__son_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/prompt-context/tired-motifs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tired_motifs_api_prompt_context_tired_motifs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/prompt-context/tired-motifs/overrides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["override_motif_api_prompt_context_tired_motifs_overrides_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/prompt-context/tired-motifs/overrides/clear": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["clear_motif_api_prompt_context_tired_motifs_overrides_clear_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/prompt-context/{kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["context_block_api_prompt_context__kind__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/fate/controls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["fate_controls_api_fate_controls_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_actions_api_actions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/son:turn_rank": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_son_turn_rank_api_actions_son_turn_rank_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/son:birth_child": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_son_birth_child_api_actions_son_birth_child_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/son:address_sibling": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_son_address_sibling_api_actions_son_address_sibling_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/chronicle:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_chronicle_edit_api_actions_chronicle_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/belief:rename": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_belief_rename_api_actions_belief_rename_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/name:accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_name_accept_api_actions_name_accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/thread:advance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_thread_advance_api_actions_thread_advance_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/epoch:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_epoch_edit_api_actions_epoch_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/cosmic:extinguish_star": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_cosmic_extinguish_star_api_actions_cosmic_extinguish_star_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/star:depth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_star_depth_api_actions_star_depth_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/world:depth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_world_depth_api_actions_world_depth_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/settlement:shelter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_settlement_shelter_api_actions_settlement_shelter_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/settlement:abandon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_settlement_abandon_api_actions_settlement_abandon_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/settlement:resettle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_settlement_resettle_api_actions_settlement_resettle_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mortal:child": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mortal_child_api_actions_mortal_child_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/settlement:capital": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_settlement_capital_api_actions_settlement_capital_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mortal:act": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mortal_act_api_actions_mortal_act_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/community:notable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_community_notable_api_actions_community_notable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/community:crown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_community_crown_api_actions_community_crown_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/people:village": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_people_village_api_actions_people_village_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/settlement:ethnogenesis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_settlement_ethnogenesis_api_actions_settlement_ethnogenesis_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/species:awaken": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_species_awaken_api_actions_species_awaken_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/ruler:heir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_ruler_heir_api_actions_ruler_heir_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/spirit:rest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_spirit_rest_api_actions_spirit_rest_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/record:retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_record_retire_api_actions_record_retire_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/society:shares": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_society_shares_api_actions_society_shares_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/society:satisfaction": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_society_satisfaction_api_actions_society_satisfaction_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/society:stores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_society_stores_api_actions_society_stores_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/society:famine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_society_famine_api_actions_society_famine_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/society:plenty": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_society_plenty_api_actions_society_plenty_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/society:forge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_society_forge_api_actions_society_forge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/society:uprising": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_society_uprising_api_actions_society_uprising_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resource:commodity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resource_commodity_api_actions_resource_commodity_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/community:mint": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_community_mint_api_actions_community_mint_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/community:work": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_community_work_api_actions_community_work_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/community:exodus": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_community_exodus_api_actions_community_exodus_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/community:contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_community_contact_api_actions_community_contact_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/world:golden_age": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_world_golden_age_api_actions_world_golden_age_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/world:end_golden_age": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_world_end_golden_age_api_actions_world_end_golden_age_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/civilization:tier": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_civilization_tier_api_actions_civilization_tier_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/civilization:independence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_civilization_independence_api_actions_civilization_independence_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/civilization:reclaim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_civilization_reclaim_api_actions_civilization_reclaim_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/world:previous_creation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_world_previous_creation_api_actions_world_previous_creation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/civilization:loan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_civilization_loan_api_actions_civilization_loan_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/civilization:forgive_debt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_civilization_forgive_debt_api_actions_civilization_forgive_debt_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/civilization:enforce_debt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_civilization_enforce_debt_api_actions_civilization_enforce_debt_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/civilization:barter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_civilization_barter_api_actions_civilization_barter_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/civilization:adoption": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_civilization_adoption_api_actions_civilization_adoption_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/civilization:treaty": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_civilization_treaty_api_actions_civilization_treaty_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/hero:raise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_hero_raise_api_actions_hero_raise_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/hero:quest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_hero_quest_api_actions_hero_quest_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/hero:resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_hero_resolve_api_actions_hero_resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/hero:recall": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_hero_recall_api_actions_hero_recall_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/hero:apprentice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_hero_apprentice_api_actions_hero_apprentice_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/hero:hunt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_hero_hunt_api_actions_hero_hunt_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/faction:found": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_faction_found_api_actions_faction_found_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/faction:dissolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_faction_dissolve_api_actions_faction_dissolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/war:battle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_war_battle_api_actions_war_battle_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/war:open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_war_open_api_actions_war_open_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/war:army": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_war_army_api_actions_war_army_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/army:disband": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_army_disband_api_actions_army_disband_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/army:bless": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_army_bless_api_actions_army_bless_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/war:duel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_war_duel_api_actions_war_duel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/war:victory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_war_victory_api_actions_war_victory_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/war:end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_war_end_api_actions_war_end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/community:rise_up": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_community_rise_up_api_actions_community_rise_up_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/faction:spy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_faction_spy_api_actions_faction_spy_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/captive:free": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_captive_free_api_actions_captive_free_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/captive:ransom": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_captive_ransom_api_actions_captive_ransom_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/tribute:impose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_tribute_impose_api_actions_tribute_impose_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/tribute:forgive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_tribute_forgive_api_actions_tribute_forgive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/alliance:betray": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_alliance_betray_api_actions_alliance_betray_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/alliance:marriage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_alliance_marriage_api_actions_alliance_marriage_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/species:feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_species_feed_api_actions_species_feed_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/species:mutate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_species_mutate_api_actions_species_mutate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/people:split": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_people_split_api_actions_people_split_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/species:chimera": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_species_chimera_api_actions_species_chimera_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/species:trail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_species_trail_api_actions_species_trail_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/species:cull": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_species_cull_api_actions_species_cull_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/species:spare_prey": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_species_spare_prey_api_actions_species_spare_prey_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/species:introduce": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_species_introduce_api_actions_species_introduce_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/species:seed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_species_seed_api_actions_species_seed_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/soul:descend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_soul_descend_api_actions_soul_descend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/soul:harvest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_soul_harvest_api_actions_soul_harvest_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/world:planet_stirs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_world_planet_stirs_api_actions_world_planet_stirs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/archive:raise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_archive_raise_api_actions_archive_raise_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/archive:read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_archive_read_api_actions_archive_read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/plague:cosmic": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_plague_cosmic_api_actions_plague_cosmic_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/soul:mirror": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_soul_mirror_api_actions_soul_mirror_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mortal:immortal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mortal_immortal_api_actions_mortal_immortal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/quest:abandon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_quest_abandon_api_actions_quest_abandon_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/sky:time_echo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_sky_time_echo_api_actions_sky_time_echo_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/horror:event": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_horror_event_api_actions_horror_event_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/horror:outer_being": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_horror_outer_being_api_actions_horror_outer_being_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/horror:cult": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_horror_cult_api_actions_horror_cult_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/horror:suppress_cult": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_horror_suppress_cult_api_actions_horror_suppress_cult_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/son:sanity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_son_sanity_api_actions_son_sanity_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/doom:apocalypse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_doom_apocalypse_api_actions_doom_apocalypse_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/doom:clock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_doom_clock_api_actions_doom_clock_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/son:duel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_son_duel_api_actions_son_duel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/son:god_war": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_son_god_war_api_actions_son_god_war_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/foreign_god:raid_temple": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_foreign_god_raid_temple_api_actions_foreign_god_raid_temple_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/foreign_god:wake": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_foreign_god_wake_api_actions_foreign_god_wake_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/son:relation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_son_relation_api_actions_son_relation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/son:outer_bargain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_son_outer_bargain_api_actions_son_outer_bargain_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/legend:forget": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_legend_forget_api_actions_legend_forget_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/legend:revive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_legend_revive_api_actions_legend_revive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/legend:from_event": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_legend_from_event_api_actions_legend_from_event_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/legend:manifest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_legend_manifest_api_actions_legend_manifest_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/prophecy:fulfil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_prophecy_fulfil_api_actions_prophecy_fulfil_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/prophecy:forget": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_prophecy_forget_api_actions_prophecy_forget_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/world:map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_world_map_api_actions_world_map_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/map:snapshot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_map_snapshot_api_actions_map_snapshot_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/world:epoch_star": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_world_epoch_star_api_actions_world_epoch_star_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/route:teach": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_route_teach_api_actions_route_teach_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/foreign_god:raise_land": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_foreign_god_raise_land_api_actions_foreign_god_raise_land_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/deposit:owner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_deposit_owner_api_actions_deposit_owner_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/market:found": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_market_found_api_actions_market_found_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/pirates:spawn": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_pirates_spawn_api_actions_pirates_spawn_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/market:disband": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_market_disband_api_actions_market_disband_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/route:danger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_route_danger_api_actions_route_danger_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/economy:resources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_economy_resources_api_actions_economy_resources_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/economy:cosmic": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_economy_cosmic_api_actions_economy_cosmic_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/addiction:cure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_addiction_cure_api_actions_addiction_cure_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/essence:pour": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_essence_pour_api_actions_essence_pour_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/creator:sign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_creator_sign_api_actions_creator_sign_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mortal:protect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mortal_protect_api_actions_mortal_protect_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/foreign_god:strike": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_foreign_god_strike_api_actions_foreign_god_strike_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/reputation:drift": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_reputation_drift_api_actions_reputation_drift_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/goals:evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_goals_evaluate_api_actions_goals_evaluate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/faith:first": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_faith_first_api_actions_faith_first_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/language:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_language_edit_api_actions_language_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/language:signature": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_language_signature_api_actions_language_signature_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/language:epoch_words": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_language_epoch_words_api_actions_language_epoch_words_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/intuition:discard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_intuition_discard_api_actions_intuition_discard_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/intuition:discard_all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_intuition_discard_all_api_actions_intuition_discard_all_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/knowledge:level": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_knowledge_level_api_actions_knowledge_level_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/knowledge:run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_knowledge_run_api_actions_knowledge_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mechanics:weigh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mechanics_weigh_api_actions_mechanics_weigh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/market:write_off": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_market_write_off_api_actions_market_write_off_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/market:run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_market_run_api_actions_market_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/faith:syncretize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_faith_syncretize_api_actions_faith_syncretize_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/faith:native_run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_faith_native_run_api_actions_faith_native_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/language:creole": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_language_creole_api_actions_language_creole_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/language:contact_run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_language_contact_run_api_actions_language_contact_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/records:living_stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_records_living_stats_api_actions_records_living_stats_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/engine:run_phase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_engine_run_phase_api_actions_engine_run_phase_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/fate:retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_fate_retry_api_actions_fate_retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/fate:rejudge_debt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_fate_rejudge_debt_api_actions_fate_rejudge_debt_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/fate:rejudge_limbo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_fate_rejudge_limbo_api_actions_fate_rejudge_limbo_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/fate:override_verdict": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_fate_override_verdict_api_actions_fate_override_verdict_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/chronicle:audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_chronicle_audit_api_actions_chronicle_audit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/voices:retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_voices_retry_api_actions_voices_retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/voices:edit_view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_voices_edit_view_api_actions_voices_edit_view_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/voices:delete_view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_voices_delete_view_api_actions_voices_delete_view_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/births:retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_births_retry_api_actions_births_retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/community:collapse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_community_collapse_api_actions_community_collapse_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/structure:raze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_structure_raze_api_actions_structure_raze_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mortal:fate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mortal_fate_api_actions_mortal_fate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/memorial:order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_memorial_order_api_actions_memorial_order_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/world:revive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_world_revive_api_actions_world_revive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/world:guardian": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_world_guardian_api_actions_world_guardian_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/species:abundance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_species_abundance_api_actions_species_abundance_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/region:seed_place": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_region_seed_place_api_actions_region_seed_place_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/pilgrimage:declare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_pilgrimage_declare_api_actions_pilgrimage_declare_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/record:end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_record_end_api_actions_record_end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/cult:merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_cult_merge_api_actions_cult_merge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/cult:schism": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_cult_schism_api_actions_cult_schism_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/people:unite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_people_unite_api_actions_people_unite_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/place:swallow": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_place_swallow_api_actions_place_swallow_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+}
+export type webhooks = Record<string, never>;
+export interface components {
+    schemas: {
+        AchievementKey: "second_sky" | "constellation" | "prophecy_fulfilled" | "return_from_death" | "fathers_hand" | "babel" | "crowded_world" | "first_prayer" | "creators_cult" | "interstellar_traveller" | "saga_completed" | "god_of_epochs" | "ancient" | "crowded_pantheon" | "first_explorers" | "sensed_world" | "weapons_silent";
+        AchievementView: {
+            key: components["schemas"]["AchievementKey"];
+            name: string;
+            description: string;
+            points: number;
+            earned: boolean;
+            epoch: number | null;
+        };
+        ActionCatalogueItem: {
+            id: string;
+            title: string;
+            group: components["schemas"]["ActionGroup"];
+            mode: components["schemas"]["ActionMode"];
+            cost: string;
+            confirmation: string | null;
+            rows: string[];
+            path: string;
+            method: string;
+            input_schema: {
+                [key: string]: unknown;
+            };
+        };
+        ActionGroup: "creator" | "sons" | "god_power" | "death" | "messages" | "interventions" | "entities" | "diplomacy" | "canon" | "cosmos" | "worlds" | "foreign_gods" | "goals" | "settings" | "society" | "warfare" | "creatures" | "beyond" | "languages" | "memory" | "fate";
+        ActionKind: "create_entity" | "revelation" | "summon_son" | "bear_child" | "command" | "absolute_command" | "bless_essence" | "bless_hp" | "bless_stat" | "bless_existence" | "add_star" | "ascend" | "lightning" | "chain" | "exile_son" | "suppress_rebellion" | "suppress_failed" | "forgive" | "answer_prayer" | "chat" | "resurrect_son" | "kill_son" | "take_life" | "resurrect_mortal" | "deify" | "demote" | "grant_power" | "choose_prophet" | "manifestation" | "lineage_curse" | "lift_lineage_curse" | "convert" | "wrath" | "world_wrath" | "drain_essence" | "devour" | "harvest_community" | "kill_foreign_god" | "canon_restore" | "canon_strike" | "edit_record" | "edit_creator" | "merge_records" | "archive_record" | "create_world" | "birth_world" | "forget_world" | "remember_world" | "exile_entity" | "pardon" | "ignite_star" | "hang_star" | "extinguish_star" | "rekindle_star" | "seal_gate" | "sever_route" | "stitch_route" | "reveal_route" | "recall_journey" | "cleanse_leak" | "sky_event" | "spirit_cloak" | "legendary_quest" | "miracle" | "disaster" | "teach_knowledge" | "advance_knowledge" | "set_knowledge_level" | "assign_mechanics" | "syncretize_faith" | "birth_creole" | "curse" | "dream" | "influence" | "declare_chosen" | "incite_war" | "transform" | "destroy" | "covenant" | "change_anchor" | "challenge" | "speak_to_sibling" | "weave_bond" | "pray_to_creator" | "harvest_resource" | "gift" | "holy_world" | "interworld_treaty" | "foreign_god_war" | "open_cosmic_bed" | "stitch_leak" | "outer_bargain" | "rebel" | "convene_council" | "awaken_peoples" | "set_passions" | "push_reputation" | "found_language" | "coin_words" | "produce" | "build" | "create_culture" | "discover_resource" | "claim" | "found_settlement" | "establish_trade" | "declare_war" | "worship" | "develop_knowledge" | "learn" | "diplomacy" | "adventure" | "discover_route" | "explore_land" | "resurrection_rite" | "build_ship" | "set_out" | "tame" | "weave_chimera" | "bind_spirit" | "search_ruins" | "sabotage" | "preach" | "defy_god" | "deny_god" | "prophesy" | "escape" | "pay_ransom" | "rescue_captive" | "raise_army" | "appoint_commander" | "build_spy_network" | "barter" | "lend" | "repay" | "adopt" | "network_repair" | "ledger_undo" | "sibling_scheme" | "scatter_bones" | "move_to_world" | "foreign_god_talk" | "write_plan" | "abandon_settlement" | "apocalypse" | "awaken_species" | "betrayal" | "bless_army" | "cosmic_archive" | "cosmic_plague" | "creator_sign" | "crown_ruler" | "cultural_contact" | "designate_heir" | "disband_army" | "dissolve_faction" | "end_blood_feud" | "epoch_star" | "ethnogenesis" | "evaluate_goals" | "force_battle" | "foreign_god_land" | "forget_legend" | "forgive_debt" | "forgive_tribute" | "found_faction" | "found_market" | "fulfil_prophecy" | "golden_age" | "grant_independence" | "grant_victory" | "horror_event" | "hunt" | "impose_tribute" | "incite_uprising" | "introduce_species" | "lay_spirit_to_rest" | "megafauna_trail" | "mint_coin" | "mirror_birth" | "mutate_species" | "order_exodus" | "order_feeding" | "outer_cult" | "planet_act" | "pour_essence" | "raise_hero" | "raise_notable" | "recall_hero" | "reclaim_colony" | "regenerate_map" | "resettle_ruin" | "reveal_previous_creation" | "revive_legend" | "set_doom_clock" | "set_immortal" | "set_route_danger" | "set_sanity" | "set_son_relation" | "set_tier" | "shape_society" | "shelter_from_ruin" | "soul_descent" | "soul_harvest" | "spare_prey" | "spawn_pirates" | "split_people" | "summon_outer_being" | "time_echo" | "train_apprentice" | "wake_foreign_god" | "edit_language" | "regenerate_signature" | "add_epoch_words" | "discard_intuition" | "rejudge_fate" | "retry_fate" | "override_verdict" | "retry_voices" | "audit_chronicle" | "retry_births" | "edit_historian_view" | "delete_historian_view" | "maintenance" | "dissolve_community" | "raze_structure" | "write_fate" | "commemorate" | "revive_world" | "appoint_guardian" | "set_abundance" | "seed_place" | "declare_pilgrimage_site" | "order_end" | "other";
+        ActionMode: "ledgered" | "job";
+        ActionResponse: {
+            action: string;
+            message: string;
+            essence_spent: number;
+            essence_gained: number;
+            target_node_id?: number | null;
+            created_ids?: number[];
+            ledger_entry_id?: number | null;
+            values?: {
+                [key: string]: number | string | boolean | null;
+            };
+            job_id?: string | null;
+        };
+        ActorKind: "creator" | "son" | "mortal" | "foreign_god" | "fate" | "engine" | "system";
+        AddictionCureInput: {
+            entity_id: number;
+            resource_id: number;
+        };
+        AddictionView: {
+            community: components["schemas"]["NodeRef"];
+            resource: components["schemas"]["NodeRef"];
+            owned_epochs: number;
+            addicted_since_epoch: number | null;
+            withdrawal_since_epoch: number | null;
+        };
+        AgentKind: "son" | "mortal";
+        AgentRetryEvent: {
+            id: number;
+            kind: "agent.retry";
+            payload: components["schemas"]["RetryPayload"];
+            at: string;
+        };
+        AgentStreamEvent: {
+            id: number;
+            kind: "agent.stream";
+            payload: components["schemas"]["EventPayload"];
+            at: string;
+        };
+        AgentThoughtEvent: {
+            id: number;
+            kind: "agent.thought";
+            payload: components["schemas"]["EventPayload"];
+            at: string;
+        };
+        AgentToolCalledEvent: {
+            id: number;
+            kind: "agent.tool_called";
+            payload: components["schemas"]["EventPayload"];
+            at: string;
+        };
+        AgentToolPreparingEvent: {
+            id: number;
+            kind: "agent.tool_preparing";
+            payload: components["schemas"]["EventPayload"];
+            at: string;
+        };
+        AgentToolResultEvent: {
+            id: number;
+            kind: "agent.tool_result";
+            payload: components["schemas"]["EventPayload"];
+            at: string;
+        };
+        AgentToolWritingEvent: {
+            id: number;
+            kind: "agent.tool_writing";
+            payload: components["schemas"]["EventPayload"];
+            at: string;
+        };
+        AgentWritingEvent: {
+            id: number;
+            kind: "agent.writing";
+            payload: components["schemas"]["EventPayload"];
+            at: string;
+        };
+        AllianceBetrayInput: {
+            traitor_id: number;
+            victim_id: number;
+            war: boolean;
+        };
+        AllianceMarriageInput: {
+            first_id: number;
+            second_id: number;
+        };
+        ArchiveMode: "history" | "atlas" | "automatic";
+        ArchiveOverride: "history" | "atlas";
+        ArchiveReadInput: {
+            community_id: number;
+        };
+        ArchiveRequest: {
+            mode: components["schemas"]["ArchiveMode"];
+        };
+        ArmyBlessInput: {
+            army_id: number;
+            morale: number;
+            equipment: number;
+            experience: number;
+        };
+        ArmyDisbandInput: {
+            army_id: number;
+        };
+        ArmyStats: {
+            kind: "army";
+            size?: number | null;
+            morale?: number | null;
+            equipment?: number | null;
+            experience?: number | null;
+        };
+        ArmyView: {
+            army: components["schemas"]["NodeRef"] | null;
+            war_id: number | null;
+            owner: components["schemas"]["NodeRef"] | null;
+            commander: components["schemas"]["NodeRef"] | null;
+            raised_epoch: number;
+            disbanded_epoch: number | null;
+        };
+        ArtworkStats: {
+            kind: "artwork";
+            renown?: number | null;
+            influence?: number | null;
+        };
+        Ascension: {
+            stars: number;
+            level: number;
+            fame: number;
+            essence: number;
+            target: components["schemas"]["Rarity"];
+        };
+        Atmosphere: "none" | "thin" | "normal" | "dense" | "toxic";
+        BackupInfo: {
+            file: string;
+            size: number;
+            modified: string;
+            label: string;
+        };
+        BackupTakenEvent: {
+            id: number;
+            kind: "backup.taken";
+            payload: components["schemas"]["FilePayload"];
+            at: string;
+        };
+        BackupVerified: {
+            file: string;
+            ok: boolean;
+        };
+        BatchDeepenLogEvent: {
+            id: number;
+            kind: "batch_deepen.log";
+            payload: components["schemas"]["BulkLogPayload"];
+            at: string;
+        };
+        BattleOutcome: "field_victory" | "great_victory" | "siege_repulsed" | "siege_breached" | "siege_starvation";
+        BattleView: {
+            id: number;
+            war_id: number;
+            epoch: number;
+            sequence: number;
+            record: components["schemas"]["NodeRef"] | null;
+            place: components["schemas"]["NodeRef"] | null;
+            winner: components["schemas"]["NodeRef"] | null;
+            loser: components["schemas"]["NodeRef"] | null;
+            outcome: components["schemas"]["BattleOutcome"];
+            gap: number;
+            siege_id: number | null;
+        };
+        BeliefRenameInput: {
+            people_id: number;
+            son_id?: number | null;
+        };
+        Biome: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+        BlessingKind: "essence" | "hp" | "stat" | "existence";
+        BlockedToolView: {
+            name: string;
+            reason: components["schemas"]["ToolBlock"];
+            minimum_rarity: components["schemas"]["Rarity"] | null;
+        };
+        BondKind: "inside" | "lives_in" | "worships" | "enemy" | "ally" | "descends_from" | "protects" | "rules" | "owns" | "beat" | "killed" | "cursed" | "blessed" | "source_of" | "tells_of" | "destroyed" | "loves" | "fears" | "hunts" | "trades_with" | "prophesies" | "caused" | "celebrates" | "forbids" | "speaks" | "produced" | "built" | "migrated_to" | "discovered" | "soul_descended_to" | "party_to" | "member_of" | "knows" | "pays_tribute" | "related" | "holds_captive" | "spy_network" | "pursues" | "companion" | "rival" | "apprentice_of" | "commands" | "part_of" | "passenger_of" | "captain_of" | "tamed" | "truce" | "owes";
+        BondKindInfo: {
+            key: string;
+            label: string;
+            category: string;
+            fate_suggestable: boolean;
+            weavable: boolean;
+            link_groups: components["schemas"]["LinkGroup"][];
+        };
+        BondRole: "side" | "victor" | "loser" | "commander" | "dueled" | "spirit_binding" | "homeland" | "mentioned_in_fate" | "fulfilled_prophecy";
+        BondState: "active" | "past" | "hidden_rejected" | "hidden_closed";
+        BondView: {
+            id: number;
+            source_node_id: number;
+            target_node_id: number;
+            kind: components["schemas"]["BondKind"];
+            description: string | null;
+            role: components["schemas"]["BondRole"] | null;
+            epoch: number;
+            state: components["schemas"]["BondState"];
+            closed_epoch: number | null;
+            closed_reason: string | null;
+            war_id: number | null;
+            debt_amount: number | null;
+            debt_what: string | null;
+            debt_due_epoch: number | null;
+            debt_status: components["schemas"]["DebtStatus"] | null;
+            outgoing: boolean;
+            other: components["schemas"]["NodeRef"] | null;
+        };
+        BookPdfStatus: {
+            ready: boolean;
+            stale: boolean;
+            size: number | null;
+            epoch: number | null;
+            created_at: string | null;
+            job_id: string | null;
+            progress: number | null;
+            stage: string | null;
+        };
+        BorderKind: "coast" | "region" | "sub_region";
+        BorderLayer: {
+            kinds: components["schemas"]["BorderKind"][];
+            coordinates: number[];
+        };
+        BulkLogPayload: {
+            epoch?: number | null;
+            level: string;
+            text?: string | null;
+            line?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        BulkRun: {
+            running: boolean;
+            stop_requested: boolean;
+            auto: boolean;
+            total: number;
+            done: number;
+            failed: number;
+            skipped: number;
+            started?: string | null;
+            finished?: string | null;
+            rerun_requested: boolean;
+        };
+        BulkState: {
+            running: boolean;
+            stop_requested: boolean;
+            total: number;
+            done: number;
+            failed: number;
+            skipped: number;
+            current?: components["schemas"]["QueueItem"][];
+            started?: string | null;
+            finished?: string | null;
+        };
+        BulkStatus: {
+            state: components["schemas"]["BulkState"];
+            log: components["schemas"]["LogLine"][];
+            waiting: number;
+            unnamed: number;
+        };
+        BulkSummary: {
+            running: boolean;
+            stop_requested: boolean;
+            total: number;
+            done: number;
+            failed: number;
+            skipped: number;
+        };
+        CanonVerdict: "canon" | "rejected";
+        CapacityInsight: {
+            capacity: number;
+            region_population: number;
+            occupancy_pct: number;
+            region: components["schemas"]["NodeRef"] | null;
+        };
+        CaptionRequest: {
+            caption?: string | null;
+        };
+        CaptiveFreeInput: {
+            captive_id: number;
+        };
+        CaptiveRansomInput: {
+            captive_id: number;
+        };
+        CaptiveStatus: "held" | "ransomed" | "escaped" | "executed" | "turncoat" | "rescued" | "released";
+        CaptiveView: {
+            id: number;
+            captive: components["schemas"]["NodeRef"] | null;
+            captor: components["schemas"]["NodeRef"] | null;
+            home: components["schemas"]["NodeRef"] | null;
+            war_id: number | null;
+            status: components["schemas"]["CaptiveStatus"];
+            taken_epoch: number;
+            released_epoch: number | null;
+            ransom_paid: number | null;
+        };
+        Catalogue: {
+            enums: components["schemas"]["EnumCatalogue"];
+            rarities: components["schemas"]["Labelled"][];
+            entity_types: components["schemas"]["EntityTypeInfo"][];
+            bond_kinds: components["schemas"]["BondKindInfo"][];
+            link_groups: components["schemas"]["LinkGroupInfo"][];
+            domains: components["schemas"]["Labelled"][];
+            world_types: components["schemas"]["WorldTypeInfo"][];
+            chronicle_kinds: components["schemas"]["Labelled"][];
+            notification_categories: components["schemas"]["NotificationCategoryInfo"][];
+            climates: components["schemas"]["Labelled"][];
+            creature_traits: components["schemas"]["Labelled"][];
+            passions: components["schemas"]["Labelled"][];
+        };
+        CategoryCount: {
+            category: components["schemas"]["NotificationCategory"];
+            total: number;
+            unread: number;
+        };
+        CategoryInfo: {
+            category: components["schemas"]["NotificationCategory"];
+            label: string;
+            severity: number;
+            enabled_by_default: boolean;
+        };
+        CelestialStats: {
+            kind: "celestial";
+            brightness?: number | null;
+            influence?: number | null;
+        };
+        CellLayer: {
+            x: number[];
+            y: number[];
+            elevation: number[];
+            moisture: number[];
+            shade: number[];
+            water: boolean[];
+            coastal: boolean[];
+            biome: number[];
+            region: (number | null)[];
+            top_region: (number | null)[];
+            known: number[];
+            polygon_offsets: number[];
+            polygon_coordinates: number[];
+        };
+        ChangesPayload: {
+            epoch?: number | null;
+            version: string;
+        } & {
+            [key: string]: unknown;
+        };
+        ChangesResponse: {
+            full: boolean;
+            version: string;
+            entities: components["schemas"]["EntityRecord"][];
+            removed_entity_ids: number[];
+            sons: components["schemas"]["SonPublic"][];
+            removed_son_ids: number[];
+            new_chronicle_lines: number;
+            bonds_changed: boolean;
+            cosmos_changed: boolean;
+            worlds_changed: boolean;
+            relations_changed: boolean;
+            foreign_god_ids: number[];
+        };
+        ChatAttitude: "loyal" | "distant" | "rebellious" | "afraid" | "grateful" | "mocking";
+        ChatPayload: {
+            epoch?: number | null;
+            son_id: number;
+            attitude: string;
+            change: number;
+        } & {
+            [key: string]: unknown;
+        };
+        ChatReply: {
+            reply: string;
+            attitude: components["schemas"]["ChatAttitude"];
+            loyalty: number;
+            change: number;
+        };
+        ChatRequest: {
+            text: string;
+        };
+        ChronicleAuditFinding: {
+            kind: components["schemas"]["ChronicleAuditKind"];
+            ref?: string | null;
+            name?: string | null;
+            world_id?: number | null;
+            sentence?: string | null;
+            detail?: string | null;
+            stated?: string | null;
+            actual?: string | null;
+        };
+        ChronicleAuditInput: {
+            epoch: number;
+        };
+        ChronicleAuditKind: "rejected_mentioned" | "son_skipped" | "event_skipped" | "verdict_skipped" | "winner_as_loser" | "active_as_silent" | "deed_miscredited" | "number_contradiction";
+        ChronicleAuditReport: {
+            found: number;
+            remaining: components["schemas"]["ChronicleAuditFinding"][];
+            rewritten: boolean;
+            repaired_sentences: number;
+            coverage?: components["schemas"]["ChronicleCoverage"];
+        };
+        ChronicleCountClaim: {
+            ref: string;
+            value: number;
+        };
+        ChronicleCoverage: {
+            covered: string[];
+            entity_ids: number[];
+            outcomes: components["schemas"]["ChronicleOutcomeClaim"][];
+            credits: components["schemas"]["ChronicleCreditClaim"][];
+            idle_actor_ids: number[];
+            counts: components["schemas"]["ChronicleCountClaim"][];
+        };
+        ChronicleCreditClaim: {
+            entity_id: number;
+            actor_id: number;
+        };
+        ChronicleEditInput: {
+            chronicle_id: number;
+            text?: string | null;
+            visible?: boolean | null;
+        };
+        ChronicleEpoch: {
+            epoch: number;
+            name: string | null;
+            lines: number;
+        };
+        ChronicleKind: "creation" | "speech" | "challenge" | "prayer" | "order" | "fate" | "death" | "birth" | "system" | "message" | "creator_hand" | "world" | "engine_raw" | "knowledge" | "resource" | "culture" | "trade" | "exploration" | "diplomacy" | "production" | "language" | "miracle" | "civilization" | "creator_reputation" | "construction" | "existence" | "dream" | "star" | "divine_sign" | "climate" | "cosmic" | "debt" | "foreign_god" | "world_age" | "council" | "previous_creation" | "sky" | "gift" | "worship" | "world_birth" | "prophecy" | "covenant" | "army" | "ascension" | "migration" | "legendary_quest" | "war" | "war_of_gods" | "cosmic_law" | "horror" | "outer_being" | "immortality" | "rebellion" | "apocalypse" | "resurrection" | "lineage" | "disaster" | "adventure" | "intrigue" | "rescue" | "chimera" | "escape" | "domestication" | "age_change" | "expedition" | "spirit" | "curse" | "denial" | "ransom" | "prohibition";
+        ChronicleLineRecord: {
+            id: number;
+            epoch: number;
+            year: number | null;
+            kind: components["schemas"]["ChronicleKind"];
+            son_id: number | null;
+            world_id: number | null;
+            text: string;
+            template_key: string | null;
+            created_at: string;
+            entity_ids?: number[];
+        };
+        ChronicleOutcomeClaim: {
+            ref: string;
+            winner_id: number;
+        };
+        ChroniclePage: {
+            items: components["schemas"]["ChronicleLineRecord"][];
+            total: number;
+            has_more: boolean;
+            oldest_id: number | null;
+        };
+        CivilizationAdoptionInput: {
+            adopter_id: number;
+            child_id: number;
+        };
+        CivilizationBarterInput: {
+            first_id: number;
+            second_id: number;
+        };
+        CivilizationEnforceDebtInput: {
+            bond_id: number;
+        };
+        CivilizationForgiveDebtInput: {
+            bond_id: number;
+        };
+        CivilizationIndependenceInput: {
+            colony_id: number;
+            war: boolean;
+        };
+        CivilizationLoanInput: {
+            lender_id: number;
+            borrower_id: number;
+            amount: number;
+        };
+        CivilizationReclaimInput: {
+            mother_id: number;
+            colony_id: number;
+        };
+        CivilizationTierInput: {
+            entity_id: number;
+            tier: number;
+            lock: boolean;
+        };
+        CivilizationTreatyInput: {
+            first_id: number;
+            second_id: number;
+            alliance: boolean;
+        };
+        ClaudeAuth: "token" | "login";
+        ClimateEra: "temperate" | "drought" | "rain" | "ice_age" | "scorching";
+        ClimateShare: {
+            biome: components["schemas"]["Biome"];
+            name: string;
+            share_pct: number;
+        };
+        Cognate: {
+            first_word: string;
+            second_word: string;
+            first_meaning: string;
+            second_meaning: string;
+        };
+        Commodity: "food" | "ore" | "goods";
+        CommunityCollapseInput: {
+            community_id: number;
+            reason: string;
+        };
+        CommunityContactInput: {
+            source_id: number;
+            target_id: number;
+            first_contact: boolean;
+        };
+        CommunityCrownInput: {
+            community_id: number;
+        };
+        CommunityExodusInput: {
+            origin_id: number;
+            share_pct: number;
+            destination_id?: number | null;
+        };
+        CommunityMintInput: {
+            entity_id: number;
+        };
+        CommunityNotableInput: {
+            community_id: number;
+            social_class?: components["schemas"]["SocialClass"] | null;
+            role_key?: string | null;
+        };
+        CommunityRelationLabel: "blood_enemy" | "enemy" | "cold" | "neutral" | "friend" | "close_friend" | "sibling";
+        CommunityRiseUpInput: {
+            community_id: number;
+        };
+        CommunityWorkInput: {
+            community_id: number;
+            kind?: components["schemas"]["EngineKind"] | null;
+        };
+        ContextBlock: {
+            kind: components["schemas"]["ContextBlockKind"];
+            text: string;
+            characters: number;
+            token_estimate: number;
+            world_id: number | null;
+            son_id: number | null;
+            entity_id: number | null;
+        };
+        ContextBlockInfo: {
+            kind: components["schemas"]["ContextBlockKind"];
+            needs_son: boolean;
+            needs_entity: boolean;
+            audience: string;
+            rows: string[];
+        };
+        ContextBlockKind: "world-header" | "dialect" | "world-line" | "cosmos" | "pantheon" | "threads" | "world-summary" | "fate-summary" | "geography" | "map" | "languages" | "entity-line" | "entity-detail" | "bond-lines" | "son-memory" | "tired-images" | "recent-events" | "powers" | "sky-calendar" | "mortal" | "chronicler";
+        CosmicEpoch: {
+            epoch: number;
+            name: string | null;
+            summary: string | null;
+            worlds: components["schemas"]["WorldChronicle"][];
+        };
+        CosmicExtinguishStarInput: {
+            star_id: number;
+        };
+        CosmosOption: {
+            size: components["schemas"]["CosmosSize"];
+            label: string;
+            worlds: number;
+        };
+        CosmosRecord: {
+            id: number;
+            name: string;
+            lore_language: components["schemas"]["LoreLanguage"];
+            seed_idea: string;
+            cosmology: string;
+            tone: string;
+            epoch: number;
+            epoch_start_year: number;
+            doom_clock: number;
+            fate_mode: components["schemas"]["FateMode"];
+            son_distribution: components["schemas"]["SonDistribution"];
+            council_every_epochs: number | null;
+            mortal_agents_per_epoch: number | null;
+            mortal_agent_parallelism: number | null;
+            fate_debt_epoch: number | null;
+            alignment_until_epoch: number | null;
+            map_version: number;
+            primary_world_id: number | null;
+            travel_resource: components["schemas"]["TravelResource"] | null;
+            created_at: string;
+        };
+        CosmosSize: "single" | "small" | "large";
+        CosmosView: {
+            stars: components["schemas"]["StarRecord"][];
+            worlds: components["schemas"]["CosmosWorld"][];
+            foreign_gods: components["schemas"]["ForeignGodRecord"][];
+            routes: components["schemas"]["RouteRecord"][];
+            journeys: components["schemas"]["JourneyRecord"][];
+            sky_events: components["schemas"]["SkyEventRecord"][];
+            world_types: components["schemas"]["WorldTypeLook"][];
+            places: components["schemas"]["EntitySummary"][];
+            communities: components["schemas"]["EntitySummary"][];
+        };
+        CosmosWorld: {
+            world: components["schemas"]["WorldRecord"];
+            type_label: string;
+            counts: components["schemas"]["WorldCounts"];
+            sons: components["schemas"]["NodeRef"][];
+            cover: string | null;
+        };
+        CouncilBallot: {
+            son_id: number;
+            name: string;
+            vote: components["schemas"]["CouncilVote"];
+            reason: string;
+        };
+        CouncilHeldEvent: {
+            id: number;
+            kind: "council.held";
+            payload: components["schemas"]["CouncilPayload"];
+            at: string;
+        };
+        CouncilMinutes: {
+            topic: string;
+            convened_by: string;
+            speeches: components["schemas"]["CouncilSpeech"][];
+            motion: string;
+            ballots: components["schemas"]["CouncilBallot"][];
+            passed: boolean;
+            decision: string;
+            notes: string[];
+            summary: string;
+        };
+        CouncilPayload: {
+            epoch?: number | null;
+            id?: number | null;
+            topic: string;
+            passed: boolean;
+            motion?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        CouncilRecord: {
+            id: number;
+            epoch: number;
+            topic: string;
+            minutes: components["schemas"]["CouncilMinutes"];
+            passed: boolean;
+            created_at: string;
+        };
+        CouncilRequest: {
+            topic: string;
+        };
+        CouncilSpeech: {
+            son_id: number;
+            name: string;
+            words: string;
+        };
+        CouncilVote: "yes" | "no" | "abstain";
+        Covenant: {
+            son_a_id: number;
+            son_b_id: number;
+            description: string | null;
+        };
+        CreatorDetail: {
+            creator: components["schemas"]["CreatorRecord"];
+            cover: string | null;
+            mood: components["schemas"]["CreatorMood"];
+            faith: number;
+            cult_essence: number;
+            cult: components["schemas"]["EntitySummary"][];
+            folk_views: components["schemas"]["FolkView"][];
+            traces: components["schemas"]["ChronicleLineRecord"][];
+            images: components["schemas"]["ImageRecord"][];
+        };
+        CreatorHintKind: "unanswered_prayers" | "unclaimed" | "rebel_sons" | "fading_sons" | "doom" | "godless_worlds" | "stale_threads" | "rich_essence";
+        CreatorHintLine: {
+            kind: components["schemas"]["CreatorHintKind"];
+            text: string;
+        };
+        CreatorHintLines: {
+            lines: components["schemas"]["CreatorHintLine"][];
+        };
+        CreatorHints: {
+            unanswered_prayers: number;
+            unclaimed: string[];
+            rebel_sons: string[];
+            fading_sons: components["schemas"]["FadingSon"][];
+            doom: number;
+            doom_threshold: number;
+            godless_worlds: string[];
+            stale_threads: number;
+            essence: number;
+        };
+        CreatorMood: {
+            contentment: number;
+            anger: number;
+            interest: number;
+            loneliness: number;
+            label: components["schemas"]["CreatorMoodLabel"];
+            breakdown: components["schemas"]["MoodInput"][];
+        };
+        CreatorMoodAxis: "contentment" | "anger" | "interest" | "loneliness";
+        CreatorMoodLabel: "angry" | "distant" | "lonely" | "content" | "uneasy" | "serene";
+        CreatorPassion: "order" | "chaos" | "beauty" | "knowledge" | "war" | "mercy" | "creation" | "silence";
+        CreatorRecord: {
+            id: number;
+            name: string;
+            title: string | null;
+            appearance: string | null;
+            temperament: string | null;
+            image_prompt: string | null;
+            note: string | null;
+            essence: number;
+            mood_contentment: number;
+            mood_anger: number;
+            mood_interest: number;
+            mood_loneliness: number;
+            passions: string[];
+            passions_automatic: boolean;
+            depth: components["schemas"]["GodDepth"] | null;
+            epic: components["schemas"]["Epic"] | null;
+        };
+        CreatorReputation: {
+            love: number;
+            fear: number;
+            forgotten: number;
+            label: components["schemas"]["ReputationLabel"];
+            sons: components["schemas"]["SonReputation"][];
+            passions: components["schemas"]["CreatorPassion"][];
+            automatic: boolean;
+            all_passions: components["schemas"]["PassionInfo"][];
+        };
+        CreatorRevelationEvent: {
+            id: number;
+            kind: "creator.revelation";
+            payload: components["schemas"]["RevelationPayload"];
+            at: string;
+        };
+        CreatorSignInput: {
+            kind: components["schemas"]["CreatorSignKind"];
+            target_id?: number | null;
+        };
+        CreatorSignKind: "wrath" | "grace" | "silence" | "dream";
+        CreatureTrait: "flying" | "venomous" | "soul_eater" | "radiant" | "fissiparous" | "hive_mind" | "stoneskin" | "time_rewinder" | "shapeshifter" | "mind_reader";
+        CultMergeInput: {
+            source_id: number;
+            into_id: number;
+        };
+        CultSchismInput: {
+            cult_id: number;
+            son_id?: number | null;
+        };
+        CultStats: {
+            kind: "cult";
+            followers?: number | null;
+            zeal?: number | null;
+            influence?: number | null;
+            devotion?: number | null;
+        };
+        Danger: {
+            id: number | null;
+            name: string;
+            reason: string;
+        };
+        DatabaseHealth: {
+            file: string;
+            size: number;
+            wal_size: number;
+            quick_check: string;
+        };
+        DeadSonPanel: {
+            son_id: number;
+            name: string;
+            death_epoch: number | null;
+            death_cause: components["schemas"]["SonDeathCause"] | null;
+            earliest_return_epoch: number | null;
+            epochs_remaining: number;
+            devotion: number;
+            devotion_required: number;
+            corpse: components["schemas"]["EntitySummary"] | null;
+            orders: components["schemas"]["ResurrectionOrder"][];
+            loyal_communities: components["schemas"]["EntitySummary"][];
+        };
+        DebtStatus: "open" | "overdue" | "repaid" | "forgiven";
+        DecreeKind: "war" | "peace" | "alliance" | "marriage" | "trade";
+        DepositOwnerInput: {
+            deposit_id: number;
+            owner_id?: number | null;
+        };
+        Disaster: "earthquake" | "flood" | "plague" | "drought" | "storm";
+        Discovery: "known" | "legend" | "unknown" | "forgotten";
+        DiscoveryEnded: {
+            ok: boolean;
+            guest: components["schemas"]["GuestWorld"] | null;
+        };
+        DiscoveryStatus: {
+            active: boolean;
+            guest: components["schemas"]["GuestWorld"] | null;
+        };
+        DiscoverySummary: {
+            worlds: components["schemas"]["DiscoveryWorld"][];
+            sensed: components["schemas"]["SensedWorld"][];
+        };
+        DiscoveryWorld: {
+            world_id: number;
+            name: string;
+            discovery: string;
+            regions: number;
+            places: number;
+            communities: number;
+        };
+        DistributionCandidateView: {
+            son_id: number;
+            name: string;
+            world_id: number | null;
+            score: number;
+            protected: boolean;
+        };
+        DistributionPreviewView: {
+            candidates: components["schemas"]["DistributionCandidateView"][];
+            next_son_id: number | null;
+            godless_world_ids: number[];
+        };
+        Domain: "sea" | "fire" | "earth" | "sky" | "storm" | "death" | "life" | "dream" | "time" | "light" | "shadow" | "war" | "craft" | "knowledge" | "love" | "trickery" | "hunt" | "plants" | "bone" | "blood" | "sound" | "stone" | "ice" | "madness" | "trade" | "road" | "plague" | "harvest" | "moon" | "sun" | "star" | "lies" | "oath" | "memory" | "hunger" | "glass" | "salt" | "ash" | "border" | "sleep";
+        Done: {
+            ok: boolean;
+            message?: string | null;
+        };
+        DoomApocalypseInput: {
+            calling: boolean;
+        };
+        DoomClockInput: {
+            value: number;
+        };
+        DoomForecastView: {
+            clock: number;
+            threshold: number;
+            speed_pct: number;
+            raw: number;
+            step: number;
+            epochs_left: number | null;
+            parts: components["schemas"]["DoomPart"][];
+        };
+        DoomPart: {
+            key: string;
+            label: string;
+            value: number;
+        };
+        DreamInbox: {
+            entity_id: number;
+            received: components["schemas"]["DreamView"][];
+            sent: components["schemas"]["DreamView"][];
+        };
+        DreamView: {
+            id: number;
+            epoch: number;
+            sender: components["schemas"]["NodeRef"] | null;
+            recipient: components["schemas"]["NodeRef"] | null;
+            text: string;
+            is_read: boolean;
+        };
+        ElevationClass: "mountainous" | "hilly" | "plain" | "water";
+        EmptyPayload: {
+            epoch?: number | null;
+        } & {
+            [key: string]: unknown;
+        };
+        EngineFinishedEvent: {
+            id: number;
+            kind: "engine.finished";
+            payload: components["schemas"]["EngineFinishedPayload"];
+            at: string;
+        };
+        EngineFinishedPayload: {
+            epoch?: number | null;
+            notes: number;
+        } & {
+            [key: string]: unknown;
+        };
+        EngineKind: "war" | "battle" | "siege" | "magic_storm" | "earthquake" | "flood" | "plague" | "drought" | "storm" | "famine" | "uprising" | "migration" | "temple" | "wall" | "library" | "school" | "observatory" | "cosmic_archive" | "wonder" | "rebels" | "merchant_guild" | "priests_council" | "warrior_band" | "interworld_federation" | "wandering_market" | "void_pirates" | "peoples_army" | "holy_guard" | "mercenary_army" | "dialect" | "primitive_language" | "currency" | "eclipse_prophecy" | "cosmic_travel_resource" | "golem" | "chimera" | "descended_soul" | "mirror_birth" | "apprentice" | "comet" | "ascension_myth" | "god_corpse" | "god_shade" | "resurrection_order" | "ghost_ship" | "colony";
+        EngineNoteEvent: {
+            id: number;
+            kind: "engine.note";
+            payload: components["schemas"]["EngineNotePayload"];
+            at: string;
+        };
+        EngineNotePayload: {
+            epoch?: number | null;
+            phase: string;
+            kind: string;
+            template_key?: string | null;
+            text: string;
+            feed?: components["schemas"]["FeedCategory"] | null;
+        } & {
+            [key: string]: unknown;
+        };
+        EnginePhaseEvent: {
+            id: number;
+            kind: "engine.phase";
+            payload: components["schemas"]["EnginePhasePayload"];
+            at: string;
+        };
+        EnginePhaseList: {
+            phases: components["schemas"]["EnginePhaseView"][];
+        };
+        EnginePhasePayload: {
+            epoch?: number | null;
+            phase: string;
+            seconds?: number | null;
+            error?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        EnginePhaseView: {
+            name: string;
+            stage: components["schemas"]["PhaseStage"];
+            enabled: boolean;
+            essential: boolean;
+            heavy: boolean;
+            runnable: boolean;
+            rule_key: string;
+        };
+        EngineRunPhaseInput: {
+            phase: string;
+            replay: boolean;
+        };
+        EngineSeed: {
+            world_seed: number;
+            epoch: number;
+            stream_format: string;
+            phase_streams: string[];
+        };
+        EngineStartedEvent: {
+            id: number;
+            kind: "engine.started";
+            payload: components["schemas"]["EmptyPayload"];
+            at: string;
+        };
+        EntityDeepenedEvent: {
+            id: number;
+            kind: "entity.deepened";
+            payload: components["schemas"]["EntityDeepenedPayload"];
+            at: string;
+        };
+        EntityDeepenedPayload: {
+            epoch?: number | null;
+            entity_id: number;
+            name: string;
+        } & {
+            [key: string]: unknown;
+        };
+        EntityDepth: {
+            history: string;
+            rumours: string[];
+            sayings: components["schemas"]["Saying"][];
+            details: string[];
+            hidden_truth: string;
+            specifics?: {
+                [key: string]: string;
+            };
+            epoch: number;
+        };
+        EntityDetail: {
+            entity: components["schemas"]["EntityRecord"];
+            cover: string | null;
+            creator_son: components["schemas"]["NodeRef"] | null;
+            maker: components["schemas"]["NodeRef"] | null;
+            patron: components["schemas"]["NodeRef"] | null;
+            breadcrumb: components["schemas"]["NodeRef"][];
+            contents: components["schemas"]["EntitySummary"][];
+            content_total: number;
+            flags: components["schemas"]["EntityFlag"][];
+            traits: components["schemas"]["CreatureTrait"][];
+            tags: string[];
+            bonds: components["schemas"]["BondView"][];
+            bond_total: number;
+            chronicle: components["schemas"]["ChronicleLineRecord"][];
+            chronicle_total: number;
+            facts: components["schemas"]["FactView"][];
+            perspectives: components["schemas"]["Perspective"][];
+            similar: components["schemas"]["SimilarRecord"][];
+            anchored_sons: components["schemas"]["NodeRef"][];
+            importance: components["schemas"]["Importance"] | null;
+            images: components["schemas"]["ImageRecord"][];
+            insight: components["schemas"]["EntityInsight"];
+        };
+        EntityFlag: "disaster" | "lost" | "dead_language" | "decipherable" | "previous_creation" | "ruin" | "rebuilt" | "remnant" | "void" | "cursed" | "godless" | "seeking_god" | "empire" | "federation" | "independent" | "colony" | "pioneer" | "golden_age" | "immortal" | "chimera" | "mutation" | "mutant" | "mutated" | "discovery" | "native" | "revelation" | "soul_descended" | "soul_bound" | "soul_harvester" | "crossed_to_the_dead" | "wonder" | "chosen" | "manifested" | "born_of_belief" | "corrupted_memory" | "fairy_tale" | "name_from_language" | "species_became_people" | "original_resource" | "cosmic_monopoly" | "outer_cult" | "whisper_source" | "nameless" | "escaped" | "megafauna" | "invasive" | "worships_planet" | "planet_closed" | "burned" | "cosmic_plague" | "mirror" | "mirror_born" | "oathbreaker" | "exile" | "omen" | "time_echo" | "two_timed" | "empty_tomb" | "resurrection_complete" | "protected_from_disaster" | "mechanics_weighed" | "depleting" | "syncretic" | "returned_to_old_god" | "revived_language" | "on_watch" | "mocked" | "protected_from_ruin" | "spared_soul" | "ghost" | "wizard" | "age_changer" | "time_returned" | "legendary" | "prophet" | "bloodline_curse" | "essence_drained" | "returned_from_death" | "saw_the_creator" | "deified" | "protected" | "depleted" | "agent_selected" | "capital" | "abandoned" | "dissolved" | "desolate" | "razed" | "fell_in_battle" | "died_in_siege" | "died_in_disaster" | "died_of_plague" | "slain_in_captivity" | "doomed" | "fate_shielded" | "commemoration" | "estranged_by_plague" | "endangered" | "extinct" | "pilgrimage_site" | "repealed" | "merged" | "disbanded" | "assimilated" | "forgotten" | "swallowed";
+        EntityInsight: {
+            society?: components["schemas"]["SocietyInsight"] | null;
+            life?: components["schemas"]["LifeInsight"] | null;
+            capacity?: components["schemas"]["CapacityInsight"] | null;
+            exploration?: components["schemas"]["ExplorationInsight"] | null;
+            knowledge?: components["schemas"]["KnowledgeInsight"] | null;
+            resource?: components["schemas"]["ResourceInsight"] | null;
+            faith?: components["schemas"]["FaithInsight"] | null;
+            reward?: components["schemas"]["RewardInsight"] | null;
+            ancestors?: components["schemas"]["NodeRef"][];
+            descendants?: components["schemas"]["NodeRef"][];
+        };
+        EntityNoteRecord: {
+            entity_id: number;
+            entity_name: string;
+            entity_type: components["schemas"]["EntityType"];
+            world_id: number;
+            text: string;
+        };
+        EntityOrigin: "son" | "creator" | "engine" | "mortal" | "cosmos";
+        EntityRecord: {
+            id: number;
+            name: string;
+            title: string | null;
+            entity_type: components["schemas"]["EntityType"];
+            subtype: string | null;
+            status: components["schemas"]["EntityStatus"];
+            world_id: number;
+            location_id: number | null;
+            power_level: number;
+            birth_epoch: number;
+            end_epoch: number | null;
+            importance: number | null;
+            favorite: boolean;
+            pending_name: boolean;
+            description: string;
+            stats: components["schemas"]["RegionStats"] | components["schemas"]["PlaceStats"] | components["schemas"]["ResourceStats"] | components["schemas"]["SettlementStats"] | components["schemas"]["SpeciesStats"] | components["schemas"]["PeopleStats"] | components["schemas"]["MortalStats"] | components["schemas"]["ItemStats"] | components["schemas"]["StructureStats"] | components["schemas"]["LanguageStats"] | components["schemas"]["LegendStats"] | components["schemas"]["TraditionStats"] | components["schemas"]["CultStats"] | components["schemas"]["FactionStats"] | components["schemas"]["CelestialStats"] | components["schemas"]["ArtworkStats"] | components["schemas"]["LawStats"] | components["schemas"]["SpiritStats"] | components["schemas"]["KnowledgeStats"] | components["schemas"]["ProphecyStats"] | components["schemas"]["EventStats"] | components["schemas"]["VesselStats"] | components["schemas"]["OuterBeingStats"] | components["schemas"]["ArmyStats"] | components["schemas"]["NaturalLawStats"];
+            domain: components["schemas"]["Domain"] | null;
+            origin: components["schemas"]["EntityOrigin"];
+            creator_son_id: number | null;
+            maker_entity_id: number | null;
+            mortal_role: components["schemas"]["MortalRole"] | null;
+            legend_category: components["schemas"]["LegendCategory"] | null;
+            fate_note: string | null;
+            depth: components["schemas"]["EntityDepth"] | null;
+            archive_override: components["schemas"]["ArchiveOverride"] | null;
+            private_note: string | null;
+            map_x: number | null;
+            map_y: number | null;
+            image_prompt: string | null;
+            civ_tier: number | null;
+            sanity: number | null;
+            last_acted_epoch: number;
+            is_underworld: boolean;
+            is_water: boolean;
+        };
+        EntityStatus: "canon" | "rejected" | "destroyed" | "dead" | "fulfilled";
+        EntitySummary: {
+            id: number;
+            name: string;
+            title: string | null;
+            entity_type: components["schemas"]["EntityType"];
+            subtype: string | null;
+            status: components["schemas"]["EntityStatus"];
+            world_id: number;
+            location_id: number | null;
+            power_level: number;
+            birth_epoch: number;
+            end_epoch: number | null;
+            importance: number | null;
+            favorite: boolean;
+            pending_name: boolean;
+        };
+        EntityType: "region" | "place" | "resource" | "settlement" | "species" | "people" | "mortal" | "item" | "structure" | "language" | "legend" | "tradition" | "cult" | "faction" | "celestial" | "artwork" | "law" | "spirit" | "knowledge" | "prophecy" | "event" | "vessel" | "outer_being" | "army" | "natural_law";
+        EntityTypeInfo: {
+            key: string;
+            label: string;
+            plural: string;
+            containers: components["schemas"]["EntityType"][];
+            location_required: boolean;
+            stats: string[];
+        };
+        EnumCatalogue: {
+            event_kinds: components["schemas"]["EventKind"][];
+            job_statuses: components["schemas"]["JobStatus"][];
+            job_kinds: components["schemas"]["JobKind"][];
+            rarities: components["schemas"]["Rarity"][];
+            entity_types: components["schemas"]["EntityType"][];
+            entity_statuses: components["schemas"]["EntityStatus"][];
+            entity_flags: components["schemas"]["EntityFlag"][];
+            chronicle_kinds: components["schemas"]["ChronicleKind"][];
+            action_kinds: components["schemas"]["ActionKind"][];
+            action_groups: components["schemas"]["ActionGroup"][];
+            action_modes: components["schemas"]["ActionMode"][];
+            node_kinds: components["schemas"]["NodeKind"][];
+            actor_kinds: components["schemas"]["ActorKind"][];
+            bond_kinds: components["schemas"]["BondKind"][];
+            bond_states: components["schemas"]["BondState"][];
+            notification_categories: components["schemas"]["NotificationCategory"][];
+            thread_statuses: components["schemas"]["ThreadStatus"][];
+            son_statuses: components["schemas"]["SonStatus"][];
+            stats: components["schemas"]["Stat"][];
+            domains: components["schemas"]["Domain"][];
+            world_types: components["schemas"]["WorldType"][];
+            star_types: components["schemas"]["StarType"][];
+            discoveries: components["schemas"]["Discovery"][];
+            climate_eras: components["schemas"]["ClimateEra"][];
+            sky_events: components["schemas"]["SkyEventKind"][];
+            travel_methods: components["schemas"]["TravelMethod"][];
+            journey_statuses: components["schemas"]["JourneyStatus"][];
+            foreign_god_statuses: components["schemas"]["ForeignGodStatus"][];
+            interventions: components["schemas"]["InterventionKind"][];
+            miracles: components["schemas"]["Miracle"][];
+            disasters: components["schemas"]["Disaster"][];
+            passions: components["schemas"]["CreatorPassion"][];
+            mood_labels: components["schemas"]["CreatorMoodLabel"][];
+            fate_modes: components["schemas"]["FateMode"][];
+            son_distributions: components["schemas"]["SonDistribution"][];
+            lore_languages: components["schemas"]["LoreLanguage"][];
+            error_codes: components["schemas"]["ErrorCode"][];
+        };
+        Epic: {
+            title: string;
+            verse: string;
+            body: string;
+            chapters: components["schemas"]["EpicChapter"][];
+            epoch: number;
+        };
+        EpicChapter: {
+            title: string;
+            text: string;
+            epoch_start: number;
+            epoch_end: number;
+        };
+        EpicPayload: {
+            epoch?: number | null;
+            son_id?: number | null;
+            creator: boolean;
+            title: string;
+        } & {
+            [key: string]: unknown;
+        };
+        EpicWrittenEvent: {
+            id: number;
+            kind: "epic.written";
+            payload: components["schemas"]["EpicPayload"];
+            at: string;
+        };
+        EpochBackupEvent: {
+            id: number;
+            kind: "epoch.backup";
+            payload: components["schemas"]["FilePayload"];
+            at: string;
+        };
+        EpochBreakdown: {
+            epoch: number;
+            current: components["schemas"]["EpochStatsData"] | null;
+            previous: components["schemas"]["EpochStatsData"] | null;
+            deltas?: {
+                [key: string]: number;
+            };
+            sons?: components["schemas"]["SonDelta"][];
+        };
+        EpochCount: {
+            epoch: number;
+            entries: number;
+            undone: number;
+        };
+        EpochEditInput: {
+            epoch: number;
+            name?: string | null;
+            narrative?: string | null;
+        };
+        EpochEstimate: {
+            samples: number;
+            average_epoch_seconds: number | null;
+            average_phase_start_seconds?: {
+                [key: string]: number;
+            };
+            running: boolean;
+            elapsed_seconds?: number | null;
+            remaining_seconds?: number | null;
+            phase?: number | null;
+            overrun: boolean;
+        };
+        EpochFinishedEvent: {
+            id: number;
+            kind: "epoch.finished";
+            payload: components["schemas"]["EpochFinishedPayload"];
+            at: string;
+        };
+        EpochFinishedPayload: {
+            epoch?: number | null;
+            new_epoch: number;
+            summary?: {
+                [key: string]: unknown;
+            };
+            duration_s: number;
+        } & {
+            [key: string]: unknown;
+        };
+        EpochListItem: {
+            epoch: number;
+            name: string | null;
+            narrative: string | null;
+            summary: string | null;
+            year_start: number | null;
+            year_end: number | null;
+            closed_at: string | null;
+            chronicler_name: string | null;
+            chronicler_identity: string | null;
+            audit?: components["schemas"]["ChronicleAuditReport"] | null;
+            worlds?: components["schemas"]["WorldNarrative"][];
+        };
+        EpochMetrics: {
+            epoch: number;
+            calls: number;
+            milliseconds: number;
+            input_tokens: number;
+            output_tokens: number;
+            cost: number;
+            errors: number;
+            retried: number;
+            slow: number;
+        };
+        EpochProgressEvent: {
+            id: number;
+            kind: "epoch.progress";
+            payload: components["schemas"]["EpochProgressPayload"];
+            at: string;
+        };
+        EpochProgressPayload: {
+            epoch?: number | null;
+            no: number;
+            total: number;
+            name: string;
+            elapsed_s: number;
+        } & {
+            [key: string]: unknown;
+        };
+        EpochRecord: {
+            epoch: number;
+            name: string | null;
+            narrative: string | null;
+            summary: string | null;
+            year_start: number | null;
+            year_end: number | null;
+            closed_at: string | null;
+            chronicler_name: string | null;
+            chronicler_identity: string | null;
+            audit?: components["schemas"]["ChronicleAuditReport"] | null;
+        };
+        EpochResumedEvent: {
+            id: number;
+            kind: "epoch.resumed";
+            payload: components["schemas"]["EpochResumedPayload"];
+            at: string;
+        };
+        EpochResumedPayload: {
+            epoch?: number | null;
+            phase: number;
+        } & {
+            [key: string]: unknown;
+        };
+        EpochStarEntry: {
+            epoch: number;
+            entity_id: number | null;
+            name: string | null;
+            text: string;
+        };
+        EpochStarView: {
+            current: components["schemas"]["EpochStarWorld"][];
+            history: components["schemas"]["EpochStarEntry"][];
+        };
+        EpochStarWorld: {
+            world_id: number;
+            world_name: string;
+            star: components["schemas"]["EntitySummary"] | null;
+        };
+        EpochStartedEvent: {
+            id: number;
+            kind: "epoch.started";
+            payload: components["schemas"]["EpochStartedPayload"];
+            at: string;
+        };
+        EpochStartedPayload: {
+            epoch?: number | null;
+            order?: components["schemas"]["TurnOrderItem"][];
+            resuming: boolean;
+        } & {
+            [key: string]: unknown;
+        };
+        EpochStatistics: {
+            epoch: number;
+            data: components["schemas"]["EpochStatsData"];
+            live: boolean;
+        };
+        EpochStatsData: {
+            population: number;
+            followers: number;
+            entities: number;
+            words: number;
+            knowledge: number;
+            languages: number;
+            wars: number;
+            trade_routes: number;
+            alliances: number;
+            structures: number;
+            items: number;
+            dead: number;
+            godless: number;
+            doom: number;
+            sons?: {
+                [key: string]: components["schemas"]["SonEpochStats"];
+            };
+            doom_items: components["schemas"]["LedgerItem"][];
+            leak_items?: {
+                [key: string]: components["schemas"]["LedgerItem"][];
+            };
+            population_items: components["schemas"]["LedgerItem"][];
+            essence_items: components["schemas"]["LedgerItem"][];
+        };
+        EpochStepKind: "completion" | "backup" | "distribution" | "naming" | "fate_judgment" | "chronicle" | "voices" | "council" | "epoch_words" | "local_gods" | "transition" | "horizon_intuitions" | "world_birth" | "network_repair" | "prune" | "images" | "localisation" | "background";
+        EpochStepStatus: "pending" | "running" | "done" | "failed" | "skipped";
+        EpochStopRequestedEvent: {
+            id: number;
+            kind: "epoch.stop_requested";
+            payload: components["schemas"]["EmptyPayload"];
+            at: string;
+        };
+        EpochStoppedEvent: {
+            id: number;
+            kind: "epoch.stopped";
+            payload: components["schemas"]["EpochStoppedPayload"];
+            at: string;
+        };
+        EpochStoppedPayload: {
+            epoch?: number | null;
+            phase: number;
+        } & {
+            [key: string]: unknown;
+        };
+        ErrorCode: "invalid" | "not_found" | "conflict" | "busy" | "read_only" | "insufficient" | "forbidden" | "too_large" | "unavailable" | "internal";
+        ErrorPayload: {
+            epoch?: number | null;
+            text: string;
+            will_retry: boolean;
+            son_id?: number | null;
+        } & {
+            [key: string]: unknown;
+        };
+        EssencePourInput: {
+            amount: number;
+        };
+        EventKind: "job.queued" | "job.started" | "job.progress" | "job.finished" | "job.failed" | "job.cancelled" | "world.changed" | "rules.changed" | "engine.note" | "engine.phase" | "system.note" | "system.error" | "agent.retry" | "epoch.started" | "epoch.resumed" | "epoch.progress" | "epoch.stop_requested" | "epoch.stopped" | "epoch.finished" | "epoch.backup" | "son.distributed" | "son.turn_queued" | "son.turn_started" | "son.turn_finished" | "mortals.started" | "mortal.turn_started" | "mortal.turn_finished" | "engine.started" | "engine.finished" | "fate.started" | "fate.step" | "fate.finished" | "council.held" | "son.chat_replied" | "son.new" | "son.ascended" | "creator.revelation" | "world.born" | "genesis.finished" | "entity.deepened" | "foreign_god.deepened" | "epic.written" | "network.repaired" | "language.translated" | "notification.created" | "world.changes" | "world.replaced" | "ledger.undone" | "backup.taken" | "image.queued" | "image.progress" | "image.done" | "image.failed" | "image.status" | "image.bulk_log" | "batch_deepen.log" | "stream.hello" | "agent.stream" | "agent.thought" | "agent.tool_preparing" | "agent.tool_writing" | "agent.tool_called" | "agent.tool_result" | "agent.writing";
+        EventMarker: {
+            id: number;
+            name: string;
+            entity_type: components["schemas"]["EntityType"];
+            subtype: string | null;
+            location_id: number;
+            epoch: number;
+            kind: components["schemas"]["MarkerKind"];
+        };
+        EventPayload: {
+            epoch?: number | null;
+        } & {
+            [key: string]: unknown;
+        };
+        EventStats: {
+            kind: "event";
+            severity?: number | null;
+        };
+        ExistenceBand: "radiant" | "solid" | "faded" | "being_forgotten";
+        ExistenceMode: "concrete" | "semi_concrete" | "conceptual" | "reflection" | "scattered";
+        ExistenceProfile: {
+            nature: string;
+            mode?: components["schemas"]["ExistenceMode"] | null;
+            manifestation: string;
+            true_name: string;
+        };
+        ExplorationInsight: {
+            regions: number;
+            places: number;
+            communities: number;
+            pressure: number;
+            narrow: boolean;
+        };
+        FactView: {
+            id: number;
+            subject: components["schemas"]["NodeRef"] | null;
+            predicate: string;
+            object: components["schemas"]["NodeRef"] | null;
+            object_text: string | null;
+            epoch: number;
+        };
+        FactionDissolveInput: {
+            faction_id: number;
+        };
+        FactionFoundInput: {
+            community_id: number;
+            kind: components["schemas"]["FactionKind"];
+        };
+        FactionKind: "guild" | "council" | "brotherhood";
+        FactionSpyInput: {
+            spymaster_id: number;
+            target_id: number;
+            operation: components["schemas"]["SpyOperation"];
+        };
+        FactionStats: {
+            kind: "faction";
+            strength?: number | null;
+            wealth?: number | null;
+            sway?: number | null;
+        };
+        FadingSon: {
+            name: string;
+            existence: number;
+        };
+        FaithFirstInput: {
+            entity_id: number;
+            source_id?: number | null;
+        };
+        FaithInsight: {
+            revered: components["schemas"]["NodeRef"][];
+            syncretic: boolean;
+        };
+        FaithSyncretizeInput: {
+            entity_id: number;
+            god_id: number;
+        };
+        FateControlsView: {
+            last_epoch: number | null;
+            fate_debt_epoch: number | null;
+            limbo: components["schemas"]["LimboRecord"][];
+            steps: components["schemas"]["StepState"][];
+            failed_births: number;
+            views: components["schemas"]["HistorianViewItem"][];
+        };
+        FateFinishedEvent: {
+            id: number;
+            kind: "fate.finished";
+            payload: components["schemas"]["FateFinishedPayload"];
+            at: string;
+        };
+        FateFinishedPayload: {
+            epoch?: number | null;
+            rejected?: unknown[];
+            corrected?: unknown[];
+            fate_debt?: boolean | null;
+        } & {
+            [key: string]: unknown;
+        };
+        FateLinkRequest: {
+            related: boolean;
+            full: boolean;
+            entity_ids?: number[];
+        };
+        FateMode: "auto" | "off";
+        FateOverrideVerdictInput: {
+            entity_id: number;
+            choice: components["schemas"]["VerdictChoice"];
+            rationale?: string | null;
+        };
+        FateStartedEvent: {
+            id: number;
+            kind: "fate.started";
+            payload: components["schemas"]["EmptyPayload"];
+            at: string;
+        };
+        FateStepEvent: {
+            id: number;
+            kind: "fate.step";
+            payload: components["schemas"]["TextPayload"];
+            at: string;
+        };
+        FateWrit: "doom" | "shield" | "clear";
+        FavoriteBoard: {
+            favorites: components["schemas"]["FavoriteCard"][];
+            suggestions: components["schemas"]["FavoriteCard"][];
+        };
+        FavoriteCard: {
+            entity: components["schemas"]["EntitySummary"];
+            cover: string | null;
+        };
+        FeedCategory: "voyage" | "gate" | "leak" | "war" | "disaster" | "sky" | "life" | "civilization" | "world";
+        FilePayload: {
+            epoch?: number | null;
+            file: string;
+            label?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        FirstSonsOptions: {
+            minimum: number;
+            maximum: number;
+            rarities: components["schemas"]["Rarity"][];
+            default: components["schemas"]["Rarity"][];
+        };
+        FolkView: {
+            people_id: number;
+            people_name: string;
+            god_node_id: number;
+            local_name: string | null;
+            account: string;
+            misconception: string | null;
+            epoch: number;
+        };
+        ForeignDepth: {
+            history?: string | null;
+            desire?: string | null;
+            hidden_truth?: string | null;
+            view_of_pantheon?: string | null;
+            worship?: string | null;
+            secrets?: string[] | null;
+            fears?: string[] | null;
+            taboos?: string[] | null;
+            gifts?: string[] | null;
+            rumours?: string[] | null;
+        };
+        ForeignExistence: {
+            mode?: components["schemas"]["ExistenceMode"] | null;
+            nature?: string | null;
+            manifestation?: string | null;
+            true_name?: string | null;
+        };
+        ForeignGodDeepenedEvent: {
+            id: number;
+            kind: "foreign_god.deepened";
+            payload: components["schemas"]["ForeignGodDeepenedPayload"];
+            at: string;
+        };
+        ForeignGodDeepenedPayload: {
+            epoch?: number | null;
+            id: number;
+            name: string;
+        } & {
+            [key: string]: unknown;
+        };
+        ForeignGodDetail: {
+            god: components["schemas"]["ForeignGodRecord"];
+            powers: components["schemas"]["ForeignGodPower"][];
+            kill_cost: number;
+            deathless: boolean;
+            deathless_caption: string | null;
+            drain_amount: number;
+            drain_gain: number;
+            world: components["schemas"]["WorldRecord"] | null;
+            worshippers: components["schemas"]["ForeignGodWorshipper"][];
+            bonds: components["schemas"]["BondView"][];
+            bond_total: number;
+            chronicle: components["schemas"]["ChronicleLineRecord"][];
+            sons_here: components["schemas"]["NodeRef"][];
+            images: components["schemas"]["ImageRecord"][];
+            cover: string | null;
+        };
+        ForeignGodPower: {
+            slot: number;
+            name: string;
+            effect: string;
+            description: string;
+        };
+        ForeignGodPowerEffect: "shield" | "caller" | "thief" | "destroyer" | "fertile" | "reviving" | "deathless" | "sharp_tongued";
+        ForeignGodRaidTempleInput: {
+            god_id: number;
+            temple_id: number;
+        };
+        ForeignGodRaiseLandInput: {
+            god_id: number;
+        };
+        ForeignGodRecord: {
+            id: number;
+            name: string;
+            title: string | null;
+            domain_primary: components["schemas"]["Domain"];
+            domain_secondary: components["schemas"]["Domain"] | null;
+            world_id: number;
+            power: number;
+            faith: number;
+            stance: number;
+            status: components["schemas"]["ForeignGodStatus"];
+            contacted: boolean;
+            description: string | null;
+            image_prompt: string | null;
+            strength: number;
+            endurance: number;
+            agility: number;
+            wisdom: number;
+            cunning: number;
+            will: number;
+            creativity: number;
+            charisma: number;
+            might: number;
+            sanity: number | null;
+            personality: components["schemas"]["Personality"] | null;
+            existence_profile: components["schemas"]["ExistenceProfile"] | null;
+            depth: components["schemas"]["GodDepth"] | null;
+            awakening_pressure: number;
+            awakening_average: number | null;
+            created_epoch: number;
+            defeated_epoch: number | null;
+            death_epoch: number | null;
+            cover?: string | null;
+        };
+        ForeignGodStatus: "awake" | "asleep" | "defeated" | "dead";
+        ForeignGodStrikeInput: {
+            god_id: number;
+            entity_id: number;
+        };
+        ForeignGodWakeInput: {
+            god_id: number;
+        };
+        ForeignGodWorshipper: {
+            entity: components["schemas"]["EntitySummary"];
+            cover: string | null;
+        };
+        ForeignPower: {
+            name: string;
+            effect: components["schemas"]["ForeignGodPowerEffect"];
+            description: string;
+        };
+        GenerateRequest: {
+            node_id: number;
+        };
+        GenesisFinishedEvent: {
+            id: number;
+            kind: "genesis.finished";
+            payload: components["schemas"]["GenesisPayload"];
+            at: string;
+        };
+        GenesisPayload: {
+            epoch?: number | null;
+            world_id?: number | null;
+        } & {
+            [key: string]: unknown;
+        };
+        GenesisRequest: {
+            creator_name: string;
+            seed: string;
+            tone?: string | null;
+            lore_language: components["schemas"]["LoreLanguage"];
+            wizard?: components["schemas"]["WizardInput"] | null;
+            first_sons?: components["schemas"]["Rarity"][] | null;
+        };
+        GenesisSettings: {
+            template?: components["schemas"]["GenesisTemplate"] | null;
+            magic: number;
+            darkness: number;
+            technology: components["schemas"]["TechnologyEra"];
+            language_texture: components["schemas"]["LanguageTexture"];
+            peoples: number;
+            cosmos_size: components["schemas"]["CosmosSize"];
+            tone?: string | null;
+            seed_idea?: string | null;
+        };
+        GenesisTemplate: "dark_fantasy" | "mythic_age" | "cosmic_horror" | "fairy_tale" | "star_myth" | "sand_and_ash" | "primordial_dawn" | "crowns_and_knives" | "drowned_world" | "long_winter" | "after_the_fall" | "sky_islands" | "age_of_engines";
+        GeographyPreview: {
+            world_id: number;
+            text: string;
+        };
+        GoalsOverview: {
+            scenarios: components["schemas"]["ScenarioView"][];
+            running: components["schemas"]["RunningScenario"][];
+            achievements: components["schemas"]["AchievementView"][];
+            score: components["schemas"]["ScoreBreakdown"];
+            score_history: [
+                number,
+                number
+            ][];
+        };
+        GodDepth: {
+            history: string;
+            names: components["schemas"]["GodName"][];
+            secrets: string[];
+            fears: string[];
+            taboos: string[];
+            gifts: string[];
+            desire: string;
+            sayings: components["schemas"]["Saying"][];
+            rumours: string[];
+            hidden_truth: string;
+            view_of_pantheon: string;
+            worship: string;
+            epoch: number;
+        };
+        GodLine: {
+            id: number;
+            name: string;
+            title: string | null;
+            status: string;
+            attitude: number;
+        };
+        GodName: {
+            name: string;
+            used_by: string;
+            meaning: string;
+        };
+        GraphLink: {
+            source: number;
+            target: number;
+            kind: components["schemas"]["BondKind"];
+            epoch: number;
+            past: boolean;
+        };
+        GraphNode: {
+            id: number;
+            kind: components["schemas"]["NodeKind"];
+            name: string;
+            type: string;
+            size: number;
+            epoch: number;
+            status: string;
+            creator_son_id?: number | null;
+            location_id?: number | null;
+            world_id?: number | null;
+        };
+        GraphWindow: {
+            nodes: components["schemas"]["GraphNode"][];
+            links: components["schemas"]["GraphLink"][];
+            node_total: number;
+            link_total: number;
+            node_offset: number;
+            link_offset: number;
+        };
+        Gravity: "low" | "normal" | "high";
+        GreatExpedition: {
+            thread_id: number;
+            kind: components["schemas"]["LegendaryQuestKind"];
+            name: string;
+            text: string;
+            declared_by: components["schemas"]["ActorKind"];
+            opened_epoch: number;
+            deadline_epoch: number;
+            epochs_remaining: number;
+            thread_status: components["schemas"]["ThreadStatus"];
+            outcome: components["schemas"]["LegendaryQuestOutcome"] | null;
+            target_star_id: number | null;
+            target_route_id: number | null;
+            target_entity_id: number | null;
+        };
+        GuestWorld: {
+            name: string;
+            epoch: number | null;
+            creator: string | null;
+            date: string | null;
+        };
+        HTTPValidationError: {
+            detail?: components["schemas"]["ValidationError"][];
+        };
+        HalfEpochState: {
+            epoch: number;
+            phase: number;
+            started: boolean;
+        };
+        HealthReport: {
+            status: string;
+            version: string;
+            uptime_seconds: number;
+            database: components["schemas"]["DatabaseHealth"];
+            latest_backup: string | null;
+            latest_backup_age_minutes: number | null;
+            backup_count: number;
+            running_jobs: number;
+            read_only: boolean;
+            log_file: string;
+            recent_errors?: components["schemas"]["LogEntry"][];
+        };
+        HealthReportResponse: {
+            report: components["schemas"]["HealthReport"];
+        };
+        HealthResponse: {
+            status: string;
+            version: string;
+            database_ok: boolean;
+            llm_enabled: boolean;
+            claude_auth: components["schemas"]["ClaudeAuth"];
+            image_worker_configured: boolean;
+            running_jobs: number;
+        };
+        HeroApprenticeInput: {
+            hero_id: number;
+        };
+        HeroHuntInput: {
+            hero_id: number;
+            monster_id: number;
+        };
+        HeroQuestInput: {
+            hero_id: number;
+            kind?: components["schemas"]["HeroQuestKind"] | null;
+            target_id?: number | null;
+        };
+        HeroQuestKind: "hunt" | "thread" | "relic" | "knowledge" | "vengeance";
+        HeroRaiseInput: {
+            community_id: number;
+        };
+        HeroRecallInput: {
+            hero_id: number;
+        };
+        HeroResolveInput: {
+            hero_id: number;
+            succeed?: boolean | null;
+        };
+        HeroView: {
+            hero: components["schemas"]["NodeRef"];
+            role: components["schemas"]["MortalRole"] | null;
+            entity_type: components["schemas"]["EntityType"];
+            power: number | null;
+        };
+        HistorianViewItem: {
+            id: number;
+            people_entity_id: number;
+            historian: string | null;
+            text: string;
+        };
+        HorizonStatus: "pending" | "processing" | "born" | "wasted";
+        HorrorCultInput: {
+            entity_id: number;
+        };
+        HorrorEventInput: {
+            world_id: number;
+            kind: components["schemas"]["HorrorEventKind"];
+        };
+        HorrorEventKind: "stars_align" | "eye_in_the_sky" | "wave_of_silence" | "reverse_rain" | "visit_of_the_void";
+        HorrorOuterBeingInput: {
+            world_id: number;
+        };
+        HorrorSuppressCultInput: {
+            cult_id: number;
+        };
+        ImageBulkLogEvent: {
+            id: number;
+            kind: "image.bulk_log";
+            payload: components["schemas"]["BulkLogPayload"];
+            at: string;
+        };
+        ImageClass: "manual" | "bulk" | "auto";
+        ImageDoneEvent: {
+            id: number;
+            kind: "image.done";
+            payload: components["schemas"]["ImageDonePayload"];
+            at: string;
+        };
+        ImageDonePayload: {
+            epoch?: number | null;
+            node_id: number;
+            image_id: number;
+            file: string;
+            cover: boolean;
+        } & {
+            [key: string]: unknown;
+        };
+        ImageFailedEvent: {
+            id: number;
+            kind: "image.failed";
+            payload: components["schemas"]["ImageFailedPayload"];
+            at: string;
+        };
+        ImageFailedPayload: {
+            epoch?: number | null;
+            node_id: number;
+            error: string;
+        } & {
+            [key: string]: unknown;
+        };
+        ImageGenStatus: {
+            status: components["schemas"]["QueueStatus"];
+            missing: number;
+        };
+        ImageListView: {
+            image: components["schemas"]["ImageRecord"];
+            target_name: string | null;
+            target_kind: components["schemas"]["NodeKind"] | null;
+            target_world_id: number | null;
+            target_type: components["schemas"]["EntityType"] | null;
+            target_importance: number | null;
+        };
+        ImageMime: "image/png" | "image/jpeg" | "image/webp";
+        ImageOrigin: "generated" | "uploaded";
+        ImageProgressEvent: {
+            id: number;
+            kind: "image.progress";
+            payload: components["schemas"]["ImageProgressPayload"];
+            at: string;
+        };
+        ImageProgressPayload: {
+            epoch?: number | null;
+            node_id: number;
+            stage: string;
+            percent: number;
+            step?: number | null;
+        } & {
+            [key: string]: unknown;
+        };
+        ImageQueuedEvent: {
+            id: number;
+            kind: "image.queued";
+            payload: components["schemas"]["ImageQueuedPayload"];
+            at: string;
+        };
+        ImageQueuedPayload: {
+            epoch?: number | null;
+            node_id: number;
+            position: number;
+        } & {
+            [key: string]: unknown;
+        };
+        ImageRecord: {
+            id: number;
+            target_node_id: number;
+            file_name: string;
+            mime: components["schemas"]["ImageMime"];
+            sha256: string;
+            origin: components["schemas"]["ImageOrigin"];
+            caption: string | null;
+            prompt: string | null;
+            is_cover: boolean;
+            size_bytes: number;
+            width: number | null;
+            height: number | null;
+            created_at: string;
+            readonly content_type: string;
+        };
+        ImageStatusEvent: {
+            id: number;
+            kind: "image.status";
+            payload: components["schemas"]["EmptyPayload"];
+            at: string;
+        };
+        ImportMode: "replace" | "merge" | "discovery";
+        ImportResult: {
+            mode: components["schemas"]["ImportMode"];
+            world: components["schemas"]["PackageMeta"];
+            safety_backup: string | null;
+            merge?: components["schemas"]["MergeSummary"] | null;
+        };
+        Importance: {
+            importance: number;
+            archived: boolean;
+            reason: string | null;
+            last_mention: number;
+        };
+        IntegrityResult: {
+            task: components["schemas"]["IntegrityTask"];
+            counters: {
+                [key: string]: number;
+            };
+            message: string;
+        };
+        IntegrityTask: "dead_bonds" | "checkpoint";
+        IntegrityTaskList: {
+            tasks: components["schemas"]["IntegrityTaskView"][];
+        };
+        IntegrityTaskView: {
+            task: components["schemas"]["IntegrityTask"];
+            title: string;
+            description: string;
+            changes_world: boolean;
+        };
+        InterventionKind: "miracle" | "disaster" | "teach_knowledge" | "curse";
+        IntuitionDiscardInput: {
+            intuition_id: number;
+        };
+        ItemStats: {
+            kind: "item";
+            damage?: number | null;
+            protection?: number | null;
+            might?: number | null;
+            curse?: number | null;
+        };
+        JobAccepted: {
+            job_id: string;
+        };
+        JobCancelledEvent: {
+            id: number;
+            kind: "job.cancelled";
+            payload: components["schemas"]["JobPayload"];
+            at: string;
+        };
+        JobFailedEvent: {
+            id: number;
+            kind: "job.failed";
+            payload: components["schemas"]["JobFailedPayload"];
+            at: string;
+        };
+        JobFailedPayload: {
+            epoch?: number | null;
+            job_id: string;
+            kind: components["schemas"]["JobKind"];
+            error: string;
+        } & {
+            [key: string]: unknown;
+        };
+        JobFinishedEvent: {
+            id: number;
+            kind: "job.finished";
+            payload: components["schemas"]["JobFinishedPayload"];
+            at: string;
+        };
+        JobFinishedPayload: {
+            epoch?: number | null;
+            job_id: string;
+            kind: components["schemas"]["JobKind"];
+            result?: {
+                [key: string]: unknown;
+            } | null;
+        } & {
+            [key: string]: unknown;
+        };
+        JobItem: {
+            node_id: number;
+            node_kind: string;
+            name: string;
+            entity_type?: string | null;
+            action: string;
+            note?: string | null;
+            other_id?: number | null;
+            other_kind?: string | null;
+            other_name?: string | null;
+        };
+        JobKind: "epoch" | "genesis" | "deepen" | "summon" | "image" | "backup" | "book" | "import" | "simulation" | "son_turn" | "naming" | "completion" | "revelation" | "world_creation" | "awakening" | "content" | "maintenance" | "retry";
+        JobPayload: {
+            epoch?: number | null;
+            job_id: string;
+            kind: components["schemas"]["JobKind"];
+        } & {
+            [key: string]: unknown;
+        };
+        JobProgressEvent: {
+            id: number;
+            kind: "job.progress";
+            payload: components["schemas"]["JobProgressPayload"];
+            at: string;
+        };
+        JobProgressPayload: {
+            epoch?: number | null;
+            job_id: string;
+            kind: components["schemas"]["JobKind"];
+            progress: number;
+            stage?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        JobQueuedEvent: {
+            id: number;
+            kind: "job.queued";
+            payload: components["schemas"]["JobPayload"];
+            at: string;
+        };
+        JobResponse: {
+            id: string;
+            kind: string;
+            status: string;
+            progress: number;
+            stage: string | null;
+            params: {
+                [key: string]: unknown;
+            };
+            result: {
+                [key: string]: unknown;
+            } | null;
+            error: string | null;
+            created_at: string;
+            started_at: string | null;
+            finished_at: string | null;
+            readonly label: string | null;
+            readonly items: components["schemas"]["JobItem"][];
+        };
+        JobStartedEvent: {
+            id: number;
+            kind: "job.started";
+            payload: components["schemas"]["JobPayload"];
+            at: string;
+        };
+        JobStatus: "queued" | "running" | "succeeded" | "failed" | "cancelled" | "interrupted";
+        JourneyEvent: {
+            epoch: number;
+            kind: components["schemas"]["JourneyEventKind"];
+            text: string;
+            loss: number;
+        };
+        JourneyEventKind: "pirates" | "void_storm" | "creature" | "lost_way" | "discovery" | "sacrifice" | "memory_loss" | "dream_not_returned" | "sail_snapped" | "bridge_collapsed" | "swallowed" | "stowaway" | "other";
+        JourneyIntent: "colony" | "trade" | "exploration" | "conquest" | "pilgrimage";
+        JourneyRecord: {
+            id: number;
+            traveller_entity_id: number;
+            route_id: number;
+            vehicle_entity_id: number | null;
+            origin_world_id: number;
+            destination_world_id: number;
+            intent: components["schemas"]["JourneyIntent"];
+            population: number;
+            epochs_left: number;
+            status: components["schemas"]["JourneyStatus"];
+            events: components["schemas"]["JourneyEvent"][];
+            memory_lost: boolean;
+            start_epoch: number;
+            end_epoch: number | null;
+            result_entity_id: number | null;
+        };
+        JourneyStatus: "underway" | "waiting" | "arrived" | "lost" | "recalled" | "stranded";
+        Kin: {
+            id: number;
+            name: string;
+            value: number;
+        };
+        KnowledgeBranch: "agriculture" | "metallurgy" | "seafaring" | "writing" | "architecture" | "medicine" | "magic" | "warfare" | "astronomy" | "trade" | "sky_navigation" | "shipbuilding" | "gate_lore" | "pathfinding" | "void_living" | "immortality" | "biomancy" | "forbidden";
+        KnowledgeInsight: {
+            branch: string | null;
+            level: number;
+            level_cap: number;
+            branch_multiplier: number;
+        };
+        KnowledgeLevelInput: {
+            knowledge_id: number;
+            deepen: boolean;
+        };
+        KnowledgeStats: {
+            kind: "knowledge";
+            level?: number | null;
+            spread?: number | null;
+        };
+        KnowledgeView: {
+            knowledge: components["schemas"]["EntitySummary"];
+            description: string;
+            branch: components["schemas"]["KnowledgeBranch"] | null;
+            level: number | null;
+            spread: number | null;
+            knowers: components["schemas"]["NodeRef"][];
+            inventor: components["schemas"]["NodeRef"] | null;
+            prerequisites: components["schemas"]["NodeRef"][];
+        };
+        KnownExtent: {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+            known_ratio: number;
+            known_cells: number;
+        };
+        Labelled: {
+            key: string;
+            label: string;
+        };
+        LandKind: "region" | "place";
+        LanguageCreoleInput: {
+            community_id: number;
+        };
+        LanguageEditInput: {
+            language_id: number;
+            writing_system?: components["schemas"]["WritingSystem"] | null;
+            clear_writing_system: boolean;
+            sample_names?: string[] | null;
+            alphabet?: string | null;
+            signature?: components["schemas"]["LanguageSignature"] | null;
+            clear_signature: boolean;
+        };
+        LanguageEpochWordsInput: {
+            epoch?: number | null;
+        };
+        LanguageNode: {
+            language: components["schemas"]["EntitySummary"];
+            writing_system: components["schemas"]["WritingSystem"] | null;
+            parent_language_id: number | null;
+            words: number;
+            speakers: number;
+            sample_names: string[];
+            signature: components["schemas"]["LanguageSignature"] | null;
+            alphabet: string[];
+            cognates: components["schemas"]["Cognate"][];
+        };
+        LanguageSignature: {
+            consonants: string;
+            cluster: string;
+            ending: string;
+            length_bias: number;
+        };
+        LanguageSignatureInput: {
+            language_id: number;
+        };
+        LanguageStats: {
+            kind: "language";
+            spread?: number | null;
+            complexity?: number | null;
+            sacredness?: number | null;
+        };
+        LanguageTexture: "flowing" | "hard" | "guttural" | "sibilant" | "long" | "free";
+        LanguageTranslatedEvent: {
+            id: number;
+            kind: "language.translated";
+            payload: components["schemas"]["TranslatedPayload"];
+            at: string;
+        };
+        LanguageView: {
+            language: components["schemas"]["EntitySummary"];
+            description: string;
+            cover: string | null;
+            speakers: components["schemas"]["NodeRef"][];
+            words: components["schemas"]["Lexeme"][];
+            word_total: number;
+        };
+        LawStats: {
+            kind: "law";
+            rigidity?: number | null;
+            justice?: number | null;
+        };
+        LedgerEntry: {
+            id: number;
+            epoch: number;
+            actor_kind: components["schemas"]["ActorKind"];
+            actor_node_id: number | null;
+            actor_name: string;
+            tool: string;
+            action_kind: components["schemas"]["ActionKind"];
+            input_summary: string | null;
+            undone: boolean;
+            undone_at: string | null;
+            applied: string[];
+            conflicts: string[];
+            created_at: string;
+        };
+        LedgerEntryView: {
+            entry: components["schemas"]["LedgerEntry"];
+            label: string;
+            change_count: number;
+            rows: string[];
+            dependents: number[];
+        };
+        LedgerItem: {
+            item: string;
+            delta: number;
+        };
+        LedgerPage: {
+            current_epoch: number;
+            epochs: components["schemas"]["EpochCount"][];
+            entries: components["schemas"]["LedgerEntryView"][];
+        };
+        LedgerUndoneEvent: {
+            id: number;
+            kind: "ledger.undone";
+            payload: components["schemas"]["LedgerUndonePayload"];
+            at: string;
+        };
+        LedgerUndonePayload: {
+            epoch?: number | null;
+            entry_id: number;
+            applied: number;
+            conflicts: number;
+        } & {
+            [key: string]: unknown;
+        };
+        LegendCategory: "creature" | "spirit" | "resource" | "relic";
+        LegendForgetInput: {
+            legend_id: number;
+        };
+        LegendFromEventInput: {
+            event_id: number;
+        };
+        LegendManifestInput: {
+            legend_id: number;
+        };
+        LegendReviveInput: {
+            legend_id: number;
+        };
+        LegendStats: {
+            kind: "legend";
+            spread?: number | null;
+        };
+        LegendaryQuestKind: "dead_star" | "sealed_gate" | "archive" | "expel_outer";
+        LegendaryQuestOutcome: "completed" | "failed" | "invalidated";
+        Lexeme: {
+            id: number;
+            word: string;
+            meaning: string;
+            part_of_speech: components["schemas"]["PartOfSpeech"] | null;
+            etymology: string | null;
+            example: string | null;
+            added_by_kind: components["schemas"]["ActorKind"];
+            added_by: components["schemas"]["NodeRef"] | null;
+            epoch: number;
+        };
+        LifeInsight: {
+            age: number | null;
+            lifespan: number;
+            lifespan_base: number;
+            medicine_bonus: number;
+            notable_bonus: number;
+            immortal: boolean;
+            death_year: number | null;
+            kill_chance_pct: number;
+            son_kill_cost: number;
+            creator_kill_cost: number;
+        };
+        LimboRecord: {
+            entity_id: number;
+            name: string;
+            born_epoch: number;
+            rationale: string | null;
+        };
+        LinkGroup: "all" | "travel" | "no_location" | "conflict" | "faith" | "lineage" | "knowledge";
+        LinkGroupInfo: {
+            key: string;
+            label: string;
+            kinds: string[];
+        };
+        LlmCall: {
+            id: number;
+            epoch: number | null;
+            job: string;
+            role: string | null;
+            model: string;
+            kind: components["schemas"]["LlmCallKind"];
+            status: components["schemas"]["LlmCallStatus"];
+            duration_ms: number;
+            attempts: number;
+            turns: number | null;
+            input_tokens: number;
+            output_tokens: number;
+            cost_usd: number;
+            error: string | null;
+            created_at: string;
+        };
+        LlmCallKind: "agent" | "structured";
+        LlmCallStatus: "ok" | "partial" | "error";
+        LogEntry: {
+            level: string;
+            at: string;
+            text: string;
+        };
+        LogLevel: "info" | "warning" | "error";
+        LogLine: {
+            level: components["schemas"]["LogLevel"];
+            at: string;
+            text: string;
+        };
+        LoreLanguage: "english" | "turkish";
+        LoreTotals: {
+            records: number;
+            by_type?: {
+                [key: string]: number;
+            };
+            bonds: number;
+            wars: number;
+            chronicle: number;
+            words: number;
+        };
+        MaintenanceTask: "completion" | "network_rules" | "loose_ends" | "data_repairs" | "history_repairs" | "epoch_years" | "mortal_ages" | "importance" | "endings" | "narrative_sweep" | "certain_facts" | "intuitions" | "mirror_pairs" | "captions" | "planner_statistics" | "prune";
+        MapNoteRecord: {
+            id: number;
+            world_id: number;
+            x: number;
+            y: number;
+            text: string;
+            color: string | null;
+            created_at: string;
+        };
+        MapPoint: {
+            entity: components["schemas"]["EntitySummary"];
+            x: number | null;
+            y: number | null;
+            cover: string | null;
+        };
+        MapPositionRequest: {
+            x: number;
+            y: number;
+        };
+        MapRelation: {
+            source: number;
+            target: number;
+            kind: components["schemas"]["RelationLineKind"];
+            description: string | null;
+            path: number[];
+        };
+        MapRoad: {
+            first: number;
+            second: number;
+            kind: components["schemas"]["RoadKind"];
+            length: number;
+            path: number[];
+        };
+        MapTime: {
+            current: number;
+            shown: number;
+            snapshots: number[];
+        };
+        MapView: {
+            world: components["schemas"]["WorldRecord"];
+            geometry: components["schemas"]["WorldMap"];
+            points: components["schemas"]["MapPoint"][];
+            political: {
+                [key: string]: components["schemas"]["RegionControl"];
+            };
+            roads: components["schemas"]["MapRoad"][];
+            relations: components["schemas"]["MapRelation"][];
+            wars: components["schemas"]["MapWar"][];
+            settlements: {
+                [key: string]: components["schemas"]["SettlementInfo"];
+            };
+            markers: components["schemas"]["EventMarker"][];
+            dominance: {
+                [key: string]: components["schemas"]["RegionDominance"];
+            };
+            region_creators: {
+                [key: string]: number | null;
+            };
+            population: {
+                [key: string]: number;
+            };
+            notes: components["schemas"]["MapNoteRecord"][];
+            time: components["schemas"]["MapTime"];
+        };
+        MapWar: {
+            id: number;
+            war_id: number;
+            name: string;
+            location_id: number | null;
+            started_epoch: number;
+            ended_epoch: number | null;
+            ongoing: boolean;
+        };
+        MapWindow: {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+        };
+        MarkReadRequest: {
+            ids?: number[];
+            every: boolean;
+            category?: components["schemas"]["NotificationCategory"] | null;
+            unread: boolean;
+        };
+        MarkReadResult: {
+            changed: number;
+        };
+        MarkerKind: "battle" | "disaster" | "ruin" | "remnant" | "event";
+        MarketDisbandInput: {
+            faction_id: number;
+        };
+        MarketFoundInput: {
+            region_id: number;
+        };
+        MarketWriteOffInput: {
+            bond_id: number;
+        };
+        MemorialForm: "monument" | "epic" | "lament" | "tradition" | "tale";
+        MemorialOrderInput: {
+            target_id: number;
+            form: components["schemas"]["MemorialForm"];
+        };
+        MergeSummary: {
+            rows: {
+                [key: string]: number;
+            };
+            skipped: {
+                [key: string]: number;
+            };
+            renamed: components["schemas"]["RenamedNode"][];
+            images: {
+                [key: string]: string;
+            };
+        };
+        MessageIntent: "friendship" | "alliance" | "love" | "threat" | "mockery" | "warning" | "bargain" | "prayer" | "answer" | "chat" | "dream" | "command";
+        MessageRecord: {
+            id: number;
+            epoch: number;
+            sender_node_id: number;
+            recipient_node_id: number;
+            intent: components["schemas"]["MessageIntent"];
+            text: string;
+            request: components["schemas"]["PrayerRequest"] | null;
+            wish: string | null;
+            is_read: boolean;
+            answered: boolean;
+            answered_epoch: number | null;
+            answer_essence: number | null;
+            created_at: string;
+        };
+        MessageView: {
+            id: number;
+            epoch: number;
+            sender: components["schemas"]["NodeRef"] | null;
+            recipient: components["schemas"]["NodeRef"] | null;
+            intent: string;
+            text: string;
+            answered: boolean;
+        };
+        Miracle: "healing" | "bounty" | "peace" | "protection";
+        MissingContent: {
+            portrait: boolean;
+            son_powers: number[];
+            sky_body: boolean;
+            first_people: boolean;
+            image_prompts: number;
+            undeepened_gods: number[];
+            pending_names: number;
+            past_narratives: number[];
+            anything_missing: boolean;
+        };
+        ModelMetrics: {
+            model: string;
+            calls: number;
+            milliseconds: number;
+            average_ms: number;
+            input_tokens: number;
+            output_tokens: number;
+            cost: number;
+        };
+        ModelMetricsView: {
+            totals: components["schemas"]["Totals"];
+            epochs: components["schemas"]["EpochMetrics"][];
+            models: components["schemas"]["ModelMetrics"][];
+            steps: components["schemas"]["StepMetrics"][];
+            slowest: components["schemas"]["LlmCall"][];
+            latest_errors: components["schemas"]["LlmCall"][];
+            slow_threshold_ms: number;
+        };
+        MoodInput: {
+            epoch: number;
+            axis: components["schemas"]["CreatorMoodAxis"];
+            item: string;
+            delta: number;
+        };
+        MoodSummary: {
+            contentment: number;
+            anger: number;
+            interest: number;
+            loneliness: number;
+            label: components["schemas"]["CreatorMoodLabel"];
+        };
+        MortalActInput: {
+            entity_id: number;
+        };
+        MortalAgentContext: {
+            entity_id: number;
+            name: string;
+            epoch: number;
+            action_points: number;
+            system_prompt: string;
+            user_prompt: string;
+            available: components["schemas"]["ToolPreviewView"][];
+            blocked: components["schemas"]["BlockedToolView"][];
+            counters: components["schemas"]["TurnCounterView"][];
+        };
+        MortalAgentItem: {
+            id: number;
+            name: string;
+            type: string;
+        };
+        MortalChildInput: {
+            first_id: number;
+            second_id: number;
+        };
+        MortalFateInput: {
+            mortal_id: number;
+            fate: components["schemas"]["FateWrit"];
+        };
+        MortalImmortalInput: {
+            mortal_id: number;
+            immortal: boolean;
+        };
+        MortalProtectInput: {
+            entity_id: number;
+            protected: boolean;
+        };
+        MortalRole: "ruler" | "hero" | "warrior" | "knight" | "hunter" | "chosen" | "seer" | "priest" | "sage" | "healer" | "artisan" | "merchant" | "scribe" | "farmer" | "explorer" | "captain" | "bandit" | "saint" | "apprentice" | "commoner";
+        MortalStats: {
+            kind: "mortal";
+            hp?: number | null;
+            strength?: number | null;
+            agility?: number | null;
+            intellect?: number | null;
+            charisma?: number | null;
+            age?: number | null;
+            lifespan?: number | null;
+            death_year?: number | null;
+        };
+        MortalToolId: "look_at_world" | "inspect_entity" | "search_entities" | "found_language" | "coin_words" | "produce_item" | "build_structure" | "create_culture" | "discover_resource" | "claim_resource" | "found_settlement" | "establish_trade" | "declare_war" | "worship" | "pray_to_creator" | "develop_knowledge" | "learn_knowledge" | "diplomacy" | "go_on_adventure" | "find_route" | "explore_land" | "resurrection_rite" | "build_ship" | "launch_expedition" | "tame_species" | "weave_chimera" | "bind_spirit" | "search_ruins" | "sabotage" | "preach" | "challenge_god" | "deny_god" | "prophesy" | "escape" | "pay_ransom" | "rescue_captive" | "raise_army" | "appoint_commander" | "build_spy_network" | "barter" | "lend" | "repay_debt" | "adopt";
+        MortalTurnFinishedEvent: {
+            id: number;
+            kind: "mortal.turn_finished";
+            payload: components["schemas"]["MortalTurnFinishedPayload"];
+            at: string;
+        };
+        MortalTurnFinishedPayload: {
+            epoch?: number | null;
+            word?: string | null;
+            creations?: number[];
+            status: string;
+            model?: string | null;
+            entity_id: number;
+            name: string;
+        } & {
+            [key: string]: unknown;
+        };
+        MortalTurnStartedEvent: {
+            id: number;
+            kind: "mortal.turn_started";
+            payload: components["schemas"]["MortalTurnStartedPayload"];
+            at: string;
+        };
+        MortalTurnStartedPayload: {
+            epoch?: number | null;
+            entity_id: number;
+            name: string;
+            resumed: boolean;
+            model?: string | null;
+            order?: number | null;
+            total?: number | null;
+        } & {
+            [key: string]: unknown;
+        };
+        MortalsStartedEvent: {
+            id: number;
+            kind: "mortals.started";
+            payload: components["schemas"]["MortalsStartedPayload"];
+            at: string;
+        };
+        MortalsStartedPayload: {
+            epoch?: number | null;
+            agents?: components["schemas"]["MortalAgentItem"][];
+        } & {
+            [key: string]: unknown;
+        };
+        MotifClearRequest: {
+            motif: string;
+            world_id?: number | null;
+        };
+        MotifOverrideMode: "pinned" | "allowed";
+        MotifOverrideRequest: {
+            motif: string;
+            mode: components["schemas"]["MotifOverrideMode"];
+            world_id?: number | null;
+        };
+        MotifOverrideView: {
+            id: number;
+            world_id: number | null;
+            motif: string;
+            mode: components["schemas"]["MotifOverrideMode"];
+        };
+        NameAcceptInput: {
+            entity_id: number;
+            name: string;
+        };
+        NameEntry: {
+            kind: components["schemas"]["NodeKind"];
+            id: number;
+            name: string;
+            type: string;
+            status?: string | null;
+            world_id?: number | null;
+            cover?: string | null;
+        };
+        NameReport: {
+            worlds: components["schemas"]["WorldDialectFit"][];
+            misfits: number;
+            weak_names: number;
+            numbered_borrowed_names: number;
+            god_lookalikes: number;
+        };
+        NaturalLaw: "none" | "immortality" | "short_life" | "dead_return" | "magic_price" | "war_ban" | "bounty" | "drought" | "sea_ban" | "one_language" | "disasters";
+        NaturalLawStats: {
+            kind: "natural_law";
+        };
+        NetworkHealth: {
+            nodes: number;
+            edges: number;
+            past_edges: number;
+            active_edges: number;
+            mean_degree: number;
+            median_degree: number;
+            density: number;
+            components: number;
+            largest_component: number;
+            largest_share_pct: number;
+            isolated: number;
+            single_link: number;
+            weak: number;
+            related: number;
+            related_undescribed: number;
+            related_to_review: number;
+            weakest: components["schemas"]["WeakNode"][];
+            log: components["schemas"]["RepairLogEntry"][];
+            priority: number;
+            healthy: boolean;
+        };
+        NetworkRepairedEvent: {
+            id: number;
+            kind: "network.repaired";
+            payload: components["schemas"]["NetworkRepairedPayload"];
+            at: string;
+        };
+        NetworkRepairedPayload: {
+            epoch?: number | null;
+            kind?: string | null;
+            type?: string | null;
+            text: string;
+        } & {
+            [key: string]: unknown;
+        };
+        NewSonPayload: {
+            epoch?: number | null;
+            son_id: number;
+            name?: string | null;
+            rarity?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        NewWordOutput: {
+            word: string;
+            meaning: string;
+            kind: components["schemas"]["PartOfSpeech"];
+            origin: string;
+        };
+        NodeKind: "entity" | "son" | "creator" | "foreign_god" | "world" | "star";
+        NodeRef: {
+            id: number;
+            kind: components["schemas"]["NodeKind"];
+            name: string;
+        };
+        NoteRequest: {
+            title: string;
+            body?: string | null;
+            target_node_id?: number | null;
+        };
+        NotesView: {
+            entity_notes: components["schemas"]["EntityNoteRecord"][];
+            map_notes: components["schemas"]["MapNoteRecord"][];
+        };
+        NotificationCategory: "rebellion" | "death" | "birth" | "prophecy" | "apocalypse" | "horror" | "war" | "prayer" | "cosmos" | "ascension" | "disaster" | "epoch" | "achievement" | "society" | "reputation" | "error" | "note" | "work";
+        NotificationCategoryInfo: {
+            key: string;
+            label: string;
+            severity: number;
+            enabled_by_default: boolean;
+        };
+        NotificationCreatedEvent: {
+            id: number;
+            kind: "notification.created";
+            payload: components["schemas"]["NotificationPayload"];
+            at: string;
+        };
+        NotificationList: {
+            unread: number;
+            counts: components["schemas"]["CategoryCount"][];
+            settings: {
+                [key: string]: boolean;
+            };
+            categories: components["schemas"]["CategoryInfo"][];
+            items: components["schemas"]["NotificationRecord"][];
+        };
+        NotificationPayload: {
+            epoch?: number | null;
+            id: number;
+            category: string;
+            label: string;
+            severity: number;
+            title: string;
+            body?: string | null;
+            target_node_id?: number | null;
+            chronicle_id?: number | null;
+            toast: boolean;
+        } & {
+            [key: string]: unknown;
+        };
+        NotificationRecord: {
+            id: number;
+            epoch: number | null;
+            category: components["schemas"]["NotificationCategory"];
+            severity: number;
+            title: string;
+            body: string | null;
+            target_node_id: number | null;
+            chronicle_id: number | null;
+            is_read: boolean;
+            created_at: string;
+            job_id?: string | null;
+            entity_ids?: number[];
+        };
+        OpportunityLineView: {
+            kind: string;
+            text: string;
+            tension: boolean;
+            tools: string[];
+        };
+        OpportunityLines: {
+            subject_id: number;
+            lines: components["schemas"]["OpportunityLineView"][];
+        };
+        OrbitingWorld: {
+            world: components["schemas"]["WorldRecord"];
+            type_label: string;
+            cover: string | null;
+            population: number;
+        };
+        OuterBargainMode: "force" | "forbid" | "allow";
+        OuterBeingStats: {
+            kind: "outer_being";
+            size?: number | null;
+            interest?: number | null;
+            influence?: number | null;
+        };
+        PackageMeta: {
+            name: string;
+            epoch: number | null;
+            creator: string | null;
+            date: string;
+        };
+        Page_ArmyView_: {
+            items: components["schemas"]["ArmyView"][];
+            total: number;
+            offset: number;
+            limit: number;
+        };
+        Page_BattleView_: {
+            items: components["schemas"]["BattleView"][];
+            total: number;
+            offset: number;
+            limit: number;
+        };
+        Page_BondView_: {
+            items: components["schemas"]["BondView"][];
+            total: number;
+            offset: number;
+            limit: number;
+        };
+        Page_CaptiveView_: {
+            items: components["schemas"]["CaptiveView"][];
+            total: number;
+            offset: number;
+            limit: number;
+        };
+        Page_ChronicleLineRecord_: {
+            items: components["schemas"]["ChronicleLineRecord"][];
+            total: number;
+            offset: number;
+            limit: number;
+        };
+        Page_EntitySummary_: {
+            items: components["schemas"]["EntitySummary"][];
+            total: number;
+            offset: number;
+            limit: number;
+        };
+        Page_SiegeView_: {
+            items: components["schemas"]["SiegeView"][];
+            total: number;
+            offset: number;
+            limit: number;
+        };
+        Page_TributeView_: {
+            items: components["schemas"]["TributeView"][];
+            total: number;
+            offset: number;
+            limit: number;
+        };
+        Page_WarSummary_: {
+            items: components["schemas"]["WarSummary"][];
+            total: number;
+            offset: number;
+            limit: number;
+        };
+        PartOfSpeech: "noun" | "verb" | "adjective" | "affix" | "title" | "place_name" | "proper_name" | "number" | "interjection";
+        Passion: "loyalty" | "ambition" | "wrath" | "mercy";
+        PassionInfo: {
+            passion: components["schemas"]["CreatorPassion"];
+            name: string;
+            hint: string;
+        };
+        PatchCreatorBody: {
+            title?: string | null;
+            appearance?: string | null;
+            temperament?: string | null;
+            image_prompt?: string | null;
+        };
+        PatchEntitiesEntityIdBody: {
+            name?: string | null;
+            title?: string | null;
+            subtype?: string | null;
+            description?: string | null;
+            image_prompt?: string | null;
+            is_water?: boolean | null;
+            is_underworld?: boolean | null;
+        };
+        PatchEntitiesEntityIdTagsBody: {
+            add_flags: components["schemas"]["EntityFlag"][];
+            remove_flags: components["schemas"]["EntityFlag"][];
+            add_traits: components["schemas"]["CreatureTrait"][];
+            remove_traits: components["schemas"]["CreatureTrait"][];
+            add_mechanics: components["schemas"]["ResourceMechanic"][];
+            remove_mechanics: components["schemas"]["ResourceMechanic"][];
+            law?: components["schemas"]["NaturalLaw"] | null;
+        };
+        PatchForeignGodsGodIdBody: {
+            name?: string | null;
+            title?: string | null;
+            domain_primary?: components["schemas"]["Domain"] | null;
+            domain_secondary?: components["schemas"]["Domain"] | null;
+            description?: string | null;
+            image_prompt?: string | null;
+            stance?: number | null;
+            power?: number | null;
+            status?: components["schemas"]["ForeignGodStatus"] | null;
+            contacted?: boolean | null;
+            stats?: {
+                [key: string]: number;
+            };
+            personality?: {
+                [key: string]: string;
+            };
+            existence?: components["schemas"]["ForeignExistence"] | null;
+            powers?: components["schemas"]["ForeignPower"][] | null;
+            depth?: components["schemas"]["ForeignDepth"] | null;
+        };
+        PatchSettingsBody: {
+            fate_mode?: components["schemas"]["FateMode"] | null;
+            son_distribution?: components["schemas"]["SonDistribution"] | null;
+            mortal_agents_per_epoch?: number | null;
+            automatic_mortal_agents: boolean;
+            council_every_epochs?: number | null;
+            mortal_agent_parallelism?: number | null;
+        };
+        PatchSonsSonIdBody: {
+            name?: string | null;
+            title?: string | null;
+            plan?: string | null;
+            personality?: components["schemas"]["SonPersonality"] | null;
+            passions?: {
+                [key: string]: number;
+            };
+            stats?: {
+                [key: string]: number;
+            };
+            rarity?: components["schemas"]["Rarity"] | null;
+            resources?: components["schemas"]["SonResources"] | null;
+        };
+        PatchStarsStarIdBody: {
+            name?: string | null;
+            star_type?: components["schemas"]["StarType"] | null;
+            description?: string | null;
+            image_prompt?: string | null;
+            brightness?: number | null;
+            x?: number | null;
+            y?: number | null;
+        };
+        PatchWorldsWorldIdBody: {
+            name?: string | null;
+            cosmology?: string | null;
+            description?: string | null;
+            image_prompt?: string | null;
+            world_type?: components["schemas"]["WorldType"] | null;
+            gravity?: components["schemas"]["Gravity"] | null;
+            atmosphere?: components["schemas"]["Atmosphere"] | null;
+            time_factor?: number | null;
+            leakage?: number | null;
+            mortal_agents?: number | null;
+            automatic_mortal_agents: boolean;
+            guardian_son_id?: number | null;
+            mirror_twin_id?: number | null;
+            discovery?: components["schemas"]["Discovery"] | null;
+            terrain_seed?: string | null;
+            sea_pct?: number | null;
+            mountains_pct?: number | null;
+            moisture_pct?: number | null;
+        };
+        PathResult: {
+            path: number[];
+            names: {
+                [key: string]: string;
+            };
+            steps: components["schemas"]["PathStep"][];
+            found: boolean;
+        };
+        PathStep: {
+            source: number;
+            target: number;
+            kind: string;
+            forward: boolean;
+            description: string | null;
+        };
+        PeopleBrief: {
+            entity: components["schemas"]["EntitySummary"];
+            population: number;
+            cover: string | null;
+        };
+        PeopleLine: {
+            id: number;
+            name: string;
+            entity_type: components["schemas"]["EntityType"];
+            population: number;
+            language: string | null;
+            god: string | null;
+        };
+        PeopleSplitInput: {
+            people_id: number;
+        };
+        PeopleStats: {
+            kind: "people";
+            population?: number | null;
+            martiality?: number | null;
+            magic?: number | null;
+            craft?: number | null;
+            piety?: number | null;
+            prosperity?: number | null;
+            wealth?: number | null;
+        };
+        PeopleUniteInput: {
+            source_id: number;
+            into_id: number;
+        };
+        PeopleVillageInput: {
+            people_id: number;
+        };
+        Personality: {
+            appearance: string;
+            temperament: string;
+            obsession: string;
+            fear: string;
+            speech_style: string;
+            secret: string;
+        };
+        Perspective: {
+            id: number;
+            epoch: number;
+            people_id: number;
+            people_name: string | null;
+            historian: string | null;
+            text: string;
+        };
+        PerspectiveLine: {
+            id: number;
+            epoch: number;
+            people_id: number;
+            people_name: string | null;
+            historian: string | null;
+            text: string;
+        };
+        PhaseStage: "tick" | "pre_transition" | "transition" | "post_transition";
+        Phonology: {
+            vowels: string[];
+            consonants: string[];
+            forbidden_sounds: string[];
+            onsets: string[];
+            codas: string[];
+            syllable_patterns: string[];
+            preferred_endings: string[];
+            texture: components["schemas"]["LanguageTexture"];
+            min_syllables: number;
+            max_syllables: number;
+            sample_names: string[];
+        };
+        PilgrimageDeclareInput: {
+            entity_id: number;
+        };
+        PiratesSpawnInput: {
+            region_id: number;
+        };
+        PlaceStats: {
+            kind: "place";
+            danger?: number | null;
+            fertility?: number | null;
+            mystery?: number | null;
+        };
+        PlaceSwallowInput: {
+            place_id: number;
+        };
+        PlacedMarker: {
+            id: number;
+            x: number;
+            y: number;
+            cell: number;
+            region_id: number | null;
+        };
+        PlagueCosmicInput: {
+            place_id: number;
+        };
+        PlayerHints: {
+            creator: components["schemas"]["CreatorHints"];
+            sons_waiting: string[];
+            sons_without_orders: string[];
+            sleeping_sons: string[];
+            dead_sons: string[];
+            open_threads: number;
+            sons_without_image: number;
+            unread_notifications: number;
+            epoch_in_progress: boolean;
+        };
+        PositionUpdate: {
+            id: number;
+            x: number;
+            y: number;
+        };
+        PostCheatsEssenceBody: {
+            amount: number;
+        };
+        PostCosmicCleanseLeakBody: {
+            world_id: number;
+        };
+        PostCosmicForgetWorldBody: {
+            world_id: number;
+        };
+        PostCosmicHangStarBody: {
+            name: string;
+            star_type: components["schemas"]["StarType"];
+            description?: string | null;
+            world_id?: number | null;
+        };
+        PostCosmicLegendaryQuestBody: {
+            kind: components["schemas"]["LegendaryQuestKind"];
+        };
+        PostCosmicRekindleStarBody: {
+            star_id: number;
+        };
+        PostCosmicResourceDepositsBody: {
+            place_id: number;
+        };
+        PostCosmicSealGateBody: {
+            route_id: number;
+        };
+        PostCosmicSkyEventBody: {
+            kind: components["schemas"]["SkyEventKind"];
+            world_id?: number | null;
+            star_id?: number | null;
+            route_id?: number | null;
+            duration?: number | null;
+        };
+        PostCosmicSoulBindBody: {
+            soul_id: number;
+            target_id: number;
+        };
+        PostEntitiesEntityIdBloodlineCurseBody: {
+            lift: boolean;
+        };
+        PostEntitiesEntityIdDecreeBody: {
+            target_id: number;
+            kind: components["schemas"]["DecreeKind"];
+        };
+        PostEntitiesEntityIdDrainBody: {
+            devour: boolean;
+        };
+        PostEntitiesEntityIdDreamBody: {
+            text: string;
+        };
+        PostEntitiesEntityIdExileBody: {
+            world_id: number;
+        };
+        PostEntitiesEntityIdExpeditionBody: {
+            route_id: number;
+            intent: components["schemas"]["JourneyIntent"];
+            percent?: number | null;
+        };
+        PostEntitiesEntityIdExploreBody: {
+            kind?: components["schemas"]["LandKind"] | null;
+        };
+        PostEntitiesEntityIdInterveneBody: {
+            action: components["schemas"]["InterventionKind"];
+            miracle?: components["schemas"]["Miracle"] | null;
+            disaster?: components["schemas"]["Disaster"] | null;
+            knowledge_id?: number | null;
+        };
+        PostEntitiesEntityIdManifestBody: {
+            words: string;
+        };
+        PostEntitiesEntityIdMergeBody: {
+            other_id: number;
+            confirm: string;
+        };
+        PostEntitiesEntityIdRiteBody: {
+            son_id: number;
+            kind: components["schemas"]["RiteKind"];
+            victim_id?: number | null;
+        };
+        PostEntitiesEntityIdTakeLifeBody: {
+            how: string;
+        };
+        PostEntitiesEntityIdWrathBody: {
+            reason: string;
+        };
+        PostFactsBody: {
+            subject_id: number;
+            relation: string;
+            object_id?: number | null;
+            object_text?: string | null;
+        };
+        PostFederationsBody: {
+            member_ids: number[];
+            name: string;
+        };
+        PostForeignGodsBody: {
+            world_id: number;
+            name: string;
+            title?: string | null;
+            description?: string | null;
+            domain_primary: components["schemas"]["Domain"];
+            domain_secondary?: components["schemas"]["Domain"] | null;
+            stance: number;
+            power?: number | null;
+            image_prompt?: string | null;
+        };
+        PostForeignGodsGodIdKillBody: {
+            reason: string;
+            devour: boolean;
+        };
+        PostLanguagesLanguageIdWordsBody: {
+            words: components["schemas"]["WordInput"][];
+        };
+        PostLinksBody: {
+            source_id: number;
+            target_id: number;
+            kind: components["schemas"]["BondKind"];
+            description?: string | null;
+        };
+        PostMapNotesBody: {
+            world_id: number;
+            x: number;
+            y: number;
+            text: string;
+            color?: string | null;
+        };
+        PostPeoplesAwakenBody: {
+            count: number;
+            world_id?: number | null;
+        };
+        PostPrayersMessageIdAnswerBody: {
+            text: string;
+            essence: number;
+        };
+        PostRevelationsBody: {
+            content: string;
+            entity_type?: string | null;
+            world_id?: number | null;
+            mechanic?: string | null;
+        };
+        PostRoutesBody: {
+            first_world_id: number;
+            second_world_id: number;
+            method: components["schemas"]["TravelMethod"];
+        };
+        PostRoutesRouteIdRestoreBody: {
+            duration?: number | null;
+        };
+        PostRoutesRouteIdRevealBody: {
+            duration?: number | null;
+        };
+        PostRoutesRouteIdSeverBody: {
+            duration?: number | null;
+        };
+        PostScenariosBody: {
+            key: components["schemas"]["ScenarioKey"];
+        };
+        PostSonsSonIdAbsoluteCommandBody: {
+            text: string;
+        };
+        PostSonsSonIdBlessBody: {
+            kind: components["schemas"]["BlessingKind"];
+            stat?: components["schemas"]["Stat"] | null;
+        };
+        PostSonsSonIdDevourBody: {
+            reason: string;
+        };
+        PostSonsSonIdKillBody: {
+            reason: string;
+        };
+        PostSonsSonIdPunishBody: {
+            kind: components["schemas"]["PunishmentKind"];
+        };
+        PostSonsSonIdRebellionBody: {
+            manifesto: string;
+        };
+        PostSonsSonIdReputationNudgeBody: {
+            love: number;
+            fear: number;
+            forgotten: number;
+        };
+        PostSonsSonIdScatterBonesBody: {
+            sibling_id: number;
+        };
+        PostSonsSonIdSchemeBody: {
+            sibling_id: number;
+            kind: components["schemas"]["SchemeKind"];
+        };
+        PostSonsSonIdStripPowerBody: {
+            slot: number;
+        };
+        PostSonsSummonBody: {
+            world_id?: number | null;
+        };
+        PostThreadsBody: {
+            text: string;
+            related_ids: number[];
+        };
+        PostThreadsThreadIdCloseBody: {
+            how: string;
+        };
+        PostWorldsBody: {
+            world_type?: components["schemas"]["WorldType"] | null;
+            inspiration: string;
+            star_id?: number | null;
+            parent_world_id?: number | null;
+            new_star: boolean;
+            new_star_type?: components["schemas"]["StarType"] | null;
+        };
+        PostWorldsWorldIdWrathBody: {
+            disaster: components["schemas"]["Disaster"];
+        };
+        PowerEffect: "cheap_creation" | "duel_master" | "essence_spring" | "worshipped" | "tireless" | "untouchable" | "dream_whisper" | "war_father" | "harvester" | "seer" | "reviving" | "bounty_giver" | "curser";
+        PrayerRequest: "essence" | "blessing" | "permission" | "vengeance" | "forgiveness" | "none" | "wish";
+        PrayerView: {
+            message: components["schemas"]["MessageRecord"];
+            sender: components["schemas"]["NodeRef"] | null;
+            sender_cover?: string | null;
+        };
+        PromptArea: "shared" | "context" | "genesis" | "son_turn" | "fate" | "chronicler" | "naming" | "voices" | "deepening" | "image_prompts" | "council" | "translation" | "world_birth" | "network_repair" | "mortal" | "opportunities" | "agent" | "chronicle" | "localisation";
+        PromptCatalogue: {
+            prompts: components["schemas"]["PromptEntry"][];
+            son_tools: components["schemas"]["ToolEntry"][];
+            mortal_tools: components["schemas"]["ToolEntry"][];
+        };
+        PromptDetail: {
+            prompt_id: components["schemas"]["PromptId"];
+            area: components["schemas"]["PromptArea"];
+            template_path: string;
+            context: string;
+            variables: components["schemas"]["PromptVariable"][];
+            output: string | null;
+            has_constraints: boolean;
+            template_source: string;
+            output_schema: {
+                [key: string]: unknown;
+            } | null;
+        };
+        PromptEntry: {
+            prompt_id: components["schemas"]["PromptId"];
+            area: components["schemas"]["PromptArea"];
+            template_path: string;
+            context: string;
+            variables: components["schemas"]["PromptVariable"][];
+            output: string | null;
+            has_constraints: boolean;
+        };
+        PromptId: "cliche_ban" | "image_prompt_rules" | "section_keys_rule" | "no_numbers_clause" | "lore_language" | "rationale_rule" | "verdict_criteria" | "tired_images" | "world_header" | "dialect_block" | "world_line" | "cosmos_lines" | "entity_line" | "bond_lines" | "society_lines" | "entity_detail" | "recent_chronicle" | "thread_lines" | "siblings" | "powers" | "location_tree" | "language_lines" | "geography_lines" | "world_summary" | "son_memory" | "sky_calendar" | "budget_trailer" | "inspect_sibling" | "genesis_system" | "genesis_user" | "genesis_wizard_settings" | "son_powers_system" | "son_powers_user" | "creator_portrait_system" | "creator_portrait_user" | "summon_son_system" | "summon_son_user" | "awaken_peoples_system" | "awaken_peoples_user" | "revelation_system" | "revelation_user" | "son_turn_system" | "son_turn_user" | "son_turn_resume_note" | "son_turn_continuation" | "creator_wishes" | "reputation_line" | "fate_judgment_system" | "fate_judgment_user" | "fate_extra_judgment_user" | "fate_prescreen_warnings" | "fate_creation_entry" | "age_events" | "age_events_by_world" | "chronicler_system" | "chronicler_concise_system" | "chronicler_user" | "chronicler_fix_opening_user" | "chronicler_audit_fix_user" | "chronicler_missing_worlds_user" | "chronicler_lost_age_user" | "chronicler_lost_world_sections_user" | "naming_system" | "naming_user" | "voices_system" | "voices_user" | "deepen_entity_system" | "deepen_entity_user" | "deepen_celestial_system" | "deepen_celestial_user" | "creator_epic_system" | "creator_epic_user" | "creator_deepen_system" | "creator_deepen_user" | "foreign_god_deepen_system" | "foreign_god_deepen_user" | "son_epic_system" | "son_epic_user" | "entity_image_prompts_system" | "entity_image_prompts_user" | "cosmos_image_prompts_system" | "cosmos_image_prompts_user" | "council_persona" | "council_agenda" | "council_session_system" | "council_session_user" | "son_chat_system" | "son_chat_user" | "translate_system" | "translate_user" | "new_world_system" | "new_world_user" | "world_inspiration" | "bond_node_line" | "bond_suggest_system" | "bond_suggest_user" | "bond_name_related_system" | "bond_name_related_user" | "mortal_turn_system" | "mortal_turn_user" | "mortal_turn_continuation" | "mortal_context" | "son_opportunities" | "mortal_opportunities" | "creator_opportunities" | "tool_rejection" | "tool_failure_refund" | "son_gate_rejection" | "mortal_gate_rejection" | "captive_gate_rejection" | "actions_spent" | "status_line" | "sleep_notice" | "pending_long_job" | "entity_state_reason" | "field_error" | "per_epoch_limit" | "creator_sign" | "sentient_demand" | "localise_system" | "localise_user";
+        PromptVariable: {
+            name: string;
+            type: string;
+            required: boolean;
+        };
+        ProphecyForgetInput: {
+            prophecy_id: number;
+        };
+        ProphecyFulfilInput: {
+            prophecy_id: number;
+        };
+        ProphecyStats: {
+            kind: "prophecy";
+            certainty?: number | null;
+        };
+        PunishmentKind: "lightning" | "chain" | "exile" | "suppress" | "pardon";
+        PutBeliefsBody: {
+            people_id: number;
+            son_id?: number | null;
+            name?: string | null;
+            narrative: string;
+            misconception?: string | null;
+        };
+        PutClimateBody: {
+            era: components["schemas"]["ClimateEra"];
+            epochs?: number | null;
+            world_id?: number | null;
+        };
+        PutCosmicResourceBody: {
+            name: string;
+            description: string;
+            rule: string;
+            side_effect: string;
+        };
+        PutCreatorMoodBody: {
+            contentment?: number | null;
+            anger?: number | null;
+            interest?: number | null;
+            loneliness?: number | null;
+        };
+        PutCreatorNoteBody: {
+            text: string;
+        };
+        PutCreatorPassionsBody: {
+            passions: components["schemas"]["CreatorPassion"][];
+            automatic: boolean;
+        };
+        PutEntitiesEntityIdAgentBody: {
+            selected: boolean;
+        };
+        PutEntitiesEntityIdCanonBody: {
+            status: components["schemas"]["CanonVerdict"];
+        };
+        PutEntitiesEntityIdFavoriteBody: {
+            favorite: boolean;
+        };
+        PutEntitiesEntityIdKnowledgeBody: {
+            knowledge_id: number;
+            known: boolean;
+        };
+        PutEntitiesEntityIdLocationBody: {
+            location_id: number;
+        };
+        PutEntitiesEntityIdNoteBody: {
+            text: string;
+        };
+        PutEntitiesEntityIdPatronBody: {
+            son_id?: number | null;
+            creator: boolean;
+            foreign_god_id?: number | null;
+        };
+        PutEntitiesEntityIdRelationsOtherIdBody: {
+            value: number;
+        };
+        PutEntitiesEntityIdStatBody: {
+            stat: string;
+            value: number;
+        };
+        PutSonsSonIdImagePromptBody: {
+            image_prompt: string;
+        };
+        PutSonsSonIdOrderBody: {
+            text: string;
+        };
+        PutSonsSonIdWorldBody: {
+            world_id: number;
+        };
+        PutWorldsWorldIdOrbitBody: {
+            star_id?: number | null;
+            parent_world_id?: number | null;
+        };
+        QuestAbandonInput: {
+            thread_id: number;
+        };
+        QueueItem: {
+            kind: components["schemas"]["TargetKind"];
+            id: number;
+            name: string;
+        };
+        QueueStatus: {
+            available: boolean;
+            reason: string | null;
+            current: components["schemas"]["QueuedImage"] | null;
+            queue: components["schemas"]["QueuedImage"][];
+            bulk: components["schemas"]["BulkRun"];
+            width: number;
+            height: number;
+            steps: number;
+            log: components["schemas"]["LogLine"][];
+        };
+        QueuedImage: {
+            node_id: number;
+            image_class: components["schemas"]["ImageClass"];
+            queued_at?: string;
+        };
+        Rarity: "common" | "uncommon" | "rare" | "epic" | "legendary" | "mythic";
+        RecordEnd: "repeal" | "abandon" | "forget" | "disband" | "lose" | "assimilate";
+        RecordEndInput: {
+            entity_id: number;
+            end: components["schemas"]["RecordEnd"];
+            reason: string;
+        };
+        RecordRetireInput: {
+            entity_id: number;
+            reason: string;
+            status: components["schemas"]["EntityStatus"];
+        };
+        RegionControl: {
+            ruler_id: number;
+            ruler_name: string;
+            ruler_type: string;
+            share: number;
+            contested: boolean;
+        };
+        RegionDominance: {
+            son_id: number | null;
+            language_id: number | null;
+        };
+        RegionRecord: {
+            id: number;
+            parent_id: number | null;
+            top_level_id: number;
+            depth: number;
+            is_water: boolean;
+            seed: [
+                number,
+                number
+            ] | null;
+            anchor: [
+                number,
+                number
+            ] | null;
+            centroid: [
+                number,
+                number
+            ] | null;
+            size: number;
+            coastal: boolean;
+            mean_elevation: number;
+            elevation_class: components["schemas"]["ElevationClass"];
+            climate: components["schemas"]["ClimateShare"][];
+            neighbours: number[];
+            bordering: number[];
+        };
+        RegionSeedPlaceInput: {
+            region_id: number;
+        };
+        RegionStats: {
+            kind: "region";
+            breadth?: number | null;
+            danger?: number | null;
+            fertility?: number | null;
+            magic?: number | null;
+        };
+        RelationEntry: {
+            other: components["schemas"]["NodeRef"];
+            value: number;
+            label: components["schemas"]["CommunityRelationLabel"];
+            blood_feud_since_epoch: number | null;
+            history: components["schemas"]["RelationEventView"][];
+        };
+        RelationEventView: {
+            epoch: number;
+            event: string;
+            delta: number;
+        };
+        RelationLineKind: "trade" | "hostility" | "rule" | "hunt";
+        RelationList: {
+            entity_id: number;
+            relations: components["schemas"]["RelationEntry"][];
+        };
+        RelationPair: {
+            first: components["schemas"]["NodeRef"];
+            second: components["schemas"]["NodeRef"];
+            value: number;
+            label: components["schemas"]["CommunityRelationLabel"];
+            blood_feud_since_epoch: number | null;
+            history: components["schemas"]["RelationEventView"][];
+        };
+        RenamedNode: {
+            old_name: string;
+            new_name: string;
+        };
+        RepairLogEntry: {
+            at: string;
+            kind: string;
+            text: string;
+            bonds?: [
+                number,
+                components["schemas"]["BondKind"],
+                number,
+                string | null
+            ][];
+        };
+        RepairResult: {
+            counters: {
+                [key: string]: number;
+            };
+            ledger_entry_id: number | null;
+        };
+        ReputationDriftInput: {
+            son_id: number;
+        };
+        ReputationLabel: "forgotten" | "hated" | "respected" | "feared" | "loved" | "distant" | "acknowledged";
+        Requirement: {
+            stars: number;
+            level: number;
+            fame: number;
+            essence: number;
+        };
+        ResetRequest: {
+            confirm: string;
+        };
+        ResourceCommodityInput: {
+            resource_id: number;
+            commodity?: components["schemas"]["Commodity"] | null;
+        };
+        ResourceInsight: {
+            mechanics: string[];
+            weighed: boolean;
+            depleting: boolean;
+            depleted: boolean;
+        };
+        ResourceLine: {
+            id: number;
+            name: string;
+            description: string;
+            mechanics: string | null;
+            original: boolean;
+        };
+        ResourceMechanic: "decaying" | "addictive" | "sentient" | "depletion_price" | "fixed" | "sacred";
+        ResourceStats: {
+            kind: "resource";
+            abundance?: number | null;
+            value?: number | null;
+            might?: number | null;
+        };
+        RestoreRequest: {
+            file: string;
+            confirm: string;
+        };
+        ResurrectionOrder: {
+            id: number;
+            name: string;
+            devotion: number;
+            followers: number;
+        };
+        RetryPayload: {
+            epoch?: number | null;
+            actor: string;
+            kind: string;
+            attempt: number;
+            total: number;
+            reason?: string | null;
+            wait_s: number;
+            kept_steps: number;
+        } & {
+            [key: string]: unknown;
+        };
+        RevelationPayload: {
+            epoch?: number | null;
+            entity_id?: number | null;
+            record_id?: number | null;
+            name?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        RewardInsight: {
+            son: components["schemas"]["NodeRef"] | null;
+            xp: number;
+            renown: number;
+            essence: number;
+            cost: number;
+            land: boolean;
+            fade_pct: number;
+            repeats: number;
+            taken_back_pct: number;
+            thread_reverted: boolean;
+        };
+        RiteKind: "prayer" | "offering" | "blood" | "life" | "rite";
+        RoadKind: "road" | "trade";
+        RouteClosure: "sealed" | "severed" | "forgotten" | "collapsed" | "snapped";
+        RouteDangerInput: {
+            route_id: number;
+            danger: number;
+        };
+        RouteLine: {
+            id: number;
+            target: string;
+            method: string;
+            duration: number;
+            danger: number;
+            active: boolean;
+            known: boolean;
+        };
+        RouteRecord: {
+            id: number;
+            world_a_id: number;
+            world_b_id: number;
+            method: components["schemas"]["TravelMethod"];
+            duration_epochs: number;
+            danger: number;
+            known: boolean;
+            controller_entity_id: number | null;
+            vehicle_entity_id: number | null;
+            builder_son_id: number | null;
+            bound_star_id: number | null;
+            description: string | null;
+            created_epoch: number;
+            active: boolean;
+            closure: components["schemas"]["RouteClosure"] | null;
+            temp_open_until_epoch: number | null;
+            temp_closed_until_epoch: number | null;
+        };
+        RouteTeachInput: {
+            community_id: number;
+            route_id: number;
+        };
+        RuleBatchRequest: {
+            changes?: {
+                [key: string]: number | null;
+            };
+            reset_all: boolean;
+        };
+        RuleResponse: {
+            namespace: string;
+            key: string;
+            value: number;
+            default: number;
+            minimum: number;
+            maximum: number;
+            group: string;
+            label: string;
+            integer: boolean;
+            warning?: string | null;
+        };
+        RuleUpdateRequest: {
+            value: number;
+        };
+        RulerHeirInput: {
+            ruler_id: number;
+            heir_id: number;
+        };
+        RulesChangedEvent: {
+            id: number;
+            kind: "rules.changed";
+            payload: components["schemas"]["RulesChangedPayload"];
+            at: string;
+        };
+        RulesChangedPayload: {
+            epoch?: number | null;
+            namespace?: string | null;
+            key?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        RunningScenario: {
+            id: number;
+            key: components["schemas"]["ScenarioKey"];
+            name: string;
+            start_epoch: number;
+            progress: components["schemas"]["ScenarioProgress"];
+        };
+        SafetyResult: {
+            ok: boolean;
+            safety_backup: string;
+        };
+        SampleNames: {
+            language_id: number;
+            names: string[];
+        };
+        SampleNamesRequest: {
+            count: number;
+            salt: string;
+        };
+        SavedGenesis: {
+            lore_language: components["schemas"]["LoreLanguage"];
+            seed_idea: string;
+            tone: string;
+            settings: components["schemas"]["GenesisSettings"] | null;
+        };
+        Saying: {
+            form: string;
+            text: string;
+        };
+        SayingInput: {
+            form: string;
+            text: string;
+        };
+        ScenarioHistory: {
+            id: number;
+            status: components["schemas"]["ScenarioStatus"];
+            start_epoch: number;
+            end_epoch: number | null;
+            result: string | null;
+        };
+        ScenarioKey: "doom_far" | "one_faith" | "lost_star" | "many_worlds" | "long_peace" | "cosmic_power" | "loyal_pantheon" | "new_horizons";
+        ScenarioProgress: {
+            percent: number;
+            text: string;
+            done: boolean;
+            failed: boolean;
+        };
+        ScenarioStatus: "running" | "completed" | "failed" | "abandoned";
+        ScenarioView: {
+            key: components["schemas"]["ScenarioKey"];
+            name: string;
+            description: string;
+            points: number;
+            history: components["schemas"]["ScenarioHistory"][];
+        };
+        SchemeKind: "rite" | "descent" | "bargain";
+        ScoreBreakdown: {
+            parts?: {
+                [key: string]: number;
+            };
+        };
+        ScoreComponent: "population" | "diversity" | "languages" | "worlds" | "civilization" | "doomsday" | "achievements" | "scenarios";
+        SearchCategory: "son" | "foreign_god" | "world" | "star" | "entity" | "word" | "epoch" | "chronicle" | "note" | "map_note" | "message" | "council";
+        SearchHit: {
+            category: components["schemas"]["SearchCategory"];
+            id: number;
+            title: string;
+            subtitle: string | null;
+            snippet: string | null;
+            epoch?: number | null;
+        };
+        SecondaryTarget: {
+            directory: string | null;
+            keep: number;
+        };
+        SecondaryTargetRequest: {
+            directory?: string | null;
+        };
+        SectionBudget: {
+            section: string;
+            characters: number;
+            limit: number | null;
+        };
+        SensedWorld: {
+            id: number;
+            mortal_entity_id: number;
+            world_id: number | null;
+            epoch: number;
+            how: string | null;
+            method: components["schemas"]["TravelMethod"] | null;
+            status: components["schemas"]["HorizonStatus"];
+            result_world_id: number | null;
+        };
+        SettlementAbandonInput: {
+            settlement_id: number;
+        };
+        SettlementCapitalInput: {
+            settlement_id: number;
+        };
+        SettlementEthnogenesisInput: {
+            settlement_id: number;
+        };
+        SettlementInfo: {
+            tier: components["schemas"]["SettlementTier"];
+            population: number;
+            previous_population: number | null;
+        };
+        SettlementResettleInput: {
+            ruin_id: number;
+            population: number;
+            source_id?: number | null;
+        };
+        SettlementShelterInput: {
+            settlement_id: number;
+            protected: boolean;
+        };
+        SettlementStats: {
+            kind: "settlement";
+            population?: number | null;
+            prosperity?: number | null;
+            defense?: number | null;
+            piety?: number | null;
+        };
+        SettlementTier: "capital" | "village" | "town" | "city" | "great_city";
+        SiblingView: {
+            son: components["schemas"]["NodeRef"];
+            value: number;
+            note: string | null;
+            cover: string | null;
+        };
+        SiegeStatus: "ongoing" | "breached" | "repulsed" | "lifted";
+        SiegeView: {
+            id: number;
+            war_id: number;
+            besieged: components["schemas"]["NodeRef"] | null;
+            besieger: components["schemas"]["NodeRef"] | null;
+            status: components["schemas"]["SiegeStatus"];
+            started_epoch: number;
+            ended_epoch: number | null;
+            rounds: number;
+        };
+        SimilarRecord: {
+            entity: components["schemas"]["EntitySummary"];
+            score: number;
+            reasons: string[];
+        };
+        SkyEventKind: "eclipse" | "comet" | "alignment" | "supernova" | "black_sun" | "void_storm";
+        SkyEventRecord: {
+            id: number;
+            kind: components["schemas"]["SkyEventKind"];
+            epoch: number;
+            until_epoch: number | null;
+            world_id: number | null;
+            star_id: number | null;
+            route_id: number | null;
+            text: string | null;
+        };
+        SkyTimeEchoInput: {
+            thread_id: number;
+        };
+        SocialClass: "farmer" | "artisan" | "merchant" | "priest" | "warrior" | "scribe";
+        SocietyFamineInput: {
+            entity_id: number;
+        };
+        SocietyForgeInput: {
+            entity_id: number;
+        };
+        SocietyInsight: {
+            shares: {
+                [key: string]: number;
+            };
+            satisfaction: {
+                [key: string]: number;
+            };
+            stocks: {
+                [key: string]: number;
+            };
+            prices: {
+                [key: string]: number;
+            };
+            unhappiest: string | null;
+            bankruptcy_risk: boolean;
+            uprising_risk: boolean;
+        };
+        SocietyPlentyInput: {
+            entity_id: number;
+        };
+        SocietySatisfactionInput: {
+            entity_id: number;
+            values: {
+                [key: string]: number;
+            };
+        };
+        SocietySharesInput: {
+            entity_id: number;
+            shares: {
+                [key: string]: number;
+            };
+        };
+        SocietyStoresInput: {
+            entity_id: number;
+            stocks: {
+                [key: string]: number;
+            };
+        };
+        SocietyUprisingInput: {
+            entity_id: number;
+            social_class?: components["schemas"]["SocialClass"] | null;
+        };
+        SonAddressSiblingInput: {
+            son_id: number;
+            sibling_id: number;
+            intent: components["schemas"]["SpokenIntent"];
+            text: string;
+        };
+        SonAscendedEvent: {
+            id: number;
+            kind: "son.ascended";
+            payload: components["schemas"]["SonAscendedPayload"];
+            at: string;
+        };
+        SonAscendedPayload: {
+            epoch?: number | null;
+            son_id: number;
+            rarity: string;
+        } & {
+            [key: string]: unknown;
+        };
+        SonBirthChildInput: {
+            son_id: number;
+            inspiration: string;
+            co_parent_id?: number | null;
+        };
+        SonCard: {
+            last_action: string | null;
+            last_action_epoch: number | null;
+            last_words: string | null;
+            reputation: string | null;
+            best_friend: components["schemas"]["Kin"] | null;
+            worst_rival: components["schemas"]["Kin"] | null;
+        };
+        SonChatRepliedEvent: {
+            id: number;
+            kind: "son.chat_replied";
+            payload: components["schemas"]["ChatPayload"];
+            at: string;
+        };
+        SonDeathCause: "fading" | "killed_by_sibling" | "killed_by_creator" | "devoured" | "foreign_god" | "cosmic_horror" | "other";
+        SonDelta: {
+            son_id: number;
+            changes: {
+                [key: string]: number;
+            };
+        };
+        SonDetail: {
+            son: components["schemas"]["SonRecord"];
+            kill_cost: number;
+            reputation: components["schemas"]["SonReputation"] | null;
+            folk_views: components["schemas"]["FolkView"][];
+            creations: components["schemas"]["EntitySummary"][];
+            chronicle: components["schemas"]["ChronicleLineRecord"][];
+            messages: components["schemas"]["MessageView"][];
+            siblings: components["schemas"]["SiblingView"][];
+            bonds: components["schemas"]["BondView"][];
+            bond_total: number;
+            live_faith: number;
+            worshippers: components["schemas"]["EntitySummary"][];
+            anchor: components["schemas"]["EntitySummary"] | null;
+            parent: components["schemas"]["NodeRef"] | null;
+            children: components["schemas"]["NodeRef"][];
+            images: components["schemas"]["ImageRecord"][];
+        };
+        SonDistributedEvent: {
+            id: number;
+            kind: "son.distributed";
+            payload: components["schemas"]["SonDistributedPayload"];
+            at: string;
+        };
+        SonDistributedPayload: {
+            epoch?: number | null;
+            son_id?: number | null;
+            world_id?: number | null;
+            text?: string | null;
+            moved?: number | null;
+        } & {
+            [key: string]: unknown;
+        };
+        SonDistribution: "auto" | "manual";
+        SonDuelInput: {
+            challenger_id: number;
+            defender_id: number;
+            stat: components["schemas"]["Stat"];
+        };
+        SonEpochStats: {
+            faith: number;
+            fame: number;
+            existence: number;
+            level: number;
+        };
+        SonGodWarInput: {
+            son_id: number;
+            god_id: number;
+        };
+        SonNewEvent: {
+            id: number;
+            kind: "son.new";
+            payload: components["schemas"]["NewSonPayload"];
+            at: string;
+        };
+        SonOuterBargainInput: {
+            son_id: number;
+            mode: components["schemas"]["OuterBargainMode"];
+            outer_id?: number | null;
+            request: string;
+        };
+        SonPersonality: {
+            appearance?: string | null;
+            temperament?: string | null;
+            obsession?: string | null;
+            fear?: string | null;
+            speech_style?: string | null;
+            secret?: string | null;
+        };
+        SonPower: {
+            slot: number;
+            name: string;
+            description: string;
+            effect: components["schemas"]["PowerEffect"];
+            param_entity_type: components["schemas"]["EntityType"] | null;
+            param_stat: components["schemas"]["Stat"] | null;
+        };
+        SonPromptPreview: {
+            son_id: number;
+            son_name: string;
+            epoch: number;
+            action_points: number;
+            system_prompt: string;
+            user_prompt: string;
+            system_characters: number;
+            user_characters: number;
+            total_characters: number;
+            token_estimate: number;
+            prompt_limit: number;
+            over_limit: boolean;
+            tool_names: string[];
+            paid_tools: string[];
+            free_tools: string[];
+            summary_sections: components["schemas"]["SectionBudget"][];
+            summary_characters: number;
+            summary_limit: number;
+            memory_characters: number;
+            memory_limit: number;
+        };
+        SonPublic: {
+            son: components["schemas"]["SonRecord"];
+            powers: components["schemas"]["SonPower"][];
+            max_hp: number;
+            max_essence: number;
+            action_points: number;
+            power_cap: number;
+            band: components["schemas"]["ExistenceBand"];
+            band_label: string;
+            band_effect: string;
+            band_action_loss: number;
+            unlocked_powers: number;
+            next_star: components["schemas"]["Requirement"] | null;
+            ascension: components["schemas"]["Ascension"] | null;
+            cover: string | null;
+            card: components["schemas"]["SonCard"];
+        };
+        SonRecord: {
+            id: number;
+            name: string;
+            title: string;
+            rarity: components["schemas"]["Rarity"];
+            stars: number;
+            domain_primary: components["schemas"]["Domain"];
+            domain_secondary: components["schemas"]["Domain"];
+            strength: number;
+            endurance: number;
+            agility: number;
+            wisdom: number;
+            cunning: number;
+            will: number;
+            creativity: number;
+            charisma: number;
+            might: number;
+            sanity: number | null;
+            loyalty: number;
+            ambition: number;
+            wrath: number;
+            mercy: number;
+            personality: components["schemas"]["Personality"];
+            existence_profile: components["schemas"]["ExistenceProfile"] | null;
+            existence: number;
+            fading_epochs: number;
+            hp: number;
+            essence: number;
+            faith: number;
+            fame: number;
+            xp: number;
+            level: number;
+            status: components["schemas"]["SonStatus"];
+            sleep_epochs_left: number;
+            chained: boolean;
+            rebel: boolean;
+            outer_bargain_forbidden: boolean;
+            standing_order: string | null;
+            order_absolute: boolean;
+            turn_rank: number | null;
+            plan: string | null;
+            plan_epoch?: number | null;
+            epic: components["schemas"]["Epic"] | null;
+            anchor_entity_id: number | null;
+            corpse_entity_id: number | null;
+            parent_son_id: number | null;
+            co_parent_son_id: number | null;
+            current_world_id: number | null;
+            manually_assigned_epoch: number | null;
+            birth_epoch: number;
+            death_epoch: number | null;
+            death_cause: components["schemas"]["SonDeathCause"] | null;
+            last_acted_epoch: number;
+            reputation_love: number | null;
+            reputation_fear: number | null;
+            reputation_forgotten: number | null;
+            reputation_unanswered: number | null;
+            reputation_last_contact_epoch: number | null;
+            reputation_label: components["schemas"]["ReputationLabel"] | null;
+            manual_love: number;
+            manual_fear: number;
+            manual_forgotten: number;
+            image_prompt: string | null;
+        };
+        SonRelationInput: {
+            first_id: number;
+            second_id: number;
+            value: number;
+        };
+        SonRelationItem: {
+            son_a_id: number;
+            son_b_id: number;
+            value: number;
+            note: string | null;
+        };
+        SonReputation: {
+            son_id: number;
+            name: string;
+            love: number;
+            fear: number;
+            forgotten: number;
+            unanswered: number;
+            last_contact: number;
+            label: components["schemas"]["ReputationLabel"];
+        };
+        SonResources: {
+            essence?: number | null;
+            hp?: number | null;
+            fame?: number | null;
+            faith?: number | null;
+            level?: number | null;
+            stars?: number | null;
+            existence?: number | null;
+        };
+        SonSanityInput: {
+            son_id: number;
+            value: number;
+        };
+        SonStatus: "active" | "asleep" | "exiled" | "dead";
+        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_father" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world";
+        SonToolsView: {
+            son_id: number;
+            rarity: components["schemas"]["Rarity"];
+            epoch: number;
+            action_points_left: number | null;
+            available: components["schemas"]["ToolPreviewView"][];
+            blocked: components["schemas"]["BlockedToolView"][];
+            counters: components["schemas"]["TurnCounterView"][];
+        };
+        SonTurnFinishedEvent: {
+            id: number;
+            kind: "son.turn_finished";
+            payload: components["schemas"]["SonTurnFinishedPayload"];
+            at: string;
+        };
+        SonTurnFinishedPayload: {
+            epoch?: number | null;
+            word?: string | null;
+            creations?: number[];
+            status: string;
+            model?: string | null;
+            son_id: number;
+            son_name: string;
+            rarity?: components["schemas"]["Rarity"] | null;
+        } & {
+            [key: string]: unknown;
+        };
+        SonTurnQueuedEvent: {
+            id: number;
+            kind: "son.turn_queued";
+            payload: components["schemas"]["SonTurnQueuedPayload"];
+            at: string;
+        };
+        SonTurnQueuedPayload: {
+            epoch?: number | null;
+            no: number;
+            total: number;
+            son_id: number;
+            name: string;
+            model?: string | null;
+            rarity?: components["schemas"]["Rarity"] | null;
+        } & {
+            [key: string]: unknown;
+        };
+        SonTurnRankInput: {
+            son_id: number;
+            rank?: number | null;
+        };
+        SonTurnStartedEvent: {
+            id: number;
+            kind: "son.turn_started";
+            payload: components["schemas"]["SonTurnStartedPayload"];
+            at: string;
+        };
+        SonTurnStartedPayload: {
+            epoch?: number | null;
+            son_id: number;
+            son_name: string;
+            resumed: boolean;
+            model?: string | null;
+            rarity?: components["schemas"]["Rarity"] | null;
+        } & {
+            [key: string]: unknown;
+        };
+        SoulDescendInput: {
+            mortal_id: number;
+        };
+        SoulHarvestInput: {
+            cult_id: number;
+            soul_id: number;
+        };
+        SoulMirrorInput: {
+            mortal_id: number;
+        };
+        SpeciesAbundanceInput: {
+            species_id: number;
+            abundance: number;
+        };
+        SpeciesAwakenInput: {
+            species_id: number;
+        };
+        SpeciesChimeraInput: {
+            first_id: number;
+            second_id: number;
+            weaver_id?: number | null;
+        };
+        SpeciesCullInput: {
+            species_id: number;
+            reason: string;
+        };
+        SpeciesFeedInput: {
+            species_id: number;
+            soul_id?: number | null;
+        };
+        SpeciesIntroduceInput: {
+            species_id: number;
+            region_id: number;
+        };
+        SpeciesMutateInput: {
+            species_id: number;
+        };
+        SpeciesSeedInput: {
+            world_id: number;
+            people: boolean;
+        };
+        SpeciesSparePreyInput: {
+            species_id: number;
+        };
+        SpeciesStats: {
+            kind: "species";
+            hp?: number | null;
+            strength?: number | null;
+            agility?: number | null;
+            intelligence?: number | null;
+            danger?: number | null;
+            might?: number | null;
+            abundance?: number | null;
+        };
+        SpeciesTrailInput: {
+            species_id: number;
+        };
+        SpiritRestInput: {
+            spirit_id: number;
+        };
+        SpiritStats: {
+            kind: "spirit";
+            strength?: number | null;
+            unrest?: number | null;
+        };
+        SpokenIntent: "friendship" | "alliance" | "love" | "threat" | "mockery" | "warning" | "bargain";
+        SpyOperation: "steal" | "sabotage";
+        StarDepthInput: {
+            history?: string | null;
+            rumours?: string[] | null;
+            sayings?: components["schemas"]["SayingInput"][] | null;
+            details?: string[] | null;
+            hidden_truth?: string | null;
+            specifics?: {
+                [key: string]: string;
+            } | null;
+            star_id: number;
+        };
+        StarRecord: {
+            id: number;
+            name: string;
+            star_type: components["schemas"]["StarType"];
+            brightness: number;
+            x: number;
+            y: number;
+            description: string | null;
+            image_prompt: string | null;
+            created_epoch: number;
+            cover?: string | null;
+        };
+        StarType: "yellow_dwarf" | "red_giant" | "blue_giant" | "binary" | "white_dwarf" | "dead_star" | "black_sun" | "broken_star" | "pulsar" | "star_remnant" | "reborn_star";
+        StarWiki: {
+            star: components["schemas"]["StarRecord"];
+            type_label: string;
+            cover: string | null;
+            depth: components["schemas"]["EntityDepth"] | null;
+            worlds: components["schemas"]["OrbitingWorld"][];
+            sky_events: components["schemas"]["SkyEventRecord"][];
+            timeline: components["schemas"]["ChronicleLineRecord"][];
+            images: components["schemas"]["ImageRecord"][];
+        };
+        Stat: "strength" | "endurance" | "agility" | "wisdom" | "cunning" | "will" | "creativity" | "charisma" | "might";
+        StateResponse: {
+            world: components["schemas"]["CosmosRecord"] | null;
+            creator: components["schemas"]["CreatorRecord"] | null;
+            creator_cover: string | null;
+            world_cover: string | null;
+            sons: components["schemas"]["SonPublic"][];
+            counts: {
+                [key: string]: number;
+            };
+            prayers_pending: number;
+            relations: components["schemas"]["SonRelationItem"][];
+            worlds: components["schemas"]["WorldBriefItem"][];
+            foreign_god_count: number;
+            pending_son_ids: number[];
+            covenants: components["schemas"]["Covenant"][];
+            threads: components["schemas"]["ThreadRecord"][];
+            last_epoch: components["schemas"]["EpochRecord"] | null;
+            image_count: number;
+            promptless_count: number;
+            pulse: components["schemas"]["EpochStatsData"] | null;
+            read_only: boolean;
+            discovery: components["schemas"]["GuestWorld"] | null;
+            version: string;
+            notifications_unread: number;
+            running_jobs: number;
+            epoch_running: boolean;
+            half_epoch: components["schemas"]["HalfEpochState"] | null;
+            mood: components["schemas"]["MoodSummary"] | null;
+            image_gen: components["schemas"]["QueueStatus"];
+            batch_deepen: components["schemas"]["BulkSummary"];
+            llm_enabled: boolean;
+        };
+        StepMetrics: {
+            step: string;
+            calls: number;
+            average_ms: number;
+            longest_ms: number;
+            cost: number;
+            errors: number;
+        };
+        StepState: {
+            step: components["schemas"]["EpochStepKind"];
+            status: components["schemas"]["EpochStepStatus"];
+            error: string | null;
+        };
+        StreamHelloEvent: {
+            id: number;
+            kind: "stream.hello";
+            payload: components["schemas"]["EventPayload"];
+            at: string;
+        };
+        StructureRazeInput: {
+            structure_id: number;
+            reason: string;
+        };
+        StructureStats: {
+            kind: "structure";
+            splendor?: number | null;
+            durability?: number | null;
+            function?: number | null;
+        };
+        SummarySection: "pantheon" | "threads" | "events" | "cosmos" | "geography" | "languages" | "map" | "legends";
+        SystemErrorEvent: {
+            id: number;
+            kind: "system.error";
+            payload: components["schemas"]["ErrorPayload"];
+            at: string;
+        };
+        SystemNoteEvent: {
+            id: number;
+            kind: "system.note";
+            payload: components["schemas"]["TextPayload"];
+            at: string;
+        };
+        TargetKind: "entity" | "foreign_god";
+        TaskInfo: {
+            task: components["schemas"]["MaintenanceTask"];
+            title: string;
+            description: string;
+            automatic: string;
+            rows: string[];
+            ledgered: boolean;
+            needs_llm: boolean;
+            running: boolean;
+        };
+        TechnologyEra: "stone" | "bronze" | "iron" | "medieval" | "renaissance" | "steam";
+        TextPayload: {
+            epoch?: number | null;
+            text: string;
+        } & {
+            [key: string]: unknown;
+        };
+        ThreadAdvanceInput: {
+            thread_id: number;
+            entity_id: number;
+        };
+        ThreadRecord: {
+            id: number;
+            epoch: number;
+            text: string;
+            status: components["schemas"]["ThreadStatus"];
+            closing_text: string | null;
+            closed_epoch: number | null;
+            progress: number;
+            related?: components["schemas"]["NodeRef"][];
+        };
+        ThreadStatus: "open" | "closed";
+        TiredMotifReport: {
+            world_id: number | null;
+            motifs: components["schemas"]["TiredMotifView"][];
+            foreign_images: string[];
+            overrides: components["schemas"]["MotifOverrideView"][];
+        };
+        TiredMotifView: {
+            key: string;
+            percent: number;
+            pinned: boolean;
+        };
+        ToolBlock: "rarity" | "actor_type" | "civilization_tier" | "world_state" | "unwired";
+        ToolEntry: {
+            tool_id: components["schemas"]["SonToolId"] | components["schemas"]["MortalToolId"];
+            agent: components["schemas"]["AgentKind"];
+            description: string;
+            read_only: boolean;
+            action_cost: number;
+            essence_cost: number;
+            minimum_rarity: string | null;
+            long_job: boolean;
+            input_schema: {
+                [key: string]: unknown;
+            };
+        };
+        ToolPreviewView: {
+            name: string;
+            description: string;
+            fields: {
+                [key: string]: string;
+            };
+            action_cost: number;
+            essence_cost: number;
+            read_only: boolean;
+            long_job: boolean;
+            minimum_rarity: components["schemas"]["Rarity"] | null;
+        };
+        Totals: {
+            calls: number;
+            milliseconds: number;
+            cost: number;
+            input_tokens: number;
+            output_tokens: number;
+        };
+        TraditionStats: {
+            kind: "tradition";
+            spread?: number | null;
+            rigidity?: number | null;
+        };
+        TranslateRequest: {
+            text: string;
+        };
+        TranslatedPayload: {
+            epoch?: number | null;
+            language_id: number;
+            new_words: number;
+        } & {
+            [key: string]: unknown;
+        };
+        TranslationOutput: {
+            translation: string;
+            pronunciation: string;
+            word_by_word: components["schemas"]["WordGlossOutput"][];
+            new_words: components["schemas"]["NewWordOutput"][];
+            note: string;
+        };
+        TravelMethod: "ancient_gate" | "space_fold" | "light_sail" | "cosmic_mount" | "dream_journey" | "river_of_dead" | "divine_bridge" | "slingshot_orbit" | "swallowed";
+        TravelResource: {
+            name: string;
+            description: string;
+            rule: string;
+            side_effect: string;
+        };
+        TravellerGuideView: {
+            world: components["schemas"]["WorldRecord"];
+            type_label: string;
+            star: string | null;
+            star_type: string | null;
+            parent: string | null;
+            atmosphere: string;
+            gravity: string;
+            discovery: string;
+            climate: string | null;
+            climate_epochs_left: number | null;
+            dangers: components["schemas"]["Danger"][];
+            peoples: components["schemas"]["PeopleLine"][];
+            resources: components["schemas"]["ResourceLine"][];
+            routes: components["schemas"]["RouteLine"][];
+            foreign_gods: components["schemas"]["GodLine"][];
+            sky: components["schemas"]["EntitySummary"][];
+        };
+        TributeForgiveInput: {
+            bond_id: number;
+        };
+        TributeImposeInput: {
+            payer_id: number;
+            receiver_id: number;
+        };
+        TributeStatus: "active" | "ended" | "revolted";
+        TributeView: {
+            id: number;
+            payer: components["schemas"]["NodeRef"] | null;
+            receiver: components["schemas"]["NodeRef"] | null;
+            war_id: number | null;
+            status: components["schemas"]["TributeStatus"];
+            since_epoch: number;
+            ended_epoch: number | null;
+        };
+        TurnCounter: "sibling_messages" | "narrative_bonds" | "prayers" | "free_living_creation" | "free_land_creation" | "anchor_chosen" | "words_coined" | "gifts" | "holy_world" | "leak_stitched" | "take_life" | "intrigue" | "outer_bargain" | "harvests" | "discoveries" | "claims" | "worship_changes" | "learning" | "prophecies" | "commander_appointments" | "adoptions" | "explorations" | "repeated_creations" | "resurrection_rites" | "languages_founded" | "cultures_created" | "land_rewards";
+        TurnCounterView: {
+            counter: components["schemas"]["TurnCounter"];
+            value: number;
+        };
+        TurnOrderItem: {
+            id: number;
+            name: string;
+            ini: number;
+        };
+        UndoResult: {
+            entry_id: number;
+            applied?: string[];
+            conflicts?: string[];
+        };
+        ValidationError: {
+            loc: (string | number)[];
+            msg: string;
+            type: string;
+            input?: unknown;
+            ctx?: Record<string, never>;
+        };
+        VerdictChoice: "accept" | "reject";
+        VesselStats: {
+            kind: "vessel";
+            speed?: number | null;
+            range?: number | null;
+            crew?: number | null;
+            armor?: number | null;
+            strangeness?: number | null;
+        };
+        VoicesDeleteViewInput: {
+            view_id: number;
+        };
+        VoicesEditViewInput: {
+            view_id: number;
+            text: string;
+        };
+        WarArmyInput: {
+            war_id: number;
+            community_id: number;
+        };
+        WarBattleInput: {
+            war_id: number;
+        };
+        WarCause: "hostility" | "uprising" | "tribute_revolt" | "incited" | "declared" | "betrayal" | "conquest_journey" | "foreign_god";
+        WarDuelInput: {
+            first_id: number;
+            second_id: number;
+            war_id?: number | null;
+        };
+        WarEndInput: {
+            war_id: number;
+            ending: components["schemas"]["WarEnding"];
+        };
+        WarEnding: "victory" | "conquest" | "tribute" | "exhaustion" | "peace" | "white_peace" | "betrayal" | "same_front" | "no_side_left" | "miracle";
+        WarOpenInput: {
+            attacker_id: number;
+            defender_id: number;
+            reason: string;
+        };
+        WarSide: "attacker" | "defender";
+        WarSideView: {
+            entity: components["schemas"]["NodeRef"] | null;
+            side: components["schemas"]["WarSide"];
+            joined_epoch: number;
+            left_epoch: number | null;
+        };
+        WarStatus: "mobilizing" | "ongoing" | "ended";
+        WarSummary: {
+            id: number;
+            event: components["schemas"]["NodeRef"] | null;
+            world_id: number;
+            status: components["schemas"]["WarStatus"];
+            cause: components["schemas"]["WarCause"];
+            cause_text: string | null;
+            started_epoch: number;
+            ended_epoch: number | null;
+            last_clash_epoch: number | null;
+            battles: number;
+            score: number;
+            violence: number | null;
+            ending: components["schemas"]["WarEnding"] | null;
+            victor: components["schemas"]["NodeRef"] | null;
+            loser: components["schemas"]["NodeRef"] | null;
+            sides: components["schemas"]["WarSideView"][];
+        };
+        WarVictoryInput: {
+            war_id: number;
+            victor_id: number;
+        };
+        WeakNode: {
+            id: number;
+            name: string;
+            kind: string;
+            degree: number;
+        };
+        WizardInput: {
+            template?: string | null;
+            magic?: unknown;
+            darkness?: unknown;
+            technology?: string | null;
+            language?: string | null;
+            peoples?: unknown;
+            cosmos?: string | null;
+            tone?: string | null;
+            seed?: string | null;
+        };
+        WizardOptions: {
+            technology: {
+                [key: string]: string;
+            };
+            language: {
+                [key: string]: string;
+            };
+            cosmos: components["schemas"]["CosmosOption"][];
+            lore_languages: {
+                [key: string]: string;
+            };
+            templates: components["schemas"]["WizardTemplate"][];
+            first_sons: components["schemas"]["FirstSonsOptions"];
+        };
+        WizardTemplate: {
+            key: components["schemas"]["GenesisTemplate"];
+            name: string;
+            tone: string;
+            magic: number;
+            darkness: number;
+            technology: components["schemas"]["TechnologyEra"];
+            language: components["schemas"]["LanguageTexture"];
+            peoples: number;
+            cosmos: components["schemas"]["CosmosSize"];
+            seed: string;
+        };
+        WordGlossOutput: {
+            word: string;
+            meaning: string;
+        };
+        WordInput: {
+            word: string;
+            meaning: string;
+            kind?: components["schemas"]["WordKind"] | null;
+            origin?: string | null;
+            example?: string | null;
+        };
+        WordKind: "noun" | "verb" | "adjective" | "affix" | "title" | "place_name" | "proper_name" | "number" | "interjection";
+        WorldBornEvent: {
+            id: number;
+            kind: "world.born";
+            payload: components["schemas"]["WorldBornPayload"];
+            at: string;
+        };
+        WorldBornPayload: {
+            epoch?: number | null;
+            world_id: number;
+            name?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        WorldBriefItem: {
+            id: number;
+            name: string;
+            world_type: string;
+            discovery: string;
+            leakage: number;
+        };
+        WorldChangedEvent: {
+            id: number;
+            kind: "world.changed";
+            payload: components["schemas"]["WorldChangedPayload"];
+            at: string;
+        };
+        WorldChangedPayload: {
+            epoch?: number | null;
+            action?: string | null;
+            target_node_id?: number | null;
+            ledger_entry_id?: number | null;
+        } & {
+            [key: string]: unknown;
+        };
+        WorldChangesEvent: {
+            id: number;
+            kind: "world.changes";
+            payload: components["schemas"]["ChangesPayload"];
+            at: string;
+        };
+        WorldChronicle: {
+            world_id: number;
+            name: string;
+            event_count: number;
+            headlines: string[];
+            summary: string | null;
+            narrative: string | null;
+        };
+        WorldCounts: {
+            regions: number;
+            peoples: number;
+            settlements: number;
+            living: number;
+            population: number;
+        };
+        WorldDepthInput: {
+            history?: string | null;
+            rumours?: string[] | null;
+            sayings?: components["schemas"]["SayingInput"][] | null;
+            details?: string[] | null;
+            hidden_truth?: string | null;
+            specifics?: {
+                [key: string]: string;
+            } | null;
+            world_id: number;
+        };
+        WorldDialectFit: {
+            world_id: number;
+            world_name: string;
+            named: number;
+            misfits: number;
+            misfit_pct: number;
+        };
+        WorldEndGoldenAgeInput: {
+            world_id: number;
+        };
+        WorldEpochStarInput: {
+            world_id: number;
+            entity_id?: number | null;
+        };
+        WorldGoldenAgeInput: {
+            world_id: number;
+        };
+        WorldGuardianInput: {
+            world_id: number;
+            son_id: number;
+        };
+        WorldLaw: {
+            entity: components["schemas"]["EntitySummary"];
+            mechanic: components["schemas"]["NaturalLaw"] | null;
+        };
+        WorldMap: {
+            seed: string;
+            world_type: components["schemas"]["WorldType"];
+            window: components["schemas"]["MapWindow"];
+            extent: components["schemas"]["KnownExtent"];
+            palette: components["schemas"]["WorldPalette"];
+            cells: components["schemas"]["CellLayer"];
+            borders: components["schemas"]["BorderLayer"];
+            regions: components["schemas"]["RegionRecord"][];
+            markers: components["schemas"]["PlacedMarker"][];
+            new_positions: components["schemas"]["PositionUpdate"][];
+            relocated_positions: components["schemas"]["PositionUpdate"][];
+        };
+        WorldMapInput: {
+            world_id: number;
+        };
+        WorldNarrative: {
+            world_id: number;
+            world_name: string;
+            narrative: string | null;
+            summary: string | null;
+        };
+        WorldPalette: {
+            world_type: components["schemas"]["WorldType"];
+            biome_names: string[];
+            biome_colours: string[];
+            terrain_colours: string[];
+            coastal_water: string;
+            background: string;
+            unknown_land: string;
+            unknown_water: string;
+            fog: string;
+            coastline: string;
+            land_label: string;
+            water_label: string;
+        };
+        WorldPlanetStirsInput: {
+            world_id: number;
+        };
+        WorldPreviousCreationInput: {
+            world_id: number;
+        };
+        WorldPulseView: {
+            world_id: number;
+            communities: number;
+            godless: number;
+            factions: number;
+            cults: number;
+            named_mortals: number;
+            sons: number;
+            son_share: number | null;
+            engine_records: number;
+            this_epoch: number;
+            per_epoch: number;
+            quota: number;
+            window: number;
+        };
+        WorldRecord: {
+            id: number;
+            name: string;
+            world_type: components["schemas"]["WorldType"];
+            star_id: number | null;
+            parent_world_id: number | null;
+            orbit: number;
+            gravity: components["schemas"]["Gravity"];
+            atmosphere: components["schemas"]["Atmosphere"];
+            time_factor: number;
+            discovery: components["schemas"]["Discovery"];
+            danger: number;
+            leakage: number;
+            cosmology: string | null;
+            phonology: components["schemas"]["Phonology"] | null;
+            description: string | null;
+            image_prompt: string | null;
+            creator_son_id: number | null;
+            patron_son_id: number | null;
+            patron_automatic: boolean;
+            epoch_star_entity_id: number | null;
+            mirror_twin_id: number | null;
+            mortal_agents: number | null;
+            climate_era: components["schemas"]["ClimateEra"] | null;
+            climate_epochs_left: number | null;
+            climate_since_epoch: number | null;
+            created_epoch: number;
+            terrain_seed: string;
+            terrain_sea: number;
+            terrain_mountains: number;
+            terrain_humidity: number;
+        };
+        WorldReplacedEvent: {
+            id: number;
+            kind: "world.replaced";
+            payload: components["schemas"]["WorldReplacedPayload"];
+            at: string;
+        };
+        WorldReplacedPayload: {
+            epoch?: number | null;
+            message: string;
+            version: string;
+        } & {
+            [key: string]: unknown;
+        };
+        WorldReviveInput: {
+            world_id: number;
+        };
+        WorldSettingsView: {
+            fate_mode: components["schemas"]["FateMode"];
+            son_distribution: components["schemas"]["SonDistribution"];
+            mortal_agents_per_epoch: number | null;
+            council_every_epochs: number | null;
+            mortal_agent_parallelism: number | null;
+            llm_enabled: boolean;
+            image_generation: boolean;
+        };
+        WorldType: "ordinary" | "ocean" | "sand" | "ice" | "lava" | "crystal" | "living" | "dead" | "dream" | "mirror" | "gas" | "ringed" | "asteroid_belt" | "tidally_locked" | "void_pocket" | "gods_palace" | "generation_ship" | "corpse_world";
+        WorldTypeInfo: {
+            key: string;
+            label: string;
+            description: string;
+            domains: components["schemas"]["Domain"][];
+            living: boolean;
+            realm_of_dead: boolean;
+        };
+        WorldTypeLook: {
+            world_type: components["schemas"]["WorldType"];
+            label: string;
+            palette: components["schemas"]["WorldPalette"];
+        };
+        WorldWiki: {
+            world: components["schemas"]["WorldRecord"];
+            type_label: string;
+            cover: string | null;
+            depth: components["schemas"]["EntityDepth"] | null;
+            star: components["schemas"]["StarRecord"] | null;
+            counts: components["schemas"]["WorldCounts"];
+            sons: components["schemas"]["NodeRef"][];
+            patron: components["schemas"]["NodeRef"] | null;
+            foreign_gods: components["schemas"]["ForeignGodRecord"][];
+            routes: components["schemas"]["RouteRecord"][];
+            peoples: components["schemas"]["PeopleBrief"][];
+            sky_events: components["schemas"]["SkyEventRecord"][];
+            timeline: components["schemas"]["ChronicleLineRecord"][];
+            images: components["schemas"]["ImageRecord"][];
+        };
+        WritingSystem: "alphabet" | "syllabary" | "pictographic" | "knot" | "notch";
+    };
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
+}
+export type $defs = Record<string, never>;
+export interface operations {
+    health_api_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    report_api_health_report_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthReportResponse"];
+                };
+            };
+        };
+    };
+    list_jobs_api_jobs_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobResponse"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_job_api_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_job_api_jobs__job_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_rules_api_rules_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleResponse"][];
+                };
+            };
+        };
+    };
+    reset_all_rules_api_rules_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_rules_api_rules_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleBatchRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleResponse"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_rule_api_rules__namespace___key__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                namespace: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_rule_api_rules__namespace___key__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                namespace: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stream_events_api_events_get: {
+        parameters: {
+            query?: {
+                after?: number | null;
+            };
+            header?: {
+                "last-event-id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    activity_log_api_activity_log_get: {
+        parameters: {
+            query?: {
+                after?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": (components["schemas"]["JobQueuedEvent"] | components["schemas"]["JobStartedEvent"] | components["schemas"]["JobProgressEvent"] | components["schemas"]["JobFinishedEvent"] | components["schemas"]["JobFailedEvent"] | components["schemas"]["JobCancelledEvent"] | components["schemas"]["WorldChangedEvent"] | components["schemas"]["RulesChangedEvent"] | components["schemas"]["EngineNoteEvent"] | components["schemas"]["EnginePhaseEvent"] | components["schemas"]["SystemNoteEvent"] | components["schemas"]["SystemErrorEvent"] | components["schemas"]["AgentRetryEvent"] | components["schemas"]["EpochStartedEvent"] | components["schemas"]["EpochResumedEvent"] | components["schemas"]["EpochProgressEvent"] | components["schemas"]["EpochStopRequestedEvent"] | components["schemas"]["EpochStoppedEvent"] | components["schemas"]["EpochFinishedEvent"] | components["schemas"]["EpochBackupEvent"] | components["schemas"]["SonDistributedEvent"] | components["schemas"]["SonTurnQueuedEvent"] | components["schemas"]["SonTurnStartedEvent"] | components["schemas"]["SonTurnFinishedEvent"] | components["schemas"]["MortalsStartedEvent"] | components["schemas"]["MortalTurnStartedEvent"] | components["schemas"]["MortalTurnFinishedEvent"] | components["schemas"]["EngineStartedEvent"] | components["schemas"]["EngineFinishedEvent"] | components["schemas"]["FateStartedEvent"] | components["schemas"]["FateStepEvent"] | components["schemas"]["FateFinishedEvent"] | components["schemas"]["CouncilHeldEvent"] | components["schemas"]["SonChatRepliedEvent"] | components["schemas"]["SonNewEvent"] | components["schemas"]["SonAscendedEvent"] | components["schemas"]["CreatorRevelationEvent"] | components["schemas"]["WorldBornEvent"] | components["schemas"]["GenesisFinishedEvent"] | components["schemas"]["EntityDeepenedEvent"] | components["schemas"]["ForeignGodDeepenedEvent"] | components["schemas"]["EpicWrittenEvent"] | components["schemas"]["NetworkRepairedEvent"] | components["schemas"]["LanguageTranslatedEvent"] | components["schemas"]["NotificationCreatedEvent"] | components["schemas"]["WorldChangesEvent"] | components["schemas"]["WorldReplacedEvent"] | components["schemas"]["LedgerUndoneEvent"] | components["schemas"]["BackupTakenEvent"] | components["schemas"]["ImageQueuedEvent"] | components["schemas"]["ImageProgressEvent"] | components["schemas"]["ImageDoneEvent"] | components["schemas"]["ImageFailedEvent"] | components["schemas"]["ImageStatusEvent"] | components["schemas"]["ImageBulkLogEvent"] | components["schemas"]["BatchDeepenLogEvent"] | components["schemas"]["StreamHelloEvent"] | components["schemas"]["AgentStreamEvent"] | components["schemas"]["AgentThoughtEvent"] | components["schemas"]["AgentToolPreparingEvent"] | components["schemas"]["AgentToolWritingEvent"] | components["schemas"]["AgentToolCalledEvent"] | components["schemas"]["AgentToolResultEvent"] | components["schemas"]["AgentWritingEvent"])[];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_state_api_state_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StateResponse"];
+                };
+            };
+        };
+    };
+    read_changes_api_changes_get: {
+        parameters: {
+            query?: {
+                since?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangesResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_enums_api_catalogue_enums_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnumCatalogue"];
+                };
+            };
+        };
+    };
+    read_catalogue_api_catalogue_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Catalogue"];
+                };
+            };
+        };
+    };
+    list_names_api_names_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NameEntry"][];
+                };
+            };
+        };
+    };
+    search_world_api_search_get: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchHit"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    wizard_options_api_genesis_wizard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WizardOptions"];
+                };
+            };
+        };
+    };
+    start_genesis_api_genesis_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenesisRequest"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobAccepted"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    saved_genesis_api_genesis_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedGenesis"];
+                };
+            };
+        };
+    };
+    complete_epoch_api_epochs_current_complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobAccepted"];
+                };
+            };
+        };
+    };
+    stop_epoch_api_epochs_current_stop_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Done"];
+                };
+            };
+        };
+    };
+    epoch_estimate_api_epochs_current_estimate_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EpochEstimate"];
+                };
+            };
+        };
+    };
+    list_epochs_api_epochs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EpochListItem"][];
+                };
+            };
+        };
+    };
+    epoch_breakdown_api_epochs__epoch__breakdown_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                epoch: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EpochBreakdown"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    epoch_statistics_api_stats_epochs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EpochStatistics"][];
+                };
+            };
+        };
+    };
+    lore_statistics_api_stats_lore_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoreTotals"];
+                };
+            };
+        };
+    };
+    read_creator_api_creator_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatorDetail"];
+                };
+            };
+        };
+    };
+    patch_creator_api_creator_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchCreatorBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_reputation_api_creator_reputation_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatorReputation"];
+                };
+            };
+        };
+    };
+    put_creator_note_api_creator_note_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PutCreatorNoteBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_creator_mood_api_creator_mood_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PutCreatorMoodBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_creator_passions_api_creator_passions_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PutCreatorPassionsBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_creator_portrait_api_creator_portrait_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    post_creator_epic_api_creator_epic_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    post_creator_deepen_api_creator_deepen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    post_sons_son_id_reputation_nudge_api_sons__son_id__reputation_nudge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostSonsSonIdReputationNudgeBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_revelations_api_revelations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostRevelationsBody"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_sons_api_sons_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SonPublic"][];
+                };
+            };
+        };
+    };
+    list_relations_api_sons_relations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SonRelationItem"][];
+                };
+            };
+        };
+    };
+    distribution_preview_view_api_sons_distribution_preview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DistributionPreviewView"];
+                };
+            };
+        };
+    };
+    read_son_api_sons__son_id__get: {
+        parameters: {
+            query?: {
+                bond_offset?: number;
+                bond_limit?: number;
+            };
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SonDetail"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_sons_son_id_api_sons__son_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchSonsSonIdBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_dead_son_panel_api_sons__son_id__resurrection_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeadSonPanel"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_chat_api_sons__son_id__chat_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageRecord"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    chat_api_sons__son_id__chat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatReply"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    act_api_sons__son_id__act_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobAccepted"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_summon_api_sons_summon_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostSonsSummonBody"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_distribute_api_sons_distribute_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    put_sons_son_id_order_api_sons__son_id__order_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PutSonsSonIdOrderBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_son_id_bless_api_sons__son_id__bless_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostSonsSonIdBlessBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_son_id_punish_api_sons__son_id__punish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostSonsSonIdPunishBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_son_id_star_api_sons__son_id__star_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_son_id_ascend_api_sons__son_id__ascend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_son_id_epic_api_sons__son_id__epic_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_son_id_resurrect_api_sons__son_id__resurrect_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_son_id_kill_api_sons__son_id__kill_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostSonsSonIdKillBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_son_id_devour_api_sons__son_id__devour_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostSonsSonIdDevourBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_son_id_drain_api_sons__son_id__drain_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_son_id_absolute_command_api_sons__son_id__absolute_command_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostSonsSonIdAbsoluteCommandBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_son_id_demote_api_sons__son_id__demote_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_son_id_strip_power_api_sons__son_id__strip_power_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostSonsSonIdStripPowerBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_son_id_rebellion_api_sons__son_id__rebellion_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostSonsSonIdRebellionBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_son_id_scheme_api_sons__son_id__scheme_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostSonsSonIdSchemeBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_son_id_scatter_bones_api_sons__son_id__scatter_bones_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostSonsSonIdScatterBonesBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_sons_son_id_world_api_sons__son_id__world_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutSonsSonIdWorldBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_sons_son_id_protection_api_sons__son_id__protection_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_sons_son_id_reset_counters_api_sons__son_id__reset_counters_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_sons_son_id_image_prompt_api_sons__son_id__image_prompt_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PutSonsSonIdImagePromptBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_entities_api_entities_get: {
+        parameters: {
+            query?: {
+                type?: components["schemas"]["EntityType"] | null;
+                q?: string | null;
+                status?: string | null;
+                world_id?: number | null;
+                hide_archived?: boolean;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_EntitySummary_"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_favorites_api_favorites_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntitySummary"][];
+                };
+            };
+        };
+    };
+    favorite_board_api_favorites_board_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FavoriteBoard"];
+                };
+            };
+        };
+    };
+    read_entity_api_entities__entity_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityDetail"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_entities_entity_id_api_entities__entity_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchEntitiesEntityIdBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    entity_bonds_api_entities__entity_id__bonds_get: {
+        parameters: {
+            query?: {
+                active_only?: boolean;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_BondView_"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    entity_chronicle_api_entities__entity_id__chronicle_get: {
+        parameters: {
+            query?: {
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ChronicleLineRecord_"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_archive_api_entities__entity_id__archive_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArchiveRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Importance"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deepen_api_entities__entity_id__deepen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobAccepted"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    write_image_prompt_api_entities__entity_id__image_prompt_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobAccepted"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suggest_links_api_entities__entity_id__suggest_links_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobAccepted"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_entities_entity_id_canon_api_entities__entity_id__canon_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutEntitiesEntityIdCanonBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_intervene_api_entities__entity_id__intervene_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostEntitiesEntityIdInterveneBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_entities_entity_id_knowledge_api_entities__entity_id__knowledge_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutEntitiesEntityIdKnowledgeBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_dream_api_entities__entity_id__dream_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostEntitiesEntityIdDreamBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_entities_entity_id_favorite_api_entities__entity_id__favorite_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PutEntitiesEntityIdFavoriteBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_note_api_entities__entity_id__note_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityNoteRecord"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_entities_entity_id_note_api_entities__entity_id__note_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PutEntitiesEntityIdNoteBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_entities_entity_id_note_api_entities__entity_id__note_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_merge_api_entities__entity_id__merge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostEntitiesEntityIdMergeBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_entities_entity_id_stat_api_entities__entity_id__stat_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutEntitiesEntityIdStatBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_entities_entity_id_tags_api_entities__entity_id__tags_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchEntitiesEntityIdTagsBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_entities_entity_id_location_api_entities__entity_id__location_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutEntitiesEntityIdLocationBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_entities_entity_id_patron_api_entities__entity_id__patron_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PutEntitiesEntityIdPatronBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_decree_api_entities__entity_id__decree_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostEntitiesEntityIdDecreeBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_entities_entity_id_agent_api_entities__entity_id__agent_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PutEntitiesEntityIdAgentBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_explore_api_entities__entity_id__explore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostEntitiesEntityIdExploreBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_seek_route_api_entities__entity_id__seek_route_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_expedition_api_entities__entity_id__expedition_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostEntitiesEntityIdExpeditionBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_exile_api_entities__entity_id__exile_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostEntitiesEntityIdExileBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_pardon_api_entities__entity_id__pardon_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_rite_api_entities__entity_id__rite_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostEntitiesEntityIdRiteBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_take_life_api_entities__entity_id__take_life_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostEntitiesEntityIdTakeLifeBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_drain_api_entities__entity_id__drain_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostEntitiesEntityIdDrainBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_harvest_api_entities__entity_id__harvest_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_resurrect_api_entities__entity_id__resurrect_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_deify_api_entities__entity_id__deify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_prophet_api_entities__entity_id__prophet_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_manifest_api_entities__entity_id__manifest_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostEntitiesEntityIdManifestBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_bloodline_curse_api_entities__entity_id__bloodline_curse_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostEntitiesEntityIdBloodlineCurseBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_convert_api_entities__entity_id__convert_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_wrath_api_entities__entity_id__wrath_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostEntitiesEntityIdWrathBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_links_api_links_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostLinksBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_links_bond_id_api_links__bond_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bond_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_facts_api_facts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostFactsBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_facts_fact_id_api_facts__fact_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fact_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_beliefs_api_beliefs_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutBeliefsBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    creator_opportunities_api_opportunities_creator_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatorHintLines"];
+                };
+            };
+        };
+    };
+    son_opportunities_api_sons__son_id__opportunities_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpportunityLines"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    entity_opportunities_api_entities__entity_id__opportunities_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpportunityLines"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    son_tools_api_sons__son_id__tools_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SonToolsView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    entity_agent_context_api_entities__entity_id__agent_context_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MortalAgentContext"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    entity_dreams_api_entities__entity_id__dreams_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DreamInbox"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    phases_api_engine_phases_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnginePhaseList"];
+                };
+            };
+        };
+    };
+    engine_seed_api_engine_seed_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EngineSeed"];
+                };
+            };
+        };
+    };
+    integrity_tasks_api_integrity_tasks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrityTaskList"];
+                };
+            };
+        };
+    };
+    run_integrity_api_integrity__task__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task: components["schemas"]["IntegrityTask"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrityResult"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    relation_between_api_entities__entity_id__relations__other_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+                other_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelationPair"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_entities_entity_id_relations_other_id_api_entities__entity_id__relations__other_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+                other_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutEntitiesEntityIdRelationsOtherIdBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_entities_entity_id_relations_other_id_feud_api_entities__entity_id__relations__other_id__feud_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+                other_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_entities_entity_id_relations_other_id_feud_api_entities__entity_id__relations__other_id__feud_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+                other_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    community_relations_api_entities__entity_id__relations_get: {
+        parameters: {
+            query?: {
+                limit?: number | null;
+            };
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelationList"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_wars_api_wars_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["WarStatus"] | null;
+                world_id?: number | null;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_WarSummary_"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_war_api_wars__war_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                war_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WarSummary"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    war_armies_api_wars__war_id__armies_get: {
+        parameters: {
+            query?: {
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                war_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ArmyView_"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    war_battles_api_wars__war_id__battles_get: {
+        parameters: {
+            query?: {
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                war_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_BattleView_"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    war_sieges_api_wars__war_id__sieges_get: {
+        parameters: {
+            query?: {
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                war_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_SiegeView_"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_captives_api_captives_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["CaptiveStatus"] | null;
+                war_id?: number | null;
+                community_id?: number | null;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_CaptiveView_"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tributes_api_tributes_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["TributeStatus"] | null;
+                war_id?: number | null;
+                community_id?: number | null;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_TributeView_"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    community_wars_api_entities__entity_id__wars_get: {
+        parameters: {
+            query?: {
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_WarSummary_"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    community_heroes_api_entities__entity_id__heroes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HeroView"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_foreign_gods_api_foreign_gods_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ForeignGodRecord"][];
+                };
+            };
+        };
+    };
+    post_foreign_gods_api_foreign_gods_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostForeignGodsBody"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_foreign_god_api_foreign_gods__god_id__get: {
+        parameters: {
+            query?: {
+                bond_offset?: number;
+                bond_limit?: number;
+            };
+            header?: never;
+            path: {
+                god_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ForeignGodDetail"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_foreign_gods_god_id_api_foreign_gods__god_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                god_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchForeignGodsGodIdBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_foreign_gods_god_id_deepen_api_foreign_gods__god_id__deepen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                god_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_foreign_gods_god_id_drain_api_foreign_gods__god_id__drain_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                god_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_foreign_gods_god_id_kill_api_foreign_gods__god_id__kill_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                god_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostForeignGodsGodIdKillBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    world_laws_api_worlds__world_id__laws_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorldLaw"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    addictions_api_addictions_get: {
+        parameters: {
+            query?: {
+                community_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddictionView"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_doom_api_doom_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DoomForecastView"];
+                };
+            };
+        };
+    };
+    read_cosmos_api_cosmos_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CosmosView"];
+                };
+            };
+        };
+    };
+    discovery_summary_api_discovery_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscoverySummary"];
+                };
+            };
+        };
+    };
+    world_guide_api_worlds__world_id__guide_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TravellerGuideView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_worlds_api_worlds_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostWorldsBody"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_worlds_world_id_api_worlds__world_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchWorldsWorldIdBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_worlds_world_id_orbit_api_worlds__world_id__orbit_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PutWorldsWorldIdOrbitBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_worlds_world_id_wrath_api_worlds__world_id__wrath_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostWorldsWorldIdWrathBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_worlds_world_id_discovery_round_api_worlds__world_id__discovery_round_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_stars_star_id_api_stars__star_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                star_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_stars_star_id_api_stars__star_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                star_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchStarsStarIdBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_routes_api_routes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostRoutesBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_routes_route_id_sever_api_routes__route_id__sever_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                route_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostRoutesRouteIdSeverBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_routes_route_id_restore_api_routes__route_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                route_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostRoutesRouteIdRestoreBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_routes_route_id_reveal_api_routes__route_id__reveal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                route_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostRoutesRouteIdRevealBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_voyages_journey_id_recall_api_voyages__journey_id__recall_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                journey_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_climate_api_climate_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutClimateBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_cosmic_resource_api_cosmic_resource_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutCosmicResourceBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_cosmic_resource_deposits_api_cosmic_resource_deposits_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostCosmicResourceDepositsBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_cosmic_hang_star_api_cosmic_hang_star_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostCosmicHangStarBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_cosmic_seal_gate_api_cosmic_seal_gate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostCosmicSealGateBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_cosmic_cleanse_leak_api_cosmic_cleanse_leak_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostCosmicCleanseLeakBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_cosmic_forget_world_api_cosmic_forget_world_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostCosmicForgetWorldBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_cosmic_sky_event_api_cosmic_sky_event_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostCosmicSkyEventBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_cosmic_rekindle_star_api_cosmic_rekindle_star_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostCosmicRekindleStarBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_cosmic_soul_bind_api_cosmic_soul_bind_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostCosmicSoulBindBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_cosmic_legendary_quest_api_cosmic_legendary_quest_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostCosmicLegendaryQuestBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    world_pulse_view_api_worlds__world_id__pulse_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorldPulseView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    world_wiki_api_worlds__world_id__wiki_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorldWiki"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    star_wiki_api_stars__star_id__wiki_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                star_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StarWiki"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deepen_world_api_worlds__world_id__deepen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobAccepted"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deepen_star_api_stars__star_id__deepen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                star_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobAccepted"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_epoch_star_api_cosmos_epoch_star_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EpochStarView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_expeditions_api_expeditions_get: {
+        parameters: {
+            query?: {
+                open_only?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GreatExpedition"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_map_api_worlds__world_id__map_get: {
+        parameters: {
+            query?: {
+                epoch?: number | null;
+            };
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    geography_preview_api_worlds__world_id__geography_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeographyPreview"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_map_notes_api_map_notes_get: {
+        parameters: {
+            query?: {
+                world_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapNoteRecord"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_map_notes_api_map_notes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostMapNotesBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_map_position_api_entities__entity_id__map_position_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MapPositionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Done"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_map_notes_note_id_api_map_notes__note_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                note_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_chronicle_api_chronicle_get: {
+        parameters: {
+            query?: {
+                epoch?: number | null;
+                before?: number | null;
+                limit?: number | null;
+                world_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChroniclePage"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    chronicle_epochs_api_chronicle_epochs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChronicleEpoch"][];
+                };
+            };
+        };
+    };
+    perspectives_api_chronicle_perspectives_get: {
+        parameters: {
+            query?: {
+                epoch?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PerspectiveLine"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cosmic_api_chronicle_cosmic_get: {
+        parameters: {
+            query?: {
+                last?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CosmicEpoch"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    threads_api_threads_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadRecord"][];
+                };
+            };
+        };
+    };
+    post_threads_api_threads_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostThreadsBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_threads_thread_id_close_api_threads__thread_id__close_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                thread_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostThreadsThreadIdCloseBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    codex_api_codex_md_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/markdown": unknown;
+                };
+            };
+        };
+    };
+    codex_archive_api_codex_zip_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": unknown;
+                };
+            };
+        };
+    };
+    book_api_book_get: {
+        parameters: {
+            query?: {
+                son_id?: number | null;
+                entity_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    book_map_api_book_maps__world_id__jpg_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": unknown;
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    book_pdf_status_api_book_pdf_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookPdfStatus"];
+                };
+            };
+        };
+    };
+    print_book_api_book_pdf_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobAccepted"];
+                };
+            };
+        };
+    };
+    download_book_api_book_pdf_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": unknown;
+                };
+            };
+        };
+    };
+    list_prayers_api_prayers_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrayerView"][];
+                };
+            };
+        };
+    };
+    post_prayers_message_id_answer_api_prayers__message_id__answer_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                message_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostPrayersMessageIdAnswerBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_councils_api_councils_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CouncilRecord"][];
+                };
+            };
+        };
+    };
+    convene_api_councils_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CouncilRequest"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_graph_api_graph_get: {
+        parameters: {
+            query?: {
+                node_offset?: number;
+                node_limit?: number;
+                link_offset?: number;
+                link_limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphWindow"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_path_api_graph_path_get: {
+        parameters: {
+            query: {
+                a: number;
+                b: number;
+                depth?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PathResult"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_health_api_graph_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetworkHealth"];
+                };
+            };
+        };
+    };
+    repair_graph_api_graph_repair_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairResult"];
+                };
+            };
+        };
+    };
+    fate_link_api_graph_fate_link_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["FateLinkRequest"] | null;
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobAccepted"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stop_fate_link_api_graph_fate_link_stop_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Done"];
+                };
+            };
+        };
+    };
+    list_languages_api_languages_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LanguageView"][];
+                };
+            };
+        };
+    };
+    language_tree_api_languages_tree_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LanguageNode"][];
+                };
+            };
+        };
+    };
+    dialect_fit_api_languages_dialect_fit_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NameReport"];
+                };
+            };
+        };
+    };
+    preview_sample_names_api_languages__language_id__sample_names_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                language_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SampleNamesRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SampleNames"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    translate_text_api_languages__language_id__translate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                language_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TranslateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TranslationOutput"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_knowledge_api_knowledge_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeView"][];
+                };
+            };
+        };
+    };
+    post_languages_language_id_words_api_languages__language_id__words_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                language_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostLanguagesLanguageIdWordsBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    media_api_media__file_name__get: {
+        parameters: {
+            query?: {
+                w?: number | null;
+            };
+            header?: never;
+            path: {
+                file_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    images_api_images_get: {
+        parameters: {
+            query?: {
+                node_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImageListView"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_image_api_images_post: {
+        parameters: {
+            query: {
+                node_id: number;
+                caption?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "image/png": string;
+                "image/jpeg": string;
+                "image/webp": string;
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImageRecord"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_cover_api_images__image_id__cover_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                image_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImageRecord"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_caption_api_images__image_id__caption_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                image_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaptionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImageRecord"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_image_api_images__image_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                image_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Done"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    gallery_missing_api_gallery_missing_get: {
+        parameters: {
+            query?: {
+                limit?: number | null;
+                type?: components["schemas"]["EntityType"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntitySummary"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    image_gen_status_api_image_gen_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImageGenStatus"];
+                };
+            };
+        };
+    };
+    generate_image_api_image_gen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerateRequest"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueuedImage"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_batch_api_image_gen_batch_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkRun"];
+                };
+            };
+        };
+    };
+    stop_batch_api_image_gen_batch_stop_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkRun"];
+                };
+            };
+        };
+    };
+    write_missing_prompts_api_entities_prompts_write_missing_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobAccepted"];
+                };
+            };
+        };
+    };
+    batch_status_api_batch_deepen_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkStatus"];
+                };
+            };
+        };
+    };
+    start_batch_api_batch_deepen_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkState"];
+                };
+            };
+        };
+    };
+    stop_batch_api_batch_deepen_stop_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkState"];
+                };
+            };
+        };
+    };
+    assign_missing_names_api_names_assign_missing_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobAccepted"];
+                };
+            };
+        };
+    };
+    list_notes_api_notes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotesView"];
+                };
+            };
+        };
+    };
+    notifications_api_notifications_get: {
+        parameters: {
+            query?: {
+                unread_only?: boolean;
+                category?: components["schemas"]["NotificationCategory"] | null;
+                limit?: number | null;
+                before?: number | null;
+                exclude?: components["schemas"]["NotificationCategory"][];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationList"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_note_api_notifications_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationRecord"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_notifications_api_notifications_read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkReadRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkReadResult"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    notification_settings_api_notifications_settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: boolean;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pin_chronicle_line_api_notifications_from_chronicle__chronicle_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chronicle_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationRecord"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_ledger_api_ledger_get: {
+        parameters: {
+            query?: {
+                epoch?: number | null;
+                actor_kind?: components["schemas"]["ActorKind"] | null;
+                actor_id?: number | null;
+                limit?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerPage"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    undo_api_ledger__entry_id__undo_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UndoResult"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    goals_api_goals_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalsOverview"];
+                };
+            };
+        };
+    };
+    opportunities_api_opportunities_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayerHints"];
+                };
+            };
+        };
+    };
+    post_scenarios_api_scenarios_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostScenariosBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_scenarios_scenario_id_abandon_api_scenarios__scenario_id__abandon_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scenario_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_settings_api_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorldSettingsView"];
+                };
+            };
+        };
+    };
+    patch_settings_api_settings_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchSettingsBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_peoples_awaken_api_peoples_awaken_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostPeoplesAwakenBody"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_federations_api_federations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostFederationsBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_cheats_essence_api_cheats_essence_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostCheatsEssenceBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_backups_api_backups_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupInfo"][];
+                };
+            };
+        };
+    };
+    take_backup_api_backups_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupInfo"];
+                };
+            };
+        };
+    };
+    secondary_target_api_backups_secondary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecondaryTarget"];
+                };
+            };
+        };
+    };
+    set_secondary_target_api_backups_secondary_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SecondaryTargetRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecondaryTarget"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_backup_api_backups_restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SafetyResult"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_backup_api_backups__file_name__database_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                file_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_package_api_backups__file_name__package_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                file_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_world_api_world_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SafetyResult"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_world_api_world_export_get: {
+        parameters: {
+            query?: {
+                images?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_world_api_world_import_post: {
+        parameters: {
+            query?: {
+                mode?: components["schemas"]["ImportMode"];
+                confirm?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportResult"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    discovery_status_api_discovery_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscoveryStatus"];
+                };
+            };
+        };
+    };
+    end_discovery_api_discovery_end_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscoveryEnded"];
+                };
+            };
+        };
+    };
+    model_metrics_api_metrics_models_get: {
+        parameters: {
+            query?: {
+                epochs?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelMetricsView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tasks_api_maintenance_tasks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskInfo"][];
+                };
+            };
+        };
+    };
+    run_task_api_maintenance_tasks__task__run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task: components["schemas"]["MaintenanceTask"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobAccepted"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    missing_content_api_maintenance_missing_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MissingContent"];
+                };
+            };
+        };
+    };
+    verify_backup_api_maintenance_backups__file_name__verify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                file_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupVerified"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    regenerate_powers_api_maintenance_sons__son_id__powers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobAccepted"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    write_cosmos_prompts_api_maintenance_cosmos_prompts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobAccepted"];
+                };
+            };
+        };
+    };
+    write_missing_chronicles_api_maintenance_chronicles_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobAccepted"];
+                };
+            };
+        };
+    };
+    list_blocks_api_prompt_context_blocks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContextBlockInfo"][];
+                };
+            };
+        };
+    };
+    prompt_catalogue_api_prompt_context_catalogue_get: {
+        parameters: {
+            query?: {
+                area?: components["schemas"]["PromptArea"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromptCatalogue"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    prompt_detail_api_prompt_context_catalogue__prompt_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                prompt_id: components["schemas"]["PromptId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromptDetail"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    son_prompt_api_prompt_context_son_prompt__son_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SonPromptPreview"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tired_motifs_api_prompt_context_tired_motifs_get: {
+        parameters: {
+            query?: {
+                world_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TiredMotifReport"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    override_motif_api_prompt_context_tired_motifs_overrides_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MotifOverrideRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TiredMotifReport"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clear_motif_api_prompt_context_tired_motifs_overrides_clear_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MotifClearRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TiredMotifReport"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    context_block_api_prompt_context__kind__get: {
+        parameters: {
+            query?: {
+                son_id?: number | null;
+                world_id?: number | null;
+                entity_id?: number | null;
+                section?: components["schemas"]["SummarySection"] | null;
+                short?: boolean;
+                full?: boolean;
+            };
+            header?: never;
+            path: {
+                kind: components["schemas"]["ContextBlockKind"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContextBlock"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    fate_controls_api_fate_controls_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FateControlsView"];
+                };
+            };
+        };
+    };
+    list_actions_api_actions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionCatalogueItem"][];
+                };
+            };
+        };
+    };
+    action_son_turn_rank_api_actions_son_turn_rank_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SonTurnRankInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_son_birth_child_api_actions_son_birth_child_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SonBirthChildInput"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_son_address_sibling_api_actions_son_address_sibling_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SonAddressSiblingInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_chronicle_edit_api_actions_chronicle_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChronicleEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_belief_rename_api_actions_belief_rename_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BeliefRenameInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_name_accept_api_actions_name_accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NameAcceptInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_thread_advance_api_actions_thread_advance_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ThreadAdvanceInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_epoch_edit_api_actions_epoch_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EpochEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_cosmic_extinguish_star_api_actions_cosmic_extinguish_star_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CosmicExtinguishStarInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_star_depth_api_actions_star_depth_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StarDepthInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_world_depth_api_actions_world_depth_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorldDepthInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_settlement_shelter_api_actions_settlement_shelter_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettlementShelterInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_settlement_abandon_api_actions_settlement_abandon_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettlementAbandonInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_settlement_resettle_api_actions_settlement_resettle_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettlementResettleInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mortal_child_api_actions_mortal_child_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MortalChildInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_settlement_capital_api_actions_settlement_capital_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettlementCapitalInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mortal_act_api_actions_mortal_act_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MortalActInput"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_community_notable_api_actions_community_notable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityNotableInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_community_crown_api_actions_community_crown_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityCrownInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_people_village_api_actions_people_village_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeopleVillageInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_settlement_ethnogenesis_api_actions_settlement_ethnogenesis_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettlementEthnogenesisInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_species_awaken_api_actions_species_awaken_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpeciesAwakenInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_ruler_heir_api_actions_ruler_heir_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RulerHeirInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_spirit_rest_api_actions_spirit_rest_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpiritRestInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_record_retire_api_actions_record_retire_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordRetireInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_society_shares_api_actions_society_shares_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SocietySharesInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_society_satisfaction_api_actions_society_satisfaction_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SocietySatisfactionInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_society_stores_api_actions_society_stores_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SocietyStoresInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_society_famine_api_actions_society_famine_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SocietyFamineInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_society_plenty_api_actions_society_plenty_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SocietyPlentyInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_society_forge_api_actions_society_forge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SocietyForgeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_society_uprising_api_actions_society_uprising_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SocietyUprisingInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resource_commodity_api_actions_resource_commodity_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResourceCommodityInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_community_mint_api_actions_community_mint_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityMintInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_community_work_api_actions_community_work_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityWorkInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_community_exodus_api_actions_community_exodus_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityExodusInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_community_contact_api_actions_community_contact_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityContactInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_world_golden_age_api_actions_world_golden_age_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorldGoldenAgeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_world_end_golden_age_api_actions_world_end_golden_age_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorldEndGoldenAgeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_civilization_tier_api_actions_civilization_tier_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CivilizationTierInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_civilization_independence_api_actions_civilization_independence_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CivilizationIndependenceInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_civilization_reclaim_api_actions_civilization_reclaim_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CivilizationReclaimInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_world_previous_creation_api_actions_world_previous_creation_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorldPreviousCreationInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_civilization_loan_api_actions_civilization_loan_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CivilizationLoanInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_civilization_forgive_debt_api_actions_civilization_forgive_debt_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CivilizationForgiveDebtInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_civilization_enforce_debt_api_actions_civilization_enforce_debt_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CivilizationEnforceDebtInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_civilization_barter_api_actions_civilization_barter_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CivilizationBarterInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_civilization_adoption_api_actions_civilization_adoption_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CivilizationAdoptionInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_civilization_treaty_api_actions_civilization_treaty_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CivilizationTreatyInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_hero_raise_api_actions_hero_raise_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HeroRaiseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_hero_quest_api_actions_hero_quest_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HeroQuestInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_hero_resolve_api_actions_hero_resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HeroResolveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_hero_recall_api_actions_hero_recall_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HeroRecallInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_hero_apprentice_api_actions_hero_apprentice_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HeroApprenticeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_hero_hunt_api_actions_hero_hunt_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HeroHuntInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_faction_found_api_actions_faction_found_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FactionFoundInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_faction_dissolve_api_actions_faction_dissolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FactionDissolveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_war_battle_api_actions_war_battle_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarBattleInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_war_open_api_actions_war_open_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarOpenInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_war_army_api_actions_war_army_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarArmyInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_army_disband_api_actions_army_disband_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArmyDisbandInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_army_bless_api_actions_army_bless_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArmyBlessInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_war_duel_api_actions_war_duel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarDuelInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_war_victory_api_actions_war_victory_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarVictoryInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_war_end_api_actions_war_end_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarEndInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_community_rise_up_api_actions_community_rise_up_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityRiseUpInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_faction_spy_api_actions_faction_spy_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FactionSpyInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_captive_free_api_actions_captive_free_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaptiveFreeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_captive_ransom_api_actions_captive_ransom_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaptiveRansomInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_tribute_impose_api_actions_tribute_impose_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TributeImposeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_tribute_forgive_api_actions_tribute_forgive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TributeForgiveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_alliance_betray_api_actions_alliance_betray_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AllianceBetrayInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_alliance_marriage_api_actions_alliance_marriage_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AllianceMarriageInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_species_feed_api_actions_species_feed_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpeciesFeedInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_species_mutate_api_actions_species_mutate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpeciesMutateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_people_split_api_actions_people_split_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeopleSplitInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_species_chimera_api_actions_species_chimera_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpeciesChimeraInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_species_trail_api_actions_species_trail_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpeciesTrailInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_species_cull_api_actions_species_cull_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpeciesCullInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_species_spare_prey_api_actions_species_spare_prey_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpeciesSparePreyInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_species_introduce_api_actions_species_introduce_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpeciesIntroduceInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_species_seed_api_actions_species_seed_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpeciesSeedInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_soul_descend_api_actions_soul_descend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SoulDescendInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_soul_harvest_api_actions_soul_harvest_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SoulHarvestInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_world_planet_stirs_api_actions_world_planet_stirs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorldPlanetStirsInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_archive_raise_api_actions_archive_raise_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    action_archive_read_api_actions_archive_read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArchiveReadInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_plague_cosmic_api_actions_plague_cosmic_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlagueCosmicInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_soul_mirror_api_actions_soul_mirror_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SoulMirrorInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mortal_immortal_api_actions_mortal_immortal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MortalImmortalInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_quest_abandon_api_actions_quest_abandon_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuestAbandonInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_sky_time_echo_api_actions_sky_time_echo_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SkyTimeEchoInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_horror_event_api_actions_horror_event_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HorrorEventInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_horror_outer_being_api_actions_horror_outer_being_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HorrorOuterBeingInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_horror_cult_api_actions_horror_cult_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HorrorCultInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_horror_suppress_cult_api_actions_horror_suppress_cult_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HorrorSuppressCultInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_son_sanity_api_actions_son_sanity_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SonSanityInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_doom_apocalypse_api_actions_doom_apocalypse_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DoomApocalypseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_doom_clock_api_actions_doom_clock_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DoomClockInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_son_duel_api_actions_son_duel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SonDuelInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_son_god_war_api_actions_son_god_war_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SonGodWarInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_foreign_god_raid_temple_api_actions_foreign_god_raid_temple_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForeignGodRaidTempleInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_foreign_god_wake_api_actions_foreign_god_wake_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForeignGodWakeInput"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_son_relation_api_actions_son_relation_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SonRelationInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_son_outer_bargain_api_actions_son_outer_bargain_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SonOuterBargainInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_legend_forget_api_actions_legend_forget_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LegendForgetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_legend_revive_api_actions_legend_revive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LegendReviveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_legend_from_event_api_actions_legend_from_event_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LegendFromEventInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_legend_manifest_api_actions_legend_manifest_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LegendManifestInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_prophecy_fulfil_api_actions_prophecy_fulfil_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProphecyFulfilInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_prophecy_forget_api_actions_prophecy_forget_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProphecyForgetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_world_map_api_actions_world_map_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorldMapInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_map_snapshot_api_actions_map_snapshot_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    action_world_epoch_star_api_actions_world_epoch_star_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorldEpochStarInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_route_teach_api_actions_route_teach_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RouteTeachInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_foreign_god_raise_land_api_actions_foreign_god_raise_land_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForeignGodRaiseLandInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_deposit_owner_api_actions_deposit_owner_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DepositOwnerInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_market_found_api_actions_market_found_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketFoundInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_pirates_spawn_api_actions_pirates_spawn_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PiratesSpawnInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_market_disband_api_actions_market_disband_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketDisbandInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_route_danger_api_actions_route_danger_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RouteDangerInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_economy_resources_api_actions_economy_resources_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    action_economy_cosmic_api_actions_economy_cosmic_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    action_addiction_cure_api_actions_addiction_cure_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddictionCureInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_essence_pour_api_actions_essence_pour_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EssencePourInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_creator_sign_api_actions_creator_sign_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatorSignInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mortal_protect_api_actions_mortal_protect_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MortalProtectInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_foreign_god_strike_api_actions_foreign_god_strike_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForeignGodStrikeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_reputation_drift_api_actions_reputation_drift_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReputationDriftInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_goals_evaluate_api_actions_goals_evaluate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    action_faith_first_api_actions_faith_first_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FaithFirstInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_language_edit_api_actions_language_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LanguageEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_language_signature_api_actions_language_signature_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LanguageSignatureInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_language_epoch_words_api_actions_language_epoch_words_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["LanguageEpochWordsInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_intuition_discard_api_actions_intuition_discard_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IntuitionDiscardInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_intuition_discard_all_api_actions_intuition_discard_all_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    action_knowledge_level_api_actions_knowledge_level_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KnowledgeLevelInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_knowledge_run_api_actions_knowledge_run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    action_mechanics_weigh_api_actions_mechanics_weigh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    action_market_write_off_api_actions_market_write_off_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketWriteOffInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_market_run_api_actions_market_run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    action_faith_syncretize_api_actions_faith_syncretize_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FaithSyncretizeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_faith_native_run_api_actions_faith_native_run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    action_language_creole_api_actions_language_creole_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LanguageCreoleInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_language_contact_run_api_actions_language_contact_run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    action_records_living_stats_api_actions_records_living_stats_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    action_engine_run_phase_api_actions_engine_run_phase_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EngineRunPhaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_fate_retry_api_actions_fate_retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    action_fate_rejudge_debt_api_actions_fate_rejudge_debt_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    action_fate_rejudge_limbo_api_actions_fate_rejudge_limbo_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    action_fate_override_verdict_api_actions_fate_override_verdict_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FateOverrideVerdictInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_chronicle_audit_api_actions_chronicle_audit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChronicleAuditInput"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_voices_retry_api_actions_voices_retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    action_voices_edit_view_api_actions_voices_edit_view_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoicesEditViewInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_voices_delete_view_api_actions_voices_delete_view_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoicesDeleteViewInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_births_retry_api_actions_births_retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+        };
+    };
+    action_community_collapse_api_actions_community_collapse_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityCollapseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_structure_raze_api_actions_structure_raze_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StructureRazeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mortal_fate_api_actions_mortal_fate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MortalFateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_memorial_order_api_actions_memorial_order_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemorialOrderInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_world_revive_api_actions_world_revive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorldReviveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_world_guardian_api_actions_world_guardian_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorldGuardianInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_species_abundance_api_actions_species_abundance_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpeciesAbundanceInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_region_seed_place_api_actions_region_seed_place_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegionSeedPlaceInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_pilgrimage_declare_api_actions_pilgrimage_declare_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PilgrimageDeclareInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_record_end_api_actions_record_end_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordEndInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_cult_merge_api_actions_cult_merge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CultMergeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_cult_schism_api_actions_cult_schism_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CultSchismInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_people_unite_api_actions_people_unite_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeopleUniteInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_place_swallow_api_actions_place_swallow_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlaceSwallowInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+}
+type FlattenedDeepRequired<T> = {
+    [K in keyof T]-?: FlattenedDeepRequired<T[K] extends unknown[] | undefined | null ? Extract<T[K], unknown[]>[number] : T[K]>;
+};
+type ReadonlyArray<T> = [
+    Exclude<T, undefined>
+] extends [
+    unknown[]
+] ? Readonly<Exclude<T, undefined>> : Readonly<Exclude<T, undefined>[]>;
+export const achievementKeyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AchievementKey"]> = ["second_sky", "constellation", "prophecy_fulfilled", "return_from_death", "fathers_hand", "babel", "crowded_world", "first_prayer", "creators_cult", "interstellar_traveller", "saga_completed", "god_of_epochs", "ancient", "crowded_pantheon", "first_explorers", "sensed_world", "weapons_silent"];
+export const actionGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActionGroup"]> = ["creator", "sons", "god_power", "death", "messages", "interventions", "entities", "diplomacy", "canon", "cosmos", "worlds", "foreign_gods", "goals", "settings", "society", "warfare", "creatures", "beyond", "languages", "memory", "fate"];
+export const actionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActionKind"]> = ["create_entity", "revelation", "summon_son", "bear_child", "command", "absolute_command", "bless_essence", "bless_hp", "bless_stat", "bless_existence", "add_star", "ascend", "lightning", "chain", "exile_son", "suppress_rebellion", "suppress_failed", "forgive", "answer_prayer", "chat", "resurrect_son", "kill_son", "take_life", "resurrect_mortal", "deify", "demote", "grant_power", "choose_prophet", "manifestation", "lineage_curse", "lift_lineage_curse", "convert", "wrath", "world_wrath", "drain_essence", "devour", "harvest_community", "kill_foreign_god", "canon_restore", "canon_strike", "edit_record", "edit_creator", "merge_records", "archive_record", "create_world", "birth_world", "forget_world", "remember_world", "exile_entity", "pardon", "ignite_star", "hang_star", "extinguish_star", "rekindle_star", "seal_gate", "sever_route", "stitch_route", "reveal_route", "recall_journey", "cleanse_leak", "sky_event", "spirit_cloak", "legendary_quest", "miracle", "disaster", "teach_knowledge", "advance_knowledge", "set_knowledge_level", "assign_mechanics", "syncretize_faith", "birth_creole", "curse", "dream", "influence", "declare_chosen", "incite_war", "transform", "destroy", "covenant", "change_anchor", "challenge", "speak_to_sibling", "weave_bond", "pray_to_creator", "harvest_resource", "gift", "holy_world", "interworld_treaty", "foreign_god_war", "open_cosmic_bed", "stitch_leak", "outer_bargain", "rebel", "convene_council", "awaken_peoples", "set_passions", "push_reputation", "found_language", "coin_words", "produce", "build", "create_culture", "discover_resource", "claim", "found_settlement", "establish_trade", "declare_war", "worship", "develop_knowledge", "learn", "diplomacy", "adventure", "discover_route", "explore_land", "resurrection_rite", "build_ship", "set_out", "tame", "weave_chimera", "bind_spirit", "search_ruins", "sabotage", "preach", "defy_god", "deny_god", "prophesy", "escape", "pay_ransom", "rescue_captive", "raise_army", "appoint_commander", "build_spy_network", "barter", "lend", "repay", "adopt", "network_repair", "ledger_undo", "sibling_scheme", "scatter_bones", "move_to_world", "foreign_god_talk", "write_plan", "abandon_settlement", "apocalypse", "awaken_species", "betrayal", "bless_army", "cosmic_archive", "cosmic_plague", "creator_sign", "crown_ruler", "cultural_contact", "designate_heir", "disband_army", "dissolve_faction", "end_blood_feud", "epoch_star", "ethnogenesis", "evaluate_goals", "force_battle", "foreign_god_land", "forget_legend", "forgive_debt", "forgive_tribute", "found_faction", "found_market", "fulfil_prophecy", "golden_age", "grant_independence", "grant_victory", "horror_event", "hunt", "impose_tribute", "incite_uprising", "introduce_species", "lay_spirit_to_rest", "megafauna_trail", "mint_coin", "mirror_birth", "mutate_species", "order_exodus", "order_feeding", "outer_cult", "planet_act", "pour_essence", "raise_hero", "raise_notable", "recall_hero", "reclaim_colony", "regenerate_map", "resettle_ruin", "reveal_previous_creation", "revive_legend", "set_doom_clock", "set_immortal", "set_route_danger", "set_sanity", "set_son_relation", "set_tier", "shape_society", "shelter_from_ruin", "soul_descent", "soul_harvest", "spare_prey", "spawn_pirates", "split_people", "summon_outer_being", "time_echo", "train_apprentice", "wake_foreign_god", "edit_language", "regenerate_signature", "add_epoch_words", "discard_intuition", "rejudge_fate", "retry_fate", "override_verdict", "retry_voices", "audit_chronicle", "retry_births", "edit_historian_view", "delete_historian_view", "maintenance", "dissolve_community", "raze_structure", "write_fate", "commemorate", "revive_world", "appoint_guardian", "set_abundance", "seed_place", "declare_pilgrimage_site", "order_end", "other"];
+export const actionModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActionMode"]> = ["ledgered", "job"];
+export const actorKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActorKind"]> = ["creator", "son", "mortal", "foreign_god", "fate", "engine", "system"];
+export const agentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentKind"]> = ["son", "mortal"];
+export const agentRetryEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentRetryEvent"]["kind"]> = ["agent.retry"];
+export const agentStreamEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentStreamEvent"]["kind"]> = ["agent.stream"];
+export const agentThoughtEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentThoughtEvent"]["kind"]> = ["agent.thought"];
+export const agentToolCalledEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentToolCalledEvent"]["kind"]> = ["agent.tool_called"];
+export const agentToolPreparingEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentToolPreparingEvent"]["kind"]> = ["agent.tool_preparing"];
+export const agentToolResultEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentToolResultEvent"]["kind"]> = ["agent.tool_result"];
+export const agentToolWritingEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentToolWritingEvent"]["kind"]> = ["agent.tool_writing"];
+export const agentWritingEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentWritingEvent"]["kind"]> = ["agent.writing"];
+export const archiveModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ArchiveMode"]> = ["history", "atlas", "automatic"];
+export const archiveOverrideValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ArchiveOverride"]> = ["history", "atlas"];
+export const armyStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ArmyStats"]["kind"]> = ["army"];
+export const artworkStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ArtworkStats"]["kind"]> = ["artwork"];
+export const atmosphereValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Atmosphere"]> = ["none", "thin", "normal", "dense", "toxic"];
+export const backupTakenEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BackupTakenEvent"]["kind"]> = ["backup.taken"];
+export const batchDeepenLogEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BatchDeepenLogEvent"]["kind"]> = ["batch_deepen.log"];
+export const battleOutcomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BattleOutcome"]> = ["field_victory", "great_victory", "siege_repulsed", "siege_breached", "siege_starvation"];
+export const biomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Biome"]> = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+export const blessingKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BlessingKind"]> = ["essence", "hp", "stat", "existence"];
+export const bondKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BondKind"]> = ["inside", "lives_in", "worships", "enemy", "ally", "descends_from", "protects", "rules", "owns", "beat", "killed", "cursed", "blessed", "source_of", "tells_of", "destroyed", "loves", "fears", "hunts", "trades_with", "prophesies", "caused", "celebrates", "forbids", "speaks", "produced", "built", "migrated_to", "discovered", "soul_descended_to", "party_to", "member_of", "knows", "pays_tribute", "related", "holds_captive", "spy_network", "pursues", "companion", "rival", "apprentice_of", "commands", "part_of", "passenger_of", "captain_of", "tamed", "truce", "owes"];
+export const bondRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BondRole"]> = ["side", "victor", "loser", "commander", "dueled", "spirit_binding", "homeland", "mentioned_in_fate", "fulfilled_prophecy"];
+export const bondStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BondState"]> = ["active", "past", "hidden_rejected", "hidden_closed"];
+export const borderKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BorderKind"]> = ["coast", "region", "sub_region"];
+export const canonVerdictValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CanonVerdict"]> = ["canon", "rejected"];
+export const captiveStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CaptiveStatus"]> = ["held", "ransomed", "escaped", "executed", "turncoat", "rescued", "released"];
+export const celestialStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CelestialStats"]["kind"]> = ["celestial"];
+export const chatAttitudeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ChatAttitude"]> = ["loyal", "distant", "rebellious", "afraid", "grateful", "mocking"];
+export const chronicleAuditKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ChronicleAuditKind"]> = ["rejected_mentioned", "son_skipped", "event_skipped", "verdict_skipped", "winner_as_loser", "active_as_silent", "deed_miscredited", "number_contradiction"];
+export const chronicleKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ChronicleKind"]> = ["creation", "speech", "challenge", "prayer", "order", "fate", "death", "birth", "system", "message", "creator_hand", "world", "engine_raw", "knowledge", "resource", "culture", "trade", "exploration", "diplomacy", "production", "language", "miracle", "civilization", "creator_reputation", "construction", "existence", "dream", "star", "divine_sign", "climate", "cosmic", "debt", "foreign_god", "world_age", "council", "previous_creation", "sky", "gift", "worship", "world_birth", "prophecy", "covenant", "army", "ascension", "migration", "legendary_quest", "war", "war_of_gods", "cosmic_law", "horror", "outer_being", "immortality", "rebellion", "apocalypse", "resurrection", "lineage", "disaster", "adventure", "intrigue", "rescue", "chimera", "escape", "domestication", "age_change", "expedition", "spirit", "curse", "denial", "ransom", "prohibition"];
+export const claudeAuthValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClaudeAuth"]> = ["token", "login"];
+export const climateEraValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClimateEra"]> = ["temperate", "drought", "rain", "ice_age", "scorching"];
+export const commodityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Commodity"]> = ["food", "ore", "goods"];
+export const communityRelationLabelValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommunityRelationLabel"]> = ["blood_enemy", "enemy", "cold", "neutral", "friend", "close_friend", "sibling"];
+export const contextBlockKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ContextBlockKind"]> = ["world-header", "dialect", "world-line", "cosmos", "pantheon", "threads", "world-summary", "fate-summary", "geography", "map", "languages", "entity-line", "entity-detail", "bond-lines", "son-memory", "tired-images", "recent-events", "powers", "sky-calendar", "mortal", "chronicler"];
+export const cosmosSizeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CosmosSize"]> = ["single", "small", "large"];
+export const councilHeldEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CouncilHeldEvent"]["kind"]> = ["council.held"];
+export const councilVoteValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CouncilVote"]> = ["yes", "no", "abstain"];
+export const creatorHintKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatorHintKind"]> = ["unanswered_prayers", "unclaimed", "rebel_sons", "fading_sons", "doom", "godless_worlds", "stale_threads", "rich_essence"];
+export const creatorMoodAxisValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatorMoodAxis"]> = ["contentment", "anger", "interest", "loneliness"];
+export const creatorMoodLabelValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatorMoodLabel"]> = ["angry", "distant", "lonely", "content", "uneasy", "serene"];
+export const creatorPassionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatorPassion"]> = ["order", "chaos", "beauty", "knowledge", "war", "mercy", "creation", "silence"];
+export const creatorRevelationEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatorRevelationEvent"]["kind"]> = ["creator.revelation"];
+export const creatorSignKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatorSignKind"]> = ["wrath", "grace", "silence", "dream"];
+export const creatureTraitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatureTrait"]> = ["flying", "venomous", "soul_eater", "radiant", "fissiparous", "hive_mind", "stoneskin", "time_rewinder", "shapeshifter", "mind_reader"];
+export const cultStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CultStats"]["kind"]> = ["cult"];
+export const debtStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DebtStatus"]> = ["open", "overdue", "repaid", "forgiven"];
+export const decreeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DecreeKind"]> = ["war", "peace", "alliance", "marriage", "trade"];
+export const disasterValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Disaster"]> = ["earthquake", "flood", "plague", "drought", "storm"];
+export const discoveryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Discovery"]> = ["known", "legend", "unknown", "forgotten"];
+export const domainValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Domain"]> = ["sea", "fire", "earth", "sky", "storm", "death", "life", "dream", "time", "light", "shadow", "war", "craft", "knowledge", "love", "trickery", "hunt", "plants", "bone", "blood", "sound", "stone", "ice", "madness", "trade", "road", "plague", "harvest", "moon", "sun", "star", "lies", "oath", "memory", "hunger", "glass", "salt", "ash", "border", "sleep"];
+export const elevationClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ElevationClass"]> = ["mountainous", "hilly", "plain", "water"];
+export const engineFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EngineFinishedEvent"]["kind"]> = ["engine.finished"];
+export const engineKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EngineKind"]> = ["war", "battle", "siege", "magic_storm", "earthquake", "flood", "plague", "drought", "storm", "famine", "uprising", "migration", "temple", "wall", "library", "school", "observatory", "cosmic_archive", "wonder", "rebels", "merchant_guild", "priests_council", "warrior_band", "interworld_federation", "wandering_market", "void_pirates", "peoples_army", "holy_guard", "mercenary_army", "dialect", "primitive_language", "currency", "eclipse_prophecy", "cosmic_travel_resource", "golem", "chimera", "descended_soul", "mirror_birth", "apprentice", "comet", "ascension_myth", "god_corpse", "god_shade", "resurrection_order", "ghost_ship", "colony"];
+export const engineNoteEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EngineNoteEvent"]["kind"]> = ["engine.note"];
+export const enginePhaseEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EnginePhaseEvent"]["kind"]> = ["engine.phase"];
+export const engineStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EngineStartedEvent"]["kind"]> = ["engine.started"];
+export const entityDeepenedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityDeepenedEvent"]["kind"]> = ["entity.deepened"];
+export const entityFlagValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityFlag"]> = ["disaster", "lost", "dead_language", "decipherable", "previous_creation", "ruin", "rebuilt", "remnant", "void", "cursed", "godless", "seeking_god", "empire", "federation", "independent", "colony", "pioneer", "golden_age", "immortal", "chimera", "mutation", "mutant", "mutated", "discovery", "native", "revelation", "soul_descended", "soul_bound", "soul_harvester", "crossed_to_the_dead", "wonder", "chosen", "manifested", "born_of_belief", "corrupted_memory", "fairy_tale", "name_from_language", "species_became_people", "original_resource", "cosmic_monopoly", "outer_cult", "whisper_source", "nameless", "escaped", "megafauna", "invasive", "worships_planet", "planet_closed", "burned", "cosmic_plague", "mirror", "mirror_born", "oathbreaker", "exile", "omen", "time_echo", "two_timed", "empty_tomb", "resurrection_complete", "protected_from_disaster", "mechanics_weighed", "depleting", "syncretic", "returned_to_old_god", "revived_language", "on_watch", "mocked", "protected_from_ruin", "spared_soul", "ghost", "wizard", "age_changer", "time_returned", "legendary", "prophet", "bloodline_curse", "essence_drained", "returned_from_death", "saw_the_creator", "deified", "protected", "depleted", "agent_selected", "capital", "abandoned", "dissolved", "desolate", "razed", "fell_in_battle", "died_in_siege", "died_in_disaster", "died_of_plague", "slain_in_captivity", "doomed", "fate_shielded", "commemoration", "estranged_by_plague", "endangered", "extinct", "pilgrimage_site", "repealed", "merged", "disbanded", "assimilated", "forgotten", "swallowed"];
+export const entityOriginValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityOrigin"]> = ["son", "creator", "engine", "mortal", "cosmos"];
+export const entityStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityStatus"]> = ["canon", "rejected", "destroyed", "dead", "fulfilled"];
+export const entityTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityType"]> = ["region", "place", "resource", "settlement", "species", "people", "mortal", "item", "structure", "language", "legend", "tradition", "cult", "faction", "celestial", "artwork", "law", "spirit", "knowledge", "prophecy", "event", "vessel", "outer_being", "army", "natural_law"];
+export const epicWrittenEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpicWrittenEvent"]["kind"]> = ["epic.written"];
+export const epochBackupEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochBackupEvent"]["kind"]> = ["epoch.backup"];
+export const epochFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochFinishedEvent"]["kind"]> = ["epoch.finished"];
+export const epochProgressEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochProgressEvent"]["kind"]> = ["epoch.progress"];
+export const epochResumedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochResumedEvent"]["kind"]> = ["epoch.resumed"];
+export const epochStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochStartedEvent"]["kind"]> = ["epoch.started"];
+export const epochStepKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochStepKind"]> = ["completion", "backup", "distribution", "naming", "fate_judgment", "chronicle", "voices", "council", "epoch_words", "local_gods", "transition", "horizon_intuitions", "world_birth", "network_repair", "prune", "images", "localisation", "background"];
+export const epochStepStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochStepStatus"]> = ["pending", "running", "done", "failed", "skipped"];
+export const epochStopRequestedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochStopRequestedEvent"]["kind"]> = ["epoch.stop_requested"];
+export const epochStoppedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochStoppedEvent"]["kind"]> = ["epoch.stopped"];
+export const errorCodeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ErrorCode"]> = ["invalid", "not_found", "conflict", "busy", "read_only", "insufficient", "forbidden", "too_large", "unavailable", "internal"];
+export const eventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EventKind"]> = ["job.queued", "job.started", "job.progress", "job.finished", "job.failed", "job.cancelled", "world.changed", "rules.changed", "engine.note", "engine.phase", "system.note", "system.error", "agent.retry", "epoch.started", "epoch.resumed", "epoch.progress", "epoch.stop_requested", "epoch.stopped", "epoch.finished", "epoch.backup", "son.distributed", "son.turn_queued", "son.turn_started", "son.turn_finished", "mortals.started", "mortal.turn_started", "mortal.turn_finished", "engine.started", "engine.finished", "fate.started", "fate.step", "fate.finished", "council.held", "son.chat_replied", "son.new", "son.ascended", "creator.revelation", "world.born", "genesis.finished", "entity.deepened", "foreign_god.deepened", "epic.written", "network.repaired", "language.translated", "notification.created", "world.changes", "world.replaced", "ledger.undone", "backup.taken", "image.queued", "image.progress", "image.done", "image.failed", "image.status", "image.bulk_log", "batch_deepen.log", "stream.hello", "agent.stream", "agent.thought", "agent.tool_preparing", "agent.tool_writing", "agent.tool_called", "agent.tool_result", "agent.writing"];
+export const eventStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EventStats"]["kind"]> = ["event"];
+export const existenceBandValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ExistenceBand"]> = ["radiant", "solid", "faded", "being_forgotten"];
+export const existenceModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ExistenceMode"]> = ["concrete", "semi_concrete", "conceptual", "reflection", "scattered"];
+export const factionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FactionKind"]> = ["guild", "council", "brotherhood"];
+export const factionStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FactionStats"]["kind"]> = ["faction"];
+export const fateFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FateFinishedEvent"]["kind"]> = ["fate.finished"];
+export const fateModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FateMode"]> = ["auto", "off"];
+export const fateStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FateStartedEvent"]["kind"]> = ["fate.started"];
+export const fateStepEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FateStepEvent"]["kind"]> = ["fate.step"];
+export const fateWritValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FateWrit"]> = ["doom", "shield", "clear"];
+export const feedCategoryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FeedCategory"]> = ["voyage", "gate", "leak", "war", "disaster", "sky", "life", "civilization", "world"];
+export const foreignGodDeepenedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodDeepenedEvent"]["kind"]> = ["foreign_god.deepened"];
+export const foreignGodPowerEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodPowerEffect"]> = ["shield", "caller", "thief", "destroyer", "fertile", "reviving", "deathless", "sharp_tongued"];
+export const foreignGodStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodStatus"]> = ["awake", "asleep", "defeated", "dead"];
+export const genesisFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisFinishedEvent"]["kind"]> = ["genesis.finished"];
+export const genesisTemplateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisTemplate"]> = ["dark_fantasy", "mythic_age", "cosmic_horror", "fairy_tale", "star_myth", "sand_and_ash", "primordial_dawn", "crowns_and_knives", "drowned_world", "long_winter", "after_the_fall", "sky_islands", "age_of_engines"];
+export const gravityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Gravity"]> = ["low", "normal", "high"];
+export const heroQuestKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HeroQuestKind"]> = ["hunt", "thread", "relic", "knowledge", "vengeance"];
+export const horizonStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HorizonStatus"]> = ["pending", "processing", "born", "wasted"];
+export const horrorEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HorrorEventKind"]> = ["stars_align", "eye_in_the_sky", "wave_of_silence", "reverse_rain", "visit_of_the_void"];
+export const imageBulkLogEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageBulkLogEvent"]["kind"]> = ["image.bulk_log"];
+export const imageClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageClass"]> = ["manual", "bulk", "auto"];
+export const imageDoneEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageDoneEvent"]["kind"]> = ["image.done"];
+export const imageFailedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageFailedEvent"]["kind"]> = ["image.failed"];
+export const imageMimeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageMime"]> = ["image/png", "image/jpeg", "image/webp"];
+export const imageOriginValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageOrigin"]> = ["generated", "uploaded"];
+export const imageProgressEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageProgressEvent"]["kind"]> = ["image.progress"];
+export const imageQueuedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageQueuedEvent"]["kind"]> = ["image.queued"];
+export const imageStatusEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageStatusEvent"]["kind"]> = ["image.status"];
+export const importModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImportMode"]> = ["replace", "merge", "discovery"];
+export const integrityTaskValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IntegrityTask"]> = ["dead_bonds", "checkpoint"];
+export const interventionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["InterventionKind"]> = ["miracle", "disaster", "teach_knowledge", "curse"];
+export const itemStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ItemStats"]["kind"]> = ["item"];
+export const jobCancelledEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JobCancelledEvent"]["kind"]> = ["job.cancelled"];
+export const jobFailedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JobFailedEvent"]["kind"]> = ["job.failed"];
+export const jobFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JobFinishedEvent"]["kind"]> = ["job.finished"];
+export const jobKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JobKind"]> = ["epoch", "genesis", "deepen", "summon", "image", "backup", "book", "import", "simulation", "son_turn", "naming", "completion", "revelation", "world_creation", "awakening", "content", "maintenance", "retry"];
+export const jobProgressEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JobProgressEvent"]["kind"]> = ["job.progress"];
+export const jobQueuedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JobQueuedEvent"]["kind"]> = ["job.queued"];
+export const jobStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JobStartedEvent"]["kind"]> = ["job.started"];
+export const jobStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JobStatus"]> = ["queued", "running", "succeeded", "failed", "cancelled", "interrupted"];
+export const journeyEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JourneyEventKind"]> = ["pirates", "void_storm", "creature", "lost_way", "discovery", "sacrifice", "memory_loss", "dream_not_returned", "sail_snapped", "bridge_collapsed", "swallowed", "stowaway", "other"];
+export const journeyIntentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JourneyIntent"]> = ["colony", "trade", "exploration", "conquest", "pilgrimage"];
+export const journeyStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JourneyStatus"]> = ["underway", "waiting", "arrived", "lost", "recalled", "stranded"];
+export const knowledgeBranchValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["KnowledgeBranch"]> = ["agriculture", "metallurgy", "seafaring", "writing", "architecture", "medicine", "magic", "warfare", "astronomy", "trade", "sky_navigation", "shipbuilding", "gate_lore", "pathfinding", "void_living", "immortality", "biomancy", "forbidden"];
+export const knowledgeStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["KnowledgeStats"]["kind"]> = ["knowledge"];
+export const landKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LandKind"]> = ["region", "place"];
+export const languageStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LanguageStats"]["kind"]> = ["language"];
+export const languageTextureValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LanguageTexture"]> = ["flowing", "hard", "guttural", "sibilant", "long", "free"];
+export const languageTranslatedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LanguageTranslatedEvent"]["kind"]> = ["language.translated"];
+export const lawStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LawStats"]["kind"]> = ["law"];
+export const ledgerUndoneEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LedgerUndoneEvent"]["kind"]> = ["ledger.undone"];
+export const legendCategoryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LegendCategory"]> = ["creature", "spirit", "resource", "relic"];
+export const legendStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LegendStats"]["kind"]> = ["legend"];
+export const legendaryQuestKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LegendaryQuestKind"]> = ["dead_star", "sealed_gate", "archive", "expel_outer"];
+export const legendaryQuestOutcomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LegendaryQuestOutcome"]> = ["completed", "failed", "invalidated"];
+export const linkGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LinkGroup"]> = ["all", "travel", "no_location", "conflict", "faith", "lineage", "knowledge"];
+export const llmCallKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LlmCallKind"]> = ["agent", "structured"];
+export const llmCallStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LlmCallStatus"]> = ["ok", "partial", "error"];
+export const logLevelValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LogLevel"]> = ["info", "warning", "error"];
+export const loreLanguageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LoreLanguage"]> = ["english", "turkish"];
+export const maintenanceTaskValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaintenanceTask"]> = ["completion", "network_rules", "loose_ends", "data_repairs", "history_repairs", "epoch_years", "mortal_ages", "importance", "endings", "narrative_sweep", "certain_facts", "intuitions", "mirror_pairs", "captions", "planner_statistics", "prune"];
+export const markerKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MarkerKind"]> = ["battle", "disaster", "ruin", "remnant", "event"];
+export const memorialFormValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemorialForm"]> = ["monument", "epic", "lament", "tradition", "tale"];
+export const messageIntentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MessageIntent"]> = ["friendship", "alliance", "love", "threat", "mockery", "warning", "bargain", "prayer", "answer", "chat", "dream", "command"];
+export const miracleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Miracle"]> = ["healing", "bounty", "peace", "protection"];
+export const mortalRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalRole"]> = ["ruler", "hero", "warrior", "knight", "hunter", "chosen", "seer", "priest", "sage", "healer", "artisan", "merchant", "scribe", "farmer", "explorer", "captain", "bandit", "saint", "apprentice", "commoner"];
+export const mortalStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalStats"]["kind"]> = ["mortal"];
+export const mortalToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalToolId"]> = ["look_at_world", "inspect_entity", "search_entities", "found_language", "coin_words", "produce_item", "build_structure", "create_culture", "discover_resource", "claim_resource", "found_settlement", "establish_trade", "declare_war", "worship", "pray_to_creator", "develop_knowledge", "learn_knowledge", "diplomacy", "go_on_adventure", "find_route", "explore_land", "resurrection_rite", "build_ship", "launch_expedition", "tame_species", "weave_chimera", "bind_spirit", "search_ruins", "sabotage", "preach", "challenge_god", "deny_god", "prophesy", "escape", "pay_ransom", "rescue_captive", "raise_army", "appoint_commander", "build_spy_network", "barter", "lend", "repay_debt", "adopt"];
+export const mortalTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalTurnFinishedEvent"]["kind"]> = ["mortal.turn_finished"];
+export const mortalTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalTurnStartedEvent"]["kind"]> = ["mortal.turn_started"];
+export const mortalsStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalsStartedEvent"]["kind"]> = ["mortals.started"];
+export const motifOverrideModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MotifOverrideMode"]> = ["pinned", "allowed"];
+export const naturalLawValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalLaw"]> = ["none", "immortality", "short_life", "dead_return", "magic_price", "war_ban", "bounty", "drought", "sea_ban", "one_language", "disasters"];
+export const naturalLawStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalLawStats"]["kind"]> = ["natural_law"];
+export const networkRepairedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NetworkRepairedEvent"]["kind"]> = ["network.repaired"];
+export const nodeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NodeKind"]> = ["entity", "son", "creator", "foreign_god", "world", "star"];
+export const notificationCategoryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotificationCategory"]> = ["rebellion", "death", "birth", "prophecy", "apocalypse", "horror", "war", "prayer", "cosmos", "ascension", "disaster", "epoch", "achievement", "society", "reputation", "error", "note", "work"];
+export const notificationCreatedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotificationCreatedEvent"]["kind"]> = ["notification.created"];
+export const outerBargainModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OuterBargainMode"]> = ["force", "forbid", "allow"];
+export const outerBeingStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OuterBeingStats"]["kind"]> = ["outer_being"];
+export const partOfSpeechValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PartOfSpeech"]> = ["noun", "verb", "adjective", "affix", "title", "place_name", "proper_name", "number", "interjection"];
+export const passionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Passion"]> = ["loyalty", "ambition", "wrath", "mercy"];
+export const peopleStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PeopleStats"]["kind"]> = ["people"];
+export const phaseStageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PhaseStage"]> = ["tick", "pre_transition", "transition", "post_transition"];
+export const placeStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PlaceStats"]["kind"]> = ["place"];
+export const powerEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PowerEffect"]> = ["cheap_creation", "duel_master", "essence_spring", "worshipped", "tireless", "untouchable", "dream_whisper", "war_father", "harvester", "seer", "reviving", "bounty_giver", "curser"];
+export const prayerRequestValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PrayerRequest"]> = ["essence", "blessing", "permission", "vengeance", "forgiveness", "none", "wish"];
+export const promptAreaValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PromptArea"]> = ["shared", "context", "genesis", "son_turn", "fate", "chronicler", "naming", "voices", "deepening", "image_prompts", "council", "translation", "world_birth", "network_repair", "mortal", "opportunities", "agent", "chronicle", "localisation"];
+export const promptIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PromptId"]> = ["cliche_ban", "image_prompt_rules", "section_keys_rule", "no_numbers_clause", "lore_language", "rationale_rule", "verdict_criteria", "tired_images", "world_header", "dialect_block", "world_line", "cosmos_lines", "entity_line", "bond_lines", "society_lines", "entity_detail", "recent_chronicle", "thread_lines", "siblings", "powers", "location_tree", "language_lines", "geography_lines", "world_summary", "son_memory", "sky_calendar", "budget_trailer", "inspect_sibling", "genesis_system", "genesis_user", "genesis_wizard_settings", "son_powers_system", "son_powers_user", "creator_portrait_system", "creator_portrait_user", "summon_son_system", "summon_son_user", "awaken_peoples_system", "awaken_peoples_user", "revelation_system", "revelation_user", "son_turn_system", "son_turn_user", "son_turn_resume_note", "son_turn_continuation", "creator_wishes", "reputation_line", "fate_judgment_system", "fate_judgment_user", "fate_extra_judgment_user", "fate_prescreen_warnings", "fate_creation_entry", "age_events", "age_events_by_world", "chronicler_system", "chronicler_concise_system", "chronicler_user", "chronicler_fix_opening_user", "chronicler_audit_fix_user", "chronicler_missing_worlds_user", "chronicler_lost_age_user", "chronicler_lost_world_sections_user", "naming_system", "naming_user", "voices_system", "voices_user", "deepen_entity_system", "deepen_entity_user", "deepen_celestial_system", "deepen_celestial_user", "creator_epic_system", "creator_epic_user", "creator_deepen_system", "creator_deepen_user", "foreign_god_deepen_system", "foreign_god_deepen_user", "son_epic_system", "son_epic_user", "entity_image_prompts_system", "entity_image_prompts_user", "cosmos_image_prompts_system", "cosmos_image_prompts_user", "council_persona", "council_agenda", "council_session_system", "council_session_user", "son_chat_system", "son_chat_user", "translate_system", "translate_user", "new_world_system", "new_world_user", "world_inspiration", "bond_node_line", "bond_suggest_system", "bond_suggest_user", "bond_name_related_system", "bond_name_related_user", "mortal_turn_system", "mortal_turn_user", "mortal_turn_continuation", "mortal_context", "son_opportunities", "mortal_opportunities", "creator_opportunities", "tool_rejection", "tool_failure_refund", "son_gate_rejection", "mortal_gate_rejection", "captive_gate_rejection", "actions_spent", "status_line", "sleep_notice", "pending_long_job", "entity_state_reason", "field_error", "per_epoch_limit", "creator_sign", "sentient_demand", "localise_system", "localise_user"];
+export const prophecyStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ProphecyStats"]["kind"]> = ["prophecy"];
+export const punishmentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PunishmentKind"]> = ["lightning", "chain", "exile", "suppress", "pardon"];
+export const rarityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Rarity"]> = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
+export const recordEndValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RecordEnd"]> = ["repeal", "abandon", "forget", "disband", "lose", "assimilate"];
+export const regionStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RegionStats"]["kind"]> = ["region"];
+export const relationLineKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RelationLineKind"]> = ["trade", "hostility", "rule", "hunt"];
+export const reputationLabelValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ReputationLabel"]> = ["forgotten", "hated", "respected", "feared", "loved", "distant", "acknowledged"];
+export const resourceMechanicValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ResourceMechanic"]> = ["decaying", "addictive", "sentient", "depletion_price", "fixed", "sacred"];
+export const resourceStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ResourceStats"]["kind"]> = ["resource"];
+export const riteKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RiteKind"]> = ["prayer", "offering", "blood", "life", "rite"];
+export const roadKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RoadKind"]> = ["road", "trade"];
+export const routeClosureValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RouteClosure"]> = ["sealed", "severed", "forgotten", "collapsed", "snapped"];
+export const rulesChangedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RulesChangedEvent"]["kind"]> = ["rules.changed"];
+export const scenarioKeyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ScenarioKey"]> = ["doom_far", "one_faith", "lost_star", "many_worlds", "long_peace", "cosmic_power", "loyal_pantheon", "new_horizons"];
+export const scenarioStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ScenarioStatus"]> = ["running", "completed", "failed", "abandoned"];
+export const schemeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SchemeKind"]> = ["rite", "descent", "bargain"];
+export const scoreComponentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ScoreComponent"]> = ["population", "diversity", "languages", "worlds", "civilization", "doomsday", "achievements", "scenarios"];
+export const searchCategoryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SearchCategory"]> = ["son", "foreign_god", "world", "star", "entity", "word", "epoch", "chronicle", "note", "map_note", "message", "council"];
+export const settlementStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SettlementStats"]["kind"]> = ["settlement"];
+export const settlementTierValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SettlementTier"]> = ["capital", "village", "town", "city", "great_city"];
+export const siegeStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SiegeStatus"]> = ["ongoing", "breached", "repulsed", "lifted"];
+export const skyEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SkyEventKind"]> = ["eclipse", "comet", "alignment", "supernova", "black_sun", "void_storm"];
+export const socialClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SocialClass"]> = ["farmer", "artisan", "merchant", "priest", "warrior", "scribe"];
+export const sonAscendedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonAscendedEvent"]["kind"]> = ["son.ascended"];
+export const sonChatRepliedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonChatRepliedEvent"]["kind"]> = ["son.chat_replied"];
+export const sonDeathCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonDeathCause"]> = ["fading", "killed_by_sibling", "killed_by_creator", "devoured", "foreign_god", "cosmic_horror", "other"];
+export const sonDistributedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonDistributedEvent"]["kind"]> = ["son.distributed"];
+export const sonDistributionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonDistribution"]> = ["auto", "manual"];
+export const sonNewEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonNewEvent"]["kind"]> = ["son.new"];
+export const sonStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonStatus"]> = ["active", "asleep", "exiled", "dead"];
+export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_father", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world"];
+export const sonTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnFinishedEvent"]["kind"]> = ["son.turn_finished"];
+export const sonTurnQueuedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnQueuedEvent"]["kind"]> = ["son.turn_queued"];
+export const sonTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnStartedEvent"]["kind"]> = ["son.turn_started"];
+export const speciesStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpeciesStats"]["kind"]> = ["species"];
+export const spiritStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpiritStats"]["kind"]> = ["spirit"];
+export const spokenIntentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpokenIntent"]> = ["friendship", "alliance", "love", "threat", "mockery", "warning", "bargain"];
+export const spyOperationValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpyOperation"]> = ["steal", "sabotage"];
+export const starTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StarType"]> = ["yellow_dwarf", "red_giant", "blue_giant", "binary", "white_dwarf", "dead_star", "black_sun", "broken_star", "pulsar", "star_remnant", "reborn_star"];
+export const statValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Stat"]> = ["strength", "endurance", "agility", "wisdom", "cunning", "will", "creativity", "charisma", "might"];
+export const streamHelloEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StreamHelloEvent"]["kind"]> = ["stream.hello"];
+export const structureStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StructureStats"]["kind"]> = ["structure"];
+export const summarySectionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SummarySection"]> = ["pantheon", "threads", "events", "cosmos", "geography", "languages", "map", "legends"];
+export const systemErrorEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SystemErrorEvent"]["kind"]> = ["system.error"];
+export const systemNoteEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SystemNoteEvent"]["kind"]> = ["system.note"];
+export const targetKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TargetKind"]> = ["entity", "foreign_god"];
+export const technologyEraValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TechnologyEra"]> = ["stone", "bronze", "iron", "medieval", "renaissance", "steam"];
+export const threadStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ThreadStatus"]> = ["open", "closed"];
+export const toolBlockValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ToolBlock"]> = ["rarity", "actor_type", "civilization_tier", "world_state", "unwired"];
+export const traditionStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraditionStats"]["kind"]> = ["tradition"];
+export const travelMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TravelMethod"]> = ["ancient_gate", "space_fold", "light_sail", "cosmic_mount", "dream_journey", "river_of_dead", "divine_bridge", "slingshot_orbit", "swallowed"];
+export const tributeStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TributeStatus"]> = ["active", "ended", "revolted"];
+export const turnCounterValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TurnCounter"]> = ["sibling_messages", "narrative_bonds", "prayers", "free_living_creation", "free_land_creation", "anchor_chosen", "words_coined", "gifts", "holy_world", "leak_stitched", "take_life", "intrigue", "outer_bargain", "harvests", "discoveries", "claims", "worship_changes", "learning", "prophecies", "commander_appointments", "adoptions", "explorations", "repeated_creations", "resurrection_rites", "languages_founded", "cultures_created", "land_rewards"];
+export const verdictChoiceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VerdictChoice"]> = ["accept", "reject"];
+export const vesselStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VesselStats"]["kind"]> = ["vessel"];
+export const warCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarCause"]> = ["hostility", "uprising", "tribute_revolt", "incited", "declared", "betrayal", "conquest_journey", "foreign_god"];
+export const warEndingValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarEnding"]> = ["victory", "conquest", "tribute", "exhaustion", "peace", "white_peace", "betrayal", "same_front", "no_side_left", "miracle"];
+export const warSideValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarSide"]> = ["attacker", "defender"];
+export const warStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarStatus"]> = ["mobilizing", "ongoing", "ended"];
+export const wordKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WordKind"]> = ["noun", "verb", "adjective", "affix", "title", "place_name", "proper_name", "number", "interjection"];
+export const worldBornEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorldBornEvent"]["kind"]> = ["world.born"];
+export const worldChangedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorldChangedEvent"]["kind"]> = ["world.changed"];
+export const worldChangesEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorldChangesEvent"]["kind"]> = ["world.changes"];
+export const worldReplacedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorldReplacedEvent"]["kind"]> = ["world.replaced"];
+export const worldTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorldType"]> = ["ordinary", "ocean", "sand", "ice", "lava", "crystal", "living", "dead", "dream", "mirror", "gas", "ringed", "asteroid_belt", "tidally_locked", "void_pocket", "gods_palace", "generation_ship", "corpse_world"];
+export const writingSystemValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WritingSystem"]> = ["alphabet", "syllabary", "pictographic", "knot", "notch"];

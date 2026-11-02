@@ -1,0 +1,100 @@
+{% from "shared/macros.md.j2" import entity_line %}
+{% set c = rules.context %}
+{% set p = "son_" if for_son else "fate_" %}
+{% set whole = c[p ~ "summary_chars"] %}
+{% set trim = c.budget_trim_min_chars %}
+{% set limit_events = whole if section else c[p ~ "chronicle_chars"] %}
+{% set limit_cosmos = whole if section else c[p ~ "cosmos_chars"] %}
+{% set limit_geography = whole if section else c[p ~ "geography_chars"] %}
+{% set limit_languages = whole if section else c[p ~ "language_chars"] %}
+{% set limit_map = whole if section else c[p ~ "map_chars"] %}
+{% set limit_legends = whole if section else c[p ~ "unlocated_chars"] %}
+{% set pantheon_text %}
+{% if pantheon %}
+
+PANTHEON:
+{{ pantheon }}
+{% endif %}
+{% endset %}
+{% set threads_text %}
+{% if threads %}
+
+OPEN STORIES (threads Fate is tracking; those who advance them are rewarded):
+{{ threads }}
+{% endif %}
+{% endset %}
+{% set events_text %}
+
+RECENT EVENTS:
+{{ budget(events, limit_events, "see world_summary section=events", trim) if events else "(nothing has happened yet)" }}
+{% endset %}
+{% set cosmos_text %}
+{% if multi_world and cosmos_lines %}
+
+THE COSMOS'S OTHER WORLDS (you can move there with move_to_world):
+{{ budget(cosmos_lines, limit_cosmos, "world_summary section=cosmos for cosmos detail", trim) }}
+{% endif %}
+{% if for_son and foreign_gods %}
+THIS WORLD'S OLD/FOREIGN GODS (talk_to_foreign_god):
+{% for god in foreign_gods %}
+- foreign#{{ god.id }} {{ god.name }}{% if god.title %}, {{ god.title }}{% endif %} ({{ god.domains if god.domains else "?" }}; power {{ god.power }}, attitude to the pantheon {{ god.attitude }}{% if god.strength is not none %}; Strength {{ god.strength }}, Will {{ god.will }}, Charisma {{ god.charisma }}, Cunning {{ god.cunning }}{% endif %}{% if god.powers %}; powers: {{ god.powers | join(", ") }}{% endif %})
+{% endfor %}
+{% endif %}
+{% if multi_world %}
+{% if routes %}
+ROUTES BETWEEN WORLDS:
+{% for route in routes %}
+- route#{{ route.id }} {{ route.world_a }} ↔ {{ route.world_b }} ({{ route.method_label }}, {{ route.duration }} ages)
+{% endfor %}
+{% else %}
+NO ROUTES BETWEEN WORLDS: mortals cannot travel to other worlds. Create a gate, bridge or ship (create_vessel with target_world_id) or give your peoples knowledge of sky navigation or shipbuilding.
+{% endif %}
+{% endif %}
+{% endset %}
+{% set geography_text %}
+{% if geography %}
+
+GEOGRAPHY AND INHABITANTS ({{ geography_total }} canon entities):
+{{ budget(geography, limit_geography, "look with search_entities", trim) }}
+{% if geography_cut %}
+… (use search_entities for more)
+{% endif %}
+{% endif %}
+{% endset %}
+{% set languages_text %}
+{% if languages %}
+
+LANGUAGES AND LEXICON (derive new names and titles from these words; give an origin):
+{{ budget(languages, limit_languages, "look at the language's lexicon with inspect_entity", trim) }}
+{% endif %}
+{% endset %}
+{% set map_text %}
+{% if map %}
+
+MAP (terrain and neighbours of regions; fit your creations to it: no harbour where there is no coast, no glacier on a plain):
+{{ budget(map, limit_map, "look at the region with inspect_entity", trim) }}
+{% endif %}
+{% endset %}
+{% set legends_body %}
+{% for item in legends %}
+{{ entity_line(item) }}
+{% endfor %}
+{% endset %}
+{% set legends_text %}
+{% if legends %}
+
+LEGENDS, TRADITIONS, PROPHECIES, EVENTS (newest):
+{{ budget(legends_body | trim, limit_legends, "look with search_entities", trim) }}
+{% endif %}
+{% endset %}
+{% set texts = {"pantheon": pantheon_text, "threads": threads_text, "events": events_text, "cosmos": cosmos_text, "geography": geography_text, "languages": languages_text, "map": map_text, "legends": legends_text} %}
+{% if section %}
+{% set chosen = texts[section] | trim %}
+{{ chosen if chosen else 'There is nothing to show in the "' ~ section ~ '" section.' }}
+{% else %}
+{% set parts = [(header, header | length, "look with world_summary")] %}
+{% for key in ["pantheon", "threads", "events", "cosmos", "geography", "languages", "map", "legends"] %}
+{% set _ = parts.append((texts[key].rstrip() if texts[key].strip() else "", c.section_min_chars, "see the full section with world_summary section=" ~ key)) %}
+{% endfor %}
+{{ sectioned(parts, whole, trim) }}
+{% endif %}

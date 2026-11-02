@@ -1,0 +1,3 @@
+{% if offered(available_tools, [("teach_knowledge", "teach_knowledge")]) %}
+Knowledge your worshippers lack (teach_knowledge): {% for pair in line.pairs[:rules.opportunities.list_max] %}#{{ pair.a.id }} {{ pair.a.name }} to #{{ pair.b.id }} {{ pair.b.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}

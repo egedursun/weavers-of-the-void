@@ -1,0 +1,45 @@
+import { lazy } from 'react'
+import { type DrawerPages } from '@/components/layout/drawer/DrawerStack'
+
+export const DRAWER_PAGES: DrawerPages = {
+  son: lazy(() =>
+    import('@/features/son/SonPage').then((module) => ({
+      default: module.SonPage,
+    }))
+  ),
+  entity: lazy(() =>
+    import('@/features/entity/EntityPage').then((module) => ({
+      default: module.EntityPage,
+    }))
+  ),
+  'foreign-god': lazy(() =>
+    import('@/features/foreign-god/ForeignGodPage').then((module) => ({
+      default: module.ForeignGodPage,
+    }))
+  ),
+  world: lazy(() =>
+    import('@/features/celestial/WorldWikiPage').then((module) => ({
+      default: module.WorldWikiPage,
+    }))
+  ),
+  star: lazy(() =>
+    import('@/features/celestial/StarWikiPage').then((module) => ({
+      default: module.StarWikiPage,
+    }))
+  ),
+  creator: lazy(() =>
+    import('@/features/creator/CreatorPage').then((module) => ({
+      default: module.CreatorPage,
+    }))
+  ),
+  'world-guide': lazy(() =>
+    import('@/features/cosmos/TravellersGuide').then((module) => ({
+      default: module.TravellersGuide,
+    }))
+  ),
+  help: lazy(() =>
+    import('@/features/help/HelpDrawer').then((module) => ({
+      default: module.HelpDrawer,
+    }))
+  ),
+}

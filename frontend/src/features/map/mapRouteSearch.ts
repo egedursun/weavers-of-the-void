@@ -1,0 +1,25 @@
+import { type DrawerSearch } from '@/components/layout/drawer/drawerEntries'
+
+export type MapSearch = DrawerSearch & {
+  world?: number
+  epoch?: number
+  focus?: number
+}
+
+function positive(value: unknown): number | undefined {
+  const number = typeof value === 'string' ? Number(value) : value
+  return typeof number === 'number' && Number.isInteger(number) && number > 0
+    ? number
+    : undefined
+}
+
+export function validateMapSearch(search: Record<string, unknown>): MapSearch {
+  const result: MapSearch = {}
+  const world = positive(search.world)
+  const epoch = positive(search.epoch)
+  const focus = positive(search.focus)
+  if (world !== undefined) result.world = world
+  if (epoch !== undefined) result.epoch = epoch
+  if (focus !== undefined) result.focus = focus
+  return result
+}

@@ -1,0 +1,2 @@
+{% from "opportunities/_macros.md.j2" import records %}
+Those who defied or denied you (vengeance or forgiveness): {{ records(line.records[:rules.opportunities.list_max]) }}

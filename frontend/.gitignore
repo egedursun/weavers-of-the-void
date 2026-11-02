@@ -1,0 +1,7 @@
+node_modules
+dist
+e2e/screenshots
+e2e/.results
+playwright-report
+test-results
+__screenshots__

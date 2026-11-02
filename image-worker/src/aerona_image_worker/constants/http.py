@@ -1,0 +1,7 @@
+HEALTH_PATH = "/health"
+JOBS_PATH = "/jobs"
+JOB_PATH = "/jobs/{job_id}"
+JOB_EVENTS_PATH = "/jobs/{job_id}/events"
+JOB_IMAGE_PATH = "/jobs/{job_id}/image"
+PNG_MEDIA_TYPE = "image/png"
+LAST_EVENT_ID_HEADER = "last-event-id"

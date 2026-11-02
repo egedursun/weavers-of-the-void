@@ -1,0 +1,16 @@
+REPORT_JSON_NAME = "migration-report.json"
+REPORT_MARKDOWN_NAME = "migration-report.md"
+LEDGER_HISTORY_NAME = "legacy-ledger.json"
+PARTIAL_SUFFIX = ".partial"
+SNAPSHOT_NAME = "legacy-snapshot.db"
+REPORT_SAMPLE_LIMIT = 25
+REPORT_TOP_TAGS = 60
+BATCH_SIZE = 500
+SEED_DIGEST_BITS = 62
+MIGRATION_ENGINE_LABEL = "legacy migration"
+DUPLICATE_ON_MIGRATION = "duplicate on migration"
+MISSING_ENDPOINT = "missing endpoint"
+LEGACY_SCHEMA_VERSION = 1
+SYLLABLE_PATTERN_FALLBACK = "CV"
+SAMPLE_NAME_LIMIT = 12
+NAME_CORPUS_LIMIT = 400

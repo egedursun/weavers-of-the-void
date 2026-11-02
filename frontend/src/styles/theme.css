@@ -1,0 +1,377 @@
+:root,
+.light {
+  --radius: 0.625rem;
+  --background: oklch(0.985 0.004 290);
+  --foreground: oklch(0.22 0.09 292);
+  --card: oklch(0.997 0.002 290);
+  --card-foreground: oklch(0.22 0.09 292);
+  --popover: oklch(0.997 0.002 290);
+  --popover-foreground: oklch(0.22 0.09 292);
+  --primary: oklch(0.48 0.22 302);
+  --primary-foreground: oklch(0.99 0.01 300);
+  --secondary: oklch(0.955 0.01 290);
+  --secondary-foreground: oklch(0.26 0.1 292);
+  --muted: oklch(0.96 0.008 290);
+  --muted-foreground: oklch(0.48 0.06 295);
+  --accent: oklch(0.94 0.02 295);
+  --accent-foreground: oklch(0.26 0.1 292);
+  --destructive: oklch(0.55 0.21 20);
+  --destructive-foreground: oklch(0.99 0.01 300);
+  --success: oklch(0.55 0.15 140);
+  --success-foreground: oklch(0.99 0.01 300);
+  --warning: oklch(0.62 0.15 65);
+  --warning-foreground: oklch(0.2 0.08 292);
+  --info: oklch(0.52 0.13 250);
+  --info-foreground: oklch(0.99 0.01 300);
+  --border: oklch(0.89 0.012 290);
+  --input: oklch(0.83 0.016 290);
+  --field: oklch(1 0 0);
+  --field-hover: oklch(0.97 0.008 290);
+  --ring: oklch(0.48 0.22 302);
+  --overlay: oklch(0.22 0.09 292 / 40%);
+  --chart-1: oklch(0.48 0.22 302);
+  --chart-2: oklch(0.72 0.16 82);
+  --chart-3: oklch(0.52 0.13 250);
+  --chart-4: oklch(0.58 0.25 322);
+  --chart-5: oklch(0.55 0.15 140);
+  --rarity-common: oklch(0.55 0.03 300);
+  --rarity-uncommon: oklch(0.55 0.15 140);
+  --rarity-rare: oklch(0.52 0.14 250);
+  --rarity-epic: oklch(0.5 0.22 302);
+  --rarity-legendary: oklch(0.64 0.15 78);
+  --rarity-mythic: oklch(0.56 0.25 325);
+  --brand-gold: oklch(0.74 0.16 84);
+  --brand-gold-light: oklch(0.88 0.12 95);
+  --brand-gold-deep: oklch(0.6 0.14 70);
+  --brand-verdigris: oklch(0.5 0.2 302);
+  --brand-violet: oklch(0.48 0.22 302);
+  --brand-magenta: oklch(0.58 0.26 322);
+  --brand-azure: oklch(0.55 0.12 250);
+  --brand-night: oklch(0.2 0.1 294);
+  --brand-ink: oklch(0.22 0.09 292);
+  --sidebar: oklch(0.972 0.006 290);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --app-glow: oklch(0.9 0.04 300 / 35%);
+}
+
+.dark {
+  --background: oklch(0.145 0.022 285);
+  --foreground: oklch(0.94 0.012 290);
+  --card: oklch(0.18 0.026 286);
+  --card-foreground: oklch(0.94 0.012 290);
+  --popover: oklch(0.2 0.028 286);
+  --popover-foreground: oklch(0.94 0.012 290);
+  --primary: oklch(0.86 0.168 89);
+  --primary-foreground: oklch(0.18 0.04 288);
+  --secondary: oklch(0.24 0.03 288);
+  --secondary-foreground: oklch(0.94 0.012 290);
+  --muted: oklch(0.225 0.026 288);
+  --muted-foreground: oklch(0.73 0.025 290);
+  --accent: oklch(0.27 0.045 295);
+  --accent-foreground: oklch(0.94 0.012 290);
+  --destructive: oklch(0.68 0.2 18);
+  --destructive-foreground: oklch(0.145 0.022 285);
+  --success: oklch(0.8 0.16 135);
+  --success-foreground: oklch(0.145 0.022 285);
+  --warning: oklch(0.8 0.15 73);
+  --warning-foreground: oklch(0.145 0.022 285);
+  --info: oklch(0.72 0.13 245);
+  --info-foreground: oklch(0.145 0.022 285);
+  --border: oklch(0.86 0.03 290 / 12%);
+  --input: oklch(0.86 0.03 290 / 20%);
+  --field: oklch(0.86 0.03 290 / 5%);
+  --field-hover: oklch(0.86 0.03 290 / 9%);
+  --ring: oklch(0.86 0.168 89);
+  --overlay: oklch(0.08 0.02 285 / 72%);
+  --chart-1: oklch(0.86 0.168 89);
+  --chart-2: oklch(0.7 0.25 322);
+  --chart-3: oklch(0.72 0.13 245);
+  --chart-4: oklch(0.8 0.16 135);
+  --chart-5: oklch(0.74 0.15 352);
+  --rarity-common: oklch(0.8 0.02 290);
+  --rarity-uncommon: oklch(0.82 0.16 135);
+  --rarity-rare: oklch(0.73 0.14 245);
+  --rarity-epic: oklch(0.7 0.2 302);
+  --rarity-legendary: oklch(0.86 0.168 89);
+  --rarity-mythic: oklch(0.72 0.25 325);
+  --brand-gold: oklch(0.86 0.168 89);
+  --brand-gold-light: oklch(0.93 0.115 97);
+  --brand-gold-deep: oklch(0.79 0.151 73);
+  --brand-verdigris: oklch(0.74 0.12 300);
+  --brand-violet: oklch(0.6 0.23 302);
+  --brand-magenta: oklch(0.68 0.27 322);
+  --brand-azure: oklch(0.7 0.13 245);
+  --brand-night: oklch(0.2 0.1 294);
+  --brand-ink: oklch(0.145 0.022 285);
+  --sidebar: oklch(0.125 0.02 285);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --app-glow: oklch(0.4 0.12 300 / 12%);
+}
+
+:root {
+  --control-height-sm: 2rem;
+  --control-height-md: 2.25rem;
+  --control-height-lg: 2.75rem;
+  --control-font-size: 0.875rem;
+  --control-line-height: 1.25rem;
+  --display-font-size: 1.75rem;
+  --display-line-height: 2.25rem;
+}
+
+:root {
+  --cosmos-void: #0d0620;
+  --cosmos-void-edge: #1a0d38;
+  --cosmos-copper: #fdca26;
+  --cosmos-bone: #ece6d8;
+  --cosmos-violet: #9b5cf0;
+  --cosmos-teal: #4fa8a0;
+  --cosmos-orbit: #3a4152;
+  --cosmos-label: #d8d2c4;
+  --cosmos-label-muted: #8e98aa;
+  --cosmos-fog: #8e98aa;
+  --cosmos-leak: #8a4ce0;
+  --cosmos-leak-glow: #b88cff;
+  --cosmos-hostile: #e07a68;
+  --cosmos-seal: #c8a0ff;
+  --cosmos-toxic: #9bdc5a;
+  --cosmos-toxic-cloud: #b4d48a;
+  --cosmos-city: #ffad5c;
+  --cosmos-nebula-1: #6a4ab0;
+  --cosmos-nebula-2: #3f8f8a;
+  --cosmos-nebula-3: #8a5ac0;
+  --cosmos-nebula-4: #4a6ab0;
+  --cosmos-nebula-5: #b08048;
+  --cosmos-nebula-6: #5a4aa8;
+  --cosmos-nebula-7: #2f6f7a;
+  --cosmos-dust-1: #ffd6a0;
+  --cosmos-dust-2: #fff4e4;
+  --cosmos-dust-3: #dfe8ff;
+  --cosmos-dust-4: #a8c4ff;
+  --cosmos-dust-5: #ffb48a;
+  --cosmos-star-yellow-dwarf: #ffd88a;
+  --cosmos-star-yellow-dwarf-edge: #ff8a2a;
+  --cosmos-star-yellow-dwarf-light: #fff0d8;
+  --cosmos-star-red-giant: #ff7448;
+  --cosmos-star-red-giant-edge: #a8200a;
+  --cosmos-star-red-giant-light: #ffb89a;
+  --cosmos-star-blue-giant: #b4d4ff;
+  --cosmos-star-blue-giant-edge: #3a6ae8;
+  --cosmos-star-blue-giant-light: #d8e8ff;
+  --cosmos-star-white-dwarf: #f6f8ff;
+  --cosmos-star-white-dwarf-edge: #a8bcff;
+  --cosmos-star-white-dwarf-light: #f4f6ff;
+  --cosmos-star-binary: #ffe0a0;
+  --cosmos-star-binary-edge: #ff9a4a;
+  --cosmos-star-binary-light: #fff0dc;
+  --cosmos-star-dead-star: #7a7f86;
+  --cosmos-star-dead-star-edge: #2a2c30;
+  --cosmos-star-dead-star-light: #9a8a80;
+  --cosmos-star-black-sun: #d0894e;
+  --cosmos-star-black-sun-edge: #1a0f08;
+  --cosmos-star-black-sun-light: #e0a070;
+  --cosmos-star-broken-star: #ffc070;
+  --cosmos-star-broken-star-edge: #e8ad48;
+  --cosmos-star-broken-star-light: #ffe0b0;
+  --cosmos-star-pulsar: #a8ecff;
+  --cosmos-star-pulsar-edge: #3aa8d8;
+  --cosmos-star-pulsar-light: #d0f4ff;
+  --cosmos-star-star-remnant: #c890f0;
+  --cosmos-star-star-remnant-edge: #6a4a9a;
+  --cosmos-star-star-remnant-light: #d8c0f0;
+  --cosmos-star-reborn-star: #fff2cc;
+  --cosmos-star-reborn-star-edge: #ffaa50;
+  --cosmos-star-reborn-star-light: #fff4e0;
+  --cosmos-route-ancient-gate: #b48ae6;
+  --cosmos-route-space-fold: #6fd8e0;
+  --cosmos-route-light-sail: #e8dcc0;
+  --cosmos-route-cosmic-mount: #e39b7b;
+  --cosmos-route-dream-journey: #b890ff;
+  --cosmos-route-river-of-dead: #7fa6b8;
+  --cosmos-route-divine-bridge: #f2b850;
+  --cosmos-route-slingshot-orbit: #dcb45c;
+  --cosmos-route-swallowed: #e0604a;
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --display-font-size: 2.25rem;
+    --display-line-height: 2.75rem;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  :root {
+    --control-font-size: 1rem;
+    --control-line-height: 1.5rem;
+  }
+}
+
+@media (pointer: coarse) {
+  :root {
+    --control-height-sm: 2.5rem;
+    --control-height-md: 2.75rem;
+    --control-height-lg: 3rem;
+  }
+}
+
+@theme {
+  --spacing-icon-xs: 0.75rem;
+  --spacing-icon-sm: 0.875rem;
+  --spacing-icon-md: 1rem;
+  --spacing-icon-lg: 1.25rem;
+  --spacing-icon-xl: 1.5rem;
+  --spacing-badge-sm: 1.25rem;
+  --spacing-badge-md: 1.5rem;
+  --spacing-textarea: 5rem;
+  --spacing-meter-sm: 0.25rem;
+  --spacing-meter-md: 0.5rem;
+  --spacing-portrait-xs: 1.25rem;
+  --spacing-portrait-sm: 1.75rem;
+  --spacing-portrait-md: 2.5rem;
+  --spacing-portrait-lg: 3.5rem;
+  --spacing-portrait-xl: 6rem;
+  --spacing-topbar: 3.5rem;
+  --spacing-label-track: 10rem;
+  --spacing-drawer: 45rem;
+  --spacing-reading: 72ch;
+
+  --text-title: 1.25rem;
+  --text-title--line-height: 1.75rem;
+  --text-title--letter-spacing: 0.02em;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.375rem;
+  --text-prose: 1rem;
+  --text-prose--line-height: 1.75rem;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.125rem;
+  --text-overline: 0.6875rem;
+  --text-overline--line-height: 1rem;
+  --text-overline--letter-spacing: 0.08em;
+  --text-kpi: 1.5rem;
+  --text-kpi--line-height: 2rem;
+}
+
+@theme inline {
+  --font-nunito:
+    'Nunito Sans Variable', 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-inter: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-brand: 'Cinzel Decorative', 'Cinzel', Georgia, serif;
+  --font-system:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Cinzel', 'Iowan Old Style', Georgia, serif;
+
+  --spacing-control-sm: var(--control-height-sm);
+  --spacing-control-md: var(--control-height-md);
+  --spacing-control-lg: var(--control-height-lg);
+  --text-control: var(--control-font-size);
+  --text-control--line-height: var(--control-line-height);
+  --text-display: var(--display-font-size);
+  --text-display--line-height: var(--display-line-height);
+  --text-display--letter-spacing: 0.02em;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-field: var(--field);
+  --color-field-hover: var(--field-hover);
+  --color-ring: var(--ring);
+  --color-overlay: var(--overlay);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-brand-violet: var(--brand-violet);
+  --color-brand-magenta: var(--brand-magenta);
+  --color-brand-azure: var(--brand-azure);
+  --color-brand-night: var(--brand-night);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-rarity-common: var(--rarity-common);
+  --color-rarity-uncommon: var(--rarity-uncommon);
+  --color-rarity-rare: var(--rarity-rare);
+  --color-rarity-epic: var(--rarity-epic);
+  --color-rarity-legendary: var(--rarity-legendary);
+  --color-rarity-mythic: var(--rarity-mythic);
+  --color-cosmos-void: var(--cosmos-void);
+  --color-cosmos-label: var(--cosmos-label);
+  --color-brand-gold: var(--brand-gold);
+  --color-brand-gold-light: var(--brand-gold-light);
+  --color-brand-gold-deep: var(--brand-gold-deep);
+  --color-brand-verdigris: var(--brand-verdigris);
+  --color-brand-ink: var(--brand-ink);
+}
+
+html.text-size-large {
+  font-size: 112.5%;
+}
+
+html.text-size-larger {
+  font-size: 125%;
+}
+
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+html.contrast-high {
+  --muted-foreground: oklch(0.36 0.03 270);
+  --border: oklch(0.6 0.02 85);
+  --input: oklch(0.5 0.02 85);
+  --foreground: oklch(0.1 0.02 270);
+}
+
+html.dark.contrast-high {
+  --muted-foreground: oklch(0.86 0.015 275);
+  --border: oklch(1 0 0 / 38%);
+  --input: oklch(1 0 0 / 50%);
+  --foreground: oklch(0.99 0.005 85);
+}

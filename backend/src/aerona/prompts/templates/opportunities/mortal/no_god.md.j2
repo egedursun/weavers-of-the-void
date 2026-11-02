@@ -1,0 +1,1 @@
+You have no god; you could worship{% if offered(available_tools, [("worship", "worship")]) %} with worship{% endif %}: {% for son in line.candidates %}son#{{ son.id }} {{ son.name }} ({{ son.domain_1 }}/{{ son.domain_2 }}){% if not loop.last %}, {% endif %}{% endfor %}

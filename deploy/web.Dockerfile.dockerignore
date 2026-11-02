@@ -1,0 +1,12 @@
+**
+!deploy/nginx.conf
+!frontend/**
+frontend/node_modules
+frontend/dist
+frontend/e2e/screenshots
+frontend/e2e/.results
+frontend/playwright-report
+frontend/test-results
+frontend/.vitest-attachments
+**/__screenshots__
+**/.DS_Store

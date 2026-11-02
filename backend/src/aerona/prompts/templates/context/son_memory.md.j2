@@ -1,0 +1,50 @@
+{% from "shared/macros.md.j2" import entity_line, chronicle_rows %}
+{% set c = rules.context %}
+{% set trim = c.budget_trim_min_chars %}
+{% set words_body %}
+{% for word in words %}
+[Age {{ word.age }}] {% if word.from_father %}YOUR FATHER {{ word.sender }}{% else %}{{ word.sender }}{% endif %}{% if word.intent_label %} ({{ word.intent_label }}){% endif %}: "{{ word.text }}"
+{% endfor %}
+{% endset %}
+{% set creations_body %}
+{% for item in creations %}
+{{ entity_line(item.entity) }}{% if item.other_world %} [in another world: {{ item.other_world }}]{% endif %}{% if item.fate_note %} — Fate: {{ item.fate_note }}{% endif %}
+
+{% endfor %}
+{% endset %}
+{% set beliefs_body %}
+{% for belief in beliefs %}
+- {{ belief.people }} calls you "{{ belief.name }}": {{ belief.story }}
+{% endfor %}
+{% endset %}
+{% set memory %}
+YOUR LONG-TERM PLAN{% if plan and plan_age is not none %} (written in Age {{ plan_age }}){% endif %}: {{ plan if plan else "(not written yet; write it with write_plan)" }}{% if plan and plan_stale %}
+
+YOUR PLAN IS STALE{% if plan_years is not none and plan_years >= rules.context.plan_stale_epochs %} (not renewed for {{ plan_years }} ages){% endif %}: renew it this age with write_plan; drop the stories that closed, write the next steps for today's world.{% if closed_since_plan %} Your stories closed since then: {{ closed_since_plan | join(" | ") }}{% endif %}{% endif %}
+
+WORDS SENT TO YOU:
+{{ budget(words_body | trim, c.memory_messages_chars, "words are in the chronicle", trim) if words else "(none)" }}
+
+YOUR CREATIONS ({{ creations_total }}{% if current_world %}; you are now on world#{{ current_world.id }} {{ current_world.name }}, the ones in other worlds are there, not here{% endif %}):
+{{ budget(creations_body | trim, c.memory_creations_chars, "look with my_memory", trim) if creations else "(none yet)" }}
+{% if repeats %}
+YOU ARE REPEATING YOURSELF: {% for bucket in repeats %}{{ bucket.label }} ×{{ bucket.count }}{% if not loop.last %}, {% endif %}{% endfor %}. Each new thing of the same subtype costs more; create something else.
+{% endif %}
+
+YOUR WORSHIPPERS ({{ worshippers | length + extra_worshippers }}): {% if worshippers %}{% for item in worshippers %}#{{ item.id }} {{ item.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% if extra_worshippers > 0 %} and {{ extra_worshippers }} more communities{% endif %}{% else %}nobody{% endif %}
+
+
+YOUR MEMORIES:
+{{ budget(chronicle_rows(recollections), c.memory_recollections_chars, "see the chronicle", trim) if recollections else "(none)" }}
+{% if about %}
+
+WHAT HAPPENED ABOUT YOU:
+{{ budget(chronicle_rows(about), c.memory_about_chars, "see the chronicle", trim) }}
+{% endif %}
+{% if beliefs %}
+
+HOW PEOPLES TELL OF YOU (what they get wrong may anger you or serve you):
+{{ budget(beliefs_body | trim, c.memory_folk_beliefs_chars, "folk beliefs", trim) }}
+{% endif %}
+{% endset %}
+{{ budget(memory | trim, c.son_memory_chars * (c.read_tool_multiplier if full else 1), "look with my_memory", trim) }}

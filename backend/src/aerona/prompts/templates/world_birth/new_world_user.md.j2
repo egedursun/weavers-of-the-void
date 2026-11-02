@@ -1,0 +1,53 @@
+{{ world_header }}
+
+KNOWN WORLDS OF THE COSMOS:
+{{ cosmos_lines if cosmos_lines else "- world#" ~ main_world.id ~ " " ~ main_world.name }}
+
+STARS AND THEIR PLANETS:
+{% if stars %}
+{% for star in stars %}
+- star_id {{ star.id }}: {{ star.name }} ({{ star.type_label }}){% if star.description %} — {{ star.description }}{% endif %} — planets: {% if star.planets %}{% for planet in star.planets %}world#{{ planet.id }} {{ planet.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}
+
+{% endfor %}
+{% else %}
+none
+{% endif %}
+
+FOREIGN AND ANCIENT GODS OF THE COSMOS (old_god cannot be one of these; do not repeat their names):
+{% if foreign_gods %}
+{% for god in foreign_gods %}
+- {{ god.name }}{% if god.title %}, {{ god.title }}{% endif %} (world#{{ god.world_id }}{% if god.domains %}; {{ god.domains }}{% endif %})
+{% endfor %}
+{% else %}
+none
+{% endif %}
+{% if placement == "existing_star" and star_id is not none %}
+This world will orbit star_id {{ star_id }}; its description must not contradict that star's light.
+{% elif placement == "moon" and parent_world_id is not none %}
+This world will be the moon of world#{{ parent_world_id }}.
+{% elif placement == "new_star" %}
+A new sun is requested for this world: placement new_star, fill the star field (name, type, description).
+{% else %}
+Choose the placement by looking at the stars above: if the light the world wants (yellow, red, blue, black sun, dead star…) exists at a star in the list, choose existing_star and give that star_id; most worlds are born this way. Choose a new sun only if no star of that kind is in the list, and fill in the star field. The world's description must not contradict the star it orbits.
+{% endif %}
+
+{% if creator_son %}
+The son {{ creator_son.name }} ({{ creator_son.title }}; {{ creator_son.domain_1 }}/{{ creator_son.domain_2 }}) is giving birth to this world; the world should reflect his domains and temperament.
+{% else %}
+The creator god {{ god_name }} is creating this world with his own hand.
+{% endif %}
+{% if world_type_label %}
+World type: {{ world_type_label }} ({{ world_type_key }}).
+{% else %}
+Choose the world type that would most enrich the cosmos.
+{% endif %}
+{% if inspiration %}
+INSPIRATION: {{ inspiration }}
+{% endif %}
+
+RULES: This world is another world; another language, another sky, another logic. First build a new dialect (not the same sounds as the main world), then derive ALL names from that dialect. Do NOT USE these names or their roots: {{ banned_names | join(", ") if banned_names else "none" }}.
+{% if cosmic_resource %}
+The cosmos's travel resource already exists ({{ cosmic_resource }}); leave the cosmic_resource field empty.
+{% else %}
+The cosmos has no travel resource yet: fill the cosmic_resource field; this substance will shape the politics of the whole cosmos.
+{% endif %}

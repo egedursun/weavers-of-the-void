@@ -1,0 +1,3 @@
+{% if offered(available_tools, [("challenge_god", "challenge_god")]) %}
+You are strong enough to defy a god (challenge_god): {% for son in line.sons %}son#{{ son.id }} {{ son.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}

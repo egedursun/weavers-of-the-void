@@ -1,0 +1,65 @@
+{% macro entity_line(entity, with_location=true) -%}
+#{{ entity.id }} {{ entity.name }} ({{ entity.type_label }}{% if entity.subtype %}/{{ entity.subtype }}{% endif %}, P{{ entity.power_level }}){% if with_location and entity.location %} · inside {{ entity.location }}{% endif %}{% if entity.status_label %} [{{ entity.status_label }}]{% endif %}
+{%- endmacro %}
+{% macro son_brief(son) -%}
+{{ son.name }}{% if son.title %}, {{ son.title }}{% endif %} ({{ son.domain_1 }}/{{ son.domain_2 }})
+{%- endmacro %}
+{% macro tired_images(images) -%}
+{% if images.motifs %}TIRED IMAGES (repeated too often in the world's texts): {% for motif in images.motifs %}{{ motif.key }} ({{ motif.percent }}%){% if not loop.last %}, {% endif %}{% endfor %}. Do NOT use these or their synonyms; instead find images specific to this entity and this corner of the world that have not been used before (another sense, another material, another craft, another season).{% endif %}
+{% if images.motifs and images.foreign_images %} {% endif %}
+{% if images.foreign_images %}OTHER WORLD'S WORDS (the main world's worn images; do not carry them into this world): {{ images.foreign_images | join(", ") }}.{% endif %}
+{%- endmacro %}
+{% macro node_ref(node) -%}
+{% if node.kind == "son" %}son#{{ node.id }} {% elif node.kind == "foreign_god" %}foreign god {% elif node.kind == "creator" %}creator {% elif node.kind == "entity" %}#{{ node.id }} {% endif %}{{ node.name }}
+{%- endmacro %}
+{% macro bond_lines(outgoing, incoming) -%}
+{% for bond in outgoing %}
+→ {{ bond.label }} {{ node_ref(bond.other) }}{% if bond.description %} — {{ bond.description }}{% endif %}{% if not loop.last or incoming %}{{ "\n" }}{% endif %}
+{% endfor %}
+{% for bond in incoming %}
+← {{ node_ref(bond.other) }} {{ bond.label }}{% if bond.description %} — {{ bond.description }}{% endif %}{% if not loop.last %}{{ "\n" }}{% endif %}
+{% endfor %}
+{%- endmacro %}
+{% macro dialect_block(worlds) -%}
+NAMING LANGUAGES (each world has its own sound system; a record is named and judged ONLY by its own world's rule, and one world's sound ban does not apply in another world):
+{% for world in worlds %}
+- world#{{ world.id }} {{ world.name }}: {{ naming_rule(world.naming) }}{% if not loop.last %}{{ "\n" }}{% endif %}
+{% endfor %}
+{%- endmacro %}
+{% macro society_lines(society) -%}
+{% set lines = [] %}
+{% if society.tier_label %}{% set _ = lines.append("Civilization tier: " ~ society.tier_label) %}{% endif %}
+{% if society.sanity is not none %}{% set _ = lines.append("Sanity: " ~ society.sanity ~ "/100" ~ (" — THEIR MINDS ARE CLOUDED: strange rites, voices, misread signs" if society.clouded else "")) %}{% endif %}
+{% if society.classes %}{% set _ = lines.append("Society: " ~ society_classes(society.classes)) %}{% endif %}
+{% if society.granary %}{% set g = society.granary %}{% set _ = lines.append("Granary: food " ~ g.food ~ ", ore " ~ g.ore ~ ", goods " ~ g.goods ~ "; prices: bread ×" ~ (g.bread_price | ratio) ~ ", ore ×" ~ (g.ore_price | ratio) ~ ", goods ×" ~ (g.goods_price | ratio)) %}{% endif %}
+{% if society.relations %}{% set _ = lines.append("Relations with communities: " ~ community_relations(society.relations)) %}{% endif %}
+{% if society.wars %}{% set _ = lines.append("Ongoing wars: " ~ war_lines(society.wars)) %}{% endif %}
+{{ lines | join("\n") }}
+{%- endmacro %}
+{% macro society_classes(classes) -%}
+{% for item in classes %}{{ item.label }} {{ item.share }}% (satisfaction {{ item.satisfaction }}){% if not loop.last %}, {% endif %}{% endfor %}
+{%- endmacro %}
+{% macro community_relations(relations) -%}
+{% for item in relations %}#{{ item.id }} {{ item.name }}: {% if item.blood_feud %}BLOOD FEUD, {% endif %}{{ item.label }} ({{ item.value }}){% if not loop.last %}; {% endif %}{% endfor %}
+{%- endmacro %}
+{% macro war_lines(wars) -%}
+{% for item in wars %}#{{ item.id }} {{ item.name }} ({{ item.clashes }} clashes){% if not loop.last %}; {% endif %}{% endfor %}
+{%- endmacro %}
+{% macro thread_line(thread) -%}
+thread#{{ thread.id }} (Age {{ thread.age }}{% if thread.worlds %}, {{ thread.worlds | join(" + ") }}{% endif %}{% if thread.advanced %}, advanced {{ thread.advanced }} times, last Age {{ thread.last_age if thread.last_age is not none else thread.age }}{% else %}, never advanced{% endif %}): {{ thread.text }}{% if thread.related_ids %} [related: {% for related in thread.related_ids %}#{{ related }}{% if not loop.last %}, {% endif %}{% endfor %}]{% endif %}
+{%- endmacro %}
+{% macro chronicle_rows(rows) -%}
+{% for row in rows %}
+[Age {{ row.age }}] {{ row.text }}{% if not loop.last %}{{ "\n" }}{% endif %}
+{% endfor %}
+{%- endmacro %}
+{% macro naming_rule(rule) -%}
+{% set parts = [] %}
+{% if rule.vowels %}{% set _ = parts.append("vowels " ~ (rule.vowels | list | join(", "))) %}{% endif %}
+{% if rule.consonants %}{% set _ = parts.append("consonants " ~ (rule.consonants | list | join(", "))) %}{% endif %}
+{% if rule.forbidden_sounds %}{% set _ = parts.append("never use " ~ (rule.forbidden_sounds | join(", "))) %}{% endif %}
+{% if rule.syllable_patterns %}{% set _ = parts.append("syllables " ~ (rule.syllable_patterns | join(", "))) %}{% endif %}
+{% if rule.endings %}{% set _ = parts.append("favoured endings " ~ (rule.endings | join(", "))) %}{% endif %}
+{% if rule.sample_names %}{% set _ = parts.append("for example " ~ (rule.sample_names | join(", "))) %}{% endif %}
+{{ parts | join("; ") if parts else "free" }}
+{%- endmacro %}

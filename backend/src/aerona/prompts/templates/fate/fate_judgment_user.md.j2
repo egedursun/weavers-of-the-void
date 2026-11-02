@@ -1,0 +1,68 @@
+{% from "shared/macros.md.j2" import tired_images as tired_images_block %}
+{% set f = rules.fate %}
+{% set trim = rules.context.budget_trim_min_chars %}
+{% set tasks %}
+=== TASKS ===
+{% include "shared/verdict_criteria.md.j2" %}
+
+TASK 2, Naming: give every record born of the world's own course a real name fitting the naming language, a subtype, a description and an image prompt. For those tagged "name-from-language" the name has already been derived from their own people's language: keep that name EXACTLY, only write the subtype, description and prompt. The description must describe the record ITSELF. {% include "shared/no_numbers_clause.md.j2" %}
+
+TASK 3: Name the prophecies that came true; reward the sons who advanced the stories.
+TASK 4, Facts: extract short, definite facts from the creations you accepted and the records you named. If a new creation violates the "Canon facts" listed in the details, give "fix".
+TASK 5, Words: a few new words that enter the languages from this age's events (language_id, word, meaning, origin).
+TASK 6, Threads: stories must reach an end. This age close AT LEAST {{ min_close }} open threads{% if close_candidates %}; one of them MUST be from the priority candidates (stretched too long or stagnant) and must be written in the resolved_thread field: {% for candidate in close_candidates %}thread#{{ candidate }}{% if not loop.last %}, {% endif %}{% endfor %}. Closing the easiest thread (young, never advanced) is not resolving{% endif %}. The closing must be concrete: a consequence born of this age's events or of the creations that advanced it, a price, a transformation; if nobody touched it, tell how the story was forgotten, blended into legend or burned out by itself. Before closing, look: if an event or record of this age concretely advanced an open thread (even if nobody gave thread_id), write it in advanced_threads (at most {{ f.thread_advance_cap }}); close a never-advanced thread only if it was truly forgotten, and tell the closing as a forgetting. Closing a young thread that never advanced as "nothing happened" is FORBIDDEN (only those stagnant for {{ f.zero_progress_close_epochs }} ages close as a forgetting); first bring the most advanced candidates to a concrete end. Closings may open doors to new conflicts. Open at most {{ new_max }} new threads; each must rest on a concrete tension born this age and be bound to specific entities. A new thread is born in ONE world: bind records of two worlds only if a concrete contact (traveller, trade, gate, war) links them and the thread's text names that contact.
+{% include "shared/lore_language.md.j2" %}
+
+{% endset %}
+{% set data %}
+THE WORLD'S GENERAL STATE:
+{{ world_summary }}
+
+WHAT HAPPENED DURING AGE {{ age }}:
+{{ age_events if age_events else "(nothing)" }}
+
+RESULTS OF THE WORLD ENGINE:
+{{ budget(engine_notes | join("\n"), f.budget_engine_notes_chars, "rest in the chronicle", trim) if engine_notes else "(none)" }}
+
+WHAT THE SONS AND MORTALS CREATED THIS AGE:
+{{ new_creations | join("\n\n---\n\n") if new_creations else "(none)" }}
+
+BORN OF THE WORLD'S OWN COURSE (they have temporary names and [World engine] descriptions):
+{{ budget(pending | join("\n\n---\n\n"), f.budget_engine_born_chars, "the rest in the naming round", trim) if pending else "(none)" }}
+
+THIS AGE'S WORLD RECORDS (events, deaths, births opened by the engine; take record_id for advanced_threads and fulfilled prophecies from here):
+{% set records_body %}
+{% for record in world_records %}
+#{{ record.id }} {{ record.name }} ({{ record.kind_label }})
+{% endfor %}
+{% endset %}
+{{ budget(records_body | trim, f.budget_world_records_chars, "look with search_entities", trim) if world_records else "(none)" }}
+
+OLD PROPHECIES:
+{{ budget(prophecies | join("\n\n---\n\n"), f.budget_old_prophecies_chars, "look with search_entities", trim) if prophecies else "(none)" }}
+
+OPEN THREADS ({{ threads | length }}; from most stagnant to most alive):
+{% if threads %}
+{% for thread in threads %}
+thread#{{ thread.id }} [open since Age {{ thread.age }}; {% if thread.advance_count %}{{ thread.advance_count }} creations advanced it ({{ thread.advancers | join(", ") }}){% else %}nobody advanced it; stagnant for {{ thread.stagnant_ages }} ages{% endif %}]: {{ thread.text }}
+{% endfor %}
+{% else %}
+(none)
+{% endif %}
+
+PANTHEON: {% for son in pantheon %}son#{{ son.id }} {{ son.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+
+{% if languages %}
+LANGUAGES: {% for language in languages %}#{{ language.id }} {{ language.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+
+{% endif %}
+{% if tired_images.present %}
+
+{{ tired_images_block(tired_images) }} This ban also applies to naming, narrative and fixing.
+{% endif %}
+{% endset %}
+{% set tasks_text = tasks | trim %}
+{{ tasks_text }}
+
+=== DATA ===
+{{ budget(data | trim, [f.budget_chronicler_engine_chars, f.budget_judgment_prompt_chars - (tasks_text | length)] | max, "prompt budget", trim) }}

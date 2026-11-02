@@ -1,0 +1,3 @@
+{% set vessel = offered(available_tools, [("create_vessel", "create_vessel")]) %}
+{% set inspire = offered(available_tools, [("inspire_knowledge", "inspire_knowledge")]) %}
+ISOLATED WORLD: there is no known open road from your world to other worlds{% if line.hidden_route %}, but the cosmos has a hidden passage; if the mortals learn sky navigation or gate lore they will find it{% if inspire %} (inspire_knowledge){% endif %}{% endif %}.{% if vessel %} Create a gate, bridge or ship with create_vessel (giving target_world_id): the road opens and mortals set out.{% endif %}

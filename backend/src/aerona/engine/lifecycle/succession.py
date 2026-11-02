@@ -1,0 +1,146 @@
+import re
+
+from aerona.constants.units import PERCENT
+from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.lifecycle import DesignatedHeirRow
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.models.entity_stats import MortalStats
+from aerona.engine.context import TickContext
+from aerona.engine.lifecycle.ruler_roles import ruler_role
+from aerona.engine.primitives.faith import living_patron
+from aerona.engine.primitives.naming import Namer, seed_of
+from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.queries import active_bonds, close, connect, living_entity, spoken_language
+from aerona.engine.primitives.records import RecordSpec, open_record
+from aerona.engine.primitives.society import class_shares
+from aerona.engine.primitives.stats import stat
+from aerona.language.titles import holder_title_of
+
+RULED_PRIMARY_TYPES = (EntityType.SETTLEMENT, EntityType.PEOPLE, EntityType.FACTION, EntityType.CULT, EntityType.REGION, EntityType.PLACE)
+REGNAL_SUFFIX = re.compile(r"\s+[IVXLCDM]+$")
+HEIR_SUBTYPE = "heir"
+INHERITED_STATS = ("strength", "agility", "intellect", "charisma")
+
+
+def dynasty_root(name: str) -> str:
+    return REGNAL_SUFFIX.sub("", name).strip() or name
+
+
+async def _shared_throne(ctx: TickContext, bond: BondRow, dead_id: int) -> bool:
+    for other in await active_bonds(ctx.session, [BondKind.RULES], targets=[bond.target_node_id]):
+        if other.source_node_id == dead_id:
+            continue
+        ruler = await living_entity(ctx.session, other.source_node_id)
+        if ruler is not None and ruler.entity_type is EntityType.MORTAL:
+            return True
+    return False
+
+
+async def _designated(ctx: TickContext, dead: EntityRow) -> EntityRow | None:
+    row = await ctx.session.get(DesignatedHeirRow, dead.id)
+    if row is None:
+        return None
+    heir = await living_entity(ctx.session, row.heir_entity_id)
+    await ctx.session.delete(row)
+    return heir if heir is not None and heir.entity_type is EntityType.MORTAL else None
+
+
+async def _spawn_heir(ctx: TickContext, dead: EntityRow, primary: EntityRow | None) -> EntityRow:
+    rules = ctx.rules
+    effects = rules.world_effects
+    rng = ctx.rng(seed_of("heir", dead.id))
+    sources = [dead] if primary is None else [dead, primary]
+    name = await Namer(ctx.session, rules).person(sources, seed_of(dead.id, ctx.epoch, HEIR_SUBTYPE), dead.world_id)
+    root = dynasty_root(dead.name)
+    title = holder_title_of(primary.entity_type, primary.name) if primary is not None else f"of the line of {root}"
+    deviation = effects.inheritance_deviation
+
+    def inherit(key: str) -> int:
+        value = stat(dead, key)
+        base = value if value is not None else effects.inheritance_default_stat
+        return clamp_int(base + rng.integer(-deviation, deviation), 0, PERCENT)
+
+    lifespan_base = stat(dead, "lifespan") or effects.default_lifespan
+    lifespan = clamp_int(
+        lifespan_base + rng.integer(-effects.heir_lifespan_deviation, effects.heir_lifespan_deviation), effects.heir_min_lifespan, rules.deep_life.lifespan_cap
+    )
+    flags = [EntityFlag.NAME_FROM_LANGUAGE] if name else []
+    heir = await open_record(
+        ctx.session,
+        ctx.epoch,
+        RecordSpec(
+            entity_type=EntityType.MORTAL,
+            name=name or root,
+            body=f"{dead.name} died and left what they ruled to them.",
+            stats=MortalStats(
+                hp=effects.heir_hp,
+                strength=inherit("strength"),
+                agility=inherit("agility"),
+                intellect=inherit("intellect"),
+                charisma=inherit("charisma"),
+                age=effects.heir_age_base + rng.die(effects.heir_age_die),
+                lifespan=lifespan,
+            ),
+            power=max(1, dead.power_level - 1),
+            location_id=dead.location_id,
+            world_id=dead.world_id,
+            subtype=ruler_role(rules, primary, await class_shares(ctx.session, rules, primary.id) if primary is not None else {}, rng),
+            mortal_role=MortalRole.RULER,
+            title=title,
+            flags=flags,
+        ),
+    )
+    await connect(ctx.session, heir.id, dead.id, BondKind.DESCENDS_FROM, ctx.epoch)
+    language = await spoken_language(ctx.session, dead.id) or (await spoken_language(ctx.session, primary.id) if primary is not None else None)
+    if language is not None:
+        await connect(ctx.session, heir.id, language.id, BondKind.SPEAKS, ctx.epoch)
+    patron = await living_patron(ctx.session, dead)
+    if patron is not None:
+        await connect(ctx.session, heir.id, patron.id, BondKind.WORSHIPS, ctx.epoch)
+    return heir
+
+
+async def pass_rule(ctx: TickContext, dead: EntityRow) -> EntityRow | None:
+    ruled: list[BondRow] = []
+    for bond in await active_bonds(ctx.session, [BondKind.RULES], sources=[dead.id]):
+        if await _shared_throne(ctx, bond, dead.id):
+            await close(ctx.session, bond, ctx.epoch, "shared throne")
+        else:
+            ruled.append(bond)
+    if not ruled:
+        return None
+    targets = [target for target in [await living_entity(ctx.session, bond.target_node_id) for bond in ruled] if target is not None]
+    primary = next((target for target in targets if target.entity_type in RULED_PRIMARY_TYPES), targets[0] if targets else None)
+    heir = await _designated(ctx, dead) or await _spawn_heir(ctx, dead, primary)
+    for bond in ruled:
+        await close(ctx.session, bond, ctx.epoch, "succession")
+        await connect(ctx.session, heir.id, bond.target_node_id, BondKind.RULES, ctx.epoch, description="inheritance")
+    ctx.count("heirs")
+    return heir
+
+
+async def designate_heir(ctx: TickContext, ruler_id: int, heir_id: int) -> DesignatedHeirRow:
+    ruler = await living_entity(ctx.session, ruler_id)
+    heir = await living_entity(ctx.session, heir_id)
+    if ruler is None or heir is None:
+        raise NotFoundError("Both the ruler and the heir must be living records.")
+    if ruler.entity_type is not EntityType.MORTAL or heir.entity_type is not EntityType.MORTAL or ruler.id == heir.id:
+        raise ValidationFailedError("A living mortal ruler can only name another living mortal as heir.")
+    if not await active_bonds(ctx.session, [BondKind.RULES], sources=[ruler.id]):
+        raise ValidationFailedError(f"{ruler.name} rules nothing that could be inherited.")
+    row = await ctx.session.get(DesignatedHeirRow, ruler.id)
+    if row is None:
+        row = DesignatedHeirRow(ruler_entity_id=ruler.id, heir_entity_id=heir.id, epoch=ctx.epoch)
+        ctx.session.add(row)
+    else:
+        row.heir_entity_id = heir.id
+        row.epoch = ctx.epoch
+    await ctx.session.flush()
+    return row
+
+
+def is_alive(entity: EntityRow) -> bool:
+    return entity.status is EntityStatus.CANON

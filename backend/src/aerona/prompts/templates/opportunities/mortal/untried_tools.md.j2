@@ -1,0 +1,5 @@
+{% from "opportunities/_macros.md.j2" import suggestion %}
+{% set usable = line.suggestions | selectattr("tool", "in", available_tools or line.suggestions | map(attribute="tool") | list) | list %}
+{% if usable %}
+TOOLS YOU HAVE NOT TRIED FOR {{ rules.opportunities.untried_epochs }} AGES: {% for item in usable %}{{ suggestion(item) }}{% if not loop.last %}; {% endif %}{% endfor %}
+{% endif %}

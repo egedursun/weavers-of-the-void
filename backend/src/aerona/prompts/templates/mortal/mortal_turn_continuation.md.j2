@@ -1,0 +1,15 @@
+Your turn was left half-done ({% if reason == "connection_error" %}connection error{% if error_detail %} ({{ error_detail | cut(120) }}){% endif %}{% elif reason == "timeout" %}timeout{% elif reason == "step_limit" %}step limit reached{% else %}you finished without speaking your saying{% endif %}).
+{% if done %}
+
+ALREADY DONE THIS AGE (they stand in the world; do not repeat them, build on them; your saying should carry this age's tone but not list what you did):
+{% for action in done %}
+- {{ action.tool }} → {{ action.summary }}
+{% endfor %}
+{% endif %}
+{% if long_jobs %}
+
+LONG WORKS YOU SET IN MOTION (their outcome is already settled; build on it, do not start them again):
+{% for job in long_jobs %}
+- {{ job.tool }} → {{ job.summary }}
+{% endfor %}
+{% endif %}

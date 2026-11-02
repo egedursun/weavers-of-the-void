@@ -1,0 +1,3978 @@
+[
+  {
+    "id": "TOOL-M-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/read.py:53",
+    "test": "backend/tests/tools/test_mortal_tools.py:76",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/agent-context surfaced in the entity drawer."
+  },
+  {
+    "id": "TOOL-M-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/read.py:60",
+    "test": "backend/tests/tools/test_mortal_tools.py:76",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/read.py:69",
+    "test": "backend/tests/tools/test_mortal_tools.py:76",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/language.py:68",
+    "test": "backend/tests/tools/test_mortal_tools.py:85",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-005",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/mortal/language.py:68",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Dialect branch (named mortal founding only a dialect with descends-from bond) is not executed by any test."
+  },
+  {
+    "id": "TOOL-M-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/language.py:96",
+    "test": "backend/tests/tools/test_mortal_tools.py:85",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/production.py:96",
+    "test": "backend/tests/tools/test_mortal_tools.py:85",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/production.py:96",
+    "test": "backend/tests/tools/test_mortal_tools.py:85",
+    "note": "Quality label and abundance drain not asserted."
+  },
+  {
+    "id": "TOOL-M-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/production.py:155",
+    "test": "backend/tests/tools/test_mortal_tools.py:85",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/production.py:210",
+    "test": "backend/tests/tools/test_mortal_tools.py:85",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/production.py:241",
+    "test": "backend/tests/tools/test_mortal_tools.py:113",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/production.py:278",
+    "test": "backend/tests/tools/test_mortal_tools.py:113",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-013",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/mortal/production.py:278",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Confiscation consequence (previous owner declares war via the war service, else relation loss) is asserted nowhere; the claim test only checks the new owner bond."
+  },
+  {
+    "id": "TOOL-M-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/production.py:316",
+    "test": "backend/tests/tools/test_mortal_tools.py:113",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/trade.py:21",
+    "test": "backend/tests/tools/test_mortal_tools.py:132",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/war.py:39",
+    "test": "backend/tests/tools/test_mortal_tools.py:132",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/diplomacy.py:85",
+    "test": "backend/tests/tools/test_mortal_tools.py:132",
+    "note": "Re-verified 2026-11-02: alliance:marriage action."
+  },
+  {
+    "id": "TOOL-M-018",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/diplomacy.py:85",
+    "test": "backend/tests/tools/test_mortal_tools.py:132",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/diplomacy.py:85",
+    "test": "backend/tests/tools/test_mortal_tools.py:132",
+    "note": "Wealth transfer not asserted."
+  },
+  {
+    "id": "TOOL-M-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/war.py:106",
+    "test": "backend/tests/tools/test_mortal_tools.py:147",
+    "note": "Result is not asserted beyond success."
+  },
+  {
+    "id": "TOOL-M-021",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/mortal/war.py:106",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Detection branch (caught saboteur gains enmity, relation loss, poison can kill) is not executed."
+  },
+  {
+    "id": "TOOL-M-022",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/war.py:141",
+    "test": "backend/tests/tools/test_mortal_tools.py:132",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-023",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/religion.py:51",
+    "test": "backend/tests/tools/test_mortal_tools.py:154",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-024",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/mortal/religion.py:51",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Direct creator worship through the tool (son id 0) is not executed."
+  },
+  {
+    "id": "TOOL-M-025",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/religion.py:88",
+    "test": "backend/tests/tools/test_mortal_tools.py:154",
+    "note": "Answered via POST /api/prayers/{id}/answer."
+  },
+  {
+    "id": "TOOL-M-026",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/religion.py:111",
+    "test": "backend/tests/tools/test_mortal_tools.py:154",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-027",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/religion.py:158",
+    "test": "backend/tests/tools/test_mortal_tools.py:154",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-028",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/religion.py:179",
+    "test": "backend/tests/tools/test_mortal_tools.py:154",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-029",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/mortal/religion.py:202",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Tool never invoked by any test (engine rite is tested in tests/engine/gods/test_death.py)."
+  },
+  {
+    "id": "TOOL-M-030",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/knowledge.py:28",
+    "test": "backend/tests/tools/test_mortal_tools.py:169",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-031",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/knowledge.py:82",
+    "test": "backend/tests/tools/test_mortal_tools.py:169",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-032",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/knowledge.py:82",
+    "test": "backend/tests/tools/test_mortal_tools.py:169",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-033",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/heroes.py:72",
+    "test": "backend/tests/tools/test_mortal_tools.py:180",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-034",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/mortal/heroes.py:72",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Seize-item branch is not executed (the test hunts a species)."
+  },
+  {
+    "id": "TOOL-M-035",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/heroes.py:155",
+    "test": "backend/tests/tools/test_mortal_tools.py:180",
+    "note": "Outcome not asserted beyond success."
+  },
+  {
+    "id": "TOOL-M-036",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/mortal/heroes.py:155",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Winning outcomes (god-slayer title, wounded son, fame loss) are not asserted."
+  },
+  {
+    "id": "TOOL-M-037",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/mortal/heroes.py:155",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Losing outcomes (death chance, curse, son gain) are not asserted."
+  },
+  {
+    "id": "TOOL-M-038",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/heroes.py:181",
+    "test": "backend/tests/tools/test_mortal_tools.py:180",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-039",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/cosmos.py:58",
+    "test": "backend/tests/tools/test_mortal_tools.py:195",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-040",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/mortal/cosmos.py:58",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Intuition (unknown world sensed, deferred birth) branch is not executed."
+  },
+  {
+    "id": "TOOL-M-041",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/cosmos.py:98",
+    "test": "backend/tests/tools/test_mortal_tools.py:275",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-042",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/mortal/cosmos.py:98",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Pioneer settlement-founding branch is not executed."
+  },
+  {
+    "id": "TOOL-M-043",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/cosmos.py:155",
+    "test": "backend/tests/tools/test_mortal_tools.py:195",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-044",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/cosmos.py:215",
+    "test": "backend/tests/tools/test_mortal_tools.py:195",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-045",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/creatures.py:46",
+    "test": "backend/tests/tools/test_mortal_tools.py:220",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-046",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/creatures.py:81",
+    "test": "backend/tests/tools/test_mortal_tools.py:220",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-047",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/creatures.py:107",
+    "test": "backend/tests/tools/test_mortal_tools.py:220",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-048",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/mortal/creatures.py:148",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Only the refusal (\"not a ruin\") is tested; the success outcomes (lost knowledge, item, curse) are not."
+  },
+  {
+    "id": "TOOL-M-049",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/mortal/captivity.py:38",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. The escape tool itself is never invoked (test_runtime only checks that a captive may only escape)."
+  },
+  {
+    "id": "TOOL-M-050",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/captivity.py:72",
+    "test": "backend/tests/tools/test_mortal_tools.py:237",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-051",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/mortal/captivity.py:98",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Tool never invoked by any test."
+  },
+  {
+    "id": "TOOL-M-052",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/armies.py:58",
+    "test": "backend/tests/tools/test_mortal_tools.py:249",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-053",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/mortal/armies.py:58",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Army stats, protects bond and joining an ongoing war of its side are not asserted."
+  },
+  {
+    "id": "TOOL-M-054",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/armies.py:105",
+    "test": "backend/tests/tools/test_mortal_tools.py:249",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-055",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/barter.py:73",
+    "test": "backend/tests/tools/test_mortal_tools.py:259",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-056",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/barter.py:112",
+    "test": "backend/tests/tools/test_mortal_tools.py:259",
+    "note": ""
+  },
+  {
+    "id": "TOOL-M-057",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/barter.py:153",
+    "test": "backend/tests/tools/test_mortal_tools.py:259",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/toolkit.py:1; backend/src/aerona/tools/son/registry.py:42",
+    "test": "backend/tests/agents/test_tool_integration.py:9",
+    "note": "POST /api/sons/{id}/act exists; SonDrawer acts on demand. The \"Available tools\" listing surface is missing (see TOOL-S-002)."
+  },
+  {
+    "id": "TOOL-S-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/registry.py:60; backend/src/aerona/tools/son/registry.py:53",
+    "test": "backend/tests/tools/test_runtime.py:67",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/tools with features/son/SonTools.tsx (availability, read-only badges, rendered descriptions)."
+  },
+  {
+    "id": "TOOL-S-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/framework/spec.py:36",
+    "test": "backend/tests/tools/test_catalogue.py:63; backend/tests/tools/test_catalogue.py:79",
+    "note": "Explicit action cost, essence cost, rarity gate, read-only fields (decision 21); editable through the rules editor."
+  },
+  {
+    "id": "TOOL-S-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/prompts/tools/son.py:1; backend/src/aerona/tools/son/registry.py:60",
+    "test": "backend/tests/prompts/test_tools.py:38",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/tools with features/son/SonTools.tsx (availability, read-only badges, rendered descriptions)."
+  },
+  {
+    "id": "TOOL-S-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/framework/runtime.py:146; backend/src/aerona/tools/framework/schema.py:1",
+    "test": "backend/tests/tools/test_runtime.py:231; backend/tests/tools/test_runtime.py:133",
+    "note": "Handlers run in one write unit under a lock; schema sanitisation in framework/schema.py and inputs.py."
+  },
+  {
+    "id": "TOOL-S-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/framework/inputs.py:1; backend/src/aerona/tools/framework/shared_inputs.py:1",
+    "test": "backend/tests/tools/test_runtime.py:45",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/framework/schema.py:129",
+    "test": "backend/tests/tools/test_runtime.py:57",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/framework/inputs.py:1",
+    "test": "backend/tests/tools/test_runtime.py:45",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/framework/runtime.py:93; backend/src/aerona/prompts/tools/results.py:1",
+    "test": "backend/tests/tools/test_catalogue.py:72; backend/tests/tools/test_runtime.py:101",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/framework/actors.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": "Spent-action rejection asserted in test_creation_tools."
+  },
+  {
+    "id": "TOOL-S-011",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/framework/validation.py:1",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. State-dependent rejection reasons (dead, destroyed, rejected, fulfilled) have no test."
+  },
+  {
+    "id": "TOOL-S-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/targets.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:283",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/targets.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:283",
+    "note": "Unified with the mortal rule (decision 20)."
+  },
+  {
+    "id": "TOOL-S-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/targets.py:1; backend/src/aerona/tools/son/creation_inputs.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/framework/runtime.py:89",
+    "test": "backend/tests/tools/test_son_tools.py:245",
+    "note": "Chronicle lines attributed to the son (lines >= 5 asserted)."
+  },
+  {
+    "id": "TOOL-S-016",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/framework/actors.py:1",
+    "test": "backend/tests/tools/test_runtime.py:173",
+    "note": "Behaviour present; dedicated test missing. Gate for an already-sleeping son is tested; the post-call notice and AP zeroing when a tool itself leaves the son asleep or dead (actors.py:53) is untested."
+  },
+  {
+    "id": "TOOL-S-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/framework/actors.py:1",
+    "test": "backend/tests/tools/test_runtime.py:173",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-018",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/framework/runtime.py:209",
+    "test": "backend/tests/tools/test_runtime.py:82",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/framework/runtime.py:218; backend/src/aerona/tools/framework/turn.py:1",
+    "test": "backend/tests/tools/test_runtime.py:158",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/framework/ledger.py:42",
+    "test": "backend/tests/tools/test_runtime.py:158",
+    "note": "Undo through POST /api/ledger/{id}/undo and LedgerDrawer."
+  },
+  {
+    "id": "TOOL-S-021",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/registry.py:53; backend/src/aerona/catalog/gates.py:1",
+    "test": "backend/tests/tools/test_runtime.py:67; backend/tests/tools/test_catalogue.py:79",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-022",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/availability.py:57; backend/src/aerona/tools/son/availability.py:36",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. World-state availability conditions (two worlds, auto distribution, dead sibling, dead star, spirit, foreign god, outer being) have no test (condition_holds / world_state are never referenced)."
+  },
+  {
+    "id": "TOOL-S-023",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/cosmos.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:245",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-024",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/framework/runtime.py:247; backend/src/aerona/tools/framework/runtime.py:272",
+    "test": "backend/tests/tools/test_runtime.py:207",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-025",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/framework/runtime.py:284; backend/src/aerona/tools/framework/turn.py:53; backend/src/aerona/domain/models/turn.py:20",
+    "test": "backend/tests/tools/test_runtime.py:207",
+    "note": "Re-verified 2026-11-02: long jobs are read into the son turn context."
+  },
+  {
+    "id": "TOOL-S-026",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/domain/enums/agent.py:42; backend/src/aerona/tools/framework/turn.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:59",
+    "note": "Re-verified 2026-11-02: son:reset_counters action."
+  },
+  {
+    "id": "TOOL-S-027",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/progress.py:78; backend/src/aerona/services/player/assignments.py:593",
+    "test": "backend/tests/services/app/test_core.py:141",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-028",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/kin.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:84",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-029",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/context/sky_calendar.py:6",
+    "test": "backend/tests/engine/cosmos/test_routes.py:37",
+    "note": "Son-turn prompt version ignores cosmos.alignment_until_epoch and uses only epoch and alignment_period."
+  },
+  {
+    "id": "TOOL-S-030",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/subtypes.py:30",
+    "test": "backend/tests/services/app/test_narrative.py:44",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-031",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/read.py:47",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Tool handler not invoked by any test (tests only assert it is absent when no views port is wired); the underlying render is covered in tests/agents/test_context.py."
+  },
+  {
+    "id": "TOOL-S-032",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/read.py:61",
+    "test": "backend/tests/tools/test_son_tools.py:321",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-033",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/read.py:68",
+    "test": "backend/tests/tools/test_son_tools.py:59",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-034",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/read.py:54",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Tool handler not invoked by any test."
+  },
+  {
+    "id": "TOOL-S-035",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/read.py:73",
+    "test": "backend/tests/tools/test_son_tools.py:59",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-036",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/memory.py:28",
+    "test": "backend/tests/tools/test_son_tools.py:59",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-037",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/memory.py:33",
+    "test": "backend/tests/tools/test_son_tools.py:59",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-038",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/language.py:28",
+    "test": "backend/tests/tools/test_son_tools.py:72",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-039",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/kin.py:103",
+    "test": "backend/tests/tools/test_son_tools.py:84",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-040",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/kin.py:121",
+    "test": "backend/tests/tools/test_son_tools.py:84",
+    "note": "Covenant success or trust refusal both accepted by the test."
+  },
+  {
+    "id": "TOOL-S-041",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/kin.py:164",
+    "test": "backend/tests/tools/test_son_tools.py:84",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-042",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/kin.py:164",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Community-transfer branch (acceptance roll by sibling charisma) is not executed by any test; only the essence gift is."
+  },
+  {
+    "id": "TOOL-S-043",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/kin.py:191",
+    "test": "backend/tests/tools/test_son_tools.py:84",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-044",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/prayer.py:40",
+    "test": "backend/tests/tools/test_son_tools.py:100",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-045",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/prayer.py:52",
+    "test": "backend/tests/tools/test_son_tools.py:100",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-046",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:387",
+    "test": "backend/tests/tools/test_son_tools.py:167",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-047",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/resources.py:51",
+    "test": "backend/tests/tools/test_son_tools.py:167",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-048",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "backend/tests/tools/test_catalogue.py:41",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-049",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-050",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-051",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-052",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Thread-link branch (closed or missing thread note, open thread tag and progress) is not executed by any test."
+  },
+  {
+    "id": "TOOL-S-053",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-054",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:159",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-055",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-056",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Location inference from linked places is never executed (every test passes location_id)."
+  },
+  {
+    "id": "TOOL-S-057",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": "Cost breakdown executes on every creation; discounts not individually asserted."
+  },
+  {
+    "id": "TOOL-S-058",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Co-creation with a covenanted sibling (half-cost split, partner XP/fame, relation) has no test."
+  },
+  {
+    "id": "TOOL-S-059",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-060",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-061",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Creator-son worship for a founded cult and the named-son path are not executed (found_cult untested)."
+  },
+  {
+    "id": "TOOL-S-062",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-063",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Empty-world first-settlement reward branch is not executed."
+  },
+  {
+    "id": "TOOL-S-064",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:109; backend/tests/services/app/test_core.py:141",
+    "note": "Payment and XP/fame execute on every creation; level-up coupling tested in test_core."
+  },
+  {
+    "id": "TOOL-S-065",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-066",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Alphabet-sound warning branch is not executed."
+  },
+  {
+    "id": "TOOL-S-067",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-068",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. No test creates a region through the tool (only the catalogue spec existence)."
+  },
+  {
+    "id": "TOOL-S-069",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-070",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-071",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. The son creation tool of this name is never invoked; tests/tools/test_mortal_tools.py only exercises the mortal tool with the same name."
+  },
+  {
+    "id": "TOOL-S-072",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Not invoked by any test."
+  },
+  {
+    "id": "TOOL-S-073",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-074",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Not invoked by any test."
+  },
+  {
+    "id": "TOOL-S-075",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-076",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. The son creation tool of this name is never invoked; only the mortal tool is tested."
+  },
+  {
+    "id": "TOOL-S-077",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "backend/tests/tools/test_son_tools.py:109",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-078",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "backend/tests/tools/test_son_tools.py:300",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-079",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Not invoked by any test."
+  },
+  {
+    "id": "TOOL-S-080",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Not invoked by any test (also leaves the creator-son worship branch of TOOL-S-061 untested)."
+  },
+  {
+    "id": "TOOL-S-081",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Not invoked by any test."
+  },
+  {
+    "id": "TOOL-S-082",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Not invoked by any test."
+  },
+  {
+    "id": "TOOL-S-083",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Not invoked by any test."
+  },
+  {
+    "id": "TOOL-S-084",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Not invoked by any test."
+  },
+  {
+    "id": "TOOL-S-085",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Not invoked by any test."
+  },
+  {
+    "id": "TOOL-S-086",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Not invoked by any test."
+  },
+  {
+    "id": "TOOL-S-087",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Not invoked by any test."
+  },
+  {
+    "id": "TOOL-S-088",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Not invoked by any test."
+  },
+  {
+    "id": "TOOL-S-089",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Not invoked by any test."
+  },
+  {
+    "id": "TOOL-S-090",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:362",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Not invoked by any test."
+  },
+  {
+    "id": "TOOL-S-091",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/creation.py:1",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Mortal age window logic is only reachable through create_mortal, which no test invokes."
+  },
+  {
+    "id": "TOOL-S-092",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/influence.py:99",
+    "test": "backend/tests/tools/test_son_tools.py:181",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-093",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/influence.py:129",
+    "test": "backend/tests/tools/test_son_tools.py:181",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-094",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/influence.py:172",
+    "test": "backend/tests/tools/test_son_tools.py:181",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-095",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/influence.py:208",
+    "test": "backend/tests/tools/test_son_tools.py:181",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-096",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/influence.py:241",
+    "test": "backend/tests/tools/test_son_tools.py:181",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-097",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/intervention.py:109",
+    "test": "backend/tests/tools/test_son_tools.py:195",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-098",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/intervention.py:109",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Healing-miracle sanity restoration is not exercised (the test sends a protection miracle)."
+  },
+  {
+    "id": "TOOL-S-099",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/intervention.py:109",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Miracle on an unclaimed community making it worship the son is not exercised."
+  },
+  {
+    "id": "TOOL-S-100",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/intervention.py:167",
+    "test": "backend/tests/tools/test_son_tools.py:195",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-101",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/intervention.py:204",
+    "test": "backend/tests/tools/test_son_tools.py:195",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-102",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/intervention.py:233",
+    "test": "backend/tests/tools/test_son_tools.py:195",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-103",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/kin.py:212",
+    "test": "backend/tests/tools/test_runtime.py:207",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-104",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/war.py:69",
+    "test": "backend/tests/tools/test_son_tools.py:217",
+    "note": "Result is not asserted (call may be refused)."
+  },
+  {
+    "id": "TOOL-S-105",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/war.py:96",
+    "test": "backend/tests/tools/test_son_tools.py:217",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-106",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/war.py:143",
+    "test": "backend/tests/tools/test_son_tools.py:217",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-107",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/war.py:143",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Losing branch (wound, essence cost, attitude drop, possible sleep) not asserted."
+  },
+  {
+    "id": "TOOL-S-108",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/death.py:47",
+    "test": "backend/tests/tools/test_son_tools.py:230",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-109",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/death.py:47",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Failed-kill refund share is not asserted for the son tool."
+  },
+  {
+    "id": "TOOL-S-110",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/death.py:73",
+    "test": "backend/tests/tools/test_son_tools.py:230",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-111",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/death.py:87",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Only the shared-cap rejection (\"already plotted\") is asserted; a successful scatter through the tool is not."
+  },
+  {
+    "id": "TOOL-S-112",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/cosmos.py:118",
+    "test": "backend/tests/tools/test_son_tools.py:245",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-113",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/cosmos.py:144",
+    "test": "backend/tests/tools/test_son_tools.py:245",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-114",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/cosmos.py:158",
+    "test": "backend/tests/tools/test_son_tools.py:245",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-115",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/cosmos.py:169",
+    "test": "backend/tests/tools/test_son_tools.py:245",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-116",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/cosmos.py:189",
+    "test": "backend/tests/tools/test_son_tools.py:245",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-117",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/cosmos.py:209",
+    "test": "backend/tests/tools/test_son_tools.py:245",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-118",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/cosmos.py:228",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. The son tool is never invoked (engine extinguish_star is tested in tests/engine/cosmos/test_stars_and_gods.py)."
+  },
+  {
+    "id": "TOOL-S-119",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/cosmos.py:244",
+    "test": "backend/tests/tools/test_son_tools.py:245",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-120",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/cosmos.py:244",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Alliance branch not exercised (only bargain)."
+  },
+  {
+    "id": "TOOL-S-121",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/cosmos.py:244",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Threat branch not exercised (only bargain)."
+  },
+  {
+    "id": "TOOL-S-122",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/cosmos.py:244",
+    "test": "backend/tests/tools/test_son_tools.py:245",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-123",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/cosmos.py:288",
+    "test": "backend/tests/tools/test_son_tools.py:245",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-124",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/tools/son/resources.py:76",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Not invoked by any test."
+  },
+  {
+    "id": "TOOL-S-125",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/cosmos.py:306",
+    "test": "backend/tests/tools/test_son_tools.py:245",
+    "note": ""
+  },
+  {
+    "id": "TOOL-S-126",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/son/cosmos.py:325",
+    "test": "backend/tests/tools/test_runtime.py:207",
+    "note": ""
+  },
+  {
+    "id": "MOOD-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mood.py:73; backend/src/aerona/engine/gods/mood.py:78; backend/src/aerona/services/gods/creator_mood.py:43",
+    "test": "backend/tests/engine/gods/test_mood.py:151",
+    "note": "Missing axes start from live rules (rules.creator.start_*)."
+  },
+  {
+    "id": "MOOD-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mood.py:89",
+    "test": "backend/tests/engine/gods/test_mood.py:33",
+    "note": "First-match order anger, interest, loneliness, contentment, unease matches legacy."
+  },
+  {
+    "id": "MOOD-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/worship.py:32",
+    "test": "backend/tests/engine/gods/test_mood.py:78",
+    "note": "Cult read from active WORSHIPS bonds to the creator node; manual patron/convert actions and CreatorCult UI exist."
+  },
+  {
+    "id": "MOOD-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/worship.py:39; backend/src/aerona/engine/gods/worship.py:49",
+    "test": "backend/tests/engine/gods/test_mood.py:78",
+    "note": "Population x piety + followers + mortal bonus, same shape as legacy."
+  },
+  {
+    "id": "MOOD-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/worship.py:53; backend/src/aerona/engine/transition.py:73; backend/src/aerona/engine/phases/doom.py:1",
+    "test": "backend/tests/engine/gods/test_mood.py:78",
+    "note": "Essence added outside the soft cap and doom push-back capped as legacy; both wired into the transition (creator_essence, doom clock item CREATOR_CULT)."
+  },
+  {
+    "id": "MOOD-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/primitives/faith.py:177",
+    "test": "backend/tests/engine/gods/test_mood.py:93",
+    "note": "Single-patron rule (decision 27) enforced; godless tag removed."
+  },
+  {
+    "id": "MOOD-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mood.py:104; backend/src/aerona/engine/gods/mood.py:158",
+    "test": "backend/tests/engine/gods/test_mood.py:140; backend/tests/engine/gods/test_mood.py:42",
+    "note": "Saturating inputs for wars (war service rows), godless share, rebels, doom clock match legacy formulas."
+  },
+  {
+    "id": "MOOD-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mood.py:104",
+    "test": "backend/tests/engine/gods/test_mood.py:60; backend/tests/engine/gods/test_mood.py:42",
+    "note": "Action count now comes from ActionRecordRow (creator actor) per decision 28 instead of chronicle kinds."
+  },
+  {
+    "id": "MOOD-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mood.py:104",
+    "test": "backend/tests/engine/gods/test_mood.py:42",
+    "note": "Persistence and mutual soothing as legacy."
+  },
+  {
+    "id": "MOOD-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mood.py:193; backend/src/aerona/services/gods/creator_mood.py:48",
+    "test": "backend/tests/engine/gods/test_mood.py:103; backend/tests/engine/gods/test_mood.py:151",
+    "note": "Breakdown stored per epoch and cleared on manual set."
+  },
+  {
+    "id": "MOOD-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mood.py:104",
+    "test": "backend/tests/engine/gods/test_mood.py:60",
+    "note": ""
+  },
+  {
+    "id": "MOOD-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mood.py:104; backend/src/aerona/engine/gods/mood.py:142",
+    "test": "backend/tests/engine/gods/test_mood.py:68; backend/tests/engine/gods/test_mood.py:54",
+    "note": "Decaying window per decision 31."
+  },
+  {
+    "id": "MOOD-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/signs.py:47; backend/src/aerona/services/player/divine.py:48; frontend/src/features/creator/GodPanel.tsx:57",
+    "test": "backend/tests/engine/gods/test_mood.py:151",
+    "note": "Re-verified 2026-11-02: sign target picker in features/creator/GodPanel.tsx."
+  },
+  {
+    "id": "MOOD-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/signs.py:64; backend/src/aerona/engine/phases/creator_mood.py:8",
+    "test": "backend/tests/engine/gods/test_mood.py:103; backend/tests/engine/gods/test_mood.py:151",
+    "note": "Godless/cursed land else most dangerous region; disaster and event; discharge. Manual trigger creator:sign wrath exists with GodPanel button."
+  },
+  {
+    "id": "MOOD-015",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/signs.py:97; backend/src/aerona/engine/gods/interventions.py:23",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. grace_sign has no test (no test references grace_sign or apply_abundance)."
+  },
+  {
+    "id": "MOOD-016",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/signs.py:116",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. silence sign and the loyalty/ambition drift for active sons have no test."
+  },
+  {
+    "id": "MOOD-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/signs.py:130",
+    "test": "backend/tests/engine/gods/test_mood.py:119",
+    "note": ""
+  },
+  {
+    "id": "MOOD-018",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/signs.py:167",
+    "test": "backend/tests/engine/gods/test_mood.py:130",
+    "note": "One per epoch, bonus when content; manual convert action and CreatorCult UI exist."
+  },
+  {
+    "id": "MOOD-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/tools/mortal/religion.py:88; backend/src/aerona/services/player/messages.py:95",
+    "test": "backend/tests/tools/test_mortal_tools.py:154",
+    "note": "Prayer message with optional request; answered through the prayers screen. Mortal agent forcing via entity:agent."
+  },
+  {
+    "id": "POW-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/essence.py:11",
+    "test": "backend/tests/api/test_sons.py:34",
+    "note": "Rejection names the rule key."
+  },
+  {
+    "id": "POW-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/essence.py:5",
+    "test": "backend/tests/engine/gods/test_god_power.py:31",
+    "note": ""
+  },
+  {
+    "id": "POW-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/power.py:49",
+    "test": "backend/tests/engine/gods/test_god_power.py:31",
+    "note": ""
+  },
+  {
+    "id": "POW-004",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/acts.py:125; backend/src/aerona/engine/gods/acts.py:130",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Cost formula has no test; frontend ForeignGodPowerPanel recomputes the formula client-side from rules instead of reading a server value."
+  },
+  {
+    "id": "POW-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/lineage.py:110",
+    "test": "backend/tests/engine/gods/test_god_power.py:99; backend/tests/engine/gods/test_god_power.py:86",
+    "note": ""
+  },
+  {
+    "id": "POW-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/lineage.py:66",
+    "test": "backend/tests/engine/gods/test_god_power.py:66",
+    "note": ""
+  },
+  {
+    "id": "POW-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/lineage.py:70",
+    "test": "backend/tests/engine/gods/test_god_power.py:66",
+    "note": ""
+  },
+  {
+    "id": "POW-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/lineage.py:78",
+    "test": "backend/tests/engine/gods/test_god_power.py:66; backend/tests/services/player/test_god_power.py:94",
+    "note": ""
+  },
+  {
+    "id": "POW-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/power.py:166; backend/src/aerona/services/gods/god_power.py:83",
+    "test": "backend/tests/engine/gods/test_god_power.py:49",
+    "note": "Re-verified 2026-11-02: rebellion:force action."
+  },
+  {
+    "id": "POW-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/god_power.py:31",
+    "test": "backend/tests/engine/gods/test_god_power.py:49",
+    "note": "Re-verified 2026-11-02: rebellion:force action."
+  },
+  {
+    "id": "POW-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/god_power.py:43",
+    "test": "backend/tests/engine/gods/test_god_power.py:49",
+    "note": ""
+  },
+  {
+    "id": "POW-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/god_power.py:58; backend/src/aerona/services/player/interventions.py:203",
+    "test": "backend/tests/engine/gods/test_god_power.py:49; backend/tests/services/player/test_interventions.py:35",
+    "note": ""
+  },
+  {
+    "id": "POW-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/god_power.py:73; backend/src/aerona/engine/phases/god_power.py:124",
+    "test": "backend/tests/engine/gods/test_god_power.py:66",
+    "note": "Temple destroyers now use engine_kind TEMPLE (decision 40) instead of name matching."
+  },
+  {
+    "id": "POW-014",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/god_power.py:93",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Temple-destroyer / cursed-mortal / multi-killer pool and top-N roll are not exercised by any test (only the bloody-hand path is)."
+  },
+  {
+    "id": "POW-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/god_power.py:140",
+    "test": "backend/tests/engine/gods/test_god_power.py:86",
+    "note": ""
+  },
+  {
+    "id": "POW-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/god_power.py:166",
+    "test": "backend/tests/engine/gods/test_god_power.py:66",
+    "note": ""
+  },
+  {
+    "id": "POW-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/god_power.py:187",
+    "test": "backend/tests/engine/gods/test_god_power.py:86",
+    "note": ""
+  },
+  {
+    "id": "REP-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/reputation.py:279",
+    "test": "backend/tests/engine/gods/test_reputation.py:116",
+    "note": "Manual PUT /creator/passions and CreatorPassions UI exist."
+  },
+  {
+    "id": "REP-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/reputation.py:268",
+    "test": "backend/tests/engine/gods/test_reputation.py:103",
+    "note": "Structured action kinds (decision 28)."
+  },
+  {
+    "id": "REP-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/reputation.py:84",
+    "test": "backend/tests/engine/gods/test_reputation.py:46",
+    "note": "Success/failure caveat: SUPPRESS_REBELLION is recorded on failed suppression too (see GOAL-016), so it feeds fear on failure."
+  },
+  {
+    "id": "REP-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/reputation.py:84",
+    "test": "backend/tests/engine/gods/test_reputation.py:46",
+    "note": ""
+  },
+  {
+    "id": "REP-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/reputation.py:153",
+    "test": "backend/tests/engine/gods/test_reputation.py:61",
+    "note": ""
+  },
+  {
+    "id": "REP-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/reputation.py:84",
+    "test": "backend/tests/engine/gods/test_reputation.py:46",
+    "note": ""
+  },
+  {
+    "id": "REP-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/reputation.py:65",
+    "test": "backend/tests/engine/gods/test_reputation.py:32",
+    "note": ""
+  },
+  {
+    "id": "REP-008",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/agents/context/reputation_line.py:6; backend/src/aerona/prompts/templates/son_turn/reputation_line.md.j2:1",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Line renderer and behaviour advice exist and are wired into the son turn context, but no test renders reputation_line (tests/prompts/samples.py only hard-codes a string)."
+  },
+  {
+    "id": "REP-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/reputation.py:205; backend/src/aerona/engine/phases/reputation.py:14; backend/src/aerona/services/player/divine.py:69",
+    "test": "backend/tests/engine/gods/test_reputation.py:71; backend/tests/engine/gods/test_reputation.py:116",
+    "note": "Corrupt records skipped via nested transaction. Manual reputation:drift action itself is untested."
+  },
+  {
+    "id": "REP-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/reputation.py:196; backend/src/aerona/engine/gods/reputation.py:166",
+    "test": "backend/tests/engine/gods/test_reputation.py:84; backend/tests/engine/gods/test_reputation.py:71",
+    "note": ""
+  },
+  {
+    "id": "REP-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/reputation.py:205; backend/src/aerona/catalog/chronicle.py:1",
+    "test": "backend/tests/engine/gods/test_reputation.py:71",
+    "note": "CREATOR_REPUTATION kind carries the reputation notification category."
+  },
+  {
+    "id": "REP-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/reputation.py:288",
+    "test": "backend/tests/engine/gods/test_reputation.py:116",
+    "note": ""
+  },
+  {
+    "id": "REP-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/reputation.py:249",
+    "test": "backend/tests/engine/gods/test_reputation.py:93",
+    "note": "Called from drain, devour, demote and strip."
+  },
+  {
+    "id": "REP-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/reputation.py:302; backend/src/aerona/api/routers/creator.py:88",
+    "test": "backend/tests/engine/gods/test_reputation.py:116",
+    "note": "GET /api/creator/reputation and ReputationPanel exist."
+  },
+  {
+    "id": "GOAL-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:166; backend/src/aerona/catalog/scenarios.py:18",
+    "test": "backend/tests/engine/gods/test_goals.py:60",
+    "note": "Failure path tested; completion path shares finish_scenario with the tested long-peace case."
+  },
+  {
+    "id": "GOAL-002",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:105",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. No test measures the one-faith scenario beyond starting it."
+  },
+  {
+    "id": "GOAL-003",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:177; backend/src/aerona/engine/gods/goals.py:89",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Lost-star measure and baseline have no test."
+  },
+  {
+    "id": "GOAL-004",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:117",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Many-worlds measure has no test."
+  },
+  {
+    "id": "GOAL-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:186; backend/src/aerona/engine/gods/goals.py:100",
+    "test": "backend/tests/engine/gods/test_goals.py:43",
+    "note": "Caveat: manual goals:evaluate also runs scenario_epoch_end (see GOAL-010)."
+  },
+  {
+    "id": "GOAL-006",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:194",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Cosmic-power measure has no test."
+  },
+  {
+    "id": "GOAL-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:125",
+    "test": "backend/tests/engine/gods/test_goals.py:68",
+    "note": "Failure path tested; completion branch not."
+  },
+  {
+    "id": "GOAL-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:146",
+    "test": "backend/tests/engine/gods/test_goals.py:76",
+    "note": ""
+  },
+  {
+    "id": "GOAL-009",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:229",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. The failure branch (measure raises, text reported) has no test."
+  },
+  {
+    "id": "GOAL-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:382; backend/src/aerona/engine/phases/goals.py:7; backend/src/aerona/services/gods/goals.py:123; backend/src/aerona/services/player/divine.py:76",
+    "test": "backend/tests/engine/gods/test_goals.py:43",
+    "note": "Re-verified 2026-11-02: the manual goals:evaluate calls evaluate_goals only; scenario_epoch_end runs only from epoch_end_goals (engine/gods/goals.py)."
+  },
+  {
+    "id": "GOAL-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:382",
+    "test": "backend/tests/engine/gods/test_goals.py:87",
+    "note": "Earned once with epoch and notification."
+  },
+  {
+    "id": "GOAL-012",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:286",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Condition for SECOND_SKY is implemented but never asserted as earned in any test."
+  },
+  {
+    "id": "GOAL-013",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:286",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Condition for CONSTELLATION is implemented but never asserted as earned in any test."
+  },
+  {
+    "id": "GOAL-014",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:286",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Condition for PROPHECY_FULFILLED is implemented but never asserted as earned in any test."
+  },
+  {
+    "id": "GOAL-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:286",
+    "test": "backend/tests/engine/gods/test_goals.py:87",
+    "note": "Fires only on an actual resurrection (decision 29)."
+  },
+  {
+    "id": "GOAL-016",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:286; backend/src/aerona/services/player/interventions.py:176 (line 200 records kind=SUPPRESS_REBELLION unconditionally)",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Condition counts ActionRecordRow kind SUPPRESS_REBELLION, but services/player/interventions.py:_suppress returns that kind for every attempt including a failed one (SUPPRESS_FAILED branch), so the achievement fires on a failed suppression. Legacy matched the success text only. No test for the achievement."
+  },
+  {
+    "id": "GOAL-017",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:286",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Condition for BABEL is implemented but never asserted as earned in any test."
+  },
+  {
+    "id": "GOAL-018",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:286",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Condition for CROWDED_WORLD is implemented but never asserted as earned in any test."
+  },
+  {
+    "id": "GOAL-019",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:286",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Condition for FIRST_PRAYER is implemented but never asserted as earned in any test."
+  },
+  {
+    "id": "GOAL-020",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:286",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Condition for CREATORS_CULT is implemented but never asserted as earned in any test."
+  },
+  {
+    "id": "GOAL-021",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:286",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Condition for INTERSTELLAR_TRAVELLER is implemented but never asserted as earned in any test."
+  },
+  {
+    "id": "GOAL-022",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:286",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Condition for SAGA_COMPLETED is implemented but never asserted as earned in any test."
+  },
+  {
+    "id": "GOAL-023",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:286",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Condition for GOD_OF_EPOCHS is implemented but never asserted as earned in any test."
+  },
+  {
+    "id": "GOAL-024",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:286",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Condition for ANCIENT is implemented but never asserted as earned in any test."
+  },
+  {
+    "id": "GOAL-025",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:286",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Condition for CROWDED_PANTHEON is implemented but never asserted as earned in any test."
+  },
+  {
+    "id": "GOAL-026",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:286",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Condition for FIRST_EXPLORERS is implemented but never asserted as earned in any test."
+  },
+  {
+    "id": "GOAL-027",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:286",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Condition for SENSED_WORLD is implemented but never asserted as earned in any test."
+  },
+  {
+    "id": "GOAL-028",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:267",
+    "test": "backend/tests/engine/gods/test_goals.py:87",
+    "note": "Behaviour present; dedicated test missing. Only the negative case is asserted (not earned); the earning path is untested."
+  },
+  {
+    "id": "GOAL-029",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:347",
+    "test": "backend/tests/engine/gods/test_goals.py:43",
+    "note": "ScoreRow per epoch; ScoreSparkline UI."
+  },
+  {
+    "id": "GOAL-030",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/goals.py:327",
+    "test": "backend/tests/engine/gods/test_goals.py:32",
+    "note": "Scenario points once (decision 30)."
+  },
+  {
+    "id": "GOAL-031",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/gods/goals.py:66; backend/src/aerona/api/routers/goals.py:1",
+    "test": "backend/tests/api/test_goals.py:4; backend/tests/engine/gods/test_goals.py:102",
+    "note": "GET /api/goals; GoalsBlock/AchievementsGrid/ScoreSparkline UI."
+  },
+  {
+    "id": "DTH-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortality.py:89",
+    "test": "backend/tests/engine/gods/test_death.py:36",
+    "note": ""
+  },
+  {
+    "id": "DTH-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortality.py:116",
+    "test": "backend/tests/engine/gods/test_death.py:36",
+    "note": "Item protection is narrative only as in legacy."
+  },
+  {
+    "id": "DTH-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortality.py:173",
+    "test": "backend/tests/engine/gods/test_death.py:56",
+    "note": "Immortal flag blocks uncertain kills; ghost handled by flags."
+  },
+  {
+    "id": "DTH-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortality.py:173; backend/src/aerona/engine/gods/mortality.py:165",
+    "test": "backend/tests/services/player/test_death_messages.py:29",
+    "note": "Relation souring with creator son and patron is not asserted in any test."
+  },
+  {
+    "id": "DTH-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortality.py:173",
+    "test": "backend/tests/engine/gods/test_death.py:56",
+    "note": "Manual protection via mortal:protect (grant_protection) with registry entry in the entity actions UI."
+  },
+  {
+    "id": "DTH-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortality.py:142",
+    "test": "backend/tests/engine/gods/test_death.py:56",
+    "note": "Only the fallback fate branch is exercised."
+  },
+  {
+    "id": "DTH-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/god_death.py:279; backend/src/aerona/engine/gods/god_death.py:331",
+    "test": "backend/tests/engine/gods/test_death.py:125",
+    "note": ""
+  },
+  {
+    "id": "DTH-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/god_death.py:61",
+    "test": "backend/tests/engine/gods/test_death.py:70",
+    "note": ""
+  },
+  {
+    "id": "DTH-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/devotion.py:83; backend/src/aerona/api/routers/sons.py:1",
+    "test": "backend/tests/engine/gods/test_death.py:90",
+    "note": "GET /api/sons/{id}/resurrection; DeadSonPanel UI."
+  },
+  {
+    "id": "DTH-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/devotion.py:103",
+    "test": "backend/tests/engine/gods/test_death.py:90",
+    "note": ""
+  },
+  {
+    "id": "DTH-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/devotion.py:144",
+    "test": "backend/tests/engine/gods/test_death.py:90",
+    "note": "Prayer rite itself is not asserted."
+  },
+  {
+    "id": "DTH-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/devotion.py:144",
+    "test": "backend/tests/engine/gods/test_death.py:90",
+    "note": ""
+  },
+  {
+    "id": "DTH-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/devotion.py:144",
+    "test": "backend/tests/engine/gods/test_death.py:115",
+    "note": ""
+  },
+  {
+    "id": "DTH-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/devotion.py:144",
+    "test": "backend/tests/engine/gods/test_death.py:90",
+    "note": ""
+  },
+  {
+    "id": "DTH-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/devotion.py:205; backend/src/aerona/services/gods/death.py:124",
+    "test": "backend/tests/engine/gods/test_death.py:90",
+    "note": "Re-verified 2026-11-02: services/player/death.py wraps order_scheme and order_scatter as player actions."
+  },
+  {
+    "id": "DTH-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/devotion.py:205; backend/src/aerona/services/gods/death.py:124",
+    "test": "backend/tests/engine/gods/test_death.py:90",
+    "note": "Re-verified 2026-11-02: services/player/death.py wraps order_scheme and order_scatter as player actions."
+  },
+  {
+    "id": "DTH-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/devotion.py:205; backend/src/aerona/engine/gods/devotion.py:197",
+    "test": "backend/tests/engine/gods/test_death.py:90",
+    "note": "Re-verified 2026-11-02: services/player/death.py wraps order_scheme and order_scatter as player actions."
+  },
+  {
+    "id": "DTH-018",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/devotion.py:205; backend/src/aerona/services/gods/death.py:124",
+    "test": "backend/tests/engine/gods/test_death.py:90",
+    "note": "Re-verified 2026-11-02: services/player/death.py wraps order_scheme and order_scatter as player actions."
+  },
+  {
+    "id": "DTH-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/devotion.py:262; backend/src/aerona/services/gods/death.py:133",
+    "test": "backend/tests/engine/gods/test_death.py:90",
+    "note": "Re-verified 2026-11-02: services/player/death.py wraps order_scheme and order_scatter as player actions."
+  },
+  {
+    "id": "DTH-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/god_death.py:39",
+    "test": "backend/tests/engine/gods/test_death.py:143",
+    "note": ""
+  },
+  {
+    "id": "DTH-021",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/god_death.py:57",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Automatic sibling schemes are not exercised by test_death_engine_foreign_strike_and_rites or any other test."
+  },
+  {
+    "id": "DTH-022",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/phases/god_death.py:57",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Hostile-sibling auto scatter is untested."
+  },
+  {
+    "id": "DTH-023",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/phases/god_death.py:84; backend/src/aerona/services/gods/death.py:153; backend/src/aerona/services/player/divine.py:63",
+    "test": "backend/tests/engine/gods/test_death.py:143",
+    "note": "Manual foreign_god:strike action with ForeignGodPowerPanel UI; the manual action itself is untested."
+  },
+  {
+    "id": "ECO-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/economy.py:204; backend/src/aerona/engine/phases/resources.py:1",
+    "test": "backend/tests/engine/gods/test_economy.py:40",
+    "note": "Re-verified 2026-11-02: economy:resources and economy:cosmic with features/cosmos/EconomyControls.tsx (addiction cure included)."
+  },
+  {
+    "id": "ECO-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/economy.py:204",
+    "test": "backend/tests/engine/gods/test_economy.py:40",
+    "note": "Re-verified 2026-11-02: economy:resources and economy:cosmic with features/cosmos/EconomyControls.tsx (addiction cure included)."
+  },
+  {
+    "id": "ECO-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/economy.py:61",
+    "test": "backend/tests/engine/gods/test_economy.py:53",
+    "note": "Re-verified 2026-11-02: economy:resources and economy:cosmic with features/cosmos/EconomyControls.tsx (addiction cure included)."
+  },
+  {
+    "id": "ECO-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/economy.py:83",
+    "test": "backend/tests/engine/gods/test_economy.py:69",
+    "note": "Re-verified 2026-11-02: economy:resources and economy:cosmic with features/cosmos/EconomyControls.tsx (addiction cure included)."
+  },
+  {
+    "id": "ECO-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/economy.py:126",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: economy:resources and economy:cosmic with features/cosmos/EconomyControls.tsx (addiction cure included)."
+  },
+  {
+    "id": "ECO-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/economy.py:152",
+    "test": "backend/tests/engine/gods/test_economy.py:40",
+    "note": "Re-verified 2026-11-02: economy:resources and economy:cosmic with features/cosmos/EconomyControls.tsx (addiction cure included)."
+  },
+  {
+    "id": "ECO-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/economy.py:176; backend/src/aerona/services/gods/cosmic_economy.py:97",
+    "test": "backend/tests/engine/gods/test_economy.py:53",
+    "note": "Re-verified 2026-11-02: economy:resources and economy:cosmic with features/cosmos/EconomyControls.tsx (addiction cure included)."
+  },
+  {
+    "id": "ECO-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/economy.py:237; backend/src/aerona/engine/cosmos/routes.py:1",
+    "test": "backend/tests/engine/gods/test_economy.py:79",
+    "note": "Wired into journey start (routes.py:428); counter on the traveller row; manual via expedition with a fold route."
+  },
+  {
+    "id": "ECO-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/economy.py:261; backend/src/aerona/services/gods/cosmic_economy.py:52",
+    "test": "backend/tests/engine/gods/test_economy.py:79; backend/tests/engine/gods/test_economy.py:104",
+    "note": "Manual deposit:owner with CosmicOrdersForm UI."
+  },
+  {
+    "id": "ECO-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/economy.py:333; backend/src/aerona/engine/gods/economy.py:291",
+    "test": "backend/tests/engine/gods/test_economy.py:79; backend/tests/engine/gods/test_economy.py:104",
+    "note": "Manual cosmos:deposit with CosmicResourceForm UI."
+  },
+  {
+    "id": "ECO-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/economy.py:352",
+    "test": "backend/tests/engine/gods/test_economy.py:79",
+    "note": "Prosperity gain goes through add_prosperity (decision 53)."
+  },
+  {
+    "id": "ECO-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/economy.py:444; backend/src/aerona/engine/gods/economy.py:389",
+    "test": "backend/tests/engine/gods/test_economy.py:79",
+    "note": "Manual market:found with CosmicOrdersForm UI."
+  },
+  {
+    "id": "ECO-013",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/economy.py:424",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Market relocation and trade-bond migration are untested (the test pins market_move_chance=0)."
+  },
+  {
+    "id": "ECO-014",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/economy.py:444",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Prosperity lift and trade-bond opening around a market are not asserted by any test."
+  },
+  {
+    "id": "ECO-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/economy.py:469",
+    "test": "backend/tests/engine/gods/test_economy.py:79",
+    "note": "Manual pirates:spawn / market:disband with CosmicOrdersForm UI."
+  },
+  {
+    "id": "ECO-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/economy.py:469",
+    "test": "backend/tests/engine/gods/test_economy.py:79",
+    "note": "Danger rise asserted; decay back to the method floor untested. Manual route:danger with RouteActions UI."
+  },
+  {
+    "id": "ECO-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/integrity/containment.py:14; backend/src/aerona/services/integrity/containment.py:33; backend/src/aerona/services/integrity/data_repairs.py:76",
+    "test": "backend/tests/services/app/test_integrity.py:29",
+    "note": "Re-verified 2026-11-02: POST /api/maintenance/tasks/{task}/run (data repairs, history repairs, importance, endings, narrative sweep, certain facts, planner statistics, prune and checkpoint) in Settings > Maintenance."
+  },
+  {
+    "id": "CNCL-001",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/agents/council.py:79",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Auto-agenda priorities (doomsday, rebel, dead brother, war, thread, default) have no test."
+  },
+  {
+    "id": "CNCL-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/council.py:245",
+    "test": "backend/tests/agents/test_roles.py:107",
+    "note": "Members active or asleep up to cap, minimum enforced, absent sons listed."
+  },
+  {
+    "id": "CNCL-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/council.py:110",
+    "test": "backend/tests/agents/test_roles.py:107",
+    "note": "Threshold is rules.council.relation_min_magnitude; PATCH /api/rules."
+  },
+  {
+    "id": "CNCL-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/council.py:245; backend/src/aerona/api/routers/council.py:40",
+    "test": "backend/tests/agents/test_roles.py:107; backend/tests/api/test_council.py:12",
+    "note": ""
+  },
+  {
+    "id": "CNCL-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/council.py:211",
+    "test": "backend/tests/agents/test_roles.py:107",
+    "note": ""
+  },
+  {
+    "id": "CNCL-006",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/agents/council.py:162",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Same-vote closeness / opposite-vote push-apart has no assertion in any test."
+  },
+  {
+    "id": "CNCL-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/council.py:176",
+    "test": "backend/tests/agents/test_roles.py:107",
+    "note": "Covenant tested; rupture and cap branches not."
+  },
+  {
+    "id": "CNCL-008",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/agents/council.py:192",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Anti-doomsday push-back branch untested (only joint_blessing is exercised)."
+  },
+  {
+    "id": "CNCL-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/council.py:192",
+    "test": "backend/tests/agents/test_roles.py:107",
+    "note": "Fresh reload of members before applying."
+  },
+  {
+    "id": "CNCL-010",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/agents/council.py:192",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Censure of rebel members untested."
+  },
+  {
+    "id": "CNCL-011",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/agents/council.py:141",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Peace call has no test despite the test name; call_for_peace is never invoked by a test."
+  },
+  {
+    "id": "CNCL-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/council.py:211; backend/src/aerona/api/routers/council.py:32",
+    "test": "backend/tests/agents/test_roles.py:107; backend/tests/api/test_council.py:12",
+    "note": "Minutes, chronicle and event published after commit."
+  },
+  {
+    "id": "CNCL-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/son_chat.py:33",
+    "test": "backend/tests/agents/test_roles.py:185",
+    "note": ""
+  },
+  {
+    "id": "CNCL-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/son_chat.py:33",
+    "test": "backend/tests/agents/test_roles.py:185",
+    "note": ""
+  },
+  {
+    "id": "CNCL-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/api/routers/sons.py:1",
+    "test": "backend/tests/api/test_reads.py:66",
+    "note": "GET /api/sons/{id}/chat."
+  },
+  {
+    "id": "CNCL-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/messages.py:37",
+    "test": "backend/tests/services/player/test_death_messages.py:37",
+    "note": ""
+  },
+  {
+    "id": "CNCL-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/mortal.py:1",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: dream inbox in features/entity/sections/EntityDreams.tsx."
+  },
+  {
+    "id": "CNCL-018",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/agents/mortal.py:1",
+    "test": "backend/tests/agents/test_roles.py:219",
+    "note": "Behaviour present; dedicated test missing. Pending-dream priority (agent_dream_bonus) is untested; only the forced-agent flag is."
+  },
+  {
+    "id": "CNCL-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/translator.py:1; backend/src/aerona/api/routers/languages.py:1",
+    "test": "backend/tests/agents/test_roles.py:185",
+    "note": ""
+  },
+  {
+    "id": "CNCL-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/translator.py:1",
+    "test": "backend/tests/agents/test_roles.py:185",
+    "note": "Lexeme added and duplicates skipped."
+  },
+  {
+    "id": "OPP-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:459; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "backend/tests/engine/gods/test_opportunities.py:38",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:192; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "backend/tests/engine/gods/test_opportunities.py:38",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:163; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:130; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:192; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:192; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:242; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "backend/tests/engine/gods/test_opportunities.py:38",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:242; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "backend/tests/engine/gods/test_opportunities.py:38",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:242; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:242; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "backend/tests/engine/gods/test_opportunities.py:38",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:242; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "backend/tests/engine/gods/test_opportunities.py:38",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:373; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "backend/tests/engine/gods/test_opportunities.py:38",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:373; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "backend/tests/engine/gods/test_opportunities.py:38",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:311; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:311; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:311; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:242; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-018",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:373; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:373; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:373; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "backend/tests/engine/gods/test_opportunities.py:38",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-021",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:242; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-022",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:242; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-023",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:242; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "backend/tests/engine/gods/test_opportunities.py:38",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-024",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:373; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "backend/tests/engine/gods/test_opportunities.py:38",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-025",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:348; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-026",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:348; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-027",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:373; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-028",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:422; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "backend/tests/engine/gods/test_opportunities.py:38",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-029",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:422; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-030",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:422; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "backend/tests/engine/gods/test_opportunities.py:38",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-031",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:422; backend/src/aerona/services/gods/opportunities.py:34",
+    "test": "backend/tests/engine/gods/test_opportunities.py:38",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-032",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/prompts/contexts/opportunities.py:317",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-033",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/prompts/contexts/opportunities.py:1; backend/src/aerona/agents/context/son_turn.py:1",
+    "test": "backend/tests/prompts/test_data.py:50",
+    "note": "Re-verified 2026-11-02: GET /api/sons/{son_id}/opportunities with the son drawer panel features/son/SonOpportunities.tsx."
+  },
+  {
+    "id": "OPP-034",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:467; frontend/src/features/pantheon/opportunities.ts:9",
+    "test": "backend/tests/engine/gods/test_opportunities.py:81",
+    "note": "Re-verified 2026-11-02: unanswered prayers render from the server creator lines and, without them, from opportunitiesOf (frontend/src/features/pantheon/opportunities.ts 'prayers')."
+  },
+  {
+    "id": "OPP-035",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:467; frontend/src/features/pantheon/opportunities.ts:9",
+    "test": "backend/tests/engine/gods/test_opportunities.py:81",
+    "note": ""
+  },
+  {
+    "id": "OPP-036",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:467",
+    "test": "backend/tests/engine/gods/test_opportunities.py:81",
+    "note": ""
+  },
+  {
+    "id": "OPP-037",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:467",
+    "test": "backend/tests/engine/gods/test_opportunities.py:81",
+    "note": ""
+  },
+  {
+    "id": "OPP-038",
+    "verdict": "UNTESTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:467; frontend/src/features/pantheon/opportunities.ts:9",
+    "test": "none",
+    "note": "Behaviour present; dedicated test missing. Frontend shows the doom line whenever doom > 0 and ignores rules.opportunities.apocalypse_warning_pct; the percentage threshold is applied only in the unreachable creator_context prompt. Doom hint not asserted in tests."
+  },
+  {
+    "id": "OPP-039",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:467",
+    "test": "backend/tests/engine/gods/test_opportunities.py:81",
+    "note": ""
+  },
+  {
+    "id": "OPP-040",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:143",
+    "test": "backend/tests/engine/gods/test_opportunities.py:38",
+    "note": ""
+  },
+  {
+    "id": "OPP-041",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/opportunities.py:467; frontend/src/features/pantheon/opportunities.ts:9",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: the rich-essence reminder renders from the server creator lines and from opportunitiesOf with rules.opportunities.rich_essence (ThisEpochBox.tsx)."
+  },
+  {
+    "id": "OPP-042",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "backend/tests/engine/gods/test_opportunities.py:61",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-043",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "backend/tests/engine/gods/test_opportunities.py:61",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-044",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-045",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-046",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-047",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-048",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "backend/tests/engine/gods/test_opportunities.py:61",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-049",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-050",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "backend/tests/engine/gods/test_opportunities.py:61",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-051",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-052",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-053",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-054",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-055",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "backend/tests/engine/gods/test_opportunities.py:61",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-056",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-057",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-058",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-059",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "OPP-060",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/engine/gods/mortal_opportunities.py:333; backend/src/aerona/services/gods/opportunities.py:40",
+    "test": "backend/tests/engine/gods/test_opportunities.py:61",
+    "note": "Re-verified 2026-11-02: GET /api/entities/{entity_id}/opportunities with features/entity/sections/EntityOpportunities.tsx."
+  },
+  {
+    "id": "ACT-001",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/creation.py:62",
+    "test": "backend/tests/services/player/test_runtime.py:91; backend/tests/services/player/test_runtime.py:100",
+    "note": ""
+  },
+  {
+    "id": "ACT-002",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/interventions.py:114",
+    "test": "backend/tests/services/player/test_runtime.py:127",
+    "note": ""
+  },
+  {
+    "id": "ACT-003",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/creation.py:78",
+    "test": "backend/tests/services/player/test_runtime.py:127",
+    "note": ""
+  },
+  {
+    "id": "ACT-004",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/council.py:245; backend/src/aerona/api/routers/council.py:40",
+    "test": "backend/tests/api/test_council.py:12; backend/tests/agents/test_roles.py:107",
+    "note": "Costed job with refund (submit_costed); CouncilScreen UI. Module differs from the plan (agents/council.py)."
+  },
+  {
+    "id": "ACT-005",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/creation.py:112",
+    "test": "backend/tests/services/player/test_runtime.py:127",
+    "note": ""
+  },
+  {
+    "id": "ACT-006",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/images/records.py:1; backend/src/aerona/api/routers/images.py:1",
+    "test": "backend/tests/api/test_images.py:43",
+    "note": "POST /api/entities/prompts/write-missing."
+  },
+  {
+    "id": "ACT-007",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/api/routers/sons.py:1; backend/src/aerona/epoch/phases/son_turns.py:1",
+    "test": "backend/tests/agents/test_son_turn.py:21",
+    "note": "POST /api/sons/{id}/act is a job; SonDrawer caller exists."
+  },
+  {
+    "id": "ACT-008",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/api/routers/entities.py:1; backend/src/aerona/services/bulk_deepen.py:1",
+    "test": "backend/tests/agents/test_roles.py:142; backend/tests/api/test_entities.py:57",
+    "note": ""
+  },
+  {
+    "id": "ACT-009",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/creator.py:230",
+    "test": "backend/tests/services/player/test_runtime.py:143",
+    "note": ""
+  },
+  {
+    "id": "ACT-010",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/creator.py:230",
+    "test": "backend/tests/services/player/test_runtime.py:143",
+    "note": ""
+  },
+  {
+    "id": "ACT-011",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/creator.py:230",
+    "test": "backend/tests/services/player/test_runtime.py:143",
+    "note": ""
+  },
+  {
+    "id": "ACT-012",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/creation.py:136",
+    "test": "backend/tests/services/player/test_runtime.py:143",
+    "note": ""
+  },
+  {
+    "id": "ACT-013",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/creator.py:239",
+    "test": "backend/tests/services/player/test_runtime.py:143",
+    "note": ""
+  },
+  {
+    "id": "ACT-014",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/images/records.py:1; backend/src/aerona/api/routers/entities.py:1",
+    "test": "backend/tests/api/test_entities.py:57",
+    "note": ""
+  },
+  {
+    "id": "ACT-015",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/epoch/phases/naming.py:1; backend/src/aerona/api/routers/bulk.py:1",
+    "test": "backend/tests/api/test_bulk.py:4",
+    "note": "POST /api/names/assign-missing."
+  },
+  {
+    "id": "ACT-016",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/network_repair.py:386; backend/src/aerona/api/routers/graph.py:1",
+    "test": "backend/tests/agents/test_roles.py:197; backend/tests/api/test_graph.py:28",
+    "note": ""
+  },
+  {
+    "id": "ACT-017",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/network_repair.py:329; backend/src/aerona/api/routers/graph.py:1",
+    "test": "backend/tests/agents/test_roles.py:197; backend/tests/api/test_graph.py:28",
+    "note": ""
+  },
+  {
+    "id": "ACT-018",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/network_repair.py:329; backend/src/aerona/api/routers/graph.py:1",
+    "test": "backend/tests/agents/test_roles.py:197; backend/tests/api/test_graph.py:28",
+    "note": ""
+  },
+  {
+    "id": "ACT-019",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/network_repair.py:329; backend/src/aerona/api/routers/graph.py:1",
+    "test": "backend/tests/agents/test_roles.py:197; backend/tests/api/test_graph.py:28",
+    "note": ""
+  },
+  {
+    "id": "ACT-020",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/agents/network_repair.py:329; backend/src/aerona/api/routers/graph.py:1",
+    "test": "backend/tests/agents/test_roles.py:197; backend/tests/api/test_graph.py:28",
+    "note": ""
+  },
+  {
+    "id": "ACT-021",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/messages.py:58",
+    "test": "backend/tests/services/player/test_death_messages.py:47; backend/tests/api/test_sons.py:21",
+    "note": ""
+  },
+  {
+    "id": "ACT-022",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/interventions.py:135",
+    "test": "backend/tests/api/test_sons.py:21",
+    "note": ""
+  },
+  {
+    "id": "ACT-023",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/interventions.py:135",
+    "test": "backend/tests/api/test_sons.py:21",
+    "note": ""
+  },
+  {
+    "id": "ACT-024",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:613",
+    "test": "backend/tests/services/player/test_assignments.py:128",
+    "note": ""
+  },
+  {
+    "id": "ACT-025",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:637",
+    "test": "backend/tests/services/player/test_assignments.py:128",
+    "note": ""
+  },
+  {
+    "id": "ACT-026",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:637",
+    "test": "backend/tests/services/player/test_assignments.py:128",
+    "note": "Legend record bonded with TELLS_OF (assignments.py:662-678)."
+  },
+  {
+    "id": "ACT-027",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/interventions.py:219",
+    "test": "backend/tests/services/player/test_interventions.py:35",
+    "note": ""
+  },
+  {
+    "id": "ACT-028",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/interventions.py:219",
+    "test": "backend/tests/services/player/test_interventions.py:35",
+    "note": ""
+  },
+  {
+    "id": "ACT-029",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/interventions.py:219",
+    "test": "backend/tests/services/player/test_interventions.py:35",
+    "note": ""
+  },
+  {
+    "id": "ACT-030",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/interventions.py:219",
+    "test": "backend/tests/services/player/test_interventions.py:35",
+    "note": ""
+  },
+  {
+    "id": "ACT-031",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/interventions.py:219",
+    "test": "backend/tests/services/player/test_interventions.py:35",
+    "note": ""
+  },
+  {
+    "id": "ACT-032",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/interventions.py:176",
+    "test": "backend/tests/services/player/test_interventions.py:35",
+    "note": "Dice contest matches legacy; the Effect always carries kind SUPPRESS_REBELLION even on failure (feeds GOAL-016 and fear traces)."
+  },
+  {
+    "id": "ACT-033",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/interventions.py:219",
+    "test": "backend/tests/services/player/test_interventions.py:35",
+    "note": ""
+  },
+  {
+    "id": "ACT-034",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/messages.py:95",
+    "test": "backend/tests/services/player/test_death_messages.py:59; backend/tests/services/player/test_death_messages.py:76",
+    "note": ""
+  },
+  {
+    "id": "ACT-035",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/messages.py:95",
+    "test": "backend/tests/services/player/test_death_messages.py:59; backend/tests/services/player/test_death_messages.py:76",
+    "note": ""
+  },
+  {
+    "id": "ACT-036",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/messages.py:95",
+    "test": "backend/tests/services/player/test_death_messages.py:59; backend/tests/services/player/test_death_messages.py:76",
+    "note": ""
+  },
+  {
+    "id": "ACT-037",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/messages.py:95",
+    "test": "backend/tests/services/player/test_death_messages.py:59; backend/tests/services/player/test_death_messages.py:76",
+    "note": ""
+  },
+  {
+    "id": "ACT-038",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/canon.py:148",
+    "test": "backend/tests/services/player/test_canon.py:20",
+    "note": ""
+  },
+  {
+    "id": "ACT-039",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/canon.py:148",
+    "test": "backend/tests/services/player/test_canon.py:20",
+    "note": ""
+  },
+  {
+    "id": "ACT-040",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/canon.py:175",
+    "test": "backend/tests/services/player/test_canon.py:35",
+    "note": ""
+  },
+  {
+    "id": "ACT-041",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:501",
+    "test": "backend/tests/api/test_sons.py:21",
+    "note": ""
+  },
+  {
+    "id": "ACT-042",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/creator.py:109",
+    "test": "backend/tests/services/player/test_misc.py:19",
+    "note": ""
+  },
+  {
+    "id": "ACT-043",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/creator.py:126",
+    "test": "backend/tests/services/player/test_misc.py:19; backend/tests/api/test_creator.py:4",
+    "note": ""
+  },
+  {
+    "id": "ACT-044",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/death.py:24",
+    "test": "backend/tests/services/player/test_death_messages.py:17",
+    "note": ""
+  },
+  {
+    "id": "ACT-045",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/death.py:30",
+    "test": "backend/tests/services/player/test_death_messages.py:29",
+    "note": ""
+  },
+  {
+    "id": "ACT-046",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/death.py:41",
+    "test": "backend/tests/services/player/test_death_messages.py:17",
+    "note": ""
+  },
+  {
+    "id": "ACT-047",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:190",
+    "test": "backend/tests/services/player/test_cosmic.py:30; backend/tests/api/test_reads.py:84",
+    "note": ""
+  },
+  {
+    "id": "ACT-048",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:214",
+    "test": "backend/tests/engine/cosmos/test_routes.py:86",
+    "note": ""
+  },
+  {
+    "id": "ACT-049",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:350",
+    "test": "backend/tests/services/player/test_cosmic.py:44",
+    "note": ""
+  },
+  {
+    "id": "ACT-050",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:238",
+    "test": "backend/tests/services/player/test_cosmic.py:44",
+    "note": ""
+  },
+  {
+    "id": "ACT-051",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:252",
+    "test": "backend/tests/services/player/test_cosmic.py:44",
+    "note": ""
+  },
+  {
+    "id": "ACT-052",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:261",
+    "test": "backend/tests/services/player/test_cosmic.py:44",
+    "note": ""
+  },
+  {
+    "id": "ACT-053",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:270",
+    "test": "backend/tests/services/player/test_cosmic.py:142",
+    "note": ""
+  },
+  {
+    "id": "ACT-054",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:279",
+    "test": "backend/tests/services/player/test_cosmic.py:44",
+    "note": ""
+  },
+  {
+    "id": "ACT-055",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:288",
+    "test": "backend/tests/services/player/test_cosmic.py:67",
+    "note": ""
+  },
+  {
+    "id": "ACT-056",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:296",
+    "test": "backend/tests/services/player/test_cosmic.py:67",
+    "note": ""
+  },
+  {
+    "id": "ACT-057",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:304",
+    "test": "backend/tests/services/player/test_cosmic.py:67",
+    "note": ""
+  },
+  {
+    "id": "ACT-058",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:252",
+    "test": "backend/tests/services/player/test_cosmic.py:44",
+    "note": ""
+  },
+  {
+    "id": "ACT-059",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:238",
+    "test": "backend/tests/services/player/test_cosmic.py:44",
+    "note": ""
+  },
+  {
+    "id": "ACT-060",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:261",
+    "test": "backend/tests/services/player/test_cosmic.py:44",
+    "note": ""
+  },
+  {
+    "id": "ACT-061",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:270",
+    "test": "backend/tests/services/player/test_cosmic.py:142",
+    "note": ""
+  },
+  {
+    "id": "ACT-062",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/interventions.py:305",
+    "test": "backend/tests/services/player/test_interventions.py:56; backend/tests/services/player/test_interventions.py:98",
+    "note": ""
+  },
+  {
+    "id": "ACT-063",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/interventions.py:305",
+    "test": "backend/tests/services/player/test_interventions.py:56; backend/tests/services/player/test_interventions.py:98",
+    "note": ""
+  },
+  {
+    "id": "ACT-064",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/interventions.py:305",
+    "test": "backend/tests/services/player/test_interventions.py:56; backend/tests/services/player/test_interventions.py:98",
+    "note": ""
+  },
+  {
+    "id": "ACT-065",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/interventions.py:305",
+    "test": "backend/tests/services/player/test_interventions.py:56; backend/tests/services/player/test_interventions.py:98",
+    "note": ""
+  },
+  {
+    "id": "ACT-066",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/interventions.py:305",
+    "test": "backend/tests/services/player/test_interventions.py:56; backend/tests/services/player/test_interventions.py:98",
+    "note": ""
+  },
+  {
+    "id": "ACT-067",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:74",
+    "test": "backend/tests/engine/gods/test_god_power.py:31; backend/tests/services/player/test_god_power.py:23",
+    "note": ""
+  },
+  {
+    "id": "ACT-068",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:80",
+    "test": "backend/tests/engine/gods/test_god_power.py:139; backend/tests/services/player/test_god_power.py:103",
+    "note": ""
+  },
+  {
+    "id": "ACT-069",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:88",
+    "test": "backend/tests/engine/gods/test_god_power.py:99",
+    "note": ""
+  },
+  {
+    "id": "ACT-070",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:99",
+    "test": "backend/tests/engine/gods/test_god_power.py:99",
+    "note": ""
+  },
+  {
+    "id": "ACT-071",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:105",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "ACT-072",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:112",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "ACT-073",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:119",
+    "test": "backend/tests/engine/gods/test_god_power.py:139",
+    "note": ""
+  },
+  {
+    "id": "ACT-074",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:126",
+    "test": "backend/tests/services/player/test_god_power.py:46",
+    "note": ""
+  },
+  {
+    "id": "ACT-075",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:142",
+    "test": "backend/tests/services/player/test_god_power.py:34",
+    "note": ""
+  },
+  {
+    "id": "ACT-076",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:149",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "ACT-077",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:156",
+    "test": "backend/tests/engine/gods/test_god_power.py:99",
+    "note": ""
+  },
+  {
+    "id": "ACT-078",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:163",
+    "test": "backend/tests/engine/gods/test_god_power.py:99",
+    "note": ""
+  },
+  {
+    "id": "ACT-079",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:171",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "ACT-080",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:182",
+    "test": "backend/tests/services/player/test_god_power.py:94",
+    "note": ""
+  },
+  {
+    "id": "ACT-081",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:192",
+    "test": "backend/tests/engine/gods/test_god_power.py:99",
+    "note": ""
+  },
+  {
+    "id": "ACT-082",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:200",
+    "test": "backend/tests/engine/gods/test_god_power.py:126",
+    "note": ""
+  },
+  {
+    "id": "ACT-083",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:207",
+    "test": "backend/tests/services/player/test_god_power.py:88",
+    "note": ""
+  },
+  {
+    "id": "ACT-084",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/creation.py:78",
+    "test": "backend/tests/services/player/test_runtime.py:127",
+    "note": ""
+  },
+  {
+    "id": "ACT-085",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:304",
+    "test": "backend/tests/services/player/test_cosmic.py:67",
+    "note": ""
+  },
+  {
+    "id": "ACT-086",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:288",
+    "test": "backend/tests/services/player/test_cosmic.py:67",
+    "note": ""
+  },
+  {
+    "id": "ACT-087",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:296",
+    "test": "backend/tests/services/player/test_cosmic.py:67",
+    "note": ""
+  },
+  {
+    "id": "ACT-088",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:190",
+    "test": "backend/tests/services/player/test_cosmic.py:30; backend/tests/api/test_reads.py:84",
+    "note": ""
+  },
+  {
+    "id": "ACT-089",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:214",
+    "test": "backend/tests/engine/cosmos/test_routes.py:86",
+    "note": ""
+  },
+  {
+    "id": "ACT-090",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:190",
+    "test": "backend/tests/services/player/test_cosmic.py:30; backend/tests/api/test_reads.py:84",
+    "note": ""
+  },
+  {
+    "id": "ACT-091",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:190",
+    "test": "backend/tests/services/player/test_cosmic.py:30; backend/tests/api/test_reads.py:84",
+    "note": ""
+  },
+  {
+    "id": "ACT-092",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:371",
+    "test": "backend/tests/services/player/test_cosmic.py:88",
+    "note": ""
+  },
+  {
+    "id": "ACT-093",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:371",
+    "test": "backend/tests/services/player/test_cosmic.py:88",
+    "note": ""
+  },
+  {
+    "id": "ACT-094",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:433",
+    "test": "backend/tests/services/player/test_cosmic.py:88",
+    "note": ""
+  },
+  {
+    "id": "ACT-095",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/diplomacy.py:190",
+    "test": "backend/tests/services/player/test_diplomacy.py:87",
+    "note": ""
+  },
+  {
+    "id": "ACT-096",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/diplomacy.py:203",
+    "test": "backend/tests/services/player/test_misc.py:62",
+    "note": ""
+  },
+  {
+    "id": "ACT-097",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:74",
+    "test": "backend/tests/services/player/test_god_power.py:23",
+    "note": ""
+  },
+  {
+    "id": "ACT-098",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:80",
+    "test": "backend/tests/services/player/test_god_power.py:103",
+    "note": ""
+  },
+  {
+    "id": "ACT-099",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:142",
+    "test": "backend/tests/services/player/test_god_power.py:34",
+    "note": ""
+  },
+  {
+    "id": "ACT-100",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:149",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "ACT-101",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:156",
+    "test": "backend/tests/engine/gods/test_god_power.py:99",
+    "note": ""
+  },
+  {
+    "id": "ACT-102",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:88",
+    "test": "backend/tests/engine/gods/test_god_power.py:99",
+    "note": ""
+  },
+  {
+    "id": "ACT-103",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:88",
+    "test": "backend/tests/engine/gods/test_god_power.py:139",
+    "note": ""
+  },
+  {
+    "id": "ACT-104",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:119",
+    "test": "backend/tests/engine/gods/test_god_power.py:139",
+    "note": ""
+  },
+  {
+    "id": "ACT-105",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:163",
+    "test": "backend/tests/engine/gods/test_god_power.py:99",
+    "note": ""
+  },
+  {
+    "id": "ACT-106",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:171",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "ACT-107",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:182",
+    "test": "backend/tests/services/player/test_god_power.py:94",
+    "note": ""
+  },
+  {
+    "id": "ACT-108",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:182",
+    "test": "backend/tests/services/player/test_god_power.py:94",
+    "note": ""
+  },
+  {
+    "id": "ACT-109",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:99",
+    "test": "backend/tests/engine/gods/test_god_power.py:99",
+    "note": ""
+  },
+  {
+    "id": "ACT-110",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:192",
+    "test": "backend/tests/engine/gods/test_god_power.py:99",
+    "note": "Tested at the services/gods layer."
+  },
+  {
+    "id": "ACT-111",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:105",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "ACT-112",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:112",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "ACT-113",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:112",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "ACT-114",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:126",
+    "test": "backend/tests/services/player/test_god_power.py:46",
+    "note": ""
+  },
+  {
+    "id": "ACT-115",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:126",
+    "test": "backend/tests/services/player/test_god_power.py:46",
+    "note": ""
+  },
+  {
+    "id": "ACT-116",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:126",
+    "test": "backend/tests/services/player/test_god_power.py:46",
+    "note": ""
+  },
+  {
+    "id": "ACT-117",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:126",
+    "test": "backend/tests/services/player/test_god_power.py:46",
+    "note": ""
+  },
+  {
+    "id": "ACT-118",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:200",
+    "test": "backend/tests/engine/gods/test_god_power.py:126",
+    "note": ""
+  },
+  {
+    "id": "ACT-119",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:200",
+    "test": "backend/tests/engine/gods/test_god_power.py:126",
+    "note": ""
+  },
+  {
+    "id": "ACT-120",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/god_power.py:207",
+    "test": "backend/tests/services/player/test_god_power.py:88",
+    "note": ""
+  },
+  {
+    "id": "ACT-121",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/creator.py:136",
+    "test": "backend/tests/engine/gods/test_reputation.py:116; backend/tests/services/player/test_misc.py:19",
+    "note": ""
+  },
+  {
+    "id": "ACT-122",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/creator.py:145",
+    "test": "backend/tests/services/player/test_misc.py:19; backend/tests/api/test_creator.py:18",
+    "note": ""
+  },
+  {
+    "id": "ACT-123",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/goals.py:21",
+    "test": "backend/tests/services/player/test_misc.py:35",
+    "note": ""
+  },
+  {
+    "id": "ACT-124",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/goals.py:29",
+    "test": "backend/tests/engine/gods/test_goals.py:102; backend/tests/services/player/test_misc.py:35",
+    "note": ""
+  },
+  {
+    "id": "ACT-125",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/death.py:41",
+    "test": "backend/tests/services/player/test_death_messages.py:17",
+    "note": ""
+  },
+  {
+    "id": "ACT-126",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/death.py:30",
+    "test": "backend/tests/services/player/test_death_messages.py:29",
+    "note": ""
+  },
+  {
+    "id": "ACT-127",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:188",
+    "test": "backend/tests/services/player/test_assignments.py:23",
+    "note": ""
+  },
+  {
+    "id": "ACT-128",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:203",
+    "test": "backend/tests/services/player/test_assignments.py:23",
+    "note": "DELETE /api/sons/{id}/protection and SonDrawer protection control."
+  },
+  {
+    "id": "ACT-129",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:300",
+    "test": "backend/tests/services/player/test_assignments.py:37",
+    "note": ""
+  },
+  {
+    "id": "ACT-130",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:300; backend/src/aerona/epoch/phases/distribution.py:1",
+    "test": "backend/tests/services/player/test_assignments.py:37",
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "ACT-131",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:322",
+    "test": "backend/tests/services/player/test_assignments.py:52",
+    "note": ""
+  },
+  {
+    "id": "ACT-132",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:322",
+    "test": "backend/tests/services/player/test_assignments.py:52",
+    "note": ""
+  },
+  {
+    "id": "ACT-133",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:355",
+    "test": "backend/tests/services/player/test_assignments.py:67",
+    "note": ""
+  },
+  {
+    "id": "ACT-134",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:355",
+    "test": "backend/tests/services/player/test_assignments.py:67",
+    "note": ""
+  },
+  {
+    "id": "ACT-135",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/diplomacy.py:101",
+    "test": "backend/tests/services/player/test_diplomacy.py:29; backend/tests/services/player/test_diplomacy.py:47",
+    "note": ""
+  },
+  {
+    "id": "ACT-136",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/diplomacy.py:101",
+    "test": "backend/tests/services/player/test_diplomacy.py:29; backend/tests/services/player/test_diplomacy.py:47",
+    "note": ""
+  },
+  {
+    "id": "ACT-137",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/diplomacy.py:101",
+    "test": "backend/tests/services/player/test_diplomacy.py:29; backend/tests/services/player/test_diplomacy.py:47",
+    "note": ""
+  },
+  {
+    "id": "ACT-138",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/diplomacy.py:101",
+    "test": "backend/tests/services/player/test_diplomacy.py:29; backend/tests/services/player/test_diplomacy.py:47",
+    "note": ""
+  },
+  {
+    "id": "ACT-139",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/diplomacy.py:101",
+    "test": "backend/tests/services/player/test_diplomacy.py:29; backend/tests/services/player/test_diplomacy.py:47",
+    "note": ""
+  },
+  {
+    "id": "ACT-140",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:390",
+    "test": "backend/tests/services/player/test_undo.py:48; backend/tests/services/player/test_assignments.py:80",
+    "note": ""
+  },
+  {
+    "id": "ACT-141",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:472",
+    "test": "backend/tests/services/player/test_assignments.py:90",
+    "note": ""
+  },
+  {
+    "id": "ACT-142",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:488",
+    "test": "backend/tests/services/player/test_assignments.py:90",
+    "note": ""
+  },
+  {
+    "id": "ACT-143",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/diplomacy.py:151",
+    "test": "backend/tests/services/player/test_diplomacy.py:56",
+    "note": ""
+  },
+  {
+    "id": "ACT-144",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/diplomacy.py:151",
+    "test": "backend/tests/services/player/test_diplomacy.py:56",
+    "note": ""
+  },
+  {
+    "id": "ACT-145",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/diplomacy.py:190",
+    "test": "backend/tests/services/player/test_diplomacy.py:87",
+    "note": ""
+  },
+  {
+    "id": "ACT-146",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/diplomacy.py:203",
+    "test": "backend/tests/services/player/test_misc.py:62",
+    "note": ""
+  },
+  {
+    "id": "ACT-147",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/diplomacy.py:221; backend/src/aerona/services/gods/death.py:114",
+    "test": "none",
+    "note": "Re-verified 2026-11-02: the control is registered for this row in services/player/catalog.py or services/maintenance/tasks.py."
+  },
+  {
+    "id": "ACT-148",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/diplomacy.py:232",
+    "test": "backend/tests/services/player/test_diplomacy.py:87",
+    "note": ""
+  },
+  {
+    "id": "ACT-149",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:593",
+    "test": "backend/tests/services/player/test_assignments.py:103",
+    "note": ""
+  },
+  {
+    "id": "ACT-150",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:593",
+    "test": "backend/tests/services/player/test_assignments.py:103",
+    "note": ""
+  },
+  {
+    "id": "ACT-151",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:593",
+    "test": "backend/tests/services/player/test_assignments.py:103",
+    "note": ""
+  },
+  {
+    "id": "ACT-152",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:593",
+    "test": "backend/tests/services/player/test_assignments.py:103",
+    "note": ""
+  },
+  {
+    "id": "ACT-153",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:593",
+    "test": "backend/tests/services/player/test_assignments.py:103",
+    "note": ""
+  },
+  {
+    "id": "ACT-154",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/assignments.py:593",
+    "test": "backend/tests/services/player/test_assignments.py:103",
+    "note": ""
+  },
+  {
+    "id": "ACT-155",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/world_edits.py:158",
+    "test": "backend/tests/services/player/test_world_and_foreign.py:15; backend/tests/services/player/test_world_and_foreign.py:40",
+    "note": ""
+  },
+  {
+    "id": "ACT-156",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/world_edits.py:158",
+    "test": "backend/tests/services/player/test_world_and_foreign.py:15; backend/tests/services/player/test_world_and_foreign.py:40",
+    "note": ""
+  },
+  {
+    "id": "ACT-157",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/world_edits.py:158",
+    "test": "backend/tests/services/player/test_world_and_foreign.py:15; backend/tests/services/player/test_world_and_foreign.py:40",
+    "note": ""
+  },
+  {
+    "id": "ACT-158",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/world_edits.py:158",
+    "test": "backend/tests/services/player/test_world_and_foreign.py:15; backend/tests/services/player/test_world_and_foreign.py:40",
+    "note": ""
+  },
+  {
+    "id": "ACT-159",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/world_edits.py:158",
+    "test": "backend/tests/services/player/test_world_and_foreign.py:15; backend/tests/services/player/test_world_and_foreign.py:40",
+    "note": ""
+  },
+  {
+    "id": "ACT-160",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/world_edits.py:158",
+    "test": "backend/tests/services/player/test_world_and_foreign.py:15; backend/tests/services/player/test_world_and_foreign.py:40",
+    "note": ""
+  },
+  {
+    "id": "ACT-161",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/world_edits.py:158",
+    "test": "backend/tests/services/player/test_world_and_foreign.py:15; backend/tests/services/player/test_world_and_foreign.py:40",
+    "note": ""
+  },
+  {
+    "id": "ACT-162",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/world_edits.py:158",
+    "test": "backend/tests/services/player/test_world_and_foreign.py:15; backend/tests/services/player/test_world_and_foreign.py:40",
+    "note": ""
+  },
+  {
+    "id": "ACT-163",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:454",
+    "test": "backend/tests/services/player/test_cosmic.py:108",
+    "note": ""
+  },
+  {
+    "id": "ACT-164",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:492",
+    "test": "backend/tests/services/player/test_cosmic.py:108; backend/tests/api/test_cosmos.py:16",
+    "note": ""
+  },
+  {
+    "id": "ACT-165",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:513",
+    "test": "backend/tests/services/player/test_cosmic.py:108; backend/tests/api/test_cosmos.py:16",
+    "note": ""
+  },
+  {
+    "id": "ACT-166",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:548",
+    "test": "backend/tests/services/player/test_diplomacy.py:56",
+    "note": ""
+  },
+  {
+    "id": "ACT-167",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:569",
+    "test": "backend/tests/services/player/test_cosmic.py:129",
+    "note": ""
+  },
+  {
+    "id": "ACT-168",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:595",
+    "test": "backend/tests/services/player/test_cosmic.py:129",
+    "note": ""
+  },
+  {
+    "id": "ACT-169",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:607",
+    "test": "backend/tests/engine/gods/test_economy.py:104; backend/tests/services/player/test_cosmic.py:129",
+    "note": ""
+  },
+  {
+    "id": "ACT-170",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/creator.py:158",
+    "test": "backend/tests/engine/gods/test_mood.py:151",
+    "note": ""
+  },
+  {
+    "id": "ACT-171",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/creation.py:201",
+    "test": "backend/tests/services/player/test_world_and_foreign.py:52",
+    "note": ""
+  },
+  {
+    "id": "ACT-172",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/foreign_gods.py:179",
+    "test": "backend/tests/services/player/test_world_and_foreign.py:52; backend/tests/services/player/test_world_and_foreign.py:74",
+    "note": ""
+  },
+  {
+    "id": "ACT-173",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/foreign_gods.py:179",
+    "test": "backend/tests/services/player/test_world_and_foreign.py:52; backend/tests/services/player/test_world_and_foreign.py:74; backend/tests/services/player/test_engine_controls.py:205",
+    "note": ""
+  },
+  {
+    "id": "ACT-174",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/foreign_gods.py:179",
+    "test": "backend/tests/services/player/test_world_and_foreign.py:52; backend/tests/services/player/test_world_and_foreign.py:74",
+    "note": ""
+  },
+  {
+    "id": "ACT-175",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/canon.py:215",
+    "test": "backend/tests/services/player/test_canon.py:43",
+    "note": ""
+  },
+  {
+    "id": "ACT-176",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/canon.py:231",
+    "test": "backend/tests/services/player/test_canon.py:43",
+    "note": ""
+  },
+  {
+    "id": "ACT-177",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/canon.py:243",
+    "test": "backend/tests/services/player/test_canon.py:43",
+    "note": ""
+  },
+  {
+    "id": "ACT-178",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/canon.py:258",
+    "test": "backend/tests/services/player/test_canon.py:43",
+    "note": ""
+  },
+  {
+    "id": "ACT-179",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/canon.py:269",
+    "test": "backend/tests/services/player/test_canon.py:43",
+    "note": ""
+  },
+  {
+    "id": "ACT-180",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/cosmic.py:279",
+    "test": "backend/tests/services/player/test_cosmic.py:44",
+    "note": ""
+  },
+  {
+    "id": "ACT-181",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/diplomacy.py:243",
+    "test": "backend/tests/services/player/test_diplomacy.py:98; backend/tests/api/test_player.py:4",
+    "note": ""
+  },
+  {
+    "id": "ACT-182",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/canon.py:302",
+    "test": "backend/tests/services/player/test_canon.py:67; backend/tests/api/test_entities.py:37",
+    "note": ""
+  },
+  {
+    "id": "ACT-183",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/canon.py:321",
+    "test": "backend/tests/services/player/test_canon.py:67",
+    "note": ""
+  },
+  {
+    "id": "ACT-184",
+    "verdict": "IMPLEMENTED",
+    "evidence": "backend/src/aerona/services/player/chronicle.py:27",
+    "test": "backend/tests/services/app/test_ledger.py:43",
+    "note": ""
+  }
+]

@@ -1,0 +1,8 @@
+{% set labels = {"narrow_lands": "lands are narrow", "hunger": "hunger", "poverty": "poverty", "explorer_spirited": "explorer-spirited", "road_knowledge": "road knowledge"} %}
+{% if offered(available_tools, [("explore_land", "explore_land")]) %}
+{% if line.reasons %}
+Unknown lands are calling you ({% for reason in line.reasons %}{% if reason.kind == "explorer" %}there is an explorer among them ({{ reason.explorer_name }}){% else %}{{ labels[reason.kind] }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}): with explore_land find a region not on the map or a new place near you{% if line.can_settle %}; your pioneers can settle there{% endif %}.
+{% else %}
+Beyond the horizon there are lands no one has yet seen: with explore_land you can find a new region or a new place near you.
+{% endif %}
+{% endif %}

@@ -1,0 +1,3 @@
+{% if offered(available_tools, [("take_life", "take_life")]) %}
+Your rivals' famous mortals (you can take their lives with take_life; very expensive and may fail): {% for mortal in line.mortals[:rules.opportunities.list_narrow] %}#{{ mortal.id }} {{ mortal.name }} ({{ mortal.patron }}; {{ mortal.cost }} essence, {{ mortal.chance }}%){% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}

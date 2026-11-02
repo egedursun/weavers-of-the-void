@@ -1,0 +1,18 @@
+{% if target_world %}
+THE REVELATION DESCENDS ON THE WORLD OF {{ target_world.name }}. Choose its location and bonds from this world.
+
+{% if target_world_line %}
+{{ target_world_line }}
+
+{% endif %}
+{% endif %}
+{{ world_summary }}
+
+ENTITY TYPES AND THEIR STATS:
+{% for item in entity_types %}
+{{ item.type_label }}: {{ item.stats | join(", ") if item.stats else "-" }}; location: {{ item.locations | join("/") if item.locations else "none" }}
+{% endfor %}
+
+THE GOD'S REVELATION: "{% if first_star %}The first celestial body {{ god_name }} hung in the sky; fitting the cosmology, seen by all the peoples of the world.{% else %}{{ revelation_text }}{% endif %}"
+
+Carry this revelation into the world as a single entity. Bind it to existing entities with their real ids. The name must fit the world's naming language.

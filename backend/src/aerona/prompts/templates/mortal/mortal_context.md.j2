@@ -1,0 +1,91 @@
+{% from "shared/macros.md.j2" import entity_line, chronicle_rows %}
+{% set m = rules.mortal_tools %}
+{% set c = rules.context %}
+{% set trim = c.budget_trim_min_chars %}
+{% set header = world_header ~ "\n" ~ world_line %}
+{% set you_text = "\nYOU:\n" ~ budget(self_detail, m.ctx_self_chars, "look at yourself with inspect_entity", trim) %}
+{% set character_text %}
+{% if character %}
+
+YOUR CHARACTER AND WAY OF LIFE:
+{% set body %}
+{% for item in character %}
+- {{ item.label }}: {{ item.value }}
+{% endfor %}
+{% endset %}
+{{ budget(body | trim, m.ctx_character_chars, "look at yourself with inspect_entity", trim) }}
+{% endif %}
+{% endset %}
+{% set god_text %}
+
+YOUR GOD: {% if god.kind == "son" %}son#{{ god.id }} {{ god.name }}{% if god.title %}, {{ god.title }}{% endif %} ({{ god.domain_1 }}/{{ god.domain_2 }}){% elif god.kind == "foreign_god" %}foreign god {{ god.name }}{% if god.title %}, {{ god.title }}{% endif %} (foreign#{{ god.id }}; not of the pantheon){% else %}you do not worship anyone yet{% endif %}
+
+{% if folk_gods %}
+
+THE GODS IN YOUR TELLING (call them by these names when you speak):
+{% for item in folk_gods %}
+- {{ item.name }} (son#{{ item.son_id }}): {{ item.story }}
+{% endfor %}
+{% endif %}
+{% endset %}
+{% set language_text %}
+
+YOUR LANGUAGE: {% if language %}#{{ language.id }} {{ language.name }}. From its lexicon: {% if language.words %}{% for word in language.words[:30] %}{{ word.word }} = {{ word.meaning }}{% if not loop.last %}; {% endif %}{% endfor %}{% else %}empty{% endif %}{% else %}you have no language yet; you can give birth to your own language with found_language{% endif %}
+
+{% endset %}
+{% set land_text %}
+
+YOUR LAND: {% if land %}#{{ land.id }} {{ land.name }}{% if land.elevation_label %} ({{ land.elevation_label }}{% if land.coastal %}, coastal{% endif %}; neighbouring regions: {% if land.neighbours %}{% for item in land.neighbours %}#{{ item.id }} {{ item.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}){% endif %}{% else %}unknown{% endif %}
+
+{% endset %}
+{% set near_body %}
+{% for item in near %}
+{{ entity_line(item) }}
+{% endfor %}
+{% endset %}
+{% set near_text = "NEAR YOU:\n" ~ (budget(near_body | trim, m.ctx_nearby_chars, "look with look_at_world and search_entities", trim) if near else "(nobody)") %}
+{% set events_text = "\nRECENT EVENTS:\n" ~ (budget(chronicle_rows(recent_events) | string, m.ctx_events_chars, "see the chronicle", trim) if recent_events else "(none)") %}
+{% set knowledge_body %}
+WHAT YOU KNOW: {% if known %}{% for item in known %}#{{ item.id }} {{ item.name }} ({{ item.branch_label }}{% if item.level %}, level {{ item.level }}{% endif %}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}no knowledge yet{% endif %}
+
+KNOWLEDGE IN THE WORLD: {% if world_knowledge %}{% for item in world_knowledge %}#{{ item.id }} {{ item.name }} ({{ item.branch_label }}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}
+{% endset %}
+{% set knowledge_text = "\n" ~ budget(knowledge_body | trim, m.ctx_knowledge_chars, "look with search_entities", trim) %}
+{% set owned_text %}
+
+WHAT YOU OWN: resources: {% if resources %}{% for item in resources %}#{{ item.id }} {{ item.name }} (abundance {{ item.abundance }}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}; items: {% if items %}{% for item in items %}#{{ item.id }} {{ item.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}
+
+{% endset %}
+{% set mentions_text = "\nRECORDS THAT MENTION YOU:\n" ~ (budget(chronicle_rows(mentions) | string, m.ctx_mentions_chars, "see the chronicle", trim) if mentions else "(none)") %}
+{% set languages_text = "\nLANGUAGES OF THE WORLD:\n" ~ (budget(languages, m.ctx_languages_chars, "look at the language's lexicon with inspect_entity", trim) if languages else "(none yet)") %}
+{% set worlds_text %}
+{% if other_worlds %}
+
+OTHER WORLDS:
+{{ other_worlds }}
+{% if routes %}
+
+KNOWN ROUTES OUT OF THIS WORLD (launch_expedition):
+{% for route in routes %}
+- route#{{ route.id }} {{ route.world_a }} ↔ {{ route.world_b }} ({{ route.method_label }}, {{ route.duration }} ages)
+{% endfor %}
+{% else %}
+
+There is no known route out of this world (find_route).
+{% endif %}
+{% endif %}
+{% endset %}
+{% set expeditions_text %}
+{% if expeditions %}
+
+YOUR ONGOING EXPEDITIONS: {% for item in expeditions %}{{ item.intent_label }}, {{ item.remaining }} ages left, {{ item.people }} people{% if not loop.last %}; {% endif %}{% endfor %}
+
+{% endif %}
+{% endset %}
+{% set floor = c.section_min_chars %}
+{% set hint = "look with look_at_world, search_entities and inspect_entity" %}
+{% set parts = [(header, header | length, hint)] %}
+{% for text in [you_text, character_text, god_text, language_text, land_text, "\n" ~ near_text, events_text, knowledge_text, owned_text, mentions_text, languages_text, worlds_text, expeditions_text] %}
+{% set _ = parts.append((text.rstrip() if text.strip() else "", floor, hint)) %}
+{% endfor %}
+{{ sectioned(parts, c.mortal_context_chars * (c.read_tool_multiplier if full else 1), trim) }}

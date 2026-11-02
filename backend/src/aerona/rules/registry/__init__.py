@@ -1,0 +1,220 @@
+from dataclasses import dataclass, field
+
+from aerona.rules.registry.agents import AgentsRules
+from aerona.rules.registry.apocalypse import ApocalypseRules
+from aerona.rules.registry.archive import ArchiveRules
+from aerona.rules.registry.ascension import AscensionRules
+from aerona.rules.registry.awakening import AwakeningRules
+from aerona.rules.registry.backup import BackupRules
+from aerona.rules.registry.balance import BalanceRules
+from aerona.rules.registry.batch import BatchRules
+from aerona.rules.registry.beyond import BeyondRules
+from aerona.rules.registry.campaigns import CampaignsRules
+from aerona.rules.registry.cartography import CartographyRules
+from aerona.rules.registry.casualties import CasualtiesRules
+from aerona.rules.registry.chronicle_audit import ChronicleAuditRules
+from aerona.rules.registry.chronicle_repeat import ChronicleRepeatRules
+from aerona.rules.registry.civilization import CivilizationRules
+from aerona.rules.registry.climate_effects import ClimateEffectsRules
+from aerona.rules.registry.climate_world_type import ClimateWorldTypeRules
+from aerona.rules.registry.content import ContentRules
+from aerona.rules.registry.context import ContextRules
+from aerona.rules.registry.core_rules import CoreRulesRules
+from aerona.rules.registry.cosmic_costs import CosmicCostsRules
+from aerona.rules.registry.cosmic_horror import CosmicHorrorRules
+from aerona.rules.registry.costs import CostsRules
+from aerona.rules.registry.council import CouncilRules
+from aerona.rules.registry.creation_base_cost import CreationBaseCostRules
+from aerona.rules.registry.creator import CreatorRules
+from aerona.rules.registry.creature_traits import CreatureTraitsRules
+from aerona.rules.registry.creatures import CreaturesRules
+from aerona.rules.registry.culture import CultureRules
+from aerona.rules.registry.death import DeathRules
+from aerona.rules.registry.deep_life import DeepLifeRules
+from aerona.rules.registry.deep_world import DeepWorldRules
+from aerona.rules.registry.diplomacy import DiplomacyRules
+from aerona.rules.registry.disasters import DisastersRules
+from aerona.rules.registry.ecology import EcologyRules
+from aerona.rules.registry.economy import EconomyRules
+from aerona.rules.registry.empty_world import EmptyWorldRules
+from aerona.rules.registry.engine_phases import EnginePhasesRules
+from aerona.rules.registry.epoch_flow import EpochFlowRules
+from aerona.rules.registry.espionage import EspionageRules
+from aerona.rules.registry.essence import EssenceRules
+from aerona.rules.registry.exploration import ExplorationRules
+from aerona.rules.registry.factions import FactionsRules
+from aerona.rules.registry.faith import FaithRules
+from aerona.rules.registry.fate import FateRules
+from aerona.rules.registry.folk_belief import FolkBeliefRules
+from aerona.rules.registry.foreign_gods import ForeignGodsRules
+from aerona.rules.registry.genesis import GenesisRules
+from aerona.rules.registry.geography import GeographyRules
+from aerona.rules.registry.goals import GoalsRules
+from aerona.rules.registry.god_actions import GodActionsRules
+from aerona.rules.registry.god_hand import GodHandRules
+from aerona.rules.registry.god_power import GodPowerRules
+from aerona.rules.registry.guide import GuideRules
+from aerona.rules.registry.heroes import HeroesRules
+from aerona.rules.registry.image_gen import ImageGenRules
+from aerona.rules.registry.intervention_costs import InterventionCostsRules
+from aerona.rules.registry.intervention_effects import InterventionEffectsRules
+from aerona.rules.registry.knowledge import KnowledgeRules
+from aerona.rules.registry.language import LanguageRules
+from aerona.rules.registry.language_contact import LanguageContactRules
+from aerona.rules.registry.ledger import LedgerRules
+from aerona.rules.registry.life_cycles import LifeCyclesRules
+from aerona.rules.registry.limits import LimitsRules
+from aerona.rules.registry.link_graph import LinkGraphRules
+from aerona.rules.registry.market import MarketRules
+from aerona.rules.registry.mechanics import MechanicsRules
+from aerona.rules.registry.metrics import MetricsRules
+from aerona.rules.registry.model import ModelRules
+from aerona.rules.registry.mortal_agents import MortalAgentsRules
+from aerona.rules.registry.mortal_tools import MortalToolsRules
+from aerona.rules.registry.naming import NamingRules
+from aerona.rules.registry.narrative import NarrativeRules
+from aerona.rules.registry.native_faith import NativeFaithRules
+from aerona.rules.registry.notifications import NotificationsRules
+from aerona.rules.registry.opportunities import OpportunitiesRules
+from aerona.rules.registry.pantheon import PantheonRules
+from aerona.rules.registry.politics import PoliticsRules
+from aerona.rules.registry.power_unlock_levels import PowerUnlockLevelsRules
+from aerona.rules.registry.rarities import RaritiesRules
+from aerona.rules.registry.rarity_gates import RarityGatesRules
+from aerona.rules.registry.record_schema import RecordSchemaRules
+from aerona.rules.registry.religion import ReligionRules
+from aerona.rules.registry.remembrance import RemembranceRules
+from aerona.rules.registry.reputation import ReputationRules
+from aerona.rules.registry.server import ServerRules
+from aerona.rules.registry.setup_wizard import SetupWizardRules
+from aerona.rules.registry.sky import SkyRules
+from aerona.rules.registry.society import SocietyRules
+from aerona.rules.registry.son_relations import SonRelationsRules
+from aerona.rules.registry.son_tools import SonToolsRules
+from aerona.rules.registry.summoning import SummoningRules
+from aerona.rules.registry.time import TimeRules
+from aerona.rules.registry.trade import TradeRules
+from aerona.rules.registry.travel import TravelRules
+from aerona.rules.registry.travel_methods import TravelMethodsRules
+from aerona.rules.registry.ui import UiRules
+from aerona.rules.registry.wonders import WondersRules
+from aerona.rules.registry.world_balance import WorldBalanceRules
+from aerona.rules.registry.world_birth import WorldBirthRules
+from aerona.rules.registry.world_effects import WorldEffectsRules
+from aerona.rules.registry.world_engine import WorldEngineRules
+from aerona.rules.registry.world_epoch_transition import WorldEpochTransitionRules
+from aerona.rules.registry.world_hunt import WorldHuntRules
+from aerona.rules.registry.world_physics import WorldPhysicsRules
+from aerona.rules.registry.world_terrain import WorldTerrainRules
+from aerona.rules.registry.world_war_strength import WorldWarStrengthRules
+
+
+@dataclass(frozen=True)
+class Rules:
+    agents: AgentsRules = field(default_factory=AgentsRules)
+    casualties: CasualtiesRules = field(default_factory=CasualtiesRules)
+    ecology: EcologyRules = field(default_factory=EcologyRules)
+    geography: GeographyRules = field(default_factory=GeographyRules)
+    life_cycles: LifeCyclesRules = field(default_factory=LifeCyclesRules)
+    remembrance: RemembranceRules = field(default_factory=RemembranceRules)
+    world_balance: WorldBalanceRules = field(default_factory=WorldBalanceRules)
+    apocalypse: ApocalypseRules = field(default_factory=ApocalypseRules)
+    archive: ArchiveRules = field(default_factory=ArchiveRules)
+    ascension: AscensionRules = field(default_factory=AscensionRules)
+    awakening: AwakeningRules = field(default_factory=AwakeningRules)
+    backup: BackupRules = field(default_factory=BackupRules)
+    balance: BalanceRules = field(default_factory=BalanceRules)
+    batch: BatchRules = field(default_factory=BatchRules)
+    beyond: BeyondRules = field(default_factory=BeyondRules)
+    campaigns: CampaignsRules = field(default_factory=CampaignsRules)
+    cartography: CartographyRules = field(default_factory=CartographyRules)
+    chronicle_audit: ChronicleAuditRules = field(default_factory=ChronicleAuditRules)
+    chronicle_repeat: ChronicleRepeatRules = field(default_factory=ChronicleRepeatRules)
+    civilization: CivilizationRules = field(default_factory=CivilizationRules)
+    climate_effects: ClimateEffectsRules = field(default_factory=ClimateEffectsRules)
+    climate_world_type: ClimateWorldTypeRules = field(default_factory=ClimateWorldTypeRules)
+    content: ContentRules = field(default_factory=ContentRules)
+    context: ContextRules = field(default_factory=ContextRules)
+    core_rules: CoreRulesRules = field(default_factory=CoreRulesRules)
+    cosmic_costs: CosmicCostsRules = field(default_factory=CosmicCostsRules)
+    cosmic_horror: CosmicHorrorRules = field(default_factory=CosmicHorrorRules)
+    costs: CostsRules = field(default_factory=CostsRules)
+    council: CouncilRules = field(default_factory=CouncilRules)
+    creation_base_cost: CreationBaseCostRules = field(default_factory=CreationBaseCostRules)
+    creator: CreatorRules = field(default_factory=CreatorRules)
+    creatures: CreaturesRules = field(default_factory=CreaturesRules)
+    creature_traits: CreatureTraitsRules = field(default_factory=CreatureTraitsRules)
+    culture: CultureRules = field(default_factory=CultureRules)
+    death: DeathRules = field(default_factory=DeathRules)
+    deep_life: DeepLifeRules = field(default_factory=DeepLifeRules)
+    deep_world: DeepWorldRules = field(default_factory=DeepWorldRules)
+    diplomacy: DiplomacyRules = field(default_factory=DiplomacyRules)
+    disasters: DisastersRules = field(default_factory=DisastersRules)
+    economy: EconomyRules = field(default_factory=EconomyRules)
+    espionage: EspionageRules = field(default_factory=EspionageRules)
+    empty_world: EmptyWorldRules = field(default_factory=EmptyWorldRules)
+    engine_phases: EnginePhasesRules = field(default_factory=EnginePhasesRules)
+    epoch_flow: EpochFlowRules = field(default_factory=EpochFlowRules)
+    essence: EssenceRules = field(default_factory=EssenceRules)
+    exploration: ExplorationRules = field(default_factory=ExplorationRules)
+    faith: FaithRules = field(default_factory=FaithRules)
+    fate: FateRules = field(default_factory=FateRules)
+    folk_belief: FolkBeliefRules = field(default_factory=FolkBeliefRules)
+    factions: FactionsRules = field(default_factory=FactionsRules)
+    foreign_gods: ForeignGodsRules = field(default_factory=ForeignGodsRules)
+    genesis: GenesisRules = field(default_factory=GenesisRules)
+    goals: GoalsRules = field(default_factory=GoalsRules)
+    god_actions: GodActionsRules = field(default_factory=GodActionsRules)
+    god_hand: GodHandRules = field(default_factory=GodHandRules)
+    god_power: GodPowerRules = field(default_factory=GodPowerRules)
+    guide: GuideRules = field(default_factory=GuideRules)
+    heroes: HeroesRules = field(default_factory=HeroesRules)
+    image_gen: ImageGenRules = field(default_factory=ImageGenRules)
+    intervention_costs: InterventionCostsRules = field(default_factory=InterventionCostsRules)
+    intervention_effects: InterventionEffectsRules = field(default_factory=InterventionEffectsRules)
+    knowledge: KnowledgeRules = field(default_factory=KnowledgeRules)
+    market: MarketRules = field(default_factory=MarketRules)
+    mechanics: MechanicsRules = field(default_factory=MechanicsRules)
+    language: LanguageRules = field(default_factory=LanguageRules)
+    language_contact: LanguageContactRules = field(default_factory=LanguageContactRules)
+    ledger: LedgerRules = field(default_factory=LedgerRules)
+    limits: LimitsRules = field(default_factory=LimitsRules)
+    link_graph: LinkGraphRules = field(default_factory=LinkGraphRules)
+    metrics: MetricsRules = field(default_factory=MetricsRules)
+    model: ModelRules = field(default_factory=ModelRules)
+    mortal_agents: MortalAgentsRules = field(default_factory=MortalAgentsRules)
+    mortal_tools: MortalToolsRules = field(default_factory=MortalToolsRules)
+    naming: NamingRules = field(default_factory=NamingRules)
+    native_faith: NativeFaithRules = field(default_factory=NativeFaithRules)
+    narrative: NarrativeRules = field(default_factory=NarrativeRules)
+    notifications: NotificationsRules = field(default_factory=NotificationsRules)
+    opportunities: OpportunitiesRules = field(default_factory=OpportunitiesRules)
+    pantheon: PantheonRules = field(default_factory=PantheonRules)
+    politics: PoliticsRules = field(default_factory=PoliticsRules)
+    power_unlock_levels: PowerUnlockLevelsRules = field(default_factory=PowerUnlockLevelsRules)
+    rarities: RaritiesRules = field(default_factory=RaritiesRules)
+    rarity_gates: RarityGatesRules = field(default_factory=RarityGatesRules)
+    record_schema: RecordSchemaRules = field(default_factory=RecordSchemaRules)
+    religion: ReligionRules = field(default_factory=ReligionRules)
+    reputation: ReputationRules = field(default_factory=ReputationRules)
+    server: ServerRules = field(default_factory=ServerRules)
+    setup_wizard: SetupWizardRules = field(default_factory=SetupWizardRules)
+    sky: SkyRules = field(default_factory=SkyRules)
+    society: SocietyRules = field(default_factory=SocietyRules)
+    son_relations: SonRelationsRules = field(default_factory=SonRelationsRules)
+    son_tools: SonToolsRules = field(default_factory=SonToolsRules)
+    summoning: SummoningRules = field(default_factory=SummoningRules)
+    time: TimeRules = field(default_factory=TimeRules)
+    trade: TradeRules = field(default_factory=TradeRules)
+    travel: TravelRules = field(default_factory=TravelRules)
+    travel_methods: TravelMethodsRules = field(default_factory=TravelMethodsRules)
+    ui: UiRules = field(default_factory=UiRules)
+    wonders: WondersRules = field(default_factory=WondersRules)
+    world_birth: WorldBirthRules = field(default_factory=WorldBirthRules)
+    world_effects: WorldEffectsRules = field(default_factory=WorldEffectsRules)
+    world_engine: WorldEngineRules = field(default_factory=WorldEngineRules)
+    world_epoch_transition: WorldEpochTransitionRules = field(default_factory=WorldEpochTransitionRules)
+    world_hunt: WorldHuntRules = field(default_factory=WorldHuntRules)
+    world_physics: WorldPhysicsRules = field(default_factory=WorldPhysicsRules)
+    world_terrain: WorldTerrainRules = field(default_factory=WorldTerrainRules)
+    world_war_strength: WorldWarStrengthRules = field(default_factory=WorldWarStrengthRules)
