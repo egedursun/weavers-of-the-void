@@ -21,6 +21,7 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import CaptiveStatus, TributeStatus, WarCause, WarSide, WarStatus
 from aerona.domain.models.entity_stats import ArmyStats, EventStats
 from aerona.engine.context import TickContext
+from aerona.engine.primitives.levies import levy
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
@@ -372,7 +373,8 @@ async def raise_army(ctx: TickContext, strength: MilitaryStrength, sides: SideIn
     heroes = sides.heroes_of(community.id)
     commander = max(heroes, key=lambda hero: ((stat(hero, "strength") or 0) + (stat(hero, "charisma") or 0), -hero.id), default=None)
     engine_kind, subtype = ARMY_KINDS.get(community.entity_type, PEOPLES_ARMY)
-    size = clamp_int(soldier_count(ctx.rules, strength, community), campaigns.army_min_soldiers, ctx.rules.limits.army_soldier_cap)
+    wanted = clamp_int(soldier_count(ctx.rules, strength, community), campaigns.army_min_soldiers, ctx.rules.limits.army_soldier_cap)
+    size = levy(ctx.rules, community, wanted)
     zeal_bonus = 0
     if community.entity_type is EntityType.CULT:
         zeal_bonus = round_half_up((stat(community, "zeal") or campaigns.default_zealotry) / campaigns.holy_guard_zealotry_divisor)

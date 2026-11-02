@@ -17,3 +17,5 @@ YENİLİKLER:
 5.  [ ] Görsel peer to peer savaş animasyonları (?)
 6.  [ ] Görsel army to army savaş animasyonları (?)
 7.  [ ] Görsel cosmic savaş animasyonları (?)
+8.  [ ] Kod kalitesi ve tutarlılık turları
+9.  [ ] Versiyonlama ve piyasaya sürme

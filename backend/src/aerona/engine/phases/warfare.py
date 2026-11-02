@@ -23,11 +23,12 @@ from aerona.engine.context import TickContext
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.knowledge import LawBook
+from aerona.engine.primitives.levies import demobilise
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_float, clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
-from aerona.engine.primitives.stats import put_stat, set_stats, shift_stat, stat
+from aerona.engine.primitives.stats import set_stats, shift_stat, stat
 from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.records import death_path
 from aerona.engine.services.community_relations import change_relation, start_blood_feud
@@ -147,9 +148,6 @@ async def end_wars_with_subjects(ctx: TickContext) -> int:
     return ended
 
 
-HOMELAND_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
-
-
 async def idle_armies(ctx: TickContext) -> int:
     campaigns = ctx.rules.campaigns
     repository = EntityRepository(ctx.session)
@@ -167,11 +165,13 @@ async def idle_armies(ctx: TickContext) -> int:
             continue
         size = stat(army, "size") or 0
         returning = min(size, max(1, round_half_up(size * campaigns.idle_army_return_pct / PERCENT)))
-        set_stats(army, size=size - returning)
         owner = await living_entity(ctx.session, row.owner_entity_id)
-        if owner is not None and owner.entity_type in HOMELAND_TYPES and stat(owner, "population") is not None:
-            put_stat(ctx.rules, owner, "population", (stat(owner, "population") or 0) + returning)
-        if size - returning >= campaigns.idle_army_disband_below:
+        remaining = size - returning
+        if remaining < campaigns.idle_army_disband_below:
+            returning, remaining = size, 0
+        set_stats(army, size=remaining)
+        demobilise(ctx.rules, owner, returning)
+        if remaining > 0:
             continue
         row.disbanded_epoch = ctx.epoch
         home = owner.name if owner is not None else "their homes"
@@ -209,11 +209,10 @@ async def battle_power(ctx: TickContext, theatre: Theatre, community: EntityRow,
     )
 
 
-def _besieged(rules: Rules, attacker: EntityRow, defender: EntityRow) -> EntityRow | None:
-    for candidate in (defender, attacker):
-        defense = stat(candidate, "defense")
-        if candidate.entity_type is EntityType.SETTLEMENT and defense is not None and defense >= rules.campaigns.siege_min_defense:
-            return candidate
+def _besieged(rules: Rules, defender: EntityRow) -> EntityRow | None:
+    defense = stat(defender, "defense")
+    if defender.entity_type is EntityType.SETTLEMENT and defense is not None and defense >= rules.campaigns.siege_min_defense:
+        return defender
     return None
 
 
@@ -430,7 +429,7 @@ async def fight_battle(ctx: TickContext, theatre: Theatre, item: OngoingWar, arm
     attacker, defender = await living_entity(ctx.session, item.attacker_id), await living_entity(ctx.session, item.defender_id)
     if attacker is None or defender is None:
         return None
-    besieged = _besieged(ctx.rules, attacker, defender)
+    besieged = _besieged(ctx.rules, defender)
     attacker_power = await battle_power(ctx, theatre, attacker, *armies[attacker.id])
     defender_power = await battle_power(ctx, theatre, defender, *armies[defender.id])
     winner, loser = (attacker, defender) if attacker_power >= defender_power else (defender, attacker)
@@ -649,6 +648,7 @@ async def disband_army(ctx: TickContext, army_id: int) -> None:
     if row is None or army is None or row.disbanded_epoch is not None:
         raise NotFoundError("No such standing army.")
     row.disbanded_epoch = ctx.epoch
+    demobilise(ctx.rules, await living_entity(ctx.session, row.owner_entity_id), stat(army, "size") or 0)
     await retire_in(ctx, army, "disbanded by decree", close_bonds=True)
 
 

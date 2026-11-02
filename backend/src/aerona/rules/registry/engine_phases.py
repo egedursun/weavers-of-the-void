@@ -7,6 +7,7 @@ from aerona.rules.model import rule
 @dataclass(frozen=True)
 class EnginePhasesRules:
     dead_bonds_opening: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: dead bonds opening")
+    modifier_upkeep: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: modifier upkeep")
     world_maps: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: world maps")
     expire_truces: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: expire truces")
     language_and_faith: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: language and faith")

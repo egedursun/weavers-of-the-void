@@ -46,6 +46,7 @@ from aerona.engine.phases import (
     heroism,
     horror,
     institutions,
+    interconnect,
     knowledge_levels,
     language_contact,
     language_death,
@@ -98,6 +99,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     records.PHASES
     + transition.PHASES
     + snapshot.PHASES
+    + interconnect.PHASES
     + afterlife.PHASES
     + belief_memory.PHASES
     + births.PHASES
@@ -173,7 +175,7 @@ def stage(*names: str) -> tuple[Phase, ...]:
     return tuple(PHASE_REGISTRY[name] for name in names)
 
 
-CLEANUP_STAGE = stage("dead_bonds_opening", "world_maps", "expire_truces", "language_and_faith")
+CLEANUP_STAGE = stage("dead_bonds_opening", "modifier_upkeep", "world_maps", "expire_truces", "language_and_faith")
 GRUDGE_STAGE = stage("divine_grudges")
 SUB_ENGINE_STAGE = stage(
     "diplomacy",

@@ -69,6 +69,7 @@ from aerona.rules.registry.market import MarketRules
 from aerona.rules.registry.mechanics import MechanicsRules
 from aerona.rules.registry.metrics import MetricsRules
 from aerona.rules.registry.model import ModelRules
+from aerona.rules.registry.modifiers import ModifiersRules
 from aerona.rules.registry.mortal_agents import MortalAgentsRules
 from aerona.rules.registry.mortal_tools import MortalToolsRules
 from aerona.rules.registry.naming import NamingRules
@@ -112,6 +113,7 @@ from aerona.rules.registry.world_war_strength import WorldWarStrengthRules
 @dataclass(frozen=True)
 class Rules:
     agents: AgentsRules = field(default_factory=AgentsRules)
+    modifiers: ModifiersRules = field(default_factory=ModifiersRules)
     casualties: CasualtiesRules = field(default_factory=CasualtiesRules)
     ecology: EcologyRules = field(default_factory=EcologyRules)
     geography: GeographyRules = field(default_factory=GeographyRules)

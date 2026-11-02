@@ -34,6 +34,7 @@ class RuleGroup(StrEnum):
     GOD_AND_SON_COSTS = "God and son costs"
     HEROES_AND_MORTALS = "Heroes and mortals"
     IMAGE_GENERATION = "Image generation"
+    INTERCONNECTION = "Interconnection"
     INTERFACE = "Interface"
     INTERVENTION = "Intervention"
     INTERVENTIONS_IN_THE_MORTAL_WORLD = "Interventions in the mortal world"

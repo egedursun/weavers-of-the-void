@@ -26,6 +26,7 @@ from aerona.db.tables.epochs import (
     EpochWorldNarrativeRow,
 )
 from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow, GodConflictRow, OuterBargainRow
+from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.job import JobRow
 from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
@@ -113,6 +114,8 @@ __all__ = [
     "HistorianViewRow",
     "HorizonIntuitionRow",
     "ImageRow",
+    "IncidentParticipantRow",
+    "IncidentRow",
     "JobRow",
     "JourneyRow",
     "LanguageProfileRow",
@@ -123,6 +126,7 @@ __all__ = [
     "MapNoteRow",
     "MapSnapshotRow",
     "MessageRow",
+    "ModifierRow",
     "MotifOverrideRow",
     "NameRegistryRow",
     "NetworkReviewRow",

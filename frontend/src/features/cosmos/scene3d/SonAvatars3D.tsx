@@ -3,12 +3,14 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Portrait } from '@/components/domain'
 import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { mediaUrl } from '@/features/pantheon/media'
 import { type SonPublic } from '../api'
 import { type CosmosIndex } from '../model/cosmosModel'
 import { humanize } from '../model/labels'
 import { labelKey } from './labelKeys'
 
 const MAX_AVATARS = 7
+const AVATAR_COVER_WIDTH = 160
 
 type SonAvatars3DProps = {
   index: CosmosIndex
@@ -60,7 +62,7 @@ export function SonAvatars3D({ index, sons, labels }: SonAvatars3DProps) {
                   >
                     <Portrait
                       name={ref.name}
-                      src={son?.cover}
+                      src={mediaUrl(son?.cover, AVATAR_COVER_WIDTH)}
                       size='xs'
                       rarity={rarity}
                     />
