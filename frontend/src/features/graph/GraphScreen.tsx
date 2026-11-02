@@ -733,6 +733,7 @@ function GraphView({ full, cosmos, linkGroups }: GraphViewProps) {
             title='Connectivity'
             icon={Activity}
             description='Islands, lonely records and the repairs Fate can make.'
+            defaultOpen
           >
             <NetworkHealthPanel />
           </Panel>

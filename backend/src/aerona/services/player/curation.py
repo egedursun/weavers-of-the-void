@@ -7,6 +7,7 @@ from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.lore import ChronicleRow, FolkBeliefRow
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.entity import EntityFlag
 from aerona.engine.primitives.naming import Namer
 from aerona.engine.primitives.renames import rewrite_name
 from aerona.services.integrity.folk_names import rename_belief
@@ -82,7 +83,7 @@ async def accept_name(scope: PlayerScope, command: AcceptName) -> Effect:
     old = record.name
     if proposed != old and await NameRepository(scope.session).is_taken(proposed, record.id):
         raise ValidationFailedError(f"The name {proposed} already belongs to another.")
-    record.pending_name = False
+    await EntityRepository(scope.session).add_flag(record.id, EntityFlag.FIXED_NAME, await scope.epoch())
     if proposed != old:
         await EntityRepository(scope.session).rename(record, proposed)
         await rewrite_name(scope.session, record.id, old, record.name)

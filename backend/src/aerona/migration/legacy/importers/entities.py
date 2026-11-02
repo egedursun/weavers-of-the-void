@@ -213,7 +213,7 @@ class EntityImporter:
             origin=EntityOrigin.ENGINE if origin is EntityOrigin.MORTAL else origin,
             world_id=self.context.world_or_primary(row.integer("world_id")),
             status=status,
-            pending_name=row.flag("pending"),
+            pending_name=row.flag("pending") or (row.text("description") or "").startswith(self.vocabulary.texts.engine_prefix.strip()),
             fate_note=row.text("fate_note"),
             depth=blobs.entity_depth(self.vocabulary, row.json("depth"), birth),
             birth_epoch=birth,

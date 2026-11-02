@@ -315,6 +315,7 @@ async def create_deposit(ctx: TickContext, region: EntityRow) -> EntityRow | Non
             engine_kind=EngineKind.COSMIC_TRAVEL_RESOURCE,
             subtype=god_lines.DEPOSIT_SUBTYPE,
             resource_mechanic=ResourceMechanic.ADDICTIVE,
+            pending_name=True,
             split_title=False,
         )
     )
@@ -413,6 +414,7 @@ async def found_faction(ctx: TickContext, kind: EngineKind, region: EntityRow) -
             location_id=region.id,
             engine_kind=kind,
             subtype=god_lines.MARKET_SUBTYPE if market else god_lines.PIRATES_SUBTYPE,
+            pending_name=True,
             split_title=False,
         )
     )

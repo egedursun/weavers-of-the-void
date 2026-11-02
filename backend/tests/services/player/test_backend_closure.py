@@ -93,7 +93,8 @@ async def test_accepting_a_name_overrides_the_dialect(scope: PlayerScope, sessio
     pending = await make_entity(session, "Unnamed Tale", EntityType.PLACE, world_id=world.world.id)
     pending.pending_name = True
     outcome = await curation.accept_name(scope, curation.AcceptName(entity_id=pending.id, name="Oruvel"))
-    assert pending.name == "Oruvel" and not pending.pending_name
+    assert pending.name == "Oruvel" and pending.pending_name
+    assert await EntityRepository(session).has_flag(pending.id, EntityFlag.FIXED_NAME)
     assert outcome.values["overridden_letters"] == "e, o, u, v"
     assert "player.naming.accepted" in await chronicle_keys(session)
 

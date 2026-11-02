@@ -203,6 +203,7 @@ async def attempt_kill(ctx: TickContext, victim: EntityRow, killer: Killer, crea
             birth_epoch=ctx.epoch,
             world_id=victim.world_id,
             subtype=god_lines.LEGEND_SUBTYPE,
+            pending_name=True,
             split_title=False,
         )
     )

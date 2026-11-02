@@ -387,7 +387,6 @@ async def order_creole(session: AsyncSession, rules: Rules, community_id: int) -
         raise ValidationFailedError(f"{community.name} does not speak two distinct languages.")
     ctx = await manual_context(session, "creole", rules, key=str(community_id))
     creole = await birth_creole(ctx, community, first, second, by="the Creator")
-    creole.pending_name = False
     await ctx.chronicle(
         ChronicleKind.CREATOR_HAND,
         f"The Creator fused the two tongues of {community.name}; {creole.name} was born.",

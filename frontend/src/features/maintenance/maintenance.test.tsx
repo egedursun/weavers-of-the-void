@@ -34,6 +34,29 @@ const MISSING = {
   anything_missing: true,
 }
 
+const NETWORK = {
+  nodes: 40,
+  edges: 90,
+  past_edges: 4,
+  active_edges: 86,
+  mean_degree: 4.3,
+  median_degree: 4,
+  density: 0.1,
+  components: 1,
+  largest_component: 40,
+  largest_share_pct: 100,
+  isolated: 0,
+  single_link: 2,
+  weak: 2,
+  related: 6,
+  related_undescribed: 0,
+  related_to_review: 0,
+  weakest: [],
+  log: [],
+  priority: 0,
+  healthy: true,
+}
+
 function routes(
   state: Record<string, unknown> = {},
   missing: unknown = MISSING
@@ -51,6 +74,8 @@ function routes(
       TASK('prune', 'Prune old data', { ledgered: false }),
     ],
     'GET /api/maintenance/missing': missing,
+    'GET /api/graph/health': NETWORK,
+    'GET /api/rules': [],
   }
 }
 

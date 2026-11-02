@@ -114,6 +114,7 @@ async def god_death(ctx: TickContext, son: SonRow, cause: str, death_cause: SonD
             world_id=world_id,
             location_id=home.id if home is not None else None,
             engine_kind=EngineKind.GOD_CORPSE,
+            pending_name=True,
             split_title=False,
         ),
     )
@@ -130,6 +131,7 @@ async def god_death(ctx: TickContext, son: SonRow, cause: str, death_cause: SonD
             world_id=corpse.world_id,
             location_id=corpse.id,
             engine_kind=EngineKind.GOD_SHADE,
+            pending_name=True,
             split_title=False,
         ),
     )
@@ -198,6 +200,7 @@ async def create_order(ctx: TickContext, son: SonRow, location: EntityRow | None
             world_id=location.world_id if location is not None else son.current_world_id,
             location_id=location.id if location is not None else None,
             engine_kind=EngineKind.RESURRECTION_ORDER,
+            pending_name=True,
             split_title=False,
         ),
     )

@@ -4,9 +4,10 @@ from sqlalchemy import select
 from aerona.agents.chronicler import complete_chronicle, record_age, write_chronicle
 from aerona.agents.context.scope import load_scope
 from aerona.agents.fate.judge import run_fate
-from aerona.agents.fate.naming import name_pending_records
+from aerona.agents.fate.naming import name_pending_records, requeue_engine_drafts
 from aerona.agents.fate.rollback import roll_back_rejection
 from aerona.agents.runtime import AgentRuntime
+from aerona.agents.text import LEGACY_ENGINE_DESCRIPTION_PREFIX
 from aerona.db.ledger_capture import LedgerDraft, capture_changes
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.session import Database
@@ -18,7 +19,7 @@ from aerona.db.tables.lore import CanonFactRow, FateRewardRow, LexemeRow, Thread
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import Verdict
-from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.world import FateMode
 from aerona.domain.models.entity_stats import ItemStats
@@ -108,6 +109,51 @@ async def test_naming_loop_names_and_cleans(runtime: AgentRuntime, model: FakeMo
         pending = await session.get(EntityRow, world.pending.id)
     assert report.named == 1
     assert pending is not None and pending.name == "Teskara"
+
+
+async def test_legacy_engine_draft_left_unflagged_is_caught_and_written(runtime: AgentRuntime, model: FakeModel, database: Database, world: AgentWorld) -> None:
+    async with database.write() as session:
+        stray = await session.get(EntityRow, world.pending.id)
+        assert stray is not None
+        stray.pending_name = False
+        stray.description = f"{LEGACY_ENGINE_DESCRIPTION_PREFIX} Peace Oath, a peace oath."
+    model.script(NamingsOutput, NamingsOutput(namings=[naming(world.pending.id, "Teskara")]))
+    report = await name_pending_records(runtime)
+    async with database.read() as session:
+        written = await session.get(EntityRow, world.pending.id)
+    assert report.named == 1
+    assert written is not None and not written.pending_name
+    assert written.description.startswith("A tale the river people tell")
+
+
+async def test_unwritten_draft_stays_pending_and_is_retried_next_time(runtime: AgentRuntime, model: FakeModel, database: Database, world: AgentWorld) -> None:
+    model.script(NamingsOutput, NamingsOutput(namings=[]), NamingsOutput(namings=[]), NamingsOutput(namings=[]), NamingsOutput(namings=[]))
+    report = await name_pending_records(runtime)
+    async with database.read() as session:
+        draft = await session.get(EntityRow, world.pending.id)
+    assert report.named == 0 and report.left == 1
+    assert draft is not None and draft.pending_name
+    model.script(NamingsOutput, NamingsOutput(namings=[naming(world.pending.id, "Teskara")]))
+    again = await name_pending_records(runtime)
+    assert again.named == 1 and again.left == 0
+
+
+async def test_fixed_name_survives_the_writer(runtime: AgentRuntime, model: FakeModel, database: Database, world: AgentWorld) -> None:
+    async with database.write() as session:
+        await EntityRepository(session).add_flag(world.pending.id, EntityFlag.FIXED_NAME)
+    model.script(NamingsOutput, NamingsOutput(namings=[naming(world.pending.id, "Teskara")]))
+    await name_pending_records(runtime)
+    async with database.read() as session:
+        written = await session.get(EntityRow, world.pending.id)
+    assert written is not None and written.name == "Unnamed Tale" and not written.pending_name
+    assert written.description.startswith("A tale the river people tell")
+
+
+async def test_requeue_only_touches_engine_drafts(database: Database, world: AgentWorld) -> None:
+    async with database.write() as session:
+        assert await requeue_engine_drafts(session) == 0
+        named = await session.get(EntityRow, world.creation.id)
+        assert named is not None and not named.pending_name
 
 
 async def test_chronicler_writes_and_records_a_unique_age(runtime: AgentRuntime, model: FakeModel, database: Database, rules: Rules, world: AgentWorld) -> None:

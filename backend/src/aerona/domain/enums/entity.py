@@ -158,6 +158,7 @@ class EntityFlag(StrEnum):
     CORRUPTED_MEMORY = "corrupted_memory"
     FAIRY_TALE = "fairy_tale"
     NAME_FROM_LANGUAGE = "name_from_language"
+    FIXED_NAME = "fixed_name"
     SPECIES_BECAME_PEOPLE = "species_became_people"
     ORIGINAL_RESOURCE = "original_resource"
     COSMIC_MONOPOLY = "cosmic_monopoly"

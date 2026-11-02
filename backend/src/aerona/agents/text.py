@@ -1,6 +1,10 @@
 import re
 
 from aerona.constants.agents import ENGINE_DESCRIPTION_PREFIX
+from aerona.migration.legacy.vocabulary import load_vocabulary
+
+LEGACY_ENGINE_DESCRIPTION_PREFIX = load_vocabulary().texts.engine_prefix.strip()
+ENGINE_DESCRIPTION_PREFIXES = (ENGINE_DESCRIPTION_PREFIX, LEGACY_ENGINE_DESCRIPTION_PREFIX)
 
 WORD_QUOTED = re.compile(r"«([^»]+)»")
 WORD_LABEL = re.compile(r"\b(?:word|saying)(?:\s*\(to the chronicle\))?\s*:", re.IGNORECASE)
@@ -103,10 +107,15 @@ def strip_meta_sentences(text: str | None) -> str:
     return "\n".join(lines).strip()
 
 
+def has_engine_prefix(text: str | None) -> bool:
+    return (text or "").strip().startswith(ENGINE_DESCRIPTION_PREFIXES)
+
+
 def without_engine_prefix(text: str | None) -> str:
     value = (text or "").strip()
-    if value.startswith(ENGINE_DESCRIPTION_PREFIX):
-        value = value[len(ENGINE_DESCRIPTION_PREFIX) :].strip()
+    for prefix in ENGINE_DESCRIPTION_PREFIXES:
+        if value.startswith(prefix):
+            value = value[len(prefix) :].strip()
     return value
 
 

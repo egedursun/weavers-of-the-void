@@ -81,7 +81,7 @@ class EpochOrchestrator:
 
         async def handler(_job: JobContext) -> dict[str, Any]:
             report = await name_pending_records(self.runtime)
-            return {"named": report.named, "cleaned": report.cleaned}
+            return {"named": report.named, "left": report.left}
 
         return await self.jobs.submit(JobKind.NAMING, handler, exclusive_group=WORLD_GROUP)
 

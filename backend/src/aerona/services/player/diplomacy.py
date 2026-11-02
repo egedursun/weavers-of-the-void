@@ -274,7 +274,8 @@ async def found_federation(scope: PlayerScope, command: Federation) -> Effect:
             location_id=members[0].location_id,
             subtype=INTERWORLD_FEDERATION_SUBTYPE if spans else FEDERATION_SUBTYPE,
             engine_kind=EngineKind.INTERWORLD_FEDERATION if spans else None,
-            flags=(EntityFlag.FEDERATION,),
+            flags=(EntityFlag.FEDERATION, EntityFlag.FIXED_NAME) if command.name.strip() else (EntityFlag.FEDERATION,),
+            pending_name=True,
             split_title=False,
         )
     )

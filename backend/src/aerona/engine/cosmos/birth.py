@@ -348,7 +348,7 @@ async def _cosmic_resource(ctx: TickContext, state: BirthState, output: NewWorld
             creator_son_id=state.son.id if state.son is not None else None,
         ),
     )
-    deposit.pending_name = False
+    await EntityRepository(ctx.session).add_flag(deposit.id, EntityFlag.FIXED_NAME)
     deposit.image_prompt = offered.image_prompt
     state.created.append(deposit)
 

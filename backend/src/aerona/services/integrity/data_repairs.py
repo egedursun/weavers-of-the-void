@@ -7,6 +7,7 @@ from pathlib import Path
 from sqlalchemy import or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.agents.fate.naming import requeue_engine_drafts
 from aerona.catalog.bonds import EVENT_BOND_KINDS
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -101,6 +102,7 @@ class DataRepairs:
             ("epoch_years", lambda session, rules, epoch: align_epoch_years(session, rules)),
             ("belief_names", lambda session, rules, epoch: repair_belief_names(session, rules)),
             ("pending_dialect_names", refit_pending_names),
+            ("engine_drafts", lambda session, rules, epoch: requeue_engine_drafts(session)),
         ]
 
     async def run(self, session: AsyncSession, rules: Rules, on_step: StepReport | None = None) -> dict[str, int]:

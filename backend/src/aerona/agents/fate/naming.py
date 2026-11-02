@@ -1,7 +1,7 @@
 import asyncio
 from dataclasses import dataclass, field
 
-from sqlalchemy import func, select, update
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.ask import ask
@@ -12,10 +12,10 @@ from aerona.agents.context.world_header import world_header
 from aerona.agents.fate.name_check import dialect_letters, fresh_name, name_problems, renamed_item, type_named_subtype
 from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
-from aerona.agents.text import sanitize, without_engine_prefix
+from aerona.agents.text import ENGINE_DESCRIPTION_PREFIXES, sanitize, without_engine_prefix
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.names import NameRepository
-from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin
 from aerona.domain.models.phonology import Phonology
 from aerona.engine.primitives.motifs import plain, record_motifs
@@ -27,11 +27,13 @@ from aerona.prompts.contexts.narrative import DialectWarning, NamingContext
 from aerona.prompts.schemas.fate import NamingsOutput
 from aerona.prompts.schemas.shared import NamingItemOutput
 
+KEPT_NAME_FLAGS = (EntityFlag.NAME_FROM_LANGUAGE, EntityFlag.FIXED_NAME, EntityFlag.NAMELESS)
+
 
 @dataclass
 class NamingReport:
     named: int = 0
-    cleaned: int = 0
+    left: int = 0
     warnings: dict[int, list[DialectWarning]] = field(default_factory=dict)
 
 
@@ -49,13 +51,25 @@ async def pending_count(session: AsyncSession) -> int:
     return int(await session.scalar(select(func.count()).select_from(EntityRow).where(EntityRow.pending_name.is_(True))) or 0)
 
 
+async def keeps_name(session: AsyncSession, entity_id: int) -> bool:
+    found = await session.scalar(select(EntityFlagRow.entity_id).where(EntityFlagRow.entity_id == entity_id, EntityFlagRow.flag.in_(KEPT_NAME_FLAGS)).limit(1))
+    return found is not None
+
+
+async def requeue_engine_drafts(session: AsyncSession) -> int:
+    prefixed = or_(*(EntityRow.description.startswith(prefix) for prefix in ENGINE_DESCRIPTION_PREFIXES))
+    caught = await session.execute(update(EntityRow).where(EntityRow.pending_name.is_(False), prefixed).values(pending_name=True, naming_attempts=0))
+    await session.execute(update(EntityRow).where(EntityRow.pending_name.is_(True), EntityRow.naming_attempts > 0).values(naming_attempts=0))
+    return int(getattr(caught, "rowcount", 0) or 0)
+
+
 async def apply_naming(session: AsyncSession, item: NamingItemOutput, epoch: int) -> tuple[str, str] | None:
     entity = await session.get(EntityRow, item.id)
     if entity is None or not entity.pending_name:
         return None
     old = entity.name
     repository = EntityRepository(session)
-    if await repository.has_flag(entity.id, EntityFlag.NAME_FROM_LANGUAGE) or not item.name.strip():
+    if await keeps_name(session, entity.id) or not item.name.strip():
         name = old
     elif item.name.strip() != old and await NameRepository(session).is_taken(item.name, entity.id):
         name = await NameRepository(session).unique_name(item.name)
@@ -128,8 +142,7 @@ async def run_batch(runtime: AgentRuntime, batch: NamingBatch, report: NamingRep
             entity = await session.get(EntityRow, item.id)
             if entity is None:
                 continue
-            keeps_name = await EntityRepository(session).has_flag(entity.id, EntityFlag.NAME_FROM_LANGUAGE)
-            check = rules.naming.dialect_check and not keeps_name
+            check = rules.naming.dialect_check and not await keeps_name(session, entity.id)
             violation = await name_problems(session, rules, entity, item.name, phonology=phonology, tired=tired) if check else None
             if violation is not None and entity.naming_attempts < max_tries:
                 report.warnings[item.id] = [violation]
@@ -141,19 +154,14 @@ async def run_batch(runtime: AgentRuntime, batch: NamingBatch, report: NamingRep
                 report.warnings.pop(item.id, None)
 
 
-async def clean_exhausted(runtime: AgentRuntime, max_tries: int) -> int:
-    async with runtime.database.write() as session:
-        rows = list(await session.scalars(select(EntityRow).where(EntityRow.pending_name.is_(True), EntityRow.naming_attempts >= max_tries)))
-        for entity in rows:
-            entity.description = without_engine_prefix(entity.description) or entity.description
-            entity.pending_name = False
-        return len(rows)
-
-
 async def name_pending_records(runtime: AgentRuntime) -> NamingReport:
     rules = await runtime.current_rules()
     max_tries = 1 + rules.naming.retries
     report = NamingReport()
+    async with runtime.database.write() as session:
+        caught = await requeue_engine_drafts(session)
+    if caught:
+        runtime.note(f"{caught} records still carrying the world engine's draft text were put back in line to be written.")
     while True:
         batches = await next_batches(runtime, max_tries)
         if not batches:
@@ -167,9 +175,10 @@ async def name_pending_records(runtime: AgentRuntime) -> NamingReport:
         failures = [result for result in results if isinstance(result, BaseException)]
         if len(failures) == len(results):
             raise failures[0]
-    report.cleaned = await clean_exhausted(runtime, max_tries)
-    if report.named or report.cleaned:
-        tail = f"; {report.cleaned} records' temporary descriptions were cleaned, left for deepening" if report.cleaned else ""
+    async with runtime.database.read() as session:
+        report.left = await pending_count(session)
+    if report.named or report.left:
+        tail = f"; {report.left} still carry draft text and are tried again at the next epoch end" if report.left else ""
         runtime.note(f"{report.named} records were named{tail}.")
     return report
 

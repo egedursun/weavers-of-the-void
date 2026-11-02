@@ -24,7 +24,7 @@ from aerona.db.repositories.sons import SonRepository
 from aerona.db.repositories.worlds import WorldDraft, WorldRepository
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.entity import EntityOrigin, EntityType
+from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityType
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.world import LoreLanguage, WorldType
 from aerona.domain.models.genesis import GenesisSettings
@@ -207,7 +207,7 @@ async def write_genesis(session: AsyncSession, rules: Rules, request: GenesisReq
                 origin=EntityOrigin.CREATOR,
             ),
         )
-        deposit.pending_name = False
+        await entities.add_flag(deposit.id, EntityFlag.FIXED_NAME)
         deposit.image_prompt = cosmic.image_prompt or None
     sky = output.first_celestial
     star = await entities.create(

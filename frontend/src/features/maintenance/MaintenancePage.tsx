@@ -1,4 +1,7 @@
+import { Waypoints } from 'lucide-react'
+import { Section } from '@/components/domain'
 import { Muted } from '@/components/typography'
+import { NetworkHealthPanel } from '@/features/graph/NetworkHealthPanel'
 import { MaintenanceTasksPanel } from './MaintenanceTasksPanel'
 import { MissingContentPanel } from './MissingContentPanel'
 import { WritingJobsPanel } from './WritingJobsPanel'
@@ -12,6 +15,16 @@ export function MaintenancePage() {
       </Muted>
       <MissingContentPanel />
       <WritingJobsPanel />
+      <Section
+        title='Knowledge network'
+        description='Repair loose ends of the link graph, or let Fate propose, name and review links across the whole network.'
+        surface='card'
+        level={3}
+        icon={Waypoints}
+        tone='verdigris'
+      >
+        <NetworkHealthPanel intro />
+      </Section>
       <MaintenanceTasksPanel />
     </div>
   )
