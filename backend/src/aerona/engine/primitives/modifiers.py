@@ -9,6 +9,7 @@ from aerona.db.tables.interconnect import ModifierRow
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 
 NEUTRAL_MULTIPLIER = 1.0
+GUARD_SOURCES = (ModifierSource.PIN, ModifierSource.SUPPRESSION)
 
 
 @dataclass(frozen=True)
@@ -85,7 +86,11 @@ class ModifierIndex:
 
     @classmethod
     async def load(cls, session: AsyncSession, epoch: int, node_ids: Iterable[int] | None = None) -> "ModifierIndex":
-        statement = select(ModifierRow).where(ModifierRow.start_epoch <= epoch, or_(ModifierRow.end_epoch.is_(None), ModifierRow.end_epoch >= epoch))
+        statement = select(ModifierRow).where(
+            ModifierRow.start_epoch <= epoch,
+            or_(ModifierRow.end_epoch.is_(None), ModifierRow.end_epoch >= epoch),
+            ModifierRow.source_kind.not_in(GUARD_SOURCES),
+        )
         if node_ids is not None:
             statement = statement.where(ModifierRow.target_node_id.in_(list(node_ids)))
         return cls(await session.scalars(statement.order_by(ModifierRow.id)))

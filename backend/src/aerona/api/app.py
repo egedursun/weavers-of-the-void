@@ -34,6 +34,7 @@ from aerona.api.routers import (
     ledger,
     maintenance,
     map,
+    mechanics,
     metrics,
     notes,
     notifications,
@@ -98,6 +99,7 @@ ROUTERS: tuple[ModuleType, ...] = (
     maintenance,
     prompt_context,
     fate,
+    mechanics,
     actions,
 )
 IMAGE_UPLOAD_SUFFIX = "/images"

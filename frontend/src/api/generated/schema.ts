@@ -4143,6 +4143,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mechanics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_mechanics_api_mechanics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/nodes/{node_id}/mechanics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["node_mechanics_api_nodes__node_id__mechanics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions": {
         parameters: {
             query?: never;
@@ -6879,6 +6911,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/lever:pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_lever_pin_api_actions_lever_pin_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/lever:unpin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_lever_unpin_api_actions_lever_unpin_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/lever:suppress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_lever_suppress_api_actions_lever_suppress_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/lever:unsuppress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_lever_unsuppress_api_actions_lever_unsuppress_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/lever:run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_lever_run_api_actions_lever_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/modifier:add": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_modifier_add_api_actions_modifier_add_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/modifier:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_modifier_remove_api_actions_modifier_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -7763,6 +7907,13 @@ export interface components {
             text: string;
             is_read: boolean;
         };
+        EffectiveValue: {
+            key: string;
+            base: number;
+            value: number;
+            applied: number[];
+            ignored: number[];
+        };
         ElevationClass: "mountainous" | "hilly" | "plain" | "water";
         EmptyPayload: {
             epoch?: number | null;
@@ -8277,6 +8428,7 @@ export interface components {
             pressure: number;
             narrow: boolean;
         };
+        Exposure: "none" | "context" | "tool";
         FactView: {
             id: number;
             subject: components["schemas"]["NodeRef"] | null;
@@ -8629,6 +8781,11 @@ export interface components {
             target_route_id: number | null;
             target_entity_id: number | null;
         };
+        GuardRecord: {
+            id: number;
+            key: string;
+            end_epoch: number | null;
+        };
         GuestWorld: {
             name: string;
             epoch: number | null;
@@ -8830,6 +8987,17 @@ export interface components {
             reason: string | null;
             last_mention: number;
         };
+        IncidentRecord: {
+            id: number;
+            kind: string;
+            epoch: number;
+            year: number | null;
+            role: components["schemas"]["IncidentRole"];
+            magnitude: number;
+            cause_incident_id: number | null;
+            chronicle_id: number | null;
+        };
+        IncidentRole: "subject" | "actor" | "target" | "witness" | "place";
         IntegrityResult: {
             task: components["schemas"]["IntegrityTask"];
             counters: {
@@ -9158,6 +9326,27 @@ export interface components {
         };
         LegendaryQuestKind: "dead_star" | "sealed_gate" | "archive" | "expel_outer";
         LegendaryQuestOutcome: "completed" | "failed" | "invalidated";
+        LeverPinInput: {
+            node_id: number;
+            key: string;
+            epochs?: number | null;
+        };
+        LeverRunInput: {
+            mechanic: string;
+        };
+        LeverSuppressInput: {
+            node_id: number;
+            mechanic: string;
+            epochs: number;
+        };
+        LeverUnpinInput: {
+            node_id: number;
+            key: string;
+        };
+        LeverUnsuppressInput: {
+            node_id: number;
+            mechanic: string;
+        };
         Lexeme: {
             id: number;
             word: string;
@@ -9333,6 +9522,20 @@ export interface components {
         MarketWriteOffInput: {
             bond_id: number;
         };
+        MechanicRecord: {
+            key: string;
+            spec_item: string;
+            title: string;
+            subsystem: components["schemas"]["Subsystem"];
+            phases: string[];
+            surfaces: string[];
+            backfill: string;
+            fields: string[];
+            flows: string[];
+            exposure: components["schemas"]["Exposure"];
+            tools: string[];
+            couplings: components["schemas"]["Subsystem"][];
+        };
         MemorialForm: "monument" | "epic" | "lament" | "tradition" | "tale";
         MemorialOrderInput: {
             target_id: number;
@@ -9405,6 +9608,32 @@ export interface components {
             latest_errors: components["schemas"]["LlmCall"][];
             slow_threshold_ms: number;
         };
+        ModifierAddInput: {
+            node_id: number;
+            key: string;
+            op: components["schemas"]["ModifierOp"];
+            magnitude: number;
+            epochs?: number | null;
+            decay_pct?: number | null;
+        };
+        ModifierOp: "add" | "multiply";
+        ModifierRecord: {
+            id: number;
+            key: string;
+            op: components["schemas"]["ModifierOp"];
+            magnitude: number;
+            source_kind: components["schemas"]["ModifierSource"];
+            source_node_id: number | null;
+            reason_key: string;
+            stacking_group: string | null;
+            start_epoch: number;
+            end_epoch: number | null;
+            decay_pct: number | null;
+        };
+        ModifierRemoveInput: {
+            modifier_id: number;
+        };
+        ModifierSource: "injury" | "condition" | "trait" | "law" | "tradition" | "artwork" | "doctrine" | "treaty" | "structure" | "wonder" | "terrain" | "weather" | "season" | "natural_law" | "god_power" | "blessing" | "curse" | "dominion" | "phenomenon" | "god_death" | "player" | "suppression" | "pin";
         MoodInput: {
             epoch: number;
             axis: components["schemas"]["CreatorMoodAxis"];
@@ -9603,6 +9832,15 @@ export interface components {
             origin: string;
         };
         NodeKind: "entity" | "son" | "creator" | "foreign_god" | "world" | "star";
+        NodeMechanicsView: {
+            node_id: number;
+            epoch: number;
+            modifiers: components["schemas"]["ModifierRecord"][];
+            effective: components["schemas"]["EffectiveValue"][];
+            pins: components["schemas"]["GuardRecord"][];
+            suppressions: components["schemas"]["GuardRecord"][];
+            incidents: components["schemas"]["IncidentRecord"][];
+        };
         NodeRef: {
             id: number;
             kind: components["schemas"]["NodeKind"];
@@ -11302,6 +11540,7 @@ export interface components {
             durability?: number | null;
             function?: number | null;
         };
+        Subsystem: "core" | "body" | "mind" | "social" | "household" | "demography" | "economy" | "polity" | "law" | "intrigue" | "communication" | "war" | "faith" | "magic" | "knowledge" | "culture" | "language" | "ecology" | "environment" | "gods" | "cosmos";
         SummarySection: "pantheon" | "threads" | "events" | "cosmos" | "geography" | "languages" | "map" | "legends";
         SystemErrorEvent: {
             id: number;
@@ -19718,6 +19957,54 @@ export interface operations {
             };
         };
     };
+    list_mechanics_api_mechanics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MechanicRecord"][];
+                };
+            };
+        };
+    };
+    node_mechanics_api_nodes__node_id__mechanics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NodeMechanicsView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_actions_api_actions_get: {
         parameters: {
             query?: never;
@@ -24803,6 +25090,223 @@ export interface operations {
             };
         };
     };
+    action_lever_pin_api_actions_lever_pin_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeverPinInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_lever_unpin_api_actions_lever_unpin_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeverUnpinInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_lever_suppress_api_actions_lever_suppress_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeverSuppressInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_lever_unsuppress_api_actions_lever_unsuppress_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeverUnsuppressInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_lever_run_api_actions_lever_run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeverRunInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_modifier_add_api_actions_modifier_add_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModifierAddInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_modifier_remove_api_actions_modifier_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModifierRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
 }
 type FlattenedDeepRequired<T> = {
     [K in keyof T]-?: FlattenedDeepRequired<T[K] extends unknown[] | undefined | null ? Extract<T[K], unknown[]>[number] : T[K]>;
@@ -24893,6 +25397,7 @@ export const eventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["s
 export const eventStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EventStats"]["kind"]> = ["event"];
 export const existenceBandValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ExistenceBand"]> = ["radiant", "solid", "faded", "being_forgotten"];
 export const existenceModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ExistenceMode"]> = ["concrete", "semi_concrete", "conceptual", "reflection", "scattered"];
+export const exposureValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Exposure"]> = ["none", "context", "tool"];
 export const factionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FactionKind"]> = ["guild", "council", "brotherhood"];
 export const factionStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FactionStats"]["kind"]> = ["faction"];
 export const fateFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FateFinishedEvent"]["kind"]> = ["fate.finished"];
@@ -24920,6 +25425,7 @@ export const imageProgressEventKindValues: ReadonlyArray<FlattenedDeepRequired<c
 export const imageQueuedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageQueuedEvent"]["kind"]> = ["image.queued"];
 export const imageStatusEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageStatusEvent"]["kind"]> = ["image.status"];
 export const importModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImportMode"]> = ["replace", "merge", "discovery"];
+export const incidentRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IncidentRole"]> = ["subject", "actor", "target", "witness", "place"];
 export const integrityTaskValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IntegrityTask"]> = ["dead_bonds", "checkpoint"];
 export const interventionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["InterventionKind"]> = ["miracle", "disaster", "teach_knowledge", "curse"];
 export const itemStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ItemStats"]["kind"]> = ["item"];
@@ -24956,6 +25462,8 @@ export const markerKindValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const memorialFormValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemorialForm"]> = ["monument", "epic", "lament", "tradition", "tale"];
 export const messageIntentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MessageIntent"]> = ["friendship", "alliance", "love", "threat", "mockery", "warning", "bargain", "prayer", "answer", "chat", "dream", "command"];
 export const miracleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Miracle"]> = ["healing", "bounty", "peace", "protection"];
+export const modifierOpValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ModifierOp"]> = ["add", "multiply"];
+export const modifierSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ModifierSource"]> = ["injury", "condition", "trait", "law", "tradition", "artwork", "doctrine", "treaty", "structure", "wonder", "terrain", "weather", "season", "natural_law", "god_power", "blessing", "curse", "dominion", "phenomenon", "god_death", "player", "suppression", "pin"];
 export const mortalRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalRole"]> = ["ruler", "hero", "warrior", "knight", "hunter", "chosen", "seer", "priest", "sage", "healer", "artisan", "merchant", "scribe", "farmer", "explorer", "captain", "bandit", "saint", "apprentice", "commoner"];
 export const mortalStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalStats"]["kind"]> = ["mortal"];
 export const mortalToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalToolId"]> = ["look_at_world", "inspect_entity", "search_entities", "found_language", "coin_words", "produce_item", "build_structure", "create_culture", "discover_resource", "claim_resource", "found_settlement", "establish_trade", "declare_war", "worship", "pray_to_creator", "develop_knowledge", "learn_knowledge", "diplomacy", "go_on_adventure", "find_route", "explore_land", "resurrection_rite", "build_ship", "launch_expedition", "tame_species", "weave_chimera", "bind_spirit", "search_ruins", "sabotage", "preach", "challenge_god", "deny_god", "prophesy", "escape", "pay_ransom", "rescue_captive", "raise_army", "appoint_commander", "build_spy_network", "barter", "lend", "repay_debt", "adopt"];
@@ -25022,6 +25530,7 @@ export const starTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["sc
 export const statValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Stat"]> = ["strength", "endurance", "agility", "wisdom", "cunning", "will", "creativity", "charisma", "might"];
 export const streamHelloEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StreamHelloEvent"]["kind"]> = ["stream.hello"];
 export const structureStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StructureStats"]["kind"]> = ["structure"];
+export const subsystemValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Subsystem"]> = ["core", "body", "mind", "social", "household", "demography", "economy", "polity", "law", "intrigue", "communication", "war", "faith", "magic", "knowledge", "culture", "language", "ecology", "environment", "gods", "cosmos"];
 export const summarySectionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SummarySection"]> = ["pantheon", "threads", "events", "cosmos", "geography", "languages", "map", "legends"];
 export const systemErrorEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SystemErrorEvent"]["kind"]> = ["system.error"];
 export const systemNoteEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SystemNoteEvent"]["kind"]> = ["system.note"];

@@ -11,6 +11,7 @@ from aerona.db.tables.lore import ChronicleRow
 from aerona.domain.enums.epoch import EngineStage, EpochPhase
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.engine.context import TickContext, TickEnvironment
+from aerona.engine.interconnect.guards import run_guarded
 from aerona.engine.notes import fold_tick_lines, last_chronicle_id
 from aerona.engine.phase import Phase
 from aerona.engine.pipeline import DISABLED_COUNTER, FAILED_COUNTER, TICK_ORDER, EnginePhaseError, current_environment, disabled_by_rules
@@ -51,7 +52,7 @@ async def run_engine_phase(ec: EpochContext, stage: EngineStage, phase: Phase, e
     started = time.perf_counter()
     try:
         async with ec.database.write() as session:
-            await phase.run(TickContext(environment, session, phase.name))
+            await run_guarded(phase, TickContext(environment, session, phase.name))
             await mark_engine_phase(session, ec.epoch, stage, phase.name, time.perf_counter() - started)
     except AeronaError:
         raise

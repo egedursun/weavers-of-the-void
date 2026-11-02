@@ -35,6 +35,7 @@ import { EntityDreams } from './sections/EntityDreams'
 import { EntityEditForm } from './sections/EntityEditForm'
 import { EntityHero } from './sections/EntityHero'
 import { EntityImages } from './sections/EntityImages'
+import { EntityMechanics } from './sections/EntityMechanics'
 import { EntityNote } from './sections/EntityNote'
 import { EntityOpportunities } from './sections/EntityOpportunities'
 import { EntityRecords } from './sections/EntityRecords'
@@ -63,6 +64,7 @@ const SECTION_LINKS = [
   { id: 'section-path', label: 'Connections' },
   { id: 'section-images', label: 'Images' },
   { id: 'section-chronicle', label: 'Chronicle' },
+  { id: 'section-mechanics', label: 'Mechanics' },
   { id: 'section-edit', label: 'Edit' },
 ]
 
@@ -211,6 +213,11 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         entityId={entity.id}
         total={detail.chronicle_total}
         highlightEpoch={highlight}
+      />
+      <EntityMechanics
+        nodeId={entity.id}
+        statKeys={Object.keys(entity.stats).filter((key) => key !== 'kind')}
+        readOnlyReason={readOnly}
       />
       <EntityEditForm
         key={`${entity.id}-${entity.name}-${entity.description.length}`}

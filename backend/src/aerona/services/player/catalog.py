@@ -34,6 +34,7 @@ from aerona.services.player import (
     knowledge,
     language_contact,
     languages,
+    levers,
     life_cycles,
     living_stats,
     market,
@@ -965,6 +966,27 @@ LIFE_CYCLE_ACTIONS = (
     _sync(Meta("place:swallow", "Let the earth swallow a place", G.WORLDS), life_cycles.swallow_place, life_cycles.PlaceTarget, end_cost_text, ()),
 )
 
+MECHANIC_ACTIONS = (
+    _sync(Meta("lever:pin", "Pin a field so that no mechanic can change it", G.SETTINGS), levers.pin_field, levers.PinField, free, ("J.16c",)),
+    _sync(Meta("lever:unpin", "Release a pinned field", G.SETTINGS), levers.unpin_field, levers.UnpinField, free, ("J.16c",)),
+    _sync(
+        Meta("lever:suppress", "Suppress a mechanic on a record for some epochs", G.SETTINGS),
+        levers.suppress_mechanic,
+        levers.SuppressMechanic,
+        free,
+        ("J.16c",),
+    ),
+    _sync(
+        Meta("lever:unsuppress", "Let a suppressed mechanic act again", G.SETTINGS),
+        levers.unsuppress_mechanic,
+        levers.UnsuppressMechanic,
+        free,
+        ("J.16c",),
+    ),
+    _sync(Meta("lever:run", "Run a mechanic now", G.SETTINGS), levers.run_mechanic, levers.RunMechanic, free, ("J.16c",)),
+    _sync(Meta("modifier:add", "Add a modifier to a record", G.SETTINGS), levers.add_player_modifier, levers.AddModifier, free, ("F9", "J.16c")),
+    _sync(Meta("modifier:remove", "Remove a modifier", G.SETTINGS), levers.remove_player_modifier, levers.RemoveModifier, free, ("F9", "J.16c")),
+)
 ACTIONS: tuple[ActionSpec, ...] = (
     *CREATOR_ACTIONS,
     *SON_ACTIONS,
@@ -997,6 +1019,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *ENGINE_CONTROL_ACTIONS,
     *FATE_ACTIONS,
     *LIFE_CYCLE_ACTIONS,
+    *MECHANIC_ACTIONS,
 )
 ACTIONS_BY_ID: dict[str, ActionSpec] = {spec.id: spec for spec in ACTIONS}
 

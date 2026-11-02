@@ -3,6 +3,7 @@ from aerona.constants.engine import UNBOUNDED_STAT
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityType
+from aerona.engine.interconnect.guards import blocked
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.rules.registry import Rules
 
@@ -27,7 +28,7 @@ def stat_or(entity: EntityRow, key: str, default: int) -> int:
 
 
 def set_stats(entity: EntityRow, **values: int | None) -> bool:
-    update = {key: value for key, value in values.items() if has_stat(entity, key) and getattr(entity.stats, key) != value}
+    update = {key: value for key, value in values.items() if has_stat(entity, key) and getattr(entity.stats, key) != value and not blocked(entity.id, key)}
     if not update:
         return False
     entity.stats = entity.stats.model_copy(update=update)

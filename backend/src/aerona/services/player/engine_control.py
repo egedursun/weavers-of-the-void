@@ -2,6 +2,7 @@ from aerona.constants.engine import UNRUNNABLE_PHASES
 from aerona.core.errors import ValidationFailedError
 from aerona.domain.enums.action import ActionKind
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.guards import run_guarded
 from aerona.engine.pipeline import find_phase
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -25,7 +26,7 @@ async def run_phase(scope: PlayerScope, command: RunPhase) -> Effect:
     phase = find_phase(command.phase)
     manual = await scope.context(f"phase.{phase.name}")
     ctx = TickContext(manual.environment, scope.session, phase.name) if command.replay else manual
-    await phase.run(ctx)
+    await run_guarded(phase, ctx)
     prefix = f"{ctx.phase}."
     counters = {name.removeprefix(prefix): value for name, value in ctx.environment.stats.counters.items() if value}
     detail = summarize(counters)

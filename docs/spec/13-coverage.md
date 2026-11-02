@@ -351,7 +351,7 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | F6/RP2 | reference-pass | learning, rust and teaching | §F6 reference pass 2 | — | — | — | — | — | — | — | — | planned |
 | F7 | foundation | Opinions and memory | §F7 | — | — | — | — | — | — | — | — | planned |
 | F8 | foundation | Needs and pressures | §F8 | — | — | — | — | — | — | — | — | planned |
-| F9 | foundation | Modifier bus (the backbone of interconnection) | §F9 | db/tables/interconnect.py ModifierRow; engine/primitives/modifiers.py (ModifierIndex, combine, add/remove); engine/phases/interconnect.py | cleanup stage: modifier_upkeep (expiry, decay) | — | — | — | — | — | tests/engine/interconnect/test_modifiers_and_incidents.py | in-progress |
+| F9 | foundation | Modifier bus (the backbone of interconnection) | §F9 | db/tables/interconnect.py ModifierRow; engine/primitives/modifiers.py (ModifierIndex, combine, add/remove); engine/phases/interconnect.py | cleanup stage: modifier_upkeep (expiry, decay) | modifier:add, modifier:remove, lever:pin | section-mechanics (effective values, modifiers) | — | — | — | tests/engine/interconnect/test_modifiers_and_incidents.py | in-progress |
 | F10 | foundation | Causality log (`incidents`) | §F10 | db/tables/interconnect.py IncidentRow, IncidentParticipantRow; db/repositories/chronicle.py (every chronicle line records an incident); engine/context.py (cause, place, magnitude) | every chronicle write | — | — | — | — | migration 26caa21842b3: incidents and participants from existing chronicle rows | tests/engine/interconnect/test_modifiers_and_incidents.py | in-progress |
 | F10/RP2 | reference-pass | event collections | §F10 reference pass 2 | — | — | — | — | — | — | — | — | planned |
 | F11 | foundation | Information and rumour | §F11 | — | — | — | — | — | — | — | — | planned |
@@ -610,7 +610,7 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | S10.8/RP4 | reference-pass | R34 | §10.8 reference pass 4 | — | — | — | — | — | — | — | — | planned |
 | S10.9 | section | Cosmic physics (derived, second pass) | §10.9 | — | — | — | — | — | — | — | — | planned |
 | S10.9/RP3 | reference-pass | R12 | §10.9 reference pass 3 | — | — | — | — | — | — | — | — | planned |
-| I.1 | deliverable | Interconnection registry | §I.1 | — | — | — | — | — | — | — | — | planned |
+| I.1 | deliverable | Interconnection registry | §I.1 | engine/interconnect/registry.py (Mechanic, Coupling, Subsystem) | — | — | — | — | — | — | tests/unit/test_mechanic_compliance.py | in-progress |
 | I.2 | deliverable | Subsystem matrix (rows affect columns) | §I.2 | — | — | — | — | — | — | — | — | planned |
 | I.3 | deliverable | Feedback loops catalogue | §I.3 | — | — | — | — | — | — | — | — | planned |
 | L1 | loop | War casualties → maimed cohort → visible weariness → peace pressure → fewer wars | Part I | — | — | — | — | — | — | — | — | planned |
@@ -804,7 +804,7 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | W40 | wave | F49 transformation graph (all new transformations) with the transformation registry in the compliance test | Part J | — | — | — | — | — | — | — | — | planned |
 | W41 | wave | B1 couplings: sign languages, sociolects, rite components, carrion pulses, the heritable gift, ecosabotage, conditions o | Part J | — | — | — | — | — | — | — | — | planned |
 | J.16b | deliverable | Compliance catalogue, ninth-pass rows | §J.16b | — | — | — | — | — | — | — | — | planned |
-| J.16c | deliverable | Generic lever and surface layer (the compliance guarantee by construction) | §J.16c | — | — | — | — | — | — | — | — | planned |
+| J.16c | deliverable | Generic lever and surface layer (the compliance guarantee by construction) | §J.16c | engine/interconnect/registry.py, catalog.py (108 mechanics: 3 new + every existing engine step), guards.py (pins and suppressions enforced in set_stats during engine steps); services/player/levers.py; api/routers/mechanics.py | every engine step runs guarded | lever:pin, lever:unpin, lever:suppress, lever:unsuppress, lever:run, modifier:add, modifier:remove | frontend entity drawer: section-mechanics (EntityMechanics.tsx) | — | — | — | tests/unit/test_mechanic_compliance.py; tests/engine/interconnect/test_guards.py | in-progress |
 | J.19 | deliverable | Completion contract (decision K.16) | §J.19 | — | — | — | — | — | — | — | — | planned |
 | K.1 | decision | Sub-epoch time | Part K | — | — | — | — | — | — | — | — | planned |
 | K.2 | decision | Existing worlds | Part K | — | — | — | — | — | — | — | — | planned |

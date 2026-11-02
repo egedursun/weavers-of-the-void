@@ -13,6 +13,7 @@ from aerona.db.session import Database
 from aerona.domain.enums.epoch import EpochPhase
 from aerona.engine import records, snapshot, transition
 from aerona.engine.context import Publisher, TickContext, TickEnvironment, phase_window
+from aerona.engine.interconnect.guards import run_guarded
 from aerona.engine.notes import FoldResult, fold_tick_lines, last_chronicle_id
 from aerona.engine.phase import Phase
 from aerona.engine.phases import (
@@ -332,7 +333,7 @@ async def run_phase(environment: TickEnvironment, database: Database, phase: Pha
     started = time.perf_counter()
     try:
         async with database.write() as session:
-            await phase.run(TickContext(environment, session, phase.name))
+            await run_guarded(phase, TickContext(environment, session, phase.name))
     except AeronaError:
         raise
     except Exception as error:
