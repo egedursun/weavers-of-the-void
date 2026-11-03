@@ -14,7 +14,7 @@ from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.models.entity_stats import EntityStats
 from aerona.engine.interconnect.catalog import REGISTERED
-from aerona.engine.interconnect.edges import all_edges, mechanic_reads, mechanic_writes
+from aerona.engine.interconnect.edges import GENERIC_CARRIERS, all_edges, mechanic_reads, mechanic_writes
 from aerona.engine.interconnect.registry import EdgeKind
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -22,7 +22,6 @@ OUTPUT = ROOT / "docs" / "spec" / "13-depth-metric.md"
 SPEC = ROOT / "docs" / "spec" / "13-depth-expansion.md"
 STAT_MODELS = {model.model_fields["kind"].default: model for model in get_args(get_args(EntityStats)[0])}
 NODE_TABLES = {"son": SonRow, "creator": CreatorRow, "foreign_god": ForeignGodRow, "war": WarRow, "world": WorldRow, "star": StarRow, "route": RouteRow}
-GENERIC_CARRIERS = frozenset({"table.entities", "table.bonds", "table.entity_flags", "table.entity_traits"})
 TARGET_ROW = re.compile(r"^\| (?P<name>[a-z_ ]+?)(?: \(new\))? \| (?P<a>[^|]*) \| (?P<b>[^|]*) \| (?P<c>[^|]*) \|$")
 TARGET_NUMBER = re.compile(r"→\s*~?(\d+)")
 TARGET_COLUMNS = 3

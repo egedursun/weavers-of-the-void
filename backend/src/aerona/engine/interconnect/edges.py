@@ -10,6 +10,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.pipeline import all_phases
 
 WONDER_KEYS = ("prosperity", "piety")
+GENERIC_CARRIERS = frozenset({"table.entities", "table.bonds", "table.entity_flags", "table.entity_traits"})
 INFRASTRUCTURE = frozenset(
     {
         "table.chronicle",
