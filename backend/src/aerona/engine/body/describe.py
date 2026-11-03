@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.body_plans import PLANS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.entities import EntityRow
@@ -69,6 +70,11 @@ def weakened(body: BodyRow, rules: Rules) -> list[str]:
     return [f"{CAPACITY_TEXT[capacity]} {getattr(body, capacity.value)}%" for capacity in Capacity if getattr(body, capacity.value) <= floor]
 
 
+def frame_line(body: BodyRow) -> str:
+    spec = PLANS[body.plan]
+    return f"Body: {body.plan.value.replace('_', ' ')} ({spec.label}), {body.height_class.value} and {body.build.value} of build"
+
+
 async def _bearer_lines(session: AsyncSession, rules: Rules, body: BodyRow, bearer_id: int, *, private: bool) -> list[str]:
     anatomy = anatomy_for(body)
     injuries = list(await session.scalars(select(InjuryRow).where(InjuryRow.bearer_node_id == bearer_id, InjuryRow.state != InjuryState.LETHAL)))
@@ -123,7 +129,8 @@ async def _community_lines(session: AsyncSession, rules: Rules, community: Entit
 
 async def body_lines(session: AsyncSession, rules: Rules, bearer: Bearer, *, private: bool = False) -> list[str]:
     body = await session.get(BodyRow, bearer.id)
-    lines = await _bearer_lines(session, rules, body, bearer.id, private=private) if body is not None else []
+    lines = [frame_line(body)] if body is not None else []
+    lines += await _bearer_lines(session, rules, body, bearer.id, private=private) if body is not None else []
     if isinstance(bearer, EntityRow) and bearer.entity_type in {EntityType.SETTLEMENT, EntityType.PEOPLE}:
         lines += await _community_lines(session, rules, bearer)
     return lines

@@ -14,11 +14,11 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.son import PowerEffect, SonDeathCause, SonStatus
+from aerona.domain.enums.war import WarCause
 from aerona.engine.body.book import effective
 from aerona.engine.body.hits import Harm
 from aerona.engine.gods.god_death import god_death
-from aerona.engine.lifecycle.mortal_death import die
-from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.lifecycle.wounds import apply_hits, slay
 from aerona.engine.primitives.faith import has_unlocked_power
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.services.community_relations import change_relation
@@ -64,7 +64,7 @@ async def _seize(call: MortalCall, item: EntityRow, goal: str) -> str:
             await bonds.deactivate(bond, call.epoch, lines.SEIZE_BOND.format(goal=goal)[:KEY_MAX_LENGTH])
         await bonds.connect(BondDraft(call.me.id, item.id, BondKind.OWNS, call.epoch, lines.SEIZE_BOND.format(goal=goal)))
         if owner is not None:
-            await bonds.connect(BondDraft(owner.id, call.me.id, BondKind.ENEMY, call.epoch, lines.STOLEN.format(item=item.name)))
+            await bonds.connect(BondDraft(owner.id, call.me.id, BondKind.ENEMY, call.epoch, lines.STOLEN.format(item=item.name), war_cause=WarCause.GRUDGE))
         holder = lines.ITEM_OWNER.format(owner=owner.name) if owner is not None else ""
         await call.chronicle(ChronicleKind.ADVENTURE, lines.SEIZED, entity_ids=[call.me.id, item.id], me=call.me.name, item=item.name, owner=holder, goal=goal)
         return result(MortalResult.ITEM_SEIZED, name=item.name, mine=mine, theirs=theirs)
@@ -125,7 +125,9 @@ async def _wound_god(call: MortalCall, son: SonRow, args: DefyInput, mine: int, 
     set_stats(call.me, charisma=min(PERCENT, stat_or(call.me, "charisma", 0) + tools.god_wounder_charisma))
     title = lines.WOUNDER_TITLE.format(son=son.name)
     call.me.title = title
-    await BondRepository(call.session).connect(BondDraft(son.id, call.me.id, BondKind.ENEMY, call.epoch, lines.DEFEAT_BOND.format(reason=args.reason)))
+    await BondRepository(call.session).connect(
+        BondDraft(son.id, call.me.id, BondKind.ENEMY, call.epoch, lines.DEFEAT_BOND.format(reason=args.reason), war_cause=WarCause.DIVINE_GRUDGE)
+    )
     await call.chronicle(
         ChronicleKind.WAR_OF_GODS,
         lines.GOD_WOUNDED,
@@ -143,7 +145,12 @@ async def _wound_god(call: MortalCall, son: SonRow, args: DefyInput, mine: int, 
 async def _defeated(call: MortalCall, son: SonRow, args: DefyInput, mine: int, theirs: int) -> str:
     tools = call.rules.mortal_tools
     if call.die(PERCENT, "defiance_death") <= tools.defy_god_death_chance:
-        await die(call.tick, call.me, cause=lines.DEFIANCE_DEATH.format(epoch=call.epoch, son=son.name), killer_id=son.id)
+        await slay(
+            call.tick,
+            call.me,
+            Harm(call.rules.casualties.wound_hp, HarmCause.GOD, lines.DEFIANCE_DEATH.format(epoch=call.epoch, son=son.name), killer_id=son.id),
+            forced=False,
+        )
         son.fame += tools.god_crush_renown
         call.died = True
         await call.chronicle(

@@ -1,6 +1,8 @@
 from sqlalchemy import select
 
-from aerona.catalog.mind import MEMORIES
+from aerona.catalog.mind import MELEE_SKILLS, MEMORIES
+from aerona.constants.units import PERCENT
+from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
@@ -8,39 +10,54 @@ from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import MemoryRow, MindRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
-from aerona.domain.enums.mind import CareerChange, MemoryKind, TraitEffect, ValueHolder
+from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.mind import ActKind, CareerChange, MemoryKind, PressureKind, TraitEffect, ValueHolder
+from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import HeroQuestKind
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.aging import is_notable
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import (
     Holder,
     ValueIndex,
     ensure_mind_row,
     holder_kind,
     living_minds,
+    pressures_of,
     scaled_by,
     trait_effect,
     traits_of,
+    values_for,
     write_values,
 )
+from aerona.engine.mind.depth import apply_depth, backfill_depth
+from aerona.engine.mind.hooks import FIGHTING_ROLES
 from aerona.engine.mind.memories import forget_faded, kin_of, remember, strength_of
 from aerona.engine.mind.needs import update_needs, update_pressures
 from aerona.engine.mind.opinion import OpinionContext
-from aerona.engine.mind.skills import choose_career, seed_skills, teach_apprentices, weather_skills
+from aerona.engine.mind.skills import choose_career, left_to_beg, practise_any, seed_skills, teach_apprentices, weather_skills
+from aerona.engine.mind.space import value_reading
 from aerona.engine.mind.traits import seed_traits
-from aerona.engine.mind.values import drift_culture, drift_person, seed_values
+from aerona.engine.mind.values import drift_body, drift_culture, drift_person, seed_values
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.heroes import active_quest, start_quest
 from aerona.engine.phases.remembrance import disaster_toll
 from aerona.engine.phases.society_support.quests import QuestOption
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import seed_of
-from aerona.engine.primitives.queries import active_bonds
-from aerona.engine.services.community_relations import lend_settlement_values, refresh_relations
+from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.queries import active_bonds, canon, living_entity
+from aerona.engine.primitives.society import set_stock, stock
+from aerona.engine.services.community_relations import change_relation, lend_settlement_values, refresh_relations
+from aerona.engine.services.war import ongoing_wars
 
 HISTORY_FIXUP = "mind.relation_history"
+AID_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.PEOPLE})
+BEGGAR_TAG = "beggar"
 HISTORY_NOTE = "the weight of older history"
 VENGEFUL_MEMORIES = (MemoryKind.KILLED_KIN, MemoryKind.MAIMED_ME)
 SEED_ORDER = (EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.CULT, EntityType.FACTION, EntityType.MORTAL)
@@ -57,6 +74,8 @@ async def seed_mind(ctx: TickContext, node: Holder) -> bool:
     if kind is ValueHolder.PERSONAL or divine:
         culture_hint = await seed_values(ctx.session, ctx.rules, node, rng) or {}
         await seed_traits(ctx.session, ctx.rules, node.id, culture_hint, rng=rng, epoch=ctx.epoch, divine=divine)
+        if isinstance(node, EntityRow) and node.entity_type is EntityType.MORTAL:
+            await apply_depth(ctx.session, ctx.rules, node, ctx.epoch, shift_values=False)
     values = await seed_values(ctx.session, ctx.rules, node, rng)
     if values is not None and kind is not None and kind is not ValueHolder.COMMUNITY:
         await write_values(ctx.session, kind, node.id, values)
@@ -142,6 +161,7 @@ async def mind_survey(ctx: TickContext) -> None:
         if god.id not in known and await seed_mind(ctx, god):
             created += 1
     ctx.count("minds", created)
+    ctx.count("depth_traits", await backfill_depth(ctx.session, ctx.rules, [entity for entity in minds if entity.entity_type is EntityType.MORTAL], ctx.epoch))
     settled = await settle_history(ctx)
     ctx.count("histories_settled", settled)
     if created or settled:
@@ -201,17 +221,36 @@ async def mind_values(ctx: TickContext) -> None:
             moved += 1 if await drift_culture(ctx, entity, index, plagued) else 0
         elif entity.entity_type is EntityType.MORTAL:
             moved += 1 if await drift_person(ctx, entity, index, await traits_of(ctx.session, entity.id)) else 0
+        elif entity.entity_type in (EntityType.FACTION, EntityType.CULT):
+            moved += 1 if await drift_body(ctx, entity, index) else 0
     ctx.count("values_drifted", moved)
+
+
+async def spar(ctx: TickContext, fighter: EntityRow) -> bool:
+    if fighter.mortal_role not in FIGHTING_ROLES or await at_war(ctx, fighter):
+        return False
+    skills = ctx.rules.skills
+    await practise_any(ctx.session, ctx.rules, fighter.id, MELEE_SKILLS, skills.spar_xp, epoch=ctx.epoch)
+    if not ctx.rng(f"spar.{fighter.id}").chance(skills.spar_injury_chance):
+        return False
+    await apply_hits(ctx, fighter, Harm(skills.spar_hp, HarmCause.ACCIDENT, "hurt while sparring", severity=1), lethal=False)
+    return True
+
+
+async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
+    home = fighter.location_id
+    return home is not None and bool(await ongoing_wars(ctx.session, home))
 
 
 async def mind_skills(ctx: TickContext) -> None:
     ctx.count("lessons", await teach_apprentices(ctx))
     index = await ValueIndex.load(ctx.session)
-    rusted = changed = 0
+    rusted = changed = sparred = 0
     for mortal in await living_minds(ctx.session):
         if mortal.entity_type is not EntityType.MORTAL:
             continue
         rusted += await weather_skills(ctx, mortal)
+        sparred += 1 if await spar(ctx, mortal) else 0
         move = await choose_career(ctx, mortal, index.of(mortal.id))
         if move is None:
             continue
@@ -221,6 +260,9 @@ async def mind_skills(ctx: TickContext) -> None:
             mind = await ctx.session.get(MindRow, mortal.id)
             if mind is not None:
                 mind.career_ended_epoch = ctx.epoch
+            if move.new is MortalRole.COMMONER and await left_to_beg(ctx, mortal):
+                await EntityRepository(ctx.session).add_tags(mortal.id, [BEGGAR_TAG])
+                await note(ctx, f"With no calling left and no one to keep them, {mortal.name} begs at the gates.", key="skill.career_beggar", ids=[mortal.id])
         if is_notable(ctx.rules, mortal, await EntityRepository(ctx.session).flags(mortal.id)):
             text = (
                 f"{mortal.name} could no longer live as a {move.old.value} and became a {move.new.value}."
@@ -230,6 +272,7 @@ async def mind_skills(ctx: TickContext) -> None:
             await note(ctx, text, key=f"skill.career_{move.reason.value}", ids=[mortal.id])
     await ctx.session.flush()
     ctx.count("skills_rusted", rusted)
+    ctx.count("sparring_wounds", sparred)
     ctx.count("careers_changed", changed)
 
 
@@ -285,11 +328,65 @@ async def mind_opinion(ctx: TickContext) -> None:
 
 
 SURVEY_PHASES = (Phase("mind_survey", mind_survey),)
+
+
+async def famine_aid(ctx: TickContext) -> None:
+    table = ctx.rules.needs
+    atlas = await RegionAtlas.load(ctx.session)
+    rng = ctx.rng("famine_aid")
+    given = 0
+    hungry = [
+        community
+        for community in await canon(ctx.session, list(AID_TYPES))
+        if (await pressures_of(ctx.session, community.id)).get(PressureKind.HUNGER, 0) >= table.famine_aid_hunger
+    ]
+    for community in hungry:
+        donor = await best_donor(ctx, atlas, community)
+        if donor is None:
+            continue
+        kindness = max(0.0, 1 + value_reading(await values_for(ctx.session, donor.id), ActKind.HOSPITALITY) / PERCENT)
+        if not rng.chance(table.famine_aid_chance * kindness):
+            continue
+        store = await stock(ctx.session, ctx.rules, donor.id, Commodity.FOOD)
+        sent = round_half_up(store * table.famine_aid_share_pct / PERCENT)
+        if sent <= 0:
+            continue
+        await set_stock(ctx.session, donor.id, Commodity.FOOD, store - sent)
+        await set_stock(ctx.session, community.id, Commodity.FOOD, await stock(ctx.session, ctx.rules, community.id, Commodity.FOOD) + sent)
+        await change_relation(
+            ctx, community.id, donor.id, table.famine_aid_relation, MemoryKind.FAMINE_AID, note="grain in the hungry year", reverse=MemoryKind.GOODWILL
+        )
+        await note(ctx, f"{donor.name} sent {sent} loads of grain to starving {community.name}.", key="mind.famine_aid", ids=[donor.id, community.id])
+        given += 1
+    ctx.count("famine_aid", given)
+
+
+async def best_donor(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) -> EntityRow | None:
+    table = ctx.rules.needs
+    home = atlas.top_region(community.id)
+    if home is None:
+        return None
+    nearby = {home, *atlas.neighbour_regions(home)}
+    best: tuple[int, EntityRow] | None = None
+    for region_id in sorted(nearby):
+        for other_id in atlas.communities_in(region_id):
+            other = await living_entity(ctx.session, other_id)
+            if other is None or other.id == community.id or other.entity_type not in AID_TYPES:
+                continue
+            if await BondRepository(ctx.session).exists_between(community.id, other.id, BondKind.ENEMY):
+                continue
+            store = await stock(ctx.session, ctx.rules, other.id, Commodity.FOOD)
+            if store >= table.famine_aid_min_food and (best is None or store > best[0]):
+                best = (store, other)
+    return best[1] if best is not None else None
+
+
 MIND_PHASES = (
     Phase("mind_values", mind_values),
     Phase("mind_skills", mind_skills),
     Phase("mind_memories", mind_memories),
     Phase("mind_needs", mind_needs),
+    Phase("famine_aid", famine_aid),
     Phase("mind_opinion", mind_opinion),
 )
 PHASES = (*SURVEY_PHASES, *MIND_PHASES)

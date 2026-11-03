@@ -10,6 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityType, MortalRole
+from aerona.domain.enums.mind import TraitEffect
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import MortalStats, PeopleStats, SettlementStats
 from aerona.engine.body.book import factor
@@ -17,6 +18,7 @@ from aerona.engine.body.cohorts import healer_demand
 from aerona.engine.body.hits import weighted
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.ruler_roles import ruler_role
+from aerona.engine.mind.book import effect_of, scaled_by
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.settlements import resettle_ruin
@@ -718,6 +720,8 @@ async def couples_bear_children(ctx: TickContext) -> None:
         if first is None or second is None or first.entity_type is not EntityType.MORTAL or second.entity_type is not EntityType.MORTAL:
             continue
         fertile = await factor(ctx.session, first.id, Capacity.FERTILITY) * await factor(ctx.session, second.id, Capacity.FERTILITY)
+        for parent in (first, second):
+            fertile *= scaled_by(await effect_of(ctx.session, parent.id, TraitEffect.FERTILITY, rules.traits.effect_scale_pct))
         if not rng.chance(rules.world_engine.birth_chance * fertile):
             continue
         await bear_child(ctx, first, second, namer)

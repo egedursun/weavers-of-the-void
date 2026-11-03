@@ -8,11 +8,12 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.war import CaptiveStatus
+from aerona.domain.enums.mind import ActKind, MemoryKind
+from aerona.domain.enums.war import CaptiveStatus, WarCause
 from aerona.engine.body.book import effective, factor
 from aerona.engine.body.hits import Harm
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.mind.hooks import judged
 from aerona.engine.primitives.faith import patron_son
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
@@ -93,6 +94,7 @@ async def pay_ransom(call: MortalCall, args: RansomInput) -> str:
         set_stats(captor, wealth=min(PERCENT, stat_or(captor, "wealth", 0) + tools.ransom_amount))
     await release_captive(call.tick, row, CaptiveStatus.RANSOMED, tools.ransom_amount)
     await change_relation(call.tick, call.me.id, captor.id, tools.ransom_relation, MemoryKind.FREED_US, note=RANSOM_EVENT)
+    await judged(call.tick, captor.id, call.me.id, ActKind.RANSOM, note=RANSOM_EVENT)
     call.target(captive.id)
     await call.chronicle(
         ChronicleKind.RANSOM, lines.RANSOMED, entity_ids=[call.me.id, captor.id, captive.id], me=call.me.name, captor=captor.name, captive=captive.name
@@ -129,7 +131,9 @@ async def rescue_captive(call: MortalCall, args: RescueInput) -> str:
         )
         return result(MortalResult.RESCUED, name=captive.name, mine=mine, theirs=theirs)
     if not await enemies(call, call.me.id, captor.id):
-        await BondRepository(call.session).connect(BondDraft(captor.id, call.me.id, BondKind.ENEMY, call.epoch, lines.RAID_BOND.format(captive=captive.name)))
+        await BondRepository(call.session).connect(
+            BondDraft(captor.id, call.me.id, BondKind.ENEMY, call.epoch, lines.RAID_BOND.format(captive=captive.name), war_cause=WarCause.GRUDGE)
+        )
     await call.chronicle(
         ChronicleKind.RESCUE, lines.RESCUE_FAILED, entity_ids=[call.me.id, captive.id, captor.id], me=call.me.name, captive=captive.name, captor=captor.name
     )

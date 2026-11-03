@@ -7,6 +7,7 @@ from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.engine.body.book import Bearer
 from aerona.engine.body.state import refresh
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.mind.book import mind_of
 from aerona.engine.mind.traits import condition_trait
@@ -59,6 +60,9 @@ async def _announce(ctx: TickContext, bearer: Bearer, phrase: str, kind: Conditi
     await note(ctx, f"{bearer.name} {phrase}.", key=f"condition.{verb}.{kind.value}", ids=[bearer.id])
 
 
+CONDITION_KEY = "conditions"
+
+
 async def gain_condition(
     ctx: TickContext,
     bearer: Bearer,
@@ -71,6 +75,8 @@ async def gain_condition(
     source_node_id: int | None = None,
     announce: bool = True,
 ) -> ConditionRow | None:
+    if blocked(bearer.id, CONDITION_KEY):
+        return None
     if chance is not None and not ctx.rng(seed_of("condition", bearer.id, kind.value)).chance(chance):
         return None
     existing = await condition_of(ctx, bearer.id, kind)

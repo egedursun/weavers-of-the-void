@@ -280,6 +280,46 @@ async def note_shift(ctx: TickContext, community: EntityRow, before: Values, aft
             await note(ctx, f"{community.name} turned toward {low.lower()}.", key="culture.shift", ids=[community.id])
 
 
+async def member_mean(ctx: TickContext, index: ValueIndex, body_id: int) -> Values | None:
+    vectors = []
+    for bond in await active_bonds(ctx.session, [BondKind.MEMBER_OF, BondKind.RULES, BondKind.WORSHIPS], targets=[body_id]):
+        found = index.of(bond.source_node_id)
+        if found:
+            vectors.append(found)
+    for bond in await active_bonds(ctx.session, [BondKind.RULES], sources=[body_id]):
+        found = index.of(bond.target_node_id)
+        if found:
+            vectors.append(found)
+    if not vectors:
+        return None
+    return {axis: round(sum(vector.get(axis, 0) for vector in vectors) / len(vectors)) for axis in ValueAxis}
+
+
+async def drift_body(ctx: TickContext, body: EntityRow, index: ValueIndex) -> bool:
+    table = ctx.rules.culture_drift
+    holder = holder_kind(body)
+    mind = await mind_of(ctx.session, body.id)
+    current = index.of(body.id)
+    if holder not in (ValueHolder.AGENDA, ValueHolder.DOCTRINE) or mind is None or is_locked(mind, VALUE_LOCK) or not current:
+        return False
+    people = await people_of(ctx.session, body)
+    culture = index.of(people.id) if people is not None else {}
+    members = await member_mean(ctx, index, body.id)
+    target: dict[ValueAxis, float] = dict(current)
+    if culture:
+        pull_toward(target, current, culture, PERCENT - table.leader_weight_pct)
+    if members:
+        pull_toward(target, current, members, table.leader_weight_pct)
+    rate = table.agenda_drift_pct if holder is ValueHolder.AGENDA else table.doctrine_drift_pct
+    moved = blend(current, {axis: round(value) for axis, value in target.items()}, rate)
+    if moved == current:
+        return False
+    await write_values(ctx.session, holder, body.id, moved)
+    index.vectors[body.id] = moved
+    await note_shift(ctx, body, current, moved)
+    return True
+
+
 async def drift_person(ctx: TickContext, mortal: EntityRow, index: ValueIndex, traits: set[TraitKind]) -> bool:
     table = ctx.rules.culture_drift
     mind = await mind_of(ctx.session, mortal.id)

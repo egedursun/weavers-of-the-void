@@ -128,6 +128,8 @@ def region_weights(rules: Rules, anatomy: Anatomy, style: StrikeStyle) -> dict[B
         StrikeStyle.LOW: {BodyRegion.LEGS: table.low_legs_pct},
     }[style]
     present = {part.region for part in anatomy.parts}
+    if style is StrikeStyle.WHOLE:
+        return {region: 1.0 for region in base if region in present}
     return {region: weight * lean.get(region, PERCENT) / PERCENT for region, weight in base.items() if region in present}
 
 

@@ -4,12 +4,13 @@ from sqlalchemy import select
 
 from aerona.agents.context.scope import Scope
 from aerona.cartography.model import RegionRecord
-from aerona.constants.agents import LARGE_REGION_RATIO, REGION_TERRAIN_SHOWN, SMALL_REGION_RATIO
+from aerona.constants.agents import LARGE_REGION_RATIO, SMALL_REGION_RATIO
 from aerona.db.tables.celestial import WorldMapRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import LandUse, RiverClass
+from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.ley import LeyWeb
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import GeographyLinesContext, RegionGeography
@@ -46,6 +47,17 @@ def environment_facts(rules: Rules, ground: RegionEnvironmentRow | None) -> dict
         "harvest": harvest,
         "use": land_words(ground),
     }
+
+
+CONTEXT_WEATHER_SLOT = "context"
+
+
+def weather_words(scope: Scope, book: EnvironmentBook, ground: RegionEnvironmentRow | None) -> str | None:
+    if ground is None:
+        return None
+    season = book.season_at(ground.world_id, scope.epoch)
+    weather = book.weather(scope.cosmos.rng_seed, scope.epoch, ground, season, CONTEXT_WEATHER_SLOT)
+    return f"{season.name.lower()}, {weather.label.lower()}" if season is not None else weather.label.lower()
 
 
 def size_label(size: int, mean: float) -> str:
@@ -90,6 +102,7 @@ async def geography_lines(scope: Scope, world_id: int | None) -> str:
     grounds = {row.entity_id: row for row in await scope.session.scalars(select(RegionEnvironmentRow).where(RegionEnvironmentRow.world_id == world_id))}
     web = await LeyWeb.load(scope.session)
     nexus = await nexus_names(scope, set(regions))
+    book = await EnvironmentBook.load(scope.session, scope.rules, scope.epoch)
     lines = [
         RegionGeography(
             id=record.id,
@@ -97,11 +110,12 @@ async def geography_lines(scope: Scope, world_id: int | None) -> str:
             elevation_label=record.elevation_class.value.replace("_", " "),
             coastal=record.coastal,
             size_label=size_label(record.size, mean),
-            terrain=[share.name for share in sorted(record.climate, key=lambda share: -share.share_pct)[:REGION_TERRAIN_SHOWN]],
+            terrain=[f"{share.share_pct}% {share.name}" for share in sorted(record.climate, key=lambda share: (-share.share_pct, share.name))],
             neighbours=[NamedRecord(id=item, name=regions[item].name) for item in record.neighbours if item in regions],
             **environment_facts(scope.rules, grounds.get(record.id)),
             ley=[NamedRecord(id=other, name=regions[other].name) for other in web.partners(record.id) if other in regions],
             nexus=nexus.get(record.id),
+            weather=weather_words(scope, book, grounds.get(record.id)),
         )
         for record in known
     ]

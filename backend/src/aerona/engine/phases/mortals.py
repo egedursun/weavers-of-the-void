@@ -1,16 +1,21 @@
 from dataclasses import dataclass
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.engine import MIN_AGING_MULTIPLIER
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.body import OPEN_INJURY_STATES, HarmCause, InjuryState
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.society import NaturalLaw
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.aging import effective_lifespan, immortal, medicine_regions
 from aerona.engine.lifecycle.mortal_death import die, world_year
+from aerona.engine.lifecycle.wounds import fatal_injury
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -29,12 +34,25 @@ async def mortal_flags(session: AsyncSession, mortal: EntityRow) -> set[EntityFl
     return await EntityRepository(session).flags(mortal.id)
 
 
+async def succumb(ctx: TickContext, mortal: EntityRow) -> None:
+    open_wounds = [
+        row
+        for row in await ctx.session.scalars(select(InjuryRow).where(InjuryRow.bearer_node_id == mortal.id).order_by(InjuryRow.severity.desc(), InjuryRow.id))
+        if row.state in OPEN_INJURY_STATES
+    ]
+    if open_wounds:
+        open_wounds[0].state = InjuryState.LETHAL
+    else:
+        await fatal_injury(ctx, mortal, Harm(ctx.rules.casualties.wound_hp, HarmCause.ACCIDENT, WOUND_DEATH))
+    await die(ctx, mortal, cause=WOUND_DEATH)
+
+
 async def mortal_wounds(ctx: TickContext) -> None:
     for mortal in await canon(ctx.session, [EntityType.MORTAL]):
         hp = stat(mortal, "hp")
         if hp is None or hp > 0 or immortal(await mortal_flags(ctx.session, mortal)):
             continue
-        await die(ctx, mortal, cause=WOUND_DEATH)
+        await succumb(ctx, mortal)
 
 
 def years_lived(ctx: TickContext, mortal: EntityRow) -> int:

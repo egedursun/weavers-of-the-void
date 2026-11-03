@@ -34,6 +34,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import TraitEffect, TraitKind
 from aerona.domain.enums.node import ActorKind
+from aerona.engine.body.book import bedridden
 from aerona.engine.gods.mortal_opportunities import mortal_opportunities
 from aerona.engine.mind.book import scaled_by, trait_effect
 from aerona.engine.phases.civilization import late_debts
@@ -86,7 +87,11 @@ async def candidates(session_scope: Scope) -> list[Candidate]:
         .where(EntityRow.status == EntityStatus.CANON, EntityRow.last_acted_epoch < epoch, EntityRow.entity_type.in_(AGENT_TYPES))
         .order_by(EntityRow.id)
     )
-    eligible = [row for row in rows if row.entity_type is not EntityType.SPECIES or intelligence(row) >= rules.mortal_agents.creature_min_intelligence]
+    eligible = [
+        row
+        for row in rows
+        if (row.entity_type is not EntityType.SPECIES or intelligence(row) >= rules.mortal_agents.creature_min_intelligence) and not bedridden(rules, row)
+    ]
     ids = [row.id for row in eligible]
     tags: dict[int, set[str]] = defaultdict(set)
     for entity_id, tag in await session_scope.session.execute(select(EntityTagRow.entity_id, EntityTagRow.tag).where(EntityTagRow.entity_id.in_(ids))):

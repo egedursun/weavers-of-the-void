@@ -4604,7 +4604,7 @@
     "OLUMLU_ARAC.ordu_en_az": "mortal_tools.army_min_soldiers",
     "OLUMLU_ARAC.ordu_guc_kat": "mortal_tools.army_strength_mult",
     "OLUMLU_ARAC.ordu_guc_varsayilan": "mortal_tools.army_default_strength",
-    "OLUMLU_ARAC.ordu_kayip": "mortal_tools.raise_army_population_pct",
+    "OLUMLU_ARAC.ordu_kayip": null,
     "OLUMLU_ARAC.ordu_metalurji": "mortal_tools.army_metallurgy_bonus",
     "OLUMLU_ARAC.ordu_moral": "mortal_tools.army_morale_base",
     "OLUMLU_ARAC.ordu_moral_zar": "mortal_tools.army_morale_die",
@@ -5438,6 +5438,7 @@
     "KRONIK_TEKRAR.ortak",
     "OLUMLU_ARAC.borc_iliski",
     "OLUMLU_ARAC.borc_ode_iliski",
+    "OLUMLU_ARAC.ordu_kayip",
     "OLUMLU_ARAC.tanri_varlik_varsayilan",
     "SUNUCU.varlik_anilan",
     "YABANCI.derin_kronik"

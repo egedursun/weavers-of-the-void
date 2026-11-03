@@ -58,7 +58,10 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "learner_ids": "Communities that first learn this knowledge (at most {{ rules.son_tools.knowledge_first_learners }})",
     },
     EntityType.REGION: {"water": "True if the region is a sea or ocean (water) rather than land; default false"},
-    EntityType.SPECIES: {"traits": "The creature's traits (at most {{ rules.son_tools.creature_max_traits }}): {{ creature_traits }}"},
+    EntityType.SPECIES: {
+        "traits": "The creature's traits (at most {{ rules.son_tools.creature_max_traits }}): {{ creature_traits }}",
+        "body_plan": "The creature's body: {{ body_plans }}; its wounds, armour and fighting follow this body",
+    },
     EntityType.VESSEL: {
         "target_world_id": "If the gate, bridge or ship connects to another world, that world's id: a route is opened",
         "vessel_kind": "What it is: {{ vessel_kinds | join(', ') }}; a gate, ship, mount or bridge opens the matching kind of road",
@@ -290,6 +293,18 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "Only gods of sky, storm, time, sun, moon, harvest, ice or plants can do it. {{ rules.son_tools.reorder_seasons_essence }} essence, "
         "{{ rules.son_tools.reorder_seasons_ap }} actions, {{ rules.son_tools.reorder_seasons_per_epoch }} per age.",
         {"world_id": "The world's id", "order": "The current positions of the world's seasons (see SEASONS in the world summary), in the new order"},
+    ),
+    T.SHAPE_WEATHER: ToolText(
+        "You hold a weather over a region: for the ages you name its sky does as you say, so harvests, battles, travel and disease follow your weather. "
+        "Only gods of sky, storm, time, sun, moon, harvest, ice or plants can do it. {{ rules.son_tools.shape_weather_essence }} essence per age, "
+        "{{ rules.son_tools.shape_weather_ap }} actions, {{ rules.son_tools.shape_weather_per_epoch }} per age, at most "
+        "{{ rules.son_tools.shape_weather_max_epochs }} ages at once.",
+        {
+            "region_id": "The region's id",
+            "weather": "The weather to hold (clear, rain, storm, snow, drought_wind, fog and the others of the weather list)",
+            "epochs": "How many ages it holds",
+            "reason": "Why you do it",
+        },
     ),
     T.DECLARE_HOLY_WORLD: ToolText(
         "You declare a world your holy world: in that world your name is invoked first. If it is another sibling's world, your relationship sours. Free, "

@@ -1,5 +1,5 @@
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from aerona.cartography.biomes import Biome
 from aerona.catalog.climate import climate_profile
@@ -174,6 +174,14 @@ MODE_SENSITIVITY: dict[MovementMode, Callable[[Rules], tuple[int, int, int, int,
 
 
 @dataclass(frozen=True)
+class Works:
+    roads: int = 0
+    bridges: int = 0
+    harbours: int = 0
+    irrigation: int = 0
+
+
+@dataclass(frozen=True)
 class Surroundings:
     world_type: WorldType
     era: ClimateEra | None
@@ -182,6 +190,7 @@ class Surroundings:
     ruins: int = 0
     chokepoints: int = 0
     star_heat: int = 0
+    works: Works = field(default_factory=Works)
 
 
 @dataclass(frozen=True)
@@ -200,12 +209,24 @@ def share(biome_mix: list[int], *biomes: Biome) -> int:
     return sum(biome_mix[biome] for biome in biomes if biome < len(biome_mix))
 
 
+TERMINATOR = PERCENT // 2
+
+
+def band_heat(rules: Rules, geography: Geography, world_type: WorldType) -> float:
+    settings = rules.environment
+    if world_type is not WorldType.TIDALLY_LOCKED:
+        return -geography.latitude * settings.latitude_cooling_pct / PERCENT
+    if geography.latitude <= TERMINATOR:
+        return (TERMINATOR - geography.latitude) / TERMINATOR * settings.locked_day_heat
+    return -(geography.latitude - TERMINATOR) / TERMINATOR * settings.locked_night_cold
+
+
 def temperature_of(rules: Rules, geography: Geography, around: Surroundings) -> int:
     settings = rules.environment
     value = (
         WORLD_TEMPERATURE[around.world_type](rules)
         + around.star_heat
-        - geography.latitude * settings.latitude_cooling_pct / PERCENT
+        + band_heat(rules, geography, around.world_type)
         - geography.elevation_mean * settings.elevation_cooling_pct / PERCENT
     )
     if around.coastal:
@@ -335,13 +356,19 @@ def scar_penalty(rules: Rules, scars: Mapping[str, int]) -> float:
     return 1 - kept
 
 
-def climate_factor(rules: Rules, *, temperature: int, rainfall: int, river: RiverClass, scars: Mapping[str, int]) -> float:
+def irrigation_pct(rules: Rules, river: RiverClass, works: Works) -> int:
+    settings = rules.environment
+    dug = min(settings.irrigation_works_cap_pct, works.irrigation * settings.irrigation_works_pct) if river is not RiverClass.NONE else 0
+    return RIVER_IRRIGATION[river](rules) + dug
+
+
+def climate_factor(rules: Rules, *, temperature: int, rainfall: int, river: RiverClass, scars: Mapping[str, int], works: Works) -> float:
     settings = rules.environment
     return (
         fit(rainfall, settings.ideal_rainfall, settings.rainfall_tolerance, settings.fit_floor_pct)
         * fit(temperature, settings.ideal_temperature, settings.temperature_tolerance, settings.fit_floor_pct)
         * (1 - scar_penalty(rules, scars))
-        * (1 + RIVER_IRRIGATION[river](rules) / PERCENT)
+        * (1 + irrigation_pct(rules, river, works) / PERCENT)
     )
 
 
@@ -372,20 +399,74 @@ COAST_BOATING: dict[CoastKind, Callable[[Rules], int]] = {
 }
 
 
-def passability_of(
-    rules: Rules, *, roughness: int, forest: int, wetland: int, river: RiverClass, temperature: int, coast: CoastKind, tides: int = 0
-) -> dict[str, int]:
+GROUND_MODES = frozenset({MovementMode.ON_FOOT, MovementMode.MOUNTED, MovementMode.WHEELED, MovementMode.BURROWING})
+ROAD_MODES = frozenset({MovementMode.ON_FOOT, MovementMode.MOUNTED, MovementMode.WHEELED})
+
+
+TERRAIN_BASE: dict[TerrainKind, Callable[[Rules], int]] = {
+    TerrainKind.PLAIN: lambda rules: rules.passability.plain_base,
+    TerrainKind.STEPPE: lambda rules: rules.passability.steppe_base,
+    TerrainKind.FOREST: lambda rules: rules.passability.forest_base,
+    TerrainKind.JUNGLE: lambda rules: rules.passability.jungle_base,
+    TerrainKind.MARSH: lambda rules: rules.passability.marsh_base,
+    TerrainKind.HILLS: lambda rules: rules.passability.hills_base,
+    TerrainKind.MOUNTAINS: lambda rules: rules.passability.mountains_base,
+    TerrainKind.HIGH_PASS: lambda rules: rules.passability.high_pass_base,
+    TerrainKind.DESERT: lambda rules: rules.passability.desert_base,
+    TerrainKind.TUNDRA: lambda rules: rules.passability.tundra_base,
+    TerrainKind.ICE_SHEET: lambda rules: rules.passability.ice_sheet_base,
+    TerrainKind.VOLCANIC: lambda rules: rules.passability.volcanic_base,
+    TerrainKind.COAST: lambda rules: rules.passability.coast_base,
+    TerrainKind.ISLAND: lambda rules: rules.passability.island_base,
+    TerrainKind.RIVER_VALLEY: lambda rules: rules.passability.river_valley_base,
+    TerrainKind.CANYON: lambda rules: rules.passability.canyon_base,
+    TerrainKind.UNDERGROUND: lambda rules: rules.passability.underground_base,
+    TerrainKind.CRYSTAL_FIELD: lambda rules: rules.passability.crystal_field_base,
+    TerrainKind.FLESH: lambda rules: rules.passability.flesh_base,
+    TerrainKind.VOID_SHORE: lambda rules: rules.passability.void_shore_base,
+    TerrainKind.RUIN_FIELD: lambda rules: rules.passability.ruin_field_base,
+    TerrainKind.URBAN: lambda rules: rules.passability.urban_base,
+    TerrainKind.SEA: lambda rules: rules.passability.sea_base,
+}
+
+
+def terrain_base(rules: Rules, terrain: TerrainKind) -> int:
+    return TERRAIN_BASE[terrain](rules)
+
+
+@dataclass(frozen=True)
+class Ground:
+    roughness: int
+    forest: int
+    wetland: int
+    river: RiverClass
+    temperature: int
+    coast: CoastKind
+    terrain: TerrainKind
+    tides: int = 0
+    works: Works = field(default_factory=Works)
+
+
+def passability_of(rules: Rules, ground: Ground) -> dict[str, int]:
     settings = rules.passability
-    cold = max(0, rules.weather.cold_threshold - temperature) * PERCENT // max(1, rules.weather.cold_threshold)
-    river_pct = RIVER_RANK[river] * PERCENT // RIVER_TOP_RANK
+    works = ground.works
+    cold = max(0, rules.weather.cold_threshold - ground.temperature) * PERCENT // max(1, rules.weather.cold_threshold)
+    crossing = max(0.0, 1 - works.bridges * settings.bridge_crossing_pct / PERCENT)
+    river_pct = RIVER_RANK[ground.river] * PERCENT // RIVER_TOP_RANK
+    roads = min(settings.road_cap_pct, works.roads * settings.road_step_pct)
+    base = terrain_base(rules, ground.terrain) / PERCENT
     values: dict[str, int] = {}
     for mode, sensitivity in MODE_SENSITIVITY.items():
         weights = sensitivity(rules)
-        loss = sum(weight * value / PERCENT for weight, value in zip(weights, (roughness, forest, wetland, river_pct, cold), strict=True))
-        values[mode.value] = clamp_int(PERCENT - loss, settings.floor, PERCENT)
-    tide = tides * settings.tide_boat_pct / PERCENT if coast is not CoastKind.NONE else 0
-    values[MovementMode.BOAT.value] = clamp_int(river_pct * settings.boat_river_pct / PERCENT + COAST_BOATING[coast](rules) - tide, 0, PERCENT)
-    values[MovementMode.FLYING.value] = clamp_int(PERCENT - roughness * settings.flying_roughness_pct / PERCENT, settings.floor, PERCENT)
+        features = (ground.roughness, ground.forest, ground.wetland, river_pct * crossing, cold)
+        loss = sum(weight * value / PERCENT for weight, value in zip(weights, features, strict=True))
+        raw = (PERCENT - loss) * (base if mode in GROUND_MODES else 1.0) + (roads if mode in ROAD_MODES else 0)
+        values[mode.value] = clamp_int(raw, settings.floor, PERCENT)
+    tide = ground.tides * settings.tide_boat_pct / PERCENT if ground.coast is not CoastKind.NONE else 0
+    harbours = works.harbours * settings.harbour_works_pct if ground.coast is not CoastKind.NONE or ground.river is not RiverClass.NONE else 0
+    boat = river_pct * settings.boat_river_pct / PERCENT + COAST_BOATING[ground.coast](rules) - tide + harbours
+    values[MovementMode.BOAT.value] = clamp_int(boat, 0, PERCENT)
+    values[MovementMode.FLYING.value] = clamp_int(PERCENT - ground.roughness * settings.flying_roughness_pct / PERCENT, settings.floor, PERCENT)
     return values
 
 

@@ -35,7 +35,8 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.PRODUCE_ITEM: ToolText(
         "You produce an item from resources you own or that lie on your land: weapon, armour, shield, tool, jewellery, sacred relic. The resources' abundance decreases; "
-        "quality depends on your craft and the resources' might. 1 action.",
+        "quality depends on your craft and the resources' might. "
+        "A named mortal needs a craft skill of at least {{ rules.skills.tool_min_craft }} (smithing, carpentry, masonry and the like). 1 action.",
         {
             "name": NAME_FIELD,
             "category": "weapon, armour, shield, tool, jewellery, sacred relic, instrument or book",
@@ -47,7 +48,8 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.BUILD_STRUCTURE: ToolText(
-        "You build a monument: temple, tower, wall, bridge, monument, tomb, mine, harbour, library. It can be dedicated to a god. 1 action.",
+        "You build a monument: temple, tower, wall, bridge, monument, tomb, mine, harbour, library. It can be dedicated to a god."
+        " A named mortal needs a craft skill of at least {{ rules.skills.tool_min_craft }} (smithing, carpentry, masonry and the like). 1 action.",
         {
             "name": NAME_FIELD,
             "subtype": "temple, tower, wall, bridge, tomb, mine, harbour, library…",
@@ -121,7 +123,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.DEVELOP_KNOWLEDGE: ToolText(
         "Your community develops a new piece of knowledge (a technology, craft, school or method). Branch: {{ knowledge_branches }}. If it is built on knowledge you already "
-        "have it is stronger. 1 action.",
+        "have it is stronger. A named mortal needs a learned skill of at least {{ rules.skills.tool_min_lore }} (lore, writing, healing and the like). 1 action.",
         {
             "name": NAME_FIELD,
             "branch": "The knowledge's branch",

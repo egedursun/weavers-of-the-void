@@ -19,7 +19,19 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.body import BodyFunction, BodyPlan, BodyReading, ConditionKind, DamageType, HarmCause, InjuryKind, InjuryState, MaimedKind
+from aerona.domain.enums.body import (
+    BodyBuild,
+    BodyFunction,
+    BodyPlan,
+    BodyReading,
+    ConditionKind,
+    DamageType,
+    HarmCause,
+    HeightClass,
+    InjuryKind,
+    InjuryState,
+    MaimedKind,
+)
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.engine.body.book import Bearer, anatomy_for, ensure_body
@@ -86,6 +98,11 @@ class ConditionTarget(Command):
 class SetBodyPlan(BearerTarget):
     plan: BodyPlan
     traits: list[BodyFunction] = Field(default_factory=list)
+
+
+class SetFrame(BearerTarget):
+    height_class: HeightClass
+    build: BodyBuild
 
 
 class SetBodyValue(BearerTarget):
@@ -269,6 +286,14 @@ async def set_plan(scope: PlayerScope, command: SetBodyPlan) -> Effect:
     if not isinstance(bearer, EntityRow) or bearer.entity_type is EntityType.MORTAL:
         await refresh(scope.session, scope.rules, bearer, epoch)
     return Effect(f"{bearer.name} now has a {_label(command.plan.value)} body.", target_node_id=bearer.id)
+
+
+@player_action("body:frame", ActionKind.OTHER)
+async def set_frame(scope: PlayerScope, command: SetFrame) -> Effect:
+    bearer = await bearer_of(scope, command.bearer_id)
+    body = await ensure_body(scope.session, scope.rules, bearer, await scope.epoch())
+    body.height_class, body.build = command.height_class, command.build
+    return Effect(f"{bearer.name} is now {command.height_class.value} and {command.build.value} of build.", target_node_id=bearer.id)
 
 
 @player_action("body:set", ActionKind.OTHER)

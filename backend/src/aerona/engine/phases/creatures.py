@@ -13,6 +13,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, ResourceMechanic
+from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import PeopleStats, ResourceStats, SpeciesStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import (
@@ -511,7 +512,9 @@ async def creature_rebellion(ctx: TickContext) -> int:
         son = await SonRepository(ctx.session).get(species.creator_son_id)
         if son is None:
             continue
-        await BondRepository(ctx.session).connect(BondDraft(species.id, son.id, BondKind.ENEMY, ctx.epoch, "rebellion against its creator"))
+        await BondRepository(ctx.session).connect(
+            BondDraft(species.id, son.id, BondKind.ENEMY, ctx.epoch, "rebellion against its creator", war_cause=WarCause.INDEPENDENCE)
+        )
         victim = await _worshipper_of(ctx, son.id, species.world_id)
         if victim is not None:
             for key in (POPULATION_KEY, FOLLOWERS_KEY):

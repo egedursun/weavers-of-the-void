@@ -5,6 +5,7 @@ from pydantic import Field
 from sqlalchemy import select
 
 from aerona.catalog.gates import Gate
+from aerona.catalog.weather import WEATHER
 from aerona.constants.tool_inputs import (
     INSPIRATION_MAX,
     INSPIRATION_MIN,
@@ -27,6 +28,7 @@ from aerona.domain.enums.agent import AgentKind, PendingJobKind, TurnCounter
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.environment import WeatherKind
 from aerona.domain.enums.foreign_god import ForeignGodPowerEffect, ForeignGodStatus
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.son import SonStatus, Stat
@@ -35,7 +37,7 @@ from aerona.engine.cosmos.actions import bargain_with_outer, seal_gate
 from aerona.engine.cosmos.foreign_gods import powers_of, stat_effect
 from aerona.engine.cosmos.stars import extinguish_star, hang_star, rekindle_star
 from aerona.engine.cosmos.worlds import declare_holy_world
-from aerona.engine.environment.control import reorder_seasons, sever_ley, world_seasons
+from aerona.engine.environment.control import force_weather, reorder_seasons, sever_ley, world_seasons
 from aerona.engine.phases.afterlife import soul_bind
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import CommonResult, SonResult, result
@@ -68,6 +70,13 @@ class SeverLeyInput(ToolInput):
 class ReorderSeasonsInput(ToolInput):
     world_id: int
     order: list[int] = Field(min_length=1)
+
+
+class ShapeWeatherInput(ToolInput):
+    region_id: int
+    weather: WeatherKind
+    epochs: int = Field(default=1, ge=1)
+    reason: Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 
 
 class WorldInput(ToolInput):
@@ -195,6 +204,38 @@ async def reorder_world_seasons(call: SonCall, args: ReorderSeasonsInput) -> str
     await call.bump(TurnCounter.SEASON_ORDER)
     await call.chronicle(ChronicleKind.COSMIC, lines.REORDER_SEASONS, world_id=world.id, son=call.son.name, world=world.name, order=order)
     return result(SonResult.SEASONS_REORDERED, name=world.name, order=order)
+
+
+async def shape_weather(call: SonCall, args: ShapeWeatherInput) -> str:
+    tools = call.rules.son_tools
+    if not {call.son.domain_primary, call.son.domain_secondary} & SEASON_DOMAINS:
+        fail(SonResult.SEASONS_NOT_YOURS)
+    await call.within_limit(TurnCounter.WEATHER_SHAPING, tools.shape_weather_per_epoch, "son_tools.shape_weather_per_epoch", SonResult.WEATHER_LIMIT)
+    region = await call.session.get(EntityRow, args.region_id)
+    if region is None or region.entity_type is not EntityType.REGION:
+        fail(SonResult.WEATHER_NOT_REGION, name=region.name if region is not None else str(args.region_id))
+    if call.world_id != region.world_id and not await call.reachable_world(region.world_id):
+        fail(SonResult.SEASONS_OUT_OF_REACH, name=region.name)
+    epochs = min(args.epochs, tools.shape_weather_max_epochs)
+    cost = tools.shape_weather_essence * epochs
+    require_essence(call, cost)
+    call.target(region.id)
+    await force_weather(call.session, region, args.weather, from_epoch=call.tick.epoch, epochs=epochs, season_position=None, son_id=call.son.id)
+    call.spend_essence(cost)
+    await call.bump(TurnCounter.WEATHER_SHAPING)
+    label = WEATHER[args.weather].label
+    await call.chronicle(
+        ChronicleKind.COSMIC,
+        lines.SHAPE_WEATHER,
+        entity_ids=[region.id],
+        world_id=region.world_id,
+        son=call.son.name,
+        weather=label.lower(),
+        region=region.name,
+        epochs=epochs,
+        reason=args.reason,
+    )
+    return result(SonResult.WEATHER_SHAPED, weather=label, name=region.name, epochs=epochs)
 
 
 async def declare_holy(call: SonCall, args: WorldInput) -> str:
@@ -436,6 +477,18 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
                 rarity_gate=gate(Gate.RARE_TOOLS),
             ),
             reorder_world_seasons,
+        ),
+        ToolSpec(
+            SonToolId.SHAPE_WEATHER,
+            son,
+            ShapeWeatherInput,
+            ToolMeta(
+                ActionKind.SHAPE_WEATHER,
+                lambda rules: rules.son_tools.shape_weather_ap,
+                essence_cost=lambda rules: rules.son_tools.shape_weather_essence,
+                rarity_gate=gate(Gate.RARE_TOOLS),
+            ),
+            shape_weather,
         ),
         ToolSpec(SonToolId.DECLARE_HOLY_WORLD, son, WorldInput, ToolMeta(ActionKind.HOLY_WORLD, no_cost, rarity_gate=gate(Gate.HOLY_WORLD)), declare_holy),
         ToolSpec(

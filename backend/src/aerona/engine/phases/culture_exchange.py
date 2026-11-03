@@ -13,6 +13,7 @@ from aerona.domain.enums.entity import AGENT_TYPES, COMMUNITY_TYPES, EntityStatu
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.engine.context import TickContext
+from aerona.engine.mind.hooks import converted
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.knowledge import KnowledgeHoldings, teach
@@ -186,6 +187,7 @@ async def _pass_god(ctx: TickContext, source: EntityRow, target: EntityRow, rate
     syncretic = faith.has_living_god(target.id)
     if not await change_religion(ctx.session, target, god, ctx.epoch, f"contact with {source.name}", syncretic=syncretic, faith=faith):
         return None
+    await converted(ctx, target.id, source.id, note=f"contact with {source.name}")
     name = faith.sons[god].name if god in faith.sons else "the Creator"
     return f"{target.name} began making offerings to {name} too" if syncretic else f"{target.name} began to worship {name}"
 

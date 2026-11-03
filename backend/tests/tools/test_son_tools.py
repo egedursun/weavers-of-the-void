@@ -8,16 +8,20 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.economy import ResourceCommodityRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import ForcedWeatherRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lore import CanonFactRow, ChronicleRow, LexemeRow, MessageRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityStatus, EntityType, LegendCategory
+from aerona.domain.enums.environment import WeatherKind
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.world import StarType
+from aerona.rules.registry import Rules
 from aerona.tools.toolkit import TurnToolkit
 from tests.tools.factories import DESCRIPTION, Realm, connect, make_entity, seed_realm, son_toolkit
 
@@ -325,3 +329,21 @@ async def test_inspect_shows_society_and_canon_facts(database: Database) -> None
     toolkit = await son_toolkit(database, realm.son_id, action_points=1)
     text = await ok(toolkit, "inspect_entity", {"id": realm.people_id})
     assert "fears the deep tide" in text
+
+
+async def test_a_sky_god_holds_the_weather_over_a_region(database: Database) -> None:
+    realm = await seed_realm(database)
+    region = realm.cosmos.region_id
+    sea = await son_toolkit(database, realm.son_id)
+    assert "not in your domains" in await rejected(sea, "shape_weather", {"region_id": region, "weather": "storm", "epochs": 2, "reason": REASON})
+    async with database.write() as session:
+        row = await session.get(SonRow, realm.son_id)
+        assert row is not None
+        row.domain_primary = Domain.STORM
+    sky = await son_toolkit(database, realm.son_id)
+    shaped = await ok(sky, "shape_weather", {"region_id": region, "weather": "storm", "epochs": 99, "reason": REASON})
+    assert "Storm" in shaped
+    async with database.read() as session:
+        forced = await session.scalar(select(ForcedWeatherRow))
+        assert forced is not None and forced.kind is WeatherKind.STORM and forced.son_id == realm.son_id
+        assert forced.until_epoch - forced.from_epoch + 1 == Rules().son_tools.shape_weather_max_epochs

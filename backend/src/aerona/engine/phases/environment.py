@@ -1,5 +1,5 @@
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from sqlalchemy import delete, func, select
 
@@ -25,10 +25,13 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.star_types import star_heat
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.ley import LeyWeb, candidate_lines, cut_by_land, pair
+from aerona.engine.environment.notable import backfill_notable_years
 from aerona.engine.environment.profile import (
     Geography,
+    Ground,
     Surroundings,
     TerrainReading,
+    Works,
     band_of,
     climate_factor,
     defensibility_of,
@@ -131,6 +134,7 @@ class RegionContext:
     ruins: int
     chokepoints: int
     star: StarRow | None = None
+    works: Works = field(default_factory=Works)
 
     def surroundings(self, rules: Rules, env: RegionEnvironmentRow) -> Surroundings:
         return Surroundings(
@@ -141,11 +145,12 @@ class RegionContext:
             ruins=self.ruins,
             chokepoints=self.chokepoints,
             star_heat=star_heat(rules, self.star),
+            works=self.works,
         )
 
 
-def factor_of(rules: Rules, env: RegionEnvironmentRow) -> float:
-    return climate_factor(rules, temperature=env.temperature, rainfall=env.rainfall, river=env.river_class, scars=env.scars)
+def factor_of(rules: Rules, env: RegionEnvironmentRow, works: Works) -> float:
+    return climate_factor(rules, temperature=env.temperature, rainfall=env.rainfall, river=env.river_class, scars=env.scars, works=works)
 
 
 def apply_geography(env: RegionEnvironmentRow, geography: Geography, coast: CoastKind) -> None:
@@ -184,16 +189,18 @@ def refresh_climate(rules: Rules, env: RegionEnvironmentRow, around: Surrounding
         reading = TerrainReading(geography, around, env.temperature, env.rainfall, env.wetland, env.built)
         env.dominant_terrain = terrain_of(rules, reading)
     held = {key.removeprefix("passability."): env.passability.get(key.removeprefix("passability.")) for key in locked if key.startswith("passability.")}
-    fresh = passability_of(
-        rules,
+    ground = Ground(
         roughness=env.roughness,
         forest=env.forest_cover,
         wetland=env.wetland,
         river=env.river_class,
         temperature=env.temperature,
         coast=env.coast_kind,
+        terrain=env.dominant_terrain,
         tides=tides,
+        works=around.works,
     )
+    fresh = passability_of(rules, ground)
     env.passability = {**fresh, **{mode: value for mode, value in held.items() if value is not None}}
     if "defensibility" not in locked:
         env.defensibility = defensibility_of(rules, roughness=env.roughness, forest=env.forest_cover, river=env.river_class, chokepoints=around.chokepoints)
@@ -246,7 +253,7 @@ def new_region_environment(ctx: TickContext, region: EntityRow, geography: Geogr
     env.mineral_layers = mineral_layers(rules, ctx.environment.rng(f"minerals.{region.id}"), geography, context.world.world_type, env.dominant_terrain)
     fertility = stat(region, "fertility")
     if fertility is not None:
-        env.soil_fertility = soil_for(fertility, factor_of(rules, env))
+        env.soil_fertility = soil_for(fertility, factor_of(rules, env, context.works))
         env.soil_base = env.soil_fertility
         env.derived_fertility = fertility
     return env
@@ -316,6 +323,31 @@ async def write_seasons(ctx: TickContext, world: WorldRow) -> list[WorldSeasonRo
     return rows
 
 
+BRIDGE_SUBTYPE = "bridge"
+HARBOUR_SUBTYPE = "harbour"
+
+
+async def works_by_region(ctx: TickContext, book: EnvironmentBook) -> dict[int, Works]:
+    knowledge = await KnowledgeMap.load(ctx.session)
+    tallies: dict[int, Counter[str]] = {}
+    for entity in await canon(ctx.session, [EntityType.STRUCTURE, EntityType.SETTLEMENT]):
+        region_id = book.atlas.top_region(entity.id)
+        if region_id is None:
+            continue
+        tally = tallies.setdefault(region_id, Counter())
+        subtype = (entity.subtype or "").lower()
+        if entity.entity_type is EntityType.STRUCTURE:
+            tally["bridges"] += BRIDGE_SUBTYPE in subtype
+            tally["harbours"] += HARBOUR_SUBTYPE in subtype
+            continue
+        tally["roads"] += knowledge.knows(entity.id, KnowledgeBranch.ARCHITECTURE)
+        tally["irrigation"] += knowledge.level(entity.id, KnowledgeBranch.AGRICULTURE) >= ctx.rules.environment.irrigation_agriculture_level
+    return {
+        region_id: Works(roads=tally["roads"], bridges=tally["bridges"], harbours=tally["harbours"], irrigation=tally["irrigation"])
+        for region_id, tally in tallies.items()
+    }
+
+
 async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list[EntityRow]) -> dict[int, RegionContext]:
     ruined = await flags_by_entity(ctx.session, EntityFlag.RUIN)
     ruins: Counter[int] = Counter()
@@ -327,6 +359,7 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
     for place in book.places.values():
         if place.chokepoint and place.region_entity_id is not None:
             chokepoints[place.region_entity_id] += 1
+    works = await works_by_region(ctx, book)
     contexts: dict[int, RegionContext] = {}
     for region in regions:
         world = book.worlds.get(region.world_id)
@@ -338,11 +371,13 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
             ruins=ruins[region.id],
             chokepoints=chokepoints[region.id],
             star=book.star_of(world),
+            works=works.get(region.id, Works()),
         )
     return contexts
 
 
 async def environment_survey(ctx: TickContext) -> None:
+    ctx.count("notable_years_backfilled", await backfill_notable_years(ctx))
     moons = await moons_by_world(ctx)
     worlds = list(await ctx.session.scalars(select(WorldRow).where(WorldRow.discovery != Discovery.FORGOTTEN).order_by(WorldRow.id)))
     calendars = 0
@@ -386,7 +421,7 @@ async def environment_survey(ctx: TickContext) -> None:
         region_id = book.atlas.top_region(place.id)
         env = book.regions.get(region_id) if region_id is not None else None
         context = contexts.get(region_id) if region_id is not None else None
-        factor = factor_of(ctx.rules, env) if env is not None else 1.0
+        factor = factor_of(ctx.rules, env, context.works if context is not None else Works()) if env is not None else 1.0
         row = new_place_environment(ctx.rules, place, region_id, factor)
         ctx.session.add(row)
         book.places[place.id] = row
@@ -484,7 +519,7 @@ async def environment_derive(ctx: TickContext) -> None:
         env.soil_fertility = fold_external(env.derived_fertility, current, env.soil_fertility)
         recover_soil(rules, env)
         if current is not None or not region.is_water:
-            set_stats(region, fertility=fertility_from(env.soil_fertility, factor_of(rules, env)))
+            set_stats(region, fertility=fertility_from(env.soil_fertility, factor_of(rules, env, context.works)))
             env.derived_fertility = stat(region, "fertility")
             derived += 1
     for place_env in book.places.values():
@@ -494,7 +529,7 @@ async def environment_derive(ctx: TickContext) -> None:
         if place is None or env is None or context is None or stat(place, "fertility") is None:
             continue
         place_env.soil_fertility = fold_external(place_env.derived_fertility, stat(place, "fertility"), place_env.soil_fertility)
-        set_stats(place, fertility=fertility_from(place_env.soil_fertility, factor_of(rules, env)))
+        set_stats(place, fertility=fertility_from(place_env.soil_fertility, factor_of(rules, env, context.works)))
         place_env.derived_fertility = stat(place, "fertility")
     await ctx.session.flush()
     ctx.count("regions_derived", derived)
@@ -534,6 +569,47 @@ async def settle_new_ground(ctx: TickContext, created: list[RegionEnvironmentRow
             env.forest_cover = clamp_int(env.base_forest * (PERCENT - env.cleared) / PERCENT, 0, PERCENT)
 
 
+@dataclass(frozen=True)
+class LandMark:
+    erosion: int
+    farmed: int
+    soil: int
+    cleared: int
+
+
+def land_turns(rules: Rules, env: RegionEnvironmentRow, before: LandMark) -> list[tuple[str, str]]:
+    settings = rules.land_use
+    turns: list[tuple[str, str]] = []
+    if before.erosion < settings.erosion_noted <= env.erosion:
+        turns.append(("land.erosion", "Rains wash the cleared slopes of {region} down to the rivers; the hills are going bare."))
+    if before.farmed <= settings.overfarm_threshold < env.farmed:
+        turns.append(("land.overfarmed", "Every field of {region} is ploughed year after year and the earth is given no rest."))
+    if before.soil >= settings.exhausted_soil_below > env.soil_fertility:
+        turns.append(("land.soil_exhausted", "The soil of {region} is worn out; seed goes in and little comes back."))
+    if before.cleared > 0 == env.cleared:
+        turns.append(("land.rewilded", "Forest and scrub have taken back the empty fields of {region}."))
+    return turns
+
+
+async def note_land(ctx: TickContext, env: RegionEnvironmentRow, before: LandMark) -> None:
+    turns = land_turns(ctx.rules, env, before)
+    if not turns:
+        return
+    region = await ctx.session.get(EntityRow, env.entity_id)
+    if region is None:
+        return
+    for key, text in turns:
+        await ctx.chronicle(
+            ChronicleKind.CLIMATE,
+            text.format(region=region.name),
+            template_key=key,
+            entity_ids=[region.id],
+            world_id=region.world_id,
+            place_entity_id=region.id,
+            feed_category=FeedCategory.WORLD,
+        )
+
+
 async def land_use(ctx: TickContext) -> None:
     rules = ctx.rules
     settings = rules.land_use
@@ -542,6 +618,7 @@ async def land_use(ctx: TickContext) -> None:
     loads = capacity.build_loads(await canon(ctx.session, LAND_COMMUNITY_TYPES))
     worked = rewilded = 0
     for region_id, env in book.regions.items():
+        before = LandMark(env.erosion, env.farmed, env.soil_fertility, env.cleared)
         load = loads.get(("region", region_id))
         if load is None or load.population <= 0:
             for key in LandUse:
@@ -557,6 +634,7 @@ async def land_use(ctx: TickContext) -> None:
         if env.farmed > settings.overfarm_threshold:
             loss += (env.farmed - settings.overfarm_threshold) * settings.overfarm_soil_pct / PERCENT
         env.soil_fertility = clamp_int(env.soil_fertility - loss, 0, PERCENT)
+        await note_land(ctx, env, before)
     await ctx.session.flush()
     ctx.count("regions_worked", worked)
     ctx.count("regions_rewilding", rewilded)
@@ -581,12 +659,13 @@ async def calendar_regions(ctx: TickContext, book: EnvironmentBook) -> set[int]:
     return regions
 
 
-def year_harvest(rules: Rules, *, growth: int, weather_growth: int, farming: float, agriculture: float, planned: bool, blight: int) -> int:
+def year_harvest(rules: Rules, *, growth: int, weather_growth: int, farming: float, agriculture: float, planned: bool, blight: int, soil: int) -> int:
     settings = rules.harvest
     value = (
         PERCENT
         * growth
         / max(1, settings.normal_growth)
+        * max(0.0, 1 + settings.soil_weight_pct / PERCENT * (soil / max(1, settings.normal_soil) - 1))
         * (1 + weather_growth / PERCENT)
         * (1 + farming * (agriculture - 1))
         * (1 + (settings.calendar_planning_pct / PERCENT if planned else 0))
@@ -608,7 +687,7 @@ async def record_notable(ctx: TickContext, world: WorldRow, region: EntityRow | 
     written = await ctx.chronicle(
         ChronicleKind.CLIMATE,
         notable.text,
-        template_key=f"environment.notable_year.{notable.kind.value}",
+        template_key=f"year.{notable.kind.value}",
         entity_ids=[region.id] if region is not None else [],
         world_id=world.id,
         feed_category=FeedCategory.WORLD,
@@ -682,6 +761,7 @@ def region_years(ctx: TickContext, season: HarvestSeason, env: RegionEnvironment
             agriculture=agriculture,
             planned=env.entity_id in season.planned,
             blight=env.scars.get(ScarKind.BLIGHTED.value, 0),
+            soil=env.soil_fertility,
         )
         results.append(YearHarvest(sampled.offset, sampled.year, value, weather.kind))
         severity = -weather.effect(WeatherEffect.GROWTH) - weather.effect(WeatherEffect.MORALE)
@@ -819,7 +899,7 @@ async def adopt_calendar(ctx: TickContext, record: EntityRow, holder_id: int) ->
     written = await ctx.chronicle(
         ChronicleKind.CULTURE,
         f"{who} began to count the year by {record.name}: {len(calendar.month_names)} months, from {first}.",
-        template_key="environment.calendar_adopted",
+        template_key="season.calendar_adopted",
         entity_ids=[record.id, holder_id],
         world_id=record.world_id,
     )
@@ -863,7 +943,7 @@ async def commemorate_hard_years(ctx: TickContext, calendar: CalendarRow, region
 
 async def weave_lines(ctx: TickContext, web: LeyWeb, regions: dict[int, EntityRow], grounds: dict[int, RegionEnvironmentRow]) -> int:
     atlas = await RegionAtlas.load(ctx.session)
-    wanted = candidate_lines(ctx.rules, atlas, regions)
+    wanted = candidate_lines(ctx.rules, atlas, regions, grounds)
     known = {pair(line.region_a_id, line.region_b_id): line for line in web.lines}
     formed = 0
     for key, strength in wanted.items():
@@ -881,13 +961,13 @@ async def weave_lines(ctx: TickContext, web: LeyWeb, regions: dict[int, EntityRo
                 entity_ids=[first.id, second.id],
                 world_id=first.world_id,
             )
-        line.strength = strength
+        line.strength = max(strength, line.strength) if line.forged else strength
         held = line.severed_until_epoch is not None and line.severed_until_epoch >= ctx.epoch
         line.severed = held or cut_by_land(ctx.rules, grounds, *key)
         if not held:
             line.severed_until_epoch = None
     for key, line in known.items():
-        if key not in wanted and line.severed_until_epoch is None:
+        if key not in wanted and line.severed_until_epoch is None and not line.forged:
             await ctx.session.delete(line)
             web.lines.remove(line)
     return formed
@@ -932,6 +1012,15 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
     return crowned
 
 
+LEY_WORK_KINDS = frozenset({EngineKind.TEMPLE, EngineKind.OBSERVATORY})
+LEY_WORK_SUBTYPES = ("gate", "tower", "temple", "observatory", "shrine")
+
+
+def ley_work(work: EntityRow) -> bool:
+    subtype = (work.subtype or "").lower()
+    return work.engine_kind in LEY_WORK_KINDS or any(word in subtype for word in LEY_WORK_SUBTYPES)
+
+
 async def empower_works(ctx: TickContext, web: LeyWeb) -> int:
     settings = ctx.rules.environment
     atlas = await RegionAtlas.load(ctx.session)
@@ -940,10 +1029,13 @@ async def empower_works(ctx: TickContext, web: LeyWeb) -> int:
     empowered = 0
     for work in await canon(ctx.session, [EntityType.STRUCTURE]):
         region_id = atlas.top_region(work.id)
-        if region_id is None or not degree[region_id]:
+        if region_id is None or not degree[region_id] or not ley_work(work):
             continue
         gain = settings.ley_function_gain * (settings.nexus_function_mult if work.location_id in nexus else 1)
-        set_stats(work, function=clamp_int(stat_or(work, "function", settings.ley_function_base) + gain, 0, PERCENT))
+        current = stat_or(work, "function", settings.ley_function_base)
+        if current >= settings.ley_function_cap:
+            continue
+        set_stats(work, function=clamp_int(current + gain, 0, settings.ley_function_cap))
         empowered += 1
     return empowered
 

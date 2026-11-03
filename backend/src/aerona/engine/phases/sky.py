@@ -28,6 +28,7 @@ from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.stars import black_sun, flare, require_star, supernova, worlds_of_star
 from aerona.engine.cosmos.world_types import mechanics_of
 from aerona.engine.cosmos.worlds import align_moons
+from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.manual import manual_context
@@ -92,11 +93,17 @@ async def eclipse_seers(ctx: TickContext, prophecy: EntityRow, world: WorldRow) 
     return seers
 
 
+async def sky_clarity(ctx: TickContext, world: WorldRow, slot: str) -> float:
+    ground = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch)
+    return ground.clarity(ctx.environment.world_seed, ctx.epoch, world.id, slot)
+
+
 async def _eclipse(ctx: TickContext, world: WorldRow) -> str:
     sky = ctx.rules.sky
+    seen = await sky_clarity(ctx, world, "sky.eclipse")
     for entity in await canon(ctx.session, INHABITANT_TYPES, world.id):
-        shift_sanity(ctx.rules, entity, -sky.eclipse_sanity_loss)
-        shift_bounded(ctx.rules, entity, PIETY_KEY, sky.eclipse_piety_gain)
+        shift_sanity(ctx.rules, entity, -round(sky.eclipse_sanity_loss * seen))
+        shift_bounded(ctx.rules, entity, PIETY_KEY, round(sky.eclipse_piety_gain * seen))
     rng = ctx.rng("eclipse")
     prophecy = await open_record(
         ctx.session,
@@ -141,7 +148,7 @@ async def _comet(ctx: TickContext, world: WorldRow) -> str:
     statement = select(BondRow).where(BondRow.kind == BondKind.ENEMY, BondRow.state == BondState.ACTIVE, BondRow.source_node_id.in_(local))
     enmities = list(await ctx.session.scalars(statement.order_by(BondRow.id)))
     bond = rng.pick_or_none(enmities)
-    if bond is None or not rng.chance(sky.comet_peace_chance):
+    if bond is None or not rng.chance(sky.comet_peace_chance * await sky_clarity(ctx, world, "sky.comet")):
         return f"A comet appeared in {world.name}'s sky."
     first, second = await ctx.session.get(EntityRow, bond.source_node_id), await ctx.session.get(EntityRow, bond.target_node_id)
     await settle_peace(ctx, bond.source_node_id, bond.target_node_id, WarEnding.PEACE, "the comet's omen")

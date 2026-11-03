@@ -33,6 +33,7 @@ from aerona.engine.services.war import (
     hostile_pair_count,
     hostile_pairs,
     ongoing_war_count,
+    ongoing_wars,
 )
 from aerona.engine.services.war_geography import Neighbourhood
 from aerona.engine.services.war_resolution import end_war, settle_peace
@@ -184,11 +185,30 @@ def _weight(ctx: TickContext, entity: EntityRow) -> int:
     return ctx.rules.diplomacy.traitor_default_strength
 
 
+async def abandon_mid_war(ctx: TickContext, traitor: EntityRow, victim: EntityRow) -> int:
+    collapsed = 0
+    rng = ctx.rng(f"betrayal.collapse.{traitor.id}.{victim.id}")
+    for item in await ongoing_wars(ctx.session, victim.id):
+        enemy_id = item.defender_id if item.attacker_id == victim.id else item.attacker_id
+        enemy = await living_entity(ctx.session, enemy_id)
+        if enemy is None or enemy.id == traitor.id or not rng.chance(ctx.rules.diplomacy.betrayal_war_collapse_chance):
+            continue
+        event = await living_entity(ctx.session, item.war.event_entity_id)
+        await end_war(ctx, item.war, WarEnding.BETRAYAL, victor_id=enemy.id, loser_id=victim.id, reason="betrayal", apply_relation=False)
+        war_name = event.name if event is not None else "the war"
+        text = f"Abandoned by its ally {traitor.name}, {victim.name} could not hold the field and {war_name} was lost to {enemy.name}."
+        await _note(ctx, text, "diplomacy.betrayal_war_lost", (victim.id, enemy.id, traitor.id))
+        collapsed += 1
+    ctx.count("wars_lost_to_betrayal", collapsed)
+    return collapsed
+
+
 async def betray(ctx: TickContext, first: EntityRow, second: EntityRow, neighbourhood: Neighbourhood, war_roll: bool) -> EntityRow:
     rules = ctx.rules.diplomacy
     await BondRepository(ctx.session).close_between(first.id, second.id, [BondKind.ALLY], ctx.epoch, "betrayal")
     traitor, victim = (first, second) if _weight(ctx, first) >= _weight(ctx, second) else (second, first)
     await change_relation(ctx, victim.id, traitor.id, -rules.betrayal_relation, MemoryKind.BETRAYED_ME, note="betrayal", reverse=MemoryKind.ILL_WILL)
+    await abandon_mid_war(ctx, traitor, victim)
     if war_roll:
         await declare_war(ctx, traitor.id, victim.id, "betrayal", cause=WarCause.BETRAYAL)
     text = f"{traitor.name} stabbed its ally {victim.name} in the back; the oath was broken."

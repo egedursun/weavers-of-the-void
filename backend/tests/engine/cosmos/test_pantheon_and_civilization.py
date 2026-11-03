@@ -14,7 +14,7 @@ from aerona.domain.enums.entity import CivilizationTier, EngineKind, EntityFlag,
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import Stat
-from aerona.domain.enums.war import DebtStatus
+from aerona.domain.enums.war import DebtStatus, WarCause
 from aerona.domain.models.entity_stats import MortalStats, OuterBeingStats, PeopleStats, SettlementStats, StructureStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.duels import son_duel
@@ -84,6 +84,21 @@ async def test_awake_god_contact_attraction_and_theft(session: AsyncSession, cos
     assert text is not None and "turned" in text
     assert await BondRepository(session).exists_between(believer.id, god.id, BondKind.WORSHIPS)
     assert not await BondRepository(session).exists_between(believer.id, son.id, BondKind.WORSHIPS)
+
+
+async def test_hostile_god_drives_its_worshippers_to_holy_war(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
+    ctx = tick(session, tuned(rules, "pantheon", foreign_attack_base_pct=100, foreign_sacrifice_chance=0, foreign_holy_war_chance=100))
+    god = await add_foreign_god(session, rules, ctx.rng(), 1, NewForeignGod("Vesmorn", cosmos.home.id, (Domain.GLASS, None), stance=-50, power=100))
+    god.faith = rules.foreign_gods.action_full_faith
+    son = await make_son(session, "Velan", cosmos.home.id)
+    zealot = await make_entity(session, "Tarn", EntityType.PEOPLE, PeopleStats(population=5000), world_id=cosmos.home.id)
+    believer = await make_entity(session, "Vesk", EntityType.PEOPLE, PeopleStats(population=5000), world_id=cosmos.home.id)
+    await BondRepository(session).connect(BondDraft(believer.id, son.id, BondKind.WORSHIPS, 1))
+    await BondRepository(session).connect(BondDraft(zealot.id, god.id, BondKind.WORSHIPS, 1))
+    text = await hostile_act(ctx, god, set())
+    assert text is not None and "to war against" in text
+    enemy = await session.scalar(select(BondRow).where(BondRow.kind == BondKind.ENEMY, BondRow.source_node_id == zealot.id))
+    assert enemy is not None and enemy.target_node_id == believer.id and enemy.war_cause is WarCause.FOREIGN_GOD
 
 
 async def test_hostile_god_destroys_temples(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:

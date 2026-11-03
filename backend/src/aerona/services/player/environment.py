@@ -1,12 +1,13 @@
 from pydantic import Field
 
+from aerona.catalog.weather import WEATHER
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.environment import ScarKind
+from aerona.domain.enums.environment import NotableYearKind, ScarKind, WeatherKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.engine.environment import control
 from aerona.engine.phases.environment import adopt_calendar, write_seasons
@@ -220,3 +221,78 @@ async def sever_ley_line(scope: PlayerScope, command: SeverLey) -> Effect:
 async def restore_ley_line(scope: PlayerScope, command: LeyTarget) -> Effect:
     line = await control.restore_ley(scope.session, command.line_id)
     return Effect(f"{(await _line_name(scope, line.region_a_id, line.region_b_id)).capitalize()} flows again.", target_node_id=line.region_a_id)
+
+
+class ForgeLey(Command):
+    first_region_id: int
+    second_region_id: int
+    strength: int | None = Field(default=None, ge=0, le=100)
+
+
+@player_action("ley:forge", ActionKind.OTHER)
+async def forge_ley_line(scope: PlayerScope, command: ForgeLey) -> Effect:
+    line = await control.forge_ley(
+        scope.session, scope.rules, command.first_region_id, command.second_region_id, epoch=await scope.epoch(), strength=command.strength
+    )
+    name = await _line_name(scope, line.region_a_id, line.region_b_id)
+    return Effect(f"{name.capitalize()} is forged at strength {line.strength}; it holds even where the land's magic is thin.", target_node_id=line.region_a_id)
+
+
+@player_action("ley:unforge", ActionKind.OTHER)
+async def unforge_ley_line(scope: PlayerScope, command: LeyTarget) -> Effect:
+    line = await control.unforge_ley(scope.session, command.line_id)
+    name = await _line_name(scope, line.region_a_id, line.region_b_id)
+    return Effect(f"{name.capitalize()} is left to the land's own magic again.", target_node_id=line.region_a_id)
+
+
+class ForceWeather(Command):
+    region_id: int
+    kind: WeatherKind
+    epochs: int = Field(default=1, ge=1, le=1000)
+    season_position: int | None = Field(default=None, ge=0)
+
+
+class ForcedTarget(Command):
+    forced_id: int
+
+
+@player_action("weather:force", ActionKind.OTHER)
+async def force_weather(scope: PlayerScope, command: ForceWeather) -> Effect:
+    region = await _entity(scope, command.region_id)
+    row = await control.force_weather(
+        scope.session, region, command.kind, from_epoch=await scope.epoch(), epochs=command.epochs, season_position=command.season_position
+    )
+    when = f"season {row.season_position + 1}" if row.season_position is not None else "every season"
+    label = WEATHER[row.kind].label.lower()
+    return Effect(f"{label.capitalize()} will hold over {region.name} in {when} for {command.epochs} epochs.", target_node_id=region.id)
+
+
+@player_action("weather:release", ActionKind.OTHER)
+async def release_weather(scope: PlayerScope, command: ForcedTarget) -> Effect:
+    row = await control.release_weather(scope.session, command.forced_id)
+    region = await _entity(scope, row.region_entity_id)
+    return Effect(f"The sky over {region.name} goes its own way again.", target_node_id=region.id)
+
+
+class ForceNotableYear(Command):
+    region_id: int
+    kind: NotableYearKind
+    magnitude: int = Field(ge=0, le=100)
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    weather: WeatherKind | None = None
+
+
+@player_action("year:force_notable", ActionKind.OTHER)
+async def force_notable_year(scope: PlayerScope, command: ForceNotableYear) -> Effect:
+    region = await _entity(scope, command.region_id)
+    row = await control.force_notable_year(
+        scope.session,
+        scope.rules,
+        region,
+        command.kind,
+        epoch=await scope.epoch(),
+        magnitude=command.magnitude,
+        name=command.name,
+        weather=command.weather,
+    )
+    return Effect(f"{row.name[:1].upper() + row.name[1:]} (the year {row.year}) is written into {region.name}'s memory.", target_node_id=region.id)

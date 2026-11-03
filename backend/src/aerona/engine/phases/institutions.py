@@ -16,6 +16,7 @@ from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.war import WarEnding
 from aerona.engine.context import TickContext
+from aerona.engine.mind.drives import closeness
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.life_cycles import turn_to_ruin
@@ -297,15 +298,16 @@ async def peoples(ctx: TickContext) -> int:
         ratio = size * 100 / max(1, stat(largest, "population") or 0)
         shared = bool(await tongues(ctx, people.id) & await tongues(ctx, largest.id))
         rng = ctx.rng(f"peoples.{people.id}")
+        kinship = await closeness(ctx.session, people.id, largest.id)
         union = False
         if ratio <= cycles.assimilation_ratio_pct:
             rules_it = bool(await BondRepository(ctx.session).active_between(largest.id, people.id, [BondKind.RULES]))
             chance = cycles.assimilation_chance + (cycles.assimilation_rule_bonus if rules_it else 0) + (cycles.assimilation_language_bonus if shared else 0)
-            if not rng.chance(chance):
+            if not rng.chance(chance * kinship):
                 continue
         elif ratio >= cycles.union_ratio_pct and shared and await relation(ctx.session, ctx.rules, people.id, largest.id) >= cycles.union_relation:
             same_god = await BondRepository(ctx.session).patron(people.id) == await BondRepository(ctx.session).patron(largest.id)
-            if not same_god or not rng.chance(cycles.union_chance):
+            if not same_god or not rng.chance(cycles.union_chance * kinship):
                 continue
             union = True
         else:

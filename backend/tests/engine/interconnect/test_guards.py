@@ -1,10 +1,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
+from aerona.engine.body.book import injuries_of
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.guards import run_guarded
 from aerona.engine.interconnect.registry import suppression_key
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.modifiers import ModifierDraft, ModifierIndex, add_modifier
 from aerona.engine.primitives.stats import set_stats, stat
@@ -48,3 +52,17 @@ async def test_guards_do_not_apply_outside_engine_phases(session: AsyncSession, 
     set_stats(folk, piety=55)
     assert stat(folk, "piety") == 55
     assert (await ModifierIndex.load(session, epoch=5)).contributions(folk.id, "piety") == []
+
+
+async def test_suppressing_the_injury_mechanic_stops_wounds(session: AsyncSession, world_id: int) -> None:
+    kept = await make(session, "Arn", EntityType.MORTAL, world_id, hp=100, strength=50, agility=50)
+    hurt = await make(session, "Bera", EntityType.MORTAL, world_id, hp=100, strength=50, agility=50)
+    await _guard(session, kept.id, suppression_key("injuries"), ModifierSource.SUPPRESSION)
+
+    async def run(ctx: TickContext) -> None:
+        for mortal in (kept, hurt):
+            await apply_hits(ctx, mortal, Harm(30, HarmCause.BATTLE, "fell in a test"), lethal=False)
+
+    await run_guarded(Phase("war_casualties", run), make_ctx(session, Rules(), epoch=5))
+    assert await injuries_of(session, kept.id) == []
+    assert await injuries_of(session, hurt.id)

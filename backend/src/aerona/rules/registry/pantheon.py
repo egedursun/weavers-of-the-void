@@ -20,6 +20,7 @@ class PantheonRules:
     foreign_growth: int = rule(1, 0, 100, RuleGroup.CIVILIZATION, "Per-epoch strength growth of a foreign god with enough faith")
     attitude_curious: int = rule(20, 0, 100, RuleGroup.CIVILIZATION, "Attitude of a foreign god showing curiosity at first contact")
     attitude_hostile: int = rule(20, 0, 100, RuleGroup.CIVILIZATION, "Attitude of a foreign god showing hostility at first contact (negative)")
+    foreign_holy_war_chance: int = rule(25, 0, 100, RuleGroup.CIVILIZATION, "A hostile foreign god drives its worshippers to war on a son's worshippers (%)")
     foreign_attack_base_pct: int = rule(20, 0, 100, RuleGroup.CIVILIZATION, "Base attack chance of a hostile foreign god (%)")
     foreign_attack_hostility_divisor: int = rule(300, 1, 100000, RuleGroup.CIVILIZATION, "Hostility contribution to attack chance: hostility / this number")
     foreign_steal_wrath: int = rule(10, 0, 100, RuleGroup.CIVILIZATION, "Wrath gain of a son whose worshipper is stolen")

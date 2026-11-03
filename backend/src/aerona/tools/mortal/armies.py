@@ -1,4 +1,3 @@
-import math
 from typing import Any
 
 from sqlalchemy import select
@@ -51,8 +50,7 @@ def _floor(call: MortalCall, key: str | None) -> int:
 def _soldiers(call: MortalCall, key: str | None, percent: int | None) -> int:
     tools = call.rules.mortal_tools
     base = stat_or(call.me, key, 0) if key is not None else round((stat(call.me, "strength") or tools.army_default_strength) * tools.army_strength_mult)
-    share = tools.raise_army_population_pct / PERCENT
-    ceiling = math.floor((base - _floor(call, key)) / share) if key is not None and share > 0 else call.rules.limits.army_soldier_cap
+    ceiling = base - _floor(call, key) if key is not None else call.rules.limits.army_soldier_cap
     wanted = round(base * max(1, min(tools.raise_army_max_pct, percent or tools.raise_army_default_pct)) / PERCENT)
     return max(0, min(wanted, ceiling, call.rules.limits.army_soldier_cap))
 
@@ -97,7 +95,7 @@ async def raise_army(call: MortalCall, args: ArmyInput) -> str:
     if event is not None and war is not None:
         await bonds.connect(BondDraft(army.id, event.id, BondKind.PART_OF, call.epoch, war_id=war.id))
     if key is not None:
-        set_stats(call.me, **{key: max(_floor(call, key), round(stat_or(call.me, key, 0) - soldiers * tools.raise_army_population_pct / PERCENT))})
+        set_stats(call.me, **{key: max(_floor(call, key), stat_or(call.me, key, 0) - soldiers)})
     elif funds is not None:
         set_stats(call.me, **{funds: max(0, stat_or(call.me, funds, 0) - tools.mercenary_cost)})
     await call.chronicle(ChronicleKind.ARMY, lines.ARMY, entity_ids=[call.me.id, army.id], me=call.me.name, count=soldiers, name=army.name)

@@ -1,7 +1,11 @@
+from collections.abc import Sequence
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.db.tables.body import ARMOUR_COLUMNS, BodyRow
+from aerona.constants.units import PERCENT
+from aerona.db.tables.body import ARMOUR_COLUMNS, BodyRow, InjuryRow
 from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.body import InjuryKind
 from aerona.domain.enums.bond import BondKind
 from aerona.engine.body.book import Bearer, Reading, active_conditions, armour_of, ensure_body, factors_of, injuries_of, open_severity, prostheses_of
 from aerona.engine.body.capacities import pain_of
@@ -46,5 +50,20 @@ async def refresh(session: AsyncSession, rules: Rules, bearer: Bearer, epoch: in
     for column, value in zip(ARMOUR_COLUMNS, (armour.head, armour.torso, armour.limbs), strict=True):
         if column not in locked:
             setattr(body, column, value)
+    cap_sanity(rules, bearer, injuries)
     body.updated_epoch = epoch
     return body
+
+
+def sanity_ceiling(rules: Rules, injuries: Sequence[InjuryRow]) -> int:
+    lost = sum(row.severity for row in injuries if row.kind is InjuryKind.VOID_TOUCH) * rules.injury.void_sanity_per_severity
+    return max(0, PERCENT - lost)
+
+
+def cap_sanity(rules: Rules, bearer: Bearer, injuries: Sequence[InjuryRow]) -> None:
+    ceiling = sanity_ceiling(rules, injuries)
+    if ceiling >= PERCENT:
+        return
+    current = bearer.sanity if bearer.sanity is not None else rules.cosmic_horror.default_sanity
+    if current > ceiling:
+        bearer.sanity = ceiling

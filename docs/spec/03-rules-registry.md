@@ -3321,7 +3321,7 @@ Old namespace `OLUMLU_ARAC` · 223 rows · defined in `src/olumluler.js` · also
 | ransom_min_wealth | fidye_esik | 20 | 0 | 100 | Mortal agents | Minimum wealth required for a ransom (+5 for prosperity) |
 | raise_army_default_pct | ordu_yuzde | 5 | 1 | 50 | Mortal agents | raise_army (ordu_topla): default levy (% of population) |
 | raise_army_max_pct | ordu_tavan | 15 | 1 | 100 | Mortal agents | raise_army: maximum levy (% of population) |
-| raise_army_population_pct | ordu_kayip | 100 | 0 | 100 | Mortal agents | Share of levied soldiers subtracted from population (%) |
+| ~~raise_army_population_pct~~ | ordu_kayip | — | — | — | Mortal agents | Removed by spec 13 F28: an army levies exactly the soldiers it holds, so headcount is conserved |
 | ctx_self_chars | sen_butce | 3500 | 500 | 100,000 | Context budgets | Mortal context: own details (characters) |
 | barter_ap | takas_ap | 1 | 1 | 5 | Mortal agents | barter (takas) action cost |
 | barter_die | takas_zar | 30 | 1 | 200 | Mortal agents | barter: acceptance die faces (offer + relation + die ≥ asked) |

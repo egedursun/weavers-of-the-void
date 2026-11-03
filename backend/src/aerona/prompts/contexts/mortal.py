@@ -67,6 +67,8 @@ class MortalLand(ContextItem):
     elevation_label: str | None = None
     coastal: bool = False
     neighbours: list[NamedRecord] = Field(default_factory=list)
+    ground: str | None = None
+    weather: str | None = None
 
 
 class KnowledgeItem(ContextItem):

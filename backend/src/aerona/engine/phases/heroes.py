@@ -164,7 +164,7 @@ async def _claim_prize(ctx: TickContext, hero: EntityRow, quest: HeroQuestRow, t
         await EntityRepository(ctx.session).remove_flag(target.id, EntityFlag.LOST)
         return f"{hero.name} found the forgotten {target.name} knowledge among the ruins and brought it back to {side.name}."
     if quest.kind is HeroQuestKind.VENGEANCE:
-        await death_path(ctx, target, f"killed by {hero.name} avenging the blood feud", hero.id, "blood feud")
+        await death_path(ctx, target, f"killed by {hero.name} avenging the blood feud", hero.id, "blood feud", harm=HarmCause.DUEL)
         return f"{hero.name} took revenge for the blood feud: {target.name} is dead."
     return f"{hero.name} found what they sought on the road taken {quest.description}: a hidden truth about {target.name} is now in their hands."
 

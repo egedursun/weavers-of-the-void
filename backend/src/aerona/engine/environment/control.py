@@ -3,15 +3,29 @@ from enum import StrEnum
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.weather import WEATHER
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import CalendarRow, LeyLineRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.environment import CoastKind, MovementMode, PlaceCover, RiverClass, ScarKind, SoilKind, TerrainKind, WaterSource
+from aerona.domain.enums.environment import (
+    CoastKind,
+    MovementMode,
+    NotableYearKind,
+    PlaceCover,
+    RiverClass,
+    ScarKind,
+    SoilKind,
+    TerrainKind,
+    WaterSource,
+    WeatherKind,
+)
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.models.calendar import epoch_start_year
 from aerona.engine.environment.seasons import season_count_for
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.rules.registry import Rules
 
@@ -263,6 +277,35 @@ async def sever_ley(session: AsyncSession, line_id: int, *, until_epoch: int, so
     return line
 
 
+async def forge_ley(session: AsyncSession, rules: Rules, first_id: int, second_id: int, *, epoch: int, strength: int | None = None) -> LeyLineRow:
+    first, second = await session.get(EntityRow, first_id), await session.get(EntityRow, second_id)
+    if first is None or second is None or first.entity_type is not EntityType.REGION or second.entity_type is not EntityType.REGION:
+        raise NotFoundError("Both ends of a ley line must be regions.")
+    if first.world_id != second.world_id or first.id == second.id:
+        raise ValidationFailedError("A ley line joins two different regions of the same world.")
+    if second.id not in (await RegionAtlas.load(session)).neighbour_regions(first.id):
+        raise ValidationFailedError("A ley line only joins neighbouring regions.")
+    low, high = sorted((first.id, second.id))
+    line = await session.scalar(select(LeyLineRow).where(LeyLineRow.region_a_id == low, LeyLineRow.region_b_id == high))
+    if line is None:
+        line = LeyLineRow(world_id=first.world_id, region_a_id=low, region_b_id=high, strength=0, formed_epoch=epoch)
+        session.add(line)
+    line.forged = True
+    line.strength = clamp_int(strength if strength is not None else rules.environment.forged_ley_strength, 0, PERCENT)
+    line.severed = False
+    line.severed_until_epoch = None
+    line.severed_by_son_id = None
+    await session.flush()
+    return line
+
+
+async def unforge_ley(session: AsyncSession, line_id: int) -> LeyLineRow:
+    line = await ley_line(session, line_id)
+    line.forged = False
+    await session.flush()
+    return line
+
+
 async def restore_ley(session: AsyncSession, line_id: int) -> LeyLineRow:
     line = await ley_line(session, line_id)
     line.severed = False
@@ -270,3 +313,70 @@ async def restore_ley(session: AsyncSession, line_id: int) -> LeyLineRow:
     line.severed_by_son_id = None
     await session.flush()
     return line
+
+
+async def force_weather(
+    session: AsyncSession, region: EntityRow, kind: WeatherKind, *, from_epoch: int, epochs: int, season_position: int | None, son_id: int | None = None
+) -> ForcedWeatherRow:
+    if region.entity_type is not EntityType.REGION:
+        raise ValidationFailedError("Weather is forced over a region.")
+    row = ForcedWeatherRow(
+        region_entity_id=region.id,
+        world_id=region.world_id,
+        from_epoch=max(1, from_epoch),
+        until_epoch=max(1, from_epoch) + epochs - 1,
+        season_position=season_position,
+        kind=kind,
+        son_id=son_id,
+    )
+    session.add(row)
+    await session.flush()
+    return row
+
+
+async def release_weather(session: AsyncSession, forced_id: int) -> ForcedWeatherRow:
+    row = await session.get(ForcedWeatherRow, forced_id)
+    if row is None:
+        raise NotFoundError("No such forced weather.")
+    await session.delete(row)
+    await session.flush()
+    return row
+
+
+NOTABLE_NAMES: dict[NotableYearKind, str] = {
+    NotableYearKind.HUNGER: "the Hungry Year in {place}",
+    NotableYearKind.PLENTY: "the Year of Plenty in {place}",
+    NotableYearKind.WEATHER: "the Year of {weather}",
+    NotableYearKind.PESTILENCE: "the Year of Pestilence in {place}",
+}
+
+
+async def force_notable_year(
+    session: AsyncSession,
+    rules: Rules,
+    region: EntityRow,
+    kind: NotableYearKind,
+    *,
+    epoch: int,
+    magnitude: int,
+    name: str | None,
+    weather: WeatherKind | None,
+) -> NotableYearRow:
+    if region.entity_type is not EntityType.REGION:
+        raise ValidationFailedError("A notable year is remembered by a region.")
+    if kind is NotableYearKind.WEATHER and weather is None:
+        raise ValidationFailedError("A year of weather needs its weather.")
+    label = WEATHER[weather].label if weather is not None else ""
+    row = NotableYearRow(
+        world_id=region.world_id,
+        region_entity_id=region.id,
+        epoch=max(1, epoch),
+        year=epoch_start_year(max(1, epoch), rules.time.years_per_epoch),
+        kind=kind,
+        weather=weather,
+        name=name or NOTABLE_NAMES[kind].format(place=region.name, weather=label),
+        magnitude=clamp_int(magnitude, 0, PERCENT),
+    )
+    session.add(row)
+    await session.flush()
+    return row

@@ -16,6 +16,7 @@ from aerona.constants.tool_inputs import (
     TAGS_MAX,
     TITLE_MAX,
 )
+from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.entity import EntityType, LegendCategory
 from aerona.domain.enums.society import Commodity, CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic
 from aerona.domain.enums.travel import VehicleKind
@@ -63,7 +64,7 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
         EntityType.NATURAL_LAW: {"mechanic": (NaturalLaw | None, None)},
         EntityType.KNOWLEDGE: {"branch": (KnowledgeBranch, ...), "learner_ids": (list[int] | None, None)},
         EntityType.REGION: {"water": (bool | None, None)},
-        EntityType.SPECIES: {"traits": (list[CreatureTrait] | None, None)},
+        EntityType.SPECIES: {"traits": (list[CreatureTrait] | None, None), "body_plan": (BodyPlan, ...)},
         EntityType.VESSEL: {"target_world_id": (int | None, None), "vessel_kind": (VehicleKind | None, None)},
         EntityType.LANGUAGE: {"words": (Annotated[list[WordInput], Field(min_length=1)], ...)},
         EntityType.MORTAL: {"title": (Annotated[str, Field(max_length=TITLE_MAX)] | None, None)},

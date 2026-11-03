@@ -19,6 +19,7 @@ from aerona.api.schemas.body import (
     ProsthesisView,
 )
 from aerona.catalog.anatomy import FINGER_COUNT
+from aerona.catalog.body_plans import PLANS
 from aerona.catalog.stats import max_hp
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
@@ -190,6 +191,9 @@ async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyVie
             bearer_kind=kind_of(bearer),
             alive=alive(bearer),
             plan=body.plan,
+            plan_label=PLANS[body.plan].label,
+            height_class=body.height_class,
+            build=body.build,
             traits=[BodyFunction(trait) for trait in body.traits],
             hp=hp,
             hp_max=hp_max,

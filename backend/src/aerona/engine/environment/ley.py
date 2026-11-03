@@ -54,18 +54,23 @@ def cut_by_land(rules: Rules, grounds: dict[int, RegionEnvironmentRow], first: i
     return any(grounds[region].scars.get(kind.value, 0) >= depth for region in (first, second) if region in grounds for kind in CUTTING_SCARS)
 
 
-def candidate_lines(rules: Rules, atlas: RegionAtlas, regions: dict[int, EntityRow]) -> dict[tuple[int, int], int]:
+def candidate_lines(rules: Rules, atlas: RegionAtlas, regions: dict[int, EntityRow], grounds: dict[int, RegionEnvironmentRow]) -> dict[tuple[int, int], int]:
     threshold = rules.environment.ley_threshold
+
+    def density(region_id: int) -> int:
+        ground = grounds.get(region_id)
+        return ground.magic_density if ground is not None else stat_or(regions[region_id], "magic", 0)
+
     found: dict[tuple[int, int], int] = {}
     for region_id, region in regions.items():
-        magic = stat_or(region, "magic", 0)
+        magic = density(region_id)
         if magic < threshold:
             continue
         for other_id in atlas.neighbour_regions(region_id):
             other = regions.get(other_id)
             if other is None or other.world_id != region.world_id:
                 continue
-            strength = min(magic, stat_or(other, "magic", 0))
+            strength = min(magic, density(other_id))
             if strength >= threshold:
                 found[pair(region_id, other_id)] = clamp_int(strength, 0, PERCENT)
     return found

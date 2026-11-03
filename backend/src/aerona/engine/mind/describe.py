@@ -7,10 +7,13 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.mind import PressureKind, ValueAxis, ValueHolder
 from aerona.engine.mind.book import Holder, holder_kind, needs_of, pressures_of, skills_of, traits_of, values_of
 from aerona.engine.mind.memories import strongest
 from aerona.engine.mind.space import top_values
+from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.rules.registry import Rules
 
 HOLDER_WORDS = {
@@ -23,6 +26,7 @@ HOLDER_WORDS = {
 }
 STRONG = 60
 FAINT = 25
+HOME_BONDS = (BondKind.LIVES_IN, BondKind.MEMBER_OF, BondKind.PROTECTS, BondKind.DESCENDS_FROM)
 
 
 def strength_word(strength: float) -> str:
@@ -44,6 +48,42 @@ async def name_of(session: AsyncSession, node_id: int) -> str:
         if found is not None:
             return str(found.name)
     return f"#{node_id}"
+
+
+def pressure_phrase(pressures: Mapping[PressureKind, int], count: int, floor: int) -> str:
+    heaviest = sorted(((kind, value) for kind, value in pressures.items() if value >= floor), key=lambda item: (-item[1], item[0]))[:count]
+    return ", ".join(f"{PRESSURE_LABELS[kind].lower()} {value}/{PERCENT}" for kind, value in heaviest)
+
+
+async def mortal_home(session: AsyncSession, mortal: EntityRow) -> EntityRow | None:
+    location = await living_entity(session, mortal.location_id)
+    if location is not None and location.entity_type in COMMUNITY_TYPES:
+        return location
+    for kind in HOME_BONDS:
+        for bond in await active_bonds(session, [kind], sources=[mortal.id]):
+            home = await living_entity(session, bond.target_node_id)
+            if home is not None and home.entity_type in COMMUNITY_TYPES:
+                return home
+    return None
+
+
+async def borne_pressures(session: AsyncSession, rules: Rules, node: Holder) -> list[str]:
+    table = rules.context
+    if isinstance(node, EntityRow) and node.entity_type is EntityType.MORTAL:
+        home = await mortal_home(session, node)
+        phrase = pressure_phrase(await pressures_of(session, home.id), table.mind_pressures_shown, table.pressure_shown_above) if home else ""
+        return [f"Your home {home.name} is pressed by: {phrase}"] if home is not None and phrase else []
+    if not isinstance(node, SonRow):
+        return []
+    lines: list[str] = []
+    for bond in await active_bonds(session, [BondKind.WORSHIPS], targets=[node.id]):
+        people = await living_entity(session, bond.source_node_id)
+        if people is None or people.entity_type not in COMMUNITY_TYPES:
+            continue
+        phrase = pressure_phrase(await pressures_of(session, people.id), table.mind_pressures_shown, table.pressure_shown_above)
+        if phrase:
+            lines.append(f"Your worshippers {people.name} (#{people.id}) are pressed by: {phrase}")
+    return lines
 
 
 async def mind_lines(session: AsyncSession, rules: Rules, node: Holder, epoch: int, *, private: bool = False) -> list[str]:
@@ -71,6 +111,7 @@ async def mind_lines(session: AsyncSession, rules: Rules, node: Holder, epoch: i
     heaviest = sorted(pressures.items(), key=lambda item: (-item[1], item[0]))[: table.mind_pressures_shown]
     if heaviest:
         lines.append("Pressures on you: " + ", ".join(f"{PRESSURE_LABELS[kind_].lower()} {value}/{PERCENT}" for kind_, value in heaviest))
+    lines.extend(await borne_pressures(session, rules, node))
     for item in await strongest(session, node.id, epoch, table.mind_memories_shown):
         name = await name_of(session, item.row.subject_node_id)
         feeling = "warmly" if item.strength > 0 else "bitterly"

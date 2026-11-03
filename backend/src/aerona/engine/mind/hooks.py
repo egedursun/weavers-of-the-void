@@ -1,11 +1,13 @@
 from collections.abc import Iterable
 
-from aerona.catalog.mind import COMMAND_SKILLS, HEALING_SKILLS, MELEE_SKILLS, MISSILE_SKILLS
+from sqlalchemy import select
+
+from aerona.catalog.mind import COMMAND_SKILLS, HEALING_SKILLS, MELEE_SKILLS, MEMORIES, MISSILE_SKILLS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import InjuryKind, InjuryState
-from aerona.domain.enums.entity import HERO_ROLES, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.entity import COMMUNITY_TYPES, HERO_ROLES, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import ActKind, MemoryKind, SkillKind, TraitKind, TraitSource
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import load_holder, values_for
@@ -19,12 +21,11 @@ FIGHTING_ROLES = frozenset({*HERO_ROLES, MortalRole.CAPTAIN, MortalRole.BANDIT})
 BATTLE_TRAITS = (TraitKind.BRAVE, TraitKind.CRAVEN)
 MAIMED_TRAITS = (TraitKind.MELANCHOLIC, TraitKind.IRON_WILLED)
 CAPTIVITY_TRAITS = (TraitKind.PARANOID,)
-ACT_MEMORIES = {
-    ActKind.EXECUTION: MemoryKind.KILLED_KIN,
-    ActKind.BETRAYAL: MemoryKind.BETRAYED_ME,
-    ActKind.OATHBREAKING: MemoryKind.BROKE_OATH,
-    ActKind.CONQUEST: MemoryKind.CONQUERED_US,
-}
+ACT_MEMORIES: dict[ActKind, MemoryKind] = {}
+for _kind, _spec in MEMORIES.items():
+    if _spec.act is not None:
+        ACT_MEMORIES.setdefault(_spec.act, _kind)
+COMMUNITY_KINDS = tuple(COMMUNITY_TYPES)
 
 
 def is_mortal(node: object) -> bool:
@@ -48,6 +49,8 @@ async def wound_memories(ctx: TickContext, bearer: object, source_id: int | None
             magnitude=size,
             epoch=ctx.epoch,
         )
+        if maimed:
+            await judged(ctx, source_id, bearer_id, ActKind.MUTILATION)
     if maimed and isinstance(bearer, EntityRow) and bearer.mortal_role in FIGHTING_ROLES:
         await gain_trait(
             ctx,
@@ -94,6 +97,7 @@ async def taken_captive(ctx: TickContext, captive_id: int, captor_id: int) -> No
         magnitude=-ctx.rules.memory.backfill_magnitude,
         epoch=ctx.epoch,
     )
+    await judged(ctx, captor_id, captive_id, ActKind.TAKING_CAPTIVES)
 
 
 async def freed(ctx: TickContext, captive: EntityRow, captor_id: int | None, rescuer_id: int | None = None) -> None:
@@ -165,6 +169,49 @@ async def witnessed(ctx: TickContext, holder_id: int, subject_id: int, act: ActK
     size = round(base * reading / PERCENT)
     if not size:
         return 0
-    kind = ACT_MEMORIES.get(act, MemoryKind.GOODWILL if size > 0 else MemoryKind.ILL_WILL)
+    kind = MemoryKind.GOODWILL if size > 0 else ACT_MEMORIES.get(act, MemoryKind.ILL_WILL)
     await remember(ctx.session, ctx.rules, holder_id=holder_id, subject_id=subject_id, kind=kind, magnitude=size, epoch=ctx.epoch, note=note)
+    return size
+
+
+async def onlookers(ctx: TickContext, actor_id: int, victim_id: int) -> list[int]:
+    victim = await ctx.session.get(EntityRow, victim_id)
+    if victim is None or victim.location_id is None:
+        return []
+    statement = select(EntityRow.id).where(
+        EntityRow.location_id == victim.location_id,
+        EntityRow.status == EntityStatus.CANON,
+        EntityRow.entity_type.in_(COMMUNITY_KINDS),
+        EntityRow.id.not_in([actor_id, victim_id]),
+    )
+    return list(await ctx.session.scalars(statement.order_by(EntityRow.id)))
+
+
+async def judged(ctx: TickContext, actor_id: int, victim_id: int, act: ActKind, *, note: str | None = None) -> int:
+    base = ctx.rules.memory.witness_magnitude
+    if not base:
+        return 0
+    moved = 0
+    for holder in await onlookers(ctx, actor_id, victim_id):
+        moved += abs(await witnessed(ctx, holder, actor_id, act, base=base, note=note))
+    return moved
+
+
+async def converted(ctx: TickContext, convert_id: int, converter_id: int, *, note: str | None = None) -> int:
+    if convert_id == converter_id:
+        return 0
+    size = ctx.rules.memory.conversion_magnitude
+    await remember(
+        ctx.session, ctx.rules, holder_id=convert_id, subject_id=converter_id, kind=MemoryKind.CONVERTED_ME, magnitude=size, epoch=ctx.epoch, note=note
+    )
+    return size
+
+
+async def desecrated(ctx: TickContext, keeper_id: int, desecrator_id: int, *, note: str | None = None) -> int:
+    if keeper_id == desecrator_id:
+        return 0
+    size = -ctx.rules.memory.outrage_magnitude
+    await remember(
+        ctx.session, ctx.rules, holder_id=keeper_id, subject_id=desecrator_id, kind=MemoryKind.DESECRATED_HOLY, magnitude=size, epoch=ctx.epoch, note=note
+    )
     return size

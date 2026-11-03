@@ -13,6 +13,7 @@ from aerona.engine.body.book import Bearer, anatomy_for, ensure_body
 from aerona.engine.body.hits import MARK_KINDS, Armour, Harm, Hit, hits_for, loss_for
 from aerona.engine.body.state import refresh
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_immortal, is_notable
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.mind.hooks import wound_memories
@@ -52,8 +53,13 @@ def _lethal(hit: Hit) -> bool:
     return hit.part.vital and hit.kind is InjuryKind.DESTROYED
 
 
+INJURY_KEY = "injuries"
+
+
 async def _record(ctx: TickContext, bearer: Bearer, body: BodyRow, harm: Harm, hits: list[Hit], *, world_id: int | None) -> list[InjuryRow]:
     rows: list[InjuryRow] = []
+    if blocked(bearer.id, INJURY_KEY):
+        return rows
     for hit in hits:
         if hit.absorbed:
             continue
@@ -174,6 +180,13 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
         max(rows, key=lambda row: row.severity).state = InjuryState.LETHAL
     result = await die(ctx, bearer, cause=harm.death_cause, killer_id=harm.killer_id, event_id=harm.event_entity_id)
     return Wounding(WoundOutcome.DIED if result is not None else WoundOutcome.WOUNDED, rows, lost)
+
+
+async def slay(ctx: TickContext, mortal: EntityRow, harm: Harm, *, forced: bool = True, event_id: int | None = None) -> bool:
+    if mortal.entity_type is not EntityType.MORTAL or mortal.status is not EntityStatus.CANON:
+        return False
+    await fatal_injury(ctx, mortal, replace(harm, event_entity_id=harm.event_entity_id or event_id))
+    return await die(ctx, mortal, cause=harm.death_cause, killer_id=harm.killer_id, forced=forced, event_id=event_id) is not None
 
 
 async def fatal_injury(ctx: TickContext, mortal: EntityRow, harm: Harm) -> InjuryRow | None:

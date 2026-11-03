@@ -8,6 +8,7 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
@@ -37,7 +38,16 @@ CURRENCY_SUBTYPE = "currency"
 TRADE_MODES = (MovementMode.ON_FOOT, MovementMode.WHEELED, MovementMode.BOAT)
 
 
-def route_ease(rules: Rules, ground: EnvironmentBook | None, first: int, second: int) -> float:
+def footed_ease(ground: EnvironmentBook, seed: int, epoch: int, region: RegionEnvironmentRow) -> float:
+    seasons: list[WorldSeasonRow | None] = [*ground.seasons_of(region.world_id)] or [None]
+    slots = [
+        max(ground.footed(seed, epoch, region, mode.value, season=season, slot=f"trade.{region.entity_id}.{index}") for mode in TRADE_MODES)
+        for index, season in enumerate(seasons)
+    ]
+    return sum(slots) / len(slots) / PERCENT
+
+
+def route_ease(rules: Rules, ground: EnvironmentBook | None, first: int, second: int, *, seed: int, epoch: int) -> float:
     if ground is None:
         return 1.0
     eases: list[float] = []
@@ -45,10 +55,7 @@ def route_ease(rules: Rules, ground: EnvironmentBook | None, first: int, second:
         region = ground.region_of(endpoint)
         if region is None:
             continue
-        passable = max(region.passability.get(mode.value, PERCENT) for mode in TRADE_MODES)
-        seasons = ground.seasons_of(region.world_id)
-        travel = sum(season.travel for season in seasons) / len(seasons) if seasons else PERCENT
-        eases.append(passable * travel / PERCENT / PERCENT)
+        eases.append(footed_ease(ground, seed, epoch, region))
     if not eases:
         return 1.0
     floor = rules.trade.route_ease_floor_pct / PERCENT
@@ -64,7 +71,7 @@ def route_income(
     for bond in bonds.bonds:
         if bond.kind is not BondKind.TRADES_WITH or not bond.active:
             continue
-        ease = route_ease(ctx.rules, ground, bond.source_node_id, bond.target_node_id)
+        ease = route_ease(ctx.rules, ground, bond.source_node_id, bond.target_node_id, seed=ctx.environment.world_seed, epoch=ctx.epoch)
         for endpoint in (bond.source_node_id, bond.target_node_id):
             if endpoint not in entities:
                 continue

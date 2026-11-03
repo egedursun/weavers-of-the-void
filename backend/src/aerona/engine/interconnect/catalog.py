@@ -3,7 +3,7 @@ import re
 import sys
 
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
-from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, PersonalityValueRow, PressureRow, SkillRow, TraitRow
 from aerona.db.tables.society import CommunityRelationRow
@@ -68,7 +68,7 @@ BUILT_IN = (
         phases=("harvest", "campaigns"),
         surface=Surface(drawer=SEASONS_SECTION),
         backfill="none: earlier epochs keep their single roll; sub-clocks run from the next epoch (K.2)",
-        templates=("environment.notable_year.hunger", "environment.notable_year.plenty", "environment.notable_year.weather"),
+        templates=("year.hunger", "year.plenty", "year.weather"),
         tables=(NotableYearRow.__tablename__,),
         targets=("region", "army"),
         couplings=(
@@ -106,7 +106,7 @@ BUILT_IN = (
         phases=("environment_survey", "calendars"),
         surface=Surface(drawer=SEASONS_SECTION),
         backfill="environment_survey: tilt, year, day, moons and seasons are generated for every world from its seed and orbit",
-        templates=("environment.calendar_adopted", "tools.son.reorder_seasons"),
+        templates=("season.calendar_adopted", "tools.son.reorder_seasons"),
         tables=(WorldSeasonRow.__tablename__, CalendarRow.__tablename__),
         exposure=Exposure.TOOL,
         tools=("reorder_seasons",),
@@ -124,15 +124,20 @@ BUILT_IN = (
         spec_item="F2.3",
         title="Weather on demand",
         subsystem=Subsystem.ENVIRONMENT,
-        phases=("harvest", "campaigns", "travel"),
+        phases=("harvest", "campaigns", "travel", "trade_income", "famine_migration", "sky"),
         surface=Surface(drawer=ENVIRONMENT_SECTION),
-        backfill="none: weather is drawn when a mechanic needs it and never stored",
+        backfill="none: weather is drawn when a mechanic needs it; only weather held by a son or the player is stored",
+        templates=("tools.son.shape_weather",),
+        tables=(ForcedWeatherRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("shape_weather",),
         targets=("region", "army"),
         couplings=(
             Coupling(Subsystem.WAR, "footing, visibility, cold, heat and camp fever in every campaign season"),
-            Coupling(Subsystem.GODS, "omens read through the patron god's domains"),
-            Coupling(Subsystem.ECONOMY, "growth of the sampled year's harvest"),
-            Coupling(Subsystem.COSMOS, "wind at departure endangers journeys"),
+            Coupling(Subsystem.GODS, "omens read through the patron god's domains; sky gods hold a region's weather"),
+            Coupling(Subsystem.ECONOMY, "growth of the sampled year's harvest; footing and wind on trade roads"),
+            Coupling(Subsystem.COSMOS, "wind at departure endangers journeys; clouds hide eclipses and comets"),
+            Coupling(Subsystem.DEMOGRAPHY, "footing of the season migrants leave in"),
         ),
     ),
     Mechanic(
@@ -178,6 +183,7 @@ BUILT_IN = (
         phases=("land_use", "resource_economy"),
         surface=Surface(drawer=ENVIRONMENT_SECTION),
         backfill="environment_survey: inhabited regions start at the land use their people already need",
+        templates=("land.erosion", "land.overfarmed", "land.soil_exhausted", "land.rewilded"),
         targets=("region",),
         couplings=(
             Coupling(Subsystem.ECOLOGY, "clearing shrinks wild land"),
@@ -204,7 +210,21 @@ BUILT_IN = (
         spec_item="F4.2",
         title="Typed injuries on body parts",
         subsystem=Subsystem.BODY,
-        phases=("disaster_casualties", "natural_disasters", "curse_decay", "cursed_items", "glory_hunts", "heroes"),
+        phases=(
+            "war_casualties",
+            "disaster_casualties",
+            "natural_disasters",
+            "curse_decay",
+            "cursed_items",
+            "glory_hunts",
+            "sworn_hunts",
+            "heroes",
+            "campaigns",
+            "prisoners",
+            "mortal_wounds",
+            "body_survey",
+            "mind_skills",
+        ),
         surface=Surface(drawer=BODY_SECTION),
         backfill="body_survey: mortals who fell in battle, siege, captivity or disaster before bodies existed get one fatal wound; others start unhurt",
         templates=tuple(f"injury.{kind.value}" for kind in InjuryKind),
@@ -259,7 +279,7 @@ BUILT_IN = (
         phases=("body_conditions",),
         surface=Surface(drawer=BODY_SECTION),
         backfill="body_conditions: the chosen gain their mark; other conditions arise from play",
-        templates=tuple(f"condition.gained.{kind.value}" for kind in ConditionKind),
+        templates=(*(f"condition.gained.{kind.value}" for kind in ConditionKind), "body.reader_taken"),
         fields=("melee", "missile", "command", "craft", "scholarship", "presence", "mobility", "fertility", "pain"),
         tables=(ConditionRow.__tablename__, BodyRow.__tablename__),
         exposure=Exposure.CONTEXT,
@@ -412,10 +432,10 @@ BUILT_IN = (
         spec_item="F8",
         title="Needs of mortals and pressures on communities",
         subsystem=Subsystem.MIND,
-        phases=("mind_needs", "famine_migration", "uprisings", "religion_spread", "diplomacy", "factions", "travel"),
+        phases=("mind_needs", "famine_aid", "famine_migration", "uprisings", "religion_spread", "diplomacy", "factions", "travel", "tribute", "espionage"),
         surface=Surface(drawer=MIND_SECTION),
         backfill="computed: needs and pressures are read from the present state every epoch",
-        templates=("need.despair",),
+        templates=("need.despair", "mind.famine_aid", "skill.career_beggar"),
         fields=("need", "pressure", "value"),
         tables=(NeedRow.__tablename__, PressureRow.__tablename__),
         exposure=Exposure.CONTEXT,

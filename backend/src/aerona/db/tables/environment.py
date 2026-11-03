@@ -153,6 +153,7 @@ class NotableYearRow(CreatedAtMixin, Base):
     name: Mapped[str] = mapped_column(String(NAME_MAX_LENGTH))
     magnitude: Mapped[int]
     incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
+    legend_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
 
 
 class CalendarRow(CreatedAtMixin, Base):
@@ -186,3 +187,22 @@ class LeyLineRow(Base):
     severed: Mapped[bool] = mapped_column(default=False)
     severed_until_epoch: Mapped[int | None]
     severed_by_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
+    forged: Mapped[bool] = mapped_column(default=False)
+
+
+class ForcedWeatherRow(CreatedAtMixin, Base):
+    __tablename__ = "forced_weather"
+    __table_args__ = (
+        at_least("from_epoch", 1),
+        CheckConstraint("until_epoch >= from_epoch", name="ordered_epochs"),
+        Index("ix_forced_weather_region", "region_entity_id", "until_epoch"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    region_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
+    world_id: Mapped[int] = mapped_column(ForeignKey("worlds.id", ondelete="CASCADE"))
+    from_epoch: Mapped[int]
+    until_epoch: Mapped[int]
+    season_position: Mapped[int | None]
+    kind: Mapped[WeatherKind] = mapped_column(enum_type(WeatherKind, "kind"))
+    son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))

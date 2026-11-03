@@ -7,15 +7,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.mind import CAREER_SKILLS, CAREER_VALUES, FIXED_ROLES, ROLE_SKILLS, SKILLS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
+from aerona.db.tables.body import BodyCustomRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SKILL_MAX, SkillRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.mind import CareerChange, MemoryKind, SkillKind, SkillSource, TraitEffect, ValueAxis
 from aerona.engine.body.book import factor
+from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
-from aerona.engine.mind.book import clamp_skill, effect_of, is_locked, mind_of, scaled_by, set_skill, skills_of
+from aerona.engine.mind.book import clamp_skill, effect_of, is_locked, mind_of, scaled_by, set_skill, skills_of, values_for
 from aerona.engine.mind.memories import remember
+from aerona.engine.mind.space import blend
 from aerona.engine.mind.traits import teach_trait
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.stats import stat
@@ -83,6 +86,8 @@ async def practise(
     if row is None:
         row = await set_skill(session, node_id, skill, 0, epoch=epoch, source=source)
     rate = scaled_by(await effect_of(session, node_id, TraitEffect.LEARNING, rules.traits.effect_scale_pct))
+    if row.level < row.peak:
+        rate *= rules.skills.relearn_pct / PERCENT
     row.xp += round(xp * rate)
     gained = 0
     while row.level < SKILL_MAX and row.xp >= level_cost(rules, row.level):
@@ -137,7 +142,9 @@ async def teach_apprentices(ctx: TickContext) -> int:
             student_level = (await skills_of(ctx.session, student.id)).get(lesson.skill)
             if student_level is not None and student_level.level >= lesson.level:
                 continue
-            await practise(ctx.session, ctx.rules, student.id, lesson.skill, table.teach_xp * quality, epoch=ctx.epoch, source=SkillSource.TEACHING)
+            gap = lesson.level - (student_level.level if student_level is not None else 0)
+            pace = 1 + gap * table.teach_gap_pct / PERCENT / PERCENT
+            await practise(ctx.session, ctx.rules, student.id, lesson.skill, table.teach_xp * quality * pace, epoch=ctx.epoch, source=SkillSource.TEACHING)
         await practise(ctx.session, ctx.rules, master.id, SkillKind.TEACHING, table.teaching_xp, epoch=ctx.epoch)
         await remember(
             ctx.session, ctx.rules, holder_id=student.id, subject_id=master.id, kind=MemoryKind.TAUGHT_ME, magnitude=table.taught_memory, epoch=ctx.epoch
@@ -192,7 +199,21 @@ async def choose_career(ctx: TickContext, mortal: EntityRow, values: Mapping[Val
     rows = await career_open(ctx, mortal)
     if rows is None or mortal.mortal_role is None:
         return None
-    return career_move(ctx.rules, mortal.mortal_role, await role_levels(ctx.session, mortal.id, rows), values)
+    people = await people_of(ctx.session, mortal)
+    culture = await values_for(ctx.session, people.id) if people is not None else {}
+    steered = blend(values, culture, ctx.rules.careers.culture_weight_pct) if culture else values
+    return career_move(ctx.rules, mortal.mortal_role, await role_levels(ctx.session, mortal.id, rows), steered)
+
+
+async def left_to_beg(ctx: TickContext, mortal: EntityRow) -> bool:
+    people = await people_of(ctx.session, mortal)
+    if people is None:
+        return False
+    custom = await ctx.session.get(BodyCustomRow, people.id)
+    if custom is not None and custom.pension:
+        return False
+    mercy = (await values_for(ctx.session, people.id)).get(ValueAxis.MERCY, 0)
+    return mercy < ctx.rules.careers.beggar_mercy_below
 
 
 async def holders_with(session: AsyncSession, skill: SkillKind, minimum: int) -> list[int]:

@@ -36,6 +36,7 @@ from aerona.engine.body.hits import MARK_KINDS, PERMANENT_KINDS, TOTAL_LOSS_KIND
 from aerona.engine.body.state import refresh
 from aerona.engine.context import TickContext
 from aerona.engine.gods.queries import community_of
+from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.mind.hooks import failed_to_heal, healed
@@ -99,8 +100,33 @@ def permanent_chance(rules: HealingRules, kind: InjuryKind) -> int:
     return table.get(kind, rules.permanent_other)
 
 
-def heal_chance(rules: HealingRules, severity: int) -> int:
-    return (rules.heal_severity_1, rules.heal_severity_2, rules.heal_severity_3, rules.heal_severity_4, rules.heal_severity_5)[severity - 1]
+def heal_chance(rules: HealingRules, severity: int, kind: InjuryKind) -> float:
+    by_severity = (rules.heal_severity_1, rules.heal_severity_2, rules.heal_severity_3, rules.heal_severity_4, rules.heal_severity_5)[severity - 1]
+    by_kind = {
+        InjuryKind.BRUISE: rules.heal_bruise_pct,
+        InjuryKind.CUT: rules.heal_cut_pct,
+        InjuryKind.DEEP_CUT: rules.heal_deep_cut_pct,
+        InjuryKind.PUNCTURE: rules.heal_puncture_pct,
+        InjuryKind.FRACTURE: rules.heal_fracture_pct,
+        InjuryKind.CRUSH: rules.heal_crush_pct,
+        InjuryKind.BURN: rules.heal_burn_pct,
+        InjuryKind.FROSTBITE: rules.heal_frostbite_pct,
+        InjuryKind.BITE: rules.heal_bite_pct,
+        InjuryKind.VENOM: rules.heal_venom_pct,
+        InjuryKind.CURSE_WITHER: rules.heal_curse_wither_pct,
+    }.get(kind, PERCENT)
+    return by_severity * by_kind / PERCENT
+
+
+def lasting_chance(rules: HealingRules, kind: InjuryKind, severity: int) -> float:
+    by_severity = (
+        rules.permanent_severity_1_pct,
+        rules.permanent_severity_2_pct,
+        rules.permanent_severity_3_pct,
+        rules.permanent_severity_4_pct,
+        rules.permanent_severity_5_pct,
+    )[severity - 1]
+    return permanent_chance(rules, kind) * by_severity / PERCENT
 
 
 def medicine_cut(rules: HealingRules, tier: MedicineTier) -> int:
@@ -270,7 +296,7 @@ async def _fester(ctx: TickContext, bearer: Bearer, body: BodyRow, row: InjuryRo
 async def _close(ctx: TickContext, bearer: Bearer, row: InjuryRow, care: Care, rng_key: str) -> None:
     table = ctx.rules.healing
     rng = ctx.rng(seed_of("scar", rng_key))
-    lasting = row.kind in PERMANENT_KINDS or (row.severity >= table.permanent_severity_floor and rng.chance(permanent_chance(table, row.kind)))
+    lasting = row.kind in PERMANENT_KINDS or rng.chance(lasting_chance(table, row.kind, row.severity))
     if lasting:
         row.state = InjuryState.PERMANENT
         if row.kind not in TOTAL_LOSS_KINDS:
@@ -290,7 +316,12 @@ async def _close(ctx: TickContext, bearer: Bearer, row: InjuryRow, care: Care, r
         await gain_condition(ctx, bearer, ConditionKind.CHRONIC_ILLNESS, row.cause_kind, severity=row.severity, source_node_id=row.cause_node_id)
 
 
+HEALING_KEY = "healing"
+
+
 async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending:
+    if blocked(bearer.id, HEALING_KEY):
+        return Tending()
     body = await ensure_body(ctx.session, ctx.rules, bearer, ctx.epoch)
     anatomy = anatomy_for(body)
     table = ctx.rules.healing
@@ -308,7 +339,7 @@ async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending
         if row.state is not InjuryState.INFECTED and anatomy.infects:
             chance = infection_base(table, row.kind) * care.disease / table.disease_reference
             chance *= (PERCENT - medicine_cut(table, care.tier)) / PERCENT * (PERCENT - min(table.healer_skill_cap, skill)) / PERCENT
-            checks = 1 + (table.campaign_infection_steps if campaign else 0)
+            checks = max(1, ctx.rules.campaigns.seasons_per_war_epoch) if campaign else 1
             if any(rng.chance(chance) for _ in range(checks)):
                 row.state = InjuryState.INFECTED
                 outcome.changed = True
@@ -321,7 +352,7 @@ async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending
             continue
         if not anatomy.heals:
             continue
-        chance = heal_chance(table, row.severity) * (1 + stats.endurance / PERCENT)
+        chance = heal_chance(table, row.severity, row.kind) * (1 + stats.endurance / PERCENT)
         chance *= table.campaign_rest_pct / PERCENT if campaign else 1
         chance *= 1 + table.healer_heal_bonus_pct * skill / PERCENT / PERCENT
         chance *= 1 + table.divine_heal_bonus_pct / PERCENT if divine else 1

@@ -4,6 +4,7 @@ from aerona.core.errors import ConflictError, NotFoundError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import CaptiveRow
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES
@@ -11,8 +12,8 @@ from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.body.book import effective
 from aerona.engine.context import TickContext
-from aerona.engine.mind.drives import cruelty_drive
-from aerona.engine.mind.hooks import witnessed
+from aerona.engine.mind.drives import closeness, cruelty_drive
+from aerona.engine.mind.hooks import judged, witnessed
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import living_entity
@@ -50,6 +51,7 @@ async def pay_ransom(ctx: TickContext, row: CaptiveRow, captive: EntityRow, capt
     shift_stat(captor, "wealth", cost)
     add_prosperity(ctx.rules, captor, cost)
     await change_relation(ctx, home.id, captor.id, ctx.rules.campaigns.ransom_relation, MemoryKind.FREED_US, note="ransom")
+    await judged(ctx, captor.id, home.id, ActKind.RANSOM, note=captive.name)
     await release_captive(ctx, row, CaptiveStatus.RANSOMED, cost)
     text = f"{home.name} paid {captor.name} a heavy ransom for {captive.name}; the prisoner returned home."
     await _note(ctx, ChronicleKind.RANSOM, text, "prisoner.ransomed", (captor.id, captive.id, home.id))
@@ -85,13 +87,14 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
         and rng.chance(campaigns.execution_chance * await cruelty_drive(ctx.session, ctx.rules, captor.id))
     ):
         await release_captive(ctx, row, CaptiveStatus.EXECUTED)
-        await death_path(ctx, captive, f"executed by {captor.name}", captor.id, "execution", forced=True)
+        await death_path(ctx, captive, f"executed by {captor.name}", captor.id, "execution", forced=True, harm=HarmCause.PUNISHMENT)
         await start_blood_feud(ctx, home.id, captor.id, f"the execution of {captive.name}")
         await witnessed(ctx, home.id, captor.id, ActKind.EXECUTION, base=ctx.rules.memory.outrage_magnitude, note=captive.name)
         text = f"{captor.name} executed its prisoner {captive.name}; {home.name} swore vengeance."
         await _note(ctx, ChronicleKind.WAR, text, "prisoner.executed", (captor.id, captive.id, home.id))
         return
-    if ctx.epoch - row.taken_epoch >= campaigns.captive_defection_epochs and rng.chance(campaigns.captive_defection_chance):
+    kinship = await closeness(ctx.session, captive.id, captor.id)
+    if ctx.epoch - row.taken_epoch >= campaigns.captive_defection_epochs and rng.chance(campaigns.captive_defection_chance * kinship):
         await defect(ctx, row, captive, captor)
 
 

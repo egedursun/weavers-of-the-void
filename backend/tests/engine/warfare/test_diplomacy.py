@@ -98,6 +98,24 @@ async def test_betrayal_in_a_multi_world_cosmos_goes_to_the_cosmic_court(session
     assert await EntityRepository(session).has_flag(traitor.id, EntityFlag.OATHBREAKER)
 
 
+async def test_betrayal_mid_war_loses_the_abandoned_ally_its_war(session: AsyncSession, world_id: int) -> None:
+    rules = tune(Rules(), diplomacy={"betrayal_war_collapse_chance": 100})
+    ctx = make_ctx(session, rules)
+    first, second = await neighbours(session, world_id)
+    enemy = await make(session, "Grey Folk", EntityType.PEOPLE, world_id, population=900)
+    await bond(session, first, second, BondKind.ALLY)
+    first_row, second_row = await EntityRepository(session).get(first), await EntityRepository(session).get(second)
+    assert first_row is not None and second_row is not None
+    await declare_war(ctx, enemy.id, first, "old raids")
+    await declare_war(ctx, enemy.id, second, "old raids")
+    first_war = await open_war(ctx, enemy, first_row)
+    second_war = await open_war(ctx, enemy, second_row)
+    traitor = await decree_betrayal(ctx, first, second, war=False)
+    betrayed, survived = (second_war, first_war) if traitor.id == first else (first_war, second_war)
+    assert betrayed.ending is WarEnding.BETRAYAL and betrayed.victor_entity_id == enemy.id
+    assert survived.status is not WarStatus.ENDED
+
+
 async def test_old_grudges_fade_when_relations_improve(session: AsyncSession, world_id: int) -> None:
     rules = tune(Rules(), diplomacy={**CALM, "grudge_fade_min_age": 2, "grudge_fade_relation": 0})
     first, second = await neighbours(session, world_id)

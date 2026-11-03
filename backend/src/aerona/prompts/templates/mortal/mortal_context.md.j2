@@ -35,7 +35,7 @@ YOUR LANGUAGE: {% if language %}#{{ language.id }} {{ language.name }}. From its
 {% endset %}
 {% set land_text %}
 
-YOUR LAND: {% if land %}#{{ land.id }} {{ land.name }}{% if land.elevation_label %} ({{ land.elevation_label }}{% if land.coastal %}, coastal{% endif %}; neighbouring regions: {% if land.neighbours %}{% for item in land.neighbours %}#{{ item.id }} {{ item.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}){% endif %}{% else %}unknown{% endif %}
+YOUR LAND: {% if land %}#{{ land.id }} {{ land.name }}{% if land.elevation_label %}, {{ land.elevation_label }}{% endif %}{% if land.coastal %}, coastal{% endif %}{% if land.ground %}; {{ land.ground }}{% endif %}{% if land.weather %}; now {{ land.weather }}{% endif %}; neighbouring regions: {% if land.neighbours %}{% for item in land.neighbours %}#{{ item.id }} {{ item.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}{% else %}unknown{% endif %}
 
 {% endset %}
 {% set near_body %}

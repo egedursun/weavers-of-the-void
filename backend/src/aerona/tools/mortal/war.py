@@ -10,10 +10,11 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.mind import MemoryKind, SkillKind
+from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitEffect
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.hits import Harm
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits
+from aerona.engine.mind.book import effect_of, scaled_by
 from aerona.engine.primitives.faith import patron_son
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.services.community_relations import change_relation
@@ -116,7 +117,8 @@ async def sabotage(call: MortalCall, args: SabotageInput) -> str:
         await fail_with_candidates(call, MortalResult.INVALID_TARGET, SABOTAGE_TARGETS)
     if not await near(call, target):
         await fail_with_candidates(call, MortalResult.TOO_FAR, SABOTAGE_TARGETS)
-    cunning = await wits_of(call) + call.die(tools.sabotage_die, "cunning")
+    guile = scaled_by(await effect_of(call.session, call.me.id, TraitEffect.DECEIT, call.rules.traits.effect_scale_pct))
+    cunning = await wits_of(call) * guile + call.die(tools.sabotage_die, "cunning")
     await practised(call, (SkillKind.INTRIGUE, SkillKind.DECEPTION), call.rules.skills.preach_xp)
     watch = first_stat(target, WATCH_CHAIN, tools.default_stat) + call.die(tools.sabotage_die, "watch")
     caught = watch > cunning + tools.sabotage_caught_margin
@@ -133,7 +135,9 @@ async def sabotage(call: MortalCall, args: SabotageInput) -> str:
     label = lines.SABOTAGE_KINDS[args.kind.value]
     if caught:
         if not await enemies(call, call.me.id, target.id):
-            await BondRepository(call.session).connect(BondDraft(target.id, call.me.id, BondKind.ENEMY, call.epoch, lines.SABOTAGE_BOND.format(kind=label)))
+            await BondRepository(call.session).connect(
+                BondDraft(target.id, call.me.id, BondKind.ENEMY, call.epoch, lines.SABOTAGE_BOND.format(kind=label), war_cause=WarCause.SABOTAGE)
+            )
         if is_community(target) and is_community(call.me):
             await change_relation(call.tick, call.me.id, target.id, -tools.sabotage_caught_relation, MemoryKind.HARMED_ME, note=label)
         note += lines.CAUGHT_SUFFIX

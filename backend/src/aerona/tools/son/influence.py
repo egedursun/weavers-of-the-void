@@ -11,10 +11,13 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityType
 from aerona.domain.enums.son import PowerEffect
+from aerona.engine.body.hits import Harm
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.prompts import SonToolId
@@ -73,6 +76,7 @@ class DreamInput(ToolInput):
     dream: Annotated[str, Field(min_length=SAYING_MIN, max_length=SAYING_MAX)]
 
 
+HP_KEY = "hp"
 FIXED_STATS = frozenset({"lifespan", "age", "level"})
 
 
@@ -99,6 +103,18 @@ def shifted(rules: Any, entity: EntityRow, key: str, delta_points: float, percen
     return old, new
 
 
+async def moved_by(call: SonCall, entity: EntityRow, key: str, change: float, harm: tuple[HarmCause, str]) -> tuple[int, int] | None:
+    old = stat(entity, key)
+    if entity.entity_type is not EntityType.MORTAL or key != HP_KEY or old is None or change >= 0:
+        return shifted(call.rules, entity, key, change, change)
+    cause, reason = harm
+    probe = old + change
+    damage = max(0, old - max(0, round(probe)))
+    if damage:
+        await apply_hits(call.tick, entity, Harm(damage, cause, reason, source_node_id=call.son.id, killer_id=call.son.id))
+    return old, stat(entity, key) or 0
+
+
 async def affect_entity(call: SonCall, args: AffectInput) -> str:
     tools = call.rules.son_tools
     entity = await require_canon(call.session, args.entity_id)
@@ -118,7 +134,7 @@ async def affect_entity(call: SonCall, args: AffectInput) -> str:
         if field is None or change.stat not in keys:
             fail(SonResult.STAT_INVALID, stat=change.stat, available=NOTE_SEPARATOR.join(keys))
         bounded = max(-tools.influence_max_change_pct, min(tools.influence_max_change_pct, change.percent))
-        moved = shifted(call.rules, entity, change.stat, bounded, bounded)
+        moved = await moved_by(call, entity, change.stat, bounded, (HarmCause.GOD, f"struck down by {call.son.name}: {args.reason}"))
         if moved is not None:
             notes.append(lines.EFFECT_NOTE.format(label=field.label, old=moved[0], new=moved[1]))
     call.spend_essence(cost)
@@ -195,7 +211,7 @@ async def curse(call: SonCall, args: CurseInput) -> str:
         field = ENTITY_TYPES[entity.entity_type].stat(key)
         if field is None or stat(entity, key) is None:
             continue
-        moved = shifted(call.rules, entity, key, -severity, -severity)
+        moved = await moved_by(call, entity, key, -severity, (HarmCause.CURSE, f"withered under {call.son.name}'s curse"))
         if moved is not None:
             notes.append(lines.EFFECT_NOTE.format(label=field.label, old=moved[0], new=moved[1]))
     await entities.add_flag(entity.id, EntityFlag.CURSED, call.epoch)

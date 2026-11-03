@@ -8,9 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.mind import MEMORIES
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow, TraitRow
 from aerona.db.tables.society import CommunityRelationRow
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.mind import OpinionComponent, TraitEffect, TraitKind, ValueAxis
 from aerona.engine.mind.book import ValueIndex, trait_effect, traits_of, values_for
@@ -182,10 +185,34 @@ async def opinion(session: AsyncSession, rules: Rules, epoch: int, holder_id: in
     )
 
 
+def with_rulers(rules: Rules, base: float, ruler_views: list[int]) -> int:
+    if not ruler_views:
+        return clamp_int(base, RELATION_MIN, RELATION_MAX)
+    weight = rules.opinion.ruler_weight_pct / PERCENT
+    return clamp_int(base * (1 - weight) + sum(ruler_views) / len(ruler_views) * weight, RELATION_MIN, RELATION_MAX)
+
+
+async def mortal_rulers(session: AsyncSession, community_id: int) -> list[int]:
+    statement = (
+        select(BondRow.source_node_id)
+        .join(EntityRow, EntityRow.id == BondRow.source_node_id)
+        .where(
+            BondRow.kind == BondKind.RULES,
+            BondRow.state == BondState.ACTIVE,
+            BondRow.target_node_id == community_id,
+            EntityRow.entity_type == EntityType.MORTAL,
+            EntityRow.status == EntityStatus.CANON,
+        )
+    )
+    return sorted(set(await session.scalars(statement)))
+
+
 async def pair_relation(session: AsyncSession, rules: Rules, epoch: int, first: int, second: int) -> int:
     forward = await opinion(session, rules, epoch, first, second)
     backward = await opinion(session, rules, epoch, second, first)
-    return clamp_int((forward.value + backward.value) / 2, RELATION_MIN, RELATION_MAX)
+    views = [(await opinion(session, rules, epoch, ruler, second)).value for ruler in await mortal_rulers(session, first)]
+    views += [(await opinion(session, rules, epoch, ruler, first)).value for ruler in await mortal_rulers(session, second)]
+    return with_rulers(rules, (forward.value + backward.value) / 2, views)
 
 
 @dataclass
@@ -199,10 +226,13 @@ class OpinionContext:
     feuds: set[tuple[int, int]]
     memories: dict[tuple[int, int], list[MemoryRow]] = field(default_factory=dict)
     traits: dict[int, set[TraitKind]] = field(default_factory=dict)
+    rulers: dict[int, list[int]] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules, epoch: int, nodes: Iterable[int], values: ValueIndex) -> "OpinionContext":
-        ids = list(dict.fromkeys(nodes))
+        communities = list(dict.fromkeys(nodes))
+        rulers = {node: await mortal_rulers(session, node) for node in communities}
+        ids = list(dict.fromkeys([*communities, *(ruler for found in rulers.values() for ruler in found)]))
         bonds = await BondIndex.load(session, (*PAIR_BONDS, *KIN_BONDS))
         patrons = {node: await _patron(session, node) for node in ids}
         languages = {node: await _language(session, node) for node in ids}
@@ -210,7 +240,7 @@ class OpinionContext:
             (row.entity_a_id, row.entity_b_id)
             for row in await session.scalars(select(CommunityRelationRow).where(CommunityRelationRow.blood_feud_since_epoch.is_not(None)))
         }
-        context = cls(rules, epoch, values, bonds, patrons, languages, feuds)
+        context = cls(rules, epoch, values, bonds, patrons, languages, feuds, rulers=rulers)
         for row in await session.scalars(select(MemoryRow).where(MemoryRow.holder_node_id.in_(ids))):
             context.memories.setdefault((row.holder_node_id, row.subject_node_id), []).append(row)
         for trait in await session.scalars(select(TraitRow).where(TraitRow.node_id.in_(ids))):
@@ -249,4 +279,7 @@ class OpinionContext:
         )
 
     def relation(self, first: int, second: int) -> int:
-        return clamp_int((self.opinion(first, second).value + self.opinion(second, first).value) / 2, RELATION_MIN, RELATION_MAX)
+        base = (self.opinion(first, second).value + self.opinion(second, first).value) / 2
+        views = [self.opinion(ruler, second).value for ruler in self.rulers.get(first, [])]
+        views += [self.opinion(ruler, first).value for ruler in self.rulers.get(second, [])]
+        return with_rulers(self.rules, base, views)

@@ -6,11 +6,13 @@ from aerona.constants.units import PERCENT
 from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.body import (
+    BodyBuild,
     BodyPlan,
     BodyReading,
     ConditionKind,
     DamageType,
     HarmCause,
+    HeightClass,
     InjuryKind,
     InjuryState,
     MaimedKind,
@@ -39,6 +41,8 @@ class BodyRow(Base):
 
     node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
     plan: Mapped[BodyPlan] = mapped_column(enum_type(BodyPlan, "plan"))
+    height_class: Mapped[HeightClass] = mapped_column(enum_type(HeightClass, "height_class"), default=HeightClass.AVERAGE)
+    build: Mapped[BodyBuild] = mapped_column(enum_type(BodyBuild, "build"), default=BodyBuild.AVERAGE)
     traits: Mapped[list[str]] = mapped_column(JSON, default=list)
     fingers: Mapped[int]
     pain: Mapped[int] = mapped_column(default=0)

@@ -8,6 +8,7 @@ from aerona.rules.model import rule
 class ContextRules:
     mind_values_shown: int = rule(3, 0, 14, RuleGroup.CONTEXT_BUDGETS, "Strongest values shown in an agent's mind block")
     mind_skills_shown: int = rule(3, 0, 60, RuleGroup.CONTEXT_BUDGETS, "Best skills shown in an agent's mind block")
+    pressure_shown_above: int = rule(30, 0, 100, RuleGroup.CONTEXT_BUDGETS, "Least pressure on a home or a god's worshippers that an agent is told of")
     mind_pressures_shown: int = rule(2, 0, 7, RuleGroup.CONTEXT_BUDGETS, "Most pressing needs or pressures shown in an agent's mind block")
     mind_memories_shown: int = rule(5, 0, 100, RuleGroup.CONTEXT_BUDGETS, "Strongest memories shown in an agent's mind block")
     plan_stale_epochs: int = rule(

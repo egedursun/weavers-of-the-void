@@ -16,6 +16,20 @@ class BodyPlan(StrEnum):
     DIVINE_MANIFEST = "divine_manifest"
 
 
+class HeightClass(StrEnum):
+    SHORT = "short"
+    AVERAGE = "average"
+    TALL = "tall"
+    GIANT = "giant"
+
+
+class BodyBuild(StrEnum):
+    SLIGHT = "slight"
+    AVERAGE = "average"
+    HEAVY = "heavy"
+    GIANT = "giant"
+
+
 class BodyFunction(StrEnum):
     GRASP = "grasp"
     FINE_MANIPULATION = "fine_manipulation"

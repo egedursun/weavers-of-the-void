@@ -29,7 +29,3 @@ def sampled_years(environment: TickEnvironment, world_id: int, count: int | None
     offsets = sorted(environment.rng(f"years.{world_id}").sample(list(range(years)), wanted))
     base = epoch_start_year(environment.epoch, years)
     return [SampledYear(offset, base + offset) for offset in offsets]
-
-
-def epoch_scale(environment: TickEnvironment, sampled: int) -> float:
-    return environment.rules.time.years_per_epoch / max(1, sampled)

@@ -19,6 +19,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.limits import RELATION_MIN
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.son import SonStatus
+from aerona.domain.enums.war import WarCause
 from aerona.engine.body.book import factor
 from aerona.engine.gods import devotion
 from aerona.engine.gods.devotion import RiteKind as EngineRite
@@ -176,7 +177,9 @@ async def deny_god(call: MortalCall, args: DenyInput) -> str:
     await entities.add_flag(call.me.id, EntityFlag.GODLESS, call.epoch)
     if son is not None:
         son.existence = max(0, son.existence - tools.deny_son_existence)
-        await BondRepository(call.session).connect(BondDraft(son.id, call.me.id, BondKind.ENEMY, call.epoch, lines.DENIAL_BOND.format(reason=args.reason)))
+        await BondRepository(call.session).connect(
+            BondDraft(son.id, call.me.id, BondKind.ENEMY, call.epoch, lines.DENIAL_BOND.format(reason=args.reason), war_cause=WarCause.DIVINE_GRUDGE)
+        )
         call.target(son.id)
     god = son.name if son is not None else foreign.name if foreign is not None else lines.THE_GODS
     await call.chronicle(ChronicleKind.DENIAL, lines.DENIED, entity_ids=[call.me.id], me=call.me.name, god=god, reason=args.reason)

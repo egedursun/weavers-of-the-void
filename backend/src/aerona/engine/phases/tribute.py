@@ -11,6 +11,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import TributeStatus, WarCause
 from aerona.engine.context import TickContext
+from aerona.engine.mind.drives import greed_drive
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
@@ -42,17 +43,18 @@ async def adopt_untracked_tributes(ctx: TickContext) -> int:
     return adopted
 
 
-async def _flow(ctx: TickContext, payer: EntityRow, receiver: EntityRow) -> None:
+async def _flow(ctx: TickContext, payer: EntityRow, receiver: EntityRow, greed: float) -> None:
     rules = ctx.rules.campaigns
-    if shift_stat(payer, "prosperity", -rules.tribute_flow) is not None:
-        add_prosperity(ctx.rules, receiver, rules.tribute_flow)
-    if shift_stat(payer, "wealth", -rules.tribute_flow) is not None:
-        shift_stat(receiver, "wealth", rules.tribute_flow)
+    flow = round_half_up(rules.tribute_flow * greed)
+    if shift_stat(payer, "prosperity", -flow) is not None:
+        add_prosperity(ctx.rules, receiver, flow)
+    if shift_stat(payer, "wealth", -flow) is not None:
+        shift_stat(receiver, "wealth", flow)
     payer_society = await ctx.session.get(CommunitySocietyRow, payer.id)
     receiver_society = await ctx.session.get(CommunitySocietyRow, receiver.id)
     if payer_society is None or receiver_society is None:
         return
-    goods = round_half_up(payer_society.stock_goods * rules.tribute_goods_pct / PERCENT)
+    goods = round_half_up(payer_society.stock_goods * min(PERCENT, rules.tribute_goods_pct * greed) / PERCENT)
     if goods > 0:
         payer_society.stock_goods -= goods
         receiver_society.stock_goods = min(ctx.rules.society.stockpile_cap, receiver_society.stock_goods + goods)
@@ -88,10 +90,11 @@ async def tribute(ctx: TickContext) -> None:
             continue
         if row.since_epoch == ctx.epoch:
             continue
-        await _flow(ctx, payer, receiver)
+        greed = await greed_drive(ctx.session, ctx.rules, receiver.id)
+        await _flow(ctx, payer, receiver, greed)
         ctx.count("tributes_paid")
         if await strength.power(payer) > await strength.power(receiver) * rules.tribute_revolt_strength_pct / PERCENT and rng.chance(
-            rules.tribute_revolt_chance
+            rules.tribute_revolt_chance * greed
         ):
             await end_tribute(ctx, row, TributeStatus.REVOLTED, "tribute revolt")
             await change_relation(ctx, payer.id, receiver.id, -rules.tribute_revolt_relation, MemoryKind.FOUGHT_US, note="tribute revolt")

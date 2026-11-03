@@ -218,7 +218,7 @@ async def _hero_loses(ctx: TickContext, hero: EntityRow, monster: EntityRow, pat
         and protection >= hunt.armor_save_min_protection
         and rng.chance(hunt.armor_save_base_pct + protection / hunt.armor_save_divisor * PERCENT)
     ):
-        style = await strike_style(ctx.session, ctx.rules, monster)
+        style = await strike_style(ctx.session, ctx.rules, monster, hero)
         if stat(hero, "hp") is None:
             set_stats(hero, hp=hunt.unknown_hp)
         await apply_hits(
@@ -234,7 +234,7 @@ async def _hero_loses(ctx: TickContext, hero: EntityRow, monster: EntityRow, pat
             son_id=son_id,
         )
         return EncounterResult(EncounterOutcome.WOUNDED)
-    style = await strike_style(ctx.session, ctx.rules, monster)
+    style = await strike_style(ctx.session, ctx.rules, monster, hero)
     await fatal_injury(ctx, hero, Harm(hunt.armor_save_hp_loss, HarmCause.MONSTER, f"fell before {monster.name}", style=style, killer_id=monster.id))
     await die(ctx, hero, cause=f"fell before {monster.name}", killer_id=monster.id, forced=True)
     lament = await _legend(

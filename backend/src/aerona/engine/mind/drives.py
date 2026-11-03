@@ -47,6 +47,23 @@ async def betrayal_drive(session: AsyncSession, rules: Rules, community_id: int)
     return await ruler_effect(session, rules, community_id, TraitEffect.BETRAYAL)
 
 
+async def zeal_drive(session: AsyncSession, rules: Rules, community_id: int) -> float:
+    held: set[TraitKind] = set()
+    for bond in await active_bonds(session, [BondKind.RULES, BondKind.MEMBER_OF], targets=[community_id]):
+        member = await living_entity(session, bond.source_node_id)
+        if member is not None and member.entity_type is EntityType.MORTAL:
+            held |= await traits_of(session, member.id)
+    return scaled_by(trait_effect(held, TraitEffect.ZEAL, rules.traits.effect_scale_pct))
+
+
+async def deceit_drive(session: AsyncSession, rules: Rules, community_id: int) -> float:
+    return await ruler_effect(session, rules, community_id, TraitEffect.DECEIT)
+
+
+async def greed_drive(session: AsyncSession, rules: Rules, community_id: int) -> float:
+    return await ruler_effect(session, rules, community_id, TraitEffect.GREED)
+
+
 async def cruelty_drive(session: AsyncSession, rules: Rules, community_id: int) -> float:
     return await ruler_effect(session, rules, community_id, TraitEffect.CRUELTY)
 
@@ -70,10 +87,6 @@ async def unrest(session: AsyncSession, rules: Rules, community_id: int) -> int:
 
 async def hunger(session: AsyncSession, community_id: int) -> int:
     return (await pressures_of(session, community_id)).get(PressureKind.HUNGER, 0)
-
-
-async def impiety_pull(session: AsyncSession, rules: Rules, community_id: int) -> float:
-    return pressure_lift((await pressures_of(session, community_id)).get(PressureKind.IMPIETY, 0), rules.needs.conversion_impiety_pct)
 
 
 async def expedition_drive(session: AsyncSession, rules: Rules, community_id: int) -> float:

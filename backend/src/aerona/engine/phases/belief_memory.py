@@ -8,8 +8,10 @@ from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import NotableYearRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType, LegendCategory, MortalRole
+from aerona.domain.enums.environment import NotableYearKind
 from aerona.domain.models.entity_stats import EntityStats, ItemStats, LegendStats, ResourceStats, SpeciesStats, SpiritStats
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
@@ -292,13 +294,66 @@ async def legendification(ctx: TickContext) -> None:
     made = 0
     for event in await ctx.session.scalars(statement):
         if made >= life.legendization_cap:
-            return
+            break
         if event.id in told or (stat(event, "severity") or 0) < life.legend_event_min_severity:
             continue
         if not rng.chance(ctx.rules.deep_world.legendization_chance):
             continue
         await legendify(ctx, event)
         made += 1
+    await year_legends(ctx, life.legendization_cap - made)
+
+
+async def legendify_year(ctx: TickContext, year: NotableYearRow) -> EntityRow:
+    life = ctx.rules.deep_life
+    rng = ctx.rng(f"legendify.year.{year.id}")
+    region = await ctx.session.get(EntityRow, year.region_entity_id) if year.region_entity_id is not None else None
+    title = year.name[:1].upper() + year.name[1:]
+    legend = await open_record(
+        ctx.session,
+        ctx.epoch,
+        RecordSpec(
+            entity_type=EntityType.LEGEND,
+            name=f"Tale of {title}",
+            body=f"{title}, the year {year.year}, lived on in the telling long after the last who saw it died; each teller made it greater.",
+            stats=LegendStats(spread=clamp_int(life.legend_spread_base + rng.die(life.legend_spread_die), 0, PERCENT)),
+            power=life.derived_min_power,
+            world_id=year.world_id,
+            location_id=region.id if region is not None else None,
+            subtype=BLURRED_SUBTYPE,
+            flags=(EntityFlag.CORRUPTED_MEMORY,),
+        ),
+    )
+    if region is not None:
+        await connect(ctx.session, legend.id, region.id, BondKind.TELLS_OF, ctx.epoch, description=f"the year {year.year}")
+    year.legend_entity_id = legend.id
+    await note(ctx, f"{title} of the year {year.year} became a tale; no one alive saw it, yet everyone knows it.", key="memory.year_legend", ids=[legend.id])
+    return legend
+
+
+async def year_legends(ctx: TickContext, room: int) -> int:
+    life = ctx.rules.deep_life
+    rng = ctx.rng("year_legends")
+    statement = (
+        select(NotableYearRow)
+        .where(
+            NotableYearRow.legend_entity_id.is_(None),
+            NotableYearRow.epoch <= ctx.epoch - life.legend_event_min_age,
+            NotableYearRow.magnitude >= life.legend_event_min_severity,
+        )
+        .order_by(NotableYearRow.epoch, NotableYearRow.id)
+    )
+    made = 0
+    famine_above = PERCENT - ctx.rules.harvest.famine_event_below
+    for year in await ctx.session.scalars(statement):
+        if made >= room:
+            break
+        if year.kind is NotableYearKind.HUNGER and year.magnitude > famine_above:
+            continue
+        if rng.chance(ctx.rules.deep_world.legendization_chance):
+            await legendify_year(ctx, year)
+            made += 1
+    return made
 
 
 async def fairy_tales(ctx: TickContext) -> None:

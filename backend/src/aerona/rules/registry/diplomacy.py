@@ -96,6 +96,7 @@ class DiplomacyRules:
     marriage_relation: int = rule(10, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Relation bonus of a marriage alliance (points)")
     betrayal_cap: int = rule(1, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "Maximum betrayals per epoch")
     traitor_default_strength: int = rule(40, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Strength assumed in a betrayal for a party with unknown sway or strength")
+    betrayal_war_collapse_chance: int = rule(40, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "A war the betrayed ally is fighting collapses into defeat (%)")
     betrayal_relation: int = rule(30, 0, 200, RuleGroup.WAR_AND_DIPLOMACY, "Relation reduced by betrayal (points)")
     alliance_lifetime: int = rule(
         8, 0, 1000, RuleGroup.WAR_AND_DIPLOMACY, "An alliance whose oath is not renewed for this many epochs may lapse (0: alliances are permanent)"

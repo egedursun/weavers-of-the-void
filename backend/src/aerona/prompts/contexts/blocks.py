@@ -310,6 +310,7 @@ class RegionGeography(ContextItem):
     ley: list[NamedRecord] = Field(default_factory=list)
     use: str | None = None
     nexus: str | None = None
+    weather: str | None = None
 
 
 class GeographyLinesContext(PromptContext):

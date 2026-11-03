@@ -36,8 +36,10 @@ from aerona.domain.models.stats import STAT_CEILING, STAT_FLOOR, StatBlock
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.mind.hooks import desecrated
 from aerona.engine.primitives.naming import Namer
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire
 from aerona.engine.primitives.stats import stat_or
 from aerona.language.generator import NameKind
@@ -233,6 +235,9 @@ def wake(god: ForeignGodRow) -> None:
 async def destroy_temple(ctx: TickContext, god: ForeignGodRow, temple: EntityRow) -> None:
     await retire(ctx.session, temple, ctx.epoch, f"Epoch {ctx.epoch}: destroyed by {god.name}.", status=EntityStatus.DESTROYED)
     await BondRepository(ctx.session).connect(BondDraft(god.id, temple.id, BondKind.DESTROYED, ctx.epoch, "destroyed its temple"))
+    keeper = await living_entity(ctx.session, temple.location_id)
+    if keeper is not None:
+        await desecrated(ctx, keeper.id, god.id, note=temple.name)
     await ctx.chronicle(ChronicleKind.FOREIGN_GOD, f"{god.name} destroyed {temple.name}.", template_key="pantheon.temple_destroyed", entity_ids=[temple.id])
 
 

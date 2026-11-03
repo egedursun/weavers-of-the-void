@@ -1,21 +1,37 @@
+from dataclasses import replace
+
 from sqlalchemy import select
 
+from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityType
-from aerona.domain.enums.environment import ScarKind, TerrainKind, WaterSource, WeatherKind
+from aerona.domain.enums.environment import CoastKind, NotableYearKind, RiverClass, ScarKind, TerrainKind, WaterSource, WeatherKind
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.world import ClimateEra, SkyEventKind, WorldType
-from aerona.domain.models.entity_stats import PlaceStats, StructureStats
-from aerona.engine.environment.control import reorder_seasons, set_place_field, set_region_field, sever_ley, unlock_region_field
+from aerona.domain.models.entity_stats import EventStats, PlaceStats, StructureStats
+from aerona.engine.environment.book import EnvironmentBook, sail_factor
+from aerona.engine.environment.control import (
+    force_notable_year,
+    force_weather,
+    forge_ley,
+    reorder_seasons,
+    set_place_field,
+    set_region_field,
+    sever_ley,
+    unlock_region_field,
+)
+from aerona.engine.environment.notable import backfill_notable_years
+from aerona.engine.environment.profile import Geography, Ground, Surroundings, Works, climate_factor, passability_of, temperature_of
 from aerona.engine.environment.seasons import season_drafts, world_calendar
 from aerona.engine.environment.weather import WeatherInputs, weather_at, weather_weights
+from aerona.engine.phases.belief_memory import legendification
 from aerona.engine.phases.disasters import strike
-from aerona.engine.phases.environment import calendars, environment_derive, environment_survey, harvest, land_use, ley_lines
+from aerona.engine.phases.environment import LandMark, calendars, environment_derive, environment_survey, harvest, land_turns, land_use, ley_lines, year_harvest
 from aerona.engine.primitives.capacity import CapacityModel
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.rules.registry import Rules
@@ -198,9 +214,11 @@ async def test_a_severed_line_stays_cut_until_its_epoch(realm: Realm) -> None:
 async def test_works_on_a_ley_line_gain_function(realm: Realm) -> None:
     await ley_realm(realm)
     stats = StructureStats(splendor=10, durability=50, function=40)
-    work = await make(realm.session, "Ley Spire", EntityType.STRUCTURE, stats, world_id=realm.world.id, location_id=realm.region.id)
+    work = await make(realm.session, "Ley Spire", EntityType.STRUCTURE, stats, world_id=realm.world.id, location_id=realm.region.id, subtype="tower")
+    wall = await make(realm.session, "Grey Wall", EntityType.STRUCTURE, stats, world_id=realm.world.id, location_id=realm.region.id, subtype="wall")
     await ley_lines(context(realm.session))
     assert (stat(work, "function") or 0) == 40 + RULES.environment.ley_function_gain
+    assert stat(wall, "function") == 40
 
 
 async def test_every_shown_value_can_be_set_and_held(realm: Realm) -> None:
@@ -227,3 +245,85 @@ async def test_a_place_can_go_back_to_its_region_terrain(realm: Realm) -> None:
     assert ground is not None and ground.terrain is TerrainKind.HIGH_PASS
     set_place_field(ground, "terrain", "inherit")
     assert ground.terrain is None
+
+
+def test_terrain_works_and_wind_shape_passability_and_fertility() -> None:
+    rules = Rules()
+    bare = Ground(roughness=30, forest=20, wetland=10, river=RiverClass.RIVER, temperature=50, coast=CoastKind.BEACH, terrain=TerrainKind.PLAIN)
+    built = replace(bare, works=Works(roads=2, bridges=1, harbours=1, irrigation=2))
+    marsh = replace(bare, terrain=TerrainKind.MARSH)
+    plain, roads, bog = passability_of(rules, bare), passability_of(rules, built), passability_of(rules, marsh)
+    assert roads["wheeled"] > plain["wheeled"] and roads["boat"] > plain["boat"]
+    assert bog["on_foot"] < plain["on_foot"] and bog["flying"] == plain["flying"]
+    watered = climate_factor(rules, temperature=50, rainfall=50, river=RiverClass.RIVER, scars={}, works=built.works)
+    dry = climate_factor(rules, temperature=50, rainfall=50, river=RiverClass.RIVER, scars={}, works=Works())
+    assert watered > dry
+    assert sail_factor(rules, rules.weather.sail_best_wind) > sail_factor(rules, 0)
+    assert sail_factor(rules, rules.weather.sail_best_wind) > sail_factor(rules, 100)
+
+
+def test_worn_soil_shrinks_the_harvest() -> None:
+    rules = Rules()
+
+    def reap(soil: int) -> int:
+        return year_harvest(rules, growth=rules.harvest.normal_growth, weather_growth=0, farming=0.0, agriculture=1.0, planned=False, blight=0, soil=soil)
+
+    assert reap(80) > reap(rules.harvest.normal_soil) == PERCENT > reap(15)
+
+
+async def test_an_old_notable_year_becomes_a_legend(realm: Realm) -> None:
+    year = NotableYearRow(
+        world_id=realm.region.world_id, region_entity_id=realm.region.id, epoch=1, year=40, kind=NotableYearKind.PLENTY, name="the Year of Plenty", magnitude=60
+    )
+    realm.session.add(year)
+    await realm.session.flush()
+    rules = tuned(deep_life={"legend_event_min_age": 1, "legend_event_min_severity": 10}, deep_world={"legendization_chance": 100})
+    await legendification(context(realm.session, rules, epoch=5))
+    assert year.legend_entity_id is not None
+    legend = await realm.session.get(EntityRow, year.legend_entity_id)
+    assert legend is not None and legend.entity_type is EntityType.LEGEND and "Year of Plenty" in legend.name
+
+
+async def test_old_famines_and_plagues_are_backfilled_as_notable_years(realm: Realm) -> None:
+    for name, kind in (("Old Famine", EngineKind.FAMINE), ("Old Plague", EngineKind.PLAGUE)):
+        await make(
+            realm.session, name, EntityType.EVENT, EventStats(severity=70), world_id=realm.region.world_id, location_id=realm.region.id, engine_kind=kind
+        )
+    ctx = context(realm.session)
+    assert await backfill_notable_years(ctx) == 2
+    assert await backfill_notable_years(ctx) == 0
+    kinds = {row.kind for row in await realm.session.scalars(select(NotableYearRow))}
+    assert kinds == {NotableYearKind.HUNGER, NotableYearKind.PESTILENCE}
+
+
+async def test_forged_lines_forced_weather_and_written_years(realm: Realm) -> None:
+    await surveyed(realm)
+    line = await forge_ley(realm.session, RULES, realm.region.id, realm.far_region.id, epoch=3, strength=60)
+    await ley_lines(context(realm.session, epoch=4))
+    assert line.forged and not line.severed and line.strength == 60
+    await force_weather(realm.session, realm.region, WeatherKind.BLIZZARD, from_epoch=4, epochs=2, season_position=None)
+    book = await EnvironmentBook.load(realm.session, RULES, 5)
+    ground = book.regions[realm.region.id]
+    assert book.weather(1, 5, ground, None, "any").kind is WeatherKind.BLIZZARD
+    assert not (await EnvironmentBook.load(realm.session, RULES, 6)).forced
+    year = await force_notable_year(realm.session, RULES, realm.region, NotableYearKind.PLENTY, epoch=4, magnitude=40, name=None, weather=None)
+    assert year.name.startswith("the Year of Plenty") and year.region_entity_id == realm.region.id
+
+
+def test_land_turns_are_written_once_when_they_cross() -> None:
+    env = RegionEnvironmentRow(erosion=40, farmed=80, soil_fertility=20, cleared=0)
+    keys = [key for key, _ in land_turns(RULES, env, LandMark(erosion=10, farmed=60, soil=30, cleared=5))]
+    assert keys == ["land.erosion", "land.overfarmed", "land.soil_exhausted", "land.rewilded"]
+    assert land_turns(RULES, env, LandMark(erosion=40, farmed=80, soil=20, cleared=0)) == []
+
+
+def test_a_tidally_locked_world_burns_by_day_and_freezes_by_night() -> None:
+    def heat(latitude: int) -> int:
+        geography = Geography(
+            biome_mix=[0] * 10, elevation_mean=0, roughness=0, latitude=latitude, moisture=50, base_forest=0, base_wetland=0, river_class=RiverClass.NONE
+        )
+        return temperature_of(RULES, geography, Surroundings(world_type=WorldType.TIDALLY_LOCKED, era=None, coastal=False, highland=False))
+
+    day, terminator, night = heat(0), heat(50), heat(100)
+    assert day > terminator > night
+    assert terminator == RULES.environment.temperature_tidally_locked

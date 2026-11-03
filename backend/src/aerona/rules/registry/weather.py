@@ -173,3 +173,5 @@ class WeatherRules:
     flare_aurora_pct: int = rule(300, 0, 10000, RuleGroup.WEATHER, "Extra weight of auroras while the world's star flares (%)")
     volcanic_ash_pct: int = rule(100, 0, 10000, RuleGroup.WEATHER, "Weight of ash fall over volcanic land (%)")
     acclimatised_within: int = rule(15, 0, 100, RuleGroup.WEATHER, "Temperature difference to home within which an army is acclimatised")
+    sail_best_wind: int = rule(35, 1, 100, RuleGroup.WEATHER, "Wind at which boats sail fastest; calm and gales both slow them")
+    sail_speed_pct: int = rule(30, 0, 100, RuleGroup.WEATHER, "How far wind can speed up or slow down sea travel (%)")

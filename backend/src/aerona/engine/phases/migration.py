@@ -8,7 +8,7 @@ from aerona.domain.models.entity_stats import SettlementStats
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.mind.book import pressures_of
-from aerona.engine.mind.drives import hunger
+from aerona.engine.mind.drives import closeness, hunger
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.settlements import resettle_ruin
@@ -32,12 +32,27 @@ async def is_hungry(ctx: TickContext, community: EntityRow) -> bool:
     return food < effects.hungry_food or (prosperity if prosperity is not None else effects.unknown_prosperity) < effects.famine_prosperity
 
 
-def walkable(ground: EnvironmentBook | None, region_id: int) -> int:
+def walkable(ctx: TickContext, ground: EnvironmentBook | None, region_id: int) -> int:
     env = ground.regions.get(region_id) if ground is not None else None
-    return env.passability.get(MovementMode.ON_FOOT.value, PERCENT) if env is not None else PERCENT
+    if ground is None or env is None:
+        return PERCENT
+    season = ground.travel_season(env.world_id)
+    return ground.footed(ctx.environment.world_seed, ctx.epoch, env, MovementMode.ON_FOOT.value, season=season, slot=f"migration.{region_id}")
 
 
-async def greener_region(ctx: TickContext, atlas: RegionAtlas, region: EntityRow, ground: EnvironmentBook | None = None) -> EntityRow | None:
+async def kin_pull(ctx: TickContext, atlas: RegionAtlas, origin: EntityRow | None, region_id: int) -> float:
+    if origin is None:
+        return 1.0
+    settled = [entity_id for entity_id in atlas.communities_in(region_id) if entity_id != origin.id]
+    if not settled:
+        return 1.0
+    nearest = max([await closeness(ctx.session, origin.id, entity_id) for entity_id in settled])
+    return 1 + (nearest - 1) * ctx.rules.culture_drift.migration_kinship_pct / PERCENT
+
+
+async def greener_region(
+    ctx: TickContext, atlas: RegionAtlas, region: EntityRow, ground: EnvironmentBook | None = None, origin: EntityRow | None = None
+) -> EntityRow | None:
     effects = ctx.rules.world_effects
     own = stat(region, "fertility")
     floor = (own if own is not None else effects.unknown_fertility) + effects.famine_fertility_margin
@@ -46,12 +61,12 @@ async def greener_region(ctx: TickContext, atlas: RegionAtlas, region: EntityRow
         neighbour = await living_entity(ctx.session, neighbour_id)
         if neighbour is None or neighbour.entity_type is not EntityType.REGION or neighbour.world_id != region.world_id or atlas.is_water(neighbour.id):
             continue
-        passable = walkable(ground, neighbour.id)
+        passable = walkable(ctx, ground, neighbour.id)
         if passable < ctx.rules.world_effects.migration_passable_min:
             continue
         fertility = stat(neighbour, "fertility")
         value = fertility if fertility is not None else effects.unknown_fertility
-        appeal = value * (PERCENT + passable) / (2 * PERCENT)
+        appeal = value * (PERCENT + passable) / (2 * PERCENT) * await kin_pull(ctx, atlas, origin, neighbour.id)
         if value > floor and (best is None or appeal > best[0]):
             best = (appeal, neighbour)
     return best[1] if best is not None else None
@@ -107,11 +122,11 @@ async def famine_migration(ctx: TickContext) -> None:
         if not starving or not rng.chance(rules.world_engine.famine_migration_chance * weight):
             continue
         region = await living_entity(ctx.session, atlas.top_region(community.id))
-        target = await greener_region(ctx, atlas, region, ground) if region is not None else None
+        target = await greener_region(ctx, atlas, region, ground, community) if region is not None else None
         if target is None:
             continue
         leaving = round_half_up(population * rules.deep_world.famine_migration_share_pct / PERCENT)
-        lost = round_half_up(leaving * (PERCENT - walkable(ground, target.id)) * effects.migration_road_loss_pct / PERCENT / PERCENT)
+        lost = round_half_up(leaving * (PERCENT - walkable(ctx, ground, target.id)) * effects.migration_road_loss_pct / PERCENT / PERCENT)
         migrants = max(1, leaving - lost)
         if lost:
             floor, cap = headcount_bounds(rules, community)

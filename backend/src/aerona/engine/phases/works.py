@@ -7,9 +7,11 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityType
+from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.domain.models.entity_stats import StructureStats
 from aerona.engine.context import TickContext
+from aerona.engine.mind.hooks import judged
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.faith import living_patron
@@ -161,6 +163,8 @@ async def build(ctx: TickContext, site: Site, kind: WorkKind) -> EntityRow:
         ),
     )
     await connect(ctx.session, builder.id, work.id, BondKind.BUILT, ctx.epoch)
+    if kind.kind is EngineKind.TEMPLE:
+        await judged(ctx, builder.id, builder.id, ActKind.BUILDING_TEMPLES, note=work.name)
     kind.effect(rules, builder)
     prosperity = stat(builder, "prosperity")
     if prosperity is not None:

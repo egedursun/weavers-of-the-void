@@ -1,5 +1,6 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.domain.enums.body import (
+    BodyBuild,
     BodyFunction,
     BodyPlan,
     BodyReading,
@@ -8,6 +9,7 @@ from aerona.domain.enums.body import (
     ConditionKind,
     DamageType,
     HarmCause,
+    HeightClass,
     InjuryKind,
     InjuryState,
     MaimedKind,
@@ -107,6 +109,9 @@ class BodyView(ApiModel):
     bearer_kind: str
     alive: bool
     plan: BodyPlan
+    plan_label: str
+    height_class: HeightClass
+    build: BodyBuild
     traits: list[BodyFunction]
     hp: int | None
     hp_max: int | None

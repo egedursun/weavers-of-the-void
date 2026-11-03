@@ -14,16 +14,18 @@ from aerona.db.repositories.names import NameRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import HERO_ROLES, EntityFlag, EntityOrigin, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.entity_stats import LegendStats
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.gods.stats import Trait, add_trait, trait_or
 from aerona.engine.gods.worship import worships_creator
-from aerona.engine.lifecycle.mortal_death import die
+from aerona.engine.lifecycle.wounds import slay
 from aerona.engine.primitives.faith import patron_son
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import has_flag
@@ -156,9 +158,9 @@ def survival_story(rng: SeededRandom, victim: str, killer: str, creator: str, ch
     return rng.pick(god_lines.STORY_FATES).format(victim=victim, killer=killer)
 
 
-async def mortal_dies(ctx: TickContext, victim: EntityRow, reason: str, killer_node_id: int | None) -> None:
+async def mortal_dies(ctx: TickContext, victim: EntityRow, reason: str, killer_node_id: int | None, *, harm: HarmCause = HarmCause.GOD) -> None:
     killer = killer_node_id if killer_node_id is not None and killer_node_id != victim.id else None
-    if await die(ctx, victim, cause=reason, killer_id=killer, forced=True) is not None:
+    if await slay(ctx, victim, Harm(ctx.rules.casualties.wound_hp, harm, reason, killer_id=killer)):
         ctx.count("mortal_deaths")
 
 
@@ -181,7 +183,13 @@ async def attempt_kill(ctx: TickContext, victim: EntityRow, killer: Killer, crea
     if certain or rng.chance(chance.percent):
         reason = god_lines.KILL_REASON.format(killer=killer.name, how=f" ({how})" if how else "")
         patron = await patron_son(ctx.session, victim)
-        await mortal_dies(ctx, victim, reason, None if killer.kind is ActorKind.CREATOR else killer.node_id)
+        await mortal_dies(
+            ctx,
+            victim,
+            reason,
+            None if killer.kind is ActorKind.CREATOR else killer.node_id,
+            harm=HarmCause.PLAYER if killer.kind is ActorKind.CREATOR else HarmCause.GOD,
+        )
         if killer_son is not None:
             note = god_lines.KILL_RELATION_NOTE.format(victim=victim.name)
             await _sour_relation(ctx, killer_son.id, victim.creator_son_id, note)

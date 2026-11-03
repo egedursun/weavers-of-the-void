@@ -17,7 +17,6 @@ class MortalToolsRules:
     ransom_min_wealth: int = rule(20, 0, 100, RuleGroup.MORTAL_AGENTS, "Minimum wealth required for a ransom (+5 for prosperity)")
     raise_army_default_pct: int = rule(5, 1, 50, RuleGroup.MORTAL_AGENTS, "raise_army (ordu_topla): default levy (% of population)")
     raise_army_max_pct: int = rule(15, 1, 100, RuleGroup.MORTAL_AGENTS, "raise_army: maximum levy (% of population)")
-    raise_army_population_pct: int = rule(100, 0, 100, RuleGroup.MORTAL_AGENTS, "Share of levied soldiers subtracted from population (%)")
     ctx_self_chars: int = rule(3500, 500, 100000, RuleGroup.CONTEXT_BUDGETS, "Mortal context: own details (characters)")
     barter_ap: int = rule(1, 1, 5, RuleGroup.MORTAL_AGENTS, "barter (takas) action cost")
     barter_die: int = rule(30, 1, 200, RuleGroup.MORTAL_AGENTS, "barter: acceptance die faces (offer + relation + die \u2265 asked)")

@@ -8,10 +8,13 @@ from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow, WarRow
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
-from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
-from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.war import SiegeStatus, WarEnding, WarStatus
 from aerona.engine.context import TickContext
+from aerona.engine.mind.book import values_for
+from aerona.engine.mind.hooks import converted, judged, witnessed
+from aerona.engine.mind.space import value_reading
 from aerona.engine.primitives.faith import change_religion, faith_dominance, faith_shares, living_patron
 from aerona.engine.primitives.levies import stand_down
 from aerona.engine.primitives.queries import living_entity, spoken_language
@@ -114,6 +117,9 @@ async def close_war(ctx: TickContext, war: WarRow, ending: WarEnding, victor_id:
     ctx.count("wars_ended")
 
 
+BOOK_KINDS = frozenset({EngineKind.LIBRARY, EngineKind.SCHOOL})
+
+
 async def _conquer(ctx: TickContext, war: WarRow, victor: EntityRow, loser: EntityRow) -> list[str]:
     event = await war_event(ctx.session, war)
     bonds = BondRepository(ctx.session)
@@ -134,6 +140,24 @@ async def _conquer(ctx: TickContext, war: WarRow, victor: EntityRow, loser: Enti
     wonder = wonders.first()
     if wonder is not None:
         notes.append(f"The wonder {wonder.name} is now in the hands of {victor.name}.")
+    notes.extend(await burn_books(ctx, victor, loser))
+    return notes
+
+
+async def burn_books(ctx: TickContext, victor: EntityRow, loser: EntityRow) -> list[str]:
+    if value_reading(await values_for(ctx.session, victor.id), ActKind.BURNING_BOOKS) < ctx.rules.campaigns.book_burning_reading:
+        return []
+    keeps = await ctx.session.scalars(
+        select(EntityRow)
+        .where(EntityRow.location_id == loser.id, EntityRow.status == EntityStatus.CANON, EntityRow.engine_kind.in_(list(BOOK_KINDS)))
+        .order_by(EntityRow.id)
+    )
+    notes: list[str] = []
+    for keep in keeps:
+        await retire_in(ctx, keep, f"burned by {victor.name} after the conquest", close_bonds=True)
+        await witnessed(ctx, loser.id, victor.id, ActKind.BURNING_BOOKS, base=ctx.rules.memory.outrage_magnitude, note=keep.name)
+        await judged(ctx, victor.id, loser.id, ActKind.BURNING_BOOKS, note=keep.name)
+        notes.append(f"{victor.name} burned {keep.name}; its books went up in smoke.")
     return notes
 
 
@@ -152,6 +176,7 @@ async def _convert_loser(ctx: TickContext, war: WarRow, victor: EntityRow, loser
     event = await war_event(ctx.session, war)
     if not await change_religion(ctx.session, loser, victor_god.id, ctx.epoch, f"came with the {ENDING_LABELS[ending]} of {event.name}", syncretic=syncretic):
         return []
+    await converted(ctx, loser.id, victor.id, note=event.name)
     if syncretic:
         return [f"{loser.name} began to revere {victor_god.name} beside its own god."]
     return [f"{loser.name} converted to the faith of {victor_god.name}."]

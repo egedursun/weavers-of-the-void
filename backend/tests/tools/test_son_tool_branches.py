@@ -9,6 +9,8 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.session import Database
+from aerona.db.tables.body import BodyRow
+from aerona.domain.enums.body import BodyPlan
 from aerona.db.tables.agency import AgentTurnRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
@@ -270,11 +272,15 @@ async def test_species_traits_are_capped_and_mighty_beasts_are_megafauna(databas
     rules = tuned_rules(son_tools={"creature_max_traits": 2, "megafauna_power": 3})
     toolkit = await son_toolkit(database, realm.son_id, action_points=4, rules=rules)
     traits = ["flying", "venomous", "soul_eater"]
-    await ok(toolkit, "create_species", creation("Skyfang", realm.people_id, power=3, traits=traits))
+    await ok(toolkit, "create_species", creation("Skyfang", realm.people_id, power=3, traits=traits, body_plan="avian"))
     beast = toolkit.created_entity_ids[-1]
-    await ok(toolkit, "create_species", creation("Mudhopper", realm.people_id, power=1))
+    refused = await rejected(toolkit, "create_species", creation("Mudhopper", realm.people_id, power=1))
+    assert "body_plan" in refused
+    await ok(toolkit, "create_species", creation("Mudhopper", realm.people_id, power=1, body_plan="amorphous"))
     small = toolkit.created_entity_ids[-1]
     async with database.read() as session:
+        body = await session.get(BodyRow, small)
+        assert body is not None and body.plan is BodyPlan.AMORPHOUS
         repository = EntityRepository(session)
         assert set(await repository.traits(beast)) == {CreatureTrait.FLYING, CreatureTrait.VENOMOUS}
         assert EntityFlag.MEGAFAUNA in await repository.flags(beast)

@@ -10,7 +10,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.mind import MemoryKind, SkillKind
-from aerona.domain.enums.war import WarEnding
+from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.services.community_relations import change_relation, relation
@@ -69,7 +69,9 @@ async def _peace(call: MortalCall, target: EntityRow, args: DiplomacyInput, roll
 async def _tribute(call: MortalCall, target: EntityRow, args: DiplomacyInput) -> str:
     tools = call.rules.mortal_tools
     if strength_of(call, call.me) < strength_of(call, target) * tools.tribute_superiority_pct / PERCENT:
-        await BondRepository(call.session).connect(BondDraft(target.id, call.me.id, BondKind.ENEMY, call.epoch, lines.INSOLENT_TRIBUTE))
+        await BondRepository(call.session).connect(
+            BondDraft(target.id, call.me.id, BondKind.ENEMY, call.epoch, lines.INSOLENT_TRIBUTE, war_cause=WarCause.TRIBUTE_REVOLT)
+        )
         await change_relation(call.tick, call.me.id, target.id, -tools.tribute_insolence_relation, MemoryKind.HUMILIATED_ME, note=lines.INSOLENT_TRIBUTE)
         return lines.DIPLOMACY_OUTCOMES["laughed"].format(target=target.name)
     for key in ("wealth", "prosperity"):

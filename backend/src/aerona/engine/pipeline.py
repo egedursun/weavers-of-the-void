@@ -276,7 +276,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "remembrance",
 )
 AGING_STAGE = stage("body_healing", "mortal_wounds", "body_conditions", "body_society", "mortal_aging", "dead_bonds_closing")
-MIND_STAGE = stage("mind_values", "mind_skills", "mind_memories", "mind_needs", "mind_opinion")
+MIND_STAGE = stage("mind_values", "mind_skills", "mind_memories", "mind_needs", "famine_aid", "mind_opinion")
 
 TICK_ORDER: tuple[Phase, ...] = (
     CLEANUP_STAGE + GRUDGE_STAGE + SUB_ENGINE_STAGE + RAID_STAGE + ECONOMY_STAGE + SOCIETY_STAGE + SOCIETY_ENGINE_STAGE + AGING_STAGE + MIND_STAGE

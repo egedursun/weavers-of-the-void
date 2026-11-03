@@ -13,6 +13,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
+from aerona.engine.mind.drives import deceit_drive
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.queries import canon, living_entity
@@ -102,6 +103,9 @@ async def perform_operation(ctx: TickContext, spymaster: EntityRow, target: Enti
     return text
 
 
+MIN_GUILE = 0.1
+
+
 async def run_networks(ctx: TickContext) -> None:
     rules = ctx.rules.espionage
     rng = ctx.rng("operations")
@@ -116,7 +120,8 @@ async def run_networks(ctx: TickContext) -> None:
             continue
         if bond.epoch == ctx.epoch:
             continue
-        if rng.chance(capture_chance(ctx, target)):
+        guile = await deceit_drive(ctx.session, ctx.rules, spymaster.id)
+        if rng.chance(capture_chance(ctx, target) / max(guile, MIN_GUILE)):
             await bonds.deactivate(bond, ctx.epoch, "spies caught")
             await change_relation(ctx, spymaster.id, target.id, -rules.spy_caught_relation_loss, MemoryKind.SPIED_ON_US, note="caught spies")
             war = rng.chance(rules.spy_war_chance) and await declare_war(ctx, target.id, spymaster.id, "espionage", cause=WarCause.ESPIONAGE)
@@ -124,7 +129,7 @@ async def run_networks(ctx: TickContext) -> None:
             await _note(ctx, f"The spies of {spymaster.name} were caught in {target.name}{tail}.", "espionage.caught", (spymaster.id, target.id))
             ctx.count("spies_caught")
             continue
-        if not rng.chance(rules.spy_action_chance):
+        if not rng.chance(rules.spy_action_chance * guile):
             continue
         operation = SpyOperation.STEAL if rng.chance(rules.spy_steal_knowledge_pct) else SpyOperation.SABOTAGE
         await perform_operation(ctx, spymaster, target, operation)

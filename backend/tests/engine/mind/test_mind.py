@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from sqlalchemy import select
 
 from aerona.db.tables.mind import MindRow
@@ -6,9 +8,23 @@ from aerona.db.tables.warfare import HeroQuestRow
 from aerona.domain.enums.body import HarmCause, InjuryKind, InjuryState
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.entity import EntityStatus, MortalRole
-from aerona.domain.enums.mind import ActKind, MemoryKind, NeedKind, PressureKind, SkillKind, SkillSource, TraitKind, TraitSource, ValueAxis, ValueHolder
+from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.mind import (
+    ActKind,
+    MemoryKind,
+    NeedKind,
+    PressureKind,
+    SkillKind,
+    SkillSource,
+    TraitEffect,
+    TraitKind,
+    TraitSource,
+    ValueAxis,
+    ValueHolder,
+)
+from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import HeroQuestKind
+from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.body.book import effective
 from aerona.engine.body.healing import heal_wounds
 from aerona.engine.body.hits import Harm
@@ -25,17 +41,21 @@ from aerona.engine.mind.book import (
     stored_values,
     traits_of,
     values_for,
+    write_pressures,
     write_values,
 )
+from aerona.engine.mind.depth import read_depth
+from aerona.engine.mind.describe import mind_lines
 from aerona.engine.mind.drives import closeness, war_drive
 from aerona.engine.mind.memories import forget_faded, memories_about, remember
 from aerona.engine.mind.opinion import opinion
-from aerona.engine.mind.skills import practise, weather_skills
+from aerona.engine.mind.skills import left_to_beg, practise, weather_skills
 from aerona.engine.mind.space import value_distance, value_reading
-from aerona.engine.phases.mind import mind_memories, mind_needs, mind_opinion, mind_skills, mind_survey, mind_values
-from aerona.engine.services.community_relations import change_relation, relation
+from aerona.engine.phases.mind import famine_aid, mind_memories, mind_needs, mind_opinion, mind_skills, mind_survey, mind_values
+from aerona.engine.primitives.society import set_stock, stock
+from aerona.engine.services.community_relations import change_relation, refresh_relation, relation
 from aerona.rules.registry import Rules
-from tests.engine.society.factories import Realm, context, link, mortal, people, settlement, son, tuned
+from tests.engine.society.factories import Realm, context, link, make, mortal, people, settlement, son, tuned
 
 RULES = Rules()
 
@@ -245,3 +265,106 @@ async def test_a_healer_heals_by_skill_and_is_remembered(realm: Realm) -> None:
     saved = await memories_about(realm.session, patient.id, healer.id)
     assert saved and saved[0].kind is MemoryKind.SAVED_ME
     assert patient.status is EntityStatus.CANON
+
+
+async def test_agents_hear_the_pressures_on_their_home_and_their_worshippers(realm: Realm) -> None:
+    town = await settlement(realm, "Saltmere")
+    smith = await mortal(realm, "Orla", location_id=town.id)
+    god = await son(realm.session, "Velan", realm.world.id)
+    await link(realm.session, town.id, god.id, BondKind.WORSHIPS)
+    await write_pressures(realm.session, town.id, {PressureKind.HUNGER: 70, PressureKind.POVERTY: 50, PressureKind.IMPIETY: 10})
+    rules = Rules()
+    mortal_lines = await mind_lines(realm.session, rules, smith, 3, private=True)
+    assert any(line.startswith("Your home Saltmere is pressed by: hunger 70/100, poverty 50/100") for line in mortal_lines)
+    god_lines = await mind_lines(realm.session, rules, god, 3, private=True)
+    assert any("Your worshippers Saltmere" in line and "hunger 70/100" in line for line in god_lines)
+
+
+async def test_neighbours_judge_a_deed_by_their_own_values(realm: Realm) -> None:
+    ctx = context(realm.session)
+    raider = await people(realm, "Ash Riders")
+    victim = await people(realm, "Reed Folk")
+    gentle = await people(realm, "Dove Kin")
+    fierce = await people(realm, "Wolf Kin")
+    await write_values(realm.session, ValueHolder.CULTURE, gentle.id, {ValueAxis.MERCY: 90, ValueAxis.MARTIAL: -80})
+    await write_values(realm.session, ValueHolder.CULTURE, fierce.id, {ValueAxis.MARTIAL: 90, ValueAxis.MERCY: -80})
+    await change_relation(ctx, victim.id, raider.id, -20, MemoryKind.HARMED_ME, note="the burning of the reeds")
+    gentle_view = sum(row.magnitude for row in await memories_about(realm.session, gentle.id, raider.id))
+    fierce_view = sum(row.magnitude for row in await memories_about(realm.session, fierce.id, raider.id))
+    assert gentle_view < 0 < fierce_view
+
+
+async def test_a_faction_agenda_drifts_toward_its_people_and_its_members(realm: Realm) -> None:
+    ctx = context(realm.session)
+    folk = await people(realm, "Reed Folk")
+    guild = await make(realm.session, "Reed Guild", EntityType.FACTION, FactionStats(sway=40), world_id=realm.world.id, location_id=realm.region.id)
+    await link(realm.session, guild.id, folk.id, BondKind.MEMBER_OF)
+    await ensure_mind_row(realm.session, guild, 1)
+    await write_values(realm.session, ValueHolder.CULTURE, folk.id, {ValueAxis.WEALTH: 80})
+    await write_values(realm.session, ValueHolder.AGENDA, guild.id, {ValueAxis.WEALTH: -80})
+    await mind_values(ctx)
+    assert (await stored_values(realm.session, ValueHolder.AGENDA, guild.id))[ValueAxis.WEALTH] > -80
+
+
+def test_written_character_becomes_traits() -> None:
+    assert read_depth("nature: a fearless and greedy smith, just a little shy") == [TraitKind.BRAVE, TraitKind.GREEDY, TraitKind.RECLUSIVE]
+    assert read_depth("") == []
+
+
+def test_every_trait_effect_is_read_by_a_mechanic() -> None:
+    root = Path(__file__).resolve().parents[3] / "src" / "aerona"
+    sources = " ".join(path.read_text() for folder in ("engine", "tools", "agents") for path in (root / folder).rglob("*.py"))
+    unread = [effect for effect in TraitEffect if f"TraitEffect.{effect.name}" not in sources]
+    assert unread == []
+
+
+async def test_a_hard_people_leaves_its_broken_to_beg(realm: Realm) -> None:
+    ctx = context(realm.session)
+    hard = await people(realm, "Flint Folk")
+    soft = await people(realm, "Dove Folk")
+    await write_values(realm.session, ValueHolder.CULTURE, hard.id, {ValueAxis.MERCY: -60})
+    await write_values(realm.session, ValueHolder.CULTURE, soft.id, {ValueAxis.MERCY: 60})
+    flint_town, dove_town = await settlement(realm, "Flintholm"), await settlement(realm, "Dovecote")
+    await link(realm.session, flint_town.id, hard.id, BondKind.DESCENDS_FROM)
+    await link(realm.session, dove_town.id, soft.id, BondKind.DESCENDS_FROM)
+    broken = await mortal(realm, "Garr", location_id=flint_town.id)
+    spared = await mortal(realm, "Ilse", location_id=dove_town.id)
+    assert await left_to_beg(ctx, broken)
+    assert not await left_to_beg(ctx, spared)
+
+
+async def test_a_rusted_skill_returns_fast_and_a_better_master_teaches_faster(realm: Realm) -> None:
+    rules = Rules()
+    rusty = await mortal(realm, "Orm")
+    fresh = await mortal(realm, "Pell")
+    row = await set_skill(realm.session, rusty.id, SkillKind.SPEAR, 10, epoch=1, source=SkillSource.PRACTICE)
+    row.peak = 60
+    await set_skill(realm.session, fresh.id, SkillKind.SPEAR, 10, epoch=1, source=SkillSource.PRACTICE)
+    await practise(realm.session, rules, rusty.id, SkillKind.SPEAR, 40, epoch=2)
+    await practise(realm.session, rules, fresh.id, SkillKind.SPEAR, 40, epoch=2)
+    assert (await skills_of(realm.session, rusty.id))[SkillKind.SPEAR].level > (await skills_of(realm.session, fresh.id))[SkillKind.SPEAR].level
+
+
+async def test_a_full_granary_feeds_a_starving_neighbour(realm: Realm) -> None:
+    ctx = context(realm.session)
+    rich = await settlement(realm, "Granary")
+    poor = await settlement(realm, "Dustholm")
+    await set_stock(realm.session, rich.id, Commodity.FOOD, 400)
+    await set_stock(realm.session, poor.id, Commodity.FOOD, 0)
+    await write_pressures(realm.session, poor.id, {PressureKind.HUNGER: 90})
+    rules = tuned(needs={"famine_aid_chance": 100})
+    await famine_aid(context(realm.session, rules))
+    assert await stock(realm.session, rules, poor.id, Commodity.FOOD) > 0
+    assert [row.kind for row in await memories_about(realm.session, poor.id, rich.id)] == [MemoryKind.FAMINE_AID]
+    assert ctx.rules.needs.famine_aid_share_pct
+
+
+async def test_a_ruler_who_hates_the_neighbour_sours_the_relation(realm: Realm) -> None:
+    ctx = context(realm.session)
+    home = await people(realm, "Reed Folk")
+    other = await people(realm, "Ash Folk")
+    calm = await relation(realm.session, ctx.rules, home.id, other.id)
+    king = await mortal(realm, "Vorn")
+    await link(realm.session, king.id, home.id, BondKind.RULES)
+    await remember(realm.session, ctx.rules, holder_id=king.id, subject_id=other.id, kind=MemoryKind.KILLED_KIN, magnitude=-90, epoch=ctx.epoch)
+    assert await refresh_relation(realm.session, ctx.rules, ctx.epoch, home.id, other.id) < calm

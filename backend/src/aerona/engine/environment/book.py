@@ -7,10 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import CalendarRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
-from aerona.domain.enums.environment import ScarKind, WeatherEffect
+from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.domain.enums.environment import MovementMode, ScarKind, WeatherEffect
 from aerona.domain.enums.world import SkyEventKind
-from aerona.engine.environment.weather import Weather, WeatherInputs, weather_at
+from aerona.engine.environment.weather import Weather, WeatherInputs, weather_at, weather_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import shift_stat
@@ -36,6 +36,14 @@ async def active_sky(session: AsyncSession, epoch: int) -> dict[int | None, froz
     return {world_id: frozenset(kinds) for world_id, kinds in found.items()}
 
 
+async def forced_weather(session: AsyncSession, epoch: int) -> dict[int, list[ForcedWeatherRow]]:
+    found: dict[int, list[ForcedWeatherRow]] = {}
+    statement = select(ForcedWeatherRow).where(ForcedWeatherRow.from_epoch <= epoch, ForcedWeatherRow.until_epoch >= epoch)
+    for row in await session.scalars(statement.order_by(ForcedWeatherRow.id.desc())):
+        found.setdefault(row.region_entity_id, []).append(row)
+    return found
+
+
 @dataclass
 class EnvironmentBook:
     rules: Rules
@@ -47,6 +55,7 @@ class EnvironmentBook:
     calendars: dict[int, CalendarRow]
     sky: dict[int | None, frozenset[SkyEventKind]] = field(default_factory=dict)
     stars: dict[int, StarRow] = field(default_factory=dict)
+    forced: dict[int, list[ForcedWeatherRow]] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules, epoch: int, atlas: RegionAtlas | None = None) -> "EnvironmentBook":
@@ -67,6 +76,7 @@ class EnvironmentBook:
             calendars=calendars,
             sky=await active_sky(session, epoch),
             stars={row.id: row for row in await session.scalars(select(StarRow))},
+            forced=await forced_weather(session, epoch),
         )
 
     def star_of(self, world: WorldRow) -> StarRow | None:
@@ -113,10 +123,38 @@ class EnvironmentBook:
         )
 
     def weather(self, world_seed: int, epoch: int, region: RegionEnvironmentRow, season: WorldSeasonRow | None, slot: str) -> Weather:
+        for row in self.forced.get(region.entity_id, []):
+            if row.from_epoch <= epoch <= row.until_epoch and (row.season_position is None or (season is not None and season.position == row.season_position)):
+                return weather_of(self.rules, row.kind)
         return weather_at(self.rules, world_seed, epoch, slot, self.inputs(region, season))
+
+    def travel_season(self, world_id: int) -> WorldSeasonRow | None:
+        seasons = self.seasons_of(world_id)
+        return max(seasons, key=lambda season: (season.travel, -season.position)) if seasons else None
+
+    def footed(self, world_seed: int, epoch: int, region: RegionEnvironmentRow, mode: str, *, season: WorldSeasonRow | None, slot: str) -> int:
+        base = region.passability.get(mode, PERCENT)
+        weather = self.weather(world_seed, epoch, region, season, slot)
+        footing = sail_factor(self.rules, weather.effect(WeatherEffect.WIND)) if mode == MovementMode.BOAT.value else weather.factor(WeatherEffect.FOOTING)
+        travel = season.travel / PERCENT if season is not None else 1.0
+        return clamp_int(base * max(0.0, footing) * travel, 0, PERCENT)
+
+    def clarity(self, world_seed: int, epoch: int, world_id: int, slot: str) -> float:
+        regions = [region for region in self.regions.values() if region.world_id == world_id]
+        if not regions:
+            return 1.0
+        season = self.season_at(world_id, epoch)
+        seen = [self.weather(world_seed, epoch, region, season, slot).factor(WeatherEffect.VISIBILITY) for region in regions]
+        return max(0.0, min(1.0, sum(seen) / len(seen)))
 
     def calendar_holders(self) -> dict[int, CalendarRow]:
         return dict(self.calendars)
+
+
+def sail_factor(rules: Rules, wind: int) -> float:
+    best = max(1, rules.weather.sail_best_wind)
+    sail = wind / best if wind <= best else max(0.0, 1 - (wind - best) / max(1, PERCENT - best))
+    return 1 + rules.weather.sail_speed_pct / PERCENT * (sail * 2 - 1)
 
 
 def scar_depth(region: RegionEnvironmentRow | None, kind: ScarKind) -> int:

@@ -28,6 +28,7 @@ from aerona.domain.enums.entity import AGENT_TYPES, LIVING_CREATION_TYPES, Entit
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.models.phonology import Phonology
+from aerona.engine.body.book import ensure_species_body
 from aerona.engine.gods.progress import power_ceiling
 from aerona.engine.gods.rewards import RewardDraft, creation_gains, creation_value, fade_pct, record_reward
 from aerona.engine.phases.exploration import land_measure
@@ -407,6 +408,8 @@ async def create_entity(call: SonCall, args: CreationInput, entity_type: EntityT
     plan = await _prepare(call, args, entity_type)
     created = await _insert(call, plan)
     call.target(created.id)
+    if entity_type is EntityType.SPECIES:
+        await ensure_species_body(call.session, created, args.option("body_plan"))
     await _bonds(call, plan, created)
     effect_notes = await apply_effects(call, created, plan.effects)
     if plan.effects is not None:

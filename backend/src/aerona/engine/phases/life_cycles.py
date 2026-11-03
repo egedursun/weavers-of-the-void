@@ -10,9 +10,10 @@ from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.warfare import BattleRow, SiegeRow, TributeRow, WarRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.war import TributeStatus, WarEnding
 from aerona.engine.context import TickContext
+from aerona.engine.mind.hooks import desecrated
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -178,6 +179,12 @@ async def raze(ctx: TickContext, structure: EntityRow, sentence: str, cause_id: 
         await bonds.connect(BondDraft(cause_id, structure.id, BondKind.CAUSED, ctx.epoch, "was destroyed"))
     if destroyer_id is not None:
         await bonds.connect(BondDraft(destroyer_id, structure.id, BondKind.DESTROYED, ctx.epoch, "looted in conquest"))
+        keeper = await living_entity(ctx.session, structure.location_id)
+        if structure.engine_kind in HOLY_KINDS and keeper is not None:
+            await desecrated(ctx, keeper.id, destroyer_id, note=structure.name)
+
+
+HOLY_KINDS = frozenset({EngineKind.TEMPLE})
 
 
 async def siege_wear(ctx: TickContext) -> int:

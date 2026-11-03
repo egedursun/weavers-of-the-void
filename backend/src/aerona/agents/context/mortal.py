@@ -2,7 +2,7 @@ from sqlalchemy import select
 
 from aerona.agents.context.entity_detail import entity_detail
 from aerona.agents.context.entity_line import line_items
-from aerona.agents.context.geography import region_records
+from aerona.agents.context.geography import environment_facts, region_records, weather_words
 from aerona.agents.context.language_lines import language_lines
 from aerona.agents.context.recent_chronicle import prompt_text, recent_rows
 from aerona.agents.context.scope import Scope
@@ -13,11 +13,13 @@ from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.chronicle import ChronicleRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lore import FolkBeliefRow, LexemeRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import knowledge_level
 from aerona.prompts.contexts.common import ChronicleRow, LabelValue, LexiconWord, NamedRecord
@@ -105,6 +107,24 @@ async def known_knowledge(scope: Scope, me: EntityRow) -> list[KnowledgeItem]:
     return items
 
 
+async def mortal_land(scope: Scope, land: EntityRow, neighbours: list[EntityRow | None]) -> MortalLand:
+    record = next((item for item in await region_records(scope, land.world_id) if item.id == land.id), None)
+    ground = await scope.session.get(RegionEnvironmentRow, land.id)
+    book = await EnvironmentBook.load(scope.session, scope.rules, scope.epoch)
+    facts = environment_facts(scope.rules, ground)
+    soil = f"{facts['soil']} soil" if facts.get("soil") else None
+    described = ", ".join(str(value) for value in (facts.get("land"), facts.get("climate"), soil, facts.get("river"), facts.get("harvest")) if value)
+    return MortalLand(
+        id=land.id,
+        name=land.name,
+        elevation_label=record.elevation_class.value.replace("_", " ") if record is not None else None,
+        coastal=record.coastal if record is not None else False,
+        neighbours=[NamedRecord(id=region.id, name=region.name) for region in neighbours if region is not None],
+        ground=described or None,
+        weather=weather_words(scope, book, ground),
+    )
+
+
 async def mortal_context(scope: Scope, me: EntityRow, full: bool = False) -> MortalContextContext:
     atlas = await RegionAtlas.load(scope.session)
     regions = await horizon_regions(scope, me, atlas)
@@ -125,13 +145,7 @@ async def mortal_context(scope: Scope, me: EntityRow, full: bool = False) -> Mor
         god=await mortal_god(scope, me),
         folk_gods=[FolkGodName(name=belief.local_name or "", son_id=belief.god_node_id, story=belief.account) for (belief,) in beliefs if belief.local_name],
         language=await spoken_language(scope, me),
-        land=MortalLand(
-            id=land_row.id,
-            name=land_row.name,
-            neighbours=[NamedRecord(id=region.id, name=region.name) for region in neighbours if region is not None],
-        )
-        if land_row is not None
-        else None,
+        land=await mortal_land(scope, land_row, neighbours) if land_row is not None else None,
         near=await line_items(scope.session, near[: scope.rules.context.son_location_tree_lines * NEAR_LIMIT_FACTOR]),
         recent_events=await recent_rows(scope, scope.rules.mortal_tools.ctx_event_lines, me.world_id),
         known=await known_knowledge(scope, me),

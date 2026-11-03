@@ -30,7 +30,6 @@ from aerona.engine.primitives.stats import stat
 
 router = APIRouter(tags=["environment"])
 
-NOTABLE_YEARS_SHOWN = 30
 FORECAST_SLOT = "forecast"
 
 
@@ -144,10 +143,7 @@ async def world_seasons(services: ServicesDep, world_id: int = Path(ge=1)) -> Wo
         calendars = list(await session.scalars(select(CalendarRow).where(CalendarRow.world_id == world_id).order_by(CalendarRow.knowledge_entity_id)))
         names = {row.id: row.name for row in await session.scalars(select(EntityRow).where(EntityRow.id.in_([item.knowledge_entity_id for item in calendars])))}
         notable = await session.scalars(
-            select(NotableYearRow)
-            .where(NotableYearRow.world_id == world_id)
-            .order_by(NotableYearRow.year.desc(), NotableYearRow.id.desc())
-            .limit(NOTABLE_YEARS_SHOWN)
+            select(NotableYearRow).where(NotableYearRow.world_id == world_id).order_by(NotableYearRow.year.desc(), NotableYearRow.id.desc())
         )
         climate = (
             ClimateAgeView(

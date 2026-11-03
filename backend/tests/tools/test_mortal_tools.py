@@ -17,7 +17,7 @@ from aerona.domain.enums.entity import EntityOrigin, EntityType, LegendCategory
 from aerona.domain.enums.society import Commodity, KnowledgeBranch
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.domain.models.entity_stats import MortalStats
-from aerona.engine.primitives.stats import set_stats
+from aerona.engine.primitives.stats import set_stats, stat
 from aerona.rules.registry import Rules
 from aerona.rules.snapshot import with_value
 from aerona.tools.toolkit import TurnToolkit
@@ -253,10 +253,21 @@ async def test_captivity_tools(database: Database) -> None:
 
 async def test_army_tools(database: Database) -> None:
     realm = await seed_realm(database)
+    async with database.read() as session:
+        people = await session.get(EntityRow, realm.people_id)
+        assert people is not None
+        before = stat(people, "population") or 0
     toolkit = await mortal_toolkit(database, realm.people_id, action_points=3)
     raised = await ok(toolkit, "raise_army", {"name": "Salt Spears", "percent": 10})
     assert "soldiers" in raised
     assert await count(database, ArmyRow) == 1
+    async with database.read() as session:
+        people = await session.get(EntityRow, realm.people_id)
+        row = await session.scalar(select(ArmyRow))
+        assert people is not None and row is not None
+        army = await session.get(EntityRow, row.entity_id)
+        assert army is not None
+        assert (stat(people, "population") or 0) + (stat(army, "size") or 0) == before
     assert "already have an army" in await rejected(toolkit, "raise_army", {"name": "Second Spears"})
     await ok(toolkit, "appoint_commander", {"mortal_id": realm.mortal_id})
 

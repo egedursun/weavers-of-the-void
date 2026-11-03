@@ -7,7 +7,7 @@ from aerona.cartography.graph import RegionGraph
 from aerona.cartography.model import ElevationClass, RegionRecord
 from aerona.constants.engine import ADJACENT_HOPS, LOCATION_CHAIN_MAX_HOPS, UNKNOWN_DISTANCE
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.engine.primitives.map_store import stored_regions
 from aerona.rules.registry import Rules
 
@@ -54,6 +54,13 @@ class RegionAtlas:
             hops += 1
         self._top[entity_id] = found
         return found
+
+    def communities_in(self, region_id: int) -> list[int]:
+        return sorted(
+            placement.entity_id
+            for placement in self._placements.values()
+            if placement.entity_type in COMMUNITY_TYPES and self.top_region(placement.entity_id) == region_id
+        )
 
     def world_of(self, entity_id: int) -> int | None:
         placement = self._placements.get(entity_id)

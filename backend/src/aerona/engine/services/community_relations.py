@@ -17,6 +17,7 @@ from aerona.domain.enums.society import CommunityRelationLabel
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import ValueIndex
+from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import memories_between, remember, strength_of
 from aerona.engine.mind.opinion import OpinionContext, pair_relation
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -115,6 +116,9 @@ async def change_relation(
     await _ensure_row(session, rules, first, second)
     await remember(session, rules, holder_id=first, subject_id=second, kind=kind, magnitude=delta, epoch=epoch, note=note, event_id=event_id)
     await remember(session, rules, holder_id=second, subject_id=first, kind=reverse or kind, magnitude=delta, epoch=epoch, note=note, event_id=event_id)
+    act = MEMORIES[kind].act
+    if act is not None:
+        await judged(ctx, second, first, act, note=note)
     return await refresh_relation(session, rules, epoch, first, second)
 
 

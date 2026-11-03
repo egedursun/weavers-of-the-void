@@ -146,7 +146,16 @@ async def love_and_rivalry(ctx: TickContext) -> None:
                 if not rng.chance(settings.love_rivalry_chance):
                     continue
                 love = rng.chance(settings.love_share_pct)
-                await bonds.connect(BondDraft(first.id, second.id, BondKind.LOVES if love else BondKind.ENEMY, ctx.epoch, "love" if love else "rivalry"))
+                await bonds.connect(
+                    BondDraft(
+                        first.id,
+                        second.id,
+                        BondKind.LOVES if love else BondKind.ENEMY,
+                        ctx.epoch,
+                        "love" if love else "rivalry",
+                        war_cause=None if love else WarCause.RIVALRY,
+                    )
+                )
                 text = f"Love blossomed between {first.name} and {second.name}." if love else f"A rivalry began between {first.name} and {second.name}."
                 await note(ctx, text, key="society.love" if love else "society.rivalry", ids=[first.id, second.id], kind=ChronicleKind.LINEAGE)
                 formed += 1

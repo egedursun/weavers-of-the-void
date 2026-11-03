@@ -26,6 +26,7 @@ from aerona.domain.enums.foreign_god import ForeignGodPowerEffect, ForeignGodSta
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.son import SonStatus, Stat
+from aerona.domain.enums.war import WarCause
 from aerona.domain.enums.world import Discovery
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.duels import ARENA_STATS, duel_history, duel_winner, son_duel
@@ -38,8 +39,9 @@ from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import BondIndex, canon, flags_by_entity
-from aerona.engine.primitives.stats import has_stat, stat_or
+from aerona.engine.primitives.stats import has_stat, headcount_value, stat_or
 from aerona.engine.services.conflict import foreign_god_war
+from aerona.engine.services.war import declare_war, is_community
 from aerona.rules.registry import Rules
 
 F = ForeignGodPowerEffect
@@ -374,6 +376,19 @@ async def steal_worshipper(ctx: TickContext, god: ForeignGodRow, victim: EntityR
     return text
 
 
+async def incite_holy_war(ctx: TickContext, god: ForeignGodRow, victim: EntityRow) -> str | None:
+    if not is_community(victim):
+        return None
+    zealots = [item for item in await worshippers(ctx.session, god.id) if is_community(item) and item.id != victim.id]
+    if not zealots:
+        return None
+    zealot = max(zealots, key=lambda item: (headcount_value(item) or 0, -item.id))
+    reason = f"the will of {god.name}"
+    if not await declare_war(ctx, zealot.id, victim.id, reason, cause=WarCause.FOREIGN_GOD):
+        return None
+    return f"{god.name} drove {zealot.name} to war against {victim.name}, who worship a son of the creator."
+
+
 async def hostile_act(ctx: TickContext, god: ForeignGodRow, powers: set[ForeignGodPowerEffect]) -> str | None:
     pantheon, settings = ctx.rules.pantheon, ctx.rules.foreign_gods
     rng = ctx.rng(f"hostile.{god.id}")
@@ -392,6 +407,10 @@ async def hostile_act(ctx: TickContext, god: ForeignGodRow, powers: set[ForeignG
     )
     if found is not None and rng.chance(steal):
         return await steal_worshipper(ctx, god, *found)
+    if found is not None and rng.chance(pantheon.foreign_holy_war_chance):
+        text = await incite_holy_war(ctx, god, found[0])
+        if text is not None:
+            return text
     temple: EntityRow | None = await ctx.session.scalar(
         select(EntityRow)
         .where(EntityRow.world_id == god.world_id, EntityRow.engine_kind == EngineKind.TEMPLE, EntityRow.status == EntityStatus.CANON)

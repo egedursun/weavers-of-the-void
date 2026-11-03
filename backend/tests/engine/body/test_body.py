@@ -4,14 +4,17 @@ from aerona.catalog.anatomy import FINGERS, Part, anatomy_of
 from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import (
+    BodyBuild,
     BodyPlan,
     BodyReading,
     ConditionKind,
     DamageType,
     HarmCause,
+    HeightClass,
     InjuryKind,
     InjuryState,
     MaimedKind,
+    StrikeStyle,
 )
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.domain import Domain
@@ -19,16 +22,18 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, Mor
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import KnowledgeStats
-from aerona.engine.body.book import effective, ensure_body
+from aerona.engine.body.book import bedridden, effective, ensure_body, frame_style, plan_from_words, size_of
 from aerona.engine.body.cohorts import return_maimed, tend_cohorts, war_appetite
 from aerona.engine.body.customs import ensure_customs
 from aerona.engine.body.healing import fit_prosthesis, heal_wounds, mend
 from aerona.engine.body.hits import Harm, harm_resisted, kind_for, loss_for
 from aerona.engine.body.state import refresh
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits
-from aerona.engine.phases.body import body_conditions, body_society, body_survey
+from aerona.engine.phases.body import body_conditions, body_society, body_survey, seek_reader
+from aerona.engine.phases.mortals import mortal_wounds
 from aerona.engine.primitives.queries import active_bonds, add_flag
 from aerona.engine.primitives.stats import stat
+from aerona.engine.records import death_path
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, context, link, make, mortal, people, settlement, son, tuned
 
@@ -212,3 +217,67 @@ async def test_gods_take_divine_wounds_and_a_miracle_mends(realm: Realm) -> None
     assert await mend(ctx, mortal_row, lasting=True) >= 1
     assert body.fingers == 10
     assert (await realm.session.get(BodyRow, mortal_row.id)).craft == 100
+
+
+async def test_every_violent_death_leaves_its_wound(realm: Realm) -> None:
+    ctx = context(realm.session)
+    captor = await people(realm, "Hill Folk")
+    executed = await mortal(realm, "Arn")
+    assert await death_path(ctx, executed, "executed by the Hill Folk", captor.id, "execution", forced=True, harm=HarmCause.PUNISHMENT)
+    faded = await mortal(realm, "Bera", hp=0)
+    await mortal_wounds(ctx)
+    for victim, cause in ((executed, HarmCause.PUNISHMENT), (faded, HarmCause.ACCIDENT)):
+        wounds = list(await realm.session.scalars(select(InjuryRow).where(InjuryRow.bearer_node_id == victim.id)))
+        assert victim.status is EntityStatus.DEAD
+        assert [(row.state, row.cause_kind) for row in wounds] == [(InjuryState.LETHAL, cause)]
+
+
+async def test_the_touch_of_the_void_lowers_sanity_for_good(realm: Realm) -> None:
+    ctx = context(realm.session)
+    seer = await mortal(realm, "Ysolde")
+    seer.sanity = 90
+    await apply_hits(ctx, seer, Harm(30, HarmCause.CURSE, "touched by the void", damage_type=DamageType.VOID), lethal=False)
+    wounds = list(await realm.session.scalars(select(InjuryRow).where(InjuryRow.bearer_node_id == seer.id, InjuryRow.kind == InjuryKind.VOID_TOUCH)))
+    assert wounds
+    ceiling = 100 - sum(row.severity for row in wounds) * ctx.rules.injury.void_sanity_per_severity
+    assert seer.sanity == max(0, ceiling) < 90
+    seer.sanity = 100
+    await refresh(realm.session, ctx.rules, seer, ctx.epoch)
+    assert seer.sanity == max(0, ceiling)
+
+
+async def test_species_bodies_follow_their_nature_and_size_shapes_the_blow(realm: Realm) -> None:
+    assert plan_from_words("A coiling sea serpent of the reefs") is BodyPlan.SERPENTINE
+    assert plan_from_words("Clockwork golems that guard the vaults") is BodyPlan.CONSTRUCT
+    assert plan_from_words("pale wraiths of the moor") is BodyPlan.INCORPOREAL
+    rules = Rules()
+    giant = BodyRow(node_id=1, plan=BodyPlan.HUMANOID, traits=[], fingers=10, height_class=HeightClass.GIANT, build=BodyBuild.GIANT, locked=[])
+    child = BodyRow(node_id=2, plan=BodyPlan.HUMANOID, traits=[], fingers=10, height_class=HeightClass.SHORT, build=BodyBuild.SLIGHT, locked=[])
+    assert frame_style(rules, size_of(giant), child) is StrikeStyle.TRAMPLE
+    assert frame_style(rules, size_of(child), giant) is StrikeStyle.LOW
+    assert frame_style(rules, size_of(child), child) is StrikeStyle.NORMAL
+
+
+async def test_survey_gives_the_slain_a_wound_from_their_killer(realm: Realm) -> None:
+    killer = await mortal(realm, "Dask")
+    victim = await mortal(realm, "Ivo")
+    victim.status, victim.end_epoch = EntityStatus.DEAD, 2
+    await link(realm.session, killer.id, victim.id, BondKind.KILLED)
+    await body_survey(context(realm.session))
+    wounds = list(await realm.session.scalars(select(InjuryRow).where(InjuryRow.bearer_node_id == victim.id)))
+    assert [(row.state, row.cause_kind, row.cause_node_id) for row in wounds] == [(InjuryState.LETHAL, HarmCause.DUEL, killer.id)]
+
+
+async def test_the_bedridden_cannot_fight_and_a_blinded_sage_finds_a_reader(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Inkhold")
+    sage = await mortal(realm, "Old Teo", location_id=town.id, role=MortalRole.SAGE, age=70)
+    pupil = await mortal(realm, "Mira", location_id=town.id, age=15, intellect=80)
+    body = await ensure_body(realm.session, ctx.rules, sage, ctx.epoch)
+    body.scholarship = 10
+    assert await seek_reader(ctx, sage) is pupil
+    assert await seek_reader(ctx, sage) is None
+    sick = await mortal(realm, "Hal", hp=10)
+    await refresh(realm.session, ctx.rules, sick, ctx.epoch)
+    sick_body = await ensure_body(realm.session, ctx.rules, sick, ctx.epoch)
+    assert bedridden(ctx.rules, sick) and sick_body.melee == 0 and sick_body.command == 0

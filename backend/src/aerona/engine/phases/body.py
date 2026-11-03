@@ -1,25 +1,32 @@
 from sqlalchemy import select
 
+from aerona.catalog.body_plans import PLANS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.society import AddictionRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import MADNESS_CONDITIONS, ConditionKind, HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
-from aerona.engine.body.book import ensure_species_body, injuries_of
+from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.node import NodeKind
+from aerona.engine.body.book import ensure_species_body, guess_plan, injuries_of, species_of, species_traits
 from aerona.engine.body.cohorts import tend_cohorts
-from aerona.engine.body.conditions import condition_of, end_condition, gain_condition
+from aerona.engine.body.conditions import CONDITION_KEY, condition_of, end_condition, gain_condition
 from aerona.engine.body.customs import SUFFERING_DOMAINS, customs_of, ensure_customs, maimed_for_rule, people_of
 from aerona.engine.body.healing import heal_wounds
 from aerona.engine.body.hits import Harm, weighted
-from aerona.engine.body.state import refresh
+from aerona.engine.body.state import has_reader, refresh
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import sanity_of
 from aerona.engine.gods.queries import community_of
+from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.lifecycle.succession import pass_rule
 from aerona.engine.lifecycle.wounds import fatal_injury
@@ -38,6 +45,7 @@ VIOLENT_DEATHS: dict[EntityFlag, HarmCause] = {
     EntityFlag.DIED_IN_DISASTER: HarmCause.DISASTER,
 }
 BACKFILL_CAUSE = "fell long ago"
+PLAN_FIXUP = "body.species_plans"
 
 
 async def body_survey(ctx: TickContext) -> None:
@@ -62,21 +70,76 @@ async def body_survey(ctx: TickContext) -> None:
             await refresh(ctx.session, rules, god, ctx.epoch)
             created += 1
     ctx.count("bodies", created)
+    ctx.count("species_plans_reread", await reread_species_plans(ctx))
     await _backfill_fallen(ctx)
+
+
+async def killer_cause(ctx: TickContext, killer_id: int) -> HarmCause:
+    kind = await NodeRepository(ctx.session).kind_of(killer_id)
+    if kind in (NodeKind.SON, NodeKind.FOREIGN_GOD):
+        return HarmCause.GOD
+    killer = await ctx.session.get(EntityRow, killer_id)
+    if killer is None:
+        return HarmCause.BATTLE
+    if killer.entity_type in (EntityType.SPECIES, EntityType.OUTER_BEING):
+        return HarmCause.MONSTER
+    if killer.entity_type is EntityType.MORTAL:
+        return HarmCause.DUEL
+    return HarmCause.PUNISHMENT if killer.entity_type in COMMUNITY_TYPES else HarmCause.BATTLE
 
 
 async def _backfill_fallen(ctx: TickContext) -> None:
     wounded = set(await ctx.session.scalars(select(InjuryRow.bearer_node_id).distinct()))
+    killed = await ctx.session.execute(select(BondRow.target_node_id, BondRow.source_node_id).where(BondRow.kind == BondKind.KILLED).order_by(BondRow.id))
+    killers = {victim: killer for victim, killer in killed}
+    flagged: dict[int, HarmCause] = {}
     for flag, cause in VIOLENT_DEATHS.items():
         for mortal_id in await flags_by_entity(ctx.session, flag):
-            if mortal_id in wounded:
-                continue
-            mortal = await ctx.session.get(EntityRow, mortal_id)
-            if mortal is None or mortal.entity_type is not EntityType.MORTAL or mortal.status is EntityStatus.CANON:
-                continue
-            await fatal_injury(ctx, mortal, Harm(ctx.rules.casualties.wound_hp, cause, BACKFILL_CAUSE))
-            wounded.add(mortal_id)
-            ctx.count("backfilled")
+            flagged.setdefault(mortal_id, cause)
+    for mortal_id in sorted(set(flagged) | set(killers)):
+        if mortal_id in wounded:
+            continue
+        mortal = await ctx.session.get(EntityRow, mortal_id)
+        if mortal is None or mortal.entity_type is not EntityType.MORTAL or mortal.status is EntityStatus.CANON:
+            continue
+        killer_id = killers.get(mortal_id)
+        cause = flagged.get(mortal_id) or (await killer_cause(ctx, killer_id) if killer_id is not None else HarmCause.BATTLE)
+        harm = Harm(ctx.rules.casualties.wound_hp, cause, BACKFILL_CAUSE, killer_id=killer_id, event_entity_id=mortal.death_event_entity_id)
+        await fatal_injury(ctx, mortal, harm)
+        wounded.add(mortal_id)
+        ctx.count("backfilled")
+
+
+async def reread_species_plans(ctx: TickContext) -> int:
+    if await ctx.session.get(AppliedFixupRow, PLAN_FIXUP) is not None:
+        return 0
+    wounded = set(await ctx.session.scalars(select(InjuryRow.bearer_node_id).distinct()))
+    changed = 0
+    for species in await canon(ctx.session, [EntityType.SPECIES]):
+        body = await ctx.session.get(BodyRow, species.id)
+        if body is None or "plan" in body.locked:
+            continue
+        plan = await guess_plan(ctx.session, species, await species_traits(ctx.session, species.id))
+        if plan is body.plan:
+            continue
+        body.plan, body.height_class, body.build = plan, PLANS[plan].height, PLANS[plan].build
+        changed += 1
+        for mortal in await members_of(ctx, species):
+            kin = await ctx.session.get(BodyRow, mortal.id)
+            if kin is not None and mortal.id not in wounded and "plan" not in kin.locked:
+                kin.plan = plan
+    ctx.session.add(AppliedFixupRow(key=PLAN_FIXUP, result={"species": changed}))
+    await ctx.session.flush()
+    return changed
+
+
+async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
+    found: list[EntityRow] = []
+    for mortal in await canon(ctx.session, [EntityType.MORTAL]):
+        kind = await species_of(ctx.session, mortal)
+        if kind is not None and kind.id == species.id:
+            found.append(mortal)
+    return found
 
 
 async def body_healing(ctx: TickContext) -> None:
@@ -190,12 +253,47 @@ async def _marks(ctx: TickContext, mortal: EntityRow, flags: set[EntityFlag]) ->
         await end_condition(ctx, mortal, ConditionKind.CHRONIC_ILLNESS)
 
 
+SCHOLAR_ROLES = frozenset({MortalRole.SAGE, MortalRole.SCRIBE, MortalRole.SEER, MortalRole.PRIEST})
+
+
+async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
+    body = await ctx.session.get(BodyRow, scholar.id)
+    if scholar.mortal_role not in SCHOLAR_ROLES or body is None or body.scholarship >= ctx.rules.capacities.reader_sought_below_pct:
+        return None
+    if await has_reader(ctx.session, scholar):
+        return None
+    home = scholar.location_id
+    if home is None:
+        return None
+    candidates = [
+        mortal
+        for mortal in await canon(ctx.session, [EntityType.MORTAL])
+        if mortal.id != scholar.id and mortal.location_id == home and (stat(mortal, "age") or 0) < (stat(scholar, "age") or 0)
+    ]
+    if not candidates:
+        return None
+    reader = max(candidates, key=lambda mortal: (stat(mortal, "intellect") or 0, -mortal.id))
+    await connect(ctx.session, reader.id, scholar.id, BondKind.APPRENTICE_OF, ctx.epoch, description="reads aloud to the blind master")
+    await refresh(ctx.session, ctx.rules, scholar, ctx.epoch)
+    await ctx.chronicle(
+        ChronicleKind.LINEAGE,
+        f"Blinded, {scholar.name} took {reader.name} as a reader; the young voice now carries the old books.",
+        template_key="body.reader_taken",
+        entity_ids=[scholar.id, reader.id],
+        world_id=scholar.world_id,
+    )
+    return reader
+
+
 async def body_conditions(ctx: TickContext) -> None:
     mortals = [mortal for mortal in await canon(ctx.session, [EntityType.MORTAL]) if mortal.status is EntityStatus.CANON]
     addicted = {row.community_entity_id: row for row in await ctx.session.scalars(select(AddictionRow))}
     repository = EntityRepository(ctx.session)
     for mortal in mortals:
+        if blocked(mortal.id, CONDITION_KEY):
+            continue
         flags = await repository.flags(mortal.id)
+        await seek_reader(ctx, mortal)
         await _senses(ctx, mortal)
         await _madness(ctx, mortal)
         await _marks(ctx, mortal, flags)

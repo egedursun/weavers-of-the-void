@@ -27,6 +27,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_types import disaster_pct
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment
+from aerona.engine.environment.notable import remember_event_year
 from aerona.engine.environment.profile import RIVER_RANK
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits, fatal_injury
 from aerona.engine.notes import note
@@ -325,7 +326,10 @@ async def scar_land(ctx: TickContext, target: EntityRow, disaster: Disaster, sev
 async def strike(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: int) -> tuple[EntityRow, DisasterImpact]:
     impact = await apply_disaster(ctx, target, disaster, severity / ctx.rules.disasters.scale_divisor)
     await scar_land(ctx, target, disaster, severity)
-    return await record_disaster_event(ctx, target, disaster, severity, impact), impact
+    event = await record_disaster_event(ctx, target, disaster, severity, impact)
+    if disaster is Disaster.PLAGUE:
+        await remember_event_year(ctx, event, await RegionAtlas.load(ctx.session), epoch=ctx.epoch)
+    return event, impact
 
 
 def _sentence(impact: DisasterImpact) -> str:

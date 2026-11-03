@@ -30,6 +30,7 @@ NEED_LOCK = "needs"
 FULL = PERCENT
 FERTILITY_KEY = "fertility"
 BELONGING_BONDS = (BondKind.LOVES, BondKind.COMPANION, BondKind.DESCENDS_FROM, BondKind.MEMBER_OF, BondKind.LIVES_IN)
+BEGGAR_TAG = "beggar"
 ROLE_STATUS = {
     MortalRole.RULER: 95,
     MortalRole.HERO: 85,
@@ -135,6 +136,8 @@ async def mortal_needs(session: AsyncSession, rules: Rules, mortal: EntityRow, *
     rules_something = bool(await active_bonds(session, [BondKind.RULES], sources=[mortal.id]))
     status = ROLE_STATUS.get(mortal.mortal_role or MortalRole.COMMONER, table.unknown_pressure) + (table.office_status if rules_something else 0)
     status -= table.trait_demand * len(traits & {TraitKind.PROUD, TraitKind.AMBITIOUS})
+    if BEGGAR_TAG in await EntityRepository(session).tags(mortal.id):
+        status -= table.beggar_status_loss
     mind = await mind_of(session, mortal.id)
     role = mortal.mortal_role or MortalRole.COMMONER
     craft = await best_skill(session, mortal.id, CAREER_SKILLS.get(role, ()))

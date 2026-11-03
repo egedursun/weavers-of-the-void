@@ -20,12 +20,12 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.limits import PERCENT_MAX
-from aerona.domain.enums.mind import MemoryKind, ValueAxis
+from aerona.domain.enums.mind import ActKind, MemoryKind, TraitEffect, ValueAxis
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.war import BattleOutcome, SiegeStatus, WarCause, WarEnding, WarStatus
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
-from aerona.engine.body.book import effective
+from aerona.engine.body.book import effective, strike_style
 from aerona.engine.body.cohorts import return_maimed
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -33,8 +33,8 @@ from aerona.engine.environment.battleground import BattleGround, attack_factor, 
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment, scar_region
 from aerona.engine.environment.years import grant_sub_steps
 from aerona.engine.lifecycle.wounds import apply_hits
-from aerona.engine.mind.book import best_effective, values_for
-from aerona.engine.mind.hooks import duelled, fought
+from aerona.engine.mind.book import best_effective, effect_of, scaled_by, values_for
+from aerona.engine.mind.hooks import duelled, fought, judged
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.knowledge import LawBook
@@ -389,12 +389,12 @@ async def _record(ctx: TickContext, report: BattleReport, place: EntityRow | Non
 
 async def duel_power(ctx: TickContext, theatre: Theatre, hero: EntityRow) -> float:
     campaigns = ctx.rules.campaigns
+    nerve = scaled_by(await effect_of(ctx.session, hero.id, TraitEffect.COURAGE, ctx.rules.traits.effect_scale_pct))
     return (
         await effective(ctx.session, hero, "strength", rules=ctx.rules)
         + await effective(ctx.session, hero, "agility", rules=ctx.rules) / campaigns.duel_agility_divisor
         + await theatre.strength.weapon_power(hero, campaigns.duel_weapon_mult)
-        + ctx.rng("duel").die(campaigns.duel_die) * campaigns.duel_die_mult
-    )
+    ) * nerve + ctx.rng("duel").die(campaigns.duel_die) * campaigns.duel_die_mult
 
 
 async def duel(ctx: TickContext, theatre: Theatre, first: EntityRow, second: EntityRow, *, war: WarRow | None, anchor_id: int | None) -> str:
@@ -412,8 +412,20 @@ async def duel(ctx: TickContext, theatre: Theatre, first: EntityRow, second: Ent
     await duelled(ctx, first)
     await duelled(ctx, second)
     winner, loser = (first, second) if first_power >= second_power else (second, first)
+    await judged(ctx, winner.id, loser.id, ActKind.DUELLING, note=context)
+    style = await strike_style(ctx.session, ctx.rules, winner, loser)
     if ctx.rng("duel_death").chance(ctx.rules.campaigns.duel_death_chance):
-        await death_path(ctx, loser, f"fell in a duel with {winner.name} in {context}", winner.id, f"{context} duel", forced=True, event_id=anchor_id)
+        await death_path(
+            ctx,
+            loser,
+            f"fell in a duel with {winner.name} in {context}",
+            winner.id,
+            f"{context} duel",
+            forced=True,
+            event_id=anchor_id,
+            harm=HarmCause.DUEL,
+            style=style,
+        )
         if anchor_id is not None:
             await bonds.connect(BondDraft(anchor_id, loser.id, BondKind.CAUSED, ctx.epoch, "fell in a duel"))
         shift_stat(winner, "charisma", campaigns.duel_winner_charisma)
@@ -424,7 +436,10 @@ async def duel(ctx: TickContext, theatre: Theatre, first: EntityRow, second: Ent
     if stat(loser, "hp") is None:
         set_stats(loser, hp=campaigns.hero_default_hp)
     await apply_hits(
-        ctx, loser, Harm(campaigns.duel_loser_hp_loss, HarmCause.DUEL, "fell in a duel", source_node_id=winner.id, killer_id=winner.id), lethal=False
+        ctx,
+        loser,
+        Harm(campaigns.duel_loser_hp_loss, HarmCause.DUEL, "fell in a duel", source_node_id=winner.id, killer_id=winner.id, style=style),
+        lethal=False,
     )
     return f" {winner.name} and {loser.name} dueled; {loser.name} was badly wounded."
 

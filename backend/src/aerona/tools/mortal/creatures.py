@@ -8,12 +8,15 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
+from aerona.engine.body.hits import Harm
 from aerona.engine.cosmos.fauna import weave_chimera as weave
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.phases.afterlife import soul_bind
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.society import class_shares
@@ -71,10 +74,13 @@ async def tame_species(call: MortalCall, args: TameInput) -> str:
         return result(MortalResult.TAMED, name=species.name)
     if call.rng("rage").probability(danger / tools.tame_attack_divisor):
         kept = (PERCENT - tools.tame_attack_loss_pct) / PERCENT
-        for key in ("population", "hp"):
-            value = stat(call.me, key)
-            if value is not None:
-                set_stats(call.me, **{key: max(1, round(value * kept))})
+        population = stat(call.me, "population")
+        if population is not None:
+            set_stats(call.me, population=max(1, round(population * kept)))
+        hp = stat(call.me, "hp")
+        if hp is not None and call.me.entity_type is EntityType.MORTAL:
+            mauled = Harm(hp - max(1, round(hp * kept)), HarmCause.MONSTER, f"mauled by {species.name}", source_node_id=species.id, killer_id=species.id)
+            await apply_hits(call.tick, call.me, mauled, lethal=False)
         await bonds.connect(BondDraft(species.id, call.me.id, BondKind.HUNTS, call.epoch, lines.ENRAGED))
     await call.chronicle(ChronicleKind.DOMESTICATION, lines.TAME_FAILED, entity_ids=[call.me.id, species.id], me=call.me.name, species=species.name)
     return result(MortalResult.NOT_TAMED, name=species.name)

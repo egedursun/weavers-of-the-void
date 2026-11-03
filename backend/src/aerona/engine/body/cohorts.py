@@ -9,6 +9,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.customs import ensure_customs, people_of
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.guards import blocked
 from aerona.engine.notes import note
 from aerona.engine.phases.remembrance import MemorialForm, memorial
 from aerona.engine.primitives.knowledge import known_levels
@@ -21,6 +22,9 @@ from aerona.rules.registry.body import MaimedRules
 EYE_KINDS = frozenset({MaimedKind.ONE_EYED, MaimedKind.BLIND})
 FESTIVAL_SUBTYPE = "scar festival"
 FESTIVAL_FIELD = "scar_festivals"
+
+
+COHORT_KEY = "maimed"
 
 
 def kind_weights(rules: MaimedRules, helmet_cover: int) -> dict[MaimedKind, float]:
@@ -54,6 +58,8 @@ async def helmet_cover(ctx: TickContext, community_id: int) -> int:
 
 async def return_maimed(ctx: TickContext, community: EntityRow, lost: int) -> int:
     table = ctx.rules.maimed
+    if blocked(community.id, COHORT_KEY):
+        return 0
     maimed = round_half_up(max(0, lost) * table.return_pct / PERCENT)
     if maimed <= 0:
         return 0
@@ -142,6 +148,8 @@ async def tend_cohorts(ctx: TickContext) -> None:
     for community_id, group in grouped.items():
         community = await entity(ctx.session, community_id)
         if community is None or community.status is not EntityStatus.CANON or community.entity_type not in {EntityType.SETTLEMENT, EntityType.PEOPLE}:
+            continue
+        if blocked(community_id, COHORT_KEY):
             continue
         for row in group:
             row.count = round_half_up(row.count * (PERCENT - table.attrition_pct) / PERCENT)

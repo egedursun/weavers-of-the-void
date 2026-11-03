@@ -1,19 +1,23 @@
+import re
 from dataclasses import dataclass, replace
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import FINGER_COUNT, Anatomy, anatomy_of
+from aerona.catalog.body_plans import BUILD_RANK, HEIGHT_RANK, PLANS, WHOLE_PLANS
 from aerona.catalog.mind import SKILLS, TRAITS
 from aerona.constants.units import PERCENT
+from aerona.core.random import SeededRandom
+from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow, ProsthesisRow
 from aerona.db.tables.entities import EntityRow, EntityTagRow, EntityTraitRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import SkillRow, TraitRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.body import OPEN_INJURY_STATES, BodyFunction, BodyPlan, Capacity, InjuryState, StrikeStyle
+from aerona.domain.enums.body import OPEN_INJURY_STATES, BodyBuild, BodyFunction, BodyPlan, Capacity, HeightClass, InjuryState, StrikeStyle
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.engine.body.capacities import BearerStats, BodyState, capacities
 from aerona.engine.body.functions import Wound
@@ -72,6 +76,48 @@ def plan_from_traits(traits: set[CreatureTrait]) -> BodyPlan:
     return next((plan for trait, plan in TRAIT_PLANS if trait in traits), BodyPlan.QUADRUPED)
 
 
+def plan_from_words(text: str) -> BodyPlan | None:
+    found = set(re.findall(r"[a-z]+", text.lower()))
+    for spec in PLANS.values():
+        if any(word in found or f"{word}s" in found for word in spec.words):
+            return spec.plan
+    return None
+
+
+async def guess_plan(session: AsyncSession, species: EntityRow, traits: set[CreatureTrait]) -> BodyPlan:
+    by_trait = next((plan for trait, plan in TRAIT_PLANS if trait in traits), None)
+    if by_trait is not None:
+        return by_trait
+    if EntityFlag.MEGAFAUNA in await EntityRepository(session).flags(species.id):
+        return BodyPlan.COLOSSAL
+    by_words = plan_from_words(" ".join(part for part in (species.name, species.subtype or "", species.description or "") if part))
+    if by_words is not None:
+        return by_words
+    home = await living_entity(session, species.location_id)
+    return BodyPlan.AQUATIC if home is not None and home.is_water else BodyPlan.QUADRUPED
+
+
+def size_of(body: BodyRow) -> int:
+    return HEIGHT_RANK[body.height_class] + BUILD_RANK[body.build]
+
+
+def mortal_frame(rules: Rules, bearer: EntityRow, plan: BodyPlan) -> tuple[HeightClass, BodyBuild]:
+    spec = PLANS[plan]
+    rng = SeededRandom.for_epoch(bearer.id, bearer.birth_epoch, "frame")
+    heights = list(HeightClass)
+    height = spec.height
+    if rng.chance(rules.anatomy.height_shift_chance):
+        index = heights.index(height) + (1 if rng.chance(50) else -1)
+        height = heights[max(0, min(len(heights) - 2, index))] if height is not HeightClass.GIANT else height
+    strength = stat(bearer, "strength") or DEFAULT_STAT
+    build = spec.build
+    if spec.build is not BodyBuild.GIANT:
+        build = (
+            BodyBuild.HEAVY if strength >= rules.anatomy.heavy_build_strength else BodyBuild.SLIGHT if strength < rules.anatomy.slight_build_strength else build
+        )
+    return height, build
+
+
 async def species_of(session: AsyncSession, mortal: EntityRow) -> EntityRow | None:
     for bond in await active_bonds(session, [BondKind.DESCENDS_FROM], sources=[mortal.id]):
         parent = await living_entity(session, bond.target_node_id)
@@ -106,19 +152,40 @@ async def ensure_body(session: AsyncSession, rules: Rules, bearer: Bearer, epoch
     plan, traits = await plan_for(session, bearer)
     hp = bearer.hp if isinstance(bearer, SonRow) else (stat(bearer, "hp") if isinstance(bearer, EntityRow) else None)
     floor = rules.world_effects.heir_hp
-    body = BodyRow(node_id=bearer.id, plan=plan, traits=traits, fingers=FINGER_COUNT, hp_max=max(hp or 0, floor), updated_epoch=epoch, locked=[])
+    height, build = mortal_frame(rules, bearer, plan) if isinstance(bearer, EntityRow) else (PLANS[plan].height, PLANS[plan].build)
+    body = BodyRow(
+        node_id=bearer.id,
+        plan=plan,
+        traits=traits,
+        fingers=FINGER_COUNT,
+        hp_max=max(hp or 0, floor),
+        updated_epoch=epoch,
+        locked=[],
+        height_class=height,
+        build=build,
+    )
     session.add(body)
     await session.flush()
     return body
 
 
-async def ensure_species_body(session: AsyncSession, species: EntityRow) -> BodyRow:
+async def ensure_species_body(session: AsyncSession, species: EntityRow, plan: BodyPlan | None = None) -> BodyRow:
     body = await session.get(BodyRow, species.id)
     if body is not None:
         return body
     traits = await species_traits(session, species.id)
     functions = sorted(TRAIT_FUNCTIONS[trait].value for trait in traits if trait in TRAIT_FUNCTIONS)
-    body = BodyRow(node_id=species.id, plan=plan_from_traits(traits), traits=functions, fingers=FINGER_COUNT, hp_max=0, locked=[])
+    chosen = plan or await guess_plan(session, species, traits)
+    body = BodyRow(
+        node_id=species.id,
+        plan=chosen,
+        traits=functions,
+        fingers=FINGER_COUNT,
+        hp_max=0,
+        locked=[],
+        height_class=PLANS[chosen].height,
+        build=PLANS[chosen].build,
+    )
     session.add(body)
     await session.flush()
     return body
@@ -200,7 +267,20 @@ def factors_of(
     )
     actual = capacities(rules, stats, state)
     whole = capacities(rules, replace(stats, age=None), BodyState(anatomy, (), FINGER_COUNT, 0))
-    return {capacity: round(actual[capacity] * PERCENT / whole[capacity]) if whole[capacity] else PERCENT for capacity in Capacity}
+    factors = {capacity: round(actual[capacity] * PERCENT / whole[capacity]) if whole[capacity] else PERCENT for capacity in Capacity}
+    if bedridden(rules, bearer):
+        factors.update(dict.fromkeys(BEDRIDDEN_LOSSES, 0))
+    return factors
+
+
+BEDRIDDEN_LOSSES = (Capacity.MELEE, Capacity.MISSILE, Capacity.COMMAND, Capacity.MOBILITY, Capacity.CRAFT)
+
+
+def bedridden(rules: Rules, bearer: object) -> bool:
+    if not isinstance(bearer, EntityRow) or bearer.entity_type is not EntityType.MORTAL:
+        return False
+    hp = stat(bearer, "hp")
+    return hp is not None and 0 < hp < rules.capacities.bedridden_hp
 
 
 async def factor(session: AsyncSession, node_id: int, capacity: Capacity) -> float:
@@ -215,17 +295,41 @@ async def scaled(session: AsyncSession, node_id: int, value: float, capacity: Ca
     return value * await factor(session, node_id, capacity)
 
 
-async def strike_style(session: AsyncSession, rules: Rules, attacker: EntityRow | None) -> StrikeStyle:
+async def strike_style(session: AsyncSession, rules: Rules, attacker: EntityRow | None, defender: Bearer | None = None) -> StrikeStyle:
     if attacker is None:
         return StrikeStyle.NORMAL
-    traits = await species_traits(session, attacker.id)
-    if CreatureTrait.FLYING in traits:
+    if CreatureTrait.FLYING in await species_traits(session, attacker.id):
         return StrikeStyle.AERIAL
     body = await session.get(BodyRow, attacker.id)
-    if body is not None and body.plan is BodyPlan.COLOSSAL:
+    if body is None and attacker.entity_type is EntityType.MORTAL:
+        body = await ensure_body(session, rules, attacker, attacker.birth_epoch)
+    if body is not None and body.plan in WHOLE_PLANS:
+        return StrikeStyle.WHOLE
+    target = await session.get(BodyRow, defender.id) if defender is not None else None
+    sized = frame_style(rules, size_of(body), target) if body is not None and target is not None else StrikeStyle.NORMAL
+    if sized is not StrikeStyle.NORMAL:
+        return sized
+    huge = (body is not None and body.plan is BodyPlan.COLOSSAL) or (stat(attacker, "danger") or 0) >= rules.anatomy.trample_danger
+    return StrikeStyle.TRAMPLE if huge else StrikeStyle.NORMAL
+
+
+AVERAGE_SIZE = HEIGHT_RANK[HeightClass.AVERAGE] + BUILD_RANK[BodyBuild.AVERAGE]
+
+
+async def blow_style(session: AsyncSession, rules: Rules, attacker: EntityRow | None, defender: Bearer) -> StrikeStyle:
+    if attacker is not None:
+        return await strike_style(session, rules, attacker, defender)
+    target = await ensure_body(session, rules, defender, 0)
+    return frame_style(rules, AVERAGE_SIZE, target)
+
+
+def frame_style(rules: Rules, attacker_size: int, target: BodyRow) -> StrikeStyle:
+    gap = attacker_size - size_of(target)
+    if gap >= rules.anatomy.size_gap_style:
         return StrikeStyle.TRAMPLE
-    danger = stat(attacker, "danger") or 0
-    return StrikeStyle.TRAMPLE if danger >= rules.anatomy.trample_danger else StrikeStyle.NORMAL
+    if gap <= -rules.anatomy.size_gap_style:
+        return StrikeStyle.LOW
+    return StrikeStyle.NORMAL
 
 
 STAT_CAPACITY: dict[str, Capacity] = {

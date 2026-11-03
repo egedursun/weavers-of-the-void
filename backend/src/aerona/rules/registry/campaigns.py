@@ -144,6 +144,9 @@ class CampaignsRules:
     tribute_flow: int = rule(2, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "Prosperity and wealth transferred per epoch by tribute")
     tribute_goods_pct: int = rule(15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of goods transferred by tribute (%)")
     tribute_revolt_strength_pct: int = rule(125, 100, 500, RuleGroup.WAR_AND_DIPLOMACY, "Strength ratio required for a tributary to rebel (%)")
+    book_burning_reading: int = rule(
+        25, -100, 100, RuleGroup.RELIGION_AND_LANGUAGE, "How far a conqueror's values must approve of burning books before it burns the libraries it takes"
+    )
     conquest_conversion_chance: int = rule(45, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "On conquest the defeated converts to the victor's god (%)")
     tribute_conversion_chance: int = rule(20, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Under tribute the defeated converts to the victor's god (%)")
     exhaustion_victory_margin: int = rule(

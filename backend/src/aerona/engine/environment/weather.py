@@ -91,12 +91,16 @@ def weather_weights(rules: Rules, inputs: WeatherInputs) -> dict[WeatherKind, fl
     return weights
 
 
+def weather_of(rules: Rules, kind: WeatherKind) -> Weather:
+    spec = WEATHER[kind]
+    return Weather(kind, spec.label, spec.effects(rules))
+
+
 def draw_weather(rules: Rules, rng: SeededRandom, inputs: WeatherInputs) -> Weather:
     weights = weather_weights(rules, inputs)
     kinds = [kind for kind in WeatherKind if weights[kind] > 0]
     kind = rng.weighted(kinds, [weights[item] for item in kinds]) if kinds else WeatherKind.CLEAR
-    spec = WEATHER[kind]
-    return Weather(kind, spec.label, spec.effects(rules))
+    return weather_of(rules, kind)
 
 
 def weather_stream(region_id: int, slot: str) -> str:

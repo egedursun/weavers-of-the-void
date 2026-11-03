@@ -16,7 +16,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, HERO_ROLES, EngineKind, 
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.domain.models.entity_stats import MortalStats
-from aerona.engine.body.book import effective
+from aerona.engine.body.book import bedridden, blow_style, effective
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits, fatal_injury
@@ -98,12 +98,14 @@ BLOODLESS_FALLS = frozenset({EntityFlag.DIED_OF_PLAGUE})
 
 
 async def fall(ctx: TickContext, mortal: EntityRow, cause: str, killer_id: int | None, *, event: EntityRow | None, flag: EntityFlag) -> bool:
+    killer = await living_entity(ctx.session, killer_id) if killer_id is not None else None
     harm = Harm(
         ctx.rules.casualties.wound_hp,
         FALL_CAUSES.get(flag, HarmCause.BATTLE),
         cause,
         killer_id=killer_id,
         event_entity_id=event.id if event is not None else None,
+        style=await blow_style(ctx.session, ctx.rules, killer if killer is not None and killer.entity_type is EntityType.MORTAL else None, mortal),
     )
     if mortal.status is EntityStatus.CANON and flag not in BLOODLESS_FALLS:
         await fatal_injury(ctx, mortal, harm)
@@ -171,6 +173,8 @@ async def _side_losses(ctx: TickContext, clash: Clash, sides: SideIndex, side_id
             break
         if mortal.status is not EntityStatus.CANON:
             continue
+        if bedridden(ctx.rules, mortal):
+            continue
         commander = side_commander is not None and side_commander.id == mortal.id
         fighter = commander or is_fighter(mortal, marks)
         chance = death_chance(ctx.rules, clash, victor=victor, commander=commander, fighter=fighter)
@@ -186,7 +190,12 @@ async def _side_losses(ctx: TickContext, clash: Clash, sides: SideIndex, side_id
                 count.dead += 1
         elif fighter and rng.chance(losses.wound_chance):
             harm = Harm(
-                losses.wound_hp, HarmCause.BATTLE, f"died of the wounds taken in {clash.event.name}", killer_id=killer_id, event_entity_id=clash.event.id
+                losses.wound_hp,
+                HarmCause.BATTLE,
+                f"died of the wounds taken in {clash.event.name}",
+                killer_id=killer_id,
+                event_entity_id=clash.event.id,
+                style=await blow_style(ctx.session, ctx.rules, killer if killer is not None and killer.entity_type is EntityType.MORTAL else None, mortal),
             )
             outcome = (await apply_hits(ctx, mortal, harm)).outcome
             if outcome is WoundOutcome.DIED:

@@ -624,3 +624,50 @@ RELATION_EVENT_MEMORIES = MappingProxyType(
 
 def memory_for_event(event: str, delta: int) -> MemoryKind:
     return RELATION_EVENT_MEMORIES.get(event.strip().lower(), M.GOODWILL if delta >= 0 else M.ILL_WILL)
+
+
+T_ = TraitKind
+DEPTH_WORDS: MappingProxyType[TraitKind, tuple[str, ...]] = MappingProxyType(
+    {
+        T_.BRAVE: ("brave", "bold", "fearless", "daring", "valiant", "courageous"),
+        T_.CRAVEN: ("coward", "cowardly", "craven", "timid", "fearful"),
+        T_.WRATHFUL: ("wrathful", "angry", "furious", "hot-tempered", "temper", "rage"),
+        T_.PATIENT: ("patient", "calm", "unhurried", "serene"),
+        T_.CRUEL: ("cruel", "sadistic", "merciless", "ruthless", "brutal"),
+        T_.KIND: ("kind-hearted", "gentle", "compassionate", "tender", "caring"),
+        T_.AMBITIOUS: ("ambitious", "driven", "hungry for power", "aspiring"),
+        T_.CONTENT: ("contented", "satisfied", "easygoing"),
+        T_.GREEDY: ("greedy", "miser", "miserly", "avaricious", "grasping"),
+        T_.GENEROUS: ("generous", "giving", "open-handed", "charitable"),
+        T_.HONEST: ("honest", "truthful", "candid", "sincere"),
+        T_.DECEITFUL: ("deceitful", "liar", "lying", "treacherous", "sly", "two-faced"),
+        T_.ZEALOUS: ("zealous", "devout", "fanatic", "fanatical", "pious"),
+        T_.CYNICAL: ("cynical", "sceptical", "skeptical", "doubting", "faithless"),
+        T_.PARANOID: ("paranoid", "suspicious", "distrustful"),
+        T_.TRUSTING: ("trusting", "naive", "credulous"),
+        T_.LUSTFUL: ("lustful", "lecherous", "amorous", "seductive"),
+        T_.CHASTE: ("chaste", "celibate", "pure-hearted"),
+        T_.GLUTTONOUS: ("glutton", "gluttonous", "greedy eater", "drunkard"),
+        T_.ASCETIC: ("ascetic", "austere", "frugal", "abstinent"),
+        T_.SCHOLARLY: ("scholarly", "learned", "bookish", "studious", "wise"),
+        T_.ILLITERATE_PROUD: ("illiterate", "unlettered", "scorns books"),
+        T_.GREGARIOUS: ("gregarious", "sociable", "jovial", "talkative", "merry"),
+        T_.RECLUSIVE: ("reclusive", "hermit", "solitary", "withdrawn", "shy"),
+        T_.VENGEFUL: ("vengeful", "grudge", "spiteful", "vindictive"),
+        T_.FORGIVING: ("forgiving", "merciful", "lenient"),
+        T_.STUBBORN: ("stubborn", "obstinate", "headstrong", "mulish"),
+        T_.FICKLE: ("fickle", "capricious", "flighty", "inconstant"),
+        T_.JUST: ("fair-minded", "righteous", "even-handed", "upright"),
+        T_.ARBITRARY: ("arbitrary", "whimsical", "unfair", "tyrannical"),
+        T_.HUMBLE: ("humble", "modest", "meek"),
+        T_.PROUD: ("proud", "arrogant", "haughty", "vain"),
+        T_.CURIOUS: ("curious", "inquisitive", "questioning", "wondering"),
+        T_.INCURIOUS: ("incurious", "dull", "indifferent"),
+        T_.MELANCHOLIC: ("melancholic", "melancholy", "sad", "gloomy", "brooding", "sorrowful"),
+        T_.SANGUINE: ("sanguine", "cheerful", "hopeful", "optimistic"),
+        T_.IRON_WILLED: ("iron-willed", "resolute", "unbending", "steadfast", "determined"),
+        T_.IMPRESSIONABLE: ("impressionable", "gullible", "easily swayed"),
+        T_.CUNNING_TACTICIAN: ("tactician", "strategist", "cunning", "shrewd", "wily"),
+        T_.RECKLESS: ("reckless", "rash", "impulsive", "foolhardy"),
+    }
+)

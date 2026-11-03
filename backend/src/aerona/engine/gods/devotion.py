@@ -13,16 +13,20 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.son import SonStatus
+from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.gods.god_death import create_order, epochs_until_resurrection, resurrection_orders
 from aerona.engine.gods.mortality import mortal_dies
 from aerona.engine.gods.queries import worshippers_of
 from aerona.engine.gods.stats import Trait, headcount_floor, headcount_trait, set_trait, trait, trait_or
+from aerona.engine.mind.hooks import judged
 from aerona.engine.primitives.queries import top_region
 from aerona.rules.registry import Rules
 
@@ -170,7 +174,10 @@ async def resurrection_rite(ctx: TickContext, worshipper: EntityRow, son: SonRow
             raise ValidationFailedError("A life sacrifice needs a living named mortal.")
         if chosen.id != worshipper.id and worshipper.entity_type is not EntityType.MORTAL and not await _same_people(ctx.session, chosen, worshipper):
             raise ValidationFailedError(f"{chosen.name} is not one of {worshipper.name}'s people.")
-        await mortal_dies(ctx, chosen, god_lines.RITE_SACRIFICE_REASON.format(son=son.name), None if chosen.id == worshipper.id else worshipper.id)
+        await mortal_dies(
+            ctx, chosen, god_lines.RITE_SACRIFICE_REASON.format(son=son.name), None if chosen.id == worshipper.id else worshipper.id, harm=HarmCause.SACRIFICE
+        )
+        await judged(ctx, worshipper.id, chosen.id, ActKind.HUMAN_SACRIFICE, note=chosen.name)
         contribution, cost = death.self_sacrifice_devotion, god_lines.RITE_COST_LIFE.format(victim=chosen.name)
     corpse = await ctx.session.get(EntityRow, son.corpse_entity_id) if son.corpse_entity_id is not None else None
     worshipper_region = await top_region(ctx.session, worshipper)
@@ -274,7 +281,9 @@ async def scatter_bones(ctx: TickContext, sibling: SonRow, son: SonRow) -> Devot
     for order in orders:
         set_trait(order, Trait.DEVOTION, max(0, trait_or(order, Trait.DEVOTION, 0) - death.scatter_bones_devotion_loss))
         if not await bonds.exists_between(order.id, sibling.id, BondKind.ENEMY):
-            await bonds.connect(BondDraft(order.id, sibling.id, BondKind.ENEMY, ctx.epoch, god_lines.SCATTER_ENEMY.format(son=son.name)))
+            await bonds.connect(
+                BondDraft(order.id, sibling.id, BondKind.ENEMY, ctx.epoch, god_lines.SCATTER_ENEMY.format(son=son.name), war_cause=WarCause.SCHISM)
+            )
     await SonRepository(ctx.session).change_relation(sibling.id, son.id, -death.scatter_bones_devotion_loss / 2, god_lines.SCATTER_NOTE)
     line = god_lines.SCATTER
     text = line.render(sibling=sibling.name, son=son.name, cost=cost, loss=death.scatter_bones_devotion_loss)

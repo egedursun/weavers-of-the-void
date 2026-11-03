@@ -22,6 +22,8 @@ from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import CultStats
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import ValueIndex
+from aerona.engine.mind.drives import zeal_drive
+from aerona.engine.mind.hooks import converted
 from aerona.engine.mind.space import DISTANCE_MAX, NEUTRAL_DISTANCE, value_distance
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -195,6 +197,7 @@ class ConversionSource:
     god_id: int
     pull: float
     reason: str
+    converter_id: int | None = None
 
 
 @dataclass(frozen=True)
@@ -206,6 +209,7 @@ class SpreadWorld:
     flags: Mapping[EntityFlag, set[int]]
     values: ValueIndex = field(default_factory=ValueIndex)
     impiety: Mapping[int, int] = field(default_factory=dict)
+    zeal: Mapping[int, float] = field(default_factory=dict)
 
 
 def god_kinship(world: SpreadWorld, first: int, second: int) -> float:
@@ -240,7 +244,10 @@ def conversion_sources(rules: Rules, community: EntityRow, world: SpreadWorld, s
             continue
         sources.append(
             ConversionSource(
-                god.id, preaching_pull(rules, cult, community) * doctrine_fit(rules, world, cult, community), f"through the sermons of {cult.name}"
+                god.id,
+                preaching_pull(rules, cult, community) * doctrine_fit(rules, world, cult, community) * world.zeal.get(cult.id, 1.0),
+                f"through the sermons of {cult.name}",
+                cult.id,
             )
         )
     if seeker:
@@ -249,7 +256,7 @@ def conversion_sources(rules: Rules, community: EntityRow, world: SpreadWorld, s
             if neighbour.id == community.id or god is None or god.id == old or neighbour.world_id != community.world_id:
                 continue
             if world.atlas.adjacent(neighbour.id, community.id):
-                sources.append(ConversionSource(god.id, fraction(rules.religion.seeker_pull_chance), f"from its neighbour {neighbour.name}"))
+                sources.append(ConversionSource(god.id, fraction(rules.religion.seeker_pull_chance), f"from its neighbour {neighbour.name}", neighbour.id))
     return sources
 
 
@@ -264,7 +271,7 @@ def best_source(
         seeking = fraction(settings.conversion_seeker_bonus_pct) if seeker else 0.0
         pull = clamp_float(source.pull + bonus + seeking, 0.0, fraction(settings.conversion_chance_cap)) * shares.dominance(rules, source.god_id)
         if best is None or pull > best.pull:
-            best = ConversionSource(source.god_id, pull, source.reason)
+            best = ConversionSource(source.god_id, pull, source.reason, source.converter_id)
     return best
 
 
@@ -304,6 +311,7 @@ async def religion_spread(ctx: TickContext) -> None:
         flags,
         values,
         {row.entity_id: row.value for row in await session.scalars(select(PressureRow).where(PressureRow.pressure == PressureKind.IMPIETY))},
+        {cult.id: await zeal_drive(session, ctx.rules, cult.id) for cult in communities if cult.entity_type is EntityType.CULT},
     )
     shares = WorshipShares.count(ctx.rules, communities, faith)
     shares.faith = await faith_shares(session)
@@ -333,6 +341,8 @@ async def religion_spread(ctx: TickContext) -> None:
             conversions += 1
             shares.move(old, chosen.god_id)
         await _announce(ctx, community, faith, old, chosen, syncretic=syncretic)
+        if chosen.converter_id is not None:
+            await converted(ctx, community.id, chosen.converter_id, note=chosen.reason)
     ctx.count("conversions", conversions)
     ctx.count("syncretisms", syncretisms)
 
