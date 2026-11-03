@@ -1,6 +1,5 @@
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.lore import ThreadLinkRow, ThreadRow
-from aerona.db.tables.society import CommunityRelationRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ThreadLinkRole, ThreadStatus
 from aerona.domain.enums.entity import EntityType, MortalRole
@@ -9,6 +8,7 @@ from aerona.domain.models.entity_stats import ItemStats, StructureStats
 from aerona.engine.phases.heroes import resolve_quest, send_on_quest
 from aerona.engine.phases.wonders import wonders
 from aerona.engine.primitives.stats import stat
+from aerona.engine.services.community_relations import set_relation
 from tests.engine.society.factories import Realm, bonded, chronicle_keys, context, link, make, mortal, people, settlement, tuned
 
 
@@ -79,8 +79,7 @@ async def envy_scene(realm: Realm) -> tuple[int, int]:
     rival = await settlement(realm, "Envy")
     await make(realm.session, "Sky Tower", EntityType.STRUCTURE, StructureStats(splendor=95), world_id=realm.world.id, location_id=owner.id)
     first, second = sorted((owner.id, rival.id))
-    realm.session.add(CommunityRelationRow(entity_a_id=first, entity_b_id=second, value=-90))
-    await realm.session.flush()
+    await set_relation(context(realm.session), first, second, -90, "old hatred")
     return owner.id, rival.id
 
 

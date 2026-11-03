@@ -9,6 +9,7 @@ from aerona.db.tables.warfare import ArmyRow, SiegeRow, WarRow
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import SiegeStatus, WarEnding, WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.faith import change_religion, faith_dominance, faith_shares, living_patron
@@ -42,6 +43,16 @@ RELATION_EFFECTS: dict[WarEnding, Callable[[Rules], int]] = {
     WarEnding.MIRACLE: lambda rules: rules.diplomacy.peace_relation,
 }
 
+ENDING_MEMORIES: dict[WarEnding, MemoryKind] = {
+    WarEnding.VICTORY: MemoryKind.HUMILIATED_ME,
+    WarEnding.CONQUEST: MemoryKind.CONQUERED_US,
+    WarEnding.TRIBUTE: MemoryKind.DEMANDED_TRIBUTE,
+    WarEnding.EXHAUSTION: MemoryKind.MADE_PEACE,
+    WarEnding.PEACE: MemoryKind.MADE_PEACE,
+    WarEnding.WHITE_PEACE: MemoryKind.MADE_PEACE,
+    WarEnding.BETRAYAL: MemoryKind.BETRAYED_ME,
+    WarEnding.MIRACLE: MemoryKind.DIVINE_WILL,
+}
 ENDING_LABELS: dict[WarEnding, str] = {
     WarEnding.VICTORY: "victory",
     WarEnding.CONQUEST: "conquest",
@@ -184,7 +195,27 @@ async def end_war(
         settlement = await impose_victory(ctx, war, victor, loser)
     if apply_relation:
         delta = relation_effect(ctx.rules, settlement.ending)
-        await change_relation(ctx, first, second, delta, ENDING_LABELS[settlement.ending])
+        if settlement.victor_id is not None and settlement.loser_id is not None:
+            await change_relation(
+                ctx,
+                settlement.loser_id,
+                settlement.victor_id,
+                delta,
+                ENDING_MEMORIES.get(settlement.ending, MemoryKind.FOUGHT_US),
+                note=ENDING_LABELS[settlement.ending],
+                reverse=MemoryKind.FOUGHT_US,
+                event_id=war.event_entity_id,
+            )
+        else:
+            await change_relation(
+                ctx,
+                first,
+                second,
+                delta,
+                ENDING_MEMORIES.get(settlement.ending, MemoryKind.MADE_PEACE),
+                note=ENDING_LABELS[settlement.ending],
+                event_id=war.event_entity_id,
+            )
     await close_war(ctx, war, settlement.ending, settlement.victor_id, settlement.loser_id)
     if settlement.victor_id is not None and settlement.loser_id is not None:
         await BondRepository(ctx.session).connect(
@@ -210,7 +241,9 @@ async def settle_peace(ctx: TickContext, first: int, second: int, ending: WarEnd
     hostile = await BondRepository(ctx.session).exists_between(first, second, BondKind.ENEMY)
     await make_peace(ctx, first, second, reason, truce)
     if apply_relation:
-        await change_relation(ctx, first, second, relation_effect(ctx.rules, ending), ENDING_LABELS[ending])
+        await change_relation(
+            ctx, first, second, relation_effect(ctx.rules, ending), ENDING_MEMORIES.get(ending, MemoryKind.MADE_PEACE), note=ENDING_LABELS[ending]
+        )
     return hostile
 
 

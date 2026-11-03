@@ -22,6 +22,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherEffect
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMethod
@@ -49,6 +50,8 @@ from aerona.engine.cosmos.routes import (
     world_name,
 )
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.mind.book import pressures_of
+from aerona.engine.mind.drives import expedition_drive
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.culture_exchange import cultural_contact
@@ -302,7 +305,10 @@ async def spontaneous_expeditions(ctx: TickContext) -> int:
             continue
         if not unlocked(ctx.rules, community.civ_tier or 0, TierCapability.EXPEDITION):
             continue
-        chance = expedition_pressure(ctx.rules, community, await _fertility_of(ctx.session, ctx.rules, community))
+        if await pressures_of(ctx.session, community.id):
+            chance = round(travel.expedition_base_pct * await expedition_drive(ctx.session, ctx.rules, community.id))
+        else:
+            chance = expedition_pressure(ctx.rules, community, await _fertility_of(ctx.session, ctx.rules, community))
         candidates.append((chance * rng.random(), chance, community))
     candidates.sort(key=lambda item: (-item[0], item[2].id))
     sent = 0
@@ -689,30 +695,32 @@ async def _contact(ctx: TickContext, arrival: Arrival, native: EntityRow) -> str
         chance = travel.subjugation_chance - stat_or(native, "defense", 0) * PERCENT / travel.subjugation_defense_divisor
         if not await bonds.active_between(arrival.colony.id, native.id, [BondKind.RULES]) and rng.chance(max(0.0, chance)):
             await bonds.connect(BondDraft(arrival.colony.id, native.id, BondKind.RULES, ctx.epoch, "conquest across the worlds"))
-            await change_relation(ctx, traveller.id, native.id, -travel.invasion_relation_loss, "conquest")
+            await change_relation(
+                ctx, traveller.id, native.id, -travel.invasion_relation_loss, MemoryKind.FOUGHT_US, note="conquest", reverse=MemoryKind.CONQUERED_US
+            )
             arrival.subjugated = True
             return f"{native.name} submitted without a fight"
     invasion = journey.intent is JourneyIntent.CONQUEST or (journey.intent is JourneyIntent.COLONY and rng.chance(travel.colony_invasion_chance))
     if invasion:
         invader = arrival.colony or traveller
         declared = await declare_war(ctx, invader.id, native.id, "first contact: invasion", cause=WarCause.CONQUEST_JOURNEY)
-        await change_relation(ctx, traveller.id, native.id, -travel.invasion_relation_loss, "invasion")
+        await change_relation(ctx, traveller.id, native.id, -travel.invasion_relation_loss, MemoryKind.FOUGHT_US, note="invasion")
         return f"{native.name} saw them as invaders" if declared else f"{native.name} looked at them with hostility"
     alive = traveller.status is EntityStatus.CANON
     if alive and (journey.intent is JourneyIntent.TRADE or rng.chance(travel.contact_trade_chance)):
         bonds = BondRepository(ctx.session)
         await bonds.connect(BondDraft(traveller.id, native.id, BondKind.TRADES_WITH, ctx.epoch, f"interworld trade ({arrival.target.name})"))
-        await change_relation(ctx, traveller.id, native.id, travel.contact_trade_relation, "first contact")
+        await change_relation(ctx, traveller.id, native.id, travel.contact_trade_relation, MemoryKind.TRADED_WITH, note="first contact")
         text = f"trade began with {native.name}"
         if rng.chance(travel.interworld_alliance_chance) and not await bonds.exists_between(traveller.id, native.id, BondKind.ALLY):
             await bonds.connect(BondDraft(traveller.id, native.id, BondKind.ALLY, ctx.epoch, f"interworld alliance ({arrival.target.name})"))
-            await change_relation(ctx, traveller.id, native.id, travel.alliance_relation, "interworld alliance")
+            await change_relation(ctx, traveller.id, native.id, travel.alliance_relation, MemoryKind.ALLIED_WITH, note="interworld alliance")
             text += f"; an interworld alliance was formed with {native.name}"
         exchanged = await cultural_contact(ctx, traveller, native, first_contact=True) + await cultural_contact(ctx, native, traveller, first_contact=True)
         if exchanged:
             text += f"; {exchanged} cultural gifts passed both ways"
         return text
-    await change_relation(ctx, traveller.id, native.id, -travel.uneasy_relation_loss, "uneasy first contact")
+    await change_relation(ctx, traveller.id, native.id, -travel.uneasy_relation_loss, MemoryKind.ILL_WILL, note="uneasy first contact")
     return f"{native.name} watched them uneasily"
 
 

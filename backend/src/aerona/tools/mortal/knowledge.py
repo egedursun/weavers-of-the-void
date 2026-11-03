@@ -1,5 +1,6 @@
 from typing import Any
 
+from aerona.catalog.mind import LEARNED_SKILLS
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
@@ -18,7 +19,7 @@ from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_acti
 from aerona.tools.framework.validation import fail
 from aerona.tools.mortal import lines
 from aerona.tools.mortal.inputs import DevelopKnowledgeInput, LearnInput
-from aerona.tools.mortal.support import MortalCreation, craft_of, create_record, name_free, same_region
+from aerona.tools.mortal.support import MortalCreation, craft_of, create_record, name_free, practised, require_lore, same_region
 
 LEARNING_BONDS = (BondKind.TRADES_WITH, BondKind.ALLY, BondKind.RULES)
 
@@ -59,6 +60,8 @@ async def _find_existing(call: MortalCall, knowledge: EntityRow, branch: str) ->
 
 async def develop_knowledge(call: MortalCall, args: DevelopKnowledgeInput) -> str:
     tools = call.rules.mortal_tools
+    await require_lore(call)
+    await practised(call, LEARNED_SKILLS, call.rules.skills.preach_xp)
     decision = await development_for(call.session, call.rules, call.me, args.branch)
     label = args.branch.value.replace("_", " ")
     if decision.kind is DevelopmentKind.DEEPEN and decision.knowledge is not None:

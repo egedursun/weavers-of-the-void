@@ -6,7 +6,9 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.lore import ChronicleRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import WarEnding, WarStatus
+from aerona.engine.mind.memories import memories_about
 from aerona.engine.phases.diplomacy import (
     decree_alliance,
     decree_betrayal,
@@ -30,7 +32,6 @@ CALM = {
     "grudge_forget_epochs": 0,
     "exhaustion_cap_pct": 0,
     "neighbor_exhaustion_cap_pct": 0,
-    "relation_decay_pct": 0,
 }
 
 
@@ -118,7 +119,9 @@ async def test_long_wars_end_in_exhaustion_peace(session: AsyncSession, world_id
     before = await relation(session, rules, first, second)
     await diplomacy(make_ctx(session, rules, epoch=6))
     assert war.ending is WarEnding.EXHAUSTION
-    assert await relation(session, rules, first, second) == before + rules.diplomacy.exhaustion_peace_relation
+    assert await relation(session, rules, first, second) >= before + rules.diplomacy.exhaustion_peace_relation
+    peace = await memories_about(session, first, second)
+    assert any(row.kind is MemoryKind.MADE_PEACE for row in peace)
 
 
 async def test_mortal_grudges_are_forgotten(session: AsyncSession, world_id: int) -> None:

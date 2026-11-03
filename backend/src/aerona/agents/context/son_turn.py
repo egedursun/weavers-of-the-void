@@ -21,6 +21,7 @@ from aerona.domain.enums.meta import ScenarioStatus
 from aerona.engine.body.describe import body_lines
 from aerona.engine.gods.opportunities import son_opportunities
 from aerona.engine.gods.progress import power_ceiling
+from aerona.engine.mind.describe import mind_lines
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.opportunities import SonOpportunitiesContext
 from aerona.prompts.contexts.son_turn import (
@@ -86,6 +87,7 @@ async def son_system_context(scope: Scope, son: SonRow, points: int, catalogue: 
         hp=son.hp,
         max_hp=max_hp(rules, son.endurance),
         wounds=await body_lines(scope.session, rules, son, private=True),
+        mind=await mind_lines(scope.session, rules, son, scope.epoch, private=True),
         essence=son.essence,
         max_essence=max_essence(rules, son.might),
         faith=son.faith,

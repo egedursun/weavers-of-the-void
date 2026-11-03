@@ -1,6 +1,8 @@
 from aerona.api.schemas.common import ApiModel
+from aerona.api.schemas.mind import OpinionView
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.entity import EntityType, MortalRole
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.society import CommunityRelationLabel
 from aerona.domain.enums.war import BattleOutcome, CaptiveStatus, SiegeStatus, TributeStatus, WarCause, WarEnding, WarSide, WarStatus
 
@@ -98,6 +100,8 @@ class RelationEventView(ApiModel):
     epoch: int
     event: str
     delta: int
+    kind: MemoryKind
+    holder_id: int
 
 
 class RelationEntry(ApiModel):
@@ -120,3 +124,4 @@ class RelationPair(ApiModel):
     label: CommunityRelationLabel
     blood_feud_since_epoch: int | None
     history: list[RelationEventView]
+    opinions: list[OpinionView]

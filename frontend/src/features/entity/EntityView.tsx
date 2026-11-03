@@ -48,10 +48,21 @@ import { EntityStats } from './sections/EntityStats'
 import { EntityTimeline } from './sections/EntityTimeline'
 import { HandOfGodPanel } from './sections/HandOfGodPanel'
 import { KnowledgeLawPanel } from './sections/KnowledgeLawPanel'
+import { MemoriesSection } from './sections/MemoriesSection'
+import { MindSection } from './sections/MindSection'
 import { PathFinder } from './sections/PathFinder'
 import { PeopleBeliefs } from './sections/PeopleBeliefs'
+import { SkillsSection } from './sections/SkillsSection'
 import { SocietyEconomy } from './sections/SocietyEconomy'
 import { TagEditor } from './sections/TagEditor'
+
+const MIND_TYPES = new Set([
+  'mortal',
+  'people',
+  'settlement',
+  'cult',
+  'faction',
+])
 
 const SECTION_LINKS = [
   { id: 'section-facts', label: 'Facts' },
@@ -71,6 +82,9 @@ const SECTION_LINKS = [
   { id: 'section-body', label: 'Body' },
   { id: 'section-body-customs', label: 'Wounds and bodies' },
   { id: 'section-maimed', label: 'The maimed' },
+  { id: 'section-mind', label: 'Mind' },
+  { id: 'section-skills', label: 'Skills' },
+  { id: 'section-memories', label: 'Memories' },
   { id: 'section-mechanics', label: 'Mechanics' },
   { id: 'section-edit', label: 'Edit' },
 ]
@@ -147,6 +161,12 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
   const maimedHome =
     entity.entity_type === 'settlement' || entity.entity_type === 'people'
   if (!maimedHome) present.delete('section-maimed')
+  const minded = MIND_TYPES.has(entity.entity_type)
+  if (!minded) {
+    present.delete('section-mind')
+    present.delete('section-memories')
+  }
+  if (entity.entity_type !== 'mortal') present.delete('section-skills')
   const acts = entity.status === 'canon' && agentTypeOf(entity.entity_type)
   if (!acts) present.delete('section-opportunities')
   if (!isCommunity(ctx.type)) {
@@ -236,6 +256,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         <PeopleBodyCustoms peopleId={entity.id} />
       )}
       {maimedHome && <CommunityMaimed communityId={entity.id} />}
+      {minded && <MindSection nodeId={entity.id} />}
+      {entity.entity_type === 'mortal' && <SkillsSection nodeId={entity.id} />}
+      {minded && <MemoriesSection nodeId={entity.id} />}
       <EntityMechanics
         nodeId={entity.id}
         statKeys={Object.keys(entity.stats).filter((key) => key !== 'kind')}

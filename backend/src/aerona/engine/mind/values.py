@@ -1,0 +1,299 @@
+from collections import defaultdict
+from collections.abc import Mapping
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from aerona.catalog.mind import AGENDA_VALUES, DOCTRINE_BASE, DOMAIN_VALUES, PASSION_VALUES, PEOPLE_STAT_VALUES, TRAITS, VALUE_LABELS
+from aerona.constants.units import PERCENT
+from aerona.core.random import SeededRandom
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.society import CommunityRelationRow
+from aerona.db.tables.sons import SonRow
+from aerona.db.tables.warfare import WarSideRow
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.entity import EngineKind, EntityType
+from aerona.domain.enums.mind import MemoryKind, TraitEffect, TraitKind, ValueAxis, ValueHolder
+from aerona.domain.enums.son import Passion
+from aerona.engine.body.customs import people_of
+from aerona.engine.context import TickContext
+from aerona.engine.mind.book import (
+    Holder,
+    ValueIndex,
+    Values,
+    clamp_value,
+    holder_kind,
+    is_locked,
+    mind_of,
+    scaled_by,
+    stored_values,
+    trait_effect,
+    traits_of,
+    write_values,
+)
+from aerona.engine.mind.space import blend
+from aerona.engine.notes import note
+from aerona.engine.primitives.faith import foreign_patron, living_patron
+from aerona.engine.primitives.queries import active_bonds, living_entity
+from aerona.engine.primitives.stats import stat
+from aerona.rules.registry import Rules
+
+VALUE_LOCK = "values"
+STAT_MIDPOINT = 50
+SECONDARY_DOMAIN_PCT = 50
+PASSION_MIDPOINT = 50
+
+
+def add_into(target: dict[ValueAxis, float], source: Mapping[ValueAxis, int], scale: float) -> None:
+    for axis, weight in source.items():
+        target[axis] += weight * scale
+
+
+def finished(raw: Mapping[ValueAxis, float]) -> Values:
+    return {axis: clamp_value(raw.get(axis, 0)) for axis in ValueAxis}
+
+
+def domain_values(domains: tuple[Domain | None, ...], scale_pct: float) -> dict[ValueAxis, float]:
+    raw: dict[ValueAxis, float] = defaultdict(float)
+    for index, domain in enumerate(domains):
+        if domain is None:
+            continue
+        share = scale_pct / PERCENT * (1 if index == 0 else SECONDARY_DOMAIN_PCT / PERCENT)
+        add_into(raw, DOMAIN_VALUES[domain], share)
+    return raw
+
+
+async def patron_domains(session: AsyncSession, entity: EntityRow) -> tuple[Domain | None, ...]:
+    son = await living_patron(session, entity)
+    if son is not None:
+        return son.domains
+    god = await foreign_patron(session, entity)
+    return (god.domain_primary, god.domain_secondary) if god is not None else ()
+
+
+async def war_count(session: AsyncSession, entity_id: int) -> int:
+    return len(list(await session.scalars(select(WarSideRow.war_id).where(WarSideRow.entity_id == entity_id))))
+
+
+async def seed_people(session: AsyncSession, rules: Rules, people: EntityRow, rng: SeededRandom) -> Values:
+    table = rules.culture_drift
+    raw: dict[ValueAxis, float] = defaultdict(float)
+    for name, weights in PEOPLE_STAT_VALUES.items():
+        value = stat(people, name)
+        if value is not None:
+            add_into(raw, weights, (value - STAT_MIDPOINT) / PERCENT * table.stat_weight_pct / PERCENT * 2)
+    for axis, weight in domain_values(await patron_domains(session, people), table.domain_weight_pct).items():
+        raw[axis] += weight
+    raw[ValueAxis.MARTIAL] += min(table.history_cap, await war_count(session, people.id) * table.history_war_martial)
+    trade = len(await active_bonds(session, [BondKind.TRADES_WITH], sources=[people.id])) + len(
+        await active_bonds(session, [BondKind.TRADES_WITH], targets=[people.id])
+    )
+    raw[ValueAxis.XENOPHILIA] += min(table.history_cap, trade * table.history_trade)
+    raw[ValueAxis.WEALTH] += min(table.history_cap, trade * table.history_trade)
+    for axis in ValueAxis:
+        raw[axis] += rng.integer(-table.seed_jitter, table.seed_jitter)
+    return finished(raw)
+
+
+async def seed_doctrine(session: AsyncSession, rules: Rules, cult: EntityRow, rng: SeededRandom) -> Values:
+    table = rules.culture_drift
+    raw: dict[ValueAxis, float] = defaultdict(float)
+    add_into(raw, DOCTRINE_BASE, 1)
+    for axis, value in domain_values(await patron_domains(session, cult), table.domain_weight_pct * table.doctrine_domain_pct / PERCENT).items():
+        raw[axis] += value
+    zeal = stat(cult, "zeal")
+    if zeal is not None:
+        raw[ValueAxis.PIETY] += (zeal - STAT_MIDPOINT) * table.stat_weight_pct / PERCENT
+    for axis in ValueAxis:
+        raw[axis] += rng.integer(-table.seed_jitter, table.seed_jitter)
+    return finished(raw)
+
+
+async def seed_agenda(session: AsyncSession, rules: Rules, faction: EntityRow, rng: SeededRandom) -> Values:
+    table = rules.culture_drift
+    raw: dict[ValueAxis, float] = defaultdict(float)
+    people = await people_of(session, faction)
+    if people is not None:
+        add_into(raw, await stored_values(session, ValueHolder.CULTURE, people.id), table.agenda_culture_pct / PERCENT)
+    kind = faction.engine_kind
+    if isinstance(kind, EngineKind) and kind in AGENDA_VALUES:
+        add_into(raw, AGENDA_VALUES[kind], 1)
+    for axis in ValueAxis:
+        raw[axis] += rng.integer(-table.seed_jitter, table.seed_jitter)
+    return finished(raw)
+
+
+async def seed_personal(session: AsyncSession, rules: Rules, mortal: EntityRow, rng: SeededRandom) -> Values:
+    table = rules.culture_drift
+    people = await people_of(session, mortal)
+    culture = await stored_values(session, ValueHolder.CULTURE, people.id) if people is not None else {}
+    raw: dict[ValueAxis, float] = defaultdict(float)
+    add_into(raw, culture, 1)
+    for trait in await traits_of(session, mortal.id):
+        add_into(raw, TRAITS[trait].values, table.trait_value_pct / PERCENT)
+    for axis in ValueAxis:
+        raw[axis] += rng.integer(-table.personal_deviation, table.personal_deviation)
+    return finished(raw)
+
+
+def seed_divine(rules: Rules, god: SonRow | ForeignGodRow, rng: SeededRandom) -> Values:
+    table = rules.culture_drift
+    domains: tuple[Domain | None, ...] = god.domains if isinstance(god, SonRow) else (god.domain_primary, god.domain_secondary)
+    raw = domain_values(domains, table.divine_domain_pct)
+    if isinstance(god, SonRow):
+        for passion, weights in PASSION_VALUES.items():
+            level = getattr(god, passion.value, None)
+            if isinstance(level, int):
+                add_into(raw, weights, (level - PASSION_MIDPOINT) / PASSION_MIDPOINT * table.passion_weight_pct / PERCENT)
+    for axis in ValueAxis:
+        raw[axis] += rng.integer(-table.seed_jitter, table.seed_jitter)
+    return finished(raw)
+
+
+async def seed_values(session: AsyncSession, rules: Rules, node: Holder, rng: SeededRandom) -> Values | None:
+    if isinstance(node, SonRow | ForeignGodRow):
+        return seed_divine(rules, node, rng)
+    seeders = {
+        ValueHolder.CULTURE: seed_people,
+        ValueHolder.DOCTRINE: seed_doctrine,
+        ValueHolder.AGENDA: seed_agenda,
+        ValueHolder.PERSONAL: seed_personal,
+    }
+    kind = holder_kind(node)
+    seeder = seeders.get(kind) if kind is not None else None
+    if seeder is None or not isinstance(node, EntityRow):
+        return None
+    return await seeder(session, rules, node, rng)
+
+
+def son_passion(son: SonRow, passion: Passion) -> int:
+    value = getattr(son, passion.value, 0)
+    return value if isinstance(value, int) else 0
+
+
+async def ruler_values(session: AsyncSession, index: ValueIndex, community_id: int) -> Values | None:
+    for bond in await active_bonds(session, [BondKind.RULES], targets=[community_id]):
+        ruler = await living_entity(session, bond.source_node_id)
+        if ruler is not None and ruler.entity_type is EntityType.MORTAL:
+            found = index.of(ruler.id)
+            if found:
+                return found
+    return None
+
+
+async def neighbour_mean(session: AsyncSession, index: ValueIndex, community_id: int) -> Values | None:
+    rows = await session.scalars(
+        select(CommunityRelationRow).where((CommunityRelationRow.entity_a_id == community_id) | (CommunityRelationRow.entity_b_id == community_id))
+    )
+    vectors = []
+    for row in rows:
+        other = row.entity_b_id if row.entity_a_id == community_id else row.entity_a_id
+        found = index.of(other)
+        if found:
+            vectors.append(found)
+    if not vectors:
+        return None
+    return {axis: round(sum(vector.get(axis, 0) for vector in vectors) / len(vectors)) for axis in ValueAxis}
+
+
+async def experience_shift(ctx: TickContext, community: EntityRow, index: ValueIndex, plagued: set[int]) -> tuple[dict[ValueAxis, float], Values | None]:
+    table = ctx.rules.culture_drift
+    shift: dict[ValueAxis, float] = defaultdict(float)
+    conqueror: Values | None = None
+    fresh = await ctx.session.scalars(select(MemoryRow).where(MemoryRow.holder_node_id == community.id, MemoryRow.epoch == ctx.epoch))
+    for memory in fresh:
+        if memory.kind is MemoryKind.CONQUERED_US:
+            shift[ValueAxis.MARTIAL] -= table.war_lost_martial
+            conqueror = index.of(memory.subject_node_id) or conqueror
+        elif memory.kind is MemoryKind.FOUGHT_US:
+            shift[ValueAxis.MARTIAL] += table.war_martial
+        elif memory.kind is MemoryKind.TRADED_WITH:
+            shift[ValueAxis.XENOPHILIA] += table.trade_xenophilia
+            shift[ValueAxis.WEALTH] += table.trade_wealth
+    victories = await ctx.session.scalars(
+        select(MemoryRow).where(MemoryRow.subject_node_id == community.id, MemoryRow.epoch == ctx.epoch, MemoryRow.kind == MemoryKind.CONQUERED_US)
+    )
+    for _ in victories:
+        shift[ValueAxis.MARTIAL] += table.war_won_martial
+    if community.id in plagued:
+        shift[ValueAxis.PIETY] += table.plague_piety
+        shift[ValueAxis.DEATH] += table.plague_death
+    return shift, conqueror
+
+
+def pull_toward(target: dict[ValueAxis, float], current: Values, source: Values | None, share_pct: float) -> None:
+    if not source:
+        return
+    for axis in ValueAxis:
+        target[axis] += (source.get(axis, 0) - current.get(axis, 0)) * share_pct / PERCENT
+
+
+async def pressure_target(ctx: TickContext, community: EntityRow, index: ValueIndex, current: Values, plagued: set[int]) -> dict[ValueAxis, float]:
+    table = ctx.rules.culture_drift
+    target: dict[ValueAxis, float] = {axis: float(current.get(axis, 0)) for axis in ValueAxis}
+    pull_toward(
+        target, current, await neighbour_mean(ctx.session, index, community.id), table.neighbour_pull_pct * scaled_by(current.get(ValueAxis.XENOPHILIA, 0))
+    )
+    pull_toward(target, current, await ruler_values(ctx.session, index, community.id), table.ruler_pull_pct)
+    patron = await living_patron(ctx.session, community)
+    god = index.of(patron.id) if patron is not None else {}
+    pull_toward(target, current, god, table.god_pull_pct * scaled_by(current.get(ValueAxis.PIETY, 0)))
+    shift, conqueror = await experience_shift(ctx, community, index, plagued)
+    for axis, value in shift.items():
+        target[axis] += value
+    if conqueror:
+        resistance = (current.get(ValueAxis.KINSHIP, 0) + current.get(ValueAxis.TRADITION, 0) + current.get(ValueAxis.HONOUR, 0)) / 3
+        sign = -1 if resistance >= table.conquest_resistance else 1
+        pull_toward(target, current, conqueror, sign * table.conquest_pull_pct)
+    return target
+
+
+async def drift_culture(ctx: TickContext, community: EntityRow, index: ValueIndex, plagued: set[int]) -> bool:
+    table = ctx.rules.culture_drift
+    mind = await mind_of(ctx.session, community.id)
+    current = index.of(community.id)
+    holder = holder_kind(community)
+    if mind is None or is_locked(mind, VALUE_LOCK) or not current or holder is None:
+        return False
+    target = await pressure_target(ctx, community, index, current, plagued)
+    resist = scaled_by(-max(0, current.get(ValueAxis.TRADITION, 0)) * table.tradition_resist_pct // PERCENT)
+    moved = blend(current, {axis: round(value) for axis, value in target.items()}, table.drift_rate_pct * resist)
+    if moved == current:
+        return False
+    await write_values(ctx.session, holder, community.id, moved)
+    index.vectors[community.id] = moved
+    await note_shift(ctx, community, current, moved)
+    return True
+
+
+async def note_shift(ctx: TickContext, community: EntityRow, before: Values, after: Values) -> None:
+    mark = ctx.rules.culture_drift.notable_value
+    for axis in ValueAxis:
+        old, new = before.get(axis, 0), after.get(axis, 0)
+        low, high = VALUE_LABELS[axis]
+        if old < mark <= new:
+            await note(ctx, f"{community.name} came to prize {high.lower()}.", key="culture.shift", ids=[community.id])
+        elif old > -mark >= new:
+            await note(ctx, f"{community.name} turned toward {low.lower()}.", key="culture.shift", ids=[community.id])
+
+
+async def drift_person(ctx: TickContext, mortal: EntityRow, index: ValueIndex, traits: set[TraitKind]) -> bool:
+    table = ctx.rules.culture_drift
+    mind = await mind_of(ctx.session, mortal.id)
+    if mind is None or is_locked(mind, VALUE_LOCK):
+        return False
+    current = index.of(mortal.id)
+    people = await people_of(ctx.session, mortal)
+    culture = index.of(people.id) if people is not None else {}
+    if not current or not culture:
+        return False
+    rate = table.mortal_pull_pct * scaled_by(trait_effect(traits, TraitEffect.DRIFT, ctx.rules.traits.effect_scale_pct))
+    moved = blend(current, culture, rate)
+    if moved == current:
+        return False
+    await write_values(ctx.session, ValueHolder.PERSONAL, mortal.id, moved)
+    index.vectors[mortal.id] = moved
+    return True

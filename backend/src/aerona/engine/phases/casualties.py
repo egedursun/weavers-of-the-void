@@ -318,7 +318,10 @@ async def army_experience(ctx: TickContext, clashes: list[Clash]) -> int:
                 )
         elif row.war_id is not None and row.war_id in fought:
             commander = await living_entity(ctx.session, row.commander_entity_id)
-            if commander is not None and await effective(ctx.session, commander, "intellect", capacity=Capacity.COMMAND) >= losses.commander_min_intellect:
+            if (
+                commander is not None
+                and await effective(ctx.session, commander, "intellect", capacity=Capacity.COMMAND, rules=ctx.rules) >= losses.commander_min_intellect
+            ):
                 after = before + losses.commander_experience
         elif row.war_id is not None:
             after = max(min(before, losses.rust_floor), before - losses.rust)

@@ -1,7 +1,9 @@
 from typing import Any
 
+from aerona.catalog.mind import MEMORIES, memory_for_event
 from aerona.constants.schema import KEY_MAX_LENGTH
-from aerona.db.tables.society import CommunityRelationEventRow, CommunityRelationRow
+from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.society import CommunityRelationRow
 from aerona.domain.enums.entity import SOCIETY_TYPES
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN, RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.society import Commodity, SocialClass
@@ -38,10 +40,23 @@ async def import_community_relations(context: MigrationContext) -> None:
             event = as_text(context.vocabulary.field("relation_history", item, "event"))
             epoch = as_int(context.vocabulary.field("relation_history", item, "epoch"))
             delta = as_int(context.vocabulary.field("relation_history", item, "delta"))
-            if event is None or epoch is None or delta is None:
+            if event is None or epoch is None or not delta:
                 continue
-            context.add(CommunityRelationEventRow(entity_a_id=low, entity_b_id=high, epoch=epoch, event=event[:KEY_MAX_LENGTH], delta=delta))
-            context.report.convert("community_relation_events")
+            kind = memory_for_event(event, delta)
+            size = max(RELATION_MIN, min(RELATION_MAX, delta))
+            for holder, subject in ((low, high), (high, low)):
+                context.add(
+                    MemoryRow(
+                        holder_node_id=holder,
+                        subject_node_id=subject,
+                        kind=kind,
+                        magnitude=size,
+                        decay_pct=round(MEMORIES[kind].decay_pct * context.rules.memory.decay_scale_pct / PERCENT_MAX),
+                        epoch=max(0, epoch),
+                        note=event[:KEY_MAX_LENGTH],
+                    )
+                )
+            context.report.convert("relation_memories")
         await context.flush_if_full()
     await context.flush()
 

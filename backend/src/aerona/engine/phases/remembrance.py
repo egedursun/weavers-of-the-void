@@ -13,6 +13,7 @@ from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.domain import DEATH_DOMAINS, Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, HERO_ROLES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.entity_stats import ArtworkStats, EntityStats, LegendStats, StructureStats, TraditionStats
 from aerona.engine.context import TickContext
@@ -228,7 +229,7 @@ async def war_lament(ctx: TickContext, scene: WarScene) -> EntityRow:
     if mourner is not None:
         await connect(ctx.session, mourner.id, lament.id, BondKind.PRODUCED, ctx.epoch, description=f"for the defeat of {scene.name}")
         if victor is not None and mourner.id != victor.id:
-            await change_relation(ctx, mourner.id, victor.id, -ctx.rules.remembrance.lament_grudge, f"{scene.name} lament")
+            await change_relation(ctx, mourner.id, victor.id, -ctx.rules.remembrance.lament_grudge, MemoryKind.LAMENTED, note=f"{scene.name} lament")
     await _tell(ctx, lament, [scene.event.id, *scene.fallen], "mourns")
     return lament
 
@@ -249,7 +250,9 @@ async def peace_oath(ctx: TickContext, scene: WarScene) -> EntityRow:
         await connect(ctx.session, side.id, oath.id, BondKind.CELEBRATES, ctx.epoch)
     await _tell(ctx, oath, [scene.event.id, *scene.fallen], "remembers the peace of")
     if len(living) == len(scene.sides) == 2:
-        await change_relation(ctx, scene.sides[0].id, scene.sides[1].id, ctx.rules.remembrance.peace_oath_warmth, f"{scene.name} peace oath")
+        await change_relation(
+            ctx, scene.sides[0].id, scene.sides[1].id, ctx.rules.remembrance.peace_oath_warmth, MemoryKind.KEPT_OATH, note=f"{scene.name} peace oath"
+        )
     return oath
 
 

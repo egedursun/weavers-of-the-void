@@ -8,6 +8,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.body.book import effective, factor
 from aerona.engine.body.hits import Harm
@@ -47,8 +48,8 @@ async def escape(call: MortalCall, args: EscapeInput) -> str:
     captor = await _captor(call, row)
     default = tools.escape_default_stat
     raw = (
-        await effective(call.session, call.me, "agility", default) / 2
-        + await effective(call.session, call.me, "intellect", default) / tools.escape_intellect_divisor
+        await effective(call.session, call.me, "agility", default, rules=call.rules) / 2
+        + await effective(call.session, call.me, "intellect", default, rules=call.rules) / tools.escape_intellect_divisor
         - stat_or(captor, "defense", tools.default_stat) / tools.escape_captor_defense_divisor
     )
     chance = max(tools.escape_min_pct, min(max(tools.escape_min_pct, tools.escape_max_pct), round(raw)))
@@ -91,7 +92,7 @@ async def pay_ransom(call: MortalCall, args: RansomInput) -> str:
     if add_prosperity(call.rules, captor, tools.ransom_amount) is None and stat(captor, "wealth") is not None:
         set_stats(captor, wealth=min(PERCENT, stat_or(captor, "wealth", 0) + tools.ransom_amount))
     await release_captive(call.tick, row, CaptiveStatus.RANSOMED, tools.ransom_amount)
-    await change_relation(call.tick, call.me.id, captor.id, tools.ransom_relation, RANSOM_EVENT)
+    await change_relation(call.tick, call.me.id, captor.id, tools.ransom_relation, MemoryKind.FREED_US, note=RANSOM_EVENT)
     call.target(captive.id)
     await call.chronicle(
         ChronicleKind.RANSOM, lines.RANSOMED, entity_ids=[call.me.id, captor.id, captive.id], me=call.me.name, captor=captor.name, captive=captive.name

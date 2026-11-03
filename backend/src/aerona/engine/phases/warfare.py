@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.mind import COMMAND_SKILLS
 from aerona.constants.units import PERCENT
 from aerona.constants.warfare import BATTLE_NAME_TEMPLATE, SIEGE_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
@@ -10,6 +11,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.mind import VALUE_MAX
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, SiegeRow, WarRow
 from aerona.domain.enums.body import Capacity, HarmCause
@@ -18,6 +20,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.limits import PERCENT_MAX
+from aerona.domain.enums.mind import MemoryKind, ValueAxis
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.war import BattleOutcome, SiegeStatus, WarCause, WarEnding, WarStatus
 from aerona.domain.models.calendar import epoch_start_year
@@ -30,6 +33,8 @@ from aerona.engine.environment.battleground import BattleGround, attack_factor, 
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment, scar_region
 from aerona.engine.environment.years import grant_sub_steps
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.mind.book import best_effective, values_for
+from aerona.engine.mind.hooks import duelled, fought
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.knowledge import LawBook
@@ -216,11 +221,12 @@ async def battle_power(ctx: TickContext, theatre: Theatre, community: EntityRow,
     command = 0.0
     if commander is not None:
         total = (
-            await effective(ctx.session, commander, "strength")
-            + await effective(ctx.session, commander, "intellect", capacity=Capacity.COMMAND)
-            + await effective(ctx.session, commander, "charisma", capacity=Capacity.COMMAND)
+            await effective(ctx.session, commander, "strength", rules=ctx.rules)
+            + await effective(ctx.session, commander, "intellect", capacity=Capacity.COMMAND, rules=ctx.rules)
+            + await effective(ctx.session, commander, "charisma", capacity=Capacity.COMMAND, rules=ctx.rules)
         )
-        command = total / campaigns.strength_commander_divisor
+        tactics = await best_effective(ctx.session, commander.id, COMMAND_SKILLS)
+        command = total / campaigns.strength_commander_divisor * (PERCENT + tactics * ctx.rules.skills.commander_tactics_pct / PERCENT) / PERCENT
     patron = await theatre.strength.patron_bonus(community)
     return (
         await theatre.strength.power(community) * campaigns.strength_community_share_pct / PERCENT
@@ -384,8 +390,8 @@ async def _record(ctx: TickContext, report: BattleReport, place: EntityRow | Non
 async def duel_power(ctx: TickContext, theatre: Theatre, hero: EntityRow) -> float:
     campaigns = ctx.rules.campaigns
     return (
-        await effective(ctx.session, hero, "strength")
-        + await effective(ctx.session, hero, "agility") / campaigns.duel_agility_divisor
+        await effective(ctx.session, hero, "strength", rules=ctx.rules)
+        + await effective(ctx.session, hero, "agility", rules=ctx.rules) / campaigns.duel_agility_divisor
         + await theatre.strength.weapon_power(hero, campaigns.duel_weapon_mult)
         + ctx.rng("duel").die(campaigns.duel_die) * campaigns.duel_die_mult
     )
@@ -403,6 +409,8 @@ async def duel(ctx: TickContext, theatre: Theatre, first: EntityRow, second: Ent
             await bonds.connect(BondDraft(event.id, hero.id, BondKind.PARTY_TO, ctx.epoch, "dueled", role=BondRole.DUELED, war_id=war.id))
     first_power = await duel_power(ctx, theatre, first)
     second_power = await duel_power(ctx, theatre, second)
+    await duelled(ctx, first)
+    await duelled(ctx, second)
     winner, loser = (first, second) if first_power >= second_power else (second, first)
     if ctx.rng("duel_death").chance(ctx.rules.campaigns.duel_death_chance):
         await death_path(ctx, loser, f"fell in a duel with {winner.name} in {context}", winner.id, f"{context} duel", forced=True, event_id=anchor_id)
@@ -419,6 +427,16 @@ async def duel(ctx: TickContext, theatre: Theatre, first: EntityRow, second: Ent
         ctx, loser, Harm(campaigns.duel_loser_hp_loss, HarmCause.DUEL, "fell in a duel", source_node_id=winner.id, killer_id=winner.id), lethal=False
     )
     return f" {winner.name} and {loser.name} dueled; {loser.name} was badly wounded."
+
+
+async def _seasoned(ctx: TickContext, theatre: Theatre, sides: tuple[EntityRow, ...], armies: dict[int, tuple[EntityRow, ArmyRow]]) -> None:
+    for side in sides:
+        for hero in theatre.sides.heroes_of(side.id):
+            await fought(ctx, hero, survived=hero.status is EntityStatus.CANON)
+        found = armies.get(side.id)
+        commander = await commander_of(ctx.session, found[1]) if found is not None else None
+        if commander is not None:
+            await fought(ctx, commander, commander=True, survived=commander.status is EntityStatus.CANON)
 
 
 async def _heroics(ctx: TickContext, theatre: Theatre, report: BattleReport) -> None:
@@ -456,7 +474,9 @@ async def _omens(ctx: TickContext, theatre: Theatre, ground: BattleGround, sides
     for side in sides:
         patron = (await theatre.strength.patron_bonus(side)).son
         domains = frozenset({patron.domain_primary, patron.domain_secondary}) if patron is not None else frozenset()
-        shift = omen_morale(ctx.rules, ground.weather, domains, stat(side, "piety") or ctx.rules.campaigns.omen_default_piety)
+        culture = await values_for(ctx.session, side.id)
+        reading = (culture[ValueAxis.SUPERSTITION] + VALUE_MAX) // 2 if ValueAxis.SUPERSTITION in culture else ctx.rules.campaigns.omen_default_piety
+        shift = omen_morale(ctx.rules, ground.weather, domains, reading)
         if shift:
             shift_stat(armies[side.id][0], "morale", shift)
 
@@ -510,7 +530,7 @@ async def fight_battle(
     for side in (winner, loser):
         await return_maimed(ctx, side, before[side.id] - (stat(army_entities[side.id], "size") or 0))
     _community_losses(ctx, winner, loser, loss)
-    await change_relation(ctx, attacker.id, defender.id, -campaigns.battle_relation, "battle")
+    await change_relation(ctx, attacker.id, defender.id, -campaigns.battle_relation, MemoryKind.FOUGHT_US, note="battle")
     son_id = await _patron_effects(ctx, theatre, winner, loser)
     place = await _place(ctx, theatre, loser, besieged)
     report = BattleReport(war, winner, loser, gap, outcome, summary)
@@ -537,6 +557,7 @@ async def fight_battle(
     )
     await _mark_ground(ctx, ground, gap, outcome)
     await _heroics(ctx, theatre, report)
+    await _seasoned(ctx, theatre, (winner, loser), armies)
     ids = [*([report.record.id] if report.record is not None else []), war.event_entity_id, winner.id, loser.id, *report.ids]
     setting = ground.describe()
     lead = f"{event.name}, {setting}" if setting else event.name

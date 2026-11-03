@@ -11,6 +11,7 @@ from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
 from aerona.engine.body.describe import body_lines
+from aerona.engine.mind.describe import mind_lines
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import EntityAuthor, EntityDetailContext
 from aerona.prompts.contexts.common import LabelValue, LexiconWord, NamedRecord, WorldItem
@@ -73,6 +74,7 @@ async def entity_detail_context(scope: Scope, entity: EntityRow, *, private: boo
         society=await society_lines(session, scope.rules, entity),
         facts=await fact_lines(session, scope.rules, entity),
         body=await body_lines(session, scope.rules, entity, private=private),
+        mind=await mind_lines(session, scope.rules, entity, scope.epoch, private=private),
     )
 
 

@@ -7,6 +7,8 @@ from aerona.domain.enums.society import Commodity
 from aerona.domain.models.entity_stats import SettlementStats
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.mind.book import pressures_of
+from aerona.engine.mind.drives import hunger
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.settlements import resettle_ruin
@@ -99,7 +101,10 @@ async def famine_migration(ctx: TickContext) -> None:
         population = stat(community, "population") or 0
         if community.status is not EntityStatus.CANON or population <= effects.famine_migration_min_population:
             continue
-        if not await is_hungry(ctx, community) or not rng.chance(rules.world_engine.famine_migration_chance):
+        level = await hunger(ctx.session, community.id) if await pressures_of(ctx.session, community.id) else None
+        starving = level >= rules.needs.migration_hunger if level is not None else await is_hungry(ctx, community)
+        weight = level / rules.needs.migration_hunger if level is not None and rules.needs.migration_hunger else 1
+        if not starving or not rng.chance(rules.world_engine.famine_migration_chance * weight):
             continue
         region = await living_entity(ctx.session, atlas.top_region(community.id))
         target = await greener_region(ctx, atlas, region, ground) if region is not None else None

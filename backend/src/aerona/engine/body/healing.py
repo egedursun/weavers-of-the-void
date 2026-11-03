@@ -5,12 +5,14 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import FINGER_COUNT, FINGERS, SIGHT_PARTS, Part
+from aerona.catalog.mind import HEALING_SKILLS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow, InjuryRow, ProsthesisRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import (
     MADNESS_CONDITIONS,
@@ -36,6 +38,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.gods.queries import community_of
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.lifecycle.mortal_death import die
+from aerona.engine.mind.hooks import failed_to_heal, healed
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -135,23 +138,21 @@ class HealingWorld:
     async def load(cls, session: AsyncSession, rules: Rules) -> "HealingWorld":
         atlas = await RegionAtlas.load(session)
         knowledge = await KnowledgeMap.load(session)
-        table = rules.healing
         healers: dict[int | None, list[Healer]] = defaultdict(list)
         artisans: dict[int | None, list[EntityRow]] = defaultdict(list)
+        trained: dict[int, int] = defaultdict(int)
+        for skill_row in await session.scalars(select(SkillRow).where(SkillRow.skill.in_(HEALING_SKILLS), SkillRow.subject_node_id.is_(None))):
+            trained[skill_row.holder_node_id] = max(trained[skill_row.holder_node_id], skill_row.level)
         for mortal in await canon(session, [EntityType.MORTAL]):
             region = atlas.top_region(mortal.id)
             if mortal.mortal_role is MortalRole.ARTISAN:
                 artisans[region].append(mortal)
-            if mortal.mortal_role not in HEALER_ROLES:
+            level = trained.get(mortal.id, 0)
+            if mortal.mortal_role not in HEALER_ROLES and level < rules.careers.min_level:
                 continue
             body = await session.get(BodyRow, mortal.id)
             hands = body.craft / PERCENT if body is not None else 1.0
-            medicine = knowledge.level(mortal.id, KnowledgeBranch.MEDICINE)
-            community = await community_of(session, mortal)
-            if community is not None:
-                medicine = max(medicine, knowledge.level(community.id, KnowledgeBranch.MEDICINE))
-            raw = (stat(mortal, "intellect") or 0) * table.healer_intellect_pct / PERCENT + medicine * table.healer_medicine_per_level
-            raw += table.healer_role_bonus if mortal.mortal_role is MortalRole.HEALER else 0
+            raw = level * rules.skills.healer_scale_pct / PERCENT
             healers[region].append(Healer(mortal, clamp_int(raw * hands, 0, PERCENT), region))
         disease = {row.entity_id: row.disease_load for row in await session.scalars(select(RegionEnvironmentRow))}
         return cls(rules=rules, atlas=atlas, knowledge=knowledge, healers=healers, disease=disease, artisans=artisans)
@@ -238,6 +239,8 @@ async def _fester(ctx: TickContext, bearer: Bearer, body: BodyRow, row: InjuryRo
             if row.part == FINGERS:
                 body.fingers = 0
             await _treated(ctx, bearer, row, care.healer)
+            if care.healer is not None:
+                await healed(ctx, care.healer.mortal.id, bearer.id, saved=True)
             if isinstance(bearer, EntityRow):
                 await note(
                     ctx,
@@ -248,6 +251,8 @@ async def _fester(ctx: TickContext, bearer: Bearer, body: BodyRow, row: InjuryRo
             return Tending(changed=True)
         row.state = InjuryState.LETHAL
         await _renown(ctx, care.healer, healed=False)
+        if care.healer is not None and isinstance(bearer, EntityRow):
+            await failed_to_heal(ctx, care.healer.mortal.id, bearer)
         if isinstance(bearer, EntityRow):
             await die(ctx, bearer, cause=FESTER_DEATH, event_id=row.event_entity_id)
             return Tending(died=True, changed=True)
@@ -277,6 +282,8 @@ async def _close(ctx: TickContext, bearer: Bearer, row: InjuryRow, care: Care, r
     row.healed_epoch = ctx.epoch
     await _treated(ctx, bearer, row, care.healer)
     await _renown(ctx, care.healer, healed=True)
+    if care.healer is not None:
+        await healed(ctx, care.healer.mortal.id, bearer.id, saved=row.severity >= table.saved_severity)
     if lasting and row.kind is InjuryKind.CURSE_WITHER and row.severity >= ctx.rules.conditions.wither_condition_severity:
         await gain_condition(ctx, bearer, ConditionKind.WITHERED_LIMB, row.cause_kind, severity=row.severity, part=row.part, source_node_id=row.cause_node_id)
     if lasting and row.kind is InjuryKind.VENOM:

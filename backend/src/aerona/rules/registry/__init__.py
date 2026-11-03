@@ -89,6 +89,15 @@ from aerona.rules.registry.link_graph import LinkGraphRules
 from aerona.rules.registry.market import MarketRules
 from aerona.rules.registry.mechanics import MechanicsRules
 from aerona.rules.registry.metrics import MetricsRules
+from aerona.rules.registry.mind import (
+    CareersRules,
+    CultureDriftRules,
+    MemoryRules,
+    NeedsRules,
+    OpinionRules,
+    SkillsRules,
+    TraitsRules,
+)
 from aerona.rules.registry.model import ModelRules
 from aerona.rules.registry.modifiers import ModifiersRules
 from aerona.rules.registry.mortal_agents import MortalAgentsRules
@@ -155,6 +164,13 @@ class Rules:
     conditions: ConditionRules = field(default_factory=ConditionRules)
     prosthetics: ProstheticsRules = field(default_factory=ProstheticsRules)
     maimed: MaimedRules = field(default_factory=MaimedRules)
+    culture_drift: CultureDriftRules = field(default_factory=CultureDriftRules)
+    traits: TraitsRules = field(default_factory=TraitsRules)
+    skills: SkillsRules = field(default_factory=SkillsRules)
+    careers: CareersRules = field(default_factory=CareersRules)
+    memory: MemoryRules = field(default_factory=MemoryRules)
+    opinion: OpinionRules = field(default_factory=OpinionRules)
+    needs: NeedsRules = field(default_factory=NeedsRules)
     casualties: CasualtiesRules = field(default_factory=CasualtiesRules)
     ecology: EcologyRules = field(default_factory=EcologyRules)
     geography: GeographyRules = field(default_factory=GeographyRules)

@@ -11,6 +11,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.cosmos.fauna import weave_chimera as weave
 from aerona.engine.phases.afterlife import soul_bind
@@ -24,7 +25,7 @@ from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_acti
 from aerona.tools.framework.validation import fail, state_reason
 from aerona.tools.mortal import lines
 from aerona.tools.mortal.inputs import BindSpiritInput, ChimeraInput, RuinsInput, TameInput
-from aerona.tools.mortal.support import first_stat, i_know, name_free, near, same_region, wits_of
+from aerona.tools.mortal.support import first_stat, i_know, name_free, near, practised, same_region, wits_of
 
 PERCENT = 100
 SKILL_CHAIN = ("craft", "intellect")
@@ -44,6 +45,7 @@ async def _species(call: MortalCall, species_id: int) -> EntityRow:
 
 
 async def tame_species(call: MortalCall, args: TameInput) -> str:
+    await practised(call, (SkillKind.BEAST_HANDLING,), call.rules.skills.hunt_xp)
     tools = call.rules.mortal_tools
     species = await _species(call, args.species_id)
     if not (await same_region(call, species) or await near(call, species)):
@@ -154,6 +156,7 @@ async def search_ruins(call: MortalCall, args: RuinsInput) -> str:
         fail(MortalResult.TOO_FAR)
     shares = await class_shares(call.session, call.rules, call.me.id)
     reason = (await wits_of(call)) + shares.get(SocialClass.SCRIBE, 0.0) * tools.relic_scribe_mult + call.die(tools.relic_die, "ruins")
+    await practised(call, (SkillKind.LORE, SkillKind.TRACKING), call.rules.skills.travel_xp)
     call.target(ruin.id)
     lost = await _lost_knowledge(call, ruin.world_id)
     items = await _ownerless_items(call, ruin)

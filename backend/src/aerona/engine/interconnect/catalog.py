@@ -5,6 +5,8 @@ import sys
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
+from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, PersonalityValueRow, PressureRow, SkillRow, TraitRow
+from aerona.db.tables.society import CommunityRelationRow
 from aerona.domain.enums.body import ConditionKind, InjuryKind
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.interconnect.registry import MECHANICS, Coupling, Exposure, Mechanic, Subsystem, Surface, register
@@ -17,6 +19,10 @@ SEASONS_SECTION = "section-seasons"
 BODY_SECTION = "section-body"
 MAIMED_SECTION = "section-maimed"
 CUSTOMS_SECTION = "section-body-customs"
+MIND_SECTION = "section-mind"
+SKILLS_SECTION = "section-skills"
+MEMORIES_SECTION = "section-memories"
+RELATIONS_SECTION = "section-community-relations"
 
 BUILT_IN = (
     Mechanic(
@@ -298,6 +304,128 @@ BUILT_IN = (
             Coupling(Subsystem.ECONOMY, "the maimed lower food and craft output and drain prosperity without a pension"),
             Coupling(Subsystem.WAR, "a maimed people grows wary of new wars; a martial one holds scar festivals"),
             Coupling(Subsystem.SOCIAL, "the maimed raise the birth of healers"),
+        ),
+    ),
+    Mechanic(
+        key="values",
+        spec_item="F5",
+        title="Values, culture and doctrine",
+        subsystem=Subsystem.MIND,
+        phases=("mind_survey", "mind_values"),
+        surface=Surface(drawer=MIND_SECTION),
+        backfill="mind_survey: cultures from stats, patron domains and history; mortals from their culture and traits; gods from domains and passions",
+        templates=("culture.shift",),
+        fields=("axis", "value"),
+        tables=(CultureValueRow.__tablename__, PersonalityValueRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("people", "cult", "faction", "mortal", "son", "foreign_god"),
+        couplings=(
+            Coupling(Subsystem.SOCIAL, "the distance between values shapes opinion, marriage alliances and where refugees seek shelter"),
+            Coupling(Subsystem.FAITH, "a doctrine close to a people's culture converts it more easily"),
+            Coupling(Subsystem.BODY, "a people's purity, piety and martial pride decide how it reads scars"),
+            Coupling(Subsystem.WAR, "omens weigh on a side by how much its culture reads them"),
+            Coupling(Subsystem.GODS, "a patron god's values pull its people toward its own"),
+        ),
+    ),
+    Mechanic(
+        key="traits",
+        spec_item="F5.1",
+        title="Traits of mortals and gods",
+        subsystem=Subsystem.MIND,
+        phases=("mind_survey", "campaigns", "body_conditions", "prisoners", "mind_skills"),
+        surface=Surface(drawer=MIND_SECTION),
+        backfill="mind_survey: two or three birth traits weighted by the mortal's values, heritable ones passed from parents; gods take a divine subset",
+        fields=("trait", "source"),
+        tables=(TraitRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal", "son", "foreign_god"),
+        couplings=(
+            Coupling(Subsystem.BODY, "brave, craven, scholarly and other traits raise or lower what a body can do"),
+            Coupling(Subsystem.WAR, "a wrathful or ambitious ruler wants war; a cruel captor executes its prisoners"),
+            Coupling(Subsystem.SOCIAL, "trusting and paranoid temperaments colour every opinion; forgiving and vengeful ones change how long grudges last"),
+            Coupling(Subsystem.POLITY, "a just ruler holds back an uprising; a deceitful one betrays allies"),
+        ),
+    ),
+    Mechanic(
+        key="skills",
+        spec_item="F6",
+        title="Skills, callings and teaching",
+        subsystem=Subsystem.MIND,
+        phases=("mind_survey", "mind_skills", "campaigns", "body_healing"),
+        surface=Surface(drawer=SKILLS_SECTION),
+        backfill="mind_survey: skills from the mortal's role, stats and years of adult life",
+        templates=("skill.career_injured", "skill.career_skilled"),
+        fields=("skill", "level", "xp", "peak", "last_used_epoch"),
+        tables=(SkillRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("produce_item", "build_structure", "develop_knowledge"),
+        targets=("mortal",),
+        couplings=(
+            Coupling(Subsystem.WAR, "a commander's tactics strengthen the army; fighters learn from every battle and duel"),
+            Coupling(Subsystem.BODY, "the healer is whoever has the medicine and surgery, and a wound that ends a calling changes the mortal's role"),
+            Coupling(Subsystem.ECONOMY, "a maker's craft skill sets the quality of what they make"),
+            Coupling(Subsystem.KNOWLEDGE, "learned skills gate and speed research"),
+        ),
+    ),
+    Mechanic(
+        key="memories",
+        spec_item="F7",
+        title="Memories and opinion",
+        subsystem=Subsystem.MIND,
+        phases=("mind_survey", "mind_memories", "diplomacy", "campaigns", "prisoners", "body_healing", "mortal_wounds"),
+        surface=Surface(drawer=MEMORIES_SECTION),
+        backfill=(
+            "mind_survey and the migration: memories rebuilt from kin killings, captivity, apprenticeship, enmity and tribute, "
+            "and every community relation event of the past"
+        ),
+        templates=("memory.vengeance",),
+        fields=("kind", "magnitude", "decay_pct", "epoch"),
+        tables=(MemoryRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal", "people", "settlement", "cult", "faction", "son", "foreign_god"),
+        couplings=(
+            Coupling(Subsystem.SOCIAL, "a dead mortal's strongest memories pass to their heirs and, for a ruler, to their realm"),
+            Coupling(Subsystem.WAR, "a mortal whose kin was killed sets out for vengeance"),
+            Coupling(Subsystem.BODY, "a healer who lost a patient is remembered for it"),
+        ),
+    ),
+    Mechanic(
+        key="community_opinion",
+        spec_item="W3",
+        title="Community relations from opinion",
+        subsystem=Subsystem.SOCIAL,
+        phases=("mind_opinion", "diplomacy"),
+        surface=Surface(drawer=RELATIONS_SECTION),
+        backfill=("the migration turned the twelve-event relation history into memories on both sides; the next epoch recomputes every relation from them"),
+        fields=("value", "blood_feud_since_epoch"),
+        tables=(CommunityRelationRow.__tablename__, MemoryRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("people", "settlement", "cult", "faction"),
+        couplings=(
+            Coupling(Subsystem.WAR, "relations built from grievance and fear decide war, peace, alliance and betrayal"),
+            Coupling(Subsystem.ECONOMY, "a creditor forgives the debts of a community it trusts"),
+            Coupling(Subsystem.FAITH, "a shared god and a shared language warm every relation"),
+        ),
+    ),
+    Mechanic(
+        key="needs",
+        spec_item="F8",
+        title="Needs of mortals and pressures on communities",
+        subsystem=Subsystem.MIND,
+        phases=("mind_needs", "famine_migration", "uprisings", "religion_spread", "diplomacy", "factions", "travel"),
+        surface=Surface(drawer=MIND_SECTION),
+        backfill="computed: needs and pressures are read from the present state every epoch",
+        templates=("need.despair",),
+        fields=("need", "pressure", "value"),
+        tables=(NeedRow.__tablename__, PressureRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal", "people", "settlement"),
+        couplings=(
+            Coupling(Subsystem.DEMOGRAPHY, "hunger drives migration and crowding sends out expeditions"),
+            Coupling(Subsystem.POLITY, "poverty, humiliation and insecurity raise uprisings and factions"),
+            Coupling(Subsystem.FAITH, "impiety opens a people to a new faith"),
+            Coupling(Subsystem.WAR, "humiliation and crowding raise the appetite for war"),
+            Coupling(Subsystem.GODS, "the most pressed mortals and communities are the likeliest to act as agents"),
         ),
     ),
 )

@@ -1,0 +1,252 @@
+from collections import defaultdict
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, field
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from aerona.catalog.mind import MEMORIES
+from aerona.constants.units import PERCENT
+from aerona.db.repositories.bonds import BondRepository
+from aerona.db.tables.mind import MemoryRow, TraitRow
+from aerona.db.tables.society import CommunityRelationRow
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
+from aerona.domain.enums.mind import OpinionComponent, TraitEffect, TraitKind, ValueAxis
+from aerona.engine.mind.book import ValueIndex, trait_effect, traits_of, values_for
+from aerona.engine.mind.memories import memories_about, strength_of
+from aerona.engine.mind.space import NEUTRAL_DISTANCE, memory_weight, value_alignment
+from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.queries import BondIndex, active_bonds, spoken_language
+from aerona.rules.registry import Rules
+
+PAIR_BONDS = (BondKind.ENEMY, BondKind.ALLY, BondKind.TRADES_WITH, BondKind.PAYS_TRIBUTE)
+KIN_BONDS = (BondKind.DESCENDS_FROM, BondKind.LOVES)
+NEGATIVE_COMPONENTS = frozenset({OpinionComponent.GRIEVANCE, OpinionComponent.FEAR})
+
+
+@dataclass(frozen=True)
+class PairFacts:
+    same_god: bool = False
+    other_god: bool = False
+    same_language: bool = False
+    enemy: bool = False
+    ally: bool = False
+    trade: bool = False
+    tribute: bool = False
+    feud: bool = False
+    kin: bool = False
+    common_enemies: int = 0
+
+
+@dataclass(frozen=True)
+class OpinionTerm:
+    key: str
+    value: int
+
+
+@dataclass(frozen=True)
+class WeighedMemory:
+    row: MemoryRow
+    strength: int
+    weight_pct: int
+    contribution: int
+
+
+@dataclass(frozen=True)
+class Opinion:
+    holder_id: int
+    subject_id: int
+    value: int
+    components: dict[OpinionComponent, int]
+    memories: list[WeighedMemory]
+    alignment: int
+    terms: list[OpinionTerm]
+
+
+def shared_terms(rules: Rules, facts: PairFacts) -> list[OpinionTerm]:
+    table = rules.opinion
+    terms = [
+        OpinionTerm("shared_god", table.shared_god) if facts.same_god else None,
+        OpinionTerm("other_god", -table.other_god) if facts.other_god else None,
+        OpinionTerm("shared_language", table.shared_language) if facts.same_language else None,
+        OpinionTerm("enemy", -table.enemy) if facts.enemy else None,
+        OpinionTerm("ally", table.ally) if facts.ally else None,
+        OpinionTerm("trade", table.trade) if facts.trade else None,
+        OpinionTerm("tribute", -table.tribute) if facts.tribute else None,
+        OpinionTerm("blood_feud", -table.blood_feud) if facts.feud else None,
+        OpinionTerm("kin", table.kin) if facts.kin else None,
+        OpinionTerm("common_enemies", min(table.common_enemy_cap, facts.common_enemies * table.common_enemy)) if facts.common_enemies else None,
+    ]
+    return [term for term in terms if term is not None]
+
+
+def weigh(rules: Rules, epoch: int, values: Mapping[ValueAxis, int], memories: Iterable[MemoryRow]) -> list[WeighedMemory]:
+    table = rules.opinion
+    weighed: list[WeighedMemory] = []
+    for row in memories:
+        strength = strength_of(row, epoch)
+        weight = memory_weight(values, row.kind, floor_pct=table.reading_floor_pct, ceiling_pct=table.reading_ceiling_pct) if values else 1.0
+        weighed.append(WeighedMemory(row, round(strength), round(weight * PERCENT), round(strength * weight)))
+    return weighed
+
+
+def components_of(weighed: Iterable[WeighedMemory], trust_term: int) -> dict[OpinionComponent, int]:
+    totals: dict[OpinionComponent, float] = defaultdict(float)
+    for item in weighed:
+        for component, share in MEMORIES[item.row.kind].components.items():
+            part = item.contribution * share / PERCENT
+            totals[component] += abs(part) if component in NEGATIVE_COMPONENTS and part < 0 else (0 if component in NEGATIVE_COMPONENTS else part)
+    totals[OpinionComponent.TRUST] += trust_term
+    return {component: clamp_int(totals.get(component, 0), RELATION_MIN, RELATION_MAX) for component in OpinionComponent}
+
+
+def compose(
+    rules: Rules,
+    epoch: int,
+    *,
+    holder_id: int,
+    subject_id: int,
+    holder_values: Mapping[ValueAxis, int],
+    subject_values: Mapping[ValueAxis, int],
+    holder_traits: Iterable[TraitKind],
+    memories: Iterable[MemoryRow],
+    facts: PairFacts,
+) -> Opinion:
+    table = rules.opinion
+    weighed = weigh(rules, epoch, holder_values, memories)
+    raw_alignment = value_alignment(holder_values, subject_values) if holder_values and subject_values else 0
+    alignment = round(raw_alignment * table.align_weight / NEUTRAL_DISTANCE)
+    terms = shared_terms(rules, facts)
+    trust = round(trait_effect(holder_traits, TraitEffect.TRUST, rules.traits.effect_scale_pct) * table.trait_trust_pct / PERCENT)
+    if trust:
+        terms.append(OpinionTerm("temperament", trust))
+    total = sum(item.contribution for item in weighed) + alignment + sum(term.value for term in terms)
+    return Opinion(
+        holder_id,
+        subject_id,
+        clamp_int(total, RELATION_MIN, RELATION_MAX),
+        components_of(weighed, trust),
+        sorted(weighed, key=lambda item: (-abs(item.contribution), item.row.id)),
+        alignment,
+        terms,
+    )
+
+
+async def _patron(session: AsyncSession, node_id: int) -> int | None:
+    return await BondRepository(session).patron(node_id)
+
+
+async def _language(session: AsyncSession, node_id: int) -> int | None:
+    found = await spoken_language(session, node_id)
+    return found.id if found is not None else None
+
+
+async def _enemies(session: AsyncSession, node_id: int) -> set[int]:
+    bonds = [*await active_bonds(session, [BondKind.ENEMY], sources=[node_id]), *await active_bonds(session, [BondKind.ENEMY], targets=[node_id])]
+    return {bond.other_end(node_id) for bond in bonds}
+
+
+async def pair_facts(session: AsyncSession, first: int, second: int) -> PairFacts:
+    bonds = BondRepository(session)
+    first_god, second_god = await _patron(session, first), await _patron(session, second)
+    first_language, second_language = await _language(session, first), await _language(session, second)
+    relation = await session.get(CommunityRelationRow, (min(first, second), max(first, second)))
+    kin = any([await bonds.exists_between(first, second, kind) for kind in KIN_BONDS])
+    common = (await _enemies(session, first) & await _enemies(session, second)) - {first, second}
+    return PairFacts(
+        same_god=first_god is not None and first_god == second_god,
+        other_god=first_god is not None and second_god is not None and first_god != second_god,
+        same_language=first_language is not None and first_language == second_language,
+        enemy=await bonds.exists_between(first, second, BondKind.ENEMY),
+        ally=await bonds.exists_between(first, second, BondKind.ALLY),
+        trade=await bonds.exists_between(first, second, BondKind.TRADES_WITH),
+        tribute=await bonds.exists_between(first, second, BondKind.PAYS_TRIBUTE),
+        feud=relation is not None and relation.blood_feud_since_epoch is not None,
+        kin=kin,
+        common_enemies=len(common),
+    )
+
+
+async def opinion(session: AsyncSession, rules: Rules, epoch: int, holder_id: int, subject_id: int) -> Opinion:
+    return compose(
+        rules,
+        epoch,
+        holder_id=holder_id,
+        subject_id=subject_id,
+        holder_values=await values_for(session, holder_id),
+        subject_values=await values_for(session, subject_id),
+        holder_traits=await traits_of(session, holder_id),
+        memories=await memories_about(session, holder_id, subject_id),
+        facts=await pair_facts(session, holder_id, subject_id),
+    )
+
+
+async def pair_relation(session: AsyncSession, rules: Rules, epoch: int, first: int, second: int) -> int:
+    forward = await opinion(session, rules, epoch, first, second)
+    backward = await opinion(session, rules, epoch, second, first)
+    return clamp_int((forward.value + backward.value) / 2, RELATION_MIN, RELATION_MAX)
+
+
+@dataclass
+class OpinionContext:
+    rules: Rules
+    epoch: int
+    values: ValueIndex
+    bonds: BondIndex
+    patrons: dict[int, int | None]
+    languages: dict[int, int | None]
+    feuds: set[tuple[int, int]]
+    memories: dict[tuple[int, int], list[MemoryRow]] = field(default_factory=dict)
+    traits: dict[int, set[TraitKind]] = field(default_factory=dict)
+
+    @classmethod
+    async def load(cls, session: AsyncSession, rules: Rules, epoch: int, nodes: Iterable[int], values: ValueIndex) -> "OpinionContext":
+        ids = list(dict.fromkeys(nodes))
+        bonds = await BondIndex.load(session, (*PAIR_BONDS, *KIN_BONDS))
+        patrons = {node: await _patron(session, node) for node in ids}
+        languages = {node: await _language(session, node) for node in ids}
+        feuds = {
+            (row.entity_a_id, row.entity_b_id)
+            for row in await session.scalars(select(CommunityRelationRow).where(CommunityRelationRow.blood_feud_since_epoch.is_not(None)))
+        }
+        context = cls(rules, epoch, values, bonds, patrons, languages, feuds)
+        for row in await session.scalars(select(MemoryRow).where(MemoryRow.holder_node_id.in_(ids))):
+            context.memories.setdefault((row.holder_node_id, row.subject_node_id), []).append(row)
+        for trait in await session.scalars(select(TraitRow).where(TraitRow.node_id.in_(ids))):
+            context.traits.setdefault(trait.node_id, set()).add(trait.trait)
+        return context
+
+    def facts(self, first: int, second: int) -> PairFacts:
+        first_god, second_god = self.patrons.get(first), self.patrons.get(second)
+        first_language = self.languages.get(first)
+        enemies_first = {bond.other_end(first) for bond in self.bonds.touching(first, BondKind.ENEMY)}
+        enemies_second = {bond.other_end(second) for bond in self.bonds.touching(second, BondKind.ENEMY)}
+        return PairFacts(
+            same_god=first_god is not None and first_god == second_god,
+            other_god=first_god is not None and second_god is not None and first_god != second_god,
+            same_language=first_language is not None and first_language == self.languages.get(second),
+            enemy=self.bonds.between(first, second, BondKind.ENEMY),
+            ally=self.bonds.between(first, second, BondKind.ALLY),
+            trade=self.bonds.between(first, second, BondKind.TRADES_WITH),
+            tribute=self.bonds.between(first, second, BondKind.PAYS_TRIBUTE),
+            feud=(min(first, second), max(first, second)) in self.feuds,
+            kin=any(self.bonds.between(first, second, kind) for kind in KIN_BONDS),
+            common_enemies=len((enemies_first & enemies_second) - {first, second}),
+        )
+
+    def opinion(self, holder_id: int, subject_id: int) -> Opinion:
+        return compose(
+            self.rules,
+            self.epoch,
+            holder_id=holder_id,
+            subject_id=subject_id,
+            holder_values=self.values.of(holder_id),
+            subject_values=self.values.of(subject_id),
+            holder_traits=self.traits.get(holder_id, set()),
+            memories=self.memories.get((holder_id, subject_id), []),
+            facts=self.facts(holder_id, subject_id),
+        )
+
+    def relation(self, first: int, second: int) -> int:
+        return clamp_int((self.opinion(first, second).value + self.opinion(second, first).value) / 2, RELATION_MIN, RELATION_MAX)

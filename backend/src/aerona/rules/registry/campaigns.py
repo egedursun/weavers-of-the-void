@@ -170,7 +170,7 @@ class CampaignsRules:
     standard_day_hours: int = rule(24, 1, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Length of a standard day in hours")
     night_visibility: int = rule(40, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Visibility lost when fighting by night")
     omen_morale_pct: int = rule(30, 0, 200, RuleGroup.WAR_AND_DIPLOMACY, "Morale moved per point of a weather omen at full piety (%)")
-    omen_default_piety: int = rule(50, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Piety assumed for a side without a piety value")
+    omen_default_piety: int = rule(50, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Omen-reading assumed for a side whose culture is not yet known")
     camp_disease_pct: int = rule(
         6, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Soldiers lost to camp fever per point of wet weather and disease load (hundredths of a percent)"
     )

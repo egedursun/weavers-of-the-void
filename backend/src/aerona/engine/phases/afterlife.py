@@ -18,6 +18,7 @@ from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyStatus, TravelMethod
@@ -520,7 +521,7 @@ async def cosmic_court(ctx: TickContext, traitor_id: int, victim_id: int) -> str
         if item.id not in (traitor.id, victim_id) and atlas.distance(traitor.id, item.id) <= beyond.oathbreaker_neighbor_distance
     ]
     for neighbour in neighbours[: beyond.oathbreaker_neighbors]:
-        await change_relation(ctx, traitor.id, neighbour.id, -beyond.oathbreaker_relation_loss, "broke an oath")
+        await change_relation(ctx, traitor.id, neighbour.id, -beyond.oathbreaker_relation_loss, MemoryKind.BROKE_OATH, note="broke an oath")
     victim_name = victim.name if victim is not None else "its ally"
     text = f"Cosmic court (Fate's voice): {traitor.name} broke the oath given to {victim_name}. Verdict: a curse and the distrust of its neighbours."
     await note(ctx, text, key="beyond.cosmic_court", ids=[traitor.id, victim_id], kind=ChronicleKind.COSMIC_LAW)

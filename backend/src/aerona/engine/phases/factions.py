@@ -15,6 +15,7 @@ from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
+from aerona.engine.mind.drives import faction_drive
 from aerona.engine.phase import Phase
 from aerona.engine.phases.warfare import is_uprising
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -154,7 +155,9 @@ async def found_factions(ctx: TickContext) -> int:
     for community in await canon(ctx.session, SOCIETY_TYPES):
         if founded >= rules.faction_cap:
             break
-        if (stat(community, "population") or 0) < rules.faction_min_population or not rng.chance(rules.faction_chance):
+        if (stat(community, "population") or 0) < rules.faction_min_population or not rng.chance(
+            rules.faction_chance * await faction_drive(ctx.session, ctx.rules, community.id)
+        ):
             continue
         kinds = await eligible_kinds(ctx, community)
         if kinds:

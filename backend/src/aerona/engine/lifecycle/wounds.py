@@ -15,6 +15,7 @@ from aerona.engine.body.state import refresh
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.aging import is_immortal, is_notable
 from aerona.engine.lifecycle.mortal_death import die
+from aerona.engine.mind.hooks import wound_memories
 from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import round_half_up
@@ -163,6 +164,7 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
     lost, emptied = await _hp_loss(ctx, bearer, harm, hits, lethal)
     await refresh(ctx.session, ctx.rules, bearer, ctx.epoch)
     await _announce(ctx, bearer, rows)
+    await wound_memories(ctx, bearer, harm.source_node_id or harm.killer_id, rows, lost)
     killed = lethal and (emptied or any(row.state is InjuryState.LETHAL for row in rows))
     if not killed:
         return Wounding(WoundOutcome.WOUNDED, rows, lost)

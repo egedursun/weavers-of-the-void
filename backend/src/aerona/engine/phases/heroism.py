@@ -101,10 +101,10 @@ async def _legend(ctx: TickContext, *, name: str, subtype: str, body: str, power
 async def hero_power(ctx: TickContext, hero: EntityRow, patron: SonRow | None, roll: int) -> float:
     hunt = ctx.rules.world_hunt
     flags = await EntityRepository(ctx.session).flags(hero.id)
-    intellect = await effective(ctx.session, hero, "intellect")
+    intellect = await effective(ctx.session, hero, "intellect", rules=ctx.rules)
     total = (
-        await effective(ctx.session, hero, "strength")
-        + await effective(ctx.session, hero, "agility") / hunt.agility_divisor
+        await effective(ctx.session, hero, "strength", rules=ctx.rules)
+        + await effective(ctx.session, hero, "agility", rules=ctx.rules) / hunt.agility_divisor
         + intellect / hunt.intellect_divisor
     )
     total += roll * hunt.die_mult
@@ -282,7 +282,8 @@ async def glory_hunts(ctx: TickContext) -> None:
     for hero in await canon(ctx.session, [EntityType.MORTAL]):
         if (
             hero.status is not EntityStatus.CANON
-            or await effective(ctx.session, hero, "strength") + await effective(ctx.session, hero, "agility") < engine.hunter_strength_agility
+            or await effective(ctx.session, hero, "strength", rules=ctx.rules) + await effective(ctx.session, hero, "agility", rules=ctx.rules)
+            < engine.hunter_strength_agility
         ):
             continue
         beaten = {bond.target_node_id for bond in await active_bonds(ctx.session, VICTORY_KINDS, sources=[hero.id])}

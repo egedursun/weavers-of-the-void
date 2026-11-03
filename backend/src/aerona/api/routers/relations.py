@@ -4,12 +4,19 @@ from fastapi import APIRouter, Path, Query
 
 from aerona.api.actions import Alias, mount_all
 from aerona.api.dependencies import ServicesDep, reader, world_rules
+from aerona.api.routers.mind import opinion_view
 from aerona.api.schemas.wars import RelationEntry, RelationEventView, RelationList, RelationPair
 from aerona.api.views.common import node_ref, node_refs
 from aerona.catalog.society import community_relation_label
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.society import CommunityRelationRow
-from aerona.engine.services.community_relations import pair_key, relation, relation_history, relation_list
+from aerona.engine.mind.opinion import opinion
+from aerona.engine.services.community_relations import RelationEvent, cosmos_epoch, pair_key, relation, relation_history, relation_list
+
+
+def event_view(event: RelationEvent) -> RelationEventView:
+    return RelationEventView(epoch=event.epoch, event=event.event, delta=event.delta, kind=event.kind, holder_id=event.holder_id)
+
 
 router = APIRouter(tags=["relations"])
 
@@ -39,7 +46,7 @@ async def community_relations(
                 value=view.value,
                 label=view.label,
                 blood_feud_since_epoch=view.blood_feud_since_epoch,
-                history=[RelationEventView(epoch=event.epoch, event=event.event, delta=event.delta) for event in view.history],
+                history=[event_view(event) for event in view.history],
             )
             for view in views
             if view.entity_id in refs
@@ -56,12 +63,18 @@ async def relation_between(services: ServicesDep, entity_id: int = Path(ge=1), o
             raise NotFoundError(NO_RELATION)
         value = await relation(session, rules, entity_id, other_id)
         stored = await session.get(CommunityRelationRow, pair_key(entity_id, other_id))
-        history = await relation_history(session, entity_id, other_id, rules.diplomacy.relation_history_len)
+        history = await relation_history(session, entity_id, other_id)
+        epoch = await cosmos_epoch(session)
+        opinions = [
+            await opinion_view(session, await opinion(session, rules, epoch, holder, subject))
+            for holder, subject in ((entity_id, other_id), (other_id, entity_id))
+        ]
         return RelationPair(
             first=first,
             second=second,
             value=value,
             label=community_relation_label(rules, value),
             blood_feud_since_epoch=stored.blood_feud_since_epoch if stored is not None else None,
-            history=[RelationEventView(epoch=event.epoch, event=event.event, delta=event.delta) for event in history],
+            history=[event_view(event) for event in history],
+            opinions=opinions,
         )

@@ -48,6 +48,16 @@ from aerona.db.tables.lore import (
     ThreadRow,
 )
 from aerona.db.tables.meta import AchievementRow, ImageRow, MapNoteRow, MapSnapshotRow, NotificationRow, ScenarioRow, ScoreRow
+from aerona.db.tables.mind import (
+    CultureValueRow,
+    MemoryRow,
+    MindRow,
+    NeedRow,
+    PersonalityValueRow,
+    PressureRow,
+    SkillRow,
+    TraitRow,
+)
 from aerona.db.tables.motifs import MotifOverrideRow
 from aerona.db.tables.node import NameRegistryRow, NodeRow
 from aerona.db.tables.routes import HorizonIntuitionRow, JourneyRow, RouteRow
@@ -55,7 +65,6 @@ from aerona.db.tables.rule_override import RuleOverrideRow
 from aerona.db.tables.society import (
     AddictionRow,
     ArchiveHoldingRow,
-    CommunityRelationEventRow,
     CommunityRelationRow,
     CommunitySocietyRow,
     ResurrectionOrderRow,
@@ -85,7 +94,6 @@ __all__ = [
     "ChronicleRow",
     "CivilizationTierLockRow",
     "ClimateOrderRow",
-    "CommunityRelationEventRow",
     "CommunityRelationRow",
     "CommunitySocietyRow",
     "ConditionRow",
@@ -96,6 +104,7 @@ __all__ = [
     "CreationVerdictRow",
     "CreatorMoodInputRow",
     "CreatorRow",
+    "CultureValueRow",
     "DeferredStepRow",
     "DesignatedHeirRow",
     "EntityFlagRow",
@@ -134,16 +143,21 @@ __all__ = [
     "MaimedCohortRow",
     "MapNoteRow",
     "MapSnapshotRow",
+    "MemoryRow",
     "MessageRow",
+    "MindRow",
     "ModifierRow",
     "MotifOverrideRow",
     "NameRegistryRow",
+    "NeedRow",
     "NetworkReviewRow",
     "NodeRow",
     "NotableYearRow",
     "NotificationRow",
     "OuterBargainRow",
+    "PersonalityValueRow",
     "PlaceEnvironmentRow",
+    "PressureRow",
     "ProsthesisRow",
     "RegionEnvironmentRow",
     "ResourceCommodityRow",
@@ -155,6 +169,7 @@ __all__ = [
     "ScenarioRow",
     "ScoreRow",
     "SiegeRow",
+    "SkillRow",
     "SkyEventRow",
     "SonPowerRow",
     "SonRelationRow",
@@ -163,6 +178,7 @@ __all__ = [
     "StarRow",
     "ThreadLinkRow",
     "ThreadRow",
+    "TraitRow",
     "TributeRow",
     "TurnCounterRow",
     "VesselProfileRow",

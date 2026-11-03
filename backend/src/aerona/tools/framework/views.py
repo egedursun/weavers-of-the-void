@@ -21,6 +21,8 @@ from aerona.domain.enums.bond import BondState
 from aerona.domain.enums.entity import CivilizationTier, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.body.describe import body_lines
+from aerona.engine.mind.describe import mind_lines
+from aerona.engine.services.community_relations import cosmos_epoch
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import (
     BondEndpoint,
@@ -208,6 +210,7 @@ async def entity_detail(session: AsyncSession, rules: Rules, entity: EntityRow) 
         society=await society_lines(session, rules, entity),
         facts=await fact_lines(session, rules, entity),
         body=await body_lines(session, rules, entity),
+        mind=await mind_lines(session, rules, entity, await cosmos_epoch(session)),
     )
     return render(PromptId.ENTITY_DETAIL, context)
 

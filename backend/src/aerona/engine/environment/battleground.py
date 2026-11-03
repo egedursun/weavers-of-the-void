@@ -71,10 +71,10 @@ def defend_factor(rules: Rules, ground: BattleGround) -> float:
     return factor
 
 
-def omen_morale(rules: Rules, weather: Weather | None, domains: frozenset[Domain], piety: int) -> int:
+def omen_morale(rules: Rules, weather: Weather | None, domains: frozenset[Domain], superstition: int) -> int:
     if weather is None:
         return 0
-    return round(weather.omen_for(domains) * piety / PERCENT * rules.campaigns.omen_morale_pct / PERCENT)
+    return round(weather.omen_for(domains) * superstition / PERCENT * rules.campaigns.omen_morale_pct / PERCENT)
 
 
 def season_losses(rules: Rules, weather: Weather | None, region: RegionEnvironmentRow | None, *, armour_pct: int, acclimatised: bool) -> float:

@@ -38,6 +38,12 @@ Body and wounds:
 - {{ line }}
 {% endfor %}
 {% endif %}
+{% if mind %}
+Mind:
+{% for line in mind %}
+- {{ line }}
+{% endfor %}
+{% endif %}
 {% if facts %}
 Canon facts (do not violate):
 {% for fact in facts %}

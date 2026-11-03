@@ -75,37 +75,14 @@ class DiplomacyRules:
     marriage_alliance_share_pct: int = rule(40, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of alliances made through marriage (%)")
     betrayal_chance: int = rule(30, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Betrayal in a breaking alliance (%)")
     betrayal_war_chance: int = rule(50, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Betrayal turns into war (%)")
-    relation_history_len: int = rule(12, 1, 500, RuleGroup.CHRONICLE, "Number of recent events kept in a community relation")
-    relation_decay_threshold: int = rule(
-        50, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Community relation mean reversion: relation beyond this value (\u00b1) fades every epoch"
-    )
-    relation_decay_pct: int = rule(
-        25, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Mean reversion: share of the difference beyond the threshold that fades per epoch (%; 0 disables)"
-    )
     neighbor_hops: int = rule(
         1, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "Maximum map hop distance between top regions at which two communities count as neighbours"
     )
     cap_close_idle_epochs: int = rule(
         2, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "A war closed by the war caps is described as idle when its last clash is at least this many epochs old"
     )
-    relation_list_history: int = rule(3, 0, 50, RuleGroup.WAR_AND_DIPLOMACY, "Recent relation events shown per listed community relation")
-    initial_shared_god: int = rule(20, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Initial relation: bonus for worshipping the same god (points)")
-    initial_different_god: int = rule(5, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Initial relation: penalty for worshipping different gods (points)")
-    initial_shared_language: int = rule(15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Initial relation: bonus for speaking the same language (points)")
-    initial_enemy: int = rule(50, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Initial relation: hostility penalty (points)")
-    initial_ally: int = rule(45, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Initial relation: alliance bonus (points)")
-    initial_trade: int = rule(20, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Initial relation: trade bonus (points)")
-    initial_tribute: int = rule(15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Initial relation: tribute penalty (points)")
     blood_feud: int = rule(30, 0, 200, RuleGroup.WAR_AND_DIPLOMACY, "Relation reduced by a blood feud (points)")
     exhaustion_peace_relation: int = rule(15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Relation bonus of an exhaustion peace (points)")
-    drift_shared_god: int = rule(2, 0, 50, RuleGroup.WAR_AND_DIPLOMACY, "Per-epoch drift: shared-god bonus (points)")
-    drift_cult_other_god: int = rule(2, 0, 50, RuleGroup.WAR_AND_DIPLOMACY, "Per-epoch drift: penalty for a cult of a different god (points)")
-    drift_shared_language: int = rule(1, 0, 50, RuleGroup.WAR_AND_DIPLOMACY, "Per-epoch drift: shared-language bonus (points)")
-    drift_trade: int = rule(3, 0, 50, RuleGroup.WAR_AND_DIPLOMACY, "Per-epoch drift: trade bonus (points)")
-    drift_ally: int = rule(2, 0, 50, RuleGroup.WAR_AND_DIPLOMACY, "Per-epoch drift: alliance bonus (points)")
-    drift_enemy: int = rule(3, 0, 50, RuleGroup.WAR_AND_DIPLOMACY, "Per-epoch drift: hostility penalty (points)")
-    drift_tribute: int = rule(2, 0, 50, RuleGroup.WAR_AND_DIPLOMACY, "Per-epoch drift: tribute penalty (points)")
-    drift_blood_feud: int = rule(3, 0, 50, RuleGroup.WAR_AND_DIPLOMACY, "Per-epoch drift: blood-feud penalty (points)")
     neighbor_exhaustion_start: int = rule(
         2, 0, 50, RuleGroup.WAR_AND_DIPLOMACY, "War duration at which exhaustion peace begins between neighbouring enemies (epochs)"
     )

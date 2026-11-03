@@ -10,6 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.phase import Phase
@@ -117,7 +118,7 @@ async def run_networks(ctx: TickContext) -> None:
             continue
         if rng.chance(capture_chance(ctx, target)):
             await bonds.deactivate(bond, ctx.epoch, "spies caught")
-            await change_relation(ctx, spymaster.id, target.id, -rules.spy_caught_relation_loss, "caught spies")
+            await change_relation(ctx, spymaster.id, target.id, -rules.spy_caught_relation_loss, MemoryKind.SPIED_ON_US, note="caught spies")
             war = rng.chance(rules.spy_war_chance) and await declare_war(ctx, target.id, spymaster.id, "espionage", cause=WarCause.ESPIONAGE)
             tail = f"; {target.name} declared them its enemy" if war else "; the network was dismantled"
             await _note(ctx, f"The spies of {spymaster.name} were caught in {target.name}{tail}.", "espionage.caught", (spymaster.id, target.id))

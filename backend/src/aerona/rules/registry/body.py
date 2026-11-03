@@ -229,9 +229,7 @@ class HealingRules:
     reattachment_chance: int = rule(20, 0, 100, G, "Chance each epoch a lost part is restored where reattachment is known (%)")
     reattachment_residual_pct: int = rule(25, 0, 100, G, "Function a reattached part still lacks (%)")
     healer_reach: int = rule(1, 0, 10, G, "Regions a wounded notable travels to find a healer")
-    healer_intellect_pct: int = rule(60, 0, 100, G, "Share of a healer's skill that comes from intellect (%)")
-    healer_medicine_per_level: int = rule(12, 0, 100, G, "Healer skill each level of medicine adds")
-    healer_role_bonus: int = rule(25, 0, 100, G, "Healer skill a trained healer has over a priest")
+    saved_severity: int = rule(3, 1, 5, G, "Severity of a healed wound for which the patient feels saved by the healer")
     healer_renown_heal: int = rule(1, 0, 100, G, "Importance a healer gains per patient healed")
     healer_renown_loss: int = rule(2, 0, 100, G, "Importance a healer loses per patient who dies in their care")
 
@@ -254,7 +252,11 @@ class ArmourRules:
 
 @dataclass(frozen=True)
 class BodyCustomsRules:
-    martial_martiality: int = rule(60, 0, 100, G, "Martiality at which a people honours battle scars")
+    martial_martiality: int = rule(60, 0, 100, G, "Martiality at which a people whose values are unknown honours battle scars")
+    martial_value: int = rule(30, -100, 100, G, "Martial glory and honour at which a people honours battle scars")
+    purity_value: int = rule(30, -100, 100, G, "Purity at which a people shuns the marked and the maimed")
+    wholeness_value: int = rule(50, -100, 100, G, "Purity at which a people requires its rulers to be whole")
+    suffering_value: int = rule(30, -100, 100, G, "Piety and veneration of the dead at which a people sanctifies suffering")
     martial_scar_pct: int = rule(6, 0, 100, G, "Presence a martial people grants per honourable scar (%)")
     martial_scar_cap: int = rule(24, 0, 200, G, "Most presence honourable scars can grant (%)")
     martial_mutilation_pct: int = rule(15, 0, 100, G, "Presence a martial people takes per mark of punishment (%)")

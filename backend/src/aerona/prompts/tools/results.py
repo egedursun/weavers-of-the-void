@@ -225,6 +225,10 @@ class MortalResult(StrEnum):
     NOT_A_RESOURCE_NAMED = "{{ name }} is not a resource."
     NOT_YOUR_RESOURCE = "{{ name }} is not on your land and you do not own it. Acquire it by trade or conquest."
     RESOURCE_SCARCE = "{{ name }} is about to run out (abundance {{ abundance }})."
+    UNSKILLED_CRAFT = (
+        "You lack the craft for this: your best craft skill is {{ level }} and making it needs {{ needed }}. Learn from a master or practise lesser work first."
+    )
+    UNSKILLED_LORE = "You lack the learning for this: your best learned skill is {{ level }} and it needs {{ needed }}. Study under a sage first."
     PRODUCED = "#{{ id }} {{ name }} produced. Damage {{ damage }}, protection {{ protection }}, might {{ might }}."
     INVALID_LOCATION = "Invalid location."
     NOT_YOUR_LAND = "You can only build on your own land."

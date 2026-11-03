@@ -23,6 +23,7 @@ from aerona.domain.enums.war import CaptiveStatus, TributeStatus, WarCause, WarS
 from aerona.domain.models.entity_stats import ArmyStats, EventStats
 from aerona.engine.body.book import effective
 from aerona.engine.context import TickContext
+from aerona.engine.mind.hooks import freed, taken_captive
 from aerona.engine.primitives.levies import levy
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -394,7 +395,9 @@ async def raise_army(ctx: TickContext, strength: MilitaryStrength, sides: SideIn
     campaigns = ctx.rules.campaigns
     heroes = sides.heroes_of(community.id)
     scores = {
-        hero.id: await effective(ctx.session, hero, "strength") + await effective(ctx.session, hero, "charisma", capacity=Capacity.COMMAND) for hero in heroes
+        hero.id: await effective(ctx.session, hero, "strength", rules=ctx.rules)
+        + await effective(ctx.session, hero, "charisma", capacity=Capacity.COMMAND, rules=ctx.rules)
+        for hero in heroes
     }
     commander = max(heroes, key=lambda hero: (scores[hero.id], -hero.id), default=None)
     engine_kind, subtype = ARMY_KINDS.get(community.entity_type, PEOPLES_ARMY)
@@ -491,6 +494,10 @@ async def held_captive(session: AsyncSession, mortal_id: int) -> CaptiveRow | No
     return found
 
 
+FREEING_STATUSES = frozenset({CaptiveStatus.RANSOMED, CaptiveStatus.ESCAPED, CaptiveStatus.RESCUED, CaptiveStatus.RELEASED})
+RESCUE_STATUSES = frozenset({CaptiveStatus.RANSOMED, CaptiveStatus.RESCUED})
+
+
 async def take_captive(ctx: TickContext, captor: EntityRow, captive: EntityRow, war: WarRow | None, *, description: str, home_id: int | None) -> CaptiveRow:
     existing = await held_captive(ctx.session, captive.id)
     if existing is not None:
@@ -509,6 +516,7 @@ async def take_captive(ctx: TickContext, captor: EntityRow, captive: EntityRow, 
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await taken_captive(ctx, captive.id, captor.id)
     return row
 
 
@@ -524,6 +532,9 @@ async def release_captive(ctx: TickContext, row: CaptiveRow, status: CaptiveStat
         if bond.state is BondState.ACTIVE:
             await bonds.deactivate(bond, ctx.epoch, status.value)
     await ctx.session.flush()
+    captive = await ctx.session.get(EntityRow, row.captive_entity_id)
+    if captive is not None and status in FREEING_STATUSES:
+        await freed(ctx, captive, row.captor_entity_id, row.home_entity_id if status in RESCUE_STATUSES else None)
 
 
 async def active_tribute(session: AsyncSession, payer_id: int, receiver_id: int) -> TributeRow | None:

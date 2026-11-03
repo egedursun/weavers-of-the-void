@@ -2,6 +2,7 @@ from typing import Any
 
 from aerona.catalog.civilization import unlocked
 from aerona.catalog.domains import match_domain
+from aerona.catalog.mind import CRAFT_SKILLS
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
@@ -13,6 +14,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.mind import MemoryKind, SkillKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarCause
@@ -50,6 +52,8 @@ from aerona.tools.mortal.support import (
     my_branch_effect,
     name_free,
     near,
+    practised,
+    require_craft,
     same_region,
 )
 
@@ -102,7 +106,9 @@ async def produce_item(call: MortalCall, args: ProduceInput) -> str:
     tools = call.rules.mortal_tools
     await name_free(call, args.name)
     resources = [await _usable_resource(call, resource_id) for resource_id in dict.fromkeys(args.resource_ids[: tools.craft_max_resources])]
+    await require_craft(call)
     craft = await craft_of(call)
+    await practised(call, CRAFT_SKILLS, call.rules.skills.craft_xp)
     might = sum(stat_or(resource, "might", 0) for resource in resources) / max(1, len(resources))
     metallurgy = round(tools.craft_metallurgy_bonus * await my_branch_effect(call, KnowledgeBranch.METALLURGY))
     region = (await call.atlas()).top_region(call.me.id)
@@ -166,7 +172,9 @@ async def build_structure(call: MortalCall, args: BuildInput) -> str:
         fail(MortalResult.INVALID_LOCATION)
     if location.id != call.me.id and not await same_region(call, location):
         fail(MortalResult.NOT_YOUR_LAND)
+    await require_craft(call)
     craft = await craft_of(call)
+    await practised(call, (SkillKind.MASONRY, SkillKind.CARPENTRY, SkillKind.ENGINEERING), call.rules.skills.craft_xp)
     architecture = round(tools.build_architecture_bonus * await my_branch_effect(call, KnowledgeBranch.ARCHITECTURE))
     stats = {
         "splendor": clamp(pct(craft, tools.build_splendor_pct) + call.die(tools.build_splendor_die) + architecture),
@@ -294,7 +302,14 @@ async def _seizure_holds(call: MortalCall, resource: EntityRow, owners: list[Ent
     if is_community(call.me):
         for owner in owners:
             if is_community(owner):
-                await change_relation(call.tick, owner.id, call.me.id, -tools.seize_repelled_relation, lines.SEIZE_ATTEMPT.format(resource=resource.name))
+                await change_relation(
+                    call.tick,
+                    owner.id,
+                    call.me.id,
+                    -tools.seize_repelled_relation,
+                    MemoryKind.HARMED_ME,
+                    note=lines.SEIZE_ATTEMPT.format(resource=resource.name),
+                )
     names = JOIN.join(owner.name for owner in owners)
     await call.chronicle(
         ChronicleKind.RESOURCE,
@@ -341,7 +356,7 @@ async def claim_resource(call: MortalCall, args: ClaimInput) -> str:
         angered.append(owner.name)
         reason = lines.CONFISCATION.format(resource=resource.name)
         grudge = (
-            await change_relation(call.tick, owner.id, call.me.id, -tools.seizure_relation_loss, reason)
+            await change_relation(call.tick, owner.id, call.me.id, -tools.seizure_relation_loss, MemoryKind.HARMED_ME, note=reason)
             if is_community(call.me)
             else -tools.seize_war_threshold
         )

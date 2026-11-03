@@ -6,6 +6,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES
+from aerona.domain.enums.mind import MemoryKind
 from aerona.engine.services.community_relations import change_relation
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -31,7 +32,7 @@ async def establish_trade(call: MortalCall, args: TradeInput) -> str:
     if await bonds.exists_between(call.me.id, target.id, BondKind.TRADES_WITH):
         fail(MortalResult.ALREADY_TRADING)
     await bonds.connect(BondDraft(call.me.id, target.id, BondKind.TRADES_WITH, call.epoch, args.goods))
-    await change_relation(call.tick, call.me.id, target.id, call.rules.mortal_tools.trade_relation, TRADE_EVENT)
+    await change_relation(call.tick, call.me.id, target.id, call.rules.mortal_tools.trade_relation, MemoryKind.TRADED_WITH, note=TRADE_EVENT)
     call.target(target.id)
     await call.chronicle(ChronicleKind.TRADE, lines.TRADE, entity_ids=[call.me.id, target.id], me=call.me.name, target=target.name, goods=args.goods)
     return result(MortalResult.TRADE_BEGUN, name=target.name)

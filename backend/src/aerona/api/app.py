@@ -38,6 +38,7 @@ from aerona.api.routers import (
     map,
     mechanics,
     metrics,
+    mind,
     notes,
     notifications,
     player,
@@ -103,6 +104,7 @@ ROUTERS: tuple[ModuleType, ...] = (
     fate,
     environment,
     body,
+    mind,
     mechanics,
     actions,
 )

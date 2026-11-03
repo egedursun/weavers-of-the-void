@@ -13,6 +13,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.society import Commodity, ResourceMechanic
 from aerona.domain.enums.war import DebtStatus, WarCause
 from aerona.engine.context import TickContext
@@ -186,7 +187,7 @@ async def end_debt(ctx: TickContext, bond: BondRow, debtor: EntityRow, creditor:
         return "lapsed"
     if await relation(ctx.session, ctx.rules, creditor.id, debtor.id) >= table.debt_forgive_relation:
         await close_debt(ctx, bond, "forgiven")
-        await change_relation(ctx, creditor.id, debtor.id, table.debt_forgive_gain, "debt forgiven")
+        await change_relation(ctx, creditor.id, debtor.id, table.debt_forgive_gain, MemoryKind.GIFTED_ME, note="debt forgiven")
         await _debt_chronicle(ctx, f"{creditor.name} forgave the debt of {owed} owed by {debtor.name}.", "debt_forgiven", [debtor.id, creditor.id])
         return "forgiven"
     subject = await BondRepository(ctx.session).active_between(debtor.id, creditor.id, [BondKind.PAYS_TRIBUTE])
@@ -194,7 +195,7 @@ async def end_debt(ctx: TickContext, bond: BondRow, debtor: EntityRow, creditor:
     if stronger and not subject and rng.chance(table.debt_tribute_chance):
         await close_debt(ctx, bond, "turned to tribute")
         await impose_tribute(ctx, debtor, creditor, None, f"in return for the unpaid debt of {owed}")
-        await change_relation(ctx, creditor.id, debtor.id, -table.debt_grudge, "debt turned to tribute")
+        await change_relation(ctx, creditor.id, debtor.id, -table.debt_grudge, MemoryKind.DEMANDED_TRIBUTE, note="debt turned to tribute")
         await _debt_chronicle(
             ctx, f"{debtor.name} could not pay its debt of {owed}; {creditor.name} bound it to tribute.", "debt_tribute", [debtor.id, creditor.id]
         )
@@ -205,13 +206,13 @@ async def end_debt(ctx: TickContext, bond: BondRow, debtor: EntityRow, creditor:
         await bonds.close_between(debtor.id, resource.id, [BondKind.OWNS], ctx.epoch, "seized for a debt")
         await bonds.connect(BondDraft(creditor.id, resource.id, BondKind.OWNS, ctx.epoch, f"seized for the unpaid debt of {debtor.name}"))
         await close_debt(ctx, bond, "resource seized")
-        await change_relation(ctx, creditor.id, debtor.id, -table.debt_grudge, "resource seized")
+        await change_relation(ctx, creditor.id, debtor.id, -table.debt_grudge, MemoryKind.HARMED_ME, note="resource seized")
         text = f"{creditor.name} seized {debtor.name}'s {resource.name} for the unpaid debt of {owed}."
         await _debt_chronicle(ctx, text, "debt_seized", [debtor.id, creditor.id, resource.id])
         return "seized"
     if rng.chance(table.debt_war_chance) and await declare_war(ctx, creditor.id, debtor.id, f"the unpaid debt of {owed}", cause=WarCause.DEBT):
         await close_debt(ctx, bond, "turned to war")
-        await change_relation(ctx, creditor.id, debtor.id, -table.debt_grudge, "debt war")
+        await change_relation(ctx, creditor.id, debtor.id, -table.debt_grudge, MemoryKind.FOUGHT_US, note="debt war")
         text = f"The unpaid debt of {owed} turned to war: {creditor.name} declared {debtor.name} its enemy to take it by the sword."
         await _debt_chronicle(ctx, text, "debt_war", [debtor.id, creditor.id])
         return "war"
@@ -332,7 +333,7 @@ async def write_off_debt(session: AsyncSession, rules: Rules, bond_id: int) -> s
     await close_debt(ctx, bond, "written off by the Creator")
     names = (debtor.name if debtor else "a debtor", creditor.name if creditor else "a creditor")
     if debtor is not None and creditor is not None and debtor.status is EntityStatus.CANON and creditor.status is EntityStatus.CANON:
-        await change_relation(ctx, creditor.id, debtor.id, rules.market.debt_forgive_gain, "debt written off")
+        await change_relation(ctx, creditor.id, debtor.id, rules.market.debt_forgive_gain, MemoryKind.GIFTED_ME, note="debt written off")
     text = f"The Creator wrote off the debt of {debt_words(bond)} {names[0]} owed to {names[1]}."
     await ctx.chronicle(ChronicleKind.CREATOR_HAND, text, template_key="market.written_off", entity_ids=[bond.source_node_id, bond.target_node_id])
     return text

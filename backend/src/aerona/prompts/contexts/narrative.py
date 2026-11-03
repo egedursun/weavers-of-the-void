@@ -216,6 +216,7 @@ class SonEpicContext(LoreContext):
     domain_1: str
     domain_2: str
     temperament: str
+    traits: list[str] = Field(default_factory=list)
     obsession: str
     secret: str
     plan: str | None = None

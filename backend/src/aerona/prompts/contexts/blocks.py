@@ -204,6 +204,7 @@ class EntityDetailContext(PromptContext):
     society: SocietyLines | None = None
     facts: list[str] = Field(default_factory=list)
     body: list[str] = Field(default_factory=list)
+    mind: list[str] = Field(default_factory=list)
 
 
 class RecentChronicleContext(PromptContext):

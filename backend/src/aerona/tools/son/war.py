@@ -16,6 +16,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.conflict import foreign_god_war
@@ -113,7 +114,7 @@ async def make_interworld_treaty(call: SonCall, args: TreatyInput) -> str:
         fail(SonResult.TREATY_EXISTS, label=label, first=first.name, second=second.name)
     require_essence(call, tools.treaty_cost)
     await bonds.connect(BondDraft(first.id, second.id, TREATY_BONDS[args.kind], call.epoch, lines.TREATY_BOND.format(son=call.son.name, terms=args.terms)))
-    await change_relation(call.tick, first.id, second.id, tools.treaty_relation, lines.TREATY_EVENT)
+    await change_relation(call.tick, first.id, second.id, tools.treaty_relation, MemoryKind.ALLIED_WITH, note=lines.TREATY_EVENT)
     call.spend_essence(tools.treaty_cost)
     call.target(first.id)
     await call.chronicle(

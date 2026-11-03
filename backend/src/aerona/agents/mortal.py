@@ -27,12 +27,15 @@ from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityFlagRow, EntityRow, EntityTagRow
 from aerona.db.tables.lore import MessageRow
+from aerona.db.tables.mind import NeedRow, PressureRow, TraitRow
 from aerona.domain.enums.agent import AgentKind, MessageIntent
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.mind import TraitEffect, TraitKind
 from aerona.domain.enums.node import ActorKind
 from aerona.engine.gods.mortal_opportunities import mortal_opportunities
+from aerona.engine.mind.book import scaled_by, trait_effect
 from aerona.engine.phases.civilization import late_debts
 from aerona.engine.primitives.manual import manual_context
 from aerona.events.kinds import EventKind
@@ -53,6 +56,8 @@ class Candidate:
     forced: bool
     chosen: bool
     dreaming: bool
+    pressure: int = 0
+    temperament: int = 0
 
 
 @dataclass(frozen=True)
@@ -98,7 +103,25 @@ async def candidates(session_scope: Scope) -> list[Candidate]:
             )
         )
     )
-    return [Candidate(row, row.id in forced, CHOSEN_TAG in tags[row.id], row.id in dreamers) for row in eligible]
+    pressure: dict[int, int] = defaultdict(int)
+    for entity_id, value in await session_scope.session.execute(select(PressureRow.entity_id, PressureRow.value).where(PressureRow.entity_id.in_(ids))):
+        pressure[entity_id] = max(pressure[entity_id], value)
+    for node_id, value in await session_scope.session.execute(select(NeedRow.node_id, NeedRow.value).where(NeedRow.node_id.in_(ids))):
+        pressure[node_id] = max(pressure[node_id], PERCENT - value)
+    held: dict[int, list[TraitKind]] = defaultdict(list)
+    for node_id, trait in await session_scope.session.execute(select(TraitRow.node_id, TraitRow.trait).where(TraitRow.node_id.in_(ids))):
+        held[node_id].append(trait)
+    return [
+        Candidate(
+            row,
+            row.id in forced,
+            CHOSEN_TAG in tags[row.id],
+            row.id in dreamers,
+            pressure[row.id],
+            trait_effect(held[row.id], TraitEffect.AGENT_WEIGHT, rules.traits.effect_scale_pct),
+        )
+        for row in eligible
+    ]
 
 
 def score(rules: Rules, candidate: Candidate, epoch: int, rng: SeededRandom) -> float:
@@ -110,7 +133,8 @@ def score(rules: Rules, candidate: Candidate, epoch: int, rng: SeededRandom) -> 
     value += min(tools.agent_wait_cap, (epoch - entity.last_acted_epoch) * tools.agent_wait_weight)
     value += rng.die(tools.agent_random_die)
     value += tools.agent_dream_bonus if candidate.dreaming else 0
-    return value
+    value += candidate.pressure * rules.needs.agent_pressure_weight / PERCENT
+    return value * scaled_by(candidate.temperament)
 
 
 def pick(rules: Rules, group: Sequence[Candidate], count: int, epoch: int, rng: SeededRandom) -> list[Candidate]:

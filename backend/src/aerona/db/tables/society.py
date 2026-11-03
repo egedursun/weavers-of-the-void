@@ -1,7 +1,6 @@
-from sqlalchemy import CheckConstraint, Float, ForeignKey, Index, String
+from sqlalchemy import CheckConstraint, Float, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
-from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, between
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN, RELATION_MAX, RELATION_MIN
@@ -63,18 +62,6 @@ class CommunityRelationRow(Base):
     entity_b_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True, index=True)
     value: Mapped[int] = mapped_column(default=0)
     blood_feud_since_epoch: Mapped[int | None]
-
-
-class CommunityRelationEventRow(Base):
-    __tablename__ = "community_relation_events"
-    __table_args__ = (Index("ix_community_relation_events_pair", "entity_a_id", "entity_b_id", "epoch"),)
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    entity_a_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
-    entity_b_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
-    epoch: Mapped[int]
-    event: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
-    delta: Mapped[int]
 
 
 class AddictionRow(Base):

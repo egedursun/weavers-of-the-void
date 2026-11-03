@@ -37,6 +37,20 @@ WHITELISTED_TABLES = frozenset(
         "historian_views",
         "images",
         "scenarios",
+        "bodies",
+        "injuries",
+        "conditions",
+        "prostheses",
+        "maimed_cohorts",
+        "body_customs",
+        "minds",
+        "culture_values",
+        "personality_values",
+        "traits",
+        "skills",
+        "memories",
+        "needs",
+        "pressures",
     }
 )
 PERMANENT_BIRTH_TABLES = frozenset({"sons", "worlds"})

@@ -20,6 +20,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, ThreadLinkRole, ThreadStatus
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.entity import COMMUNITY_TYPES, CivilizationTier, EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import CaptiveStatus, DebtStatus, WarCause
 from aerona.domain.models.entity_stats import FactionStats, ItemStats, KnowledgeStats, PlaceStats
@@ -108,7 +109,9 @@ async def colony_independence(ctx: TickContext) -> int:
         if bond is None or mother is None or mother.status is not EntityStatus.CANON:
             continue
         far = mother.world_id != colony.world_id
-        await change_relation(ctx, mother.id, colony.id, -(civ.colony_far_cooling if far else civ.colony_near_cooling), "distance from the homeland")
+        await change_relation(
+            ctx, mother.id, colony.id, -(civ.colony_far_cooling if far else civ.colony_near_cooling), MemoryKind.ILL_WILL, note="distance from the homeland"
+        )
         chance = (civ.colony_far_independence_chance if far else civ.colony_near_independence_chance) / PERCENT
         chance += (stat_or(colony, PROSPERITY_KEY, civ.colony_prosperity_base) - civ.colony_prosperity_base) / civ.colony_prosperity_divisor
         chance += civ.colony_grudge_bonus_pct / PERCENT if await relation(ctx.session, ctx.rules, mother.id, colony.id) < 0 else 0
@@ -319,7 +322,7 @@ async def repay(ctx: TickContext, bond: BondRow, debtor: EntityRow, creditor: En
     overdue = bond.debt_status is DebtStatus.OVERDUE
     bond.debt_status = DebtStatus.REPAID
     await BondRepository(ctx.session).deactivate(bond, ctx.epoch, "debt paid")
-    await change_relation(ctx, debtor.id, creditor.id, ctx.rules.civilization.loan_repay_relation, "debt paid")
+    await change_relation(ctx, debtor.id, creditor.id, ctx.rules.civilization.loan_repay_relation, MemoryKind.KEPT_OATH, note="debt paid")
     late = " even though it was overdue" if overdue else ""
     text = f"{debtor.name} paid its debt ({amount} {bond.debt_what or SILVER}) to {creditor.name}{late}."
     await ctx.chronicle(ChronicleKind.DEBT, text, template_key="civilization.debt_paid", entity_ids=[debtor.id, creditor.id])
@@ -360,7 +363,7 @@ async def late_debts(ctx: TickContext) -> int:
         if parties is None:
             continue
         debtor, creditor = parties
-        await change_relation(ctx, creditor.id, debtor.id, -ctx.rules.civilization.loan_default_relation, "unpaid debt")
+        await change_relation(ctx, creditor.id, debtor.id, -ctx.rules.civilization.loan_default_relation, MemoryKind.CHEATED_US, note="unpaid debt")
         bond.debt_status = DebtStatus.OVERDUE
         debt = f"{bond.debt_amount} {bond.debt_what or SILVER}"
         text = f"{debtor.name} did not pay its debt ({debt}) to {creditor.name} on time (Epoch {bond.debt_due_epoch}); coldness fell between them."
@@ -382,7 +385,7 @@ async def lend(ctx: TickContext, lender: EntityRow, borrower: EntityRow, amount:
     owes = next(iter(await active_bonds(ctx.session, [BondKind.OWES], sources=[borrower.id], targets=[lender.id])), None)
     if owes is not None and owes.debt_status is None:
         owes.debt_status = DebtStatus.OPEN
-    await change_relation(ctx, lender.id, borrower.id, civ.loan_relation, "loan")
+    await change_relation(ctx, lender.id, borrower.id, civ.loan_relation, MemoryKind.GIFTED_ME, note="loan")
     text = f"{lender.name} lent {lent} {what} to {borrower.name}, who was in need; due Epoch {due}."
     await ctx.chronicle(ChronicleKind.DEBT, text, template_key="civilization.loan", entity_ids=[lender.id, borrower.id])
     return text
@@ -440,7 +443,7 @@ async def swap_goods(ctx: TickContext, first: EntityRow, second: EntityRow, firs
     await bonds.close_between(second.id, second_good.id, [BondKind.OWNS], ctx.epoch, "bartered away")
     await bonds.connect(BondDraft(first.id, second_good.id, BondKind.OWNS, ctx.epoch, "barter"))
     await bonds.connect(BondDraft(second.id, first_good.id, BondKind.OWNS, ctx.epoch, "barter"))
-    await change_relation(ctx, first.id, second.id, ctx.rules.civilization.barter_relation, "barter")
+    await change_relation(ctx, first.id, second.id, ctx.rules.civilization.barter_relation, MemoryKind.TRADED_WITH, note="barter")
     text = f"{first.name} and {second.name} bartered: {first_good.name} for {second_good.name}."
     await ctx.chronicle(ChronicleKind.TRADE, text, template_key="civilization.barter", entity_ids=[first.id, second.id, first_good.id, second_good.id])
     return text
@@ -470,7 +473,7 @@ async def spontaneous_barter(ctx: TickContext) -> None:
 
 async def adopt(ctx: TickContext, adopter: EntityRow, child: EntityRow) -> str:
     await BondRepository(ctx.session).connect(BondDraft(child.id, adopter.id, BondKind.DESCENDS_FROM, ctx.epoch, "adopted: left alone, taken in"))
-    await change_relation(ctx, adopter.id, child.id, ctx.rules.civilization.adoption_relation, "adoption")
+    await change_relation(ctx, adopter.id, child.id, ctx.rules.civilization.adoption_relation, MemoryKind.GOODWILL, note="adoption")
     text = f"{adopter.name} adopted the orphaned {child.name}."
     await ctx.chronicle(ChronicleKind.LINEAGE, text, template_key="civilization.adoption", entity_ids=[adopter.id, child.id])
     return text
@@ -531,7 +534,7 @@ async def sign_treaty(ctx: TickContext, offer: TreatyOffer) -> str:
     await BondRepository(ctx.session).connect(
         BondDraft(offer.first.id, offer.second.id, offer.kind, ctx.epoch, f"interworld treaty (by way of {offer.method})")
     )
-    await change_relation(ctx, offer.first.id, offer.second.id, ctx.rules.civilization.treaty_relation, "interworld treaty")
+    await change_relation(ctx, offer.first.id, offer.second.id, ctx.rules.civilization.treaty_relation, MemoryKind.ALLIED_WITH, note="interworld treaty")
     kind = "alliance" if offer.kind is BondKind.ALLY else "trade"
     first_world, second_world = await world_name(ctx.session, offer.first.world_id), await world_name(ctx.session, offer.second.world_id)
     parties = f"{offer.first.name} of the world {first_world} and {offer.second.name} of the world {second_world}"

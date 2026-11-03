@@ -14,6 +14,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.travel import JourneyIntent, JourneyStatus
 from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.domain.models.entity_stats import FactionStats
@@ -119,16 +120,16 @@ async def decree(scope: PlayerScope, command: Decree) -> Effect:
         if block is not None and block is not WarBlock.ALREADY_ENEMIES:
             raise ConflictError(f"No war can be commanded between {first.name} and {second.name}: {block.value.replace('_', ' ')}.")
         await declare_war(ctx, first.id, second.id, DECREE_REASON, cause=WarCause.DECLARED)
-        await change_relation(ctx, first.id, second.id, -hand_rules.decree_war_relation, DECREE_REASON)
+        await change_relation(ctx, first.id, second.id, -hand_rules.decree_war_relation, MemoryKind.DIVINE_WILL, note=DECREE_REASON)
         kind = ActionKind.DECLARE_WAR
     elif command.kind is DecreeKind.PEACE:
         await settle_peace(ctx, first.id, second.id, WarEnding.PEACE, DECREE_REASON, truce=True, apply_relation=False)
-        await change_relation(ctx, first.id, second.id, hand_rules.decree_peace_relation, DECREE_REASON)
+        await change_relation(ctx, first.id, second.id, hand_rules.decree_peace_relation, MemoryKind.DIVINE_WILL, note=DECREE_REASON)
     elif command.kind is DecreeKind.ALLIANCE:
         await bonds.close_between(first.id, second.id, [BondKind.ENEMY], ctx.epoch, DECREE_REASON)
         if not await bonds.exists_between(first.id, second.id, BondKind.ALLY):
             await bonds.connect(BondDraft(first.id, second.id, BondKind.ALLY, ctx.epoch, DECREE_REASON))
-        await change_relation(ctx, first.id, second.id, hand_rules.decree_alliance_relation, DECREE_REASON)
+        await change_relation(ctx, first.id, second.id, hand_rules.decree_alliance_relation, MemoryKind.DIVINE_WILL, note=DECREE_REASON)
     elif command.kind is DecreeKind.MARRIAGE:
         await bonds.close_between(first.id, second.id, [BondKind.ENEMY], ctx.epoch, DECREE_REASON)
         await decree_alliance(ctx, first.id, second.id, marriage=True)
@@ -136,7 +137,7 @@ async def decree(scope: PlayerScope, command: Decree) -> Effect:
         await bonds.close_between(first.id, second.id, [BondKind.ENEMY], ctx.epoch, DECREE_REASON)
         if not await bonds.exists_between(first.id, second.id, BondKind.TRADES_WITH):
             await bonds.connect(BondDraft(first.id, second.id, BondKind.TRADES_WITH, ctx.epoch, DECREE_REASON))
-        await change_relation(ctx, first.id, second.id, hand_rules.decree_trade_relation, DECREE_REASON)
+        await change_relation(ctx, first.id, second.id, hand_rules.decree_trade_relation, MemoryKind.DIVINE_WILL, note=DECREE_REASON)
         kind = ActionKind.ESTABLISH_TRADE
     creator = await scope.creator()
     message = await hand(

@@ -9,6 +9,7 @@ from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.engine.context import TickContext
+from aerona.engine.mind.drives import closeness
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.settlements import resettle_ruin
@@ -74,6 +75,7 @@ async def shelter_score(ctx: TickContext, bonds: BondIndex, atlas: RegionAtlas, 
         score += life.refugee_weight_god
     if not atlas.same_region(origin.id, host.id):
         score += life.refugee_weight_other_region
+    score += await closeness(ctx.session, origin.id, host.id) * ctx.rules.culture_drift.refugee_kinship_weight
     return score
 
 

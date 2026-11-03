@@ -2,7 +2,7 @@
 {{ world_header }}
 
 SON: {{ name }}, {{ title }} ({{ rarity_label }} {{ stars | stars }}, {{ domain_1 }}/{{ domain_2 }})
-Temperament: {{ temperament }}
+Temperament: {{ temperament }}{% if traits %} (its traits, which the temperament must agree with: {{ traits | join(", ") }}){% endif %}
 Obsession: {{ obsession }}
 Secret (as much as the bard senses): {{ secret }}
 Plan: {{ plan if plan else "-" }}

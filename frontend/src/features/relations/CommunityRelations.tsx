@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Flame, HeartHandshake, Save } from 'lucide-react'
+import { Flame, HeartHandshake, Save, Scale } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,8 @@ import { Label, Muted, Text } from '@/components/typography'
 import { type EntityContext } from '@/features/entity/actions/context'
 import { optionsFor } from '@/features/entity/actions/pickers'
 import { usePickerData } from '@/features/entity/actions/usePickerData'
+import { MEMORY_ICONS, named } from '@/features/entity/mind/labels'
+import { OpinionBreakdown } from '@/features/entity/sections/MemoriesSection'
 import {
   type RelationEntry,
   useEndFeud,
@@ -27,7 +29,9 @@ function signed(value: number): string {
   return value > 0 ? `+${value}` : String(value)
 }
 
-function tone(entry: Pick<RelationEntry, 'value' | 'blood_feud_since_epoch'>): 'success' | 'destructive' | 'secondary' {
+function tone(
+  entry: Pick<RelationEntry, 'value' | 'blood_feud_since_epoch'>
+): 'success' | 'destructive' | 'secondary' {
   if (entry.blood_feud_since_epoch !== null || entry.value < 0)
     return 'destructive'
   return entry.value > 0 ? 'success' : 'secondary'
@@ -70,15 +74,18 @@ function RelationRow({ entry, selfId, readOnlyReason }: RowProps) {
           >{`Blood feud since epoch ${entry.blood_feud_since_epoch}`}</Badge>
         )}
       </div>
-      {entry.history.length > 0 && (
+      {entry.history.some((event) => event.holder_id === selfId) && (
         <ul className='flex min-w-0 flex-col gap-0.5'>
-          {entry.history.map((event, index) => (
-            <li key={`${event.epoch}-${index}`}>
-              <Muted variant='caption'>{`Epoch ${event.epoch}: ${event.event} (${signed(event.delta)})`}</Muted>
-            </li>
-          ))}
+          {entry.history
+            .filter((event) => event.holder_id === selfId)
+            .map((event, index) => (
+              <li key={`${event.epoch}-${index}`}>
+                <Muted variant='caption'>{`Epoch ${event.epoch}: ${named(MEMORY_ICONS, event.kind).label.toLowerCase()} · ${event.event} (${signed(event.delta)})`}</Muted>
+              </li>
+            ))}
         </ul>
       )}
+      <WhyToggle entityId={selfId} otherId={entry.other.id} />
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Input
           type='number'
@@ -139,7 +146,13 @@ function RelationRow({ entry, selfId, readOnlyReason }: RowProps) {
   )
 }
 
-function PairStanding({ entityId, otherId }: { entityId: number; otherId: number }) {
+function PairStanding({
+  entityId,
+  otherId,
+}: {
+  entityId: number
+  otherId: number
+}) {
   const pair = useRelationPair(entityId, otherId)
   if (pair.isPending) return <Skeleton className='h-control-lg w-full' />
   if (pair.isError) return <Text tone='destructive'>{pair.error.message}</Text>
@@ -148,22 +161,54 @@ function PairStanding({ entityId, otherId }: { entityId: number; otherId: number
     <div className='flex min-w-0 flex-col gap-2 rounded-lg border p-3'>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Label>Now</Label>
-        <Badge size='sm' variant={tone(data)}>{`${data.label.replaceAll('_', ' ')} ${signed(data.value)}`}</Badge>
+        <Badge
+          size='sm'
+          variant={tone(data)}
+        >{`${data.label.replaceAll('_', ' ')} ${signed(data.value)}`}</Badge>
         {data.blood_feud_since_epoch !== null && (
-          <Badge size='sm' variant='destructive'>{`Blood feud since epoch ${data.blood_feud_since_epoch}`}</Badge>
+          <Badge
+            size='sm'
+            variant='destructive'
+          >{`Blood feud since epoch ${data.blood_feud_since_epoch}`}</Badge>
         )}
       </div>
-      {data.history.length === 0 ? (
-        <Muted variant='caption'>{`${data.first.name} and ${data.second.name} share no history yet.`}</Muted>
-      ) : (
-        <ul className='flex min-w-0 flex-col gap-0.5'>
-          {data.history.map((event, index) => (
-            <li key={`${event.epoch}-${index}`}>
-              <Muted variant='caption'>{`Epoch ${event.epoch}: ${event.event} (${signed(event.delta)})`}</Muted>
-            </li>
-          ))}
-        </ul>
+      {data.history.length === 0 && (
+        <Muted variant='caption'>{`${data.first.name} and ${data.second.name} remember nothing of each other yet.`}</Muted>
       )}
+      <div className='@container/mind flex min-w-0 flex-col gap-2'>
+        {data.opinions.map((opinion) => (
+          <OpinionBreakdown
+            key={opinion.holder?.id ?? opinion.value}
+            opinion={opinion}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function WhyToggle({
+  entityId,
+  otherId,
+}: {
+  entityId: number
+  otherId: number
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className='flex min-w-0 flex-col gap-2'>
+      <div>
+        <Button
+          size='sm'
+          variant='ghost'
+          aria-expanded={open}
+          onClick={() => setOpen(!open)}
+        >
+          <Scale />
+          {open ? 'Hide why' : 'Why?'}
+        </Button>
+      </div>
+      {open && <PairStanding entityId={entityId} otherId={otherId} />}
     </div>
   )
 }
@@ -212,7 +257,9 @@ function NewRelation({
           />
         )}
       </FormRow>
-      {otherId !== null && <PairStanding entityId={ctx.entity.id} otherId={otherId} />}
+      {otherId !== null && (
+        <PairStanding entityId={ctx.entity.id} otherId={otherId} />
+      )}
       <FormRow
         label='Relation value'
         description={`From ${RELATION_MIN} to ${RELATION_MAX}`}
@@ -290,7 +337,7 @@ export function CommunityRelations({
     <Section
       id='section-community-relations'
       title='Community relations'
-      description='How this community regards the others, with the latest events. Relations drift on their own; set one here to override.'
+      description='How this community regards the others. Each relation comes from what both sides remember of each other, how close their values are and the bonds they share; set one here to add the will of the gods.'
     >
       {query.isPending && <Skeleton className='h-textarea w-full' />}
       {query.isError && <Text tone='destructive'>{query.error.message}</Text>}

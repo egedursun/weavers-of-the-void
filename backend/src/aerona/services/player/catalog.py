@@ -43,6 +43,7 @@ from aerona.services.player import (
     mechanics,
     memory,
     messages,
+    mind,
     native_faith,
     pantheon,
     relations,
@@ -984,6 +985,22 @@ BODY_ACTIONS = (
     _sync(Meta("body:cohort", "Set the maimed of a community", G.SOCIETY), body.set_cohort, body.SetCohort, free, ("F4.5",)),
 )
 
+MIND_ACTIONS = (
+    _sync(Meta("mind:values", "Set and hold values or a culture", G.ENTITIES), mind.set_values, mind.SetValues, free, ("F5",)),
+    _sync(Meta("mind:lock", "Hold a part of a mind as it is", G.ENTITIES), mind.lock_mind, mind.LockMind, free, ("F5", "F8")),
+    _sync(Meta("mind:unlock", "Let a held part of a mind change again", G.ENTITIES), mind.unlock_mind, mind.LockMind, free, ("F5", "F8")),
+    _sync(Meta("mind:trait", "Give a trait", G.ENTITIES), mind.give_trait, mind.TraitCommand, free, ("F5.1",)),
+    _sync(Meta("mind:trait_remove", "Take a trait away", G.ENTITIES), mind.take_trait, mind.TraitCommand, free, ("F5.1",)),
+    _sync(Meta("mind:skill", "Set a skill level", G.ENTITIES), mind.give_skill, mind.SetSkill, free, ("F6",)),
+    _sync(Meta("mind:skill_remove", "Make a mortal forget a skill", G.ENTITIES), mind.forget_skill, mind.SkillTarget, free, ("F6",)),
+    _sync(Meta("mind:role", "Set and hold a mortal's calling", G.ENTITIES), mind.set_role, mind.SetRole, free, ("F6",)),
+    _sync(Meta("mind:memory", "Plant a memory", G.ENTITIES), mind.add_memory, mind.AddMemory, free, ("F7",)),
+    _sync(Meta("mind:memory_edit", "Change a memory's strength or how fast it fades", G.ENTITIES), mind.edit_memory, mind.EditMemory, free, ("F7",)),
+    _sync(Meta("mind:memory_remove", "Erase a memory", G.ENTITIES), mind.forget_memory, mind.MemoryTarget, free, ("F7",)),
+    _sync(Meta("mind:need", "Set and hold a mortal's need", G.ENTITIES), mind.set_need, mind.SetNeed, free, ("F8",)),
+    _sync(Meta("mind:pressure", "Set and hold a pressure on a community", G.SOCIETY), mind.set_pressure, mind.SetPressure, free, ("F8",)),
+)
+
 ENVIRONMENT_ACTIONS = (
     _sync(
         Meta("ley:sever", "Cut a ley line for some epochs", G.WORLDS),
@@ -1133,6 +1150,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *MECHANIC_ACTIONS,
     *ENVIRONMENT_ACTIONS,
     *BODY_ACTIONS,
+    *MIND_ACTIONS,
 )
 ACTIONS_BY_ID: dict[str, ActionSpec] = {spec.id: spec for spec in ACTIONS}
 

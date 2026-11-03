@@ -8,6 +8,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import TributeRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import TributeStatus, WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.phase import Phase
@@ -82,7 +83,7 @@ async def tribute(ctx: TickContext) -> None:
         age = ctx.epoch - row.since_epoch
         if age >= rules.tribute_epochs:
             await end_tribute(ctx, row, TributeStatus.ENDED, "tribute ended")
-            await change_relation(ctx, payer.id, receiver.id, rules.tribute_end_relation, "tribute ended")
+            await change_relation(ctx, payer.id, receiver.id, rules.tribute_end_relation, MemoryKind.FREED_US, note="tribute ended")
             await _note(ctx, f"The tribute {payer.name} paid to {receiver.name} ended after {age} epochs.", "tribute.ended", (payer.id, receiver.id))
             continue
         if row.since_epoch == ctx.epoch:
@@ -93,7 +94,7 @@ async def tribute(ctx: TickContext) -> None:
             rules.tribute_revolt_chance
         ):
             await end_tribute(ctx, row, TributeStatus.REVOLTED, "tribute revolt")
-            await change_relation(ctx, payer.id, receiver.id, -rules.tribute_revolt_relation, "tribute revolt")
+            await change_relation(ctx, payer.id, receiver.id, -rules.tribute_revolt_relation, MemoryKind.FOUGHT_US, note="tribute revolt")
             war = await declare_war(ctx, payer.id, receiver.id, "tribute revolt", cause=WarCause.TRIBUTE_REVOLT)
             tail = "; the two sides declared each other enemies" if war else ""
             await _note(ctx, f"{payer.name} grew strong and refused to pay tribute to {receiver.name}{tail}.", "tribute.revolt", (payer.id, receiver.id))
@@ -120,7 +121,7 @@ async def forgive_tribute(ctx: TickContext, tribute_id: int) -> TributeRow:
     await end_tribute(ctx, row, TributeStatus.ENDED, "forgiven by decree")
     payer, receiver = await living_entity(ctx.session, row.payer_entity_id), await living_entity(ctx.session, row.receiver_entity_id)
     if payer is not None and receiver is not None:
-        await change_relation(ctx, payer.id, receiver.id, ctx.rules.campaigns.tribute_end_relation, "tribute forgiven")
+        await change_relation(ctx, payer.id, receiver.id, ctx.rules.campaigns.tribute_end_relation, MemoryKind.GIFTED_ME, note="tribute forgiven")
         await _note(ctx, f"The tribute {payer.name} paid to {receiver.name} was forgiven.", "tribute.forgiven", (payer.id, receiver.id))
     return row
 

@@ -126,7 +126,7 @@ async def appoint_commander(call: MortalCall, args: CommanderInput) -> str:
     await bonds.connect(BondDraft(mortal.id, army.id, BondKind.COMMANDS, call.epoch, lines.COMMANDS))
     row.commander_entity_id = mortal.id
     morale = (stat(army, "morale") or tools.commander_default_morale) + round(
-        await effective(call.session, mortal, "charisma", tools.default_stat, Capacity.COMMAND) / tools.commander_charisma_divisor
+        await effective(call.session, mortal, "charisma", tools.default_stat, Capacity.COMMAND, rules=call.rules) / tools.commander_charisma_divisor
     )
     set_stats(army, morale=max(0, min(PERCENT, morale)))
     await call.bump(TurnCounter.COMMANDER_APPOINTMENTS)

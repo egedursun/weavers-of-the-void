@@ -1,5 +1,6 @@
 from typing import Any
 
+from aerona.catalog.mind import PREACHING_SKILLS
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -16,6 +17,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.limits import RELATION_MIN
+from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.body.book import factor
 from aerona.engine.gods import devotion
@@ -29,7 +31,7 @@ from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_acti
 from aerona.tools.framework.validation import fail
 from aerona.tools.mortal import lines
 from aerona.tools.mortal.inputs import DenyInput, PrayerInput, PreachInput, ProphesyInput, RiteInput, RiteKind, WorshipInput
-from aerona.tools.mortal.support import MortalCreation, create_record, name_free, near, require_target, wits_of
+from aerona.tools.mortal.support import MortalCreation, create_record, name_free, near, practised, require_target, wits_of
 
 PERCENT = 100
 CREATOR_ID = 0
@@ -113,6 +115,7 @@ async def pray_to_creator(call: MortalCall, args: PrayerInput) -> str:
 
 
 async def preach(call: MortalCall, args: PreachInput) -> str:
+    await practised(call, PREACHING_SKILLS, call.rules.skills.preach_xp)
     tools = call.rules.mortal_tools
     god = await living_patron(call.session, call.me)
     if god is None:
@@ -193,6 +196,7 @@ async def prophesy(call: MortalCall, args: ProphesyInput) -> str:
     description = lines.PROPHECY_TEXT.format(me=call.me.name, saying=args.saying, concerns=concerns)
     subtype = lines.PROPHECY_SUBTYPES["cult" if call.me.entity_type is EntityType.CULT else "mortal"]
     certainty = max(0, min(PERCENT, tools.prophecy_certainty_base + round((await wits_of(call)) / 2)))
+    await practised(call, (SkillKind.PROPHECY,), call.rules.skills.preach_xp)
     prophecy = await create_record(call, MortalCreation(args.name, EntityType.PROPHECY, description, subtype=subtype, stats={"certainty": certainty}))
     bonds = BondRepository(call.session)
     await bonds.connect(BondDraft(call.me.id, prophecy.id, BondKind.PROPHESIES, call.epoch))

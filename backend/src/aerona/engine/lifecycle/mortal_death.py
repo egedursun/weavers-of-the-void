@@ -21,6 +21,7 @@ from aerona.domain.models.entity_stats import SpiritStats, TraditionStats
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.aging import immortal, raise_lifespan_to_death_age
 from aerona.engine.lifecycle.succession import dynasty_root, pass_rule
+from aerona.engine.mind.memories import inherit_memories, mourn
 from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, scaled_cap
@@ -84,7 +85,10 @@ async def die(
     killer_kind = await NodeRepository(session).kind_of(killer_id) if killer_id is not None else None
     if killer_id is not None and killer_kind is not None:
         await connect(session, killer_id, mortal.id, BondKind.KILLED, ctx.epoch, description=cause)
+    ctx.count("memories_inherited", await mourn(session, ctx.rules, mortal, killer_id, ctx.epoch))
     heir = await pass_rule(ctx, mortal)
+    if heir is not None:
+        await inherit_memories(session, ctx.rules, mortal, [heir.id], ctx.epoch)
     if natural:
         tail = "; an heir took their place" if heir is not None else ". Their name now lives only in the tales"
         text = f"{mortal.name} died at age {age_text}{tail}."

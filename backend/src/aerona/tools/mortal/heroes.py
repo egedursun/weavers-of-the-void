@@ -12,6 +12,7 @@ from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.son import PowerEffect, SonDeathCause, SonStatus
 from aerona.engine.body.book import effective
 from aerona.engine.body.hits import Harm
@@ -55,8 +56,8 @@ async def _seize(call: MortalCall, item: EntityRow, goal: str) -> str:
     if owner is None and not await near(call, item):
         fail(MortalResult.ITEM_TOO_FAR)
     default = tools.default_stat
-    nimble = await effective(call.session, call.me, "agility", default, Capacity.MISSILE)
-    mine = round(nimble + await effective(call.session, call.me, "intellect", default) // 2) + call.die(tools.seize_item_die, "seize")
+    nimble = await effective(call.session, call.me, "agility", default, Capacity.MISSILE, rules=call.rules)
+    mine = round(nimble + await effective(call.session, call.me, "intellect", default, rules=call.rules) // 2) + call.die(tools.seize_item_die, "seize")
     theirs = (first_stat(owner, OWNER_DEFENCE, default) if owner is not None else default) + call.die(tools.seize_item_die, "guard")
     if mine >= theirs:
         for bond in owned:
@@ -167,9 +168,9 @@ async def challenge_god(call: MortalCall, args: DefyInput) -> str:
     default = tools.default_stat
     me = call.me
     mine = round(
-        await effective(call.session, me, "strength", default)
-        + await effective(call.session, me, "agility", default) / 2
-        + await effective(call.session, me, "intellect", default) / tools.defy_god_intellect_divisor
+        await effective(call.session, me, "strength", default, rules=call.rules)
+        + await effective(call.session, me, "agility", default, rules=call.rules) / 2
+        + await effective(call.session, me, "intellect", default, rules=call.rules) / tools.defy_god_intellect_divisor
         + await _weapons(call)
         + call.die(tools.defy_god_die, "defier")
     )
@@ -200,7 +201,7 @@ async def adopt(call: MortalCall, args: AdoptInput) -> str:
     if mine is not None and theirs is not None and theirs >= mine:
         fail(MortalResult.NOT_YOUNGER, name=child.name, mine=mine, theirs=theirs)
     await bonds.connect(BondDraft(child.id, call.me.id, BondKind.DESCENDS_FROM, call.epoch, lines.ADOPTION_BOND.format(reason=args.reason)))
-    await change_relation(call.tick, call.me.id, child.id, call.rules.civilization.adoption_relation, lines.ADOPTION_EVENT)
+    await change_relation(call.tick, call.me.id, child.id, call.rules.civilization.adoption_relation, MemoryKind.GOODWILL, note=lines.ADOPTION_EVENT)
     await call.bump(TurnCounter.ADOPTIONS)
     call.target(child.id)
     await call.chronicle(ChronicleKind.LINEAGE, lines.ADOPTED, entity_ids=[call.me.id, child.id], me=call.me.name, child=child.name, reason=args.reason)

@@ -4,10 +4,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import FINGER_COUNT, Anatomy, anatomy_of
+from aerona.catalog.mind import SKILLS, TRAITS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow, ProsthesisRow
 from aerona.db.tables.entities import EntityRow, EntityTagRow, EntityTraitRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.mind import SkillRow, TraitRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import OPEN_INJURY_STATES, BodyFunction, BodyPlan, Capacity, InjuryState, StrikeStyle
 from aerona.domain.enums.bond import BondKind
@@ -234,7 +236,27 @@ STAT_CAPACITY: dict[str, Capacity] = {
 }
 
 
-async def effective(session: AsyncSession, mortal: EntityRow, key: str, default: int = 0, capacity: Capacity | None = None) -> float:
+async def temperament(session: AsyncSession, rules: Rules, node_id: int, capacity: Capacity) -> float:
+    held = await session.scalars(select(TraitRow.trait).where(TraitRow.node_id == node_id))
+    lift = sum(TRAITS[trait].capacities.get(capacity, 0) for trait in held) * rules.traits.capacity_scale_pct / PERCENT
+    return max(0.0, (PERCENT + lift) / PERCENT)
+
+
+async def training(session: AsyncSession, rules: Rules, node_id: int, capacity: Capacity) -> float:
+    wanted = [skill for skill, spec in SKILLS.items() if spec.capacity is capacity]
+    levels = await session.scalars(
+        select(SkillRow.level).where(SkillRow.holder_node_id == node_id, SkillRow.skill.in_(wanted), SkillRow.subject_node_id.is_(None))
+    )
+    return 1 + max(levels, default=0) * rules.skills.capacity_skill_pct / PERCENT / PERCENT
+
+
+async def effective(
+    session: AsyncSession, mortal: EntityRow, key: str, default: int = 0, capacity: Capacity | None = None, *, rules: Rules | None = None
+) -> float:
     value = stat(mortal, key)
     base = default if value is None else value
-    return base * await factor(session, mortal.id, capacity or STAT_CAPACITY[key])
+    use = capacity or STAT_CAPACITY[key]
+    result = base * await factor(session, mortal.id, use)
+    if rules is not None:
+        result *= await temperament(session, rules, mortal.id, use) * await training(session, rules, mortal.id, use)
+    return result

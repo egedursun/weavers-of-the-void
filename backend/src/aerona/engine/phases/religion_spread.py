@@ -3,20 +3,26 @@ from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 
+from sqlalchemy import select
+
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.mind import PressureRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.mind import PressureKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import CultStats
 from aerona.engine.context import TickContext
+from aerona.engine.mind.book import ValueIndex
+from aerona.engine.mind.space import DISTANCE_MAX, NEUTRAL_DISTANCE, value_distance
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -26,6 +32,7 @@ from aerona.engine.primitives.queries import canon, flags_by_entity, spoken_lang
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.primitives.thresholds import relative_threshold
+from aerona.engine.services.community_relations import lend_settlement_values
 from aerona.engine.services.war import declare_war
 from aerona.rules.registry import Rules
 
@@ -197,6 +204,20 @@ class SpreadWorld:
     cults: Sequence[EntityRow]
     communities: Sequence[EntityRow]
     flags: Mapping[EntityFlag, set[int]]
+    values: ValueIndex = field(default_factory=ValueIndex)
+    impiety: Mapping[int, int] = field(default_factory=dict)
+
+
+def god_kinship(world: SpreadWorld, first: int, second: int) -> float:
+    one, other = world.values.of(first), world.values.of(second)
+    return (DISTANCE_MAX - value_distance(one, other)) / NEUTRAL_DISTANCE if one and other else 1.0
+
+
+def doctrine_fit(rules: Rules, world: SpreadWorld, cult: EntityRow, community: EntityRow) -> float:
+    doctrine, culture = world.values.of(cult.id), world.values.of(community.id)
+    closeness = (DISTANCE_MAX - value_distance(doctrine, culture)) / NEUTRAL_DISTANCE if doctrine and culture else 1.0
+    lift = 1 + world.impiety.get(community.id, 0) / DISTANCE_MAX * rules.needs.conversion_impiety_pct / PERCENT
+    return closeness * lift
 
 
 def preaching_pull(rules: Rules, cult: EntityRow, community: EntityRow) -> float:
@@ -217,7 +238,11 @@ def conversion_sources(rules: Rules, community: EntityRow, world: SpreadWorld, s
         god = world.faith.living_patron_son(cult.id)
         if god is None or god.id == old or cult.world_id != community.world_id or not world.atlas.adjacent(cult.id, community.id):
             continue
-        sources.append(ConversionSource(god.id, preaching_pull(rules, cult, community), f"through the sermons of {cult.name}"))
+        sources.append(
+            ConversionSource(
+                god.id, preaching_pull(rules, cult, community) * doctrine_fit(rules, world, cult, community), f"through the sermons of {cult.name}"
+            )
+        )
     if seeker:
         for neighbour in world.communities:
             god = world.faith.living_patron_son(neighbour.id)
@@ -269,12 +294,16 @@ async def religion_spread(ctx: TickContext) -> None:
     faith = await FaithIndex.load(session)
     communities = await canon(session, COMMUNITY_TYPES)
     flags = {flag: await flags_by_entity(session, flag) for flag in (EntityFlag.GODLESS, EntityFlag.SEEKING_GOD)}
+    values = await ValueIndex.load(session)
+    await lend_settlement_values(session, values, {community.id for community in communities})
     world = SpreadWorld(
         faith,
         await RegionAtlas.load(session),
         [cult for cult in communities if cult.entity_type is EntityType.CULT and faith.living_patron_son(cult.id) is not None],
         [community for community in communities if community.entity_type in SOCIETY_TYPES],
         flags,
+        values,
+        {row.entity_id: row.value for row in await session.scalars(select(PressureRow).where(PressureRow.pressure == PressureKind.IMPIETY))},
     )
     shares = WorshipShares.count(ctx.rules, communities, faith)
     shares.faith = await faith_shares(session)
@@ -293,7 +322,7 @@ async def religion_spread(ctx: TickContext) -> None:
         chosen = best_source(ctx.rules, conversion_sources(ctx.rules, community, world, seeker), old, seeker, (faith, shares))
         if chosen is None or not rng.probability(chosen.pull):
             continue
-        syncretic = old is not None and not seeker and rng.chance(settings.syncretism_pct)
+        syncretic = old is not None and not seeker and rng.chance(settings.syncretism_pct * god_kinship(world, old, chosen.god_id))
         if (syncretisms if syncretic else conversions) >= (settings.syncretism_cap if syncretic else settings.conversion_cap):
             continue
         if not await change_religion(ctx.session, community, chosen.god_id, ctx.epoch, chosen.reason, syncretic=syncretic, faith=faith):

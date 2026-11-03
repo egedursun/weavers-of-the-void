@@ -14,6 +14,7 @@ from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
 from aerona.agents.text import epoch_mentions, sanitize, sentences
 from aerona.catalog.domains import DOMAIN_LABELS
+from aerona.catalog.mind import TRAITS
 from aerona.catalog.rarities import RARITY_LABELS
 from aerona.constants.agents import CREATOR_PSEUDO_SON_ID
 from aerona.db.repositories.bonds import BondRepository
@@ -27,6 +28,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.profiles import Epic
+from aerona.engine.mind.book import traits_of
 from aerona.engine.primitives.folk_names import clashes, folk_god_name, guarded_names
 from aerona.engine.primitives.naming import Namer
 from aerona.events.kinds import EventKind
@@ -262,6 +264,7 @@ async def write_son_epic(runtime: AgentRuntime, son_id: int) -> Epic:
             domain_1=DOMAIN_LABELS[son.domain_primary],
             domain_2=DOMAIN_LABELS[son.domain_secondary],
             temperament=son.personality.temperament,
+            traits=[TRAITS[trait].label.lower() for trait in sorted(await traits_of(session, son.id))],
             obsession=son.personality.obsession,
             secret=son.personality.secret,
             plan=son.plan,

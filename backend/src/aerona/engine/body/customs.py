@@ -1,13 +1,16 @@
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import SIGHT_PARTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import BodyCustomRow, ConditionRow, InjuryRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.mind import CultureValueRow
 from aerona.domain.enums.body import LASTING_INJURY_STATES, OPEN_INJURY_STATES, BodyReading, ConditionKind, HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType, MortalRole
+from aerona.domain.enums.mind import ValueAxis
 from aerona.engine.body.hits import TOTAL_LOSS_KINDS
 from aerona.engine.gods.queries import community_of
 from aerona.engine.primitives.faith import living_patron
@@ -42,7 +45,12 @@ async def people_of(session: AsyncSession, entity: EntityRow) -> EntityRow | Non
     return None
 
 
-async def derived_reading(session: AsyncSession, rules: Rules, people: EntityRow) -> tuple[BodyReading, bool]:
+async def culture_of(session: AsyncSession, people_id: int) -> dict[ValueAxis, int]:
+    rows = await session.scalars(select(CultureValueRow).where(CultureValueRow.entity_id == people_id))
+    return {row.axis: row.value for row in rows}
+
+
+async def domain_reading(session: AsyncSession, rules: Rules, people: EntityRow) -> tuple[BodyReading, bool]:
     table = rules.body_customs
     patron = await living_patron(session, people)
     domains = set(patron.domains) if patron is not None else set()
@@ -56,9 +64,34 @@ async def derived_reading(session: AsyncSession, rules: Rules, people: EntityRow
     return BodyReading.NEUTRAL, False
 
 
+async def derived_reading(session: AsyncSession, rules: Rules, people: EntityRow) -> tuple[BodyReading, bool]:
+    table = rules.body_customs
+    values = await culture_of(session, people.id)
+    if not values:
+        return await domain_reading(session, rules, people)
+    purity = values.get(ValueAxis.PURITY, 0)
+    suffering = (values.get(ValueAxis.PIETY, 0) + values.get(ValueAxis.DEATH, 0)) / 2
+    martial = (values.get(ValueAxis.MARTIAL, 0) + values.get(ValueAxis.HONOUR, 0)) / 2
+    leanings = [
+        (purity - table.purity_value, BodyReading.PURITY),
+        (suffering - table.suffering_value, BodyReading.SANCTIFIED_SUFFERING),
+        (martial - table.martial_value, BodyReading.MARTIAL_HONOUR),
+    ]
+    margin, reading = max(leanings, key=lambda item: item[0])
+    if margin < 0:
+        return BodyReading.NEUTRAL, False
+    return reading, reading is BodyReading.PURITY and purity >= table.wholeness_value
+
+
 async def ensure_customs(session: AsyncSession, rules: Rules, people: EntityRow) -> BodyCustomRow:
     row = await session.get(BodyCustomRow, people.id)
     if row is not None:
+        reading, wholeness = await derived_reading(session, rules, people)
+        locked = set(row.locked or [])
+        if "reading" not in locked:
+            row.reading = reading
+        if "wholeness_required" not in locked:
+            row.wholeness_required = wholeness
         return row
     reading, wholeness = await derived_reading(session, rules, people)
     row = BodyCustomRow(people_entity_id=people.id, reading=reading, wholeness_required=wholeness, locked=[])

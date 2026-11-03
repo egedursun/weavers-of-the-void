@@ -8,6 +8,7 @@ from aerona.engine.phases.dark_ages import dark_age_status, dark_ages, drift_spr
 from aerona.engine.phases.society_economy import set_class_shares
 from aerona.engine.phases.wonders import wonders
 from aerona.engine.primitives.stats import stat
+from aerona.engine.services.community_relations import set_relation
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, bonded, chronicle_keys, context, knowledge, link, make, people, settlement, son, tuned
 
@@ -61,8 +62,7 @@ async def test_wonders_reward_owners_and_stir_envy(realm: Realm) -> None:
     await link(realm.session, owner.id, god.id, BondKind.WORSHIPS)
     tower = await make(realm.session, "Sky Tower", EntityType.STRUCTURE, StructureStats(splendor=95), world_id=realm.world.id, location_id=owner.id)
     first, second = sorted((owner.id, rival.id))
-    realm.session.add(CommunityRelationRow(entity_a_id=first, entity_b_id=second, value=-90))
-    await realm.session.flush()
+    await set_relation(context(realm.session), first, second, -90, "old hatred")
     ctx = context(realm.session, tuned(wonders={"envy_war_chance": 100}))
     await wonders(ctx)
     assert await realm.session.get(EntityFlagRow, (tower.id, EntityFlag.WONDER)) is not None

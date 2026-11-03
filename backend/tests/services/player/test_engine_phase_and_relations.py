@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.society import CommunityRelationEventRow
+from aerona.db.tables.mind import MemoryRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.limits import RELATION_MAX
 from aerona.engine import pipeline
@@ -73,7 +73,7 @@ async def test_relation_can_be_set_listed_and_its_history_read(scope: PlayerScop
         await relations.set_community_relation(scope, relations.SetRelation(first_id=first.id, second_id=second.id, value=RELATION_MAX + 1))
     with pytest.raises(ValidationFailedError):
         await relations.set_community_relation(scope, relations.SetRelation(first_id=first.id, second_id=first.id, value=1))
-    assert (await session.scalar(select(CommunityRelationEventRow))) is not None
+    assert (await session.scalar(select(MemoryRow))) is not None
 
 
 async def test_a_blood_feud_can_be_declared_once_and_lowers_the_relation(scope: PlayerScope, session: AsyncSession, world: PlayerWorld, rules: Rules) -> None:

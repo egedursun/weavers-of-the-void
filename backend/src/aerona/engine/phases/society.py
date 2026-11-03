@@ -9,6 +9,8 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, 
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
+from aerona.engine.mind.book import pressures_of
+from aerona.engine.mind.drives import unrest
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.community import CommunityBook
@@ -109,8 +111,12 @@ async def uprisings(ctx: TickContext) -> None:
     for settlement in settlements:
         if raised >= settings.poverty_revolt_cap:
             break
-        poor = stat_or(settlement, "prosperity", ctx.rules.world_effects.unknown_prosperity) < settings.poverty_revolt_prosperity
-        if not poor or stat_or(settlement, "population", 0) < threshold(settlement):
+        pressed = await pressures_of(session, settlement.id)
+        if pressed:
+            restless = await unrest(session, ctx.rules, settlement.id) >= ctx.rules.needs.uprising_pressure
+        else:
+            restless = stat_or(settlement, "prosperity", ctx.rules.world_effects.unknown_prosperity) < settings.poverty_revolt_prosperity
+        if not restless or stat_or(settlement, "population", 0) < threshold(settlement):
             continue
         just = _just_law_present(book, settlement, settings.just_law_threshold)
         if not rng.chance(settings.poverty_revolt_just_law_chance if just else settings.poverty_revolt_chance):

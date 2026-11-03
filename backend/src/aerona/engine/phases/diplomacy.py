@@ -10,19 +10,20 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.engine.body.cohorts import war_appetite
 from aerona.engine.context import TickContext
+from aerona.engine.mind.drives import betrayal_drive, closeness, war_drive
 from aerona.engine.phase import Phase
 from aerona.engine.phases.afterlife import cosmic_court
-from aerona.engine.primitives.queries import BondIndex, active_bonds, canon, living_entity, spoken_language
+from aerona.engine.primitives.queries import BondIndex, active_bonds, canon, living_entity
 from aerona.engine.primitives.stats import stat
 from aerona.engine.services.community_relations import (
     blood_feud_pairs,
     change_relation,
     pair_key,
     relation,
-    revert_extreme_relations,
 )
 from aerona.engine.services.sides import SideIndex
 from aerona.engine.services.war import (
@@ -165,7 +166,7 @@ async def form_alliance(ctx: TickContext, first: EntityRow, second: EntityRow, s
     if marriage and spouses is not None and not await bonds.exists_between(spouses[0].id, spouses[1].id, BondKind.LOVES):
         await bonds.connect(BondDraft(spouses[0].id, spouses[1].id, BondKind.LOVES, ctx.epoch, "marriage alliance"))
     if marriage:
-        await change_relation(ctx, first.id, second.id, rules.marriage_relation, "marriage")
+        await change_relation(ctx, first.id, second.id, rules.marriage_relation, MemoryKind.MARRIED_INTO, note="marriage")
     ctx.count("alliances")
     return spouses
 
@@ -187,7 +188,7 @@ async def betray(ctx: TickContext, first: EntityRow, second: EntityRow, neighbou
     rules = ctx.rules.diplomacy
     await BondRepository(ctx.session).close_between(first.id, second.id, [BondKind.ALLY], ctx.epoch, "betrayal")
     traitor, victim = (first, second) if _weight(ctx, first) >= _weight(ctx, second) else (second, first)
-    await change_relation(ctx, first.id, second.id, -rules.betrayal_relation, "betrayal")
+    await change_relation(ctx, victim.id, traitor.id, -rules.betrayal_relation, MemoryKind.BETRAYED_ME, note="betrayal", reverse=MemoryKind.ILL_WILL)
     if war_roll:
         await declare_war(ctx, traitor.id, victim.id, "betrayal", cause=WarCause.BETRAYAL)
     text = f"{traitor.name} stabbed its ally {victim.name} in the back; the oath was broken."
@@ -200,46 +201,12 @@ async def betray(ctx: TickContext, first: EntityRow, second: EntityRow, neighbou
 @dataclass(frozen=True)
 class PairContext:
     bonds: BondIndex
-    patrons: dict[int, int | None]
-    languages: dict[int, int | None]
     feuds: set[tuple[int, int]]
-    cults: set[int]
 
 
-def _drift(ctx: TickContext, pair: PairContext, first: int, second: int) -> int:
-    rules = ctx.rules.diplomacy
-    delta = 0
-    first_god, second_god = pair.patrons.get(first), pair.patrons.get(second)
-    if first_god is not None and first_god == second_god:
-        delta += rules.drift_shared_god
-    elif first_god is not None and second_god is not None and (first in pair.cults or second in pair.cults):
-        delta -= rules.drift_cult_other_god
-    first_language = pair.languages.get(first)
-    if first_language is not None and first_language == pair.languages.get(second):
-        delta += rules.drift_shared_language
-    if pair.bonds.between(first, second, BondKind.TRADES_WITH):
-        delta += rules.drift_trade
-    if pair.bonds.between(first, second, BondKind.ALLY):
-        delta += rules.drift_ally
-    if pair.bonds.between(first, second, BondKind.ENEMY):
-        delta -= rules.drift_enemy
-    if pair.bonds.between(first, second, BondKind.PAYS_TRIBUTE):
-        delta -= rules.drift_tribute
-    if pair_key(first, second) in pair.feuds:
-        delta -= rules.drift_blood_feud
-    return delta
-
-
-async def _pair_context(ctx: TickContext, communities: list[EntityRow]) -> PairContext:
+async def _pair_context(ctx: TickContext) -> PairContext:
     bonds = await BondIndex.load(ctx.session, [BondKind.TRADES_WITH, BondKind.ALLY, BondKind.ENEMY, BondKind.PAYS_TRIBUTE])
-    repository = BondRepository(ctx.session)
-    patrons = {community.id: await repository.patron(community.id) for community in communities}
-    languages: dict[int, int | None] = {}
-    for community in communities:
-        language = await spoken_language(ctx.session, community.id)
-        languages[community.id] = language.id if language is not None else None
-    cults = {community.id for community in communities if community.entity_type is EntityType.CULT}
-    return PairContext(bonds, patrons, languages, await blood_feud_pairs(ctx.session), cults)
+    return PairContext(bonds, await blood_feud_pairs(ctx.session))
 
 
 async def _neighbour_pair(
@@ -254,9 +221,6 @@ async def _neighbour_pair(
 ) -> None:
     rules = ctx.rules.diplomacy
     rng = ctx.rng("neighbours")
-    drift = _drift(ctx, pair, first.id, second.id)
-    if drift:
-        await change_relation(ctx, first.id, second.id, drift)
     value = await relation(ctx.session, ctx.rules, first.id, second.id)
     enemy = pair.bonds.between(first.id, second.id, BondKind.ENEMY)
     ally = pair.bonds.between(first.id, second.id, BondKind.ALLY)
@@ -275,7 +239,11 @@ async def _neighbour_pair(
         and counters.declared < rules.declarations_cap
         and await ongoing_war_count(ctx.session, first.id) < cap
         and await ongoing_war_count(ctx.session, second.id) < cap
-        and rng.chance(rules.war_declaration_chance * min(await war_appetite(ctx, first), await war_appetite(ctx, second)))
+        and rng.chance(
+            rules.war_declaration_chance
+            * min(await war_appetite(ctx, first), await war_appetite(ctx, second))
+            * max(await war_drive(ctx.session, ctx.rules, first.id), await war_drive(ctx.session, ctx.rules, second.id))
+        )
         and await declare_war(
             ctx, first.id, second.id, "blood feud turned to war" if feud else "accumulated grudge", cause=WarCause.VENDETTA if feud else WarCause.GRUDGE
         )
@@ -290,7 +258,11 @@ async def _neighbour_pair(
         how = f"worn out by {duration} epochs of war the two sides made a truce" if tired else "envoys swore a peace oath"
         await _note(ctx, f"{first.name} and {second.name} laid down arms; {how}.", "diplomacy.peace", (first.id, second.id))
     elif not enemy and not ally and value >= rules.alliance_threshold and counters.alliances < rules.alliance_cap and rng.chance(rules.alliance_chance):
-        marriage = bool(_marriageable(ctx, sides, first.id)) and bool(_marriageable(ctx, sides, second.id)) and rng.chance(rules.marriage_alliance_share_pct)
+        marriage = (
+            bool(_marriageable(ctx, sides, first.id))
+            and bool(_marriageable(ctx, sides, second.id))
+            and rng.chance(rules.marriage_alliance_share_pct * await closeness(ctx.session, first.id, second.id))
+        )
         spouses = await form_alliance(ctx, first, second, sides, marriage)
         counters.alliances += 1
         if marriage:
@@ -299,7 +271,14 @@ async def _neighbour_pair(
             await _note(ctx, f"{first.name} and {second.name} were bound by a marriage{wed}.", "diplomacy.marriage_alliance", ids)
         else:
             await _note(ctx, f"{first.name} and {second.name} became allies by an oath of friendship.", "diplomacy.alliance", (first.id, second.id))
-    elif ally and value < 0 and counters.betrayals < rules.betrayal_cap and rng.chance(rules.betrayal_chance):
+    elif (
+        ally
+        and value < 0
+        and counters.betrayals < rules.betrayal_cap
+        and rng.chance(
+            rules.betrayal_chance * max(await betrayal_drive(ctx.session, ctx.rules, first.id), await betrayal_drive(ctx.session, ctx.rules, second.id))
+        )
+    ):
         await betray(ctx, first, second, neighbourhood, rng.chance(rules.betrayal_war_chance))
         counters.betrayals += 1
 
@@ -336,7 +315,6 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
 
 
 async def diplomacy(ctx: TickContext) -> None:
-    ctx.count("relations_reverted", await revert_extreme_relations(ctx.session, ctx.rules))
     ctx.count("alliances_lapsed", await alliance_lifetimes(ctx))
     counters = DiplomacyCounters()
     candidates = ctx.rng("candidates").shuffled(await hostile_pairs(ctx.session))
@@ -346,7 +324,7 @@ async def diplomacy(ctx: TickContext) -> None:
     communities = await canon(ctx.session, COMMUNITY_TYPES)
     neighbourhood = await Neighbourhood.load(ctx.session, ctx.rules)
     sides = await SideIndex.load(ctx.session, neighbourhood)
-    pair = await _pair_context(ctx, communities)
+    pair = await _pair_context(ctx)
     for index, first in enumerate(communities):
         for second in communities[index + 1 :]:
             if neighbourhood.are_neighbours(first.id, second.id):

@@ -7,9 +7,12 @@ from aerona.db.tables.warfare import CaptiveRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES
+from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.body.book import effective
 from aerona.engine.context import TickContext
+from aerona.engine.mind.drives import cruelty_drive
+from aerona.engine.mind.hooks import witnessed
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import living_entity
@@ -46,7 +49,7 @@ async def pay_ransom(ctx: TickContext, row: CaptiveRow, captive: EntityRow, capt
     shift_stat(home, "prosperity", -cost)
     shift_stat(captor, "wealth", cost)
     add_prosperity(ctx.rules, captor, cost)
-    await change_relation(ctx, home.id, captor.id, ctx.rules.campaigns.ransom_relation, "ransom")
+    await change_relation(ctx, home.id, captor.id, ctx.rules.campaigns.ransom_relation, MemoryKind.FREED_US, note="ransom")
     await release_captive(ctx, row, CaptiveStatus.RANSOMED, cost)
     text = f"{home.name} paid {captor.name} a heavy ransom for {captive.name}; the prisoner returned home."
     await _note(ctx, ChronicleKind.RANSOM, text, "prisoner.ransomed", (captor.id, captive.id, home.id))
@@ -70,8 +73,8 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
     if home is not None and _is_rich(ctx, home) and rng.chance(campaigns.ransom_chance):
         await pay_ransom(ctx, row, captive, captor, home)
         return
-    agility = await effective(ctx.session, captive, "agility", campaigns.captive_default_stat)
-    intellect = await effective(ctx.session, captive, "intellect", campaigns.captive_default_stat)
+    agility = await effective(ctx.session, captive, "agility", campaigns.captive_default_stat, rules=ctx.rules)
+    intellect = await effective(ctx.session, captive, "intellect", campaigns.captive_default_stat, rules=ctx.rules)
     if rng.probability(agility / campaigns.escape_agility_divisor + intellect / campaigns.escape_intellect_divisor):
         await release_captive(ctx, row, CaptiveStatus.ESCAPED)
         await _note(ctx, ChronicleKind.ESCAPE, f"{captive.name} escaped from the dungeon of {captor.name}.", "prisoner.escaped", (captor.id, captive.id))
@@ -79,11 +82,12 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
     if (
         home is not None
         and await relation(ctx.session, ctx.rules, home.id, captor.id) <= -campaigns.execution_relation
-        and rng.chance(campaigns.execution_chance)
+        and rng.chance(campaigns.execution_chance * await cruelty_drive(ctx.session, ctx.rules, captor.id))
     ):
         await release_captive(ctx, row, CaptiveStatus.EXECUTED)
         await death_path(ctx, captive, f"executed by {captor.name}", captor.id, "execution", forced=True)
         await start_blood_feud(ctx, home.id, captor.id, f"the execution of {captive.name}")
+        await witnessed(ctx, home.id, captor.id, ActKind.EXECUTION, base=ctx.rules.memory.outrage_magnitude, note=captive.name)
         text = f"{captor.name} executed its prisoner {captive.name}; {home.name} swore vengeance."
         await _note(ctx, ChronicleKind.WAR, text, "prisoner.executed", (captor.id, captive.id, home.id))
         return

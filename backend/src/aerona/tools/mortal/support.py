@@ -6,6 +6,8 @@ from typing import NoReturn
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.entity_types import ENTITY_TYPES
+from aerona.catalog.mind import CRAFT_SKILLS, LEARNED_SKILLS
+from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.repositories.names import NameRepository
@@ -14,10 +16,13 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, CivilizationTier, EngineKind, EntityOrigin, EntityStatus, EntityType, LegendCategory
+from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.body.book import factor
 from aerona.engine.gods.queries import community_of
+from aerona.engine.mind.book import best_skill, mind_of
+from aerona.engine.mind.skills import practise_any
 from aerona.engine.primitives.distance import seafaring_reach
 from aerona.engine.primitives.knowledge import LawBook, branch_level, knows, level_multiplier
 from aerona.engine.primitives.queries import canon
@@ -44,14 +49,47 @@ def first_stat(entity: EntityRow, keys: Sequence[str], default: int) -> int:
     return default
 
 
+def trained(call: MortalCall, level: int) -> float:
+    return 1 + level * call.rules.skills.capacity_skill_pct / PERCENT / PERCENT
+
+
 async def craft_of(call: MortalCall, entity: EntityRow | None = None) -> int:
     holder = entity or call.me
-    return round(first_stat(holder, CRAFT_CHAIN, call.rules.mortal_tools.default_stat) * await factor(call.session, holder.id, Capacity.CRAFT))
+    base = first_stat(holder, CRAFT_CHAIN, call.rules.mortal_tools.default_stat) * await factor(call.session, holder.id, Capacity.CRAFT)
+    if holder.entity_type is EntityType.MORTAL:
+        base *= trained(call, await best_skill(call.session, holder.id, CRAFT_SKILLS))
+    return round(base)
 
 
 async def wits_of(call: MortalCall, entity: EntityRow | None = None) -> int:
     holder = entity or call.me
-    return round(first_stat(holder, WITS_CHAIN, call.rules.mortal_tools.default_stat) * await factor(call.session, holder.id, Capacity.SCHOLARSHIP))
+    base = first_stat(holder, WITS_CHAIN, call.rules.mortal_tools.default_stat) * await factor(call.session, holder.id, Capacity.SCHOLARSHIP)
+    if holder.entity_type is EntityType.MORTAL:
+        base *= trained(call, await best_skill(call.session, holder.id, (*LEARNED_SKILLS, SkillKind.INTRIGUE)))
+    return round(base)
+
+
+async def require_craft(call: MortalCall) -> None:
+    if call.me.entity_type is not EntityType.MORTAL or await mind_of(call.session, call.me.id) is None:
+        return
+    level = await best_skill(call.session, call.me.id, CRAFT_SKILLS)
+    needed = call.rules.skills.tool_min_craft
+    if level < needed:
+        fail(MortalResult.UNSKILLED_CRAFT, level=level, needed=needed)
+
+
+async def require_lore(call: MortalCall) -> None:
+    if call.me.entity_type is not EntityType.MORTAL or await mind_of(call.session, call.me.id) is None:
+        return
+    level = await best_skill(call.session, call.me.id, LEARNED_SKILLS)
+    needed = call.rules.skills.tool_min_lore
+    if level < needed:
+        fail(MortalResult.UNSKILLED_LORE, level=level, needed=needed)
+
+
+async def practised(call: MortalCall, skills: Sequence[SkillKind], xp: int) -> None:
+    if call.me.entity_type is EntityType.MORTAL:
+        await practise_any(call.session, call.rules, call.me.id, skills, xp, epoch=call.epoch)
 
 
 def money_key(entity: EntityRow) -> str | None:

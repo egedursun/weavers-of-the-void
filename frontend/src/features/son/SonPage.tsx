@@ -4,6 +4,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/domain'
 import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
 import { BodySection } from '@/features/entity/sections/BodySection'
+import { MemoriesSection } from '@/features/entity/sections/MemoriesSection'
+import { MindSection } from '@/features/entity/sections/MindSection'
 import {
   useOpportunities,
   useSons,
@@ -113,6 +115,8 @@ export function SonPage({ id }: DrawerPageProps) {
       <SonBeliefs views={data.folk_views} sonId={son.id} name={son.name} />
       <SonStats view={view} faith={data.live_faith} />
       <BodySection nodeId={son.id} />
+      <MindSection nodeId={son.id} />
+      <MemoriesSection nodeId={son.id} />
       <SonImages son={son} images={data.images} />
       <SonSiblings sonId={son.id} siblings={data.siblings} alive={!dead} />
       {!dead && <SonBirthChild son={son} siblings={data.siblings} />}

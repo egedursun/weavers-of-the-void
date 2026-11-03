@@ -8,6 +8,8 @@ from aerona.engine.body.book import Bearer
 from aerona.engine.body.state import refresh
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.aging import is_notable
+from aerona.engine.mind.book import mind_of
+from aerona.engine.mind.traits import condition_trait
 from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 
@@ -89,6 +91,8 @@ async def gain_condition(
     ctx.session.add(row)
     await ctx.session.flush()
     await refresh(ctx.session, ctx.rules, bearer, ctx.epoch)
+    if await mind_of(ctx.session, bearer.id) is not None:
+        await condition_trait(ctx, bearer.id, kind)
     if announce:
         await _announce(ctx, bearer, CONDITION_PHRASES[kind], kind, "gained")
     return row
