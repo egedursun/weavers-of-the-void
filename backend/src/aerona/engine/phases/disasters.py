@@ -1,5 +1,5 @@
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +13,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.domain.enums.body import ConditionKind, DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
@@ -21,11 +22,13 @@ from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import EventStats
+from aerona.engine.body.conditions import gain_condition
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_types import disaster_pct
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment
 from aerona.engine.environment.profile import RIVER_RANK
-from aerona.engine.lifecycle.wounds import WoundOutcome, wound
+from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits, fatal_injury
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.climate import plague_pct
@@ -39,6 +42,14 @@ from aerona.engine.primitives.stats import FOLLOWERS_KEY, POPULATION_KEY, headco
 from aerona.engine.primitives.thresholds import relative_threshold
 from aerona.engine.records import death_path
 from aerona.rules.registry import Rules
+
+DISASTER_DAMAGE: dict[Disaster, DamageType] = {
+    Disaster.EARTHQUAKE: DamageType.BLUNT,
+    Disaster.FLOOD: DamageType.BLUNT,
+    Disaster.PLAGUE: DamageType.VENOM,
+    Disaster.DROUGHT: DamageType.VENOM,
+    Disaster.STORM: DamageType.BLUNT,
+}
 
 DISASTER_KINDS: dict[Disaster, EngineKind] = {
     Disaster.EARTHQUAKE: EngineKind.EARTHQUAKE,
@@ -112,13 +123,20 @@ async def _strike_mortal(ctx: TickContext, mortal: EntityRow, disaster: Disaster
     medicine = knowledge.ratio(ctx.rules, mortal.id, KnowledgeBranch.MEDICINE, effects.medicine_plague_severity) if disaster is Disaster.PLAGUE else 1.0
     rng = ctx.rng(f"disaster_mortal.{mortal.id}")
     phrase = DISASTERS[disaster].death_phrase
+    label = DISASTERS[disaster].label.lower()
+    harm = Harm(
+        round_half_up(effects.disaster_injury_hp * scale), HarmCause.DISASTER, f"died of wounds suffered in the {label}", damage_type=DISASTER_DAMAGE[disaster]
+    )
     if rng.chance(death_chances[disaster] * scale * medicine):
+        if disaster is not Disaster.PLAGUE:
+            await fatal_injury(ctx, mortal, replace(harm, death_cause=phrase))
         return await death_path(ctx, mortal, phrase)
     if not rng.chance(effects.disaster_injury_chance):
         return False
-    label = DISASTERS[disaster].label.lower()
-    outcome = await wound(ctx, mortal, round_half_up(effects.disaster_injury_hp * scale), cause=f"died of wounds suffered in the {label}")
-    return outcome is WoundOutcome.DIED
+    wounding = await apply_hits(ctx, mortal, harm)
+    if disaster is Disaster.PLAGUE and wounding.outcome is WoundOutcome.WOUNDED:
+        await gain_condition(ctx, mortal, ConditionKind.CHRONIC_ILLNESS, HarmCause.DISASTER, chance=ctx.rules.conditions.plague_chronic_chance)
+    return wounding.outcome is WoundOutcome.DIED
 
 
 async def _quake_structure(ctx: TickContext, structure: EntityRow, scale: float, knowledge: KnowledgeMap) -> bool:

@@ -7,10 +7,14 @@ from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityType, MortalRole
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import MortalStats, PeopleStats, SettlementStats
+from aerona.engine.body.book import factor
+from aerona.engine.body.cohorts import healer_demand
+from aerona.engine.body.hits import weighted
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.ruler_roles import ruler_role
 from aerona.engine.notes import note
@@ -337,7 +341,10 @@ async def notables(ctx: TickContext, namer: Namer) -> None:
         if not rng.chance(chance):
             continue
         social_class = pick_class(rng.random(), await class_shares(ctx.session, rules, community.id))
-        await raise_notable(ctx, community, social_class, rng.pick(NOTABLE_ROLES[social_class]), namer)
+        demand = await healer_demand(ctx, community)
+        roles = NOTABLE_ROLES[social_class]
+        pick = weighted(rng, {index: demand if role.role is MortalRole.HEALER else 1.0 for index, role in enumerate(roles)})
+        await raise_notable(ctx, community, social_class, roles[pick] if pick is not None else rng.pick(roles), namer)
         born += 1
 
 
@@ -710,7 +717,8 @@ async def couples_bear_children(ctx: TickContext) -> None:
         second = await living_entity(ctx.session, bond.target_node_id)
         if first is None or second is None or first.entity_type is not EntityType.MORTAL or second.entity_type is not EntityType.MORTAL:
             continue
-        if not rng.chance(rules.world_engine.birth_chance):
+        fertile = await factor(ctx.session, first.id, Capacity.FERTILITY) * await factor(ctx.session, second.id, Capacity.FERTILITY)
+        if not rng.chance(rules.world_engine.birth_chance * fertile):
             continue
         await bear_child(ctx, first, second, namer)
         born += 1

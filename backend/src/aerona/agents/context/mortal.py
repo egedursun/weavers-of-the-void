@@ -120,7 +120,7 @@ async def mortal_context(scope: Scope, me: EntityRow, full: bool = False) -> Mor
         full=full,
         world_header=await world_header(scope, me.world_id, short=True),
         world_line=await world_line(scope, me.world_id),
-        self_detail=await entity_detail(scope, me),
+        self_detail=await entity_detail(scope, me, private=True),
         character=[LabelValue(label=key, value=value) for key, value in (depth.specifics if depth is not None else {}).items()],
         god=await mortal_god(scope, me),
         folk_gods=[FolkGodName(name=belief.local_name or "", son_id=belief.god_node_id, story=belief.account) for (belief,) in beliefs if belief.local_name],

@@ -10,6 +10,7 @@ from aerona.rules.registry import Rules
 from aerona.services.player import (
     assignments,
     beyond,
+    body,
     canon,
     celestial_depth,
     cheats,
@@ -967,6 +968,22 @@ LIFE_CYCLE_ACTIONS = (
     _sync(Meta("place:swallow", "Let the earth swallow a place", G.WORLDS), life_cycles.swallow_place, life_cycles.PlaceTarget, end_cost_text, ()),
 )
 
+BODY_ACTIONS = (
+    _sync(Meta("body:heal", "Heal a bearer's wounds", G.ENTITIES), body.heal_body, body.HealBody, free, ("F4.4",)),
+    _sync(Meta("body:maim", "Wound a chosen body part", G.ENTITIES), body.maim, body.Maim, free, ("F4.2", "F4.3")),
+    _sync(Meta("body:injury", "Change an injury", G.ENTITIES), body.edit_injury, body.EditInjury, free, ("F4.2",)),
+    _sync(Meta("body:prosthesis", "Fit a prosthesis", G.ENTITIES), body.apply_prosthesis, body.FitProsthesis, free, ("F4.5",)),
+    _sync(Meta("body:prosthesis_remove", "Take away a prosthesis", G.ENTITIES), body.remove_prosthesis, body.ProsthesisTarget, free, ("F4.5",)),
+    _sync(Meta("body:condition", "Give a lasting condition", G.ENTITIES), body.add_condition, body.AddCondition, free, ("F4.5",)),
+    _sync(Meta("body:condition_end", "End a lasting condition", G.ENTITIES), body.end_condition_action, body.ConditionTarget, free, ("F4.5",)),
+    _sync(Meta("body:plan", "Change a body plan", G.ENTITIES), body.set_plan, body.SetBodyPlan, free, ("F4.1",)),
+    _sync(Meta("body:set", "Set or hold a capacity, armour or body value", G.ENTITIES), body.set_body_value, body.SetBodyValue, free, ("F4.3", "F4.5")),
+    _sync(Meta("body:unlock", "Let a held body value follow the body again", G.ENTITIES), body.unlock_body_value, body.UnlockBodyValue, free, ("F4.5",)),
+    _sync(Meta("body:customs", "Set how a people reads scars", G.SOCIETY), body.set_customs, body.SetCustoms, free, ("F4.5",)),
+    _sync(Meta("body:customs_unlock", "Let a people's reading of scars change again", G.SOCIETY), body.unlock_customs, body.UnlockCustoms, free, ("F4.5",)),
+    _sync(Meta("body:cohort", "Set the maimed of a community", G.SOCIETY), body.set_cohort, body.SetCohort, free, ("F4.5",)),
+)
+
 ENVIRONMENT_ACTIONS = (
     _sync(
         Meta("ley:sever", "Cut a ley line for some epochs", G.WORLDS),
@@ -1115,6 +1132,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *LIFE_CYCLE_ACTIONS,
     *MECHANIC_ACTIONS,
     *ENVIRONMENT_ACTIONS,
+    *BODY_ACTIONS,
 )
 ACTIONS_BY_ID: dict[str, ActionSpec] = {spec.id: spec for spec in ACTIONS}
 

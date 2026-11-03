@@ -9,14 +9,17 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, WarRow
+from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.chronicle import FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, HERO_ROLES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.domain.models.entity_stats import MortalStats
+from aerona.engine.body.book import effective
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
-from aerona.engine.lifecycle.wounds import WoundOutcome, wound
+from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits, fatal_injury
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import DISASTER_KINDS
@@ -90,7 +93,20 @@ async def fated(ctx: TickContext, mortal: EntityRow, dies: bool) -> bool:
     return dies
 
 
+FALL_CAUSES = {EntityFlag.SLAIN_IN_CAPTIVITY: HarmCause.TORTURE, EntityFlag.DIED_IN_DISASTER: HarmCause.DISASTER}
+BLOODLESS_FALLS = frozenset({EntityFlag.DIED_OF_PLAGUE})
+
+
 async def fall(ctx: TickContext, mortal: EntityRow, cause: str, killer_id: int | None, *, event: EntityRow | None, flag: EntityFlag) -> bool:
+    harm = Harm(
+        ctx.rules.casualties.wound_hp,
+        FALL_CAUSES.get(flag, HarmCause.BATTLE),
+        cause,
+        killer_id=killer_id,
+        event_entity_id=event.id if event is not None else None,
+    )
+    if mortal.status is EntityStatus.CANON and flag not in BLOODLESS_FALLS:
+        await fatal_injury(ctx, mortal, harm)
     if not await death_path(ctx, mortal, cause, killer_id, cause, event_id=event.id if event is not None else None):
         return False
     await add_flag(ctx.session, mortal.id, flag, ctx.epoch)
@@ -169,7 +185,10 @@ async def _side_losses(ctx: TickContext, clash: Clash, sides: SideIndex, side_id
                 fallen += 1
                 count.dead += 1
         elif fighter and rng.chance(losses.wound_chance):
-            outcome = await wound(ctx, mortal, losses.wound_hp, cause=f"died of the wounds taken in {clash.event.name}", killer_id=killer_id)
+            harm = Harm(
+                losses.wound_hp, HarmCause.BATTLE, f"died of the wounds taken in {clash.event.name}", killer_id=killer_id, event_entity_id=clash.event.id
+            )
+            outcome = (await apply_hits(ctx, mortal, harm)).outcome
             if outcome is WoundOutcome.DIED:
                 await add_flag(ctx.session, mortal.id, EntityFlag.FELL_IN_BATTLE, ctx.epoch)
                 fallen += 1
@@ -299,7 +318,7 @@ async def army_experience(ctx: TickContext, clashes: list[Clash]) -> int:
                 )
         elif row.war_id is not None and row.war_id in fought:
             commander = await living_entity(ctx.session, row.commander_entity_id)
-            if commander is not None and (stat(commander, "intellect") or 0) >= losses.commander_min_intellect:
+            if commander is not None and await effective(ctx.session, commander, "intellect", capacity=Capacity.COMMAND) >= losses.commander_min_intellect:
                 after = before + losses.commander_experience
         elif row.war_id is not None:
             after = max(min(before, losses.rust_floor), before - losses.rust)

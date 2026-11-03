@@ -8,12 +8,16 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
+from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.son import PowerEffect, SonDeathCause, SonStatus
+from aerona.engine.body.book import effective
+from aerona.engine.body.hits import Harm
 from aerona.engine.gods.god_death import god_death
 from aerona.engine.lifecycle.mortal_death import die
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.faith import has_unlocked_power
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.services.community_relations import change_relation
@@ -51,7 +55,8 @@ async def _seize(call: MortalCall, item: EntityRow, goal: str) -> str:
     if owner is None and not await near(call, item):
         fail(MortalResult.ITEM_TOO_FAR)
     default = tools.default_stat
-    mine = stat_or(call.me, "agility", default) + stat_or(call.me, "intellect", default) // 2 + call.die(tools.seize_item_die, "seize")
+    nimble = await effective(call.session, call.me, "agility", default, Capacity.MISSILE)
+    mine = round(nimble + await effective(call.session, call.me, "intellect", default) // 2) + call.die(tools.seize_item_die, "seize")
     theirs = (first_stat(owner, OWNER_DEFENCE, default) if owner is not None else default) + call.die(tools.seize_item_die, "guard")
     if mine >= theirs:
         for bond in owned:
@@ -62,9 +67,9 @@ async def _seize(call: MortalCall, item: EntityRow, goal: str) -> str:
         holder = lines.ITEM_OWNER.format(owner=owner.name) if owner is not None else ""
         await call.chronicle(ChronicleKind.ADVENTURE, lines.SEIZED, entity_ids=[call.me.id, item.id], me=call.me.name, item=item.name, owner=holder, goal=goal)
         return result(MortalResult.ITEM_SEIZED, name=item.name, mine=mine, theirs=theirs)
-    hp = stat(call.me, "hp")
-    if hp is not None:
-        set_stats(call.me, hp=max(1, min(call.rules.limits.hp_cap, hp - tools.seize_item_fail_wound)))
+    cause = HarmCause.DUEL if owner is not None else HarmCause.ACCIDENT
+    harm = Harm(tools.seize_item_fail_wound, cause, "died seizing a treasure", source_node_id=owner.id if owner is not None else item.id)
+    await apply_hits(call.tick, call.me, harm, lethal=False)
     await call.chronicle(ChronicleKind.ADVENTURE, lines.SEIZE_FAILED, entity_ids=[call.me.id, item.id], me=call.me.name, item=item.name)
     return result(MortalResult.SEIZE_FAILED, mine=mine, theirs=theirs)
 
@@ -114,7 +119,7 @@ async def _slay(call: MortalCall, son: SonRow, args: DefyInput, mine: int, their
 async def _wound_god(call: MortalCall, son: SonRow, args: DefyInput, mine: int, theirs: int) -> str:
     tools = call.rules.mortal_tools
     wound = round(max_hp(call.rules, son.endurance) * tools.god_wound_pct / PERCENT)
-    son.hp = max(1, son.hp - wound)
+    await apply_hits(call.tick, son, Harm(wound, HarmCause.DUEL, "was wounded by a mortal", source_node_id=call.me.id), lethal=False)
     son.fame = max(0, son.fame - tools.god_wound_renown_loss)
     set_stats(call.me, charisma=min(PERCENT, stat_or(call.me, "charisma", 0) + tools.god_wounder_charisma))
     title = lines.WOUNDER_TITLE.format(son=son.name)
@@ -162,9 +167,9 @@ async def challenge_god(call: MortalCall, args: DefyInput) -> str:
     default = tools.default_stat
     me = call.me
     mine = round(
-        stat_or(me, "strength", default)
-        + stat_or(me, "agility", default) / 2
-        + stat_or(me, "intellect", default) / tools.defy_god_intellect_divisor
+        await effective(call.session, me, "strength", default)
+        + await effective(call.session, me, "agility", default) / 2
+        + await effective(call.session, me, "intellect", default) / tools.defy_god_intellect_divisor
         + await _weapons(call)
         + call.die(tools.defy_god_die, "defier")
     )

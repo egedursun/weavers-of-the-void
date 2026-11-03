@@ -6,6 +6,7 @@ from aerona.api.dependencies import guard_writes
 from aerona.api.routers import (
     actions,
     backups,
+    body,
     books,
     bulk,
     catalogue,
@@ -101,6 +102,7 @@ ROUTERS: tuple[ModuleType, ...] = (
     prompt_context,
     fate,
     environment,
+    body,
     mechanics,
     actions,
 )

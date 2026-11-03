@@ -32,6 +32,12 @@ Lexicon: {% if lexicon %}{% for word in lexicon %}{{ word.word }} = {{ word.mean
 {% if society %}
 {{ society_lines(society) }}
 {% endif %}
+{% if body %}
+Body and wounds:
+{% for line in body %}
+- {{ line }}
+{% endfor %}
+{% endif %}
 {% if facts %}
 Canon facts (do not violate):
 {% for fact in facts %}

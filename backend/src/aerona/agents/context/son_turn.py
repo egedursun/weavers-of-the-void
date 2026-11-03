@@ -18,6 +18,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.meta import ScenarioRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.domain.enums.meta import ScenarioStatus
+from aerona.engine.body.describe import body_lines
 from aerona.engine.gods.opportunities import son_opportunities
 from aerona.engine.gods.progress import power_ceiling
 from aerona.prompts import PromptId, render
@@ -84,6 +85,7 @@ async def son_system_context(scope: Scope, son: SonRow, points: int, catalogue: 
         passions=Passions(loyalty=son.loyalty, ambition=son.ambition, wrath=son.wrath, mercy=son.mercy),
         hp=son.hp,
         max_hp=max_hp(rules, son.endurance),
+        wounds=await body_lines(scope.session, rules, son, private=True),
         essence=son.essence,
         max_essence=max_essence(rules, son.might),
         faith=son.faith,

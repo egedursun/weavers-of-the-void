@@ -8,6 +8,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES
 from aerona.domain.enums.war import CaptiveStatus
+from aerona.engine.body.book import effective
 from aerona.engine.context import TickContext
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.prosperity import add_prosperity
@@ -69,8 +70,8 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
     if home is not None and _is_rich(ctx, home) and rng.chance(campaigns.ransom_chance):
         await pay_ransom(ctx, row, captive, captor, home)
         return
-    agility = stat(captive, "agility") or campaigns.captive_default_stat
-    intellect = stat(captive, "intellect") or campaigns.captive_default_stat
+    agility = await effective(ctx.session, captive, "agility", campaigns.captive_default_stat)
+    intellect = await effective(ctx.session, captive, "intellect", campaigns.captive_default_stat)
     if rng.probability(agility / campaigns.escape_agility_divisor + intellect / campaigns.escape_intellect_divisor):
         await release_captive(ctx, row, CaptiveStatus.ESCAPED)
         await _note(ctx, ChronicleKind.ESCAPE, f"{captive.name} escaped from the dungeon of {captor.name}.", "prisoner.escaped", (captor.id, captive.id))

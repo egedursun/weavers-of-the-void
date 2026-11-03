@@ -4,6 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, Section } from '@/components/domain'
 import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
 import { Muted, Text } from '@/components/typography'
+import { BodySection } from '@/features/entity/sections/BodySection'
 import { ChronicleList } from '@/features/pantheon/ChronicleList'
 import { RecordGallery } from '@/features/pantheon/RecordGallery'
 import { AttitudeBar } from './AttitudeBar'
@@ -58,6 +59,7 @@ export function ForeignGodPage({ id }: DrawerPageProps) {
       </Section>
       <ForeignGodPowerPanel detail={data} />
       <ForeignGodProfile detail={data} />
+      <BodySection nodeId={god.id} />
       <ForeignGodDepth god={god} />
       <ForeignGodRelations detail={data} />
       <RecordGallery

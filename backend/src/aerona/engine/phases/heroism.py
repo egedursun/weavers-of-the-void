@@ -7,14 +7,18 @@ from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import LegendStats
+from aerona.engine.body.book import effective, strike_style
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.mortal_death import die
+from aerona.engine.lifecycle.wounds import apply_hits, fatal_injury
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -97,8 +101,12 @@ async def _legend(ctx: TickContext, *, name: str, subtype: str, body: str, power
 async def hero_power(ctx: TickContext, hero: EntityRow, patron: SonRow | None, roll: int) -> float:
     hunt = ctx.rules.world_hunt
     flags = await EntityRepository(ctx.session).flags(hero.id)
-    intellect = stat(hero, "intellect") or 0
-    total = (stat(hero, "strength") or 0) + (stat(hero, "agility") or 0) / hunt.agility_divisor + intellect / hunt.intellect_divisor
+    intellect = await effective(ctx.session, hero, "intellect")
+    total = (
+        await effective(ctx.session, hero, "strength")
+        + await effective(ctx.session, hero, "agility") / hunt.agility_divisor
+        + intellect / hunt.intellect_divisor
+    )
     total += roll * hunt.die_mult
     total += round_half_up(patron.charisma / hunt.patron_charisma_divisor) if patron is not None else 0
     total += await weapon_power(ctx.session, ctx.rules, hero.id, hunt.weapon_mult)
@@ -210,8 +218,12 @@ async def _hero_loses(ctx: TickContext, hero: EntityRow, monster: EntityRow, pat
         and protection >= hunt.armor_save_min_protection
         and rng.chance(hunt.armor_save_base_pct + protection / hunt.armor_save_divisor * PERCENT)
     ):
-        hp = stat(hero, "hp")
-        set_stats(hero, hp=clamp_int((hp or hunt.unknown_hp) - hunt.armor_save_hp_loss, 1, ctx.rules.limits.hp_cap))
+        style = await strike_style(ctx.session, ctx.rules, monster)
+        if stat(hero, "hp") is None:
+            set_stats(hero, hp=hunt.unknown_hp)
+        await apply_hits(
+            ctx, hero, Harm(hunt.armor_save_hp_loss, HarmCause.MONSTER, f"fell before {monster.name}", style=style, source_node_id=monster.id), lethal=False
+        )
         set_stats(armor, protection=clamp_int(protection - hunt.armor_save_wear, 0, PERCENT))
         await declare_war(ctx, monster.id, hero.id, context, cause=WarCause.BEAST, world_cap=False)
         await note(
@@ -222,6 +234,8 @@ async def _hero_loses(ctx: TickContext, hero: EntityRow, monster: EntityRow, pat
             son_id=son_id,
         )
         return EncounterResult(EncounterOutcome.WOUNDED)
+    style = await strike_style(ctx.session, ctx.rules, monster)
+    await fatal_injury(ctx, hero, Harm(hunt.armor_save_hp_loss, HarmCause.MONSTER, f"fell before {monster.name}", style=style, killer_id=monster.id))
     await die(ctx, hero, cause=f"fell before {monster.name}", killer_id=monster.id, forced=True)
     lament = await _legend(
         ctx,
@@ -266,7 +280,10 @@ async def glory_hunts(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     monsters = await monsters_of(ctx)
     for hero in await canon(ctx.session, [EntityType.MORTAL]):
-        if hero.status is not EntityStatus.CANON or (stat(hero, "strength") or 0) + (stat(hero, "agility") or 0) < engine.hunter_strength_agility:
+        if (
+            hero.status is not EntityStatus.CANON
+            or await effective(ctx.session, hero, "strength") + await effective(ctx.session, hero, "agility") < engine.hunter_strength_agility
+        ):
             continue
         beaten = {bond.target_node_id for bond in await active_bonds(ctx.session, VICTORY_KINDS, sources=[hero.id])}
         prey = [

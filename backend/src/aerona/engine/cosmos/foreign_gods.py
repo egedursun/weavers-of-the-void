@@ -20,6 +20,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow, GodConflictRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
@@ -32,7 +33,9 @@ from aerona.domain.enums.war import GodConflictOutcome
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.profiles import ExistenceProfile
 from aerona.domain.models.stats import STAT_CEILING, STAT_FLOOR, StatBlock
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.naming import Namer
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.records import retire
@@ -354,6 +357,7 @@ async def _son_wins(
     tools = ctx.rules.son_tools
     killed = diff >= tools.foreign_war_crushing_margin and F.DEATHLESS not in powers
     god.power = max(0, god.power - tools.foreign_war_strength_loss)
+    await apply_hits(ctx, god, Harm(tools.foreign_war_strength_loss + diff, HarmCause.GOD, "was struck down by a son of the creator", source_node_id=son.id))
     god.stance = max(RELATION_MIN, god.stance - tools.foreign_war_attitude_loss)
     if killed:
         god.status = ForeignGodStatus.DEAD
@@ -372,7 +376,7 @@ async def _son_loses(ctx: TickContext, son: SonRow, god: ForeignGodRow, diff: in
     tools = ctx.rules.son_tools
     wound = tools.foreign_war_min_wound + diff
     loss = min(tools.foreign_war_essence_loss, max(0, son.essence))
-    son.hp = max(0, son.hp - wound)
+    await apply_hits(ctx, son, Harm(wound, HarmCause.GOD, "was struck down by a foreign god", source_node_id=god.id))
     son.essence = max(0, son.essence - loss)
     god.stance = max(RELATION_MIN, god.stance - tools.foreign_war_attitude_loss)
     text = f"lost {wound} HP and {loss} essence."

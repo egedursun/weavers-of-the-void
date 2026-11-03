@@ -6,11 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.foreign_gods import GodConflictRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
+from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.son import PowerEffect, SonStatus, Stat
 from aerona.domain.enums.war import GodConflictOutcome
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.gods.progress import Progress, cap_gained_essence, grant_progress
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.numbers import round_half_up
 
 ARENA_STATS = (Stat.STRENGTH, Stat.WISDOM, Stat.CUNNING, Stat.CHARISMA, Stat.WILL)
@@ -39,12 +42,16 @@ async def _score(ctx: TickContext, son: SonRow, rival: SonRow, stat: Stat) -> in
     return round_half_up(son.stat(stat) + die * tools.challenge_die_mult + son.level * tools.challenge_strength_per_level + bonus)
 
 
+BODILY_STATS = frozenset({Stat.STRENGTH, Stat.ENDURANCE, Stat.AGILITY, Stat.MIGHT})
+
+
 async def son_duel(ctx: TickContext, challenger: SonRow, defender: SonRow, stat: Stat, reason: str) -> DuelResult:
     tools = ctx.rules.son_tools
     first, second = await _score(ctx, challenger, defender, stat), await _score(ctx, defender, challenger, stat)
     winner, loser = (challenger, defender) if first >= second else (defender, challenger)
     wound = tools.challenge_min_wound + round(abs(first - second) / tools.challenge_wound_diff_divisor)
-    loser.hp = max(0, loser.hp - wound)
+    damage_type = None if stat in BODILY_STATS else DamageType.MAGIC
+    await apply_hits(ctx, loser, Harm(wound, HarmCause.DUEL, "fell in a trial of the gods", damage_type=damage_type, source_node_id=winner.id))
     loser.fame = max(0, loser.fame - tools.challenge_loser_renown_loss)
     stolen = min(tools.challenge_max_steal, loser.essence)
     before = winner.essence

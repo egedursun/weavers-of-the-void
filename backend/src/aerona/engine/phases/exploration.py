@@ -20,6 +20,7 @@ from aerona.db.tables.epochs import DeferredStepRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.routes import HorizonIntuitionRow, RouteRow
+from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.civilization import TierCapability
@@ -30,6 +31,7 @@ from aerona.domain.enums.society import Commodity, KnowledgeBranch
 from aerona.domain.enums.travel import HorizonStatus, TravelMethod, VehicleKind
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.entity_stats import EntityStats, PlaceStats, RegionStats, SettlementStats, VesselStats
+from aerona.engine.body.book import factor
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import RouteSpec, has_tamed_mount, open_route
 from aerona.engine.cosmos.vessels import set_vessel_kind
@@ -120,10 +122,14 @@ async def land_measure(session: AsyncSession, rules: Rules, world_id: int, atlas
     return LandMeasure(world_id, len(regions), len(places), len(communities), crowded, ratio, not regions or ratio >= threshold)
 
 
-def is_explorer(rules: Rules, entity: EntityRow) -> bool:
-    return (
-        entity.entity_type is EntityType.MORTAL and stat_or(entity, INTELLECT_KEY, 0) + stat_or(entity, AGILITY_KEY, 0) >= rules.exploration.explorer_threshold
-    )
+def is_explorer(rules: Rules, entity: EntityRow, mobility: float = 1.0) -> bool:
+    if entity.entity_type is not EntityType.MORTAL:
+        return False
+    return (stat_or(entity, INTELLECT_KEY, 0) + stat_or(entity, AGILITY_KEY, 0)) * mobility >= rules.exploration.explorer_threshold
+
+
+async def explores(ctx: TickContext, entity: EntityRow) -> bool:
+    return is_explorer(ctx.rules, entity, await factor(ctx.session, entity.id, Capacity.MOBILITY))
 
 
 @dataclass
@@ -143,7 +149,7 @@ class ExplorationScene:
 
     @classmethod
     async def load(cls, ctx: TickContext) -> "ExplorationScene":
-        explorers = [mortal for mortal in await canon(ctx.session, [EntityType.MORTAL]) if is_explorer(ctx.rules, mortal)]
+        explorers = [mortal for mortal in await canon(ctx.session, [EntityType.MORTAL]) if await explores(ctx, mortal)]
         statement = select(BondRow.source_node_id).where(BondRow.kind == BondKind.DISCOVERED, BondRow.epoch == ctx.epoch)
         away = set(await ctx.session.scalars(statement))
         return cls(await RegionAtlas.load(ctx.session), await KnowledgeMap.load(ctx.session), await CapacityModel.load(ctx.session, ctx.rules), explorers, away)
@@ -180,7 +186,7 @@ async def exploration_pressure(ctx: TickContext, scene: ExplorationScene, entity
         if explorer is not None:
             pct += settings.explorer_bonus_pct
             reasons.append(Reason.EXPLORER)
-    elif is_explorer(ctx.rules, entity):
+    elif await explores(ctx, entity):
         pct += settings.explorer_bonus_pct
         reasons.append(Reason.SPIRIT)
     if scene.knowledge.branches(entity.id) & KNOWLEDGE_FOR_EXPLORING:
@@ -594,9 +600,7 @@ async def _explore_world(ctx: TickContext, scene: ExplorationScene, world: World
     communities = await canon(ctx.session, LAND_COMMUNITIES, world.id)
     entities = [entity for entity in await canon(ctx.session, SEEKER_TYPES, world.id) if _may_explore(ctx.rules, entity)]
     candidates = [
-        entity
-        for entity in entities
-        if (entity.entity_type in COMMUNITY_TYPES and headcount(entity) >= settings.min_population) or is_explorer(ctx.rules, entity)
+        entity for entity in entities if (entity.entity_type in COMMUNITY_TYPES and headcount(entity) >= settings.min_population) or await explores(ctx, entity)
     ]
     pressures = [(await exploration_pressure(ctx, scene, entity, communities), entity) for entity in candidates]
     pressures.sort(key=lambda item: (-item[0].pct, item[1].id))

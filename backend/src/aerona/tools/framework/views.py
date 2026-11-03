@@ -20,6 +20,7 @@ from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.bond import BondState
 from aerona.domain.enums.entity import CivilizationTier, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.war import WarStatus
+from aerona.engine.body.describe import body_lines
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import (
     BondEndpoint,
@@ -206,6 +207,7 @@ async def entity_detail(session: AsyncSession, rules: Rules, entity: EntityRow) 
         lexicon=await _lexicon(session, entity, rules.context.inspect_lexicon_words),
         society=await society_lines(session, rules, entity),
         facts=await fact_lines(session, rules, entity),
+        body=await body_lines(session, rules, entity),
     )
     return render(PromptId.ENTITY_DETAIL, context)
 

@@ -85,6 +85,7 @@ BOND_KINDS: dict[BondKind, BondKindSpec] = {
         BondKindSpec(BondKind.TAMED, "tamed", MECHANICAL),
         BondKindSpec(BondKind.TRUCE, "made truce with", MECHANICAL),
         BondKindSpec(BondKind.OWES, "owes", MECHANICAL),
+        BondKindSpec(BondKind.TREATED_BY, "treated by", MECHANICAL),
     )
 }
 

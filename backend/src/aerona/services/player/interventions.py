@@ -13,6 +13,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import LOCATION_TYPES, EntityFlag, EntityStatus, EntityType
@@ -21,10 +22,12 @@ from aerona.domain.enums.job import JobKind
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.son import SonStatus, Stat
 from aerona.domain.models.stats import STAT_CEILING
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.gods.interventions import MiracleEffect, apply_miracle
 from aerona.engine.gods.power import end_rebellion
 from aerona.engine.gods.stats import Trait, add_trait
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.phases.disasters import apply_disaster, record_disaster_event
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.numbers import clamp_percent
@@ -188,7 +191,17 @@ async def _suppress(scope: PlayerScope, ctx: TickContext, son_id: int) -> Effect
     if god_roll >= son_roll:
         son.rebel = False
         son.loyalty = clamp_percent(son.loyalty + actions.suppress_loyalty_gain)
-        son.hp = max(1, round(son.hp * actions.suppress_hp_left_pct / 100))
+        await apply_hits(
+            ctx,
+            son,
+            Harm(
+                son.hp - max(1, round(son.hp * actions.suppress_hp_left_pct / 100)),
+                HarmCause.PUNISHMENT,
+                "was broken by the creator",
+                source_node_id=creator.id,
+            ),
+            lethal=False,
+        )
         son.fame = max(0, son.fame - actions.suppress_renown_loss)
         line, kind = SUPPRESSED, ActionKind.SUPPRESS_REBELLION
     else:
@@ -228,7 +241,13 @@ async def punish(scope: PlayerScope, command: Punish) -> Effect:
     spent = 0
     if command.kind is PunishmentKind.LIGHTNING:
         spent = guards.charge(creator, scope.rules.costs.lightning, "costs.lightning")
-        son.hp = max(1, son.hp - round(max_hp(scope.rules, son.endurance) * actions.lightning_hp_pct / 100))
+        bolt = round(max_hp(scope.rules, son.endurance) * actions.lightning_hp_pct / 100)
+        await apply_hits(
+            ctx,
+            son,
+            Harm(bolt, HarmCause.PUNISHMENT, "was struck by the creator's lightning", damage_type=DamageType.FIRE, source_node_id=creator.id),
+            lethal=False,
+        )
         line, kind = LIGHTNING, ActionKind.LIGHTNING
     elif command.kind is PunishmentKind.CHAIN:
         if son.chained:

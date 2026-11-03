@@ -50,6 +50,7 @@ class BondKind(StrEnum):
     TAMED = "tamed"
     TRUCE = "truce"
     OWES = "owes"
+    TREATED_BY = "treated_by"
 
 
 class BondCategory(StrEnum):

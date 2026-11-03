@@ -8,6 +8,7 @@ class RuleGroup(StrEnum):
     AWAKENING_OF_THE_PEOPLES = "Awakening of the peoples"
     BACKUPS = "Backups"
     BATCH_JOBS = "Batch jobs"
+    BODY = "Bodies and wounds"
     CARTOGRAPHY = "Cartography"
     CHRONICLE = "Chronicle"
     CIVILIZATION = "Civilization"

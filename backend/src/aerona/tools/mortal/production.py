@@ -102,7 +102,7 @@ async def produce_item(call: MortalCall, args: ProduceInput) -> str:
     tools = call.rules.mortal_tools
     await name_free(call, args.name)
     resources = [await _usable_resource(call, resource_id) for resource_id in dict.fromkeys(args.resource_ids[: tools.craft_max_resources])]
-    craft = craft_of(call)
+    craft = await craft_of(call)
     might = sum(stat_or(resource, "might", 0) for resource in resources) / max(1, len(resources))
     metallurgy = round(tools.craft_metallurgy_bonus * await my_branch_effect(call, KnowledgeBranch.METALLURGY))
     region = (await call.atlas()).top_region(call.me.id)
@@ -166,7 +166,7 @@ async def build_structure(call: MortalCall, args: BuildInput) -> str:
         fail(MortalResult.INVALID_LOCATION)
     if location.id != call.me.id and not await same_region(call, location):
         fail(MortalResult.NOT_YOUR_LAND)
-    craft = craft_of(call)
+    craft = await craft_of(call)
     architecture = round(tools.build_architecture_bonus * await my_branch_effect(call, KnowledgeBranch.ARCHITECTURE))
     stats = {
         "splendor": clamp(pct(craft, tools.build_splendor_pct) + call.die(tools.build_splendor_die) + architecture),

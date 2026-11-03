@@ -11,6 +11,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.war import WarCause, WarEnding
+from aerona.engine.body.cohorts import war_appetite
 from aerona.engine.context import TickContext
 from aerona.engine.phase import Phase
 from aerona.engine.phases.afterlife import cosmic_court
@@ -274,7 +275,7 @@ async def _neighbour_pair(
         and counters.declared < rules.declarations_cap
         and await ongoing_war_count(ctx.session, first.id) < cap
         and await ongoing_war_count(ctx.session, second.id) < cap
-        and rng.chance(rules.war_declaration_chance)
+        and rng.chance(rules.war_declaration_chance * min(await war_appetite(ctx, first), await war_appetite(ctx, second)))
         and await declare_war(
             ctx, first.id, second.id, "blood feud turned to war" if feud else "accumulated grudge", cause=WarCause.VENDETTA if feud else WarCause.GRUDGE
         )

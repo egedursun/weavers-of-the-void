@@ -8,10 +8,12 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
+from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.engine.body.book import effective
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.services.war import ARMY_KINDS, PEOPLES_ARMY, held_captive, ongoing_wars, war_event
 from aerona.prompts import MortalToolId
@@ -72,7 +74,7 @@ async def raise_army(call: MortalCall, args: ArmyInput) -> str:
     metallurgy = tools.army_metallurgy_bonus if await i_know(call, KnowledgeBranch.METALLURGY) else 0
     veterans = await i_know(call, KnowledgeBranch.WARFARE)
     morale = max(0, min(PERCENT, tools.army_morale_base + call.die(tools.army_morale_die)))
-    equipment = max(0, min(PERCENT, tools.army_equipment_base + metallurgy + round(craft_of(call) / tools.army_craft_divisor)))
+    equipment = max(0, min(PERCENT, tools.army_equipment_base + metallurgy + round((await craft_of(call)) / tools.army_craft_divisor)))
     stats = {"size": soldiers, "morale": morale, "equipment": equipment, "experience": tools.army_experience_warcraft if veterans else tools.army_experience}
     wars = await ongoing_wars(call.session, call.me.id)
     war = wars[0].war if wars else None
@@ -124,7 +126,7 @@ async def appoint_commander(call: MortalCall, args: CommanderInput) -> str:
     await bonds.connect(BondDraft(mortal.id, army.id, BondKind.COMMANDS, call.epoch, lines.COMMANDS))
     row.commander_entity_id = mortal.id
     morale = (stat(army, "morale") or tools.commander_default_morale) + round(
-        (stat(mortal, "charisma") or tools.default_stat) / tools.commander_charisma_divisor
+        await effective(call.session, mortal, "charisma", tools.default_stat, Capacity.COMMAND) / tools.commander_charisma_divisor
     )
     set_stats(army, morale=max(0, min(PERCENT, morale)))
     await call.bump(TurnCounter.COMMANDER_APPOINTMENTS)

@@ -17,7 +17,8 @@ WHO YOU ARE
 - Stats: {% for stat in stats %}{{ stat.label }} {{ stat.value }}{% if not loop.last %}, {% endif %}{% endfor %}
 
 - Passions (0 to 100): loyalty {{ passions.loyalty }}, ambition {{ passions.ambition }}, wrath {{ passions.wrath }}, mercy {{ passions.mercy }}
-- Life {{ hp }}/{{ max_hp }} · Essence {{ essence }}/{{ max_essence }} · Faith {{ faith }} · Fame {{ fame }}
+- Life {{ hp }}/{{ max_hp }} · Essence {{ essence }}/{{ max_essence }} · Faith {{ faith }} · Fame {{ fame }}{% if wounds %}
+- Your divine body: {{ wounds | join('; ') }}{% endif %}
 - Your existence: {{ existence_value }}/100 ({{ existence_band_label }}: {{ existence_band_effect }}). Gods exist by being worshipped, remembered and through their anchors.
 - Your anchor: {% if anchor %}#{{ anchor.id }} {{ anchor.name }} ({{ anchor.status_label }}){% else %}none; you can make one of your creations your anchor with choose_anchor{% endif %}
 

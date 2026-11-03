@@ -1,4 +1,5 @@
 from aerona.db.tables.agency import ActionRecordRow, AgentTurnRow, CreationRewardRow, EpochAgentRow, TurnCounterRow
+from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldMapRow, WorldRow
 from aerona.db.tables.climate import ClimateOrderRow
@@ -74,6 +75,8 @@ __all__ = [
     "ArchiveHoldingRow",
     "ArmyRow",
     "BattleRow",
+    "BodyCustomRow",
+    "BodyRow",
     "BondRow",
     "CalendarRow",
     "CanonFactRow",
@@ -85,6 +88,7 @@ __all__ = [
     "CommunityRelationEventRow",
     "CommunityRelationRow",
     "CommunitySocietyRow",
+    "ConditionRow",
     "CosmosRow",
     "CouncilRow",
     "CreationMotifRow",
@@ -118,6 +122,7 @@ __all__ = [
     "ImageRow",
     "IncidentParticipantRow",
     "IncidentRow",
+    "InjuryRow",
     "JobRow",
     "JourneyRow",
     "LanguageProfileRow",
@@ -126,6 +131,7 @@ __all__ = [
     "LegendaryQuestRow",
     "LexemeRow",
     "LeyLineRow",
+    "MaimedCohortRow",
     "MapNoteRow",
     "MapSnapshotRow",
     "MessageRow",
@@ -138,6 +144,7 @@ __all__ = [
     "NotificationRow",
     "OuterBargainRow",
     "PlaceEnvironmentRow",
+    "ProsthesisRow",
     "RegionEnvironmentRow",
     "ResourceCommodityRow",
     "ResourceMechanicRow",

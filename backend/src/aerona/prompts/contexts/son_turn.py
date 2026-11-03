@@ -53,6 +53,7 @@ class SonTurnSystemContext(LoreRulesContext):
     passions: Passions
     hp: int
     max_hp: int
+    wounds: list[str] = Field(default_factory=list)
     essence: int
     max_essence: int
     faith: int

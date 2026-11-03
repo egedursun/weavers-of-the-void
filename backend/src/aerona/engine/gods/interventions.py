@@ -10,6 +10,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.intervention import Miracle
 from aerona.domain.enums.war import WarEnding
+from aerona.engine.body.healing import mend, restore_body_senses
 from aerona.engine.context import TickContext
 from aerona.engine.gods.queries import THINKING_TYPES
 from aerona.engine.gods.stats import Trait, add_trait, has_trait, set_trait, trait
@@ -84,6 +85,8 @@ async def restore_senses(ctx: TickContext, target: EntityRow) -> tuple[str, ...]
         if entity.entity_type in THINKING_TYPES and entity.status is EntityStatus.CANON:
             current = entity.sanity if entity.sanity is not None else tools.default_sanity
             entity.sanity = max(0, min(PERCENT, current + tools.healing_sanity))
+            if entity.entity_type is EntityType.MORTAL:
+                await restore_body_senses(ctx, entity)
             restored.append(entity.name)
     return tuple(restored)
 
@@ -102,6 +105,8 @@ async def _healing(ctx: TickContext, target: EntityRow) -> MiracleOutcome:
     hp = trait(target, Trait.HP)
     if target.entity_type is EntityType.MORTAL and hp is not None and hp < effects.healing_hp:
         set_trait(target, Trait.HP, effects.healing_hp)
+        found.append(MiracleEffect.HEALTH)
+    if target.entity_type is EntityType.MORTAL and await mend(ctx, target) and MiracleEffect.HEALTH not in found:
         found.append(MiracleEffect.HEALTH)
     if await lift_curse(ctx, target):
         found.append(MiracleEffect.CURSE_LIFTED)

@@ -1,13 +1,16 @@
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.engine.body.conditions import end_condition
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import add_scar, region_environment
-from aerona.engine.lifecycle.wounds import WoundOutcome, wound
+from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -51,7 +54,8 @@ async def curse_decay(ctx: TickContext) -> None:
                 add_scar(ground, ScarKind.BLIGHTED, rules.scars.curse_blight_depth)
         ctx.count("cursed_decay")
         if entity.entity_type is EntityType.MORTAL and rules.world_engine.curse_hp_loss > 0:
-            await wound(ctx, entity, rules.world_engine.curse_hp_loss, cause=CURSE_DEATH, killer_id=await curser_of(ctx, entity))
+            curser = await curser_of(ctx, entity)
+            await apply_hits(ctx, entity, Harm(rules.world_engine.curse_hp_loss, HarmCause.CURSE, CURSE_DEATH, source_node_id=curser, killer_id=curser))
 
 
 async def lift_curses(ctx: TickContext) -> None:
@@ -69,6 +73,8 @@ async def lift_curses(ctx: TickContext) -> None:
 async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
     if not await remove_flag(ctx.session, entity.id, EntityFlag.CURSED):
         return False
+    if entity.entity_type is EntityType.MORTAL:
+        await end_condition(ctx, entity, ConditionKind.ENDLESS_HUNGER)
     await note(ctx, f"The curse upon {entity.name} was lifted.", key="curses.lifted", ids=[entity.id])
     return True
 
@@ -95,8 +101,8 @@ async def cursed_items(ctx: TickContext) -> None:
             if value is not None:
                 set_stats(owner, **{key: clamp_int(value - stat_damage, 0, PERCENT)})
         if owner.entity_type is EntityType.MORTAL and hp is not None:
-            outcome = await wound(ctx, owner, hp_damage, cause=f"gave up their life to the curse of {item.name}")
-            if outcome is WoundOutcome.DIED:
+            harm = Harm(hp_damage, HarmCause.CURSE, f"gave up their life to the curse of {item.name}", source_node_id=item.id)
+            if (await apply_hits(ctx, owner, harm)).outcome is WoundOutcome.DIED:
                 continue
         contagious = owner.status is EntityStatus.CANON and rng.chance(rules.world_engine.cursed_item_contagion_chance)
         if contagious and not await has_flag(ctx.session, owner.id, EntityFlag.CURSED):

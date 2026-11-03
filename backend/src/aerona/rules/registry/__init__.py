@@ -9,6 +9,17 @@ from aerona.rules.registry.backup import BackupRules
 from aerona.rules.registry.balance import BalanceRules
 from aerona.rules.registry.batch import BatchRules
 from aerona.rules.registry.beyond import BeyondRules
+from aerona.rules.registry.body import (
+    AnatomyRules,
+    ArmourRules,
+    BodyCustomsRules,
+    CapacityRules,
+    ConditionRules,
+    HealingRules,
+    InjuryRules,
+    MaimedRules,
+    ProstheticsRules,
+)
 from aerona.rules.registry.campaigns import CampaignsRules
 from aerona.rules.registry.cartography import CartographyRules
 from aerona.rules.registry.casualties import CasualtiesRules
@@ -135,6 +146,15 @@ class Rules:
     calendars: CalendarsRules = field(default_factory=CalendarsRules)
     engine_budget: EngineBudgetRules = field(default_factory=EngineBudgetRules)
     weather: WeatherRules = field(default_factory=WeatherRules)
+    anatomy: AnatomyRules = field(default_factory=AnatomyRules)
+    injury: InjuryRules = field(default_factory=InjuryRules)
+    capacities: CapacityRules = field(default_factory=CapacityRules)
+    healing: HealingRules = field(default_factory=HealingRules)
+    armour: ArmourRules = field(default_factory=ArmourRules)
+    body_customs: BodyCustomsRules = field(default_factory=BodyCustomsRules)
+    conditions: ConditionRules = field(default_factory=ConditionRules)
+    prosthetics: ProstheticsRules = field(default_factory=ProstheticsRules)
+    maimed: MaimedRules = field(default_factory=MaimedRules)
     casualties: CasualtiesRules = field(default_factory=CasualtiesRules)
     ecology: EcologyRules = field(default_factory=EcologyRules)
     geography: GeographyRules = field(default_factory=GeographyRules)

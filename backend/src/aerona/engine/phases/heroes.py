@@ -11,12 +11,16 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import HeroQuestRow
+from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import HERO_ROLES, SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.war import HeroQuestKind, HeroQuestStatus
 from aerona.domain.models.entity_stats import MortalStats
+from aerona.engine.body.book import factor
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.lifecycle.wounds import apply_hits, fatal_injury
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.heroism import encounter
@@ -28,7 +32,7 @@ from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_float, clamp_int, fraction
 from aerona.engine.primitives.queries import BondIndex, canon, flags_by_entity, spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record
-from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.primitives.thresholds import relative_threshold
 from aerona.engine.records import death_path
 from aerona.engine.services.community_relations import blood_feud_pairs
@@ -120,9 +124,9 @@ async def close_quest(ctx: TickContext, quest: HeroQuestRow, status: HeroQuestSt
     await ctx.session.flush()
 
 
-def success_chance(rules: Rules, hero: EntityRow, companions: int, chosen: bool) -> float:
+def success_chance(rules: Rules, hero: EntityRow, companions: int, chosen: bool, body: float = 1.0) -> float:
     settings = rules.heroes
-    base = (stat_or(hero, "strength", 0) + stat_or(hero, "agility", 0) + stat_or(hero, "intellect", 0)) / settings.quest_success_divisor
+    base = (stat_or(hero, "strength", 0) + stat_or(hero, "agility", 0) + stat_or(hero, "intellect", 0)) * body / settings.quest_success_divisor
     bonus = companions * fraction(settings.quest_companion_bonus_pct) + (fraction(settings.quest_chosen_bonus_pct) if chosen else 0.0)
     return clamp_float(base + bonus, fraction(settings.quest_success_min_pct), fraction(settings.quest_success_max_pct))
 
@@ -170,15 +174,14 @@ async def _quest_failed(ctx: TickContext, hero: EntityRow, quest: HeroQuestRow) 
     rng = ctx.rng(f"quest_failure.{quest.id}")
     if rng.chance(settings.quest_death_chance):
         await close_quest(ctx, quest, HeroQuestStatus.DIED)
+        await fatal_injury(ctx, hero, Harm(settings.quest_epoch_hp_loss, HarmCause.QUEST, f"died on the road {quest.description}"))
         await death_path(ctx, hero, f"died on the road {quest.description}")
         text, key = f"{hero.name} gave their life on the road {quest.description}.", "heroes.quest_death"
     elif ctx.epoch - quest.started_epoch >= settings.quest_abandon_epochs:
         await close_quest(ctx, quest, HeroQuestStatus.ABANDONED)
         text, key = f"{hero.name} searched for years but came back empty-handed from the quest {quest.description}.", "heroes.quest_abandoned"
     else:
-        hp = stat(hero, "hp")
-        wounded = (hp if hp is not None else ctx.rules.campaigns.hero_default_hp) - settings.quest_epoch_hp_loss
-        set_stats(hero, hp=clamp_int(wounded, 1, ctx.rules.limits.hp_cap))
+        await apply_hits(ctx, hero, Harm(settings.quest_epoch_hp_loss, HarmCause.QUEST, f"died on the road {quest.description}"), lethal=False)
         return
     await note(ctx, text, key=key, ids=[hero.id], kind=ChronicleKind.ADVENTURE)
 
@@ -194,7 +197,7 @@ async def resolve_quest_now(ctx: TickContext, hero: EntityRow, quest: HeroQuestR
         await close_quest(ctx, quest, HeroQuestStatus.ABANDONED)
         return quest.status
     companions = await companions_of(ctx, hero)
-    chance = success_chance(ctx.rules, hero, len(companions), hero.id in world.chosen)
+    chance = success_chance(ctx.rules, hero, len(companions), hero.id in world.chosen, await factor(ctx.session, hero.id, Capacity.MOBILITY))
     succeeded = forced if forced is not None else ctx.rng(f"quest.{quest.id}").probability(chance)
     if not succeeded:
         await _quest_failed(ctx, hero, quest)

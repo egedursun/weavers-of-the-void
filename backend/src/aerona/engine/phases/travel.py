@@ -17,6 +17,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
@@ -26,6 +27,7 @@ from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMethod
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import KnowledgeStats, LegendStats, SettlementStats
+from aerona.engine.body.book import factor
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.discovery import mark_world_discovered
 from aerona.engine.cosmos.fauna import stowaway
@@ -136,7 +138,7 @@ async def hidden_routes(ctx: TickContext) -> int:
             item
             for world in ends
             for item in await canon(session, [EntityType.MORTAL], world)
-            if stat_or(item, INTELLECT_KEY, 0) >= travel.sensing_min_intellect
+            if stat_or(item, INTELLECT_KEY, 0) * await factor(session, item.id, Capacity.SCHOLARSHIP) >= travel.sensing_min_intellect
         ]
         sage = max(mortals, key=lambda item: (stat_or(item, INTELLECT_KEY, 0), -item.id)) if mortals else None
         son = next((item for item in sons if item.current_world_id in ends), None)

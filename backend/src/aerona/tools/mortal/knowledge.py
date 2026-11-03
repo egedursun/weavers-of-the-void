@@ -29,7 +29,7 @@ async def knows_record(call: MortalCall, holder_id: int, knowledge_id: int) -> b
 
 async def _deepen_held(call: MortalCall, knowledge: EntityRow, branch: str) -> str:
     table = call.rules.knowledge
-    gain = table.develop_level_gain + (table.craft_level_bonus if craft_of(call) > call.rules.mortal_tools.knowledge_craft_threshold else 0)
+    gain = table.develop_level_gain + (table.craft_level_bonus if (await craft_of(call)) > call.rules.mortal_tools.knowledge_craft_threshold else 0)
     level = shift_level(call.rules, knowledge, gain)
     if level is None:
         empty = await empty_branches(call.session, call.me.world_id)
@@ -77,7 +77,7 @@ async def develop_knowledge(call: MortalCall, args: DevelopKnowledgeInput) -> st
         ):
             bases.append(base)
     deepest = max((stat_or(base, "level", 0) for base in bases), default=0)
-    skilled = 1 if craft_of(call) > tools.knowledge_craft_threshold else 0
+    skilled = 1 if (await craft_of(call)) > tools.knowledge_craft_threshold else 0
     level = max(1, min(tools.knowledge_level_cap, 1 + deepest + skilled))
     knowledge = await create_record(
         call,

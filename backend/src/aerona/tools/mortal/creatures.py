@@ -153,7 +153,7 @@ async def search_ruins(call: MortalCall, args: RuinsInput) -> str:
     if ruin.world_id != call.me.world_id or not (await same_region(call, ruin) or await near(call, ruin)):
         fail(MortalResult.TOO_FAR)
     shares = await class_shares(call.session, call.rules, call.me.id)
-    reason = wits_of(call) + shares.get(SocialClass.SCRIBE, 0.0) * tools.relic_scribe_mult + call.die(tools.relic_die, "ruins")
+    reason = (await wits_of(call)) + shares.get(SocialClass.SCRIBE, 0.0) * tools.relic_scribe_mult + call.die(tools.relic_die, "ruins")
     call.target(ruin.id)
     lost = await _lost_knowledge(call, ruin.world_id)
     items = await _ownerless_items(call, ruin)

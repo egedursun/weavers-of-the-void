@@ -25,6 +25,8 @@ import { type EntityDetail } from './api/types'
 import { RELATION_PAGE_MAX } from './constants'
 import { scrollToSection } from './scrollToSection'
 import { ArrangeExtras } from './sections/ArrangeExtras'
+import { BodySection } from './sections/BodySection'
+import { CommunityMaimed, PeopleBodyCustoms } from './sections/BodySociety'
 import { CanonFacts } from './sections/CanonFacts'
 import { DangerZone } from './sections/DangerZone'
 import { EntityAgentContext } from './sections/EntityAgentContext'
@@ -66,6 +68,9 @@ const SECTION_LINKS = [
   { id: 'section-images', label: 'Images' },
   { id: 'section-chronicle', label: 'Chronicle' },
   { id: 'section-environment', label: 'Environment' },
+  { id: 'section-body', label: 'Body' },
+  { id: 'section-body-customs', label: 'Wounds and bodies' },
+  { id: 'section-maimed', label: 'The maimed' },
   { id: 'section-mechanics', label: 'Mechanics' },
   { id: 'section-edit', label: 'Edit' },
 ]
@@ -135,6 +140,13 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
   if (!detail.insight.society) present.delete('section-society')
   if (entity.entity_type !== 'region' && entity.entity_type !== 'place')
     present.delete('section-environment')
+  const embodied =
+    entity.entity_type === 'mortal' || entity.entity_type === 'species'
+  if (!embodied) present.delete('section-body')
+  if (entity.entity_type !== 'people') present.delete('section-body-customs')
+  const maimedHome =
+    entity.entity_type === 'settlement' || entity.entity_type === 'people'
+  if (!maimedHome) present.delete('section-maimed')
   const acts = entity.status === 'canon' && agentTypeOf(entity.entity_type)
   if (!acts) present.delete('section-opportunities')
   if (!isCommunity(ctx.type)) {
@@ -219,6 +231,11 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         highlightEpoch={highlight}
       />
       <EntityEnvironment entityId={entity.id} entityType={entity.entity_type} />
+      {embodied && <BodySection nodeId={entity.id} />}
+      {entity.entity_type === 'people' && (
+        <PeopleBodyCustoms peopleId={entity.id} />
+      )}
+      {maimedHome && <CommunityMaimed communityId={entity.id} />}
       <EntityMechanics
         nodeId={entity.id}
         statKeys={Object.keys(entity.stats).filter((key) => key !== 'kind')}

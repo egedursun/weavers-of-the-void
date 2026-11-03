@@ -66,6 +66,7 @@ class ContextRules:
     unlocated_rows: int = rule(45, 1, 1000, RuleGroup.CONTEXT_BUDGETS, "Legends and traditions: newest records shown")
     inspect_lexicon_words: int = rule(40, 0, 2000, RuleGroup.CONTEXT_BUDGETS, "Entity inspection: words shown from the language's lexicon")
     inspect_canon_facts: int = rule(8, 0, 200, RuleGroup.CONTEXT_BUDGETS, "Entity inspection: canon facts shown")
+    body_weakness_pct: int = rule(15, 0, 100, RuleGroup.CONTEXT_BUDGETS, "Capacity loss at which a mortal is told they are hampered (%)")
     chronicle_default: int = rule(12, 1, 500, RuleGroup.CONTEXT_BUDGETS, "Recent events: default lines")
     search_results_max: int = rule(25, 1, 500, RuleGroup.CONTEXT_BUDGETS, "search_entity (varlik_ara): maximum results")
     memory_creations_count: int = rule(30, 1, 500, RuleGroup.CONTEXT_BUDGETS, "Son memory: number of recent creations")

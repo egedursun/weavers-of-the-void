@@ -5,17 +5,19 @@ from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.lore import ChronicleRow
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.models.entity_stats import ItemStats, RegionStats
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.gods.mortality import ProtectorKind, kill_chance
 from aerona.engine.lifecycle.aging import effective_lifespan, is_notable, life_info
 from aerona.engine.lifecycle.mortal_death import die, force_death
 from aerona.engine.lifecycle.succession import designate_heir, dynasty_root
-from aerona.engine.lifecycle.wounds import WoundOutcome, wound
+from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits
 from aerona.engine.phases.mortals import mortal_aging, mortal_wounds
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import has_flag
@@ -101,14 +103,14 @@ async def test_after_death_soul_items_and_death_gods(session: AsyncSession, worl
 
 async def test_wounds_respect_immortality(ctx: TickContext, world: CoreWorld, session: AsyncSession) -> None:
     sage = await mortal(session, "Ivo", world, world.regions[0].id, hp=10)
-    assert await wound(ctx, sage, 4, cause="was hurt") is WoundOutcome.WOUNDED
+    assert (await apply_hits(ctx, sage, Harm(4, HarmCause.ACCIDENT, "was hurt"))).outcome is WoundOutcome.WOUNDED
     assert stat(sage, "hp") == 6
     await add_flag(session, sage.id, EntityFlag.IMMORTAL)
-    assert await wound(ctx, sage, 50, cause="was hurt") is WoundOutcome.IMMORTAL
+    assert (await apply_hits(ctx, sage, Harm(50, HarmCause.ACCIDENT, "was hurt"))).outcome is WoundOutcome.IMMORTAL
     mortal_one = await mortal(session, "Rhea", world, world.regions[0].id, hp=5)
-    assert await wound(ctx, mortal_one, 9, cause="bled out", killer_id=world.species.id) is WoundOutcome.DIED
+    assert (await apply_hits(ctx, mortal_one, Harm(9, HarmCause.MONSTER, "bled out", killer_id=world.species.id))).outcome is WoundOutcome.DIED
     assert mortal_one.status is EntityStatus.DEAD
-    assert await wound(ctx, world.species, 5, cause="nothing") is None
+    assert (await apply_hits(ctx, world.species, Harm(5, HarmCause.ACCIDENT, "nothing"))).outcome is None
 
 
 async def test_effective_lifespan_and_life_info(ctx: TickContext, world: CoreWorld, session: AsyncSession, rules: Rules) -> None:

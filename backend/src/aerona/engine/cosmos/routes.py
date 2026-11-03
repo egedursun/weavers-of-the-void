@@ -17,6 +17,7 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow, EntityTraitRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
@@ -25,12 +26,14 @@ from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMethod, VehicleKind
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.records import JourneyEvent
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.resources import cosmic_access
 from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.vessels import owned_vessels
 from aerona.engine.cosmos.world_types import hidden_route_method, mechanics_of, river_reaches
 from aerona.engine.gods.economy import spend_cosmic_resource
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.knowledge import knows
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, stat, stat_or
@@ -419,7 +422,10 @@ async def _gate_sacrifice(ctx: TickContext, spec: JourneySpec, carried: int) -> 
         text = f"the gate would not open without its true name; {lost} travellers were given to it"
         return carried - lost, JourneyEvent(epoch=ctx.epoch, kind=JourneyEventKind.SACRIFICE, text=text, loss=lost)
     if stat(spec.traveller, HP_KEY) is not None:
-        put_stat(ctx.rules, spec.traveller, HP_KEY, stat_or(spec.traveller, HP_KEY, 0) - costs.gate_sacrifice_hp)
+        if spec.traveller.entity_type is EntityType.MORTAL:
+            await apply_hits(ctx, spec.traveller, Harm(costs.gate_sacrifice_hp, HarmCause.SACRIFICE, "was given to an ancient gate"))
+        else:
+            put_stat(ctx.rules, spec.traveller, HP_KEY, stat_or(spec.traveller, HP_KEY, 0) - costs.gate_sacrifice_hp)
         text = "the gate would not open without its true name; the traveller paid in blood"
         return carried, JourneyEvent(epoch=ctx.epoch, kind=JourneyEventKind.SACRIFICE, text=text)
     return carried, None

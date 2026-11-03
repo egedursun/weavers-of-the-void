@@ -20,6 +20,7 @@ from aerona.engine.phases import (
     afterlife,
     belief_memory,
     births,
+    body,
     casualties,
     civilization,
     climate,
@@ -105,6 +106,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + afterlife.PHASES
     + belief_memory.PHASES
     + births.PHASES
+    + body.PHASES
     + casualties.PHASES
     + ecology.PHASES
     + environment.PHASES
@@ -178,7 +180,7 @@ def stage(*names: str) -> tuple[Phase, ...]:
     return tuple(PHASE_REGISTRY[name] for name in names)
 
 
-CLEANUP_STAGE = stage("dead_bonds_opening", "modifier_upkeep", "world_maps", "environment_survey", "expire_truces", "language_and_faith")
+CLEANUP_STAGE = stage("dead_bonds_opening", "modifier_upkeep", "world_maps", "environment_survey", "body_survey", "expire_truces", "language_and_faith")
 GRUDGE_STAGE = stage("divine_grudges")
 SUB_ENGINE_STAGE = stage(
     "harvest",
@@ -269,7 +271,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "culture_cycles",
     "remembrance",
 )
-AGING_STAGE = stage("mortal_wounds", "mortal_aging", "dead_bonds_closing")
+AGING_STAGE = stage("body_healing", "mortal_wounds", "body_conditions", "body_society", "mortal_aging", "dead_bonds_closing")
 
 TICK_ORDER: tuple[Phase, ...] = (
     CLEANUP_STAGE + GRUDGE_STAGE + SUB_ENGINE_STAGE + RAID_STAGE + ECONOMY_STAGE + SOCIETY_STAGE + SOCIETY_ENGINE_STAGE + AGING_STAGE

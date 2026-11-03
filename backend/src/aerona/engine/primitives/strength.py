@@ -12,10 +12,12 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
+from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.son import PowerEffect
+from aerona.engine.body.book import factor
 from aerona.engine.primitives.faith import patron_son
 from aerona.engine.primitives.knowledge import KnowledgeMap, known_levels, level_multiplier
 from aerona.engine.primitives.numbers import round_half_up
@@ -144,6 +146,8 @@ BASE_STRENGTH: dict[EntityType, Callable[[Rules, EntityRow], float]] = {
 async def _base_strength(session: AsyncSession, rules: Rules, entity: EntityRow) -> float:
     strength = rules.world_war_strength
     base = BASE_STRENGTH.get(entity.entity_type, _other_base)(rules, entity)
+    if entity.entity_type is EntityType.MORTAL:
+        base *= await factor(session, entity.id, Capacity.MELEE)
     if entity.entity_type in WARRIOR_CLASS_TYPES:
         shares = await class_shares(session, rules, entity.id)
         base += (shares[SocialClass.WARRIOR] - strength.warrior_threshold_pct) * strength.warrior_coeff_pct / PERCENT

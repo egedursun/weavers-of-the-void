@@ -12,6 +12,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, SiegeRow, WarRow
+from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
@@ -21,10 +22,14 @@ from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.war import BattleOutcome, SiegeStatus, WarCause, WarEnding, WarStatus
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
+from aerona.engine.body.book import effective
+from aerona.engine.body.cohorts import return_maimed
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.environment.battleground import BattleGround, attack_factor, defend_factor, night_chance, omen_morale, scar_battlefield, season_losses
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment, scar_region
 from aerona.engine.environment.years import grant_sub_steps
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.knowledge import LawBook
@@ -210,7 +215,11 @@ async def battle_power(ctx: TickContext, theatre: Theatre, community: EntityRow,
     commander = await commander_of(ctx.session, army_row)
     command = 0.0
     if commander is not None:
-        total = (stat(commander, "strength") or 0) + (stat(commander, "intellect") or 0) + (stat(commander, "charisma") or 0)
+        total = (
+            await effective(ctx.session, commander, "strength")
+            + await effective(ctx.session, commander, "intellect", capacity=Capacity.COMMAND)
+            + await effective(ctx.session, commander, "charisma", capacity=Capacity.COMMAND)
+        )
         command = total / campaigns.strength_commander_divisor
     patron = await theatre.strength.patron_bonus(community)
     return (
@@ -375,8 +384,8 @@ async def _record(ctx: TickContext, report: BattleReport, place: EntityRow | Non
 async def duel_power(ctx: TickContext, theatre: Theatre, hero: EntityRow) -> float:
     campaigns = ctx.rules.campaigns
     return (
-        (stat(hero, "strength") or 0)
-        + (stat(hero, "agility") or 0) / campaigns.duel_agility_divisor
+        await effective(ctx.session, hero, "strength")
+        + await effective(ctx.session, hero, "agility") / campaigns.duel_agility_divisor
         + await theatre.strength.weapon_power(hero, campaigns.duel_weapon_mult)
         + ctx.rng("duel").die(campaigns.duel_die) * campaigns.duel_die_mult
     )
@@ -404,8 +413,11 @@ async def duel(ctx: TickContext, theatre: Theatre, first: EntityRow, second: Ent
         if winner_side is not None and loser_side is not None and winner_side != loser_side:
             await start_blood_feud(ctx, winner_side, loser_side, f"the blood of {loser.name}")
         return f" In a duel {winner.name} killed {loser.name}; now there is a blood feud between the two sides."
-    hp = stat(loser, "hp")
-    set_stats(loser, hp=clamp_int((hp if hp else campaigns.hero_default_hp) - campaigns.duel_loser_hp_loss, 1, ctx.rules.limits.hp_cap))
+    if stat(loser, "hp") is None:
+        set_stats(loser, hp=campaigns.hero_default_hp)
+    await apply_hits(
+        ctx, loser, Harm(campaigns.duel_loser_hp_loss, HarmCause.DUEL, "fell in a duel", source_node_id=winner.id, killer_id=winner.id), lethal=False
+    )
     return f" {winner.name} and {loser.name} dueled; {loser.name} was badly wounded."
 
 
@@ -493,7 +505,10 @@ async def fight_battle(
         war.score += (1 if winner.id == attacker.id else -1) * (campaigns.great_victory_score if great else 1)
         outcome = BattleOutcome.GREAT_VICTORY if great else BattleOutcome.FIELD_VICTORY
         summary = f"{winner.name} prevailed over {loser.name}"
+    before = {side.id: stat(army_entities[side.id], "size") or 0 for side in (winner, loser)}
     loss = _casualties(ctx, army_entities[winner.id], army_entities[loser.id], gap)
+    for side in (winner, loser):
+        await return_maimed(ctx, side, before[side.id] - (stat(army_entities[side.id], "size") or 0))
     _community_losses(ctx, winner, loser, loss)
     await change_relation(ctx, attacker.id, defender.id, -campaigns.battle_relation, "battle")
     son_id = await _patron_effects(ctx, theatre, winner, loser)

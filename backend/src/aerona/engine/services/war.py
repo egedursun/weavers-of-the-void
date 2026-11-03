@@ -14,12 +14,14 @@ from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, TributeRow, WarRow, WarSideRow
+from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import CaptiveStatus, TributeStatus, WarCause, WarSide, WarStatus
 from aerona.domain.models.entity_stats import ArmyStats, EventStats
+from aerona.engine.body.book import effective
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.levies import levy
 from aerona.engine.primitives.naming import Namer, seed_of
@@ -391,7 +393,10 @@ PEOPLES_ARMY = (EngineKind.PEOPLES_ARMY, "people's army")
 async def raise_army(ctx: TickContext, strength: MilitaryStrength, sides: SideIndex, community: EntityRow, war: WarRow) -> tuple[EntityRow, ArmyRow]:
     campaigns = ctx.rules.campaigns
     heroes = sides.heroes_of(community.id)
-    commander = max(heroes, key=lambda hero: ((stat(hero, "strength") or 0) + (stat(hero, "charisma") or 0), -hero.id), default=None)
+    scores = {
+        hero.id: await effective(ctx.session, hero, "strength") + await effective(ctx.session, hero, "charisma", capacity=Capacity.COMMAND) for hero in heroes
+    }
+    commander = max(heroes, key=lambda hero: (scores[hero.id], -hero.id), default=None)
     engine_kind, subtype = ARMY_KINDS.get(community.entity_type, PEOPLES_ARMY)
     wanted = clamp_int(soldier_count(ctx.rules, strength, community), campaigns.army_min_soldiers, ctx.rules.limits.army_soldier_cap)
     size = levy(ctx.rules, community, wanted)

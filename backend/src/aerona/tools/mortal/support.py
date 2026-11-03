@@ -11,10 +11,12 @@ from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, CivilizationTier, EngineKind, EntityOrigin, EntityStatus, EntityType, LegendCategory
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import SonStatus
+from aerona.engine.body.book import factor
 from aerona.engine.gods.queries import community_of
 from aerona.engine.primitives.distance import seafaring_reach
 from aerona.engine.primitives.knowledge import LawBook, branch_level, knows, level_multiplier
@@ -42,12 +44,14 @@ def first_stat(entity: EntityRow, keys: Sequence[str], default: int) -> int:
     return default
 
 
-def craft_of(call: MortalCall, entity: EntityRow | None = None) -> int:
-    return first_stat(entity or call.me, CRAFT_CHAIN, call.rules.mortal_tools.default_stat)
+async def craft_of(call: MortalCall, entity: EntityRow | None = None) -> int:
+    holder = entity or call.me
+    return round(first_stat(holder, CRAFT_CHAIN, call.rules.mortal_tools.default_stat) * await factor(call.session, holder.id, Capacity.CRAFT))
 
 
-def wits_of(call: MortalCall, entity: EntityRow | None = None) -> int:
-    return first_stat(entity or call.me, WITS_CHAIN, call.rules.mortal_tools.default_stat)
+async def wits_of(call: MortalCall, entity: EntityRow | None = None) -> int:
+    holder = entity or call.me
+    return round(first_stat(holder, WITS_CHAIN, call.rules.mortal_tools.default_stat) * await factor(call.session, holder.id, Capacity.SCHOLARSHIP))
 
 
 def money_key(entity: EntityRow) -> str | None:

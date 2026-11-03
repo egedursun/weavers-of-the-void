@@ -11,11 +11,13 @@ from aerona.db.tables.lore import MessageRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, MessageIntent, PrayerRequest, TurnCounter
+from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.limits import RELATION_MIN
 from aerona.domain.enums.son import SonStatus
+from aerona.engine.body.book import factor
 from aerona.engine.gods import devotion
 from aerona.engine.gods.devotion import RiteKind as EngineRite
 from aerona.engine.primitives.faith import clear_seeking, foreign_patron, living_patron, patron_son, worship_creator
@@ -125,7 +127,7 @@ async def preach(call: MortalCall, args: PreachInput) -> str:
     rival = (old.charisma / tools.preach_old_god_divisor if old is not None else 0) + (
         old_foreign.charisma / tools.preach_old_god_divisor if old_foreign is not None else 0
     )
-    influence = stat(call.me, "influence") or tools.preach_default_influence
+    influence = (stat(call.me, "influence") or tools.preach_default_influence) * await factor(call.session, call.me.id, Capacity.PRESENCE)
     piety = stat(target, "piety") or tools.preach_default_piety
     chance = tools.preach_base_pct + influence / 2 + god.charisma / tools.preach_god_charisma_divisor - rival - piety / tools.preach_piety_divisor
     call.target(target.id)
@@ -190,7 +192,7 @@ async def prophesy(call: MortalCall, args: ProphesyInput) -> str:
     concerns = lines.PROPHECY_CONCERNS.format(names=JOIN.join(entity.name for entity in related)) if related else ""
     description = lines.PROPHECY_TEXT.format(me=call.me.name, saying=args.saying, concerns=concerns)
     subtype = lines.PROPHECY_SUBTYPES["cult" if call.me.entity_type is EntityType.CULT else "mortal"]
-    certainty = max(0, min(PERCENT, tools.prophecy_certainty_base + round(wits_of(call) / 2)))
+    certainty = max(0, min(PERCENT, tools.prophecy_certainty_base + round((await wits_of(call)) / 2)))
     prophecy = await create_record(call, MortalCreation(args.name, EntityType.PROPHECY, description, subtype=subtype, stats={"certainty": certainty}))
     bonds = BondRepository(call.session)
     await bonds.connect(BondDraft(call.me.id, prophecy.id, BondKind.PROPHESIES, call.epoch))

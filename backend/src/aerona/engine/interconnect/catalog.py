@@ -2,8 +2,10 @@ import inspect
 import re
 import sys
 
+from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
+from aerona.domain.enums.body import ConditionKind, InjuryKind
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.interconnect.registry import MECHANICS, Coupling, Exposure, Mechanic, Subsystem, Surface, register
 from aerona.engine.phase import Phase
@@ -12,6 +14,9 @@ from aerona.engine.pipeline import PHASE_REGISTRY
 MECHANICS_SECTION = "section-mechanics"
 ENVIRONMENT_SECTION = "section-environment"
 SEASONS_SECTION = "section-seasons"
+BODY_SECTION = "section-body"
+MAIMED_SECTION = "section-maimed"
+CUSTOMS_SECTION = "section-body-customs"
 
 BUILT_IN = (
     Mechanic(
@@ -172,6 +177,127 @@ BUILT_IN = (
             Coupling(Subsystem.ECOLOGY, "clearing shrinks wild land"),
             Coupling(Subsystem.ECONOMY, "erosion and overfarming wear out the soil"),
             Coupling(Subsystem.DEMOGRAPHY, "building and crowding raise disease"),
+        ),
+    ),
+    Mechanic(
+        key="anatomy",
+        spec_item="F4.1",
+        title="Body plans",
+        subsystem=Subsystem.BODY,
+        phases=("body_survey",),
+        surface=Surface(drawer=BODY_SECTION),
+        backfill="body_survey: every mortal, son and foreign god gets the body plan of their species, or a humanoid or divine body",
+        fields=("plan", "traits", "fingers"),
+        tables=(BodyRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal", "species", "son", "foreign_god"),
+        couplings=(Coupling(Subsystem.ECOLOGY, "a species' traits add wings, venom glands, horns and tails"),),
+    ),
+    Mechanic(
+        key="injuries",
+        spec_item="F4.2",
+        title="Typed injuries on body parts",
+        subsystem=Subsystem.BODY,
+        phases=("disaster_casualties", "natural_disasters", "curse_decay", "cursed_items", "glory_hunts", "heroes"),
+        surface=Surface(drawer=BODY_SECTION),
+        backfill="body_survey: mortals who fell in battle, siege, captivity or disaster before bodies existed get one fatal wound; others start unhurt",
+        templates=tuple(f"injury.{kind.value}" for kind in InjuryKind),
+        fields=("part", "kind", "severity", "state", "function_loss", "visible"),
+        tables=(InjuryRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal", "son", "foreign_god"),
+        couplings=(
+            Coupling(Subsystem.WAR, "battles, duels and sieges wound by weapon mix and armour cover"),
+            Coupling(Subsystem.GODS, "sons and foreign gods carry divine wounds from their trials and wars"),
+        ),
+    ),
+    Mechanic(
+        key="hits",
+        spec_item="F4.3",
+        title="From weapons to injuries",
+        subsystem=Subsystem.BODY,
+        phases=("campaigns",),
+        surface=Surface(drawer=BODY_SECTION),
+        backfill="none: armour cover is read from the people's metallurgy and the armour each bearer owns",
+        fields=("armour_head", "armour_torso", "armour_limbs"),
+        tables=(BodyRow.__tablename__,),
+        targets=("mortal", "son", "foreign_god"),
+        couplings=(
+            Coupling(Subsystem.KNOWLEDGE, "metallurgy gives helmets; a people without them breeds one-eyed veterans"),
+            Coupling(Subsystem.ECOLOGY, "flying beasts strike heads, giants trample legs"),
+        ),
+    ),
+    Mechanic(
+        key="healing",
+        spec_item="F4.4",
+        title="Healing, infection and death from wounds",
+        subsystem=Subsystem.BODY,
+        phases=("body_healing", "mortal_wounds"),
+        surface=Surface(drawer=BODY_SECTION),
+        backfill="none: open wounds begin healing on the next epoch",
+        templates=("healing.amputated", "healing.reattached", "healing.prosthesis"),
+        fields=("hp_max", "patients_healed", "patients_lost"),
+        tables=(InjuryRow.__tablename__, ProsthesisRow.__tablename__),
+        targets=("mortal", "son", "foreign_god"),
+        couplings=(
+            Coupling(Subsystem.ENVIRONMENT, "the region's disease load makes wounds fester"),
+            Coupling(Subsystem.KNOWLEDGE, "medicine brings herbs, surgery, prosthetics and reattachment"),
+            Coupling(Subsystem.SOCIAL, "wounded notables seek the best healer within reach and bind to them"),
+        ),
+    ),
+    Mechanic(
+        key="conditions",
+        spec_item="F4.5",
+        title="Permanent conditions and derived capacities",
+        subsystem=Subsystem.BODY,
+        phases=("body_conditions",),
+        surface=Surface(drawer=BODY_SECTION),
+        backfill="body_conditions: the chosen gain their mark; other conditions arise from play",
+        templates=tuple(f"condition.gained.{kind.value}" for kind in ConditionKind),
+        fields=("melee", "missile", "command", "craft", "scholarship", "presence", "mobility", "fertility", "pain"),
+        tables=(ConditionRow.__tablename__, BodyRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal", "son", "foreign_god"),
+        couplings=(
+            Coupling(Subsystem.WAR, "melee, command and mobility drive duels, commanders, hunts and escapes"),
+            Coupling(Subsystem.CULTURE, "craft and scholarship drive making, teaching and sensing hidden roads"),
+            Coupling(Subsystem.DEMOGRAPHY, "fertility shapes the children of couples"),
+            Coupling(Subsystem.FAITH, "presence shapes preaching; madness, possession and void taint follow sanity and spirits"),
+        ),
+    ),
+    Mechanic(
+        key="body_customs",
+        spec_item="F4.5",
+        title="How a people reads scars and missing parts",
+        subsystem=Subsystem.CULTURE,
+        phases=("body_society",),
+        surface=Surface(drawer=CUSTOMS_SECTION),
+        backfill="body_survey: each people's reading comes from its patron's domains and its martiality",
+        templates=("body.ruler_set_aside", "body.maimed_cult"),
+        fields=("reading", "wholeness_required", "seer_eye", "scar_festivals", "pension"),
+        tables=(BodyCustomRow.__tablename__,),
+        targets=("people",),
+        couplings=(
+            Coupling(Subsystem.POLITY, "a people that demands wholeness sets aside a maimed ruler"),
+            Coupling(Subsystem.FAITH, "cults that sanctify suffering take in the maimed"),
+        ),
+    ),
+    Mechanic(
+        key="maimed_cohorts",
+        spec_item="F4.5",
+        title="The maimed as a population",
+        subsystem=Subsystem.DEMOGRAPHY,
+        phases=("body_society", "couple_births"),
+        surface=Surface(drawer=MAIMED_SECTION),
+        backfill="none: cohorts start empty and fill from the soldiers of later battles",
+        templates=("cohort.scar_festival",),
+        fields=("count", "veterans"),
+        tables=(MaimedCohortRow.__tablename__,),
+        targets=("settlement", "people"),
+        couplings=(
+            Coupling(Subsystem.ECONOMY, "the maimed lower food and craft output and drain prosperity without a pension"),
+            Coupling(Subsystem.WAR, "a maimed people grows wary of new wars; a martial one holds scar festivals"),
+            Coupling(Subsystem.SOCIAL, "the maimed raise the birth of healers"),
         ),
     ),
 )

@@ -6,11 +6,13 @@ from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.war import WarCause
-from aerona.engine.lifecycle.wounds import WoundOutcome, wound
+from aerona.engine.body.hits import Harm
+from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits
 from aerona.engine.primitives.faith import patron_son
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.services.community_relations import change_relation
@@ -71,8 +73,8 @@ async def declare(call: MortalCall, args: DeclareWarInput) -> str:
 async def _poison(call: MortalCall, target: EntityRow, caught: bool) -> str:
     tools = call.rules.mortal_tools
     if target.entity_type is EntityType.MORTAL:
-        outcome = await wound(call.tick, target, tools.poison_hp, cause=lines.POISON_DEATH, killer_id=call.me.id if caught else None)
-        if outcome is WoundOutcome.DIED:
+        harm = Harm(tools.poison_hp, HarmCause.POISON, lines.POISON_DEATH, source_node_id=call.me.id, killer_id=call.me.id if caught else None)
+        if (await apply_hits(call.tick, target, harm)).outcome is WoundOutcome.DIED:
             return result(MortalResult.POISON_KILLED, name=target.name)
         return result(MortalResult.POISON_WORKED, name=target.name)
     floor = call.rules.limits.population_floor
@@ -113,7 +115,7 @@ async def sabotage(call: MortalCall, args: SabotageInput) -> str:
         await fail_with_candidates(call, MortalResult.INVALID_TARGET, SABOTAGE_TARGETS)
     if not await near(call, target):
         await fail_with_candidates(call, MortalResult.TOO_FAR, SABOTAGE_TARGETS)
-    cunning = wits_of(call) + call.die(tools.sabotage_die, "cunning")
+    cunning = await wits_of(call) + call.die(tools.sabotage_die, "cunning")
     watch = first_stat(target, WATCH_CHAIN, tools.default_stat) + call.die(tools.sabotage_die, "watch")
     caught = watch > cunning + tools.sabotage_caught_margin
     call.target(target.id)
@@ -151,7 +153,7 @@ async def build_spy_network(call: MortalCall, args: SpyInput) -> str:
     bonds = BondRepository(call.session)
     if await bonds.exists_between(call.me.id, target.id, BondKind.SPY_NETWORK):
         fail(MortalResult.SPIES_EXIST)
-    mine = wits_of(call) + call.die(tools.spy_die, "spy_wits")
+    mine = await wits_of(call) + call.die(tools.spy_die, "spy_wits")
     theirs = first_stat(target, WATCH_CHAIN, tools.default_stat) + call.die(tools.spy_die, "spy_watch")
     call.target(target.id)
     if theirs > mine + tools.spy_caught_margin:

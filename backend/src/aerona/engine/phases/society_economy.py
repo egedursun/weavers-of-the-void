@@ -20,6 +20,7 @@ from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw, 
 from aerona.domain.enums.war import WarCause
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import FactionStats, ItemStats
+from aerona.engine.body.cohorts import labour_factor
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_types import ore_yield_pct
 from aerona.engine.notes import note
@@ -470,12 +471,13 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     society = await society_of(ctx.session, rules, entity.id)
     rng = ctx.rng(f"community.{entity.id}")
     society.shares = drift_shares(rules, society.shares, class_targets(rules, inputs))
-    rate = food_rate(settings, inputs, society.shares[SocialClass.FARMER], rules.knowledge)
+    labour = await labour_factor(ctx, entity)
+    rate = food_rate(settings, inputs, society.shares[SocialClass.FARMER], rules.knowledge) * labour
     society.stocks[Commodity.FOOD] = next_food(settings, society.stocks[Commodity.FOOD], rate, inputs.at_war)
     society.stocks[Commodity.ORE] = clamp_int(society.stocks[Commodity.ORE] + inputs.ore_income - settings.ore_consumption, 0, settings.stockpile_cap)
     metallurgy = KnowledgeBranch.METALLURGY in inputs.branches
     factor = ratio_of(rules.knowledge, inputs.levels.get(KnowledgeBranch.METALLURGY, 1), settings.goods_metallurgy_pct)
-    output = craft_output(settings, society.shares[SocialClass.ARTISAN], society.stocks[Commodity.ORE], metallurgy, factor)
+    output = craft_output(settings, society.shares[SocialClass.ARTISAN], society.stocks[Commodity.ORE], metallurgy, factor) * labour
     goods = society.stocks[Commodity.GOODS] + output * settings.goods_production_mult - settings.goods_consumption
     society.stocks[Commodity.GOODS] = clamp_int(goods - round_half_up(inputs.prosperity / settings.goods_prosperity_divisor), 0, settings.stockpile_cap)
     if society.stocks[Commodity.GOODS] > settings.goods_ore_threshold and society.stocks[Commodity.ORE] > settings.goods_ore_threshold:

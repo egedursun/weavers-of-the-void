@@ -5,9 +5,13 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import CaptiveRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
+from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.war import CaptiveStatus
+from aerona.engine.body.book import effective, factor
+from aerona.engine.body.hits import Harm
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.faith import patron_son
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
@@ -43,8 +47,8 @@ async def escape(call: MortalCall, args: EscapeInput) -> str:
     captor = await _captor(call, row)
     default = tools.escape_default_stat
     raw = (
-        (stat(call.me, "agility") or default) / 2
-        + (stat(call.me, "intellect") or default) / tools.escape_intellect_divisor
+        await effective(call.session, call.me, "agility", default) / 2
+        + await effective(call.session, call.me, "intellect", default) / tools.escape_intellect_divisor
         - stat_or(captor, "defense", tools.default_stat) / tools.escape_captor_defense_divisor
     )
     chance = max(tools.escape_min_pct, min(max(tools.escape_min_pct, tools.escape_max_pct), round(raw)))
@@ -53,9 +57,9 @@ async def escape(call: MortalCall, args: EscapeInput) -> str:
         await release_captive(call.tick, row, CaptiveStatus.ESCAPED)
         await call.chronicle(ChronicleKind.ESCAPE, lines.ESCAPED, entity_ids=[call.me.id, captor.id], me=call.me.name, captor=captor.name, how=args.how)
         return result(MortalResult.ESCAPED, chance=chance)
-    hp = stat(call.me, "hp")
-    if hp is not None:
-        set_stats(call.me, hp=max(1, hp - tools.escape_caught_wound))
+    await apply_hits(
+        call.tick, call.me, Harm(tools.escape_caught_wound, HarmCause.ESCAPE, "died after a failed escape", source_node_id=captor.id), lethal=False
+    )
     await call.chronicle(ChronicleKind.ESCAPE, lines.ESCAPE_FAILED, entity_ids=[call.me.id, captor.id], me=call.me.name, captor=captor.name)
     return result(MortalResult.ESCAPE_FAILED, chance=chance)
 
@@ -106,7 +110,9 @@ async def rescue_captive(call: MortalCall, args: RescueInput) -> str:
         fail(MortalResult.NO_CAPTIVE_TO_RESCUE)
     if captor.id == call.me.id:
         fail(MortalResult.OWN_CAPTIVE_RAID, name=captive.name)
-    mine = first_stat(call.me, STRENGTH_CHAIN, tools.default_stat) + call.die(tools.rescue_die, "raiders")
+    mine = first_stat(call.me, STRENGTH_CHAIN, tools.default_stat) * await factor(call.session, call.me.id, Capacity.MELEE) + call.die(
+        tools.rescue_die, "raiders"
+    )
     theirs = first_stat(captor, GUARD_CHAIN, tools.default_stat) + call.die(tools.rescue_die, "guards")
     call.target(captive.id)
     if mine >= theirs:

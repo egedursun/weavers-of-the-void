@@ -10,6 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
+from aerona.engine.body.describe import body_lines
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import EntityAuthor, EntityDetailContext
 from aerona.prompts.contexts.common import LabelValue, LexiconWord, NamedRecord, WorldItem
@@ -38,7 +39,7 @@ def stat_values(entity: EntityRow) -> list[LabelValue]:
     return found
 
 
-async def entity_detail_context(scope: Scope, entity: EntityRow) -> EntityDetailContext:
+async def entity_detail_context(scope: Scope, entity: EntityRow, *, private: bool = False) -> EntityDetailContext:
     session = scope.session
     location = await session.get(EntityRow, entity.location_id) if entity.location_id is not None else None
     son = await session.get(SonRow, entity.creator_son_id) if entity.creator_son_id is not None else None
@@ -71,8 +72,9 @@ async def entity_detail_context(scope: Scope, entity: EntityRow) -> EntityDetail
         lexicon=lexicon,
         society=await society_lines(session, scope.rules, entity),
         facts=await fact_lines(session, scope.rules, entity),
+        body=await body_lines(session, scope.rules, entity, private=private),
     )
 
 
-async def entity_detail(scope: Scope, entity: EntityRow) -> str:
-    return render(PromptId.ENTITY_DETAIL, await entity_detail_context(scope, entity))
+async def entity_detail(scope: Scope, entity: EntityRow, *, private: bool = False) -> str:
+    return render(PromptId.ENTITY_DETAIL, await entity_detail_context(scope, entity, private=private))
