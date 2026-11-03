@@ -122,9 +122,9 @@ function SmallChart({ spec, points }: { spec: ChartSpec; points: Point[] }) {
       data-chart-card={spec.id}
       className='flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-4'
     >
-      <div className='flex min-w-0 items-center gap-3'>
+      <div className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2'>
         <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
-        <Text as='span' weight='semibold' truncate className='min-w-0 flex-1'>
+        <Text as='span' weight='semibold' className='flex-1'>
           {spec.title}
         </Text>
         {spec.fields.length === 1 && last !== null && (

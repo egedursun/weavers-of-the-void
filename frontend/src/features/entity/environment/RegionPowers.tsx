@@ -120,19 +120,21 @@ export function ForgeLey({
               onPick={setOther}
             />
           </div>
-          <FormRow label='Strength'>
-            {(id) => (
-              <Input
-                id={id}
-                type='number'
-                min={0}
-                max={MAX_PERCENT}
-                value={strength}
-                className='w-24'
-                onChange={(event) => setStrength(event.target.value)}
-              />
-            )}
-          </FormRow>
+          <div className='w-24'>
+            <FormRow label='Strength'>
+              {(id) => (
+                <Input
+                  id={id}
+                  type='number'
+                  min={0}
+                  max={MAX_PERCENT}
+                  value={strength}
+                  className='w-24'
+                  onChange={(event) => setStrength(event.target.value)}
+                />
+              )}
+            </FormRow>
+          </div>
           <Button
             size='sm'
             disabled={busy !== null || other === ''}
@@ -244,18 +246,20 @@ export function HoldWeather({
             onPick={setSeason}
           />
         </div>
-        <FormRow label='Epochs'>
-          {(id) => (
-            <Input
-              id={id}
-              type='number'
-              min={1}
-              value={epochs}
-              className='w-20'
-              onChange={(event) => setEpochs(event.target.value)}
-            />
-          )}
-        </FormRow>
+        <div className='w-20'>
+          <FormRow label='Epochs'>
+            {(id) => (
+              <Input
+                id={id}
+                type='number'
+                min={1}
+                value={epochs}
+                className='w-20'
+                onChange={(event) => setEpochs(event.target.value)}
+              />
+            )}
+          </FormRow>
+        </div>
         <Button
           size='sm'
           disabled={busy !== null}
@@ -353,30 +357,34 @@ export function NotableYears({
             />
           </div>
         )}
-        <FormRow label='Weight'>
-          {(id) => (
-            <Input
-              id={id}
-              type='number'
-              min={0}
-              max={MAX_PERCENT}
-              value={magnitude}
-              className='w-20'
-              onChange={(event) => setMagnitude(event.target.value)}
-            />
-          )}
-        </FormRow>
-        <FormRow label='Name'>
-          {(id) => (
-            <Input
-              id={id}
-              value={name}
-              placeholder='Named by the land if empty'
-              className='w-56'
-              onChange={(event) => setName(event.target.value)}
-            />
-          )}
-        </FormRow>
+        <div className='w-20'>
+          <FormRow label='Weight'>
+            {(id) => (
+              <Input
+                id={id}
+                type='number'
+                min={0}
+                max={MAX_PERCENT}
+                value={magnitude}
+                className='w-20'
+                onChange={(event) => setMagnitude(event.target.value)}
+              />
+            )}
+          </FormRow>
+        </div>
+        <div className='min-w-48 flex-1'>
+          <FormRow label='Name'>
+            {(id) => (
+              <Input
+                id={id}
+                value={name}
+                placeholder='Named by the land if empty'
+                className='w-full'
+                onChange={(event) => setName(event.target.value)}
+              />
+            )}
+          </FormRow>
+        </div>
         <Button
           size='sm'
           disabled={busy !== null}

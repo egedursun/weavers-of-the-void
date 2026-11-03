@@ -116,7 +116,8 @@ async def list_mechanics() -> list[MechanicRecord]:
 @router.get("/nodes/{node_id}/mechanics", response_model=NodeMechanicsView)
 async def node_mechanics(services: ServicesDep, node_id: int = Path(ge=1)) -> NodeMechanicsView:
     async with reader(services) as session:
-        node = await session.get(NodeRow, node_id)
+        entity = await session.get(EntityRow, node_id)
+        node = entity if entity is not None else await session.get(NodeRow, node_id)
         if node is None:
             raise NotFoundError("No such record.")
         epoch = (await CosmosRepository(session).require_cosmos()).epoch
@@ -128,7 +129,6 @@ async def node_mechanics(services: ServicesDep, node_id: int = Path(ge=1)) -> No
                 guards[row.source_kind].append(GuardRecord(id=row.id, key=key, end_epoch=row.end_epoch))
         index = await ModifierIndex.load(session, epoch, [node_id])
         effective: list[EffectiveValue] = []
-        entity = await session.get(EntityRow, node_id)
         keys = sorted({*index.keys_of(node_id), *(stat_keys(entity) if entity is not None else [])})
         for key in keys:
             base = base_stat(entity, key) if entity is not None else None
