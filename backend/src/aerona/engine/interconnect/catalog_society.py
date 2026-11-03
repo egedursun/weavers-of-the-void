@@ -64,12 +64,11 @@ SOCIETY_MECHANICS = (
     Mechanic(
         key="people_profiles",
         spec_item="S4.1",
-        title="People biology, culture, assimilation and ethnogenesis",
+        title="People biology and culture",
         subsystem=Subsystem.CULTURE,
         phases=("people_cycles",),
         surface=Surface(drawer=PEOPLE_SECTION),
         backfill="people_cycles: biology from member lifespans, culture from values, knowledge and homeland",
-        templates=("peoples.assimilated",),
         fields=(
             "maturity_years",
             "adult_years",
@@ -97,7 +96,6 @@ SOCIETY_MECHANICS = (
         tables=(PeopleBiologyRow.__tablename__, PeopleCultureRow.__tablename__),
         targets=("people",),
         couplings=(
-            Coupling(Subsystem.LANGUAGE, "a weak people sharing a tongue is absorbed", EdgeKind.TRIGGER, "peoples.assimilation_cohesion"),
             Coupling(Subsystem.WAR, "martial value and cohesion set the levy", EdgeKind.MODIFIER, "peoples.levy_martial_pct"),
             Coupling(Subsystem.DEMOGRAPHY, "short-lived peoples breed faster", EdgeKind.MODIFIER, "peoples.maturity_years"),
         ),

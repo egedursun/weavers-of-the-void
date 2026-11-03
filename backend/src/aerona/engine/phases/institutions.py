@@ -10,14 +10,17 @@ from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.war import WarEnding
+from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import closeness
+from aerona.engine.mind.space import value_distance
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.life_cycles import turn_to_ruin
@@ -272,6 +275,31 @@ async def absorb_people(ctx: TickContext, people: EntityRow, into: EntityRow, *,
     await end_record(ctx, people, EntityFlag.MERGED if union else EntityFlag.ASSIMILATED, reason)
 
 
+async def folds_in(ctx: TickContext, people: EntityRow, into: EntityRow, *, shared: bool) -> bool:
+    table = ctx.rules.peoples
+    culture = await ctx.session.get(PeopleCultureRow, people.id)
+    if not shared or culture is None or culture.cohesion >= table.assimilation_cohesion:
+        return False
+    return value_distance(await culture_of(ctx.session, people.id), await culture_of(ctx.session, into.id)) < table.assimilation_distance
+
+
+async def joining(ctx: TickContext, people: EntityRow, largest: EntityRow, *, ratio: float) -> bool | None:
+    cycles = ctx.rules.life_cycles
+    shared = bool(await tongues(ctx, people.id) & await tongues(ctx, largest.id))
+    rng = ctx.rng(f"peoples.{people.id}")
+    kinship = await closeness(ctx.session, people.id, largest.id)
+    if await folds_in(ctx, people, largest, shared=shared):
+        return False if rng.chance(cycles.assimilation_chance * 2 * kinship) else None
+    if ratio <= cycles.assimilation_ratio_pct:
+        rules_it = bool(await BondRepository(ctx.session).active_between(largest.id, people.id, [BondKind.RULES]))
+        chance = cycles.assimilation_chance + (cycles.assimilation_rule_bonus if rules_it else 0) + (cycles.assimilation_language_bonus if shared else 0)
+        return False if rng.chance(chance * kinship) else None
+    if ratio >= cycles.union_ratio_pct and shared and await relation(ctx.session, ctx.rules, people.id, largest.id) >= cycles.union_relation:
+        same_god = await BondRepository(ctx.session).patron(people.id) == await BondRepository(ctx.session).patron(largest.id)
+        return True if same_god and rng.chance(cycles.union_chance * kinship) else None
+    return None
+
+
 async def peoples(ctx: TickContext) -> int:
     cycles = ctx.rules.life_cycles
     atlas = await RegionAtlas.load(ctx.session)
@@ -296,23 +324,10 @@ async def peoples(ctx: TickContext) -> int:
         largest = max(bigger, key=lambda other: (stat(other, "population") or 0, -other.id), default=None)
         if largest is None:
             continue
-        ratio = size * 100 / max(1, stat(largest, "population") or 0)
-        shared = bool(await tongues(ctx, people.id) & await tongues(ctx, largest.id))
-        rng = ctx.rng(f"peoples.{people.id}")
-        kinship = await closeness(ctx.session, people.id, largest.id)
-        union = False
-        if ratio <= cycles.assimilation_ratio_pct:
-            rules_it = bool(await BondRepository(ctx.session).active_between(largest.id, people.id, [BondKind.RULES]))
-            chance = cycles.assimilation_chance + (cycles.assimilation_rule_bonus if rules_it else 0) + (cycles.assimilation_language_bonus if shared else 0)
-            if not rng.chance(chance * kinship):
-                continue
-        elif ratio >= cycles.union_ratio_pct and shared and await relation(ctx.session, ctx.rules, people.id, largest.id) >= cycles.union_relation:
-            same_god = await BondRepository(ctx.session).patron(people.id) == await BondRepository(ctx.session).patron(largest.id)
-            if not same_god or not rng.chance(cycles.union_chance * kinship):
-                continue
-            union = True
-        else:
+        verdict = await joining(ctx, people, largest, ratio=size * 100 / max(1, stat(largest, "population") or 0))
+        if verdict is None:
             continue
+        union = verdict
         reason = f"united with {largest.name} into one people" if union else f"melted into {largest.name}"
         await absorb_people(ctx, people, largest, union=union, reason=reason)
         ended.add(people.id)

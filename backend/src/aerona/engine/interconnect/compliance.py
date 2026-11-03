@@ -188,7 +188,7 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("PeopleProfile", "LabourSankey", "section-people-profile", "section-labour"),
         ("mortal_context",),
         (),
-        ("peoples.",),
+        ("institutions.people_assimilated",),
         ("people_cycles", "labour_allocation"),
     ),
     ComplianceRow(

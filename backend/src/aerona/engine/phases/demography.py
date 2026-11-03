@@ -3,7 +3,6 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.engine.context import TickContext
-from aerona.engine.demography.assimilation import assimilate
 from aerona.engine.demography.cohorts import rebalance_classes, reconcile, seed
 from aerona.engine.demography.labour import allocate
 from aerona.engine.demography.mobility import class_mobility, desertion, ennoble_heroes, ruin_merchants
@@ -110,7 +109,6 @@ async def people_cycles(ctx: TickContext) -> None:
         ground = await region_of(ctx, atlas, people)
         _, culture = await ensure_profiles(ctx.session, ctx.rules, people, ground)
         refresh_culture(culture, await culture_for(ctx.session, ctx.rules, people, ground))
-    ctx.count("assimilated", await assimilate(ctx))
     await ctx.session.flush()
 
 
