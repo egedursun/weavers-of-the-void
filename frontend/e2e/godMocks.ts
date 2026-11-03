@@ -312,6 +312,9 @@ const PULSE: Schemas['EpochStatsData'] = {
   dead: 12,
   godless: 3,
   doom: 62,
+  soldiers: 4200,
+  travelling: 300,
+  flow_items: [],
   doom_items: [
     { item: 'Open wars', delta: 8 },
     { item: 'Miracles worked', delta: -3 },

@@ -18,13 +18,20 @@ import {
   Atom,
   ChevronsUp,
   HandHeart,
+  Shield,
+  Footprints,
 } from 'lucide-react'
 import { type KpiTone } from '@/components/domain'
 import { type EpochStatsData } from './api'
 
 export type NumericStat = Exclude<
   keyof EpochStatsData,
-  'sons' | 'doom_items' | 'leak_items' | 'population_items' | 'essence_items'
+  | 'sons'
+  | 'doom_items'
+  | 'leak_items'
+  | 'population_items'
+  | 'essence_items'
+  | 'flow_items'
 >
 
 export const STAT_LABEL: Record<NumericStat, string> = {
@@ -42,6 +49,8 @@ export const STAT_LABEL: Record<NumericStat, string> = {
   dead: 'Dead',
   godless: 'Godless communities',
   doom: 'Doom clock',
+  soldiers: 'Soldiers under arms',
+  travelling: 'On the road between worlds',
 }
 
 export const STAT_FIELDS = Object.keys(STAT_LABEL) as NumericStat[]
@@ -80,6 +89,8 @@ export const STAT_ICON: Record<NumericStat, LucideIcon> = {
   dead: Skull,
   godless: Ban,
   doom: Hourglass,
+  soldiers: Shield,
+  travelling: Footprints,
 }
 
 export const STAT_TONE: Record<NumericStat, KpiTone> = {
@@ -97,6 +108,8 @@ export const STAT_TONE: Record<NumericStat, KpiTone> = {
   dead: 'muted',
   godless: 'muted',
   doom: 'danger',
+  soldiers: 'danger',
+  travelling: 'info',
 }
 
 export const SON_STAT_ICON: Record<string, LucideIcon> = {

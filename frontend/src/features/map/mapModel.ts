@@ -18,6 +18,14 @@ export const LAYER_MODES = [
   'creators',
   'religions',
   'languages',
+  'ground',
+  'soil',
+  'climate',
+  'land_use',
+  'ley',
+  'population',
+  'followers',
+  'soldiers',
 ] as const
 export type LayerMode = (typeof LAYER_MODES)[number]
 
@@ -28,7 +36,29 @@ export const LAYER_LABEL: Record<LayerMode, string> = {
   creators: 'Creators',
   religions: 'Religions',
   languages: 'Languages',
+  ground: 'Ground',
+  soil: 'Soil',
+  climate: 'Climate',
+  land_use: 'Land use',
+  ley: 'Ley lines',
+  population: 'Population',
+  followers: 'Followers',
+  soldiers: 'Soldiers',
 }
+
+export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
+  ground: 'map-layer-terrain',
+  soil: 'map-layer-soil',
+  climate: 'map-layer-climate',
+  land_use: 'map-layer-land-use',
+  ley: 'map-layer-ley',
+  population: 'map-layer-population',
+  followers: 'map-layer-followers',
+  soldiers: 'map-layer-soldiers',
+}
+
+export const STOCK_LAYERS = ['population', 'followers', 'soldiers'] as const
+export type StockLayer = (typeof STOCK_LAYERS)[number]
 
 export const OVERLAYS = [
   'roads',

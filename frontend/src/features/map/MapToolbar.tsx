@@ -20,6 +20,13 @@ import {
   Waypoints,
   Zap,
   type LucideIcon,
+  Sprout,
+  Thermometer,
+  Wheat,
+  Sparkles,
+  Users,
+  Flame,
+  Shield,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -51,6 +58,7 @@ import {
   type Overlay,
   LAYER_LABEL,
   LAYER_MODES,
+  LAYER_SURFACE,
   OVERLAYS,
   OVERLAY_LABEL,
 } from './mapModel'
@@ -62,6 +70,14 @@ const LAYER_ICON: Record<LayerMode, LucideIcon> = {
   creators: Crown,
   religions: Church,
   languages: Languages,
+  ground: Mountain,
+  soil: Sprout,
+  climate: Thermometer,
+  land_use: Wheat,
+  ley: Sparkles,
+  population: Users,
+  followers: Flame,
+  soldiers: Shield,
 }
 
 const OVERLAY_ICON: Record<Overlay, LucideIcon> = {
@@ -116,7 +132,11 @@ function LayerControls({
         {LAYER_MODES.map((option) => {
           const Icon = LAYER_ICON[option]
           return (
-            <ToggleGroupItem key={option} value={option}>
+            <ToggleGroupItem
+              key={option}
+              value={option}
+              data-surface={LAYER_SURFACE[option]}
+            >
               <Icon aria-hidden='true' />
               {LAYER_LABEL[option]}
             </ToggleGroupItem>

@@ -319,3 +319,15 @@ test('searching the commands with no match says so', async ({ page }) => {
   await drawer.getByRole('searchbox', { name: 'Find a command' }).fill('zzzz')
   await expect(drawer.getByText('No command matches')).toBeVisible()
 })
+
+test('the Mechanics tab lists the mechanics acting on a record and runs one on it', async ({ page }) => {
+  const { drawer, writes } = await openDrawer(page, MORTAL)
+  const mechanics = drawer.locator('#section-mechanics')
+  await mechanics.scrollIntoViewIfNeeded()
+  await expect(mechanics.getByText('Typed injuries on body parts')).toBeVisible()
+  await expect(mechanics.getByText('× 0.85 because a lingering illness saps their strength')).toBeVisible()
+  await expect(drawer.locator('#section-biography').getByText('Varn and Osk met at the ford.')).toBeVisible()
+  await mechanics.getByRole('button', { name: 'Run on this record now' }).click()
+  await expect.poll(() => writesTo(writes, 'POST', /\/api\/actions\/lever:run$/).length).toBe(1)
+  expect(writesTo(writes, 'POST', /\/api\/actions\/lever:run$/)[0]?.body).toEqual({ mechanic: 'injuries', target_node_id: 45 })
+})

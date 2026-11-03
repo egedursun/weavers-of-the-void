@@ -19,6 +19,7 @@ import {
 } from '@/features/overview/statFields'
 import { ChronicleEntry } from './ChronicleEntry'
 import { EpochNarrative } from './EpochNarrative'
+import { YearStrip } from './YearStrip'
 import {
   type EpochListItem,
   type EpochStatistics,
@@ -58,7 +59,10 @@ export function EpochArticle({
   const [opened, setOpened] = useState(ongoing)
   const open = opened || forceOpen
   const lines = useEpochLines(epoch, open)
-  const shown = filterLines(lines.data?.items ?? [], filter)
+  const [year, setYear] = useState<number | null>(null)
+  const filtered = filterLines(lines.data?.items ?? [], filter)
+  const shown =
+    year === null ? filtered : filtered.filter((line) => line.year === year)
   const years =
     item?.year_start !== null && item?.year_start !== undefined
       ? `Years ${formatInteger(item.year_start)}–${item.year_end !== null ? formatInteger(item.year_end) : '…'}`
@@ -160,6 +164,7 @@ export function EpochArticle({
                 : 'Nothing was written in this epoch.'}
             </Muted>
           )}
+          <YearStrip lines={filtered} selected={year} onSelect={setYear} />
           {shown.length > 0 && (
             <ol className='flex min-w-0 flex-col gap-1'>
               {shown.map((line) => (

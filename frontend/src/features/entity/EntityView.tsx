@@ -25,6 +25,7 @@ import { type EntityDetail } from './api/types'
 import { RELATION_PAGE_MAX } from './constants'
 import { scrollToSection } from './scrollToSection'
 import { ArrangeExtras } from './sections/ArrangeExtras'
+import { BiographySection } from './sections/BiographySection'
 import { BodySection } from './sections/BodySection'
 import { CommunityMaimed, PeopleBodyCustoms } from './sections/BodySociety'
 import { CanonFacts } from './sections/CanonFacts'
@@ -85,6 +86,7 @@ const SECTION_LINKS = [
   { id: 'section-mind', label: 'Mind' },
   { id: 'section-skills', label: 'Skills' },
   { id: 'section-memories', label: 'Memories' },
+  { id: 'section-biography', label: 'Biography' },
   { id: 'section-mechanics', label: 'Mechanics' },
   { id: 'section-edit', label: 'Edit' },
 ]
@@ -259,6 +261,7 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       {minded && <MindSection nodeId={entity.id} />}
       {entity.entity_type === 'mortal' && <SkillsSection nodeId={entity.id} />}
       {minded && <MemoriesSection nodeId={entity.id} />}
+      <BiographySection nodeId={entity.id} readOnlyReason={readOnly} />
       <EntityMechanics
         nodeId={entity.id}
         statKeys={Object.keys(entity.stats).filter((key) => key !== 'kind')}

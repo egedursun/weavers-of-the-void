@@ -60,6 +60,36 @@ const ALPHA: Record<LayerMode, number> = {
   creators: 0.3,
   religions: 0.42,
   languages: 0.42,
+  ground: 0.45,
+  soil: 0.45,
+  climate: 0.4,
+  land_use: 0.42,
+  ley: 0.5,
+  population: 0.45,
+  followers: 0.45,
+  soldiers: 0.45,
+}
+
+export const STOCK_BANDS = [
+  { key: 'few', below: 1000 },
+  { key: 'many', below: 10000 },
+  { key: 'multitude', below: Number.POSITIVE_INFINITY },
+] as const
+
+const BAND_LABEL: Record<string, string> = {
+  few: 'Fewer than a thousand',
+  many: 'Thousands',
+  multitude: 'Tens of thousands or more',
+}
+
+export function stockBand(value: number): string | null {
+  if (value <= 0) return null
+  return STOCK_BANDS.find((band) => value < band.below)?.key ?? null
+}
+
+function words(value: string): string {
+  const text = value.replaceAll('_', ' ')
+  return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
 const POLITICAL_ALPHA_GAIN = 0.2
@@ -98,6 +128,34 @@ function regionKey(
       const language = view.dominance[String(topId)]?.language_id
       return language ? { key: `language:${language}`, alpha } : null
     }
+    case 'ground':
+    case 'soil':
+    case 'climate':
+    case 'land_use':
+    case 'ley': {
+      const ground = view.ground[String(regionId)] ?? view.ground[String(topId)]
+      if (!ground) return null
+      if (mode === 'ley') {
+        if (ground.nexus) return { key: 'ley:nexus', alpha }
+        return ground.ley_lines > 0 ? { key: 'ley:line', alpha } : null
+      }
+      const value =
+        mode === 'ground'
+          ? ground.terrain
+          : mode === 'soil'
+            ? ground.soil
+            : mode === 'climate'
+              ? ground.climate
+              : ground.land_use
+      return { key: `${mode}:${value}`, alpha }
+    }
+    case 'population':
+    case 'followers':
+    case 'soldiers': {
+      const stocks = view.stocks[String(regionId)] ?? view.stocks[String(topId)]
+      const band = stocks ? stockBand(stocks[mode]) : null
+      return band ? { key: `${mode}:${band}`, alpha } : null
+    }
     case 'political': {
       const control = controlOf(view, regionId, topId)
       if (!control) return null
@@ -127,6 +185,17 @@ function labelFor(
   const id = Number(raw)
   if (kind === 'son') return names.sons.get(id) ?? `Son ${id}`
   if (kind === 'language') return names.languages.get(id) ?? `Language ${id}`
+  if (kind === 'ley')
+    return raw === 'nexus' ? 'Nexus of ley lines' : 'On a ley line'
+  if (kind === 'population' || kind === 'followers' || kind === 'soldiers')
+    return BAND_LABEL[raw] ?? words(raw)
+  if (
+    kind === 'ground' ||
+    kind === 'soil' ||
+    kind === 'climate' ||
+    kind === 'land_use'
+  )
+    return words(raw)
   if (kind === 'ruler') {
     const control = Object.values(view.political).find(
       (item) => item.ruler_id === id

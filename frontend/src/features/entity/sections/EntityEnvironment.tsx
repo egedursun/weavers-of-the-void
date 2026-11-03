@@ -18,6 +18,7 @@ import {
   Waypoints,
   Wheat,
   type LucideIcon,
+  Scroll,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -50,6 +51,11 @@ import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { loreKeys } from '../api/keys'
+import {
+  ForgeLey,
+  HoldWeather,
+  NotableYears,
+} from '../environment/RegionPowers'
 import {
   BAND,
   COAST,
@@ -724,6 +730,15 @@ function RegionEnvironmentSection({ regionId }: { regionId: number }) {
             </Card>
             <Card title='Ley lines' icon={Waypoints}>
               <LeyLines ground={ground} blocked={reason()} />
+              <ForgeLey regionId={regionId} ground={ground} />
+            </Card>
+          </div>
+          <div className='grid min-w-0 grid-cols-1 gap-3 @xl/env:grid-cols-2'>
+            <Card title='Weather held over this land' icon={CloudSun}>
+              <HoldWeather regionId={regionId} ground={ground} />
+            </Card>
+            <Card title='Years remembered' icon={Scroll}>
+              <NotableYears regionId={regionId} ground={ground} />
             </Card>
           </div>
           <RegionControls regionId={regionId} ground={ground} />

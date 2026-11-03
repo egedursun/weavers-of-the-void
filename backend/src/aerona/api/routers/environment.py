@@ -7,8 +7,10 @@ from aerona.api.schemas.environment import (
     AstronomyRecordView,
     CalendarView,
     ClimateAgeView,
+    ForcedWeatherView,
     HolyDayView,
     LeyLineView,
+    NeighbourRegion,
     NotableYearView,
     PlaceEnvironmentView,
     RegionEnvironmentView,
@@ -17,15 +19,17 @@ from aerona.api.schemas.environment import (
     WorldSeasonsView,
 )
 from aerona.catalog.climate import CLIMATES
+from aerona.catalog.weather import WEATHER
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import LandUse
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.stats import stat
 
 router = APIRouter(tags=["environment"])
@@ -47,9 +51,48 @@ async def ley_views(session: AsyncSession, region_id: int) -> list[LeyLineView]:
             strength=line.strength,
             severed=line.severed,
             severed_until_epoch=line.severed_until_epoch,
+            forged=line.forged,
         )
         for line in lines
     ]
+
+
+async def forced_views(session: AsyncSession, region_id: int, epoch: int) -> list[ForcedWeatherView]:
+    rows = await session.scalars(
+        select(ForcedWeatherRow).where(ForcedWeatherRow.region_entity_id == region_id, ForcedWeatherRow.until_epoch >= epoch).order_by(ForcedWeatherRow.id)
+    )
+    return [
+        ForcedWeatherView(
+            id=row.id,
+            kind=row.kind,
+            label=WEATHER[row.kind].label,
+            from_epoch=row.from_epoch,
+            until_epoch=row.until_epoch,
+            season_position=row.season_position,
+            son_id=row.son_id,
+        )
+        for row in rows
+    ]
+
+
+async def neighbour_views(session: AsyncSession, region_id: int) -> list[NeighbourRegion]:
+    atlas = await RegionAtlas.load(session)
+    rows = await session.scalars(select(EntityRow).where(EntityRow.id.in_(atlas.neighbour_regions(region_id))).order_by(EntityRow.name))
+    return [NeighbourRegion(id=row.id, name=row.name) for row in rows]
+
+
+def notable_view(row: NotableYearRow) -> NotableYearView:
+    return NotableYearView(
+        id=row.id,
+        epoch=row.epoch,
+        year=row.year,
+        kind=row.kind,
+        weather=row.weather,
+        name=row.name,
+        magnitude=row.magnitude,
+        region_id=row.region_entity_id,
+        legend_id=row.legend_entity_id,
+    )
 
 
 @router.get("/regions/{region_id}/environment", response_model=RegionEnvironmentView)
@@ -110,6 +153,14 @@ async def region_environment(services: ServicesDep, region_id: int = Path(ge=1))
             locked=list(ground.locked),
             forecast=forecast,
             ley_lines=await ley_views(session, region.id),
+            forced_weather=await forced_views(session, region.id, cosmos.epoch),
+            neighbours=await neighbour_views(session, region.id),
+            notable_years=[
+                notable_view(row)
+                for row in await session.scalars(
+                    select(NotableYearRow).where(NotableYearRow.region_entity_id == region.id).order_by(NotableYearRow.year.desc(), NotableYearRow.id.desc())
+                )
+            ],
         )
 
 
@@ -203,17 +254,5 @@ async def world_seasons(services: ServicesDep, world_id: int = Path(ge=1)) -> Wo
                 )
                 for calendar in calendars
             ],
-            notable_years=[
-                NotableYearView(
-                    id=row.id,
-                    epoch=row.epoch,
-                    year=row.year,
-                    kind=row.kind,
-                    weather=row.weather,
-                    name=row.name,
-                    magnitude=row.magnitude,
-                    region_id=row.region_entity_id,
-                )
-                for row in notable
-            ],
+            notable_years=[notable_view(row) for row in notable],
         )

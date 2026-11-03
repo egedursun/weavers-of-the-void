@@ -9,9 +9,8 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.session import Database
-from aerona.db.tables.body import BodyRow
-from aerona.domain.enums.body import BodyPlan
 from aerona.db.tables.agency import AgentTurnRow
+from aerona.db.tables.body import BodyRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -19,6 +18,7 @@ from aerona.db.tables.lore import ChronicleRow, LexemeRow, ThreadLinkRow, Thread
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.society import ResurrectionOrderRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
+from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ThreadStatus
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType

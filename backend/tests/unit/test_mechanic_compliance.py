@@ -24,7 +24,8 @@ def matrix_ids() -> set[str]:
 
 
 def frontend_source() -> str:
-    return "\n".join(path.read_text(encoding="utf-8") for path in FRONTEND.rglob("*.tsx") if path.is_file() and "generated" not in path.parts)
+    paths = [*FRONTEND.rglob("*.tsx"), *FRONTEND.rglob("*.ts")]
+    return "\n".join(path.read_text(encoding="utf-8") for path in paths if path.is_file() and "generated" not in path.parts)
 
 
 def test_generic_levers_exist_for_every_mechanic() -> None:

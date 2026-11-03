@@ -1,3 +1,4 @@
+import { mechanicsResponse } from './mechanicsMocks'
 import { type Page, type Route } from '@playwright/test'
 import { controlsResponse } from './controlsMocks'
 import { cosmosResponse } from './cosmosMocks'
@@ -114,6 +115,8 @@ export async function mockApi(page: Page): Promise<void> {
     if (runWorld !== undefined) return json(route, runWorld)
     const god = godResponse(route.request().method(), url)
     if (god !== undefined) return json(route, god)
+    const mechanics = mechanicsResponse(route.request().method(), url)
+    if (mechanics !== undefined) return json(route, mechanics)
     const mapGraph = mapGraphResponse(route.request().method(), url)
     if (mapGraph !== undefined) return json(route, mapGraph)
     return json(route, { detail: 'Not found' }, 404)

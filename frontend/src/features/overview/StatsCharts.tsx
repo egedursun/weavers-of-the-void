@@ -7,6 +7,8 @@ import {
   Skull,
   Swords,
   Users,
+  Shield,
+  Footprints,
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -39,14 +41,14 @@ type ChartSpec = {
 
 const CHARTS: ChartSpec[] = [
   {
-    id: 'population',
+    id: 'chart-population',
     title: 'Population',
     fields: ['population'],
     icon: Users,
     tone: 'gold',
   },
   {
-    id: 'followers',
+    id: 'chart-followers',
     title: 'Followers',
     fields: ['followers'],
     icon: Flame,
@@ -72,6 +74,20 @@ const CHARTS: ChartSpec[] = [
     fields: ['doom'],
     icon: Skull,
     tone: 'danger',
+  },
+  {
+    id: 'chart-soldiers',
+    title: 'Soldiers under arms',
+    fields: ['soldiers'],
+    icon: Shield,
+    tone: 'danger',
+  },
+  {
+    id: 'chart-travelling',
+    title: 'On the road between worlds',
+    fields: ['travelling'],
+    icon: Footprints,
+    tone: 'info',
   },
 ]
 

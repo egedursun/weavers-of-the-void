@@ -143,9 +143,11 @@ async def epoch_statistics(ctx: TickContext) -> EpochStatsData:
 
 
 @reads(
+    "army.size",
     "cult.followers",
     "people.population",
     "settlement.population",
+    "table.journeys",
     "table.bonds",
     "table.cosmos",
     "table.entity_flags",

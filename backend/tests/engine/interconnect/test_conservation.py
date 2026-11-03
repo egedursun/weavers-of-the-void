@@ -11,7 +11,7 @@ from aerona.domain.enums.war import WarEnding
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.conservation import journey_imbalance, residuals, snapshot, totals_by_phase, transfer_imbalance, unexplained, wrong_signs
 from aerona.engine.interconnect.flows import FlowCategory, flowing
-from aerona.engine.interconnect.guards import recording, run_guarded
+from aerona.engine.interconnect.guards import run_guarded
 from aerona.engine.phase import Phase
 from aerona.engine.phases.warfare import force_battle
 from aerona.engine.pipeline import current_environment, run_epoch_transition, run_tick

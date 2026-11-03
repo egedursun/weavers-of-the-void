@@ -164,6 +164,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   adopt: Baby,
   move_to_world: Orbit,
   reorder_seasons: CalendarSync,
+  shape_weather: CloudLightning,
   sever_ley: Scissors,
   declare_holy_world: Sun,
   seal_gate: Lock,

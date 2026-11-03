@@ -53,7 +53,7 @@ PLANS: dict[BodyPlan, PlanSpec] = {
         PlanSpec(
             BodyPlan.AQUATIC,
             "fins, gills and a tail",
-            ("fish", "whale", "shark", "squid", "octopus", "kraken", "seal", "fin", "gill"),
+            ("fish", "whale", "shark", "squid", "cuttlefish", "kraken", "seal", "fin", "gill"),
             HeightClass.AVERAGE,
             BodyBuild.HEAVY,
         ),

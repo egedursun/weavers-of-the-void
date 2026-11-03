@@ -6,7 +6,6 @@ import {
   Pause,
   Play,
   Plus,
-  ScrollText,
   Sigma,
   Sparkles,
   Trash2,
@@ -25,21 +24,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  ChangeChip,
-  Medallion,
-  Section,
-  Timeline,
-  TimelineItem,
-} from '@/components/domain'
+import { Medallion, Section, Timeline } from '@/components/domain'
 import { ChoiceTiles } from '@/components/domain/SettingsKit'
-import { Label, Muted, Stat, Text } from '@/components/typography'
+import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { humanize } from '../actions/schema'
 import { loreKeys } from '../api/keys'
+import {
+  ActingMechanics,
+  IncidentEntry,
+  WhyBreakdown,
+} from '../mechanics/parts'
 
 type Modifier = components['schemas']['ModifierRecord']
-type Incident = components['schemas']['IncidentRecord']
 type Op = 'add' | 'multiply'
 
 const DEFAULT_SUPPRESS_EPOCHS = 1
@@ -62,20 +59,6 @@ const OPS = [
     icon: Sigma,
   },
 ] as const
-const ROLE_TONE = {
-  subject: 'primary',
-  actor: 'success',
-  target: 'destructive',
-  witness: 'default',
-  place: 'default',
-} as const
-const ROLE_LABEL: Record<string, string> = {
-  subject: 'About it',
-  actor: 'It acted',
-  target: 'It was struck',
-  witness: 'It witnessed',
-  place: 'It happened here',
-}
 
 function mechanicsKey(nodeId: number) {
   return [...loreKeys.entity(nodeId), 'mechanics'] as const
@@ -84,12 +67,6 @@ function mechanicsKey(nodeId: number) {
 function positive(value: string): number | null {
   const parsed = Number.parseInt(value, 10)
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null
-}
-
-function incidentTitle(kind: string): { title: string; area: string | null } {
-  const parts = kind.split('.').filter((part) => part !== 'folded')
-  if (parts.length === 1) return { title: humanize(parts[0]), area: null }
-  return { title: humanize(parts[parts.length - 1]), area: humanize(parts[0]) }
 }
 
 function modifierText(modifier: Modifier): string {
@@ -139,45 +116,6 @@ function ModifierRow({
         Remove
       </Button>
     </li>
-  )
-}
-
-function IncidentItem({
-  incident,
-  last,
-}: {
-  incident: Incident
-  last: boolean
-}) {
-  const { title, area } = incidentTitle(incident.kind)
-  return (
-    <TimelineItem
-      icon={ScrollText}
-      tone={ROLE_TONE[incident.role]}
-      title={title}
-      timestamp={
-        incident.year !== null
-          ? `Year ${incident.year} · epoch ${incident.epoch}`
-          : `Epoch ${incident.epoch}`
-      }
-      last={last}
-    >
-      <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-        {area && (
-          <Badge size='sm' variant='secondary'>
-            {area}
-          </Badge>
-        )}
-        <Badge size='sm' variant='outline'>
-          {ROLE_LABEL[incident.role] ?? humanize(incident.role)}
-        </Badge>
-        {incident.magnitude > 0 && (
-          <Badge size='sm' variant='warning'>
-            {`Weight ${incident.magnitude}`}
-          </Badge>
-        )}
-      </div>
-    </TimelineItem>
   )
 }
 
@@ -248,7 +186,11 @@ export function EntityMechanics({
   })
   const runNow = useGodAction({
     run: () =>
-      unwrap(api.POST('/api/actions/lever:run', { body: { mechanic } })),
+      unwrap(
+        api.POST('/api/actions/lever:run', {
+          body: { mechanic, target_node_id: nodeId },
+        })
+      ),
   })
   const add = useGodAction({
     run: () =>
@@ -295,25 +237,19 @@ export function EntityMechanics({
     >
       {data && (
         <div className='@container/mech flex min-w-0 flex-col gap-4'>
-          {data.effective.length > 0 && (
-            <div className='grid min-w-0 grid-cols-1 gap-2 @md/mech:grid-cols-2 @xl/mech:grid-cols-3'>
-              {data.effective.map((value) => (
-                <div
-                  key={value.key}
-                  className='flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'
-                >
-                  <div className='flex min-w-0 flex-1 flex-col'>
-                    <Stat value={Number(value.value.toFixed(1))} />
-                    <Label truncate>{humanize(value.key)}</Label>
-                  </div>
-                  <ChangeChip
-                    value={Number((value.value - value.base).toFixed(1))}
-                    label={`from ${value.base}`}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+          <div className='flex min-w-0 flex-col gap-2'>
+            <Label variant='overline'>Why each value is what it is</Label>
+            <WhyBreakdown values={data.effective} modifiers={data.modifiers} />
+          </div>
+          <div className='flex min-w-0 flex-col gap-2'>
+            <Label variant='overline'>Mechanics acting on it</Label>
+            <ActingMechanics
+              nodeId={nodeId}
+              acting={data.acting}
+              statKeys={statKeys}
+              blocked={needs(null)}
+            />
+          </div>
           <div className='flex min-w-0 flex-col gap-2'>
             <Label variant='overline'>Modifiers</Label>
             {data.modifiers.length === 0 ? (
@@ -370,10 +306,11 @@ export function EntityMechanics({
             ) : (
               <Timeline label='Recent incidents'>
                 {data.incidents.map((incident, index) => (
-                  <IncidentItem
+                  <IncidentEntry
                     key={incident.id}
                     incident={incident}
                     last={index === data.incidents.length - 1}
+                    blocked={needs(null)}
                   />
                 ))}
               </Timeline>

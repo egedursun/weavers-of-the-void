@@ -49,12 +49,14 @@ import { loreKeys } from '../api/keys'
 import { BodyDiagram } from '../body/BodyDiagram'
 import {
   ARMOUR_ICON,
+  BUILDS,
   CAPACITIES,
   CAUSES,
   CONDITIONS,
   DAMAGE,
   FUNCTIONS,
   HEALER_ICON,
+  HEIGHTS,
   INJURIES,
   MATERIALS,
   MEDICINE,
@@ -76,6 +78,8 @@ type HarmCause = components['schemas']['HarmCause']
 type ConditionKind = components['schemas']['ConditionKind']
 type MaterialKind = components['schemas']['MaterialKind']
 type BodyFunction = components['schemas']['BodyFunction']
+type HeightClass = components['schemas']['HeightClass']
+type BodyBuild = components['schemas']['BodyBuild']
 
 const PERCENT = 100
 const FACTOR_MAX = 200
@@ -188,6 +192,9 @@ function BodyHero({ body }: { body: Body }) {
       <Medallion icon={plan.icon} tone={plan.tone ?? 'gold'} />
       <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
         <Text weight='semibold'>{`${plan.label} body`}</Text>
+        <Muted variant='caption'>
+          {`${plain(HEIGHTS, body.height_class)}, ${plain(BUILDS, body.build).toLowerCase()} of build; ${body.plan_label}`}
+        </Muted>
         <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
           {body.traits.map((trait) => (
             <Badge key={trait} size='sm' variant='secondary'>
@@ -964,6 +971,19 @@ function BodyControls({ body }: { body: Body }) {
       ),
     success: 'The body is reshaped',
   })
+  const frame = useGodAction({
+    run: (change: { height?: string; build?: string }) =>
+      unwrap(
+        api.POST('/api/actions/body:frame', {
+          body: {
+            bearer_id: body.node_id,
+            height_class: (change.height ?? body.height_class) as HeightClass,
+            build: (change.build ?? body.build) as BodyBuild,
+          },
+        })
+      ),
+    success: 'The frame is changed',
+  })
   const heal = useGodAction({
     run: (lasting: boolean) =>
       unwrap(
@@ -974,7 +994,9 @@ function BodyControls({ body }: { body: Body }) {
   })
   const busy =
     reason() ??
-    (release.isPending || plan.isPending || heal.isPending ? WORKING : null)
+    (release.isPending || plan.isPending || heal.isPending || frame.isPending
+      ? WORKING
+      : null)
   const wounded = body.injuries.some((row) => OPEN_STATES.has(row.state))
   const harmed = body.injuries.some(
     (row) => row.function_loss > 0 && row.state !== 'lethal'
@@ -1024,6 +1046,20 @@ function BodyControls({ body }: { body: Body }) {
           table={labels(PLANS)}
           blocked={busy}
           onPick={(value) => plan.mutate(value)}
+        />
+        <Picker
+          label='Height'
+          value={body.height_class}
+          table={HEIGHTS}
+          blocked={busy}
+          onPick={(value) => frame.mutate({ height: value })}
+        />
+        <Picker
+          label='Build'
+          value={body.build}
+          table={BUILDS}
+          blocked={busy}
+          onPick={(value) => frame.mutate({ build: value })}
         />
         <div className='flex min-w-0 flex-col justify-end gap-2 @3xl/body:col-span-2'>
           <div className='flex min-w-0 flex-wrap gap-2'>

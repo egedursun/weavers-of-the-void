@@ -373,3 +373,17 @@ export const VOICE_ICON = Mic
 export function bodyValueLabel(key: string): string {
   return CAPACITIES[key]?.label ?? BODY_VALUES[key] ?? plain({}, key)
 }
+
+export const HEIGHTS: Record<string, string> = {
+  short: 'Short',
+  average: 'Of middling height',
+  tall: 'Tall',
+  giant: 'Giant',
+}
+
+export const BUILDS: Record<string, string> = {
+  slight: 'Slight',
+  average: 'Middling',
+  heavy: 'Heavy',
+  giant: 'Giant',
+}

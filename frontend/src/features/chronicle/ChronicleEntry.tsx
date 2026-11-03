@@ -77,11 +77,7 @@ export function ChronicleEntry({
           aria-label={`Mentioned: ${cast.map((target) => target.name).join(', ')}`}
         >
           {cast.slice(0, CAST_SHOWN).map((target) => (
-            <span
-              key={target.id}
-              title={target.name}
-              className='rounded-full'
-            >
+            <span key={target.id} title={target.name} className='rounded-full'>
               <NodeAvatar id={target.id} name={target.name} />
             </span>
           ))}

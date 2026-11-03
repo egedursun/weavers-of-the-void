@@ -29,6 +29,34 @@ class LeyLineView(ApiModel):
     strength: int
     severed: bool
     severed_until_epoch: int | None
+    forged: bool
+
+
+class NotableYearView(ApiModel):
+    id: int
+    epoch: int
+    year: int
+    kind: NotableYearKind
+    weather: WeatherKind | None
+    name: str
+    magnitude: int
+    region_id: int | None
+    legend_id: int | None = None
+
+
+class ForcedWeatherView(ApiModel):
+    id: int
+    kind: WeatherKind
+    label: str
+    from_epoch: int
+    until_epoch: int
+    season_position: int | None
+    son_id: int | None
+
+
+class NeighbourRegion(ApiModel):
+    id: int
+    name: str
 
 
 class RegionEnvironmentView(ApiModel):
@@ -67,6 +95,9 @@ class RegionEnvironmentView(ApiModel):
     locked: list[str]
     forecast: list[WeatherForecast]
     ley_lines: list[LeyLineView]
+    forced_weather: list[ForcedWeatherView]
+    neighbours: list[NeighbourRegion]
+    notable_years: list[NotableYearView]
 
 
 class PlaceEnvironmentView(ApiModel):
@@ -105,17 +136,6 @@ class CalendarView(ApiModel):
     anchor_year: int
     month_names: list[str]
     holy_days: list[HolyDayView]
-
-
-class NotableYearView(ApiModel):
-    id: int
-    epoch: int
-    year: int
-    kind: NotableYearKind
-    weather: WeatherKind | None
-    name: str
-    magnitude: int
-    region_id: int | None
 
 
 class ClimateAgeView(ApiModel):

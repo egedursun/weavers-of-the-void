@@ -6,30 +6,30 @@ Where J.7 sets a target the cell shows value / target and whether it is met.
 
 | Node type | A | B | C |
 |---|---:|---:|---:|
-| region | 5 / 70 short | 37 / 60 short | 910 / 45 met |
+| region | 5 / 70 short | 37 / 60 short | 911 / 45 met |
 | place | 4 / 25 short | 19 / 20 short | 303 / 15 met |
 | resource | 3 / 35 short | 16 / 50 short | 78 / 30 met |
-| settlement | 16 / 120 short | 64 / 100 short | 1432 / 65 met |
+| settlement | 16 / 120 short | 64 / 100 short | 1434 / 65 met |
 | species | 10 / 70 short | 14 / 80 short | 209 / 45 met |
-| people | 25 / 150 short | 50 / 110 short | 1348 / 70 met |
-| mortal | 45 / 75 short | 42 / 140 short | 974 / 80 met |
+| people | 25 / 150 short | 50 / 110 short | 1350 / 70 met |
+| mortal | 45 / 75 short | 42 / 140 short | 976 / 80 met |
 | item | 4 / 40 short | 15 / 45 short | 241 / 30 met |
 | structure | 3 / 35 short | 16 / 50 short | 142 / 40 met |
 | language | 3 / 45 short | 6 / 45 short | 39 / 30 met |
 | legend | 1 / 15 short | 8 / 25 short | 40 / 20 met |
 | tradition | 2 / 20 short | 7 / 25 short | 43 / 25 met |
-| cult | 11 / 45 short | 33 / 55 short | 992 / 45 met |
-| faction | 10 / 35 short | 29 / 45 short | 874 / 35 met |
+| cult | 11 / 45 short | 33 / 55 short | 994 / 45 met |
+| faction | 10 / 35 short | 29 / 45 short | 876 / 35 met |
 | celestial | 2 / 10 short | 0 / 12 short | 0 / 15 short |
 | artwork | 2 / 20 short | 8 / 20 short | 40 / 15 met |
 | law | 2 / 30 short | 4 / 35 short | 13 / 30 short |
 | spirit | 1 / 25 short | 11 / 35 short | 58 / 25 met |
-| knowledge | 1 / 30 short | 14 / 50 short | 559 / 50 met |
+| knowledge | 1 / 30 short | 14 / 50 short | 561 / 50 met |
 | prophecy | 1 / 15 short | 2 / 15 short | 1 / 15 short |
-| event | 1 / 15 short | 17 / 20 short | 755 / 15 met |
+| event | 1 / 15 short | 17 / 20 short | 756 / 15 met |
 | vessel | 0 / 25 short | 3 / 25 short | 81 / 15 met |
 | outer_being | 0 / 15 short | 3 / 20 short | 37 / 20 met |
-| army | 6 / 90 short | 11 / 80 short | 820 / 45 met |
+| army | 6 / 90 short | 11 / 80 short | 823 / 45 met |
 | natural_law | 0 / 10 short | 1 / 30 short | 0 / 30 short |
 | son | 93 / 150 short | 29 / 150 short | 456 / 90 met |
 | creator | 15 / 35 short | 3 / 40 short | 23 / 35 short |
