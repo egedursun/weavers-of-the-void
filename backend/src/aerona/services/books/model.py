@@ -56,6 +56,7 @@ ENCYCLOPEDIA_ORDER: tuple[EntityType, ...] = (
     EntityType.ITEM,
     EntityType.VESSEL,
     EntityType.ARMY,
+    EntityType.TRADE_ROUTE,
     EntityType.SPIRIT,
     EntityType.OUTER_BEING,
     EntityType.CELESTIAL,

@@ -43,9 +43,8 @@ CREATION_FIELDS: dict[str, str] = {
 WORSHIPPED_SON_FIELD = {"worshipped_son_id": "Whom they worship (son id){% if entity.type == 'cult' %}; you if empty{% endif %}. Faith flows this way."}
 
 LEGEND_CATEGORY_FIELD = "What the legend would become if belief ever made it walk the world: {{ legend_categories | join(', ') }}; creature for a beast or monster, spirit for a ghost or soul, resource for a sacred spring or vein, relic for a weapon or treasure"
-COMMODITY_FIELD = (
-    "What its people draw from it: {{ commodities | join(', ') }}; ore feeds forges and weapons, food feeds mouths, goods feed trade; empty if none"
-)
+COMMODITY_FIELD = "What its people draw from it: {{ commodities | join(', ') }}; ore feeds forges and coin, grain, livestock and fish feed mouths, timber feeds fuel and ships; empty if none"
+MATERIAL_FIELD = "What it is made of or yields, if a material: {{ materials | join(', ') }}; it sets hardness, edge, weight, holiness and taint"
 
 CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
     EntityType.CULT: WORSHIPPED_SON_FIELD,
@@ -69,6 +68,7 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
     EntityType.LEGEND: {"legend_category": LEGEND_CATEGORY_FIELD},
     EntityType.RESOURCE: {
         "commodity": COMMODITY_FIELD,
+        "material": MATERIAL_FIELD,
         "mechanics": "The resource's strange rules, at most {{ rules.mechanics.resource_max }} (if left empty they are read from its name and text; sacred makes it yours): {{ resource_mechanics }}",
     },
     EntityType.LANGUAGE: {**WORD_FIELDS, "words": "The language's first words (at most {{ rules.son_tools.coin_word_max_words }}); matching the naming rule"},

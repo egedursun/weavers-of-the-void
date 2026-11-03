@@ -30,4 +30,5 @@ class CreationBaseCostRules:
     vessel: int = rule(14, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of creating a vessel")
     outer_being: int = rule(0, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of an Outer Being")
     army: int = rule(0, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of an army")
+    trade_route: int = rule(0, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of a trade route")
     natural_law: int = rule(30, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of decreeing a natural law")

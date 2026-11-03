@@ -4287,6 +4287,150 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/worlds/{world_id}/materials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["world_materials_api_worlds__world_id__materials_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/communities/{community_id}/economy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["community_economy_api_communities__community_id__economy_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/resources/{resource_id}/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["resource_profile_api_resources__resource_id__profile_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/markets/{market_id}/prices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["market_prices_api_markets__market_id__prices_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trade-routes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["trade_routes_api_trade_routes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trade-routes/{route_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["trade_route_api_trade_routes__route_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/currencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["currencies_api_currencies_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ledger/debts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["debts_ledger_api_ledger_debts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/markets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["market_list_api_markets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions": {
         parameters: {
             query?: never;
@@ -7455,6 +7599,230 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/material:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_material_edit_api_actions_material_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/stock:grant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_stock_grant_api_actions_stock_grant_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resource:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resource_set_api_actions_resource_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resource:owner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resource_owner_api_actions_resource_owner_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resource:reveal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resource_reveal_api_actions_resource_reveal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/workshop:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_workshop_set_api_actions_workshop_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/trade_route:open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_trade_route_open_api_actions_trade_route_open_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/trade_route:close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_trade_route_close_api_actions_trade_route_close_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/trade_route:toll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_trade_route_toll_api_actions_trade_route_toll_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/currency:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_currency_edit_api_actions_currency_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/currency:debase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_currency_debase_api_actions_currency_debase_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/currency:use": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_currency_use_api_actions_currency_use_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/loan:forgive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_loan_forgive_api_actions_loan_forgive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/hoard:inject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_hoard_inject_api_actions_hoard_inject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/body:heal": {
         parameters: {
             query?: never;
@@ -8436,6 +8804,21 @@ export interface components {
             polygon_offsets: number[];
             polygon_coordinates: number[];
         };
+        ChainStepView: {
+            key: string;
+            label: string;
+            workshop: components["schemas"]["WorkshopKind"] | null;
+            inputs: {
+                [key: string]: number;
+            };
+            output: components["schemas"]["CommodityKind"];
+            output_qty: number;
+            made: number;
+            quality: number;
+            material: components["schemas"]["MaterialKind"] | null;
+            bottleneck: components["schemas"]["CommodityKind"] | null;
+            runs: boolean;
+        };
         ChangesPayload: {
             epoch?: number | null;
             version: string;
@@ -8610,6 +8993,17 @@ export interface components {
             updated_epoch: number;
         };
         Commodity: "food" | "ore" | "goods";
+        CommodityFamily: "subsistence" | "industrial" | "strategic" | "luxury";
+        CommodityKind: "grain" | "livestock" | "fish" | "fodder" | "timber" | "fuel" | "bread" | "ore" | "stone" | "cloth" | "tools" | "weapons" | "armour" | "mounts" | "siege_materiel" | "medicine" | "luxuries" | "incense" | "sacred_goods" | "magical_reagents";
+        CommodityView: {
+            kind: components["schemas"]["CommodityKind"];
+            label: string;
+            family: components["schemas"]["CommodityFamily"];
+            base_price: number;
+            nourishment: number;
+            strategic: boolean;
+            per_1000: number;
+        };
         CommunityCollapseInput: {
             community_id: number;
             reason: string;
@@ -8621,6 +9015,23 @@ export interface components {
         };
         CommunityCrownInput: {
             community_id: number;
+        };
+        CommunityEconomyView: {
+            community_id: number;
+            epoch: number;
+            stocks: components["schemas"]["StockLotView"][];
+            supply: {
+                [key: string]: number;
+            };
+            storage: {
+                [key: string]: number;
+            };
+            workshops: components["schemas"]["WorkshopView"][];
+            chain: components["schemas"]["ChainStepView"][];
+            flows: components["schemas"]["FlowView"][];
+            quotes: components["schemas"]["QuoteView"][];
+            currency_id: number | null;
+            market: boolean;
         };
         CommunityExodusInput: {
             origin_id: number;
@@ -8879,6 +9290,33 @@ export interface components {
             influence?: number | null;
             devotion?: number | null;
         };
+        CurrencyDebaseInput: {
+            currency_id: number;
+        };
+        CurrencyEditInput: {
+            currency_id: number;
+            purity?: number | null;
+            trust?: number | null;
+            supply?: number | null;
+        };
+        CurrencyUseInput: {
+            community_id: number;
+            currency_id?: number | null;
+        };
+        CurrencyView: {
+            id: number;
+            name: string;
+            issuer_id: number;
+            issuer_name: string;
+            item_id: number | null;
+            metal: components["schemas"]["MaterialKind"];
+            purity: number;
+            trust: number;
+            supply: number;
+            minted_epoch: number;
+            debased_epoch: number | null;
+            users: number[];
+        };
         DamageType: "cut" | "pierce" | "blunt" | "fire" | "cold" | "venom" | "magic" | "void" | "holy";
         Danger: {
             id: number | null;
@@ -8905,6 +9343,17 @@ export interface components {
             loyal_communities: components["schemas"]["EntitySummary"][];
         };
         DebtStatus: "open" | "overdue" | "repaid" | "forgiven";
+        DebtView: {
+            bond_id: number;
+            debtor_id: number;
+            debtor_name: string;
+            creditor_id: number;
+            creditor_name: string;
+            amount: number;
+            what: string;
+            due_epoch: number | null;
+            currency_id: number | null;
+        };
         DecreeKind: "war" | "peace" | "alliance" | "marriage" | "trade";
         DepositOwnerInput: {
             deposit_id: number;
@@ -9152,7 +9601,7 @@ export interface components {
             favorite: boolean;
             pending_name: boolean;
             description: string;
-            stats: components["schemas"]["RegionStats"] | components["schemas"]["PlaceStats"] | components["schemas"]["ResourceStats"] | components["schemas"]["SettlementStats"] | components["schemas"]["SpeciesStats"] | components["schemas"]["PeopleStats"] | components["schemas"]["MortalStats"] | components["schemas"]["ItemStats"] | components["schemas"]["StructureStats"] | components["schemas"]["LanguageStats"] | components["schemas"]["LegendStats"] | components["schemas"]["TraditionStats"] | components["schemas"]["CultStats"] | components["schemas"]["FactionStats"] | components["schemas"]["CelestialStats"] | components["schemas"]["ArtworkStats"] | components["schemas"]["LawStats"] | components["schemas"]["SpiritStats"] | components["schemas"]["KnowledgeStats"] | components["schemas"]["ProphecyStats"] | components["schemas"]["EventStats"] | components["schemas"]["VesselStats"] | components["schemas"]["OuterBeingStats"] | components["schemas"]["ArmyStats"] | components["schemas"]["NaturalLawStats"];
+            stats: components["schemas"]["RegionStats"] | components["schemas"]["PlaceStats"] | components["schemas"]["ResourceStats"] | components["schemas"]["SettlementStats"] | components["schemas"]["SpeciesStats"] | components["schemas"]["PeopleStats"] | components["schemas"]["MortalStats"] | components["schemas"]["ItemStats"] | components["schemas"]["StructureStats"] | components["schemas"]["LanguageStats"] | components["schemas"]["LegendStats"] | components["schemas"]["TraditionStats"] | components["schemas"]["CultStats"] | components["schemas"]["FactionStats"] | components["schemas"]["CelestialStats"] | components["schemas"]["ArtworkStats"] | components["schemas"]["LawStats"] | components["schemas"]["SpiritStats"] | components["schemas"]["KnowledgeStats"] | components["schemas"]["ProphecyStats"] | components["schemas"]["EventStats"] | components["schemas"]["VesselStats"] | components["schemas"]["OuterBeingStats"] | components["schemas"]["ArmyStats"] | components["schemas"]["TradeRouteStats"] | components["schemas"]["NaturalLawStats"];
             domain: components["schemas"]["Domain"] | null;
             origin: components["schemas"]["EntityOrigin"];
             creator_son_id: number | null;
@@ -9189,7 +9638,7 @@ export interface components {
             favorite: boolean;
             pending_name: boolean;
         };
-        EntityType: "region" | "place" | "resource" | "settlement" | "species" | "people" | "mortal" | "item" | "structure" | "language" | "legend" | "tradition" | "cult" | "faction" | "celestial" | "artwork" | "law" | "spirit" | "knowledge" | "prophecy" | "event" | "vessel" | "outer_being" | "army" | "natural_law";
+        EntityType: "region" | "place" | "resource" | "settlement" | "species" | "people" | "mortal" | "item" | "structure" | "language" | "legend" | "tradition" | "cult" | "faction" | "celestial" | "artwork" | "law" | "spirit" | "knowledge" | "prophecy" | "event" | "vessel" | "outer_being" | "army" | "natural_law" | "trade_route";
         EntityTypeInfo: {
             key: string;
             label: string;
@@ -9644,6 +10093,11 @@ export interface components {
             rarities: components["schemas"]["Rarity"][];
             default: components["schemas"]["Rarity"][];
         };
+        FlowView: {
+            commodity: components["schemas"]["CommodityKind"];
+            flow: string;
+            quantity: number;
+        };
         FolkView: {
             people_id: number;
             people_name: string;
@@ -9978,6 +10432,11 @@ export interface components {
             people_entity_id: number;
             historian: string | null;
             text: string;
+        };
+        HoardInjectInput: {
+            community_id: number;
+            metal: components["schemas"]["MaterialKind"];
+            units?: number | null;
         };
         HolyDayView: {
             name: string;
@@ -10465,6 +10924,10 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        LedgerView: {
+            loans: components["schemas"]["LoanView"][];
+            debts: components["schemas"]["DebtView"][];
+        };
         LegendCategory: "creature" | "spirit" | "resource" | "relic";
         LegendForgetInput: {
             legend_id: number;
@@ -10589,6 +11052,26 @@ export interface components {
         };
         LlmCallKind: "agent" | "structured";
         LlmCallStatus: "ok" | "partial" | "error";
+        LoanForgiveInput: {
+            loan_id: number;
+        };
+        LoanStatus: "open" | "repaid" | "defaulted" | "forgiven";
+        LoanView: {
+            id: number;
+            lender_id: number;
+            lender_name: string;
+            borrower_id: number;
+            borrower_name: string;
+            currency_id: number | null;
+            principal: number;
+            interest_pct: number;
+            repaid: number;
+            owed: number;
+            issued_epoch: number;
+            due_epoch: number;
+            status: components["schemas"]["LoanStatus"];
+            purpose: string;
+        };
         LogEntry: {
             level: string;
             at: string;
@@ -10666,6 +11149,17 @@ export interface components {
             shown: number;
             snapshots: number[];
         };
+        MapTrade: {
+            route_id: number;
+            name: string;
+            first: number;
+            second: number;
+            mode: components["schemas"]["TradeMode"];
+            status: components["schemas"]["TradeRouteStatus"];
+            volume: number;
+            capacity: number;
+            path: number[];
+        };
         MapView: {
             world: components["schemas"]["WorldRecord"];
             geometry: components["schemas"]["WorldMap"];
@@ -10695,6 +11189,7 @@ export interface components {
             stocks: {
                 [key: string]: components["schemas"]["RegionStocks"];
             };
+            trade: components["schemas"]["MapTrade"][];
             notes: components["schemas"]["MapNoteRecord"][];
             time: components["schemas"]["MapTime"];
         };
@@ -10729,10 +11224,66 @@ export interface components {
         MarketFoundInput: {
             region_id: number;
         };
+        MarketSummary: {
+            id: number;
+            name: string;
+            world_id: number | null;
+            entity_type: components["schemas"]["EntityType"];
+        };
+        MarketView: {
+            market_id: number;
+            name: string;
+            world_id: number | null;
+            series: components["schemas"]["PriceSeries"][];
+        };
         MarketWriteOffInput: {
             bond_id: number;
         };
-        MaterialKind: "wood" | "bone" | "hide" | "cloth" | "stone" | "flint" | "obsidian" | "copper" | "tin" | "bronze" | "iron" | "steel" | "silver" | "gold" | "glass" | "crystal" | "ivory" | "chitin" | "dragonbone" | "star_metal" | "void_glass" | "godflesh" | "living_wood" | "salt" | "amber" | "lead" | "skysteel" | "sulfur" | "clay" | "gems";
+        MaterialEditInput: {
+            world_id: number;
+            material?: components["schemas"]["MaterialKind"] | null;
+            world_material_id?: number | null;
+            values?: {
+                [key: string]: number;
+            };
+            name?: string | null;
+        };
+        MaterialFamily: "organic" | "stone" | "metal" | "precious" | "exotic";
+        MaterialKind: "wood" | "bone" | "hide" | "leather" | "cloth" | "stone" | "flint" | "obsidian" | "copper" | "tin" | "bronze" | "iron" | "steel" | "silver" | "gold" | "glass" | "crystal" | "ivory" | "chitin" | "dragonbone" | "star_metal" | "void_glass" | "godflesh" | "living_wood" | "salt" | "amber" | "lead" | "skysteel" | "sulfur" | "clay" | "gems";
+        MaterialOrigin: "catalog" | "god_remains" | "dead_star" | "beast" | "leak_crystal" | "research";
+        MaterialView: {
+            kind: components["schemas"]["MaterialKind"] | null;
+            world_material_id: number | null;
+            label: string;
+            family: components["schemas"]["MaterialFamily"];
+            origin: components["schemas"]["MaterialOrigin"];
+            edited: boolean;
+            hardness: number;
+            toughness: number;
+            weight: number;
+            edge: number;
+            conductivity: number;
+            sanctity: number;
+            corruption: number;
+            rarity: number;
+            base_value: number;
+            decay: number;
+            branch: components["schemas"]["KnowledgeBranch"] | null;
+            level: number;
+            gate: components["schemas"]["KnowledgeBranch"] | null;
+            description?: string | null;
+            deposit_id?: number | null;
+        };
+        MaterialsView: {
+            world_id: number;
+            materials: components["schemas"]["MaterialView"][];
+            commodities: components["schemas"]["CommodityView"][];
+        };
+        MechanicParamView: {
+            mechanic: string;
+            magnitude: number | null;
+            epochs: number | null;
+        };
         MechanicRecord: {
             key: string;
             spec_item: string;
@@ -11831,6 +12382,18 @@ export interface components {
             label: string;
             value: number;
         };
+        PricePoint: {
+            epoch: number;
+            price: number;
+            supply: number;
+            demand: number;
+            imported: number;
+            exported: number;
+        };
+        PriceSeries: {
+            commodity: components["schemas"]["CommodityKind"];
+            points: components["schemas"]["PricePoint"][];
+        };
         PromptArea: "shared" | "context" | "genesis" | "son_turn" | "fate" | "chronicler" | "naming" | "voices" | "deepening" | "image_prompts" | "council" | "translation" | "world_birth" | "network_repair" | "mortal" | "opportunities" | "agent" | "chronicle" | "localisation";
         PromptCatalogue: {
             prompts: components["schemas"]["PromptEntry"][];
@@ -11987,6 +12550,14 @@ export interface components {
             node_id: number;
             image_class: components["schemas"]["ImageClass"];
             queued_at?: string;
+        };
+        QuoteView: {
+            commodity: components["schemas"]["CommodityKind"];
+            price: number;
+            supply: number;
+            demand: number;
+            imported: number;
+            exported: number;
         };
         Rarity: "common" | "uncommon" | "rare" | "epic" | "legendary" | "mythic";
         RecordEnd: "repeal" | "abandon" | "forget" | "disband" | "lose" | "assimilate";
@@ -12186,7 +12757,8 @@ export interface components {
         };
         ResourceCommodityInput: {
             resource_id: number;
-            commodity?: components["schemas"]["Commodity"] | null;
+            commodity: components["schemas"]["CommodityKind"];
+            material?: components["schemas"]["MaterialKind"] | null;
         };
         ResourceInsight: {
             mechanics: string[];
@@ -12202,6 +12774,45 @@ export interface components {
             original: boolean;
         };
         ResourceMechanic: "decaying" | "addictive" | "sentient" | "depletion_price" | "fixed" | "sacred";
+        ResourceOwnerInput: {
+            resource_id: number;
+            owner_id?: number | null;
+        };
+        ResourceProfileView: {
+            resource_id: number;
+            commodity: components["schemas"]["CommodityKind"];
+            material: components["schemas"]["MaterialKind"] | null;
+            world_material_id: number | null;
+            material_label: string | null;
+            reserve: number;
+            initial_reserve: number;
+            richness: number;
+            regeneration: number;
+            extraction_difficulty: number;
+            required_branch: components["schemas"]["KnowledgeBranch"] | null;
+            required_level: number;
+            quality: number;
+            byproduct_material: components["schemas"]["MaterialKind"] | null;
+            byproduct_pct: number;
+            revealed: boolean;
+            sealed_until_epoch: number | null;
+            last_output: number;
+            workers: components["schemas"]["WorkerView"][];
+            runs: components["schemas"]["RunView"][];
+            params: components["schemas"]["MechanicParamView"][];
+            owners: number[];
+        };
+        ResourceRevealInput: {
+            resource_id: number;
+            revealed: boolean;
+        };
+        ResourceSetInput: {
+            resource_id: number;
+            reserve?: number | null;
+            fields?: {
+                [key: string]: number;
+            };
+        };
         ResourceStats: {
             kind: "resource";
             abundance?: number | null;
@@ -12257,6 +12868,18 @@ export interface components {
         RouteDangerInput: {
             route_id: number;
             danger: number;
+        };
+        RouteFlowView: {
+            epoch: number;
+            commodity: components["schemas"]["CommodityKind"];
+            material: components["schemas"]["MaterialKind"] | null;
+            from_id: number;
+            to_id: number;
+            volume: number;
+            lost: number;
+            loss: components["schemas"]["TradeLoss"] | null;
+            value: number;
+            toll_paid: number;
         };
         RouteLine: {
             id: number;
@@ -12336,6 +12959,13 @@ export interface components {
             key?: string | null;
         } & {
             [key: string]: unknown;
+        };
+        RunView: {
+            epoch: number;
+            community_id: number;
+            quantity: number;
+            quality: number;
+            workers: number;
         };
         RunningScenario: {
             id: number;
@@ -13070,6 +13700,22 @@ export interface components {
             status: components["schemas"]["EpochStepStatus"];
             error: string | null;
         };
+        StockGrantInput: {
+            community_id: number;
+            commodity: components["schemas"]["CommodityKind"];
+            quantity: number;
+            material?: components["schemas"]["MaterialKind"] | null;
+            quality: number;
+        };
+        StockLotView: {
+            id: number;
+            commodity: components["schemas"]["CommodityKind"];
+            material: components["schemas"]["MaterialKind"] | null;
+            world_material_id: number | null;
+            label: string;
+            quantity: number;
+            quality: number;
+        };
         StreamHelloEvent: {
             id: number;
             kind: "stream.hello";
@@ -13146,6 +13792,14 @@ export interface components {
             percent: number;
             pinned: boolean;
         };
+        TollView: {
+            region_id: number;
+            region_name: string;
+            controller_id: number;
+            controller_name: string;
+            rate_pct: number;
+            set_by_player: boolean;
+        };
         ToolBlock: "rarity" | "actor_type" | "civilization_tier" | "world_state" | "unwired";
         ToolEntry: {
             tool_id: components["schemas"]["SonToolId"] | components["schemas"]["MortalToolId"];
@@ -13178,6 +13832,78 @@ export interface components {
             cost: number;
             input_tokens: number;
             output_tokens: number;
+        };
+        TradeLoss: "bandits" | "sea" | "beasts" | "weather";
+        TradeMode: "road" | "river" | "sea" | "caravan" | "sky";
+        TradeRouteCloseInput: {
+            route_id: number;
+        };
+        TradeRouteDetail: {
+            route_id: number;
+            name: string;
+            world_id: number | null;
+            first_id: number;
+            first_name: string;
+            second_id: number;
+            second_name: string;
+            mode: components["schemas"]["TradeMode"];
+            status: components["schemas"]["TradeRouteStatus"];
+            length: number;
+            capacity: number;
+            danger: number;
+            renown: number;
+            culture: number;
+            path: number[];
+            tolls: components["schemas"]["TollView"][];
+            controller_id: number | null;
+            blockaded_by_id: number | null;
+            founded_epoch: number;
+            last_traffic_epoch: number | null;
+            volume: number;
+            closed_by_player: boolean;
+            flows: components["schemas"]["RouteFlowView"][];
+        };
+        TradeRouteOpenInput: {
+            route_id?: number | null;
+            first_id?: number | null;
+            second_id?: number | null;
+        };
+        TradeRouteStats: {
+            kind: "trade_route";
+            capacity?: number | null;
+            danger?: number | null;
+            renown?: number | null;
+            culture?: number | null;
+        };
+        TradeRouteStatus: "forming" | "open" | "blockaded" | "closed" | "decayed";
+        TradeRouteTollInput: {
+            route_id: number;
+            region_id: number;
+            rate?: number | null;
+        };
+        TradeRouteView: {
+            route_id: number;
+            name: string;
+            world_id: number | null;
+            first_id: number;
+            first_name: string;
+            second_id: number;
+            second_name: string;
+            mode: components["schemas"]["TradeMode"];
+            status: components["schemas"]["TradeRouteStatus"];
+            length: number;
+            capacity: number;
+            danger: number;
+            renown: number;
+            culture: number;
+            path: number[];
+            tolls: components["schemas"]["TollView"][];
+            controller_id: number | null;
+            blockaded_by_id: number | null;
+            founded_epoch: number;
+            last_traffic_epoch: number | null;
+            volume: number;
+            closed_by_player: boolean;
         };
         TraditionStats: {
             kind: "tradition";
@@ -13319,7 +14045,7 @@ export interface components {
         WarBattleInput: {
             war_id: number;
         };
-        WarCause: "hostility" | "uprising" | "tribute_revolt" | "incited" | "declared" | "betrayal" | "conquest_journey" | "foreign_god" | "independence" | "vendetta" | "grudge" | "divine_grudge" | "rivalry" | "debt" | "espionage" | "sabotage" | "envy" | "schism" | "beast" | "resource";
+        WarCause: "hostility" | "uprising" | "tribute_revolt" | "incited" | "declared" | "betrayal" | "conquest_journey" | "foreign_god" | "independence" | "vendetta" | "grudge" | "divine_grudge" | "rivalry" | "debt" | "espionage" | "sabotage" | "envy" | "schism" | "beast" | "resource" | "trade_route";
         WarDuelInput: {
             first_id: number;
             second_id: number;
@@ -13441,6 +14167,26 @@ export interface components {
             example?: string | null;
         };
         WordKind: "noun" | "verb" | "adjective" | "affix" | "title" | "place_name" | "proper_name" | "number" | "interjection";
+        WorkerView: {
+            community_id: number;
+            community_name: string;
+            workers: number;
+        };
+        WorkshopKind: "market" | "granary" | "warehouse" | "mine" | "lumber_camp" | "fishery" | "charcoal_kiln" | "forge" | "tannery" | "mill" | "brewery" | "weavery" | "stable" | "mason_yard" | "shipyard" | "siege_yard" | "alchemist" | "shrine_workshop" | "mint";
+        WorkshopSetInput: {
+            community_id: number;
+            kind: components["schemas"]["WorkshopKind"];
+            level: number;
+        };
+        WorkshopView: {
+            kind: components["schemas"]["WorkshopKind"];
+            label: string;
+            level: number;
+            fleet: number;
+            idle_epochs: number;
+            built_epoch: number;
+            structure_id: number | null;
+        };
         WorldBornEvent: {
             id: number;
             kind: "world.born";
@@ -21829,6 +22575,247 @@ export interface operations {
             };
         };
     };
+    world_materials_api_worlds__world_id__materials_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialsView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    community_economy_api_communities__community_id__economy_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                community_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityEconomyView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resource_profile_api_resources__resource_id__profile_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resource_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceProfileView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    market_prices_api_markets__market_id__prices_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                market_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trade_routes_api_trade_routes_get: {
+        parameters: {
+            query?: {
+                world_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TradeRouteView"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trade_route_api_trade_routes__route_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                route_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TradeRouteDetail"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    currencies_api_currencies_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrencyView"][];
+                };
+            };
+        };
+    };
+    debts_ledger_api_ledger_debts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerView"];
+                };
+            };
+        };
+    };
+    market_list_api_markets_get: {
+        parameters: {
+            query?: {
+                world_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketSummary"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_actions_api_actions_get: {
         parameters: {
             query?: never;
@@ -27751,6 +28738,440 @@ export interface operations {
             };
         };
     };
+    action_material_edit_api_actions_material_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MaterialEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_stock_grant_api_actions_stock_grant_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StockGrantInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resource_set_api_actions_resource_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResourceSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resource_owner_api_actions_resource_owner_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResourceOwnerInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resource_reveal_api_actions_resource_reveal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResourceRevealInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_workshop_set_api_actions_workshop_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkshopSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_trade_route_open_api_actions_trade_route_open_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TradeRouteOpenInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_trade_route_close_api_actions_trade_route_close_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeRouteCloseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_trade_route_toll_api_actions_trade_route_toll_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeRouteTollInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_currency_edit_api_actions_currency_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CurrencyEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_currency_debase_api_actions_currency_debase_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CurrencyDebaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_currency_use_api_actions_currency_use_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CurrencyUseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_loan_forgive_api_actions_loan_forgive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoanForgiveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_hoard_inject_api_actions_hoard_inject_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HoardInjectInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_body_heal_api_actions_body_heal_post: {
         parameters: {
             query?: never;
@@ -28641,6 +30062,8 @@ export const claudeAuthValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const climateEraValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClimateEra"]> = ["temperate", "drought", "rain", "ice_age", "scorching"];
 export const coastKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CoastKind"]> = ["none", "cliff", "beach", "harbour_site", "reef"];
 export const commodityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Commodity"]> = ["food", "ore", "goods"];
+export const commodityFamilyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommodityFamily"]> = ["subsistence", "industrial", "strategic", "luxury"];
+export const commodityKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommodityKind"]> = ["grain", "livestock", "fish", "fodder", "timber", "fuel", "bread", "ore", "stone", "cloth", "tools", "weapons", "armour", "mounts", "siege_materiel", "medicine", "luxuries", "incense", "sacred_goods", "magical_reagents"];
 export const communityRelationLabelValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommunityRelationLabel"]> = ["blood_enemy", "enemy", "cold", "neutral", "friend", "close_friend", "sibling"];
 export const conditionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ConditionKind"]> = ["chronic_illness", "paranoia", "visions", "rage", "melancholy", "addiction", "age_blindness", "age_deafness", "withered_limb", "endless_hunger", "possession", "void_taint", "chosen_mark", "divine_brand"];
 export const contextBlockKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ContextBlockKind"]> = ["world-header", "dialect", "world-line", "cosmos", "pantheon", "threads", "world-summary", "fate-summary", "geography", "map", "languages", "entity-line", "entity-detail", "bond-lines", "son-memory", "tired-images", "recent-events", "powers", "sky-calendar", "mortal", "chronicler"];
@@ -28671,7 +30094,7 @@ export const entityDeepenedEventKindValues: ReadonlyArray<FlattenedDeepRequired<
 export const entityFlagValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityFlag"]> = ["disaster", "lost", "dead_language", "decipherable", "previous_creation", "ruin", "rebuilt", "remnant", "void", "cursed", "godless", "seeking_god", "empire", "federation", "independent", "colony", "pioneer", "golden_age", "immortal", "chimera", "mutation", "mutant", "mutated", "discovery", "native", "revelation", "soul_descended", "soul_bound", "soul_harvester", "crossed_to_the_dead", "wonder", "chosen", "manifested", "born_of_belief", "corrupted_memory", "fairy_tale", "name_from_language", "fixed_name", "species_became_people", "original_resource", "cosmic_monopoly", "outer_cult", "whisper_source", "nameless", "escaped", "megafauna", "invasive", "worships_planet", "planet_closed", "burned", "cosmic_plague", "mirror", "mirror_born", "oathbreaker", "exile", "omen", "time_echo", "two_timed", "empty_tomb", "resurrection_complete", "protected_from_disaster", "mechanics_weighed", "depleting", "syncretic", "returned_to_old_god", "revived_language", "on_watch", "mocked", "protected_from_ruin", "spared_soul", "ghost", "wizard", "age_changer", "time_returned", "legendary", "prophet", "bloodline_curse", "essence_drained", "returned_from_death", "saw_the_creator", "deified", "protected", "depleted", "agent_selected", "capital", "abandoned", "dissolved", "desolate", "razed", "fell_in_battle", "died_in_siege", "died_in_disaster", "died_of_plague", "slain_in_captivity", "doomed", "fate_shielded", "commemoration", "estranged_by_plague", "endangered", "extinct", "pilgrimage_site", "repealed", "merged", "disbanded", "assimilated", "forgotten", "swallowed"];
 export const entityOriginValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityOrigin"]> = ["son", "creator", "engine", "mortal", "cosmos"];
 export const entityStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityStatus"]> = ["canon", "rejected", "destroyed", "dead", "fulfilled"];
-export const entityTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityType"]> = ["region", "place", "resource", "settlement", "species", "people", "mortal", "item", "structure", "language", "legend", "tradition", "cult", "faction", "celestial", "artwork", "law", "spirit", "knowledge", "prophecy", "event", "vessel", "outer_being", "army", "natural_law"];
+export const entityTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityType"]> = ["region", "place", "resource", "settlement", "species", "people", "mortal", "item", "structure", "language", "legend", "tradition", "cult", "faction", "celestial", "artwork", "law", "spirit", "knowledge", "prophecy", "event", "vessel", "outer_being", "army", "natural_law", "trade_route"];
 export const epicWrittenEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpicWrittenEvent"]["kind"]> = ["epic.written"];
 export const epochBackupEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochBackupEvent"]["kind"]> = ["epoch.backup"];
 export const epochFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochFinishedEvent"]["kind"]> = ["epoch.finished"];
@@ -28749,12 +30172,15 @@ export const legendaryQuestOutcomeValues: ReadonlyArray<FlattenedDeepRequired<co
 export const linkGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LinkGroup"]> = ["all", "travel", "no_location", "conflict", "faith", "lineage", "knowledge"];
 export const llmCallKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LlmCallKind"]> = ["agent", "structured"];
 export const llmCallStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LlmCallStatus"]> = ["ok", "partial", "error"];
+export const loanStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LoanStatus"]> = ["open", "repaid", "defaulted", "forgiven"];
 export const logLevelValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LogLevel"]> = ["info", "warning", "error"];
 export const loreLanguageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LoreLanguage"]> = ["english", "turkish"];
 export const maimedKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaimedKind"]> = ["one_armed", "one_legged", "one_eyed", "blind", "deaf", "mute", "lame", "scarred", "broken_minded"];
 export const maintenanceTaskValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaintenanceTask"]> = ["completion", "network_rules", "loose_ends", "data_repairs", "history_repairs", "epoch_years", "mortal_ages", "importance", "endings", "narrative_sweep", "certain_facts", "intuitions", "mirror_pairs", "captions", "planner_statistics", "prune"];
 export const markerKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MarkerKind"]> = ["battle", "disaster", "ruin", "remnant", "event"];
-export const materialKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaterialKind"]> = ["wood", "bone", "hide", "cloth", "stone", "flint", "obsidian", "copper", "tin", "bronze", "iron", "steel", "silver", "gold", "glass", "crystal", "ivory", "chitin", "dragonbone", "star_metal", "void_glass", "godflesh", "living_wood", "salt", "amber", "lead", "skysteel", "sulfur", "clay", "gems"];
+export const materialFamilyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaterialFamily"]> = ["organic", "stone", "metal", "precious", "exotic"];
+export const materialKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaterialKind"]> = ["wood", "bone", "hide", "leather", "cloth", "stone", "flint", "obsidian", "copper", "tin", "bronze", "iron", "steel", "silver", "gold", "glass", "crystal", "ivory", "chitin", "dragonbone", "star_metal", "void_glass", "godflesh", "living_wood", "salt", "amber", "lead", "skysteel", "sulfur", "clay", "gems"];
+export const materialOriginValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaterialOrigin"]> = ["catalog", "god_remains", "dead_star", "beast", "leak_crystal", "research"];
 export const medicineTierValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MedicineTier"]> = ["none", "herbs", "surgery", "prosthetics", "reattachment"];
 export const memorialFormValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemorialForm"]> = ["monument", "epic", "lament", "tradition", "tale"];
 export const memoryKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemoryKind"]> = ["harmed_me", "killed_kin", "saved_me", "betrayed_me", "kept_oath", "broke_oath", "maimed_me", "humiliated_me", "gifted_me", "converted_me", "conquered_us", "freed_us", "famine_aid", "desecrated_holy", "married_into", "fought_us", "traded_with", "allied_with", "made_peace", "demanded_tribute", "cheated_us", "spied_on_us", "envied", "failed_to_heal", "taught_me", "held_captive", "lamented", "divine_will", "goodwill", "ill_will", "long_history"];
@@ -28850,6 +30276,10 @@ export const temperatureBandValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const terrainKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TerrainKind"]> = ["plain", "steppe", "forest", "jungle", "marsh", "hills", "mountains", "high_pass", "desert", "tundra", "ice_sheet", "volcanic", "coast", "island", "river_valley", "canyon", "underground", "crystal_field", "flesh", "void_shore", "ruin_field", "urban", "sea"];
 export const threadStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ThreadStatus"]> = ["open", "closed"];
 export const toolBlockValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ToolBlock"]> = ["rarity", "actor_type", "civilization_tier", "world_state", "unwired"];
+export const tradeLossValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TradeLoss"]> = ["bandits", "sea", "beasts", "weather"];
+export const tradeModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TradeMode"]> = ["road", "river", "sea", "caravan", "sky"];
+export const tradeRouteStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TradeRouteStats"]["kind"]> = ["trade_route"];
+export const tradeRouteStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TradeRouteStatus"]> = ["forming", "open", "blockaded", "closed", "decayed"];
 export const traditionStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraditionStats"]["kind"]> = ["tradition"];
 export const traitEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraitEffect"]> = ["war_appetite", "betrayal", "cruelty", "trust", "memory_decay", "zeal", "agent_weight", "learning", "drift", "exploration", "fertility", "justice", "deceit", "greed", "courage"];
 export const traitKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraitKind"]> = ["brave", "craven", "wrathful", "patient", "cruel", "kind", "ambitious", "content", "greedy", "generous", "honest", "deceitful", "zealous", "cynical", "paranoid", "trusting", "lustful", "chaste", "gluttonous", "ascetic", "scholarly", "illiterate_proud", "gregarious", "reclusive", "vengeful", "forgiving", "stubborn", "fickle", "just", "arbitrary", "humble", "proud", "curious", "incurious", "melancholic", "sanguine", "iron_willed", "impressionable", "cunning_tactician", "reckless"];
@@ -28861,7 +30291,7 @@ export const valueAxisValues: ReadonlyArray<FlattenedDeepRequired<components>["s
 export const valueHolderValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ValueHolder"]> = ["culture", "doctrine", "agenda", "personal", "divine", "community"];
 export const verdictChoiceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VerdictChoice"]> = ["accept", "reject"];
 export const vesselStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VesselStats"]["kind"]> = ["vessel"];
-export const warCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarCause"]> = ["hostility", "uprising", "tribute_revolt", "incited", "declared", "betrayal", "conquest_journey", "foreign_god", "independence", "vendetta", "grudge", "divine_grudge", "rivalry", "debt", "espionage", "sabotage", "envy", "schism", "beast", "resource"];
+export const warCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarCause"]> = ["hostility", "uprising", "tribute_revolt", "incited", "declared", "betrayal", "conquest_journey", "foreign_god", "independence", "vendetta", "grudge", "divine_grudge", "rivalry", "debt", "espionage", "sabotage", "envy", "schism", "beast", "resource", "trade_route"];
 export const warEndingValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarEnding"]> = ["victory", "conquest", "tribute", "exhaustion", "peace", "white_peace", "betrayal", "same_front", "no_side_left", "miracle"];
 export const warSideValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarSide"]> = ["attacker", "defender"];
 export const warStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarStatus"]> = ["mobilizing", "ongoing", "ended"];
@@ -28869,6 +30299,7 @@ export const waterSourceValues: ReadonlyArray<FlattenedDeepRequired<components>[
 export const weatherEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WeatherEffect"]> = ["visibility", "footing", "cold", "heat", "wet", "wind", "morale", "growth"];
 export const weatherKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WeatherKind"]> = ["clear", "overcast", "rain", "downpour", "storm", "fog", "snow", "blizzard", "heat_wave", "drought_wind", "sandstorm", "hail", "magic_storm", "ash_fall", "void_rain", "eclipse_dark", "aurora"];
 export const wordKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WordKind"]> = ["noun", "verb", "adjective", "affix", "title", "place_name", "proper_name", "number", "interjection"];
+export const workshopKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorkshopKind"]> = ["market", "granary", "warehouse", "mine", "lumber_camp", "fishery", "charcoal_kiln", "forge", "tannery", "mill", "brewery", "weavery", "stable", "mason_yard", "shipyard", "siege_yard", "alchemist", "shrine_workshop", "mint"];
 export const worldBornEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorldBornEvent"]["kind"]> = ["world.born"];
 export const worldChangedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorldChangedEvent"]["kind"]> = ["world.changed"];
 export const worldChangesEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorldChangesEvent"]["kind"]> = ["world.changes"];

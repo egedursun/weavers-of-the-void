@@ -2225,7 +2225,7 @@ Old namespace `DERIN_TOPLUM` · 128 rows · defined in `src/derin.js`. Social cl
 | initial_food | erzak_ilk | 60 | 0 | 1000 | Economy | Community's initial food (supplies) |
 | initial_ore | maden_ilk | 10 | 0 | 1000 | Economy | Community's initial ore |
 | initial_goods | mal_ilk | 20 | 0 | 1000 | Economy | Community's initial goods |
-| stockpile_cap | ambar_tavan | 200 | 10 | 100,000 | Economy | Cap of the food, ore and goods stockpile |
+| ~~stockpile_cap~~ | ambar_tavan | 200 | 10 | 100,000 | Economy | Removed by spec 13 F3.2: storage is the capacity of granaries and warehouses |
 | default_stat | stat_varsayilan | 50 | 0 | 100 | Economy | Value assumed for a community and land with unrecorded prosperity, faith or fertility |
 | target_agriculture_farmer | hedef_tarim_ciftci | 10 | 0 | 100 | Economy | Farmer-share bonus for those who know agriculture |
 | target_trade_merchant | hedef_ticaret_tuccar | 6 | 0 | 100 | Economy | Merchant-share bonus for those who trade |
@@ -2251,32 +2251,32 @@ Old namespace `DERIN_TOPLUM` · 128 rows · defined in `src/derin.js`. Social cl
 | food_rain_pct | uretim_yagmur | 110 | 0 | 1000 | Economy | Food-production multiplier in a rain age (%) |
 | food_rate_min_pct | uretim_alt | 20 | 0 | 1000 | Economy | Floor of the food-production rate (%) |
 | food_rate_max_pct | uretim_ust | 300 | 0 | 10,000 | Economy | Cap of the food-production rate (%) |
-| food_rate_effect | erzak_oran_carpan | 30 | 0 | 1000 | Economy | Per-epoch effect of the production rate on food |
-| food_war_consumption | erzak_savas | 6 | 0 | 200 | Economy | Food consumed by war per epoch |
-| food_low_threshold | erzak_dusuk | 30 | 0 | 200 | Economy | Below this food the stockpile switches to saving |
-| food_saving_gain | erzak_dusuk_ek | 4 | 0 | 200 | Economy | Per-epoch food gain of a stockpile in saving mode |
-| ore_abundance_divisor | maden_bolluk_bolen | 10 | 1 | 1000 | Economy | Ore gain: abundance of the ore resource / this number |
-| ore_consumption | maden_tuketim | 1 | 0 | 200 | Economy | Ore consumed per epoch |
-| goods_artisan_divisor | zanaat_bolen | 15 | 1 | 1000 | Economy | Goods production: artisan share / this number |
+| ~~food_rate_effect~~ | erzak_oran_carpan | 30 | 0 | 1000 | Economy | Removed by spec 13 F3.2: food is grown and eaten as goods per head |
+| ~~food_war_consumption~~ | erzak_savas | 6 | 0 | 200 | Economy | Removed by spec 13 F3.2: armies draw food and weapons from the stores as goods |
+| ~~food_low_threshold~~ | erzak_dusuk | 30 | 0 | 200 | Economy | Removed by spec 13 F3.2: stores no longer refill themselves by saving |
+| ~~food_saving_gain~~ | erzak_dusuk_ek | 4 | 0 | 200 | Economy | Removed by spec 13 F3.2: stores no longer refill themselves by saving |
+| ~~ore_abundance_divisor~~ | maden_bolluk_bolen | 10 | 1 | 1000 | Economy | Removed by spec 13 §6.3: ore comes from extraction by workers |
+| ~~ore_consumption~~ | maden_tuketim | 1 | 0 | 200 | Economy | Removed by spec 13 F3.2: consumption is per head per commodity (economy.consumption_*) |
+| ~~goods_artisan_divisor~~ | zanaat_bolen | 15 | 1 | 1000 | Economy | Removed by spec 13 §6.3: goods are made in refining chains |
 | ore_plenty_threshold | maden_bol | 20 | 0 | 200 | Economy | Above this ore, artisans find plenty of ore |
-| goods_ore_plenty_pct | zanaat_maden_carpan | 140 | 0 | 1000 | Economy | Goods-production multiplier with plenty of ore (%) |
-| goods_metallurgy_pct | zanaat_metalurji | 130 | 0 | 1000 | Economy | Goods-production multiplier for those who know metallurgy (%) |
-| goods_production_mult | mal_uretim | 6 | 0 | 100 | Economy | Goods-production multiplier |
-| goods_consumption | mal_tuketim | 3 | 0 | 200 | Economy | Goods consumed per epoch |
-| goods_prosperity_divisor | mal_refah_bolen | 50 | 1 | 1000 | Economy | Goods consumption of prosperity: prosperity / this number |
-| goods_ore_threshold | mal_maden_esik | 10 | 0 | 200 | Economy | Goods and ore threshold at which goods production spends ore |
-| goods_ore_spend_mult | mal_maden_harcama | 1 | 0 | 100 | Economy | Ore-spending multiplier of goods production |
-| price_food_rate_min_pct | fiyat_oran_alt | 30 | 1 | 1000 | Economy | Floor of the production rate in food price (%) |
-| price_scarcity_food | fiyat_kitlik_erzak | 60 | 0 | 200 | Economy | Below this food, bread becomes expensive |
-| price_scarcity_pct | fiyat_kitlik | 180 | 0 | 10,000 | Economy | Food-price multiplier in scarcity (%) |
-| price_plenty_food | fiyat_bolluk_erzak | 120 | 0 | 100,000 | Economy | Above this food, bread becomes cheap |
-| price_plenty_pct | fiyat_bolluk | 70 | 0 | 1000 | Economy | Food-price multiplier in plenty (%) |
-| price_min_pct | fiyat_alt | 30 | 0 | 1000 | Economy | Floor of prices (%) |
-| price_food_max_pct | fiyat_erzak_ust | 900 | 100 | 100,000 | Economy | Cap of food price (%) |
-| price_max_pct | fiyat_ust | 400 | 100 | 100,000 | Economy | Cap of ore and goods price (%) |
-| price_equilibrium_stock | fiyat_denge | 40 | 1 | 10,000 | Economy | Stock at which goods are at normal price |
-| price_equilibrium_ore | fiyat_denge_maden | 10 | 1 | 10,000 | Economy | Stock at which ore is at normal price (ore stockpiles run much lower than goods) |
-| price_stock_floor | fiyat_stok_alt | 10 | 1 | 10,000 | Economy | Floor of stock in ore and goods price |
+| ~~goods_ore_plenty_pct~~ | zanaat_maden_carpan | 140 | 0 | 1000 | Economy | Removed by spec 13 §6.3: goods are made in refining chains |
+| ~~goods_metallurgy_pct~~ | zanaat_metalurji | 130 | 0 | 1000 | Economy | Removed by spec 13 §6.3: metallurgy gates which metals a forge can work |
+| ~~goods_production_mult~~ | mal_uretim | 6 | 0 | 100 | Economy | Removed by spec 13 §6.3: goods are made in refining chains |
+| ~~goods_consumption~~ | mal_tuketim | 3 | 0 | 200 | Economy | Removed by spec 13 F3.2: consumption is per head per commodity (economy.consumption_*) |
+| ~~goods_prosperity_divisor~~ | mal_refah_bolen | 50 | 1 | 1000 | Economy | Removed by spec 13 F3.2: consumption is per head per commodity |
+| ~~goods_ore_threshold~~ | mal_maden_esik | 10 | 0 | 200 | Economy | Removed by spec 13 §6.3: refining spends its inputs per batch |
+| ~~goods_ore_spend_mult~~ | mal_maden_harcama | 1 | 0 | 100 | Economy | Removed by spec 13 §6.3: refining spends its inputs per batch |
+| ~~price_food_rate_min_pct~~ | fiyat_oran_alt | 30 | 1 | 1000 | Economy | Removed by spec 13 §6.4: prices are set per commodity in each market (markets.*) |
+| ~~price_scarcity_food~~ | fiyat_kitlik_erzak | 60 | 0 | 200 | Economy | Removed by spec 13 §6.4: prices are set per commodity in each market (markets.*) |
+| ~~price_scarcity_pct~~ | fiyat_kitlik | 180 | 0 | 10,000 | Economy | Removed by spec 13 §6.4: prices are set per commodity in each market (markets.*) |
+| ~~price_plenty_food~~ | fiyat_bolluk_erzak | 120 | 0 | 100,000 | Economy | Removed by spec 13 §6.4: prices are set per commodity in each market (markets.*) |
+| ~~price_plenty_pct~~ | fiyat_bolluk | 70 | 0 | 1000 | Economy | Removed by spec 13 §6.4: prices are set per commodity in each market (markets.*) |
+| ~~price_min_pct~~ | fiyat_alt | 30 | 0 | 1000 | Economy | Removed by spec 13 §6.4: prices are set per commodity in each market (markets.*) |
+| ~~price_food_max_pct~~ | fiyat_erzak_ust | 900 | 100 | 100,000 | Economy | Removed by spec 13 §6.4: prices are set per commodity in each market (markets.*) |
+| ~~price_max_pct~~ | fiyat_ust | 400 | 100 | 100,000 | Economy | Removed by spec 13 §6.4: prices are set per commodity in each market (markets.*) |
+| ~~price_equilibrium_stock~~ | fiyat_denge | 40 | 1 | 10,000 | Economy | Removed by spec 13 §6.4: prices are set per commodity in each market (markets.*) |
+| ~~price_equilibrium_ore~~ | fiyat_denge_maden | 10 | 1 | 10,000 | Economy | Removed by spec 13 §6.4: prices are set per commodity in each market (markets.*) |
+| ~~price_stock_floor~~ | fiyat_stok_alt | 10 | 1 | 10,000 | Economy | Removed by spec 13 §6.4: prices are set per commodity in each market (markets.*) |
 | sat_hungry_food | m_ac_erzak | 60 | 0 | 200 | Economy | Below this food, farmers are hungry |
 | sat_farmer_hungry | m_ciftci_ac | 25 | 0 | 100 | Economy | Satisfaction loss of hungry farmers |
 | sat_farmer_fed | m_ciftci_tok | 5 | 0 | 100 | Economy | Satisfaction gain of well-fed farmers |
@@ -2311,17 +2311,17 @@ Old namespace `DERIN_TOPLUM` · 128 rows · defined in `src/derin.js`. Social cl
 | famine_cap | kitlik_tavan | 1 | 0 | 100 | Population and growth | Maximum famines per epoch |
 | famine_population_kept_pct | kitlik_nufus_kalan | 92 | 0 | 100 | Population and growth | Population remaining after famine (%) |
 | famine_prosperity_loss | kitlik_refah | 6 | 0 | 100 | Population and growth | Prosperity reduced by famine |
-| weapon_ore_required | silah_maden | 12 | 0 | 10,000 | Economy | Ore required to forge weapons (ore stockpiles run low in most communities) |
+| ~~weapon_ore_required~~ | silah_maden | 12 | 0 | 10,000 | Economy | Removed by spec 13 §6.3: a named batch is forged from weapons in store (refining.weapon_batch_threshold) |
 | weapon_warrior_pct | silah_savasci | 12 | 0 | 100 | Economy | Warrior share required to forge weapons (%) |
 | weapon_batch_cap | silah_tavan | 2 | 0 | 100 | Economy | Maximum weapon batches per epoch |
-| weapon_ore_cost | silah_maden_bedel | 8 | 0 | 10,000 | Economy | Ore spent by one weapon batch |
+| ~~weapon_ore_cost~~ | silah_maden_bedel | 8 | 0 | 10,000 | Economy | Removed by spec 13 §6.3: a named batch is forged from weapons in store (refining.weapon_batch_threshold) |
 | weapon_power | silah_guc | 3 | 1 | 12 | Economy | Power level of a forged weapon |
-| weapon_damage_base | silah_hasar | 30 | 0 | 100 | Economy | Base damage of a forged weapon |
-| weapon_damage_die | silah_hasar_zar | 35 | 1 | 100 | Economy | Damage die of a forged weapon (1–N) |
-| weapon_protection_base | silah_koruma | 5 | 0 | 100 | Economy | Base protection of a forged weapon |
-| weapon_protection_die | silah_koruma_zar | 15 | 1 | 100 | Economy | Protection die of a forged weapon (1–N) |
-| weapon_might_base | silah_kudret | 5 | 0 | 100 | Economy | Base might of a forged weapon |
-| weapon_might_die | silah_kudret_zar | 10 | 1 | 100 | Economy | Might die of a forged weapon (1–N) |
+| ~~weapon_damage_base~~ | silah_hasar | 30 | 0 | 100 | Economy | Removed by spec 13 F3.1: damage follows the weapon's material (materials.damage_*) |
+| ~~weapon_damage_die~~ | silah_hasar_zar | 35 | 1 | 100 | Economy | Removed by spec 13 F3.1: damage follows the weapon's material (materials.damage_*) |
+| ~~weapon_protection_base~~ | silah_koruma | 5 | 0 | 100 | Economy | Removed by spec 13 F3.1: protection follows the material (materials.protection_*) |
+| ~~weapon_protection_die~~ | silah_koruma_zar | 15 | 1 | 100 | Economy | Removed by spec 13 F3.1: protection follows the material (materials.protection_*) |
+| ~~weapon_might_base~~ | silah_kudret | 5 | 0 | 100 | Economy | Removed by spec 13 F3.1: might is capped by the material's conductivity |
+| ~~weapon_might_die~~ | silah_kudret_zar | 10 | 1 | 100 | Economy | Removed by spec 13 F3.1: might is capped by the material's conductivity |
 | bankruptcy_merchant_pct | iflas_tuccar | 12 | 0 | 100 | Economy | Merchant share required for bankruptcy (%) |
 | bankruptcy_prosperity | iflas_refah | 35 | 0 | 100 | Economy | Below this prosperity a guild may go bankrupt |
 | bankruptcy_cap | iflas_tavan | 1 | 0 | 100 | Economy | Maximum guild bankruptcies per epoch |
@@ -2340,9 +2340,9 @@ Old namespace `DERIN_TOPLUM` · 128 rows · defined in `src/derin.js`. Social cl
 | revolt_faction_sway | ayaklanma_nufuz | 20 | 0 | 100 | War and diplomacy | Base sway of the revolt faction |
 | revolt_faction_sway_die | ayaklanma_nufuz_zar | 30 | 1 | 100 | War and diplomacy | Sway die of the revolt faction (1–N) |
 | revolt_relief | ayaklanma_rahatlama | 15 | 0 | 100 | War and diplomacy | Satisfaction gain of the revolting class |
-| trade_min_stock_diff | ticaret_fark | 20 | 0 | 1000 | Economy | Minimum stock difference for a trade route to carry goods |
-| trade_flow_divisor | ticaret_akis_bolen | 4 | 1 | 100 | Economy | Trade flow: stock difference / this number |
-| trade_seller_prosperity | ticaret_satan_refah | 1 | 0 | 100 | Economy | Seller's prosperity gain per trade |
+| ~~trade_min_stock_diff~~ | ticaret_fark | 20 | 0 | 1000 | Economy | Removed by spec 13 §6.4: the two trade flows merged into one route-based flow |
+| ~~trade_flow_divisor~~ | ticaret_akis_bolen | 4 | 1 | 100 | Economy | Removed by spec 13 §6.4: the two trade flows merged into one route-based flow |
+| ~~trade_seller_prosperity~~ | ticaret_satan_refah | 1 | 0 | 100 | Economy | Removed by spec 13 §6.4: the two trade flows merged into one route-based flow (market.flow_prosperity) |
 
 ### DEEP_WARFARE
 
@@ -4443,10 +4443,10 @@ Old namespace `DUNYA_ETKI` · 166 rows · defined in `src/sim.js`. World-engine 
 | prosperity_reversion_pct | refah_donus | 10 | 0 | 100 | Economy | Gap toward the equilibrium value that prosperity closes each epoch (%) |
 | curse_population_kept_pct | lanet_nufus_kalan | 95 | 0 | 100 | Heroes and mortals | Share of population and followers a cursed community keeps each epoch (%) |
 | curse_stat_loss | lanet_stat | 3 | 0 | 100 | Heroes and mortals | Prosperity, fertility, strength and wealth a cursed entity loses each epoch |
-| resource_min_abundance | kaynak_bolluk_esik | 15 | 0 | 100 | Economy | Minimum abundance of a resource that gives its owners income |
-| resource_income | kaynak_kazanc | 1 | 0 | 100 | Economy | Base prosperity, wealth and craft a resource owner gains each epoch |
-| resource_value_divisor | kaynak_deger_bolen | 40 | 1 | 1000 | Economy | Value contribution to resource income: value / this number |
-| resource_consumption | kaynak_tuketim | 2 | 0 | 100 | Economy | Abundance each owner consumes from the resource per epoch |
+| ~~resource_min_abundance~~ | kaynak_bolluk_esik | 15 | 0 | 100 | Economy | Removed by spec 13 §6.3: extraction stops when the reserve is spent |
+| ~~resource_income~~ | kaynak_kazanc | 1 | 0 | 100 | Economy | Removed by spec 13 §6.3: owners earn the value of what is extracted |
+| ~~resource_value_divisor~~ | kaynak_deger_bolen | 40 | 1 | 1000 | Economy | Removed by spec 13 §6.3: owners earn the value of what is extracted |
+| ~~resource_consumption~~ | kaynak_tuketim | 2 | 0 | 100 | Economy | Removed by spec 13 §6.3: the reserve falls by what is extracted |
 | resource_regen | kaynak_yenilenme | 4 | 0 | 100 | Economy | Per-epoch abundance regeneration of resources |
 | barter_cap | ticaret_tavan | 2 | 0 | 50 | Economy | Maximum resource barters established spontaneously per epoch |
 | item_curse_threshold | esya_lanet_esik | 50 | 0 | 100 | Heroes and mortals | Minimum curse of an item that harms its owner |

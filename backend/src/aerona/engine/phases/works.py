@@ -6,6 +6,7 @@ from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityType
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
@@ -21,7 +22,7 @@ from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import active_bonds, canon, connect, count_communities, living_entity
 from aerona.engine.primitives.records import RecordSpec, indefinite, open_record
-from aerona.engine.primitives.society import class_shares, set_stock, stock
+from aerona.engine.primitives.society import class_shares, shift_stock
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
@@ -170,8 +171,7 @@ async def build(ctx: TickContext, site: Site, kind: WorkKind) -> EntityRow:
     prosperity = stat(builder, "prosperity")
     if prosperity is not None:
         set_stats(builder, prosperity=clamp_int(prosperity - life.structure_prosperity_cost, 0, PERCENT))
-    goods = await stock(ctx.session, rules, builder.id, Commodity.GOODS)
-    await set_stock(ctx.session, builder.id, Commodity.GOODS, clamp_int(goods - life.structure_goods_cost, 0, rules.society.stockpile_cap))
+    await shift_stock(ctx.session, rules, builder.id, Commodity.GOODS, -life.structure_goods_cost, epoch=ctx.epoch, flow=GoodsFlow.CONSTRUCTION)
     await note(ctx, f"The masters of {builder.name} built {indefinite(kind.subtype)}.", key="works.built", ids=[builder.id, work.id])
     ctx.count("built")
     return work

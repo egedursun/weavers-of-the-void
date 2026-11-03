@@ -188,6 +188,14 @@ class NaturalLawStats(ValueObject):
     kind: Literal["natural_law"] = "natural_law"
 
 
+class TradeRouteStats(ValueObject):
+    kind: Literal["trade_route"] = "trade_route"
+    capacity: Count | None = None
+    danger: Percent | None = None
+    renown: Percent | None = None
+    culture: Percent | None = None
+
+
 EntityStats = Annotated[
     RegionStats
     | PlaceStats
@@ -213,6 +221,7 @@ EntityStats = Annotated[
     | VesselStats
     | OuterBeingStats
     | ArmyStats
+    | TradeRouteStats
     | NaturalLawStats,
     Field(discriminator="kind"),
 ]

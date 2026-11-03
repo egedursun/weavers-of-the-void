@@ -8,7 +8,9 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import TributeRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import TributeStatus, WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
@@ -17,6 +19,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.society import move_stock
 from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.services.community_relations import change_relation
@@ -57,8 +60,7 @@ async def _flow(ctx: TickContext, payer: EntityRow, receiver: EntityRow, greed: 
         return
     goods = round_half_up(payer_society.stock_goods * min(PERCENT, rules.tribute_goods_pct * greed) / PERCENT)
     if goods > 0:
-        payer_society.stock_goods -= goods
-        receiver_society.stock_goods = min(ctx.rules.society.stockpile_cap, receiver_society.stock_goods + goods)
+        await move_stock(ctx.session, ctx.rules, payer.id, receiver.id, Commodity.GOODS, index=goods, epoch=ctx.epoch, flow=GoodsFlow.TRIBUTE)
 
 
 async def _note(ctx: TickContext, text: str, key: str, ids: tuple[int, ...]) -> None:

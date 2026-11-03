@@ -673,6 +673,7 @@ export const drawScene: DrawScene = (context, input) => {
   drawLines(context, view, tokens, transform, {
     roads: overlays.roads,
     ties: overlays.ties,
+    trade: overlays.trade,
     time: input.time,
     animate: input.animate,
     fade,

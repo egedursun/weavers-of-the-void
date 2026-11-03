@@ -362,10 +362,36 @@ def irrigation_pct(rules: Rules, river: RiverClass, works: Works) -> int:
     return RIVER_IRRIGATION[river](rules) + dug
 
 
-def climate_factor(rules: Rules, *, temperature: int, rainfall: int, river: RiverClass, scars: Mapping[str, int], works: Works) -> float:
+@dataclass(frozen=True)
+class CropMix:
+    grain: float
+    pasture: float
+    fish: float
+
+
+def crop_mix(rules: Rules, *, farmed: int, grazed: int, coastal: bool, river: RiverClass) -> CropMix:
     settings = rules.environment
+    water = settings.coast_fishing_share if coastal else settings.river_fishing_share if river is not RiverClass.NONE else 0
+    land = max(0.0, 1 - water / PERCENT)
+    sown = farmed + grazed
+    grain = farmed / sown if sown > 0 else 1.0
+    return CropMix(grain=land * grain, pasture=land * (1 - grain), fish=water / PERCENT)
+
+
+def rain_fit(rules: Rules, rainfall: int, mix: CropMix) -> float:
+    settings = rules.environment
+    grain = fit(rainfall, settings.ideal_rainfall, settings.rainfall_tolerance, settings.fit_floor_pct)
+    pasture = fit(rainfall, settings.pasture_ideal_rainfall, settings.pasture_rainfall_tolerance, settings.fit_floor_pct)
+    return mix.grain * grain + mix.pasture * pasture + mix.fish
+
+
+def climate_factor(
+    rules: Rules, *, temperature: int, rainfall: int, river: RiverClass, scars: Mapping[str, int], works: Works, mix: CropMix | None = None
+) -> float:
+    settings = rules.environment
+    crops = mix if mix is not None else CropMix(1.0, 0.0, 0.0)
     return (
-        fit(rainfall, settings.ideal_rainfall, settings.rainfall_tolerance, settings.fit_floor_pct)
+        rain_fit(rules, rainfall, crops)
         * fit(temperature, settings.ideal_temperature, settings.temperature_tolerance, settings.fit_floor_pct)
         * (1 - scar_penalty(rules, scars))
         * (1 + irrigation_pct(rules, river, works) / PERCENT)

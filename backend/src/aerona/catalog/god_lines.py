@@ -206,12 +206,15 @@ ECONOMY_SENTIENT_LEFT = Line("gods.economy.sentient_left", "{resource} demanded 
 ECONOMY_SENTIENT_CHOSEN = "; now it chooses {owner}"
 ECONOMY_SENTIENT_BOND = "the resource chose it"
 SENTIENT_DEMANDS = (
-    "an epoch of silence",
-    "the eyes of the oldest seer",
-    "the first names of the newborns",
-    "a song, every night",
-    "a settlement of their enemy",
-    "the entire harvest of a year",
+    ("an epoch of silence", None, 0),
+    ("the eyes of the oldest seer", None, 0),
+    ("the first names of the newborns", "sacred_goods", 20),
+    ("a song, every night", "luxuries", 15),
+    ("a settlement of their enemy", None, 0),
+    ("the entire harvest of a year", "grain", 400),
+)
+ECONOMY_SENTIENT_BARGAINED = Line(
+    "gods.economy.sentient_bargained", "{resource} demanded {demand} from {owner}; {negotiator} talked it down to half, and {owner} paid."
 )
 ECONOMY_SACRED_CURSE = Line("gods.economy.sacred_curse", "{son} cursed {owner} for digging the sacred {resource}.")
 ECONOMY_SACRED_BOND = "for the sacred {resource}"

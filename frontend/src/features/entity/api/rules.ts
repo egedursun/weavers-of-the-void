@@ -30,6 +30,6 @@ export function useRuleLookup() {
 export const RULE = {
   sanityClouding: 'cosmic_horror.clouding_threshold',
   sanityMadness: 'cosmic_horror.madness_threshold',
-  priceScarcity: 'society.price_scarcity_pct',
-  pricePlenty: 'society.price_plenty_pct',
+  priceScarcity: 'market.flow_price_gap_pct',
+  pricePlenty: 'markets.price_floor_pct',
 } as const

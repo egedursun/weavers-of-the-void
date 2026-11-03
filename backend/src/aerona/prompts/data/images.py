@@ -20,6 +20,7 @@ IMAGE_DIRECTION: dict[EntityType, str] = {
     EntityType.SETTLEMENT: "an establishing shot of the settlement from a nearby rise, people and smoke for life and scale",
     EntityType.MORTAL: "a full-length character portrait in their environment; face, garments, posture that reveal their role",
     EntityType.ARMY: "the army on the march or arrayed for battle, banners and equipment, dust and weather",
+    EntityType.TRADE_ROUTE: "the route seen from along its way: caravans, boats or porters with their loads, waystations and the land it crosses",
     EntityType.STRUCTURE: "the monument or work in its setting, with people for scale",
     EntityType.ITEM: "a museum-grade still life of the object on a surface that fits its origin, raking light",
     EntityType.RESOURCE: "the resource where it is found or harvested, with the workers or creatures who gather it",

@@ -1,0 +1,443 @@
+{
+  "workshops": {
+    "market": [
+      "market",
+      "bazaar",
+      "pazar",
+      "çarşı"
+    ],
+    "granary": [
+      "granary",
+      "ambar",
+      "silo"
+    ],
+    "warehouse": [
+      "warehouse",
+      "depo",
+      "storehouse"
+    ],
+    "mine": [
+      "mine",
+      "maden",
+      "quarry",
+      "ocak"
+    ],
+    "forge": [
+      "forge",
+      "smithy",
+      "demirhane",
+      "dökümhane"
+    ],
+    "tannery": [
+      "tannery",
+      "tabakhane"
+    ],
+    "mill": [
+      "mill",
+      "değirmen",
+      "bakery",
+      "fırın"
+    ],
+    "brewery": [
+      "brewery",
+      "winery",
+      "bağ",
+      "şaraphane"
+    ],
+    "weavery": [
+      "weavery",
+      "loom",
+      "dokuma"
+    ],
+    "stable": [
+      "stable",
+      "ahır"
+    ],
+    "mason_yard": [
+      "mason",
+      "taşçı"
+    ],
+    "shipyard": [
+      "shipyard",
+      "tersane",
+      "dock"
+    ],
+    "siege_yard": [
+      "siege"
+    ],
+    "alchemist": [
+      "alchem",
+      "simya"
+    ],
+    "shrine_workshop": [
+      "shrine",
+      "türbe"
+    ],
+    "mint": [
+      "mint",
+      "darphane"
+    ]
+  },
+  "resources": {
+    "timber": [
+      "forest",
+      "wood",
+      "timber",
+      "grove",
+      "orman",
+      "ağaç",
+      "kereste",
+      "koru"
+    ],
+    "fish": [
+      "fish",
+      "fishery",
+      "pearl",
+      "reef",
+      "balık",
+      "inci",
+      "mercan"
+    ],
+    "grain": [
+      "field",
+      "grain",
+      "wheat",
+      "barley",
+      "harvest",
+      "tarla",
+      "buğday",
+      "arpa",
+      "tahıl",
+      "ekin"
+    ],
+    "livestock": [
+      "herd",
+      "pasture",
+      "cattle",
+      "sheep",
+      "goat",
+      "sürü",
+      "mera",
+      "koyun",
+      "keçi",
+      "sığır"
+    ],
+    "mounts": [
+      "horse",
+      "steed",
+      "mount",
+      "at",
+      "kısrak",
+      "binek"
+    ],
+    "stone": [
+      "quarry",
+      "marble",
+      "granite",
+      "stone",
+      "taş",
+      "mermer",
+      "granit",
+      "ocak"
+    ],
+    "magical_reagents": [
+      "crystal",
+      "essence",
+      "reagent",
+      "herb",
+      "spore",
+      "kristal",
+      "öz",
+      "ot",
+      "mantar",
+      "iksir"
+    ],
+    "incense": [
+      "incense",
+      "resin",
+      "myrrh",
+      "tütsü",
+      "reçine",
+      "günlük"
+    ],
+    "luxuries": [
+      "gem",
+      "jewel",
+      "silk",
+      "spice",
+      "dye",
+      "mücevher",
+      "ipek",
+      "baharat",
+      "boya"
+    ],
+    "sacred_goods": [
+      "relic",
+      "sacred",
+      "holy",
+      "kutsal",
+      "emanet"
+    ]
+  },
+  "materials": {
+    "iron": [
+      "iron",
+      "demir"
+    ],
+    "copper": [
+      "copper",
+      "bakır"
+    ],
+    "tin": [
+      "tin",
+      "kalay"
+    ],
+    "silver": [
+      "silver",
+      "gümüş"
+    ],
+    "gold": [
+      "gold",
+      "altın"
+    ],
+    "salt": [
+      "salt",
+      "tuz"
+    ],
+    "obsidian": [
+      "obsidian",
+      "obsidyen"
+    ],
+    "amber": [
+      "amber",
+      "kehribar"
+    ],
+    "crystal": [
+      "crystal",
+      "kristal"
+    ],
+    "lead": [
+      "lead",
+      "kurşun"
+    ],
+    "sulfur": [
+      "sulfur",
+      "sulphur",
+      "kükürt"
+    ],
+    "gems": [
+      "gem",
+      "jewel",
+      "mücevher",
+      "cevher"
+    ],
+    "clay": [
+      "clay",
+      "kil"
+    ]
+  },
+  "traits": {
+    "brave": [
+      "cesur",
+      "yiğit",
+      "gözüpek",
+      "korkusuz",
+      "yürekli"
+    ],
+    "craven": [
+      "korkak",
+      "ürkek",
+      "pısırık"
+    ],
+    "wrathful": [
+      "öfkeli",
+      "sinirli",
+      "hiddetli",
+      "asabi",
+      "öfkesi"
+    ],
+    "patient": [
+      "sabırlı",
+      "sabırla",
+      "temkinli",
+      "sakin"
+    ],
+    "cruel": [
+      "zalim",
+      "acımasız",
+      "gaddar",
+      "merhametsiz"
+    ],
+    "kind": [
+      "nazik",
+      "şefkatli",
+      "merhametli",
+      "yumuşak kalpli",
+      "iyiliksever"
+    ],
+    "ambitious": [
+      "hırslı",
+      "tutkulu",
+      "gözü yüksekte"
+    ],
+    "content": [
+      "kanaatkâr",
+      "kanaatkar",
+      "yetinen",
+      "halinden memnun"
+    ],
+    "greedy": [
+      "açgözlü",
+      "doymak bilmez",
+      "tamahkâr",
+      "hırsız"
+    ],
+    "generous": [
+      "cömert",
+      "eli açık",
+      "bonkör"
+    ],
+    "honest": [
+      "dürüst",
+      "doğru sözlü",
+      "sözünün eri"
+    ],
+    "deceitful": [
+      "yalancı",
+      "hilekâr",
+      "sinsi",
+      "düzenbaz",
+      "ikiyüzlü"
+    ],
+    "zealous": [
+      "bağnaz",
+      "fanatik",
+      "dindar",
+      "tutucu"
+    ],
+    "cynical": [
+      "alaycı",
+      "kuşkucu",
+      "şüpheci"
+    ],
+    "paranoid": [
+      "vesveseli",
+      "evhamlı",
+      "paranoyak",
+      "herkesten şüphe"
+    ],
+    "trusting": [
+      "saf",
+      "güvenen",
+      "safça"
+    ],
+    "lustful": [
+      "şehvetli",
+      "çapkın"
+    ],
+    "chaste": [
+      "iffetli",
+      "namuslu"
+    ],
+    "gluttonous": [
+      "obur",
+      "pisboğaz"
+    ],
+    "ascetic": [
+      "çileci",
+      "zahit",
+      "dünyadan el etek"
+    ],
+    "scholarly": [
+      "bilgin",
+      "okumuş",
+      "alim",
+      "kitap kurdu",
+      "bilge"
+    ],
+    "gregarious": [
+      "girişken",
+      "konuşkan",
+      "cana yakın",
+      "sosyal"
+    ],
+    "reclusive": [
+      "kolay açılmaz",
+      "içine kapanık",
+      "yalnızlığı",
+      "münzevi",
+      "çekingen"
+    ],
+    "vengeful": [
+      "kindar",
+      "intikam"
+    ],
+    "forgiving": [
+      "affedici",
+      "bağışlayıcı"
+    ],
+    "stubborn": [
+      "inatçı",
+      "dik başlı",
+      "inadı"
+    ],
+    "fickle": [
+      "kararsız",
+      "dönek",
+      "değişken"
+    ],
+    "just": [
+      "adil",
+      "hakkaniyetli",
+      "kurallarına"
+    ],
+    "arbitrary": [
+      "keyfi",
+      "keyfine"
+    ],
+    "humble": [
+      "alçakgönüllü",
+      "mütevazı",
+      "kendini önemsemez"
+    ],
+    "proud": [
+      "kibirli",
+      "gururlu",
+      "mağrur",
+      "kendini beğenmiş"
+    ],
+    "curious": [
+      "meraklı",
+      "merakı"
+    ],
+    "melancholic": [
+      "hüzünlü",
+      "melankolik",
+      "kederli",
+      "üzgün"
+    ],
+    "sanguine": [
+      "neşeli",
+      "oyunbaz",
+      "şakacı",
+      "güler yüzlü"
+    ],
+    "iron_willed": [
+      "iradeli",
+      "azimli",
+      "kararlı",
+      "sarsılmaz"
+    ],
+    "cunning_tactician": [
+      "kurnaz",
+      "taktikçi",
+      "hesapçı"
+    ],
+    "reckless": [
+      "pervasız",
+      "gözü kara",
+      "düşüncesiz",
+      "atılgan"
+    ]
+  }
+}

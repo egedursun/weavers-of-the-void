@@ -81,6 +81,15 @@ class RegionAtlas:
         graph = self._graphs.get(world)
         return graph.hop_distance(first_region, second_region) if graph is not None else None
 
+    def region_path(self, first_region: int | None, second_region: int | None, avoid: frozenset[int] = frozenset()) -> list[int] | None:
+        if first_region is None or second_region is None:
+            return None
+        world = self.world_of(first_region)
+        if world is None or world != self.world_of(second_region):
+            return None
+        graph = self._graphs.get(world)
+        return graph.path(first_region, second_region, avoid) if graph is not None else None
+
     def hops(self, first: int, second: int) -> int | None:
         return self.region_hops(self.top_region(first), self.top_region(second))
 

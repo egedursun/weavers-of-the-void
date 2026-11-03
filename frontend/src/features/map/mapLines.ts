@@ -9,10 +9,19 @@ export const LINE_KINDS = [
   'hostility',
   'rule',
   'hunt',
+  'route',
+  'route_busy',
+  'route_blocked',
 ] as const
 export type LineKind = (typeof LINE_KINDS)[number]
 
 export const ROAD_KINDS: ReadonlySet<LineKind> = new Set(['road', 'trade_road'])
+export const ROUTE_KINDS: ReadonlySet<LineKind> = new Set([
+  'route',
+  'route_busy',
+  'route_blocked',
+])
+const BUSY_SHARE = 0.5
 
 export type LineInfo = {
   kind: LineKind
@@ -77,6 +86,20 @@ export const LINE_STYLE: Record<LineKind, LineStyle> = {
     main: { color: red, width: 1.1, alpha: 0.9, dash: [1, 3] },
     arrow: true,
   },
+  route: {
+    casing: { color: halo, width: 4, alpha: 0.4 },
+    main: { color: gold, width: 1.8, alpha: 0.85 },
+    flow: { color: light, width: 1, alpha: 0.7, dash: [2, 10], speed: 0.015 },
+  },
+  route_busy: {
+    casing: { color: halo, width: 7, alpha: 0.45 },
+    main: { color: gold, width: 3.6, alpha: 0.95 },
+    flow: { color: light, width: 1.6, alpha: 0.85, dash: [3, 9], speed: 0.03 },
+  },
+  route_blocked: {
+    casing: { color: halo, width: 4, alpha: 0.4 },
+    main: { color: red, width: 1.8, alpha: 0.9, dash: [5, 5] },
+  },
 }
 
 const CURVE_BEND = 0.16
@@ -131,6 +154,23 @@ function shapesOf(view: MapView): Shape[] {
       points: road.path,
       arrow: null,
     })
+  for (const route of view.trade ?? [])
+    shapes.push({
+      info: {
+        kind:
+          route.status === 'blockaded'
+            ? 'route_blocked'
+            : route.capacity > 0 && route.volume >= route.capacity * BUSY_SHARE
+              ? 'route_busy'
+              : 'route',
+        source: route.first,
+        target: route.second,
+        description: `${route.name}: ${route.volume} of ${route.capacity} carried`,
+        length: null,
+      },
+      points: route.path,
+      arrow: null,
+    })
   for (const line of view.relations) {
     const kind = line.kind as LineKind
     const info = {
@@ -153,9 +193,18 @@ function shapesOf(view: MapView): Shape[] {
   return shapes
 }
 
-function visibleShapes(view: MapView, roads: boolean, ties: boolean): Shape[] {
+function visibleShapes(
+  view: MapView,
+  roads: boolean,
+  ties: boolean,
+  trade = false
+): Shape[] {
   return shapesOf(view).filter((shape) =>
-    ROAD_KINDS.has(shape.info.kind) ? roads : ties
+    ROUTE_KINDS.has(shape.info.kind)
+      ? trade
+      : ROAD_KINDS.has(shape.info.kind)
+        ? roads
+        : ties
   )
 }
 
@@ -185,12 +234,13 @@ export function drawLines(
   options: {
     roads: boolean
     ties: boolean
+    trade?: boolean
     time: number
     animate: boolean
     fade: number
   }
 ): void {
-  const shapes = visibleShapes(view, options.roads, options.ties)
+  const shapes = visibleShapes(view, options.roads, options.ties, options.trade)
   if (shapes.length === 0) return
   const k = transform.k
   context.lineJoin = 'round'
@@ -246,9 +296,10 @@ export function lineHits(
   view: MapView,
   transform: Transform,
   roads: boolean,
-  ties: boolean
+  ties: boolean,
+  trade = false
 ): LineHit[] {
-  return visibleShapes(view, roads, ties).map((shape) => {
+  return visibleShapes(view, roads, ties, trade).map((shape) => {
     const points: number[] = []
     for (let index = 0; index + 1 < shape.points.length; index += 2)
       points.push(

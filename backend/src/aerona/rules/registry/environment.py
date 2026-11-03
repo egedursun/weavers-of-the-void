@@ -76,6 +76,10 @@ class EnvironmentRules:
     ideal_rainfall: int = rule(50, 0, 100, RuleGroup.ENVIRONMENT, "Rainfall at which crops grow best")
     soil_moisture_pct: int = rule(30, 0, 200, RuleGroup.ENVIRONMENT, "Natural soil fertility gained per point of moisture above the ideal (%)")
     rainfall_tolerance: int = rule(60, 1, 200, RuleGroup.ENVIRONMENT, "Rainfall away from the ideal at which crops stop growing")
+    pasture_ideal_rainfall: int = rule(35, 0, 100, RuleGroup.ENVIRONMENT, "Rainfall at which pasture grows best")
+    pasture_rainfall_tolerance: int = rule(90, 1, 200, RuleGroup.ENVIRONMENT, "Rainfall away from the ideal at which pasture stops growing")
+    coast_fishing_share: int = rule(25, 0, 100, RuleGroup.ENVIRONMENT, "Share of a coastal region's food that comes from the sea (%)")
+    river_fishing_share: int = rule(10, 0, 100, RuleGroup.ENVIRONMENT, "Share of a river region's food that comes from the river (%)")
     ideal_temperature: int = rule(45, 0, 100, RuleGroup.ENVIRONMENT, "Temperature at which crops grow best")
     temperature_tolerance: int = rule(45, 1, 200, RuleGroup.ENVIRONMENT, "Temperature away from the ideal at which crops stop growing")
     fit_floor_pct: int = rule(15, 0, 100, RuleGroup.ENVIRONMENT, "Least share of growth kept in the worst rain or temperature (%)")
@@ -275,7 +279,6 @@ class LandUseRules:
     exhausted_soil_below: int = rule(25, 0, 100, RuleGroup.ENVIRONMENT, "Soil fertility below which the chronicle notes worn-out land")
     mining_per_owner: int = rule(2, 0, 100, RuleGroup.ENVIRONMENT, "Mined land each owner of a worked resource adds per epoch")
     seam_depletion: int = rule(1, 0, 100, RuleGroup.ENVIRONMENT, "Richness a worked resource takes from the region's richest seam per owner each epoch")
-    barren_regen_pct: int = rule(50, 0, 1000, RuleGroup.ENVIRONMENT, "Resource regrowth in a region without mineral seams (%)")
 
 
 @dataclass(frozen=True)

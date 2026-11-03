@@ -11,8 +11,8 @@ from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.travel import TravelMethod, VehicleKind
 from aerona.engine.cosmos.routes import RouteSpec, method_label, open_route
 from aerona.engine.cosmos.vessels import set_vessel_kind
+from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.gods.queries import worshippers_of
-from aerona.engine.phases.society_economy import set_resource_commodity
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.mechanics import assign_mechanics
 from aerona.engine.primitives.stats import set_stats
@@ -168,7 +168,7 @@ async def finish_extras(call: SonCall, args: CreationInput, created: EntityRow) 
         await add_words(call.session, created, words[: call.rules.son_tools.coin_word_max_words], actor=(ActorKind.SON, call.son.id), epoch=call.epoch)
     commodity = args.option("commodity")
     if created.entity_type is EntityType.RESOURCE and commodity is not None:
-        await set_resource_commodity(call.tick, created.id, commodity)
+        await set_resource_yield(call.session, call.rules, created.id, commodity, args.option("material"))
     if created.entity_type in MECHANIC_TYPES:
         await assign_mechanics(call.session, call.rules, created, resource_choice=args.option("mechanics") or (), law_choice=args.option("mechanic"))
     learners = args.option("learner_ids") or []

@@ -14,6 +14,7 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.engine.body.cohorts import war_appetite
 from aerona.engine.context import TickContext
+from aerona.engine.economy.routes import blockade_pressure
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import betrayal_drive, closeness, war_drive
 from aerona.engine.phase import Phase
@@ -275,7 +276,11 @@ async def _neighbour_pair(
         tail = "; the blood feud is now a campaign" if feud else ""
         text = f"The grudge that had built up for years between {first.name} and {second.name} turned into open enmity{tail}."
         await _note(ctx, text, "diplomacy.war_declared", (first.id, second.id), ChronicleKind.WAR)
-    elif enemy and ((value >= rules.peace_threshold and rng.chance(rules.peace_chance)) or tired) and counters.peaces < rules.peace_cap:
+    elif (
+        enemy
+        and ((value >= rules.peace_threshold and rng.chance(rules.peace_chance + await blockade_pressure(ctx, first.id, second.id))) or tired)
+        and counters.peaces < rules.peace_cap
+    ):
         await settle_peace(ctx, first.id, second.id, WarEnding.PEACE, "peace")
         counters.peaces += 1
         how = f"worn out by {duration} epochs of war the two sides made a truce" if tired else "envoys swore a peace oath"

@@ -48,6 +48,31 @@ class RegionGraph:
                 queue.append(neighbour)
         return None
 
+    def path(self, first: int | None, second: int | None, avoid: frozenset[int] = frozenset()) -> list[int] | None:
+        start = self.top_level_of(first) if first is not None else None
+        goal = self.top_level_of(second) if second is not None else None
+        if start is None or goal is None:
+            return None
+        if start == goal:
+            return [start]
+        previous: dict[int, int | None] = {start: None}
+        queue = deque([start])
+        while queue:
+            current = queue.popleft()
+            for neighbour in sorted(self._top_level.get(current, ())):
+                if neighbour in previous or (neighbour in avoid and neighbour != goal):
+                    continue
+                previous[neighbour] = current
+                if neighbour == goal:
+                    route = [goal]
+                    step = previous[goal]
+                    while step is not None:
+                        route.append(step)
+                        step = previous[step]
+                    return list(reversed(route))
+                queue.append(neighbour)
+        return None
+
     def within(self, region_id: int, hops: int) -> list[int]:
         start = self.top_level_of(region_id)
         if start is None:

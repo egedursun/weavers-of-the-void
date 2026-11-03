@@ -24,6 +24,7 @@ from aerona.services.player import (
     death,
     diplomacy,
     divine,
+    economy,
     engine_control,
     environment,
     fate_controls,
@@ -1002,6 +1003,29 @@ MIND_ACTIONS = (
     _sync(Meta("mind:pressure", "Set and hold a pressure on a community", G.SOCIETY), mind.set_pressure, mind.SetPressure, free, ("F8",)),
 )
 
+ECONOMY_ACTIONS = (
+    _sync(Meta("material:edit", "Edit a material's properties in a world", G.WORLDS), economy.edit_material, economy.EditMaterial, free, ("F3.1", "F3/RP3")),
+    _sync(Meta("stock:grant", "Add goods to a community's stores or take them away", G.SOCIETY), economy.grant_stock, economy.GrantStock, free, ("F3.2",)),
+    _sync(
+        Meta("resource:set", "Set a resource's reserve, richness, difficulty and quality", G.SOCIETY),
+        economy.set_resource,
+        economy.SetResource,
+        free,
+        ("S6.3",),
+    ),
+    _sync(Meta("resource:owner", "Give a resource to a new owner", G.SOCIETY), economy.set_owner, economy.SetOwner, free, ("S6.3",)),
+    _sync(Meta("resource:reveal", "Reveal or hide a deposit", G.SOCIETY), economy.reveal, economy.Reveal, free, ("S6.3",)),
+    _sync(Meta("workshop:set", "Raise, enlarge or pull down a workshop", G.SOCIETY), economy.set_workshop, economy.SetWorkshop, free, ("S6.3",)),
+    _sync(Meta("trade_route:open", "Open a trade route between two markets", G.SOCIETY), economy.open_route, economy.OpenRoute, free, ("S6.4",)),
+    _sync(Meta("trade_route:close", "Close a trade route", G.SOCIETY), economy.close_route, economy.RouteTarget, free, ("S6.4",)),
+    _sync(Meta("trade_route:toll", "Set or release the toll on a stretch of a route", G.SOCIETY), economy.set_toll, economy.SetToll, free, ("S6.4",)),
+    _sync(Meta("currency:edit", "Set a coin's purity, trust and supply", G.SOCIETY), economy.edit_currency, economy.EditCurrency, free, ("S6.4",)),
+    _sync(Meta("currency:debase", "Debase a coin", G.SOCIETY), economy.debase, economy.CurrencyTarget, free, ("S6.4",)),
+    _sync(Meta("currency:use", "Choose the coin a community counts in", G.SOCIETY), economy.use_currency, economy.UseCurrency, free, ("S6.4",)),
+    _sync(Meta("loan:forgive", "Forgive a bank loan", G.SOCIETY), economy.forgive_loan, economy.LoanTarget, free, ("S6.4",)),
+    _sync(Meta("hoard:inject", "Pour a hoard of treasure into a market", G.SOCIETY), economy.inject_hoard, economy.InjectHoard, free, ("S6.4",)),
+)
+
 ENVIRONMENT_ACTIONS = (
     _sync(
         Meta("ley:sever", "Cut a ley line for some epochs", G.WORLDS),
@@ -1187,6 +1211,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *LIFE_CYCLE_ACTIONS,
     *MECHANIC_ACTIONS,
     *ENVIRONMENT_ACTIONS,
+    *ECONOMY_ACTIONS,
     *BODY_ACTIONS,
     *MIND_ACTIONS,
 )

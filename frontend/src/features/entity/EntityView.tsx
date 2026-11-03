@@ -23,6 +23,9 @@ import {
 } from './api/queries'
 import { type EntityDetail } from './api/types'
 import { RELATION_PAGE_MAX } from './constants'
+import { EntityEconomy } from './economy/EntityEconomy'
+import { ResourceProfile } from './economy/ResourceProfile'
+import { PriceBoard, TradeRouteSection } from './economy/RouteAndMarket'
 import { scrollToSection } from './scrollToSection'
 import { ArrangeExtras } from './sections/ArrangeExtras'
 import { BiographySection } from './sections/BiographySection'
@@ -69,6 +72,10 @@ const SECTION_LINKS = [
   { id: 'section-facts', label: 'Facts' },
   { id: 'section-stats', label: 'Stats' },
   { id: 'section-society', label: 'Society' },
+  { id: 'section-economy', label: 'Stores' },
+  { id: 'section-market', label: 'Market' },
+  { id: 'section-resource-profile', label: 'Reserve' },
+  { id: 'section-trade-route', label: 'Route' },
   { id: 'section-depth', label: 'Depth' },
   { id: 'section-opportunities', label: 'Opportunities' },
   { id: 'section-hand', label: 'Hand of God' },
@@ -154,6 +161,16 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
   }, [])
   const present = new Set(SECTION_LINKS.map((link) => link.id))
   if (!detail.insight.society) present.delete('section-society')
+  const trading =
+    entity.entity_type === 'people' || entity.entity_type === 'settlement'
+  if (!trading) {
+    present.delete('section-economy')
+    present.delete('section-market')
+  }
+  if (entity.entity_type !== 'resource')
+    present.delete('section-resource-profile')
+  if (entity.entity_type !== 'trade_route')
+    present.delete('section-trade-route')
   if (entity.entity_type !== 'region' && entity.entity_type !== 'place')
     present.delete('section-environment')
   const embodied =
@@ -253,6 +270,20 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         highlightEpoch={highlight}
       />
       <EntityEnvironment entityId={entity.id} entityType={entity.entity_type} />
+      {(entity.entity_type === 'people' ||
+        entity.entity_type === 'settlement') && (
+        <EntityEconomy communityId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {(entity.entity_type === 'people' ||
+        entity.entity_type === 'settlement') && (
+        <PriceBoard marketId={entity.id} />
+      )}
+      {entity.entity_type === 'resource' && (
+        <ResourceProfile resourceId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'trade_route' && (
+        <TradeRouteSection routeId={entity.id} readOnlyReason={readOnly} />
+      )}
       {embodied && <BodySection nodeId={entity.id} />}
       {entity.entity_type === 'people' && (
         <PeopleBodyCustoms peopleId={entity.id} />

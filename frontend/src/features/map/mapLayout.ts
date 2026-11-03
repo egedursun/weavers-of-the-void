@@ -520,7 +520,13 @@ export function computeLayout(
   const hits: HitTarget[] = []
 
   if (overlays.roads || overlays.ties)
-    for (const line of lineHits(view, transform, overlays.roads, overlays.ties))
+    for (const line of lineHits(
+      view,
+      transform,
+      overlays.roads,
+      overlays.ties,
+      overlays.trade
+    ))
       hits.push({
         key: `line:${line.info.kind}:${line.info.source}:${line.info.target}`,
         kind: 'line',

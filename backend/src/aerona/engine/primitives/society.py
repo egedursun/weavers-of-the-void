@@ -1,7 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.society import Commodity, SocialClass
+from aerona.engine.economy.stocks import goods_of
 from aerona.rules.registry import Rules
 
 
@@ -32,9 +35,19 @@ async def stock(session: AsyncSession, rules: Rules, entity_id: int, commodity: 
     return defaults[commodity]
 
 
-async def set_stock(session: AsyncSession, entity_id: int, commodity: Commodity, value: int) -> bool:
+async def shift_stock(session: AsyncSession, rules: Rules, entity_id: int, commodity: Commodity, delta: int, *, epoch: int, flow: GoodsFlow) -> bool:
     row = await session.get(CommunitySocietyRow, entity_id)
-    if row is None:
+    entity = await session.get(EntityRow, entity_id)
+    if row is None or entity is None:
         return False
-    setattr(row, f"stock_{commodity.value}", max(0, value))
+    await goods_of(session, epoch).shift_aggregate(rules, entity, commodity, delta, flow=flow)
     return True
+
+
+async def move_stock(
+    session: AsyncSession, rules: Rules, source_id: int, target_id: int, commodity: Commodity, *, index: int, epoch: int, flow: GoodsFlow
+) -> int:
+    source, target = await session.get(EntityRow, source_id), await session.get(EntityRow, target_id)
+    if source is None or target is None or await session.get(CommunitySocietyRow, target_id) is None:
+        return 0
+    return await goods_of(session, epoch).move_aggregate(rules, source, target, commodity, index=index, flow=flow)

@@ -17,11 +17,12 @@ from aerona.db.tables.warfare import ArmyRow, BattleRow, SiegeRow, WarRow
 from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.mind import ActKind, MemoryKind, TraitEffect, ValueAxis
-from aerona.domain.enums.society import NaturalLaw
+from aerona.domain.enums.society import Commodity, NaturalLaw
 from aerona.domain.enums.war import BattleOutcome, SiegeStatus, WarCause, WarEnding, WarStatus
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
@@ -29,6 +30,7 @@ from aerona.engine.body.book import effective, strike_style
 from aerona.engine.body.cohorts import return_maimed
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.economy.equipment import march_burden, siege_engines, suffer_heat
 from aerona.engine.environment.battleground import BattleGround, attack_factor, defend_factor, night_chance, omen_morale, scar_battlefield, season_losses
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment, scar_region
 from aerona.engine.environment.years import grant_sub_steps
@@ -44,6 +46,7 @@ from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_float, clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
+from aerona.engine.primitives.society import shift_stock
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat
 from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.records import death_path
@@ -209,12 +212,37 @@ async def idle_armies(ctx: TickContext) -> int:
     return disbanded
 
 
-@reads("army.size", "settlement.population", "table.armies", "table.battles", "table.bonds", "table.entity_flags", "table.war_sides", "table.wars")
+async def heat_toll(ctx: TickContext) -> int:
+    ground = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch)
+    lost = 0
+    statement = select(ArmyRow).where(ArmyRow.disbanded_epoch.is_(None), ArmyRow.war_id.is_not(None)).order_by(ArmyRow.entity_id)
+    for row in await ctx.session.scalars(statement):
+        army = await living_entity(ctx.session, row.entity_id)
+        region = ground.region_of(row.entity_id) if army is not None else None
+        if army is not None and region is not None:
+            lost += await suffer_heat(ctx, army, region.temperature)
+    return lost
+
+
+@reads(
+    "army.size",
+    "settlement.population",
+    "table.armies",
+    "table.battles",
+    "table.bonds",
+    "table.entity_flags",
+    "table.node_materials",
+    "table.region_environment",
+    "table.war_sides",
+    "table.wars",
+    "table.world_materials",
+)
 @writes("army.size", "settlement.population", "table.armies", "table.entities")
 @reads("army.size", "settlement.population")
 @writes("army.size", "settlement.population")
 async def war_upkeep(ctx: TickContext) -> None:
     ctx.count("armies_stood_down", await idle_armies(ctx))
+    ctx.count("heat_losses", await heat_toll(ctx))
     ctx.count("stale_wars_closed", await close_stale_wars(ctx))
     ctx.count("uprisings_redirected", await redirect_uprisings(ctx))
     ctx.count("subject_wars_ended", await end_wars_with_subjects(ctx))
@@ -233,7 +261,8 @@ async def battle_power(ctx: TickContext, theatre: Theatre, community: EntityRow,
         tactics = await best_effective(ctx.session, commander.id, COMMAND_SKILLS)
         command = total / campaigns.strength_commander_divisor * (PERCENT + tactics * ctx.rules.skills.commander_tactics_pct / PERCENT) / PERCENT
     patron = await theatre.strength.patron_bonus(community)
-    return (
+    burden = max(0.0, 1 - await march_burden(ctx, army) * ctx.rules.materials.march_campaign_pct / PERCENT)
+    return burden * (
         await theatre.strength.power(community) * campaigns.strength_community_share_pct / PERCENT
         + await theatre.strength.ally_power(community)
         + log_size(stat(army, "size") or 0) * campaigns.strength_size_log_mult
@@ -276,6 +305,9 @@ async def _siege(
     society = await _society(ctx, besieged.id)
     food = society.stock_food if society is not None else campaigns.siege_default_supplies
     starving = campaigns.breach_starving_bonus_pct / PERCENT if food < campaigns.breach_starving_supplies else 0
+    owner = await ctx.session.get(ArmyRow, attacker_army.id)
+    engines = await siege_engines(ctx, await living_entity(ctx.session, owner.owner_entity_id) if owner is not None else None, attacker_army)
+    starving += engines * ctx.rules.materials.engine_breach_pct / PERCENT
     breach_chance = clamp_float(gap / campaigns.breach_diff_divisor + starving, campaigns.breach_min_pct / PERCENT, campaigns.breach_max_pct / PERCENT)
     sign = 1 if winner.id == attacker_id else -1
     besieger_name = besieger_entity.name if besieger_entity is not None else "the besiegers"
@@ -300,7 +332,7 @@ async def _siege(
         prosperity=clamp_int((prosperity if prosperity is not None else ctx.rules.society.default_stat) - campaigns.siege_prosperity_loss, 0, PERCENT_MAX),
     )
     if society is not None:
-        society.stock_food = max(0, society.stock_food - campaigns.siege_supply_loss)
+        await shift_stock(ctx.session, ctx.rules, besieged.id, Commodity.FOOD, -campaigns.siege_supply_loss, epoch=ctx.epoch, flow=GoodsFlow.SIEGE)
     shift_stat(attacker_army, "morale", -campaigns.siege_attacker_morale_loss)
     return BattleOutcome.SIEGE_STARVATION, f"{besieger_name} laid siege to {besieged.name}; the walls hold but food is running low in the city", siege
 

@@ -46,6 +46,7 @@ class WarCause(StrEnum):
     SCHISM = "schism"
     BEAST = "beast"
     RESOURCE = "resource"
+    TRADE_ROUTE = "trade_route"
 
 
 class SiegeStatus(StrEnum):

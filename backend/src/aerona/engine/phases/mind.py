@@ -12,6 +12,7 @@ from aerona.db.tables.society import CommunityRelationRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import ActKind, CareerChange, MemoryKind, PressureKind, TraitEffect, ValueHolder
 from aerona.domain.enums.society import Commodity
@@ -52,7 +53,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import active_bonds, canon, living_entity
-from aerona.engine.primitives.society import set_stock, stock
+from aerona.engine.primitives.society import move_stock, stock
 from aerona.engine.services.community_relations import change_relation, lend_settlement_values, refresh_relations
 from aerona.engine.services.war import ongoing_wars
 
@@ -548,8 +549,7 @@ async def famine_aid(ctx: TickContext) -> None:
         sent = round_half_up(store * table.famine_aid_share_pct / PERCENT)
         if sent <= 0:
             continue
-        await set_stock(ctx.session, donor.id, Commodity.FOOD, store - sent)
-        await set_stock(ctx.session, community.id, Commodity.FOOD, await stock(ctx.session, ctx.rules, community.id, Commodity.FOOD) + sent)
+        await move_stock(ctx.session, ctx.rules, donor.id, community.id, Commodity.FOOD, index=sent, epoch=ctx.epoch, flow=GoodsFlow.AID)
         await change_relation(
             ctx, community.id, donor.id, table.famine_aid_relation, MemoryKind.FAMINE_AID, note="grain in the hungry year", reverse=MemoryKind.GOODWILL
         )

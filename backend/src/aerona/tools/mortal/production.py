@@ -6,6 +6,7 @@ from aerona.catalog.mind import CRAFT_SKILLS
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
@@ -13,12 +14,14 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.economy import CommodityKind, MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, SkillKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarCause
-from aerona.engine.phases.society_economy import set_resource_commodity
+from aerona.engine.economy.materials import armour_protection, curse_bonus, decay_loss, enchantment_cap, sanctity_splendour, set_node_material, weapon_damage
+from aerona.engine.economy.resources import ensure_profile, set_resource_yield
 from aerona.engine.primitives.mechanics import assign_mechanics
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
@@ -40,6 +43,7 @@ from aerona.tools.mortal.inputs import (
     ProduceInput,
     SettleInput,
 )
+from aerona.tools.mortal.materials import chosen_material
 from aerona.tools.mortal.support import (
     MortalCreation,
     civilization_tier,
@@ -119,11 +123,18 @@ async def produce_item(call: MortalCall, args: ProduceInput) -> str:
     category = args.category.value
     damage = max(tools.craft_min_value, clamp(skilled + call.die(tools.craft_die) + metallurgy)) if category in WEAPONS else call.die(tools.craft_side_die)
     protection = max(tools.craft_min_value, clamp(skilled + call.die(tools.craft_die) + metallurgy)) if category in ARMOUR else call.die(tools.craft_side_die)
+    material = await chosen_material(call, args.material, resources)
+    worked = round(craft)
+    if material is not None and category in WEAPONS:
+        damage = max(damage, weapon_damage(call.rules, material, worked))
+    if material is not None and category in ARMOUR:
+        protection = max(protection, armour_protection(call.rules, material, worked))
+    enchanted = clamp(pct(might, tools.craft_item_might_pct) + call.die(tools.craft_item_might_die) + magic)
     stats = {
         "damage": damage,
         "protection": protection,
-        "might": clamp(pct(might, tools.craft_item_might_pct) + call.die(tools.craft_item_might_die) + magic),
-        "curse": clamp(call.die(tools.craft_curse_die) - tools.craft_curse_shift),
+        "might": min(enchanted, enchantment_cap(call.rules, material)) if material is not None else enchanted,
+        "curse": clamp(call.die(tools.craft_curse_die) - tools.craft_curse_shift + (curse_bonus(call.rules, material) if material is not None else 0)),
     }
     label = args.category.value.replace("_", " ")
     subtype = lines.ITEM_SUBTYPE.format(label=label, subtype=args.subtype) if args.subtype else label
@@ -141,6 +152,8 @@ async def produce_item(call: MortalCall, args: ProduceInput) -> str:
             tags=(category,),
         ),
     )
+    if material is not None:
+        await set_node_material(call.session, item.id, MaterialSlot.BODY, material.kind, material.world_material_id)
     bonds = BondRepository(call.session)
     for resource in resources:
         await bonds.connect(BondDraft(item.id, resource.id, BondKind.SOURCE_OF, call.epoch))
@@ -176,9 +189,12 @@ async def build_structure(call: MortalCall, args: BuildInput) -> str:
     craft = await craft_of(call)
     await practised(call, (SkillKind.MASONRY, SkillKind.CARPENTRY, SkillKind.ENGINEERING), call.rules.skills.craft_xp)
     architecture = round(tools.build_architecture_bonus * await my_branch_effect(call, KnowledgeBranch.ARCHITECTURE))
+    material = await chosen_material(call, args.material, [])
+    lasting = decay_loss(call.rules, material, 0) if material is not None else 0
+    holy = sanctity_splendour(call.rules, material) if material is not None else 0
     stats = {
-        "splendor": clamp(pct(craft, tools.build_splendor_pct) + call.die(tools.build_splendor_die) + architecture),
-        "durability": clamp(pct(craft, tools.build_durability_pct) + call.die(tools.build_durability_die) + architecture),
+        "splendor": clamp(pct(craft, tools.build_splendor_pct) + call.die(tools.build_splendor_die) + architecture + holy),
+        "durability": clamp(pct(craft, tools.build_durability_pct) + call.die(tools.build_durability_die) + architecture - lasting),
         "function": clamp(tools.build_function_base + call.die(tools.build_function_die)),
     }
     work = await create_record(
@@ -187,6 +203,8 @@ async def build_structure(call: MortalCall, args: BuildInput) -> str:
             args.name, EntityType.STRUCTURE, args.description, subtype=args.subtype, stats=stats, location_id=location.id, image_prompt=args.image_prompt
         ),
     )
+    if material is not None:
+        await set_node_material(call.session, work.id, MaterialSlot.BODY, material.kind, material.world_material_id)
     bonds = BondRepository(call.session)
     await bonds.connect(BondDraft(call.me.id, work.id, BondKind.BUILT, call.epoch))
     god = await call.session.get(SonRow, args.dedicated_son_id) if args.dedicated_son_id is not None else None
@@ -276,7 +294,13 @@ async def discover_resource(call: MortalCall, args: DiscoverInput) -> str:
     )
     resource.domain = match_domain(args.domain or "") or Domain.EARTH
     if args.commodity is not None:
-        await set_resource_commodity(call.tick, resource.id, args.commodity)
+        await set_resource_yield(call.session, call.rules, resource.id, args.commodity, args.material)
+    else:
+        region_id = (await call.atlas()).top_region(location.id)
+        region = await call.session.get(RegionEnvironmentRow, region_id) if region_id is not None else None
+        await ensure_profile(
+            call.session, call.rules, resource, region, commodity=CommodityKind.ORE if args.material is not None else None, material=args.material
+        )
     await BondRepository(call.session).connect(BondDraft(call.me.id, resource.id, BondKind.OWNS, call.epoch, lines.DISCOVERED_BOND))
     await assign_mechanics(call.session, call.rules, resource, resource_choice=args.mechanics or ())
     await call.bump(TurnCounter.DISCOVERIES)

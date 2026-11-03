@@ -13,6 +13,7 @@ from aerona.domain.enums.entity import AGENT_TYPES, COMMUNITY_TYPES, EntityStatu
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.engine.context import TickContext
+from aerona.engine.economy.routes import link_weight, trade_links
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.hooks import converted
 from aerona.engine.notes import note
@@ -24,7 +25,7 @@ from aerona.engine.primitives.numbers import scaled_cap
 from aerona.engine.primitives.queries import BondIndex, canon, spoken_language
 from aerona.language.titles import community_phrase
 
-DIFFUSION_BOND_KINDS = (BondKind.TRADES_WITH, BondKind.ALLY, BondKind.RULES, BondKind.PAYS_TRIBUTE)
+DIFFUSION_BOND_KINDS = (BondKind.ALLY, BondKind.RULES, BondKind.PAYS_TRIBUTE)
 ITEM_SEPARATOR = "; "
 
 
@@ -49,13 +50,15 @@ def contact_rates(ctx: TickContext, first_contact: bool) -> ContactRates:
     return ContactRates(culture.trade_loanword_pct, culture.trade_tradition_pct, culture.trade_knowledge_pct, culture.trade_god_pct)
 
 
-async def _diffuse_direction(ctx: TickContext, source: EntityRow, target: EntityRow, holdings: KnowledgeHoldings, spread: list[int], *, cap: int) -> None:
+async def _diffuse_direction(
+    ctx: TickContext, source: EntityRow, target: EntityRow, holdings: KnowledgeHoldings, spread: list[int], *, cap: int, weight: float = 1.0
+) -> None:
     if target.entity_type not in AGENT_TYPES:
         return
     settings = ctx.rules.knowledge
     rng = ctx.rng(f"diffusion.{source.id}.{target.id}")
     writing = times_of(ctx.rules.knowledge, holdings.branch_level(source.id, KnowledgeBranch.WRITING), settings.writing_diffusion_mult)
-    chance = settings.diffusion_chance * writing
+    chance = min(100.0, settings.diffusion_chance * writing * weight)
     for knowledge in holdings.known_by(source.id):
         if spread[0] >= cap or holdings.knows(target.id, knowledge.id):
             continue
@@ -117,12 +120,14 @@ async def knowledge_diffusion(ctx: TickContext) -> None:
     cap = scaled_cap(
         settings.diffusion_cap, settings.diffusion_cap_community_divisor, sum(1 for item in entities.values() if item.entity_type in COMMUNITY_TYPES)
     )
-    for bond in sorted(bonds.bonds, key=lambda item: item.id):
-        first, second = entities.get(bond.source_node_id), entities.get(bond.target_node_id)
+    pairs = [(bond.source_node_id, bond.target_node_id, 1.0) for bond in sorted(bonds.bonds, key=lambda item: item.id)]
+    pairs += [(link.first, link.second, link_weight(ctx, link)) for link in await trade_links(ctx)]
+    for first_id, second_id, weight in pairs:
+        first, second = entities.get(first_id), entities.get(second_id)
         if first is None or second is None:
             continue
-        await _diffuse_direction(ctx, first, second, holdings, spread, cap=cap)
-        await _diffuse_direction(ctx, second, first, holdings, spread, cap=cap)
+        await _diffuse_direction(ctx, first, second, holdings, spread, cap=cap, weight=weight)
+        await _diffuse_direction(ctx, second, first, holdings, spread, cap=cap, weight=weight)
         await _spread_language(ctx, first, second, laws)
     ctx.count("knowledge_spread", spread[0])
 
@@ -257,14 +262,13 @@ def _trading_communities(bond_entities: tuple[EntityRow | None, EntityRow | None
 async def cultural_exchange(ctx: TickContext) -> None:
     culture = ctx.rules.culture
     entities: Mapping[int, EntityRow] = {entity.id: entity for entity in await canon(ctx.session, COMMUNITY_TYPES)}
-    bonds = await BondIndex.load(ctx.session, [BondKind.TRADES_WITH])
     rng = ctx.rng("exchange")
     exchanges = 0
-    for bond in sorted(bonds.bonds, key=lambda item: item.id):
+    for link in sorted(await trade_links(ctx), key=lambda item: (-item.volume, item.first, item.second)):
         if exchanges >= culture.exchange_cap:
             break
-        pair = _trading_communities((entities.get(bond.source_node_id), entities.get(bond.target_node_id)))
-        if pair is None or not rng.chance(culture.exchange_chance):
+        pair = _trading_communities((entities.get(link.first), entities.get(link.second)))
+        if pair is None or not rng.chance(min(100.0, culture.exchange_chance * link_weight(ctx, link))):
             continue
         source, target = pair if rng.chance(culture.exchange_direction_pct) else (pair[1], pair[0])
         if await cultural_contact(ctx, source, target) > 0:

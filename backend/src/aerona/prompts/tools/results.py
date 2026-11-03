@@ -228,6 +228,8 @@ class MortalResult(StrEnum):
     NOT_A_RESOURCE_NAMED = "{{ name }} is not a resource."
     NOT_YOUR_RESOURCE = "{{ name }} is not on your land and you do not own it. Acquire it by trade or conquest."
     RESOURCE_SCARCE = "{{ name }} is about to run out (abundance {{ abundance }})."
+    MATERIAL_UNHELD = "You hold no {{ material }}: work it from a resource that yields it or from your people's stores."
+    MATERIAL_UNWORKABLE = "Your people cannot yet work {{ material }}: it needs {{ branch }} at level {{ level }}."
     UNSKILLED_CRAFT = (
         "You lack the craft for this: your best craft skill is {{ level }} and making it needs {{ needed }}. Learn from a master or practise lesser work first."
     )

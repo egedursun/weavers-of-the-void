@@ -3,6 +3,7 @@ from enum import StrEnum
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import EntitySummary, MapNoteRecord, WorldRecord
 from aerona.cartography.model import WorldMap
+from aerona.domain.enums.economy import TradeMode, TradeRouteStatus
 from aerona.domain.models.records import RegionControl
 from aerona.services.wiki import EventMarker, RegionDominance, RoadKind, SettlementInfo
 
@@ -73,6 +74,18 @@ class RegionStocks(ApiModel):
     soldiers: int
 
 
+class MapTrade(ApiModel):
+    route_id: int
+    name: str
+    first: int
+    second: int
+    mode: TradeMode
+    status: TradeRouteStatus
+    volume: int
+    capacity: int
+    path: list[float]
+
+
 class MapView(ApiModel):
     world: WorldRecord
     geometry: WorldMap
@@ -88,5 +101,6 @@ class MapView(ApiModel):
     population: dict[int, int]
     ground: dict[int, RegionGround]
     stocks: dict[int, RegionStocks]
+    trade: list[MapTrade]
     notes: list[MapNoteRecord]
     time: MapTime

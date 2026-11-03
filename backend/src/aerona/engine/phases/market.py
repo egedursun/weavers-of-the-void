@@ -3,28 +3,25 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.society import COMMODITY_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.society import Commodity, ResourceMechanic
+from aerona.domain.enums.society import ResourceMechanic
 from aerona.domain.enums.war import DebtStatus, WarCause
 from aerona.engine.context import TickContext
-from aerona.engine.gods.economy import depletion_price, mechanics_of
+from aerona.engine.gods.economy import depletion_price, mechanics_of, shift_reserve
 from aerona.engine.gods.queries import owners_of
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import active_bonds, add_flag, canon, flags_by_entity, living_entity, remove_flag
 from aerona.engine.primitives.stats import headcount, set_stats, stat, stat_or
 from aerona.engine.primitives.strength import military_strength
@@ -43,111 +40,7 @@ DOUBLE = 2
 
 @dataclass
 class MarketTally:
-    flows: int = 0
-    moved: int = 0
-    credit: int = 0
-    noted: int = 0
     endings: dict[str, int] = field(default_factory=dict)
-
-
-def payment_key(entity: EntityRow) -> str | None:
-    if stat(entity, WEALTH_KEY) is not None:
-        return WEALTH_KEY
-    return PROSPERITY_KEY if stat(entity, PROSPERITY_KEY) is not None else None
-
-
-def commodity_word(commodity: Commodity) -> str:
-    return COMMODITY_LABELS[commodity].lower()
-
-
-async def open_debt(session: AsyncSession, debtor_id: int, creditor_id: int) -> BondRow | None:
-    found = await active_bonds(session, [BondKind.OWES], sources=[debtor_id], targets=[creditor_id])
-    return found[0] if found else None
-
-
-async def sell_on_credit(ctx: TickContext, buyer: EntityRow, seller: EntityRow, commodity: Commodity, moved: int, *, tally: MarketTally) -> None:
-    table = ctx.rules.market
-    if await open_debt(ctx.session, buyer.id, seller.id) is not None:
-        return
-    amount = max(1, round(moved / table.credit_divisor))
-    due = ctx.epoch + table.credit_term
-    what = commodity_word(commodity)
-    bond = await BondRepository(ctx.session).connect(
-        BondDraft(buyer.id, seller.id, BondKind.OWES, ctx.epoch, f"bought {what} on credit", debt_amount=amount, debt_what=what, debt_due_epoch=due)
-    )
-    bond.debt_status = DebtStatus.OPEN
-    tally.credit += 1
-    text = f"{buyer.name} bought {what} from {seller.name} on credit and owes {amount} {what}, due Epoch {due}."
-    await ctx.chronicle(ChronicleKind.DEBT, text, template_key="market.credit", entity_ids=[buyer.id, seller.id])
-    if tally.noted < table.note_cap:
-        tally.noted += 1
-        await note(
-            ctx, f"{buyer.name} bought {what} from {seller.name} on credit.", key="market.credit_note", ids=[buyer.id, seller.id], kind=ChronicleKind.TRADE
-        )
-
-
-async def flow_good(
-    ctx: TickContext, pair: tuple[tuple[EntityRow, CommunitySocietyRow], tuple[EntityRow, CommunitySocietyRow]], commodity: Commodity, tally: MarketTally
-) -> bool:
-    table = ctx.rules.market
-    (first, first_row), (second, second_row) = pair
-    first_price, second_price = first_row.price(commodity) or NEUTRAL_PRICE, second_row.price(commodity) or NEUTRAL_PRICE
-    seller, seller_row, buyer, buyer_row, low, high = (
-        (first, first_row, second, second_row, first_price, second_price)
-        if first_price <= second_price
-        else (second, second_row, first, first_row, second_price, first_price)
-    )
-    if high * PERCENT < low * table.flow_price_gap_pct:
-        return False
-    surplus = seller_row.stock(commodity) - table.flow_reserve
-    moved = min(table.flow_cap, surplus * table.flow_share_pct // PERCENT) if surplus > 0 else 0
-    if moved <= 0:
-        return False
-    setattr(seller_row, f"stock_{commodity.value}", seller_row.stock(commodity) - moved)
-    setattr(buyer_row, f"stock_{commodity.value}", buyer_row.stock(commodity) + moved)
-    tally.flows += 1
-    tally.moved += moved
-    add_prosperity(ctx.rules, seller, table.flow_prosperity)
-    key = payment_key(buyer)
-    rng = ctx.rng(f"credit.{buyer.id}.{seller.id}.{commodity.value}")
-    if key is not None and (stat_or(buyer, key, 0) < table.credit_threshold or rng.chance(table.credit_chance)):
-        await sell_on_credit(ctx, buyer, seller, commodity, moved, tally=tally)
-    elif key is not None:
-        set_stats(buyer, **{key: clamp_int(stat_or(buyer, key, 0) - max(1, round(moved / table.flow_payment_divisor)), 0, PERCENT)})
-    if commodity is Commodity.FOOD and high * PERCENT >= low * table.famine_gap_pct and tally.noted < table.note_cap:
-        tally.noted += 1
-        await note(
-            ctx,
-            f"{buyer.name} brought grain from {seller.name} in a time of famine.",
-            key="market.famine_grain",
-            ids=[buyer.id, seller.id],
-            kind=ChronicleKind.TRADE,
-        )
-    return True
-
-
-async def trade_flow(ctx: TickContext, tally: MarketTally) -> None:
-    seen: set[tuple[int, int]] = set()
-    for bond in sorted(await active_bonds(ctx.session, [BondKind.TRADES_WITH]), key=lambda item: item.id):
-        key = (min(bond.source_node_id, bond.target_node_id), max(bond.source_node_id, bond.target_node_id))
-        if key in seen:
-            continue
-        seen.add(key)
-        first, second = await living_entity(ctx.session, key[0]), await living_entity(ctx.session, key[1])
-        if first is None or second is None or first.entity_type not in TRADING_TYPES or second.entity_type not in TRADING_TYPES:
-            continue
-        first_row, second_row = await ctx.session.get(CommunitySocietyRow, first.id), await ctx.session.get(CommunitySocietyRow, second.id)
-        if first_row is None or second_row is None:
-            continue
-        for commodity in Commodity:
-            await flow_good(ctx, ((first, first_row), (second, second_row)), commodity, tally)
-    if tally.flows:
-        await note(
-            ctx,
-            f"{tally.flows} trade roads carried goods to market: {tally.moved} loads moved from cheap stores to dear ones.",
-            key="market.flows",
-            kind=ChronicleKind.TRADE,
-        )
 
 
 async def close_debt(ctx: TickContext, bond: BondRow, reason: str, status: DebtStatus = DebtStatus.FORGIVEN) -> None:
@@ -249,7 +142,7 @@ async def owner_population(session: AsyncSession) -> dict[int, int]:
 
 async def exhaust(ctx: TickContext, resource: EntityRow) -> None:
     table = ctx.rules.market
-    set_stats(resource, abundance=0)
+    await shift_reserve(ctx.session, resource, -stat_or(resource, ABUNDANCE_KEY, 0))
     await remove_flag(ctx.session, resource.id, EntityFlag.DEPLETING)
     if ResourceMechanic.DEPLETION_PRICE in await mechanics_of(ctx.session, resource):
         await depletion_price(ctx, resource)
@@ -268,8 +161,8 @@ async def exhaust(ctx: TickContext, resource: EntityRow) -> None:
 async def _refill(ctx: TickContext, resource: EntityRow) -> bool:
     table = ctx.rules.market
     clawback = min(table.depleted_clawback, ctx.rules.world_effects.resource_regen)
-    abundance = clamp_int(stat_or(resource, ABUNDANCE_KEY, 0) - clawback, 0, PERCENT)
-    set_stats(resource, abundance=abundance)
+    await shift_reserve(ctx.session, resource, -clawback)
+    abundance = stat_or(resource, ABUNDANCE_KEY, 0)
     if abundance < table.refill_abundance:
         return False
     await remove_flag(ctx.session, resource.id, EntityFlag.DEPLETED)
@@ -356,11 +249,8 @@ async def resource_market(ctx: TickContext) -> None:
 @writes("resource.abundance", "resource.value", "settlement.prosperity")
 async def market(ctx: TickContext) -> None:
     tally = MarketTally()
-    await trade_flow(ctx, tally)
     await debt_endings(ctx, tally)
     await resource_market(ctx)
-    ctx.count("flows", tally.flows)
-    ctx.count("credit", tally.credit)
     for ending, count in tally.endings.items():
         ctx.count(f"debt_{ending}", count)
 

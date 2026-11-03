@@ -36,6 +36,9 @@ export const LINE_LABEL: Record<LineKind, string> = {
   hostility: 'Hostility',
   rule: 'Rule',
   hunt: 'Hunt',
+  route: 'Trade route',
+  route_busy: 'Busy trade route',
+  route_blocked: 'Blockaded trade route',
 }
 
 const DIRECTED: ReadonlySet<LineKind> = new Set(['rule', 'hunt'])

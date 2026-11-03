@@ -36,6 +36,7 @@ class CommunitySocietyRow(Base):
     price_ore: Mapped[int]
     price_goods: Mapped[int]
     golden_age_since_epoch: Mapped[int | None]
+    currency_id: Mapped[int | None] = mapped_column(ForeignKey("currencies.id", ondelete="SET NULL"))
 
     def share(self, social_class: SocialClass) -> float:
         value: float = getattr(self, f"share_{social_class.value}")

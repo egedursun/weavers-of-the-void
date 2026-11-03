@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.agents.context.economy import resource_yield, stores_for
 from aerona.agents.context.entity_detail import entity_detail
 from aerona.agents.context.entity_line import line_items
 from aerona.agents.context.geography import environment_facts, region_records, weather_words
@@ -150,9 +151,12 @@ async def mortal_context(scope: Scope, me: EntityRow, full: bool = False) -> Mor
         recent_events=await recent_rows(scope, scope.rules.mortal_tools.ctx_event_lines, me.world_id),
         known=await known_knowledge(scope, me),
         resources=[
-            OwnedResource(id=entity.id, name=entity.name, abundance=int(getattr(entity.stats, "abundance", 0) or 0))
+            OwnedResource(
+                id=entity.id, name=entity.name, abundance=int(getattr(entity.stats, "abundance", 0) or 0), yields=await resource_yield(scope.session, entity.id)
+            )
             for entity in await owned(scope, me, EntityType.RESOURCE)
         ],
+        stores=await stores_for(scope.session, scope.rules, me),
         items=[NamedRecord(id=entity.id, name=entity.name) for entity in await owned(scope, me, EntityType.ITEM)],
         mentions=[ChronicleRow(age=row.epoch, text=prompt_text(row.text)) for row in reversed(mentions)],
         languages=await language_lines(scope, me.world_id),

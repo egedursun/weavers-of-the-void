@@ -53,7 +53,8 @@ KNOWLEDGE IN THE WORLD: {% if world_knowledge %}{% for item in world_knowledge %
 {% set knowledge_text = "\n" ~ budget(knowledge_body | trim, m.ctx_knowledge_chars, "look with search_entities", trim) %}
 {% set owned_text %}
 
-WHAT YOU OWN: resources: {% if resources %}{% for item in resources %}#{{ item.id }} {{ item.name }} (abundance {{ item.abundance }}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}; items: {% if items %}{% for item in items %}#{{ item.id }} {{ item.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}
+WHAT YOU OWN: resources: {% if resources %}{% for item in resources %}#{{ item.id }} {{ item.name }} (abundance {{ item.abundance }}{% if item.yields %}; {{ item.yields }}{% endif %}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}; items: {% if items %}{% for item in items %}#{{ item.id }} {{ item.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}
+{% if stores %}YOUR PEOPLE'S STORES ({{ stores.community }}): {% if stores.materials %}{{ stores.materials | join('; ') }}{% else %}nothing of note{% endif %}{% if stores.short %}; running short of {{ stores.short | join(', ') }}{% endif %}{% if stores.routes %}; trade roads: {{ stores.routes | join(', ') }}{% endif %}{% endif %}
 
 {% endset %}
 {% set mentions_text = "\nRECORDS THAT MENTION YOU:\n" ~ (budget(chronicle_rows(mentions) | string, m.ctx_mentions_chars, "see the chronicle", trim) if mentions else "(none)") %}

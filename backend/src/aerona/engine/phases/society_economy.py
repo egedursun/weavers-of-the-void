@@ -1,21 +1,23 @@
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.society import SOCIAL_CLASSES
 from aerona.constants.units import PERCENT, TENTHS
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import WorldRow
-from aerona.db.tables.economy import ResourceCommodityRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialSlot
 from aerona.domain.enums.entity import SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.domain.enums.war import WarCause
 from aerona.domain.enums.world import WorldType
@@ -23,6 +25,10 @@ from aerona.domain.models.entity_stats import FactionStats, ItemStats
 from aerona.engine.body.cohorts import labour_factor
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_types import ore_yield_pct
+from aerona.engine.economy.book import EconomyBook
+from aerona.engine.economy.household import eat, enforce_storage, gather_commons, harvest_goods, storage_index, store_kind, wear
+from aerona.engine.economy.materials import MaterialBook, armour_protection, curse_bonus, enchantment_cap, set_node_material, weapon_damage
+from aerona.engine.economy.stocks import goods_of, holding, lots_of, sync_aggregates
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -70,6 +76,12 @@ class EconomyWorld:
     faith: FaithIndex
     harvests: Mapping[int, int] = field(default_factory=dict)
     world_types: Mapping[int, WorldType] = field(default_factory=dict)
+    ledger: EconomyBook | None = None
+
+    @property
+    def economy(self) -> EconomyBook:
+        assert self.ledger is not None
+        return self.ledger
 
     @classmethod
     async def load(cls, session: AsyncSession) -> "EconomyWorld":
@@ -105,7 +117,6 @@ class EconomyInputs:
     justice: float | None
     fertility: int
     branches: frozenset[KnowledgeBranch]
-    ore_income: float
     piety: int
     prosperity: int
     skilled_crafts: bool
@@ -148,19 +159,31 @@ async def society_of(session: AsyncSession, rules: Rules, entity_id: int) -> Soc
     return society_from_row(row) if row is not None else default_society(rules)
 
 
-async def save_society(session: AsyncSession, entity_id: int, society: Society) -> CommunitySocietyRow:
+async def save_society(session: AsyncSession, entity_id: int, society: Society, *, stocks: bool = True) -> CommunitySocietyRow:
     row = await session.get(CommunitySocietyRow, entity_id)
     if row is None:
         row = CommunitySocietyRow(entity_id=entity_id)
         session.add(row)
+        stocks = True
     for social_class in SocialClass:
         setattr(row, f"share_{social_class.value}", clamp_float(society.shares[social_class], 0.0, float(PERCENT)))
         setattr(row, f"satisfaction_{social_class.value}", clamp_int(society.satisfaction[social_class], 0, PERCENT))
     for commodity in Commodity:
-        setattr(row, f"stock_{commodity.value}", max(0, round_half_up(society.stocks[commodity])))
+        if stocks:
+            setattr(row, f"stock_{commodity.value}", max(0, round_half_up(society.stocks[commodity])))
         setattr(row, f"price_{commodity.value}", max(0, round_half_up(society.prices[commodity])))
     await session.flush()
     return row
+
+
+async def seed_stocks(ctx: TickContext, entity: EntityRow) -> None:
+    if await lots_of(ctx.session, entity.id):
+        return
+    row = await ctx.session.get(CommunitySocietyRow, entity.id)
+    if row is None:
+        return
+    for aggregate in Commodity:
+        await goods_of(ctx.session, ctx.epoch).shift_aggregate(ctx.rules, entity, aggregate, row.stock(aggregate), flow=GoodsFlow.SEED)
 
 
 def class_targets(rules: Rules, inputs: EconomyInputs) -> dict[SocialClass, float]:
@@ -200,38 +223,6 @@ def food_rate(settings: SocietyRules, inputs: EconomyInputs, farmer_share: float
         production *= fraction(settings.food_bounty_law_pct)
     production *= 1 + (inputs.harvest_pct - PERCENT) * fraction(settings.food_harvest_weight_pct) / PERCENT
     return clamp_float(production, fraction(settings.food_rate_min_pct), fraction(settings.food_rate_max_pct))
-
-
-def next_food(settings: SocietyRules, food: int, rate: float, at_war: bool) -> int:
-    change = (rate - 1) * settings.food_rate_effect - (settings.food_war_consumption if at_war else 0)
-    saving = settings.food_saving_gain if food < settings.food_low_threshold else 0
-    return clamp_int(food + change + saving, 0, settings.stockpile_cap)
-
-
-def craft_output(settings: SocietyRules, artisan_share: float, ore: int, metallurgy: bool, metallurgy_factor: float | None = None) -> float:
-    output = artisan_share / settings.goods_artisan_divisor
-    if ore > settings.ore_plenty_threshold:
-        output *= fraction(settings.goods_ore_plenty_pct)
-    if metallurgy:
-        output *= metallurgy_factor if metallurgy_factor is not None else fraction(settings.goods_metallurgy_pct)
-    return output
-
-
-def market_prices(settings: SocietyRules, rate: float, stocks: Mapping[Commodity, int]) -> dict[Commodity, int]:
-    food = stocks[Commodity.FOOD]
-    scarcity = 1.0
-    if food < settings.price_scarcity_food:
-        scarcity = fraction(settings.price_scarcity_pct)
-    elif food > settings.price_plenty_food:
-        scarcity = fraction(settings.price_plenty_pct)
-    food_price = clamp_int(PERCENT / max(fraction(settings.price_food_rate_min_pct), rate) * scarcity, settings.price_min_pct, settings.price_food_max_pct)
-    ore_floor = max(1, min(settings.price_stock_floor, settings.price_equilibrium_ore))
-    ore_price = clamp_int(PERCENT * settings.price_equilibrium_ore / max(ore_floor, stocks[Commodity.ORE]), settings.price_min_pct, settings.price_max_pct)
-    goods_floor = max(1, settings.price_stock_floor)
-    goods_price = clamp_int(
-        PERCENT * settings.price_equilibrium_stock / max(goods_floor, stocks[Commodity.GOODS]), settings.price_min_pct, settings.price_max_pct
-    )
-    return {Commodity.FOOD: food_price, Commodity.ORE: ore_price, Commodity.GOODS: goods_price}
 
 
 def _signed(condition: bool, gain: int, loss: int) -> int:
@@ -303,21 +294,6 @@ def land_fertility(rules: Rules, entity: EntityRow, entities: Mapping[int, Entit
     return round_half_up(place_fertility * fraction(settings.fertility_place_share_pct) + region_fertility * fraction(settings.fertility_region_share_pct))
 
 
-async def ore_income(session: AsyncSession, rules: Rules, owner_id: int, book: CommunityBook, entities: Mapping[int, EntityRow]) -> float:
-    owned = [bond.target_node_id for bond in book.bonds.outgoing(owner_id, BondKind.OWNS)]
-    resources = [entities[item] for item in owned if item in entities and entities[item].entity_type is EntityType.RESOURCE]
-    if not resources:
-        return 0.0
-    ore_ids = set(
-        await session.scalars(
-            select(ResourceCommodityRow.resource_entity_id).where(
-                ResourceCommodityRow.resource_entity_id.in_([resource.id for resource in resources]), ResourceCommodityRow.commodity == Commodity.ORE
-            )
-        )
-    )
-    return sum(stat_or(resource, "abundance", 0) / rules.society.ore_abundance_divisor for resource in resources if resource.id in ore_ids)
-
-
 async def gather_inputs(ctx: TickContext, entity: EntityRow, world: EconomyWorld) -> EconomyInputs:
     settings = ctx.rules.society
     book = world.book
@@ -335,7 +311,6 @@ async def gather_inputs(ctx: TickContext, entity: EntityRow, world: EconomyWorld
         fertility=land_fertility(ctx.rules, entity, world.entities, world.atlas),
         branches=frozenset(book.knowledge.branches(entity.id)),
         levels={branch: book.knowledge.level(entity.id, branch) for branch in book.knowledge.branches(entity.id)},
-        ore_income=await ore_income(ctx.session, ctx.rules, entity.id, book, world.entities) * world.ore_yield(ctx.rules, entity.world_id),
         piety=stat_or(entity, "piety", settings.default_stat),
         prosperity=stat_or(entity, "prosperity", settings.default_stat),
         skilled_crafts=craft is not None and craft >= settings.target_craft_threshold,
@@ -377,30 +352,43 @@ async def strike_famine(ctx: TickContext, entity: EntityRow, society: Society) -
 async def forge_weapons(ctx: TickContext, entity: EntityRow, society: Society) -> EntityRow:
     settings = ctx.rules.society
     rng = ctx.rng("forge")
-    society.stocks[Commodity.ORE] = max(0, society.stocks[Commodity.ORE] - settings.weapon_ore_cost)
+    lots = await goods_of(ctx.session, ctx.epoch).take(entity.id, CommodityKind.WEAPONS, ctx.rules.refining.weapon_batch_threshold, GoodsFlow.INPUT)
+    best = max(lots, key=lambda lot: (lot.quality, lot.quantity), default=None)
+    book = await MaterialBook.load(ctx.session)
+    material = best.material if best is not None and best.material is not None else MaterialKind.BRONZE
+    props = book.props(entity.world_id, material, best.world_material_id if best is not None else None) or book.props(entity.world_id, MaterialKind.BRONZE)
+    quality = best.quality if best is not None else settings.default_stat
+    assert props is not None
     location = entity.id if entity.entity_type is EntityType.SETTLEMENT else entity.location_id
     weapon = await create_record(
         ctx,
         RecordSpec(
-            name=f"Swords of {entity.name}",
+            name=f"{props.label} Swords of {entity.name}",
             entity_type=EntityType.ITEM,
             stats=ItemStats(
-                damage=clamp_int(settings.weapon_damage_base + rng.die(settings.weapon_damage_die), 0, PERCENT),
-                protection=clamp_int(settings.weapon_protection_base + rng.die(settings.weapon_protection_die), 0, PERCENT),
-                might=clamp_int(settings.weapon_might_base + rng.die(settings.weapon_might_die), 0, PERCENT),
-                curse=0,
+                damage=weapon_damage(ctx.rules, props, quality),
+                protection=clamp_int(armour_protection(ctx.rules, props, quality) // 4, 0, PERCENT),
+                might=min(enchantment_cap(ctx.rules, props), rng.die(max(1, props.conductivity // 4))),
+                curse=clamp_int(curse_bonus(ctx.rules, props), 0, PERCENT),
             ),
-            body=f"The smiths of {entity.name} forged a batch of weapons from their ore.",
+            body=f"The smiths of {entity.name} forged a batch of {props.label.lower()} weapons.",
             power=settings.weapon_power,
             world_id=entity.world_id,
             location_id=location,
             subtype=WEAPON_SUBTYPE,
         ),
     )
+    await set_node_material(ctx.session, weapon.id, MaterialSlot.BODY, props.kind if props.world_material_id is None else None, props.world_material_id)
     bonds = BondRepository(ctx.session)
     await bonds.connect(BondDraft(entity.id, weapon.id, BondKind.PRODUCED, ctx.epoch, "forge"))
     await bonds.connect(BondDraft(entity.id, weapon.id, BondKind.OWNS, ctx.epoch, "forge"))
-    await note(ctx, f"The forges of {entity.name} hammered out new weapons.", key="society.weapons", ids=[entity.id, weapon.id], kind=ChronicleKind.PRODUCTION)
+    await note(
+        ctx,
+        f"The forges of {entity.name} hammered out new {props.label.lower()} weapons.",
+        key="material.weapons_forged",
+        ids=[entity.id, weapon.id],
+        kind=ChronicleKind.PRODUCTION,
+    )
     return weapon
 
 
@@ -474,24 +462,25 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     society.shares = drift_shares(rules, society.shares, class_targets(rules, inputs))
     labour = await labour_factor(ctx, entity)
     rate = food_rate(settings, inputs, society.shares[SocialClass.FARMER], rules.knowledge) * labour
-    society.stocks[Commodity.FOOD] = next_food(settings, society.stocks[Commodity.FOOD], rate, inputs.at_war)
-    society.stocks[Commodity.ORE] = clamp_int(society.stocks[Commodity.ORE] + inputs.ore_income - settings.ore_consumption, 0, settings.stockpile_cap)
-    metallurgy = KnowledgeBranch.METALLURGY in inputs.branches
-    factor = ratio_of(rules.knowledge, inputs.levels.get(KnowledgeBranch.METALLURGY, 1), settings.goods_metallurgy_pct)
-    output = craft_output(settings, society.shares[SocialClass.ARTISAN], society.stocks[Commodity.ORE], metallurgy, factor) * labour
-    goods = society.stocks[Commodity.GOODS] + output * settings.goods_production_mult - settings.goods_consumption
-    society.stocks[Commodity.GOODS] = clamp_int(goods - round_half_up(inputs.prosperity / settings.goods_prosperity_divisor), 0, settings.stockpile_cap)
-    if society.stocks[Commodity.GOODS] > settings.goods_ore_threshold and society.stocks[Commodity.ORE] > settings.goods_ore_threshold:
-        society.stocks[Commodity.ORE] = max(0, society.stocks[Commodity.ORE] - round_half_up(output * settings.goods_ore_spend_mult))
-    society.prices = market_prices(settings, rate, society.stocks)
+    await save_society(ctx.session, entity.id, society, stocks=False)
+    await seed_stocks(ctx, entity)
+    await harvest_goods(ctx, world.economy, entity, rate, society.shares[SocialClass.FARMER])
+    await gather_commons(ctx, world.economy, entity, society.shares[SocialClass.FARMER])
+    meal = await eat(ctx, entity)
+    await wear(ctx, entity)
+    await enforce_storage(ctx, world.economy, entity)
+    row = await sync_aggregates(ctx.session, rules, entity)
+    if row is not None:
+        society.stocks = {commodity: row.stock(commodity) for commodity in Commodity}
     society.satisfaction = drift_satisfaction(rules, society.satisfaction, satisfaction_targets(rules, inputs, society.stocks))
     apply_class_effects(rules, entity, society)
-    if society.stocks[Commodity.FOOD] <= settings.famine_food and rate < fraction(settings.famine_rate_pct) and counters.famines < settings.famine_cap:
+    hungry = society.stocks[Commodity.FOOD] <= settings.famine_food or meal.fed_pct < settings.famine_fed_pct
+    if hungry and rate < fraction(settings.famine_rate_pct) and counters.famines < settings.famine_cap:
         counters.famines += 1
         await strike_famine(ctx, entity, society)
-    can_forge = (
-        society.stocks[Commodity.ORE] >= settings.weapon_ore_required and metallurgy and society.shares[SocialClass.WARRIOR] >= settings.weapon_warrior_pct
-    )
+    weapons = await holding(ctx.session, entity.id, CommodityKind.WEAPONS)
+    metallurgy = KnowledgeBranch.METALLURGY in inputs.branches
+    can_forge = weapons >= rules.refining.weapon_batch_threshold and metallurgy and society.shares[SocialClass.WARRIOR] >= settings.weapon_warrior_pct
     if can_forge and counters.weapons < settings.weapon_batch_cap and rng.chance(settings.forge_weapon_chance):
         counters.weapons += 1
         await forge_weapons(ctx, entity, society)
@@ -511,42 +500,9 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     ):
         counters.uprisings += 1
         await raise_class_uprising(ctx, entity, society, restless, world)
-    await save_society(ctx.session, entity.id, society)
+    await save_society(ctx.session, entity.id, society, stocks=False)
     counters.touched.add(entity.id)
     return society
-
-
-async def trade_flows(ctx: TickContext, book: CommunityBook, entities: Mapping[int, EntityRow]) -> int:
-    settings = ctx.rules.society
-    flows = 0
-    for bond in sorted(book.bonds.bonds, key=lambda item: item.id):
-        if bond.kind is not BondKind.TRADES_WITH or not bond.active:
-            continue
-        first = entities.get(bond.source_node_id)
-        second = entities.get(bond.target_node_id)
-        if first is None or second is None or first.entity_type not in SOCIETY_TYPES or second.entity_type not in SOCIETY_TYPES:
-            continue
-        if first.status is not EntityStatus.CANON or second.status is not EntityStatus.CANON:
-            continue
-        left = await society_of(ctx.session, ctx.rules, first.id)
-        right = await society_of(ctx.session, ctx.rules, second.id)
-        moved = False
-        for commodity in Commodity:
-            gap = left.stocks[commodity] - right.stocks[commodity]
-            if abs(gap) < settings.trade_min_stock_diff:
-                continue
-            flow = round_half_up(gap / settings.trade_flow_divisor)
-            if flow == 0:
-                continue
-            left.stocks[commodity] = max(0, left.stocks[commodity] - flow)
-            right.stocks[commodity] = max(0, right.stocks[commodity] + flow)
-            add_prosperity(ctx.rules, first if flow > 0 else second, settings.trade_seller_prosperity)
-            moved = True
-        if moved:
-            flows += 1
-            await save_society(ctx.session, first.id, left)
-            await save_society(ctx.session, second.id, right)
-    return flows
 
 
 @reads(
@@ -609,7 +565,7 @@ async def trade_flows(ctx: TickContext, book: CommunityBook, entities: Mapping[i
 @writes("people.martiality", "people.piety", "people.prosperity", "settlement.defense", "settlement.piety", "settlement.prosperity")
 async def society_economy(ctx: TickContext) -> None:
     session = ctx.session
-    world = await EconomyWorld.load(session)
+    world = replace(await EconomyWorld.load(session), ledger=await EconomyBook.load(ctx))
     counters = EconomyCounters()
     for entity in await canon(session, SOCIETY_TYPES):
         if entity.status is not EntityStatus.CANON:
@@ -620,7 +576,6 @@ async def society_economy(ctx: TickContext) -> None:
     ctx.count("uprisings", counters.uprisings)
     ctx.count("bankruptcies", counters.bankruptcies)
     ctx.count("weapons", counters.weapons)
-    ctx.count("trade_flows", await trade_flows(ctx, world.book, world.entities))
 
 
 async def require_society_entity(session: AsyncSession, entity_id: int) -> EntityRow:
@@ -674,34 +629,46 @@ async def set_satisfaction(ctx: TickContext, entity_id: int, values: Mapping[Soc
     return society
 
 
+async def storage_room(ctx: TickContext, entity: EntityRow, commodity: Commodity) -> int:
+    book = await EconomyBook.load(ctx)
+    return storage_index(ctx.rules, book.workshop(entity.id, store_kind(commodity)), commodity)
+
+
 async def set_stores(ctx: TickContext, entity_id: int, stocks: Mapping[Commodity, int]) -> Society:
-    await require_society_entity(ctx.session, entity_id)
-    cap = ctx.rules.society.stockpile_cap
-    if any(value < 0 or value > cap for value in stocks.values()):
-        raise ValidationFailedError(f"Stores must be between 0 and {cap}.")
-    society = await society_of(ctx.session, ctx.rules, entity_id)
-    society.stocks.update(stocks)
-    await save_society(ctx.session, entity_id, society)
-    return society
+    entity = await require_society_entity(ctx.session, entity_id)
+    for commodity, value in stocks.items():
+        room = await storage_room(ctx, entity, commodity)
+        if value < 0 or value > room:
+            raise ValidationFailedError(f"{commodity.value.capitalize()} stores must be between 0 and {room}, what the granaries and warehouses can hold.")
+    ledger = goods_of(ctx.session, ctx.epoch)
+    for commodity, value in stocks.items():
+        current = (await society_of(ctx.session, ctx.rules, entity_id)).stocks[commodity]
+        await ledger.shift_aggregate(ctx.rules, entity, commodity, value - current, flow=GoodsFlow.PLAYER)
+    return await society_of(ctx.session, ctx.rules, entity_id)
 
 
 async def send_famine(ctx: TickContext, entity_id: int) -> Society:
     entity = await require_society_entity(ctx.session, entity_id)
+    ledger = goods_of(ctx.session, ctx.epoch)
+    for row in await lots_of(ctx.session, entity.id):
+        if COMMODITIES[row.commodity].nourishment > 0 and row.quantity > 0:
+            await ledger.take(entity.id, row.commodity, row.quantity, GoodsFlow.PLAYER)
+    await sync_aggregates(ctx.session, ctx.rules, entity)
     society = await society_of(ctx.session, ctx.rules, entity_id)
-    society.stocks[Commodity.FOOD] = 0
-    society.prices[Commodity.FOOD] = ctx.rules.society.price_food_max_pct
+    society.prices[Commodity.FOOD] = ctx.rules.markets.price_cap_pct
     await strike_famine(ctx, entity, society)
-    await save_society(ctx.session, entity_id, society)
+    await save_society(ctx.session, entity_id, society, stocks=False)
     return society
 
 
 async def send_plenty(ctx: TickContext, entity_id: int) -> Society:
     entity = await require_society_entity(ctx.session, entity_id)
-    settings = ctx.rules.society
     society = await society_of(ctx.session, ctx.rules, entity_id)
-    society.stocks[Commodity.FOOD] = settings.stockpile_cap
-    society.prices = market_prices(settings, fraction(settings.food_rate_max_pct), society.stocks)
-    await save_society(ctx.session, entity_id, society)
+    room = await storage_room(ctx, entity, Commodity.FOOD)
+    await goods_of(ctx.session, ctx.epoch).shift_aggregate(ctx.rules, entity, Commodity.FOOD, room - society.stocks[Commodity.FOOD], flow=GoodsFlow.PLAYER)
+    society = await society_of(ctx.session, ctx.rules, entity_id)
+    society.prices[Commodity.FOOD] = ctx.rules.markets.price_floor_pct
+    await save_society(ctx.session, entity_id, society, stocks=False)
     await note(ctx, f"Plenty filled the granaries of {entity.name}.", key="society.plenty", ids=[entity.id], kind=ChronicleKind.CREATOR_HAND)
     return society
 
@@ -709,10 +676,10 @@ async def send_plenty(ctx: TickContext, entity_id: int) -> Society:
 async def order_forge(ctx: TickContext, entity_id: int) -> EntityRow:
     entity = await require_society_entity(ctx.session, entity_id)
     society = await society_of(ctx.session, ctx.rules, entity_id)
-    if society.stocks[Commodity.ORE] < ctx.rules.society.weapon_ore_cost:
-        raise ValidationFailedError("There is not enough ore in the stores to forge weapons.")
+    if await holding(ctx.session, entity.id, CommodityKind.WEAPONS) < ctx.rules.refining.weapon_batch_threshold:
+        raise ValidationFailedError(f"There are fewer than {ctx.rules.refining.weapon_batch_threshold} weapons in the stores to forge a named batch from.")
     weapon = await forge_weapons(ctx, entity, society)
-    await save_society(ctx.session, entity_id, society)
+    await save_society(ctx.session, entity_id, society, stocks=False)
     return weapon
 
 
@@ -725,21 +692,6 @@ async def incite_class_uprising(ctx: TickContext, entity_id: int, social_class: 
     faction = await raise_class_uprising(ctx, entity, society, chosen, await EconomyWorld.load(ctx.session))
     await save_society(ctx.session, entity_id, society)
     return faction
-
-
-async def set_resource_commodity(ctx: TickContext, resource_id: int, commodity: Commodity | None) -> None:
-    resource = await ctx.session.get(EntityRow, resource_id)
-    if resource is None or resource.entity_type is not EntityType.RESOURCE:
-        raise NotFoundError("No such resource.")
-    row = await ctx.session.get(ResourceCommodityRow, resource_id)
-    if commodity is None:
-        if row is not None:
-            await ctx.session.delete(row)
-    elif row is None:
-        ctx.session.add(ResourceCommodityRow(resource_entity_id=resource_id, commodity=commodity))
-    else:
-        row.commodity = commodity
-    await ctx.session.flush()
 
 
 PHASES = (Phase("society_economy", society_economy),)

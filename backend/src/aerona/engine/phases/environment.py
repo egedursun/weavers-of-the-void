@@ -34,6 +34,7 @@ from aerona.engine.environment.profile import (
     Works,
     band_of,
     climate_factor,
+    crop_mix,
     defensibility_of,
     disease_load_of,
     fertility_from,
@@ -151,7 +152,8 @@ class RegionContext:
 
 
 def factor_of(rules: Rules, env: RegionEnvironmentRow, works: Works) -> float:
-    return climate_factor(rules, temperature=env.temperature, rainfall=env.rainfall, river=env.river_class, scars=env.scars, works=works)
+    mix = crop_mix(rules, farmed=env.farmed, grazed=env.grazed, coastal=env.coast_kind is not CoastKind.NONE, river=env.river_class)
+    return climate_factor(rules, temperature=env.temperature, rainfall=env.rainfall, river=env.river_class, scars=env.scars, works=works, mix=mix)
 
 
 def apply_geography(env: RegionEnvironmentRow, geography: Geography, coast: CoastKind) -> None:

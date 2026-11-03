@@ -10,19 +10,25 @@ from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmic_state import AddictionImmunityRow, ResourceMechanicRow
+from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.society import AddictionRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import ResourceMechanic
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.entity_stats import FactionStats, ResourceStats
 from aerona.engine.context import TickContext
+from aerona.engine.economy.extraction import reconcile, write_reserve
+from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.gods.queries import cosmos_row, owners_of, world_count
 from aerona.engine.gods.stats import Trait, add_trait, headcount_floor, headcount_trait, set_trait, trait, trait_or
 from aerona.engine.interconnect.annotations import reads, writes
@@ -37,6 +43,30 @@ PIRATE_METHODS = frozenset({TravelMethod.LIGHT_SAIL, TravelMethod.SLINGSHOT_ORBI
 WITHDRAWAL_TRAITS = (Trait.PROSPERITY, Trait.DEFENSE, Trait.STRENGTH, Trait.PIETY)
 MARKET_TARGET_TYPES = (EntityType.PEOPLE, EntityType.SETTLEMENT)
 MULTI_WORLD_MINIMUM = 2
+
+
+async def mechanic_params(session: AsyncSession, resource_id: int) -> dict[ResourceMechanic, ResourceMechanicRow]:
+    rows = await session.scalars(select(ResourceMechanicRow).where(ResourceMechanicRow.entity_id == resource_id))
+    return {row.mechanic: row for row in rows}
+
+
+def magnitude_or(params: dict[ResourceMechanic, ResourceMechanicRow], mechanic: ResourceMechanic, default: int) -> int:
+    row = params.get(mechanic)
+    return row.magnitude if row is not None and row.magnitude is not None else default
+
+
+def epochs_or(params: dict[ResourceMechanic, ResourceMechanicRow], mechanic: ResourceMechanic, default: int) -> int:
+    row = params.get(mechanic)
+    return row.epochs if row is not None and row.epochs is not None else default
+
+
+async def shift_reserve(session: AsyncSession, resource: EntityRow, abundance_points: int) -> None:
+    profile = await session.get(ResourceProfileRow, resource.id)
+    if profile is None:
+        add_trait(resource, Trait.ABUNDANCE, abundance_points)
+        return
+    reconcile(resource, profile)
+    write_reserve(resource, profile, profile.reserve + round(abundance_points * profile.initial_reserve / PERCENT))
 
 
 async def mechanics_of(session: AsyncSession, resource: EntityRow) -> set[ResourceMechanic]:
@@ -59,7 +89,7 @@ async def _immune(ctx: TickContext, owner_id: int, resource_id: int) -> bool:
     return row is not None and ctx.epoch - row.recovered_epoch < ctx.rules.economy.addiction_immunity_epochs
 
 
-async def _addictive(ctx: TickContext, resource: EntityRow, owners: list[EntityRow]) -> None:
+async def _addictive(ctx: TickContext, resource: EntityRow, owners: list[EntityRow], hook_epochs: int) -> None:
     economy = ctx.rules.economy
     if trait_or(resource, Trait.ABUNDANCE, 0) < economy.withdrawal_min_abundance:
         return
@@ -72,7 +102,7 @@ async def _addictive(ctx: TickContext, resource: EntityRow, owners: list[EntityR
             row = AddictionRow(community_entity_id=owner.id, resource_entity_id=resource.id, owned_epochs=0)
             ctx.session.add(row)
         row.owned_epochs = max(0, ctx.epoch - since) if since is not None else 0
-        if since is not None and ctx.epoch - since >= economy.addiction_epochs and row.addicted_since_epoch is None:
+        if since is not None and ctx.epoch - since >= hook_epochs and row.addicted_since_epoch is None:
             row.addicted_since_epoch = ctx.epoch
             row.withdrawal_since_epoch = None
             line = god_lines.ECONOMY_ADDICTED
@@ -81,25 +111,51 @@ async def _addictive(ctx: TickContext, resource: EntityRow, owners: list[EntityR
             )
 
 
-async def _sentient(ctx: TickContext, resource: EntityRow, owners: list[EntityRow]) -> None:
+async def _pay_demand(ctx: TickContext, owner: EntityRow, commodity: CommodityKind | None, units: int, cost: int) -> bool:
+    if commodity is None:
+        riches = trait(owner, Trait.PROSPERITY)
+        riches = trait(owner, Trait.WEALTH) if riches is None else riches
+        riches = ctx.rules.economy.sentient_owner_default if riches is None else riches
+        if riches < ctx.rules.economy.sentient_owner_prosperity:
+            return False
+        add_trait(owner, Trait.PROSPERITY, -cost)
+        add_trait(owner, Trait.WEALTH, -cost)
+        return True
+    if await holding(ctx.session, owner.id, commodity) < units:
+        return False
+    await goods_of(ctx.session, ctx.epoch).take(owner.id, commodity, units, GoodsFlow.OFFERING)
+    return True
+
+
+async def _sentient(ctx: TickContext, resource: EntityRow, owners: list[EntityRow], cost: int) -> None:
     economy = ctx.rules.economy
     rng = ctx.rng(f"sentient.{resource.id}")
     if not owners or not rng.chance(economy.sentient_resource_choose_chance):
         return
     owner = rng.pick(owners)
-    demand = rng.pick(god_lines.SENTIENT_DEMANDS)
-    riches = trait(owner, Trait.PROSPERITY)
-    riches = trait(owner, Trait.WEALTH) if riches is None else riches
-    riches = economy.sentient_owner_default if riches is None else riches
-    if riches >= economy.sentient_owner_prosperity and rng.chance(economy.sentient_resource_keep_chance):
-        add_trait(owner, Trait.PROSPERITY, -economy.sentient_demand_cost)
-        add_trait(owner, Trait.WEALTH, -economy.sentient_demand_cost)
+    demand, wanted, units = rng.pick(god_lines.SENTIENT_DEMANDS)
+    commodity = CommodityKind(wanted) if wanted is not None else None
+    if rng.chance(economy.sentient_resource_keep_chance) and await _pay_demand(ctx, owner, commodity, units, cost):
         line = god_lines.ECONOMY_SENTIENT_PAID
         await ctx.chronicle(
             ChronicleKind.RESOURCE,
             line.render(resource=resource.name, demand=demand, owner=owner.name),
             template_key=line.key,
             entity_ids=[resource.id, owner.id],
+        )
+        return
+    negotiator, skill = await best_negotiator(ctx.session, owner)
+    if (
+        negotiator is not None
+        and rng.chance(skill * economy.sentient_bargain_pct_per_level)
+        and await _pay_demand(ctx, owner, commodity, units // 2, cost // 2)
+    ):
+        line = god_lines.ECONOMY_SENTIENT_BARGAINED
+        await ctx.chronicle(
+            ChronicleKind.RESOURCE,
+            line.render(resource=resource.name, demand=demand, owner=owner.name, negotiator=negotiator.name),
+            template_key=line.key,
+            entity_ids=[resource.id, owner.id, negotiator.id],
         )
         return
     bonds = BondRepository(ctx.session)
@@ -124,7 +180,25 @@ async def _sentient(ctx: TickContext, resource: EntityRow, owners: list[EntityRo
     )
 
 
-async def _sacred(ctx: TickContext, resource: EntityRow, owners: list[EntityRow]) -> None:
+async def best_negotiator(session: AsyncSession, owner: EntityRow) -> tuple[EntityRow | None, int]:
+    statement = (
+        select(EntityRow, SkillRow.level)
+        .join(SkillRow, SkillRow.holder_node_id == EntityRow.id)
+        .where(
+            SkillRow.skill == SkillKind.NEGOTIATION,
+            SkillRow.subject_node_id.is_(None),
+            EntityRow.status == EntityStatus.CANON,
+            EntityRow.entity_type == EntityType.MORTAL,
+            or_(EntityRow.location_id == owner.id, EntityRow.id == owner.id),
+        )
+        .order_by(SkillRow.level.desc(), EntityRow.id)
+        .limit(1)
+    )
+    found = (await session.execute(statement)).first()
+    return (found[0], found[1]) if found is not None else (None, 0)
+
+
+async def _sacred(ctx: TickContext, resource: EntityRow, owners: list[EntityRow], wrath: int) -> None:
     economy = ctx.rules.economy
     son = await ctx.session.get(SonRow, resource.sacred_to_son_id) if resource.sacred_to_son_id is not None else None
     if son is None or son.status is SonStatus.DEAD:
@@ -134,7 +208,7 @@ async def _sacred(ctx: TickContext, resource: EntityRow, owners: list[EntityRow]
     for owner in owners:
         if await patron_node(ctx.session, owner) == son.id:
             continue
-        son.wrath = clamp_int(son.wrath + economy.sacred_wrath, 0, PERCENT)
+        son.wrath = clamp_int(son.wrath + wrath, 0, PERCENT)
         if rng.chance(economy.sacred_resource_curse_chance) and not await entities.has_flag(owner.id, EntityFlag.CURSED):
             await entities.add_flag(owner.id, EntityFlag.CURSED, ctx.epoch)
             await BondRepository(ctx.session).connect(
@@ -150,7 +224,7 @@ async def _sacred(ctx: TickContext, resource: EntityRow, owners: list[EntityRow]
             )
 
 
-async def depletion_price(ctx: TickContext, resource: EntityRow) -> None:
+async def depletion_price(ctx: TickContext, resource: EntityRow, doom: int | None = None) -> None:
     entities = EntityRepository(ctx.session)
     if trait_or(resource, Trait.ABUNDANCE, 0) > 0 or await entities.has_flag(resource.id, EntityFlag.DEPLETED):
         return
@@ -158,7 +232,7 @@ async def depletion_price(ctx: TickContext, resource: EntityRow) -> None:
     place = await ctx.session.get(EntityRow, resource.location_id) if resource.location_id is not None else None
     if place is not None:
         await entities.add_flag(place.id, EntityFlag.CURSED, ctx.epoch)
-    await advance_doom(ctx.session, ctx.rules, ctx.rules.economy.depletion_apocalypse)
+    await advance_doom(ctx.session, ctx.rules, doom if doom is not None else ctx.rules.economy.depletion_apocalypse)
     line = god_lines.ECONOMY_DEPLETED
     clause = god_lines.ECONOMY_DEPLETED_PLACE.format(place=place.name) if place is not None else ""
     await ctx.chronicle(ChronicleKind.RESOURCE, line.render(resource=resource.name, place=clause), template_key=line.key, entity_ids=[resource.id])
@@ -250,18 +324,19 @@ async def resource_mechanics(ctx: TickContext) -> None:
         if not mechanics:
             continue
         owners = await owners_of(ctx.session, resource.id)
+        params = await mechanic_params(ctx.session, resource.id)
         if ResourceMechanic.DECAYING in mechanics:
-            add_trait(resource, Trait.ABUNDANCE, -economy.decay_loss)
+            await shift_reserve(ctx.session, resource, -magnitude_or(params, ResourceMechanic.DECAYING, economy.decay_loss))
         if ResourceMechanic.FIXED in mechanics:
-            add_trait(resource, Trait.ABUNDANCE, -economy.fixed_regen_clawback)
+            await shift_reserve(ctx.session, resource, -magnitude_or(params, ResourceMechanic.FIXED, economy.fixed_regen_clawback))
         if ResourceMechanic.ADDICTIVE in mechanics:
-            await _addictive(ctx, resource, owners)
+            await _addictive(ctx, resource, owners, epochs_or(params, ResourceMechanic.ADDICTIVE, economy.addiction_epochs))
         if ResourceMechanic.SENTIENT in mechanics:
-            await _sentient(ctx, resource, owners)
+            await _sentient(ctx, resource, owners, magnitude_or(params, ResourceMechanic.SENTIENT, economy.sentient_demand_cost))
         if ResourceMechanic.SACRED in mechanics:
-            await _sacred(ctx, resource, owners)
+            await _sacred(ctx, resource, owners, magnitude_or(params, ResourceMechanic.SACRED, economy.sacred_wrath))
         if ResourceMechanic.DEPLETION_PRICE in mechanics:
-            await depletion_price(ctx, resource)
+            await depletion_price(ctx, resource, magnitude_or(params, ResourceMechanic.DEPLETION_PRICE, economy.depletion_apocalypse))
     await withdrawal(ctx)
     await ctx.session.flush()
 

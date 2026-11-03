@@ -28,6 +28,8 @@ class Harm:
     part: str | None = None
     kind: InjuryKind | None = None
     severity: int | None = None
+    edge: int | None = None
+    heft: int | None = None
 
 
 @dataclass(frozen=True)
@@ -227,6 +229,17 @@ def harm_resisted(anatomy: Anatomy, damage_type: DamageType) -> bool:
     return physical and not anatomy.material
 
 
+def edged_mix(mix: dict[DamageType, int], edge: int | None, heft: int | None) -> dict[DamageType, int]:
+    if edge is None or heft is None:
+        return mix
+    shaped = dict(mix)
+    if DamageType.CUT in shaped:
+        shaped[DamageType.CUT] = round(shaped[DamageType.CUT] * (PERCENT + edge) / PERCENT)
+    if DamageType.BLUNT in shaped:
+        shaped[DamageType.BLUNT] = round(shaped[DamageType.BLUNT] * (PERCENT + heft * (PERCENT - edge) / PERCENT) / PERCENT)
+    return shaped
+
+
 def hits_for(rules: Rules, anatomy: Anatomy, harm: Harm, armour: Armour, rng: SeededRandom) -> list[Hit]:
     table = rules.injury
     if harm.damage <= 0:
@@ -234,7 +247,7 @@ def hits_for(rules: Rules, anatomy: Anatomy, harm: Harm, armour: Armour, rng: Se
     count = 1 if harm.part else max(1, min(table.max_hits, math.ceil(harm.damage / max(1, table.hit_size))))
     magnitude = harm.damage / count
     hits: list[Hit] = []
-    mix = cause_mix(table, harm.cause)
+    mix = edged_mix(cause_mix(table, harm.cause), harm.edge, harm.heft)
     for _ in range(count):
         damage_type = harm.damage_type or weighted(rng, {key: float(value) for key, value in mix.items()}) or DamageType.BLUNT
         if harm_resisted(anatomy, damage_type):

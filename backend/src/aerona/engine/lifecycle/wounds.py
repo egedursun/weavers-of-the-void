@@ -14,6 +14,7 @@ from aerona.engine.body.book import Bearer, anatomy_for, ensure_body
 from aerona.engine.body.hits import MARK_KINDS, Armour, Harm, Hit, hits_for, loss_for
 from aerona.engine.body.state import refresh
 from aerona.engine.context import TickContext
+from aerona.engine.economy.equipment import weapon_of
 from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_immortal, is_notable
 from aerona.engine.lifecycle.mortal_death import die
@@ -167,6 +168,10 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
     body = await ensure_body(ctx.session, ctx.rules, bearer, ctx.epoch)
     anatomy = anatomy_for(body)
     rng = ctx.rng(seed_of("hits", bearer.id, harm.cause.value, round_half_up(harm.damage)))
+    if harm.edge is None and harm.damage_type is None:
+        blade = await weapon_of(ctx.session, harm.source_node_id or harm.killer_id)
+        if blade is not None:
+            harm = replace(harm, edge=blade.edge, heft=blade.weight)
     hits = hits_for(ctx.rules, anatomy, harm, _armour(body), rng)
     if not lethal:
         hits = [_spare(hit) for hit in hits]

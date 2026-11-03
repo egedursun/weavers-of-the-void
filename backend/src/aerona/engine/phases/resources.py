@@ -1,18 +1,16 @@
 from aerona.constants.units import PERCENT
 from aerona.db.tables.environment import RegionEnvironmentRow
-from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.economy import ExtractionKind
 from aerona.engine.context import TickContext
-from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.economy.book import EconomyBook
+from aerona.engine.economy.extraction import ExtractionTally, extract, extraction_kind, reconcile, regrow
+from aerona.engine.economy.stocks import sync_aggregates
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.prosperity import add_prosperity
-from aerona.engine.primitives.queries import active_bonds, canon, living_entity
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.numbers import clamp_int
 from aerona.rules.registry import Rules
 
-GROWING_KEYS = ("wealth", "craft")
+SEAM_KINDS = frozenset({ExtractionKind.MINING, ExtractionKind.QUARRYING})
 
 
 def deepest_layer(ground: RegionEnvironmentRow | None) -> str | None:
@@ -21,91 +19,90 @@ def deepest_layer(ground: RegionEnvironmentRow | None) -> str | None:
     return max(sorted(ground.mineral_layers), key=lambda material: ground.mineral_layers[material])
 
 
-def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int) -> None:
-    material = deepest_layer(ground)
-    if ground is None or material is None:
+def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, material: str | None = None) -> None:
+    seam = material if ground is not None and material in ground.mineral_layers else deepest_layer(ground)
+    if ground is None or seam is None:
         return
     settings = rules.land_use
     ground.mined = clamp_int(ground.mined + settings.mining_per_owner * owners, 0, PERCENT)
     layers = dict(ground.mineral_layers)
-    layers[material] = max(0, layers[material] - settings.seam_depletion * owners)
+    layers[seam] = max(0, layers[seam] - settings.seam_depletion * owners)
     ground.mineral_layers = {key: value for key, value in layers.items() if value > 0}
 
 
 @reads(
     "faction.wealth",
     "people.craft",
+    "people.population",
     "people.prosperity",
     "people.wealth",
     "resource.abundance",
     "resource.value",
+    "settlement.population",
     "settlement.prosperity",
     "table.bonds",
     "table.calendars",
+    "table.community_societies",
+    "table.community_stocks",
     "table.forced_weather",
+    "table.maimed_cohorts",
     "table.place_environment",
     "table.region_environment",
+    "table.resource_profiles",
+    "table.resource_workers",
+    "table.skills",
     "table.sky_events",
+    "table.workshops",
     "table.world_maps",
     "table.world_seasons",
 )
-@writes("faction.wealth", "people.craft", "resource.abundance", "settlement.prosperity", "table.entities", "table.region_environment")
-@reads("faction.wealth", "people.craft", "people.prosperity", "people.wealth", "resource.abundance", "resource.value", "settlement.prosperity")
-@writes("faction.wealth", "people.craft", "resource.abundance", "settlement.prosperity")
-async def resource_economy(ctx: TickContext) -> None:
-    rules = ctx.rules
-    effects = rules.world_effects
-    book = await EnvironmentBook.load(ctx.session, rules, ctx.epoch)
-    for resource in await canon(ctx.session, [EntityType.RESOURCE]):
-        owners = []
-        for bond in await active_bonds(ctx.session, [BondKind.OWNS], targets=[resource.id]):
-            owner = await living_entity(ctx.session, bond.source_node_id)
-            if owner is not None:
-                owners.append(owner)
-        abundance = stat(resource, "abundance") or 0
-        if not owners or abundance < effects.resource_min_abundance:
-            continue
-        value = stat(resource, "value")
-        gain = effects.resource_income + round_half_up((value if value is not None else effects.unknown_stat) / effects.resource_value_divisor)
-        for owner in owners:
-            add_prosperity(rules, owner, gain)
-            for key in GROWING_KEYS:
-                current = stat(owner, key)
-                if current is not None:
-                    set_stats(owner, **{key: clamp_int(current + gain, 0, PERCENT)})
-        set_stats(resource, abundance=clamp_int(abundance - effects.resource_consumption * len(owners), 0, PERCENT))
-        work_seam(rules, book.region_of(resource.id), len(owners))
-        ctx.count("resources_worked")
-
-
-def regrowth(rules: Rules, ground: RegionEnvironmentRow | None) -> int:
-    regen = rules.world_effects.resource_regen
-    material = deepest_layer(ground)
-    if ground is None:
-        return regen
-    if material is None:
-        return round_half_up(regen * rules.land_use.barren_regen_pct / PERCENT)
-    return round_half_up(regen * (rules.land_use.barren_regen_pct + ground.mineral_layers[material]) / PERCENT)
-
-
-@reads(
+@writes(
+    "faction.wealth",
+    "people.craft",
+    "people.population",
+    "people.prosperity",
+    "people.wealth",
     "resource.abundance",
-    "table.calendars",
-    "table.forced_weather",
-    "table.place_environment",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.community_societies",
+    "table.community_stocks",
+    "table.goods_flows",
+    "table.maimed_cohorts",
+    "table.production_runs",
     "table.region_environment",
-    "table.sky_events",
-    "table.world_maps",
-    "table.world_seasons",
+    "table.resource_profiles",
+    "table.resource_workers",
 )
-@writes("resource.abundance")
-@reads("resource.abundance")
-@writes("resource.abundance")
+async def resource_economy(ctx: TickContext) -> None:
+    book = await EconomyBook.load(ctx)
+    tally = ExtractionTally()
+    for resource in book.resources():
+        profile = book.profiles.get(resource.id)
+        if profile is None:
+            continue
+        if await extract(ctx, book, resource, profile, tally) > 0 and extraction_kind(profile) in SEAM_KINDS:
+            material = profile.material.value if profile.material is not None else None
+            work_seam(ctx.rules, book.ground.region_of(resource.id), len(book.owners.get(resource.id, [])), material)
+    for community in book.communities:
+        await sync_aggregates(ctx.session, ctx.rules, community)
+    ctx.count("resources_worked", tally.worked)
+    ctx.count("output", tally.output)
+    ctx.count("hazards", tally.hazards)
+
+
+@reads("resource.abundance", "table.resource_profiles")
+@writes("resource.abundance", "table.resource_profiles")
 async def resource_regeneration(ctx: TickContext) -> None:
-    book = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch)
-    for resource in await canon(ctx.session, [EntityType.RESOURCE]):
-        gain = regrowth(ctx.rules, book.region_of(resource.id))
-        set_stats(resource, abundance=clamp_int((stat(resource, "abundance") or 0) + gain, 0, PERCENT))
+    book = await EconomyBook.load(ctx)
+    regrown = 0
+    for resource in book.resources():
+        profile = book.profiles.get(resource.id)
+        if profile is None:
+            continue
+        reconcile(resource, profile)
+        regrown += regrow(ctx.rules, resource, profile)
+    ctx.count("regrown", regrown)
 
 
 ECONOMY_PHASES = (Phase("resource_economy", resource_economy),)

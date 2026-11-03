@@ -77,6 +77,7 @@ const STORAGE = {
 }
 const DEFAULT_OVERLAYS: Record<Overlay, boolean> = {
   roads: true,
+  trade: true,
   ties: true,
   wars: true,
   events: true,

@@ -85,6 +85,7 @@ class BondRow(CreatedAtMixin, Base):
     debt_what: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
     debt_due_epoch: Mapped[int | None]
     debt_status: Mapped[DebtStatus | None] = mapped_column(enum_type(DebtStatus, "debt_status"))
+    debt_currency_id: Mapped[int | None] = mapped_column(ForeignKey("currencies.id", ondelete="SET NULL"))
     truce_until_epoch: Mapped[int | None]
     war_cause: Mapped[WarCause | None] = mapped_column(enum_type(WarCause, "war_cause"))
     incited_by_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))

@@ -17,6 +17,7 @@ import { Route as AppChronicleRouteImport } from './routes/_app/chronicle'
 import { Route as AppCosmosRouteImport } from './routes/_app/cosmos'
 import { Route as AppCouncilRouteImport } from './routes/_app/council'
 import { Route as AppDesignRouteImport } from './routes/_app/design'
+import { Route as AppEconomyRouteImport } from './routes/_app/economy'
 import { Route as AppEpochRouteImport } from './routes/_app/epoch'
 import { Route as AppGalleryRouteImport } from './routes/_app/gallery'
 import { Route as AppGoalsRouteImport } from './routes/_app/goals'
@@ -78,6 +79,11 @@ const AppCouncilRoute = AppCouncilRouteImport.update({
 const AppDesignRoute = AppDesignRouteImport.update({
   id: '/design',
   path: '/design',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppEconomyRoute = AppEconomyRouteImport.update({
+  id: '/economy',
+  path: '/economy',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppEpochRoute = AppEpochRouteImport.update({
@@ -205,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/cosmos': typeof AppCosmosRoute
   '/council': typeof AppCouncilRoute
   '/design': typeof AppDesignRoute
+  '/economy': typeof AppEconomyRoute
   '/epoch': typeof AppEpochRoute
   '/gallery': typeof AppGalleryRoute
   '/goals': typeof AppGoalsRoute
@@ -235,6 +242,7 @@ export interface FileRoutesByTo {
   '/cosmos': typeof AppCosmosRoute
   '/council': typeof AppCouncilRoute
   '/design': typeof AppDesignRoute
+  '/economy': typeof AppEconomyRoute
   '/epoch': typeof AppEpochRoute
   '/gallery': typeof AppGalleryRoute
   '/goals': typeof AppGoalsRoute
@@ -269,6 +277,7 @@ export interface FileRoutesById {
   '/_app/cosmos': typeof AppCosmosRoute
   '/_app/council': typeof AppCouncilRoute
   '/_app/design': typeof AppDesignRoute
+  '/_app/economy': typeof AppEconomyRoute
   '/_app/epoch': typeof AppEpochRoute
   '/_app/gallery': typeof AppGalleryRoute
   '/_app/goals': typeof AppGoalsRoute
@@ -304,6 +313,7 @@ export interface FileRouteTypes {
     | '/cosmos'
     | '/council'
     | '/design'
+    | '/economy'
     | '/epoch'
     | '/gallery'
     | '/goals'
@@ -334,6 +344,7 @@ export interface FileRouteTypes {
     | '/cosmos'
     | '/council'
     | '/design'
+    | '/economy'
     | '/epoch'
     | '/gallery'
     | '/goals'
@@ -367,6 +378,7 @@ export interface FileRouteTypes {
     | '/_app/cosmos'
     | '/_app/council'
     | '/_app/design'
+    | '/_app/economy'
     | '/_app/epoch'
     | '/_app/gallery'
     | '/_app/goals'
@@ -453,6 +465,13 @@ declare module '@tanstack/react-router' {
       path: '/design'
       fullPath: '/design'
       preLoaderRoute: typeof AppDesignRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/economy': {
+      id: '/_app/economy'
+      path: '/economy'
+      fullPath: '/economy'
+      preLoaderRoute: typeof AppEconomyRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/_app/epoch': {
@@ -657,6 +676,7 @@ interface AppRouteRouteChildren {
   AppCosmosRoute: typeof AppCosmosRoute
   AppCouncilRoute: typeof AppCouncilRoute
   AppDesignRoute: typeof AppDesignRoute
+  AppEconomyRoute: typeof AppEconomyRoute
   AppEpochRoute: typeof AppEpochRoute
   AppGalleryRoute: typeof AppGalleryRoute
   AppGoalsRoute: typeof AppGoalsRoute
@@ -678,6 +698,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppCosmosRoute: AppCosmosRoute,
   AppCouncilRoute: AppCouncilRoute,
   AppDesignRoute: AppDesignRoute,
+  AppEconomyRoute: AppEconomyRoute,
   AppEpochRoute: AppEpochRoute,
   AppGalleryRoute: AppGalleryRoute,
   AppGoalsRoute: AppGoalsRoute,

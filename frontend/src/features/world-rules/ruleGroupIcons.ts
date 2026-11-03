@@ -66,6 +66,8 @@ export const RULE_GROUP_ICON: Record<string, LucideIcon> = {
   'Awakening of the peoples': Sprout,
   Backups: Database,
   'Major actions and essence': Droplet,
+  'Markets, money and trade routes': Coins,
+  'Materials and production': Hammer,
   'Batch jobs': Layers,
   'The Beyond': Eye,
   'Cosmic actions': Sparkles,

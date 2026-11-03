@@ -43,6 +43,8 @@ class RuleGroup(StrEnum):
     LANGUAGE_AND_NAMES = "Language and names"
     LINK_GRAPH = "Link graph"
     MAJOR_ACTIONS_AND_ESSENCE = "Major actions and essence"
+    MARKETS_AND_MONEY = "Markets, money and trade routes"
+    MATERIALS = "Materials and production"
     MIND = "Minds, values and memory"
     MORTAL_AGENTS = "Mortal agents"
     MORTALS = "Mortals"

@@ -39,6 +39,7 @@ import {
   Wheat,
   Wind,
   Zap,
+  Route,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 
@@ -73,6 +74,7 @@ export const ENTITY_TYPE_ICON: Record<Schemas['EntityType'], LucideIcon> = {
   outer_being: Brain,
   army: Swords,
   natural_law: Scale,
+  trade_route: Route,
 }
 
 export const STAT_ICON: Record<Schemas['Stat'], LucideIcon> = {

@@ -21,6 +21,7 @@ from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import CultStats
 from aerona.engine.context import TickContext
+from aerona.engine.economy.routes import link_partners
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.book import ValueIndex
 from aerona.engine.mind.drives import zeal_drive
@@ -239,6 +240,7 @@ class SpreadWorld:
     values: ValueIndex = field(default_factory=ValueIndex)
     impiety: Mapping[int, int] = field(default_factory=dict)
     zeal: Mapping[int, float] = field(default_factory=dict)
+    roads: Mapping[int, Mapping[int, float]] = field(default_factory=dict)
 
 
 def god_kinship(world: SpreadWorld, first: int, second: int) -> float:
@@ -286,6 +288,13 @@ def conversion_sources(rules: Rules, community: EntityRow, world: SpreadWorld, s
                 continue
             if world.atlas.adjacent(neighbour.id, community.id):
                 sources.append(ConversionSource(god.id, fraction(rules.religion.seeker_pull_chance), f"from its neighbour {neighbour.name}", neighbour.id))
+    for partner_id, weight in sorted(world.roads.get(community.id, {}).items()):
+        god = world.faith.living_patron_son(partner_id)
+        partner = next((item for item in world.communities if item.id == partner_id), None)
+        if god is None or god.id == old or partner is None:
+            continue
+        pull = fraction(rules.trade_routes.missionary_pct) * weight * (1 + fraction(rules.religion.conversion_seeker_bonus_pct) if seeker else 1)
+        sources.append(ConversionSource(god.id, pull, f"from missionaries who came with the caravans of {partner.name}", partner.id))
     return sources
 
 
@@ -370,6 +379,7 @@ async def religion_spread(ctx: TickContext) -> None:
         values,
         {row.entity_id: row.value for row in await session.scalars(select(PressureRow).where(PressureRow.pressure == PressureKind.IMPIETY))},
         {cult.id: await zeal_drive(session, ctx.rules, cult.id) for cult in communities if cult.entity_type is EntityType.CULT},
+        await link_partners(ctx),
     )
     shares = WorshipShares.count(ctx.rules, communities, faith)
     shares.faith = await faith_shares(session)

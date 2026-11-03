@@ -2,7 +2,7 @@ import asyncio
 
 from fastapi import APIRouter, Path, Query
 from pydantic import ValidationError
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.geography import geography_lines
@@ -11,19 +11,33 @@ from aerona.api.actions import Alias, mount_all
 from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.common import Done
 from aerona.api.schemas.entities import MapPositionRequest
-from aerona.api.schemas.maps import GeographyPreview, MapPoint, MapRelation, MapRoad, MapTime, MapView, MapWar, RegionGround, RegionStocks, RelationLineKind
+from aerona.api.schemas.maps import (
+    GeographyPreview,
+    MapPoint,
+    MapRelation,
+    MapRoad,
+    MapTime,
+    MapTrade,
+    MapView,
+    MapWar,
+    RegionGround,
+    RegionStocks,
+    RelationLineKind,
+)
 from aerona.api.schemas.records import EntitySummary, MapNoteRecord, WorldRecord
 from aerona.cartography.generator import generate_map
 from aerona.cartography.model import MARKER_TYPES, WorldMap
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
+from aerona.db.tables.economy import TradeFlowRow, TradeRouteProfileRow, TradeRouteRegionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import LandUse
 from aerona.engine.cosmos.maps import MAPPED_STATUSES, map_is_stale, map_request, store_world_map, world_entities
+from aerona.engine.economy.routes import LIVE_STATUSES
 from aerona.engine.environment.ley import LeyWeb
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import canon
@@ -131,9 +145,52 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
             population=population,
             ground=await region_ground(session, world_id),
             stocks=await region_stocks(session, world_id),
+            trade=await trade_lines(session, world_id, positions),
             notes=[MapNoteRecord.model_validate(row) for row in await map_notes(session, world_id)],
             time=MapTime(current=current, shown=shown, snapshots=await snapshot_epochs(session, world_id)),
         )
+
+
+async def trade_lines(session: AsyncSession, world_id: int, positions: dict[int, tuple[float, float]]) -> list[MapTrade]:
+    statement = (
+        select(TradeRouteProfileRow, EntityRow)
+        .join(EntityRow, EntityRow.id == TradeRouteProfileRow.route_entity_id)
+        .where(EntityRow.world_id == world_id, TradeRouteProfileRow.status.in_(list(LIVE_STATUSES)))
+        .order_by(TradeRouteProfileRow.route_entity_id)
+    )
+    found = list(await session.execute(statement))
+    if not found:
+        return []
+    ids = [profile.route_entity_id for profile, _ in found]
+    steps: dict[int, list[tuple[int, int]]] = {}
+    for step in await session.scalars(select(TradeRouteRegionRow).where(TradeRouteRegionRow.route_entity_id.in_(ids))):
+        steps.setdefault(step.route_entity_id, []).append((step.position, step.region_entity_id))
+    latest = await session.scalar(select(func.max(TradeFlowRow.epoch)))
+    volumes: dict[int, int] = {}
+    if latest is not None:
+        for route_id, volume in await session.execute(select(TradeFlowRow.route_entity_id, TradeFlowRow.volume).where(TradeFlowRow.epoch == latest)):
+            volumes[route_id] = volumes.get(route_id, 0) + volume
+    lines: list[MapTrade] = []
+    for profile, entity in found:
+        middle = [region for _, region in sorted(steps.get(profile.route_entity_id, []))][1:-1]
+        points = [positions.get(node) for node in (profile.first_market_id, *middle, profile.second_market_id)]
+        path = [value for point in points if point is not None for value in point]
+        if len(path) < 4:
+            continue
+        lines.append(
+            MapTrade(
+                route_id=entity.id,
+                name=entity.name,
+                first=profile.first_market_id,
+                second=profile.second_market_id,
+                mode=profile.mode,
+                status=profile.status,
+                volume=volumes.get(entity.id, 0),
+                capacity=stat(entity, "capacity") or 0,
+                path=path,
+            )
+        )
+    return lines
 
 
 WILD = "wild"

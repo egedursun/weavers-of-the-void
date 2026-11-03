@@ -26,6 +26,7 @@ from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_types import disaster_pct
+from aerona.engine.economy.routes import link_partners
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment
 from aerona.engine.environment.notable import remember_event_year
 from aerona.engine.environment.profile import RIVER_RANK
@@ -61,7 +62,7 @@ DISASTER_KINDS: dict[Disaster, EngineKind] = {
     Disaster.STORM: EngineKind.STORM,
 }
 STRUCK_TYPES = frozenset({*COMMUNITY_TYPES, EntityType.STRUCTURE})
-SPREAD_BOND_KINDS = (BondKind.TRADES_WITH, BondKind.PAYS_TRIBUTE, BondKind.RULES)
+SPREAD_BOND_KINDS = (BondKind.PAYS_TRIBUTE, BondKind.RULES)
 HIGHLANDS = frozenset({ElevationClass.MOUNTAINOUS, ElevationClass.HILLY})
 
 
@@ -413,6 +414,7 @@ async def _plague_spread(ctx: TickContext) -> int:
         if event.engine_kind is EngineKind.PLAGUE and event.birth_epoch >= ctx.epoch - settings.plague_spread_epochs
     ]
     links = await BondIndex.load(session, [*SPREAD_BOND_KINDS, BondKind.CAUSED])
+    roads = await link_partners(ctx)
     knowledge = await KnowledgeMap.load(session)
     spread = 0
     for plague in plagues:
@@ -420,15 +422,16 @@ async def _plague_spread(ctx: TickContext) -> int:
         if not caused:
             continue
         source, struck = caused[0].target_node_id, {bond.target_node_id for bond in caused}
-        partners = sorted({bond.other_end(source) for kind in SPREAD_BOND_KINDS for bond in links.touching(source, kind)} - struck - {source})
+        bonded = {bond.other_end(source) for kind in SPREAD_BOND_KINDS for bond in links.touching(source, kind)}
+        traffic = roads.get(source, {})
+        partners = sorted((bonded | set(traffic)) - struck - {source})
         for partner_id in partners:
             partner = await session.get(EntityRow, partner_id)
             if partner is None or partner.status is not EntityStatus.CANON or partner.entity_type not in COMMUNITY_TYPES:
                 continue
             medicine = knowledge.knows(partner.id, KnowledgeBranch.MEDICINE)
-            if not ctx.rng(f"plague_spread.{plague.id}.{partner.id}").chance(
-                settings.plague_spread_medicine_chance if medicine else settings.plague_spread_chance
-            ):
+            chance = settings.plague_spread_medicine_chance if medicine else settings.plague_spread_chance
+            if not ctx.rng(f"plague_spread.{plague.id}.{partner.id}").chance(min(100, chance * traffic.get(partner.id, 1.0))):
                 continue
             await apply_disaster(ctx, partner, Disaster.PLAGUE, fraction(settings.plague_spread_severity_pct))
             links.add(await BondRepository(session).connect(BondDraft(plague.id, partner.id, BondKind.CAUSED, ctx.epoch, "spread along the roads")))

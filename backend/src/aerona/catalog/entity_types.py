@@ -417,6 +417,22 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset({EngineKind.PEOPLES_ARMY, EngineKind.HOLY_GUARD, EngineKind.MERCENARY_ARMY}),
         ),
         EntityTypeSpec(
+            EntityType.TRADE_ROUTE,
+            "Trade route",
+            "Trade routes",
+            "trade route",
+            None,
+            LAND,
+            False,
+            (
+                StatField("capacity", "Capacity", lambda rules: 0, lambda rules: rules.trade_routes.capacity_cap),
+                StatField("danger", "Danger"),
+                StatField("renown", "Renown"),
+                StatField("culture", "Carried culture"),
+            ),
+            ("trade road", "caravan way", "sea lane", "river route", "sky lane"),
+        ),
+        EntityTypeSpec(
             EntityType.NATURAL_LAW,
             "Natural law",
             "Natural laws",
@@ -456,6 +472,7 @@ CREATION_BASE_COST_RULES: dict[EntityType, RuleBound] = {
     EntityType.OUTER_BEING: lambda rules: rules.creation_base_cost.outer_being,
     EntityType.ARMY: lambda rules: rules.creation_base_cost.army,
     EntityType.NATURAL_LAW: lambda rules: rules.creation_base_cost.natural_law,
+    EntityType.TRADE_ROUTE: lambda rules: rules.creation_base_cost.trade_route,
 }
 
 

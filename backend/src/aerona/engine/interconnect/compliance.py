@@ -1,6 +1,20 @@
 from dataclasses import dataclass
 
 from aerona.db.tables.body import ConditionRow, InjuryRow
+from aerona.db.tables.economy import (
+    CommunityStockRow,
+    CurrencyRow,
+    LoanRow,
+    MarketPriceRow,
+    NodeMaterialRow,
+    ProductionRunRow,
+    ResourceProfileRow,
+    ResourceWorkerRow,
+    TradeFlowRow,
+    TradeRouteProfileRow,
+    WorkshopRow,
+    WorldMaterialRow,
+)
 from aerona.db.tables.environment import ForcedWeatherRow, LeyLineRow, NotableYearRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, PersonalityValueRow, PressureRow, SkillRow
@@ -118,5 +132,38 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (),
         (),
         ("26caa21842b3",),
+    ),
+    ComplianceRow(
+        "F3",
+        (WorldMaterialRow.__tablename__, NodeMaterialRow.__tablename__, CommunityStockRow.__tablename__),
+        ("society_economy", "refining", "material_decay", "world_materials"),
+        ("material:edit", "stock:grant"),
+        ("MaterialsBrowser", "StockTable"),
+        ("mortal_context",),
+        ("produce_item", "build_structure", "discover_resource"),
+        ("material.",),
+        ("economy.w4_backfill", "economy_survey"),
+    ),
+    ComplianceRow(
+        "S6.3",
+        (ResourceProfileRow.__tablename__, ResourceWorkerRow.__tablename__, ProductionRunRow.__tablename__, WorkshopRow.__tablename__),
+        ("resource_economy", "refining", "deposit_finding", "barter_and_rivalry"),
+        ("resource:set", "resource:owner", "resource:reveal", "resource:commodity", "workshop:set"),
+        ("ResourceProfile", "ProductionChain"),
+        ("mortal_context",),
+        ("discover_resource",),
+        ("mining.", "refining.", "extraction."),
+        ("economy_survey",),
+    ),
+    ComplianceRow(
+        "S6.4",
+        (MarketPriceRow.__tablename__, TradeRouteProfileRow.__tablename__, TradeFlowRow.__tablename__, CurrencyRow.__tablename__, LoanRow.__tablename__),
+        ("markets", "trade_flow", "currency", "banking"),
+        ("trade_route:open", "trade_route:close", "trade_route:toll", "currency:debase", "currency:edit", "loan:forgive", "hoard:inject"),
+        ("PriceBoard", "CurrencyCards", "DebtsLedger", "map-layer-trade", "TradeRouteSection"),
+        ("mortal_context",),
+        (),
+        ("trade_route.", "money.", "banking.", "tolls.", "markets."),
+        ("economy.w4_backfill",),
     ),
 )

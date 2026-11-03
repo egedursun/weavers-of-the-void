@@ -10,13 +10,16 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.body.book import effective, strike_style
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.economy.money import inject_hoard
+from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import apply_hits, fatal_injury
@@ -157,6 +160,9 @@ async def _hero_wins(ctx: TickContext, hero: EntityRow, monster: EntityRow, patr
         rewound = False
     if slain:
         await retire(ctx.session, monster, ctx.epoch, f"Epoch {ctx.epoch}: killed by {hero.name}.")
+        home = await community_of(ctx.session, hero)
+        if home is not None and home.entity_type in SOCIETY_TYPES and ctx.rng(f"hoard.{monster.id}").chance(ctx.rules.money.beast_hoard_chance):
+            await inject_hoard(ctx, home, ctx.rules.money.hoard_luxury_units, MaterialKind.GOLD)
     if slain and EntityFlag.MEGAFAUNA in monster_flags:
         hero.title = f"{monster.name} Slayer"
         await add_flag(ctx.session, hero.id, EntityFlag.AGE_CHANGER, ctx.epoch)

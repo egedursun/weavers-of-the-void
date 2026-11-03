@@ -1,4 +1,5 @@
 import {
+  Coins,
   Archive,
   Bell,
   BookOpen,
@@ -42,6 +43,7 @@ export type NavRoute =
   | '/atlas'
   | '/network'
   | '/wars'
+  | '/economy'
   | '/chronicle'
   | '/languages'
   | '/gallery'
@@ -245,6 +247,14 @@ export const NAV_GROUPS: NavGroup[] = [
         to: '/wars',
         icon: Swords,
         description: 'Wars, armies, battles, sieges, captives and tributes.',
+      },
+      {
+        id: 'economy',
+        title: 'Economy',
+        to: '/economy',
+        icon: Coins,
+        description:
+          'Trade routes, market prices, materials, coins, loans and debts.',
       },
     ],
   },

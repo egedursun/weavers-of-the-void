@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react'
 import {
+  Coins,
   BookOpen,
   Church,
   CloudFog,
@@ -61,6 +62,7 @@ import {
   LAYER_SURFACE,
   OVERLAYS,
   OVERLAY_LABEL,
+  OVERLAY_SURFACE,
 } from './mapModel'
 
 const LAYER_ICON: Record<LayerMode, LucideIcon> = {
@@ -82,6 +84,7 @@ const LAYER_ICON: Record<LayerMode, LucideIcon> = {
 
 const OVERLAY_ICON: Record<Overlay, LucideIcon> = {
   roads: Route,
+  trade: Coins,
   ties: Waypoints,
   wars: Swords,
   events: Zap,
@@ -151,6 +154,7 @@ function LayerControls({
               key={overlay}
               size='sm'
               variant='outline'
+              data-surface={OVERLAY_SURFACE[overlay]}
               pressed={overlays[overlay]}
               onPressedChange={(pressed) => onOverlay(overlay, pressed)}
             >

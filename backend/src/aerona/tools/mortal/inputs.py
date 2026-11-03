@@ -18,8 +18,10 @@ from aerona.constants.tool_inputs import (
     SAYING_MIN,
     SUBTYPE_MAX,
 )
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import LegendCategory
-from aerona.domain.enums.society import Commodity, KnowledgeBranch, ResourceMechanic
+from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.society import KnowledgeBranch, ResourceMechanic
 from aerona.domain.enums.travel import JourneyIntent
 from aerona.tools.framework.inputs import ToolInput
 
@@ -80,6 +82,7 @@ class ProduceInput(ToolInput):
     subtype: Subtype | None = None
     description: Description
     resource_ids: Annotated[list[int], Field(min_length=1)]
+    material: MaterialKind | None = None
     owner_id: int | None = None
     image_prompt: ImagePrompt | None = None
 
@@ -90,6 +93,7 @@ class BuildInput(ToolInput):
     description: Description
     location_id: int | None = None
     dedicated_son_id: int | None = None
+    material: MaterialKind | None = None
     image_prompt: ImagePrompt | None = None
 
 
@@ -110,7 +114,8 @@ class DiscoverInput(ToolInput):
     location_id: int
     domain: str | None = None
     image_prompt: ImagePrompt | None = None
-    commodity: Commodity | None = None
+    commodity: CommodityKind | None = None
+    material: MaterialKind | None = None
     mechanics: list[ResourceMechanic] | None = None
 
 

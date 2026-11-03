@@ -16,13 +16,14 @@ from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.civilization import TierCapability
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.society import Commodity, KnowledgeBranch
 from aerona.domain.enums.travel import JourneyIntent, VehicleKind
 from aerona.engine.cosmos.routes import LIVE_JOURNEYS, JourneySpec, can_use_route, method_label, start_journey
 from aerona.engine.cosmos.vessels import owned_vessels, set_vessel_kind
 from aerona.engine.phases.exploration import SearchStatus, land_stats, pioneers, position_region, record_intuition, route_method, search_route
-from aerona.engine.primitives.society import set_stock, stock
+from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import stat
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -174,7 +175,7 @@ async def build_ship(call: MortalCall, args: ShipInput) -> str:
     )
     await set_vessel_kind(call.session, ship.id, VehicleKind.SHIP)
     await BondRepository(call.session).connect(BondDraft(call.me.id, ship.id, BondKind.OWNS, call.epoch, lines.SHIPYARD))
-    await set_stock(call.session, call.me.id, Commodity.ORE, ore - tools.ship_miners_cost)
+    await shift_stock(call.session, call.rules, call.me.id, Commodity.ORE, -tools.ship_miners_cost, epoch=call.epoch, flow=GoodsFlow.TOOL)
     await call.chronicle(ChronicleKind.PRODUCTION, lines.SHIP, entity_ids=[call.me.id, ship.id], me=call.me.name, name=ship.name)
     return result(MortalResult.SHIP_READY, id=ship.id, name=ship.name)
 

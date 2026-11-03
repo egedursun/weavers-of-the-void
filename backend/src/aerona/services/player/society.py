@@ -2,8 +2,11 @@ from pydantic import Field
 
 from aerona.core.errors import ValidationFailedError
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import Commodity, SocialClass
+from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.phases.culture_exchange import order_cultural_contact
 from aerona.engine.phases.refugees import order_exodus
 from aerona.engine.phases.society_economy import (
@@ -13,7 +16,6 @@ from aerona.engine.phases.society_economy import (
     send_famine,
     send_plenty,
     set_class_shares,
-    set_resource_commodity,
     set_satisfaction,
     set_stores,
 )
@@ -49,7 +51,13 @@ class ClassUprising(Command):
 
 class ResourceCommodity(Command):
     resource_id: int
-    commodity: Commodity | None = None
+    commodity: CommodityKind
+    material: MaterialKind | None = None
+
+
+class Mint(Command):
+    entity_id: int
+    metal: MaterialKind | None = None
 
 
 class Work(Command):
@@ -123,15 +131,17 @@ async def class_uprising(scope: PlayerScope, command: ClassUprising) -> Effect:
 
 @player_action("resource:commodity", ActionKind.EDIT_RECORD)
 async def resource_commodity(scope: PlayerScope, command: ResourceCommodity) -> Effect:
-    await set_resource_commodity(await scope.context("resource_commodity"), command.resource_id, command.commodity)
-    yielded = command.commodity.value if command.commodity is not None else "nothing"
-    return Effect(f"The resource now yields {yielded}.", command.resource_id, values={"commodity": command.commodity})
+    ctx = await scope.context("resource_commodity")
+    profile = await set_resource_yield(ctx.session, ctx.rules, command.resource_id, command.commodity, command.material)
+    yielded = " ".join(part for part in ((profile.material.value if profile.material else ""), command.commodity.value) if part).replace("_", " ")
+    return Effect(f"The resource now yields {yielded}.", command.resource_id, values={"commodity": command.commodity, "material": profile.material})
 
 
 @player_action("community:mint", ActionKind.MINT_COIN)
-async def mint(scope: PlayerScope, command: SocietyTarget) -> Effect:
-    coin = await order_minting(await scope.context("mint"), command.entity_id)
-    return Effect(f"{coin.name} was struck.", coin.id, created_ids=(coin.id,))
+async def mint(scope: PlayerScope, command: Mint) -> Effect:
+    currency = await order_minting(await scope.context("mint"), command.entity_id, command.metal)
+    coin = currency.item_entity_id or command.entity_id
+    return Effect(f"{currency.name} was struck.", coin, created_ids=(coin,), values={"currency_id": currency.id})
 
 
 @player_action("community:work", ActionKind.BUILD)

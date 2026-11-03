@@ -5,6 +5,7 @@ class MaterialKind(StrEnum):
     WOOD = "wood"
     BONE = "bone"
     HIDE = "hide"
+    LEATHER = "leather"
     CLOTH = "cloth"
     STONE = "stone"
     FLINT = "flint"

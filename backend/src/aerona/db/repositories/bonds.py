@@ -31,6 +31,7 @@ class BondDraft:
     debt_amount: int | None = None
     debt_what: str | None = None
     debt_due_epoch: int | None = None
+    debt_currency_id: int | None = None
     truce_until_epoch: int | None = None
     war_cause: WarCause | None = None
     incited_by_son_id: int | None = None
@@ -76,6 +77,7 @@ class BondRepository(Repository):
             debt_amount=normalized.debt_amount,
             debt_what=normalized.debt_what,
             debt_due_epoch=normalized.debt_due_epoch,
+            debt_currency_id=normalized.debt_currency_id,
             truce_until_epoch=normalized.truce_until_epoch,
             war_cause=normalized.war_cause,
             incited_by_son_id=normalized.incited_by_son_id,

@@ -27,6 +27,7 @@ class EntityType(StrEnum):
     OUTER_BEING = "outer_being"
     ARMY = "army"
     NATURAL_LAW = "natural_law"
+    TRADE_ROUTE = "trade_route"
 
 
 class EntityStatus(StrEnum):

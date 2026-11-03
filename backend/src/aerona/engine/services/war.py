@@ -23,6 +23,7 @@ from aerona.domain.enums.war import CaptiveStatus, TributeStatus, WarCause, WarS
 from aerona.domain.models.entity_stats import ArmyStats, EventStats
 from aerona.engine.body.book import effective
 from aerona.engine.context import TickContext
+from aerona.engine.economy.equipment import equip_army
 from aerona.engine.interconnect.flows import flowing
 from aerona.engine.mind.hooks import freed, taken_captive
 from aerona.engine.primitives.levies import levy, levy_category
@@ -432,6 +433,9 @@ async def raise_army(ctx: TickContext, strength: MilitaryStrength, sides: SideIn
                 engine_kind=engine_kind,
             ),
         )
+    kit = await equip_army(ctx, community, army, size)
+    if kit.bonus:
+        set_stats(army, equipment=clamp_int((stat(army, "equipment") or 0) + kit.bonus, 0, PERCENT_MAX))
     row = ArmyRow(
         entity_id=army.id,
         war_id=war.id,

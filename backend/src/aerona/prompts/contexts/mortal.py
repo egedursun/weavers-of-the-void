@@ -82,6 +82,14 @@ class OwnedResource(ContextItem):
     id: int
     name: str
     abundance: int
+    yields: str = ""
+
+
+class StoresLine(ContextItem):
+    community: str
+    materials: list[str] = Field(default_factory=list)
+    short: list[str] = Field(default_factory=list)
+    routes: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):
@@ -106,6 +114,7 @@ class MortalContextContext(RulesContext):
     world_knowledge: list[KnowledgeItem] = Field(default_factory=list)
     resources: list[OwnedResource] = Field(default_factory=list)
     items: list[NamedRecord] = Field(default_factory=list)
+    stores: StoresLine | None = None
     mentions: list[ChronicleRow] = Field(default_factory=list)
     languages: str = ""
     other_worlds: str = ""

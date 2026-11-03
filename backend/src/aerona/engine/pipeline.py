@@ -24,6 +24,7 @@ from aerona.engine.phases import (
     casualties,
     civilization,
     climate,
+    commerce,
     cosmic_economy,
     cosmos_upkeep,
     creator_mood,
@@ -67,6 +68,7 @@ from aerona.engine.phases import (
     pantheon,
     population,
     prisoners,
+    production,
     prosperity,
     refugees,
     religion_spread,
@@ -120,6 +122,8 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + remembrance.PHASES
     + world_balance.PHASES
     + civilization.PHASES
+    + commerce.PHASES
+    + production.PHASES
     + climate.PHASES
     + cosmic_economy.PHASES
     + cosmos_upkeep.PHASES
@@ -185,7 +189,15 @@ def stage(*names: str) -> tuple[Phase, ...]:
 
 
 CLEANUP_STAGE = stage(
-    "dead_bonds_opening", "modifier_upkeep", "world_maps", "environment_survey", "mind_survey", "body_survey", "expire_truces", "language_and_faith"
+    "dead_bonds_opening",
+    "modifier_upkeep",
+    "world_maps",
+    "environment_survey",
+    "mind_survey",
+    "body_survey",
+    "economy_survey",
+    "expire_truces",
+    "language_and_faith",
 )
 GRUDGE_STAGE = stage("divine_grudges")
 SUB_ENGINE_STAGE = stage(
@@ -218,6 +230,9 @@ RAID_STAGE = stage("monster_raids", "sworn_hunts", "glory_hunts")
 ECONOMY_STAGE = stage(
     "trade_income",
     "curse_decay",
+    "world_materials",
+    "species_yields",
+    "deposit_finding",
     "resource_economy",
     "prosperity_reversion",
     "barter_and_rivalry",
@@ -255,6 +270,10 @@ SOCIETY_STAGE = stage(
 )
 SOCIETY_ENGINE_STAGE = stage(
     "society_economy",
+    "refining",
+    "markets",
+    "trade_flow",
+    "banking",
     "heroes",
     "spontaneous_births",
     "factions",
@@ -273,6 +292,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "ruins",
     "settlement_cycles",
     "land_use",
+    "material_decay",
     "institution_cycles",
     "culture_cycles",
     "remembrance",

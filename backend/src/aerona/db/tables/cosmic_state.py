@@ -21,6 +21,8 @@ class ResourceMechanicRow(Base):
 
     entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     mechanic: Mapped[ResourceMechanic] = mapped_column(enum_type(ResourceMechanic, "mechanic"), primary_key=True, index=True)
+    magnitude: Mapped[int | None]
+    epochs: Mapped[int | None]
 
 
 class AddictionImmunityRow(Base):

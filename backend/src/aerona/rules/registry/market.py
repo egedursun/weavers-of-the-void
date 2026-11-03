@@ -9,14 +9,11 @@ class MarketRules:
     flow_price_gap_pct: int = rule(
         150, 100, 10000, RuleGroup.ECONOMY, "Trade flow: goods move when the buyer's price is at least this share of the seller's (%)"
     )
-    flow_reserve: int = rule(40, 0, 100000, RuleGroup.ECONOMY, "Trade flow: stock the seller always keeps in its stores")
+    flow_reserve: int = rule(40, 0, 100000, RuleGroup.ECONOMY, "Trade flow: units of a good the seller always keeps in its stores")
     flow_share_pct: int = rule(15, 0, 100, RuleGroup.ECONOMY, "Trade flow: share of the seller's surplus that moves per epoch (%)")
-    flow_cap: int = rule(20, 0, 100000, RuleGroup.ECONOMY, "Trade flow: most of one good moving along one road per epoch")
+    flow_cap: int = rule(2000, 0, 1000000, RuleGroup.ECONOMY, "Trade flow: most units of one good moving along one road per epoch")
     famine_gap_pct: int = rule(250, 100, 10000, RuleGroup.ECONOMY, "Trade flow: a grain purchase is chronicled as a famine purchase above this price gap (%)")
     flow_prosperity: int = rule(2, 0, 100, RuleGroup.ECONOMY, "Trade flow: prosperity a seller gains for selling a good")
-    flow_payment_divisor: int = rule(
-        10, 1, 10000, RuleGroup.ECONOMY, "Trade flow: the buyer pays wealth or prosperity equal to the moved amount divided by this"
-    )
     credit_threshold: int = rule(25, 0, 100, RuleGroup.ECONOMY, "Trade flow: a buyer below this wealth or prosperity buys on credit (a debt is born)")
     credit_chance: int = rule(12, 0, 100, RuleGroup.ECONOMY, "Trade flow: chance a buyer who could pay still buys a large load on credit (%)")
     credit_term: int = rule(3, 1, 50, RuleGroup.ECONOMY, "Term of a credit debt (epochs)")

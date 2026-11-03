@@ -14,6 +14,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import LanguageStats
 from aerona.engine.context import TickContext
+from aerona.engine.economy.routes import link_weight, trade_links
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -197,13 +198,13 @@ async def migration_contact(ctx: TickContext, tally: ContactTally) -> None:
 async def trade_contact(ctx: TickContext, tally: ContactTally) -> None:
     table = ctx.rules.language_contact
     borrowed_before = tally.borrowed
-    for bond in sorted(await active_bonds(ctx.session, [BondKind.TRADES_WITH]), key=lambda item: item.id):
+    for link in sorted(await trade_links(ctx), key=lambda item: (-item.volume, item.first, item.second)):
         if tally.loans_left <= 0:
             break
-        rng = ctx.rng(f"trade.{bond.id}")
-        if not rng.chance(table.trade_loan_chance):
+        rng = ctx.rng(f"trade.{link.first}.{link.second}")
+        if not rng.chance(min(100.0, table.trade_loan_chance * link_weight(ctx, link))):
             continue
-        first, second = await living_entity(ctx.session, bond.source_node_id), await living_entity(ctx.session, bond.target_node_id)
+        first, second = await living_entity(ctx.session, link.first), await living_entity(ctx.session, link.second)
         if first is None or second is None:
             continue
         lender, borrower = (first, second) if rng.random() < HALF else (second, first)

@@ -32,7 +32,7 @@ import {
 import { type MapView } from './api'
 import { EVENT_ICON, SETTLEMENT_ICON, typeIcon } from './iconPaths'
 import { EVENT_TOKEN } from './mapLayout'
-import { LINE_STYLE, type LineKind, ROAD_KINDS } from './mapLines'
+import { LINE_STYLE, type LineKind, ROAD_KINDS, ROUTE_KINDS } from './mapLines'
 import {
   type LayerMode,
   type Overlay,
@@ -69,6 +69,9 @@ const LINE_TOKEN: Record<LineKind, ThemeColorName> = {
   hostility: 'destructive',
   rule: 'rarity-epic',
   hunt: 'destructive',
+  route: 'brand-gold',
+  route_busy: 'brand-gold',
+  route_blocked: 'destructive',
 }
 
 const LINE_NOTE: Partial<Record<LineKind, string>> = {
@@ -307,9 +310,16 @@ export function MapLegend({
       road.kind === 'trade' ? 'trade_road' : 'road'
     ),
     ...view.relations.map((line) => line.kind as LineKind),
+    ...(view.trade ?? []).map((route): LineKind =>
+      route.status === 'blockaded' ? 'route_blocked' : 'route'
+    ),
   ])
   const lines = [...lineKinds].filter((kind) =>
-    ROAD_KINDS.has(kind) ? overlays.roads : overlays.ties
+    ROUTE_KINDS.has(kind)
+      ? overlays.trade
+      : ROAD_KINDS.has(kind)
+        ? overlays.roads
+        : overlays.ties
   )
   const ongoing = view.wars.some((war) => war.ongoing)
   const threshold: Record<string, string> = {

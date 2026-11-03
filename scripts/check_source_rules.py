@@ -31,7 +31,7 @@ HASH_COMMENT_NAMES = {"Dockerfile", "Makefile", ".gitignore", ".dockerignore"}
 
 TURKISH_CODEPOINTS = (0x011F, 0x011E, 0x0131, 0x0130, 0x015F, 0x015E, 0x00E7, 0x00C7, 0x00F6, 0x00D6, 0x00FC, 0x00DC)
 TURKISH_CHARACTERS = re.compile("[" + "".join(chr(code) for code in TURKISH_CODEPOINTS) + "]")
-TURKISH_ALLOWED_FILES = frozenset({Path("backend/src/aerona/migration/legacy/schema_map.json")})
+TURKISH_ALLOWED_FILES = frozenset({Path("backend/src/aerona/migration/legacy/schema_map.json"), Path("backend/src/aerona/migration/legacy/backfill_words.json")})
 PROMPT_HOME = Path("backend/src/aerona/prompts")
 PROMPT_MARKERS = re.compile(r"\b(you are|your task|respond with|return only|write a|as the narrator)\b", re.IGNORECASE)
 PROMPT_WORD_LIMIT = 40

@@ -87,6 +87,8 @@ from aerona.rules.registry.life_cycles import LifeCyclesRules
 from aerona.rules.registry.limits import LimitsRules
 from aerona.rules.registry.link_graph import LinkGraphRules
 from aerona.rules.registry.market import MarketRules
+from aerona.rules.registry.markets import BankingRules, MarketsRules, MoneyRules, TollsRules, TradeRoutesRules
+from aerona.rules.registry.materials import MaterialsRules
 from aerona.rules.registry.mechanics import MechanicsRules
 from aerona.rules.registry.metrics import MetricsRules
 from aerona.rules.registry.mind import (
@@ -110,6 +112,7 @@ from aerona.rules.registry.opportunities import OpportunitiesRules
 from aerona.rules.registry.pantheon import PantheonRules
 from aerona.rules.registry.politics import PoliticsRules
 from aerona.rules.registry.power_unlock_levels import PowerUnlockLevelsRules
+from aerona.rules.registry.production import ExtractionRules, MiningHazardsRules, RefiningRules
 from aerona.rules.registry.rarities import RaritiesRules
 from aerona.rules.registry.rarity_gates import RarityGatesRules
 from aerona.rules.registry.record_schema import RecordSchemaRules
@@ -211,6 +214,15 @@ class Rules:
     diplomacy: DiplomacyRules = field(default_factory=DiplomacyRules)
     disasters: DisastersRules = field(default_factory=DisastersRules)
     economy: EconomyRules = field(default_factory=EconomyRules)
+    materials: MaterialsRules = field(default_factory=MaterialsRules)
+    extraction: ExtractionRules = field(default_factory=ExtractionRules)
+    refining: RefiningRules = field(default_factory=RefiningRules)
+    mining_hazards: MiningHazardsRules = field(default_factory=MiningHazardsRules)
+    markets: MarketsRules = field(default_factory=MarketsRules)
+    money: MoneyRules = field(default_factory=MoneyRules)
+    trade_routes: TradeRoutesRules = field(default_factory=TradeRoutesRules)
+    banking: BankingRules = field(default_factory=BankingRules)
+    tolls: TollsRules = field(default_factory=TollsRules)
     espionage: EspionageRules = field(default_factory=EspionageRules)
     empty_world: EmptyWorldRules = field(default_factory=EmptyWorldRules)
     engine_phases: EnginePhasesRules = field(default_factory=EnginePhasesRules)

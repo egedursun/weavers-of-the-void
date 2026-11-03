@@ -61,6 +61,8 @@ PHASE_FLOWS: dict[str, FlowCategory] = {
     "institution_cycles": C.MERGE,
     "schisms": C.MERGE,
     "resource_mechanics": C.DEATH,
+    "resource_economy": C.DISASTER,
+    "trade_flow": C.DISASTER,
     "price_of_magic": C.DEATH,
     "horror": C.DEATH,
     "beyond": C.DEATH,
