@@ -4,7 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.schemas.environment import (
+    AstronomyRecordView,
     CalendarView,
+    ClimateAgeView,
     HolyDayView,
     LeyLineView,
     NotableYearView,
@@ -14,12 +16,15 @@ from aerona.api.schemas.environment import (
     WeatherForecast,
     WorldSeasonsView,
 )
+from aerona.catalog.climate import CLIMATES
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import LandUse
+from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.primitives.stats import stat
 
@@ -144,8 +149,33 @@ async def world_seasons(services: ServicesDep, world_id: int = Path(ge=1)) -> Wo
             .order_by(NotableYearRow.year.desc(), NotableYearRow.id.desc())
             .limit(NOTABLE_YEARS_SHOWN)
         )
+        climate = (
+            ClimateAgeView(
+                era=world.climate_era,
+                label=CLIMATES[world.climate_era].label,
+                description=CLIMATES[world.climate_era].description,
+                since_epoch=world.climate_since_epoch,
+                epochs_left=world.climate_epochs_left,
+                imposed=world.climate_imposed_by_son_id is not None,
+            )
+            if world.climate_era is not None
+            else None
+        )
+        kept = {calendar.knowledge_entity_id for calendar in calendars}
+        astronomy = await session.scalars(
+            select(EntityRow)
+            .where(
+                EntityRow.world_id == world_id,
+                EntityRow.entity_type == EntityType.KNOWLEDGE,
+                EntityRow.knowledge_branch == KnowledgeBranch.ASTRONOMY,
+                EntityRow.status == EntityStatus.CANON,
+            )
+            .order_by(EntityRow.name)
+        )
         return WorldSeasonsView(
             world_id=world.id,
+            astronomy_records=[AstronomyRecordView(id=row.id, name=row.name) for row in astronomy if row.id not in kept],
+            climate=climate,
             axial_tilt=world.axial_tilt,
             year_length_days=world.year_length_days,
             season_count=world.season_count,

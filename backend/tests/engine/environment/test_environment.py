@@ -11,7 +11,7 @@ from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.world import ClimateEra, SkyEventKind, WorldType
 from aerona.domain.models.entity_stats import PlaceStats, StructureStats
-from aerona.engine.environment.control import reorder_seasons, sever_ley
+from aerona.engine.environment.control import reorder_seasons, set_region_field, sever_ley, unlock_region_field
 from aerona.engine.environment.seasons import season_drafts, world_calendar
 from aerona.engine.environment.weather import WeatherInputs, weather_at, weather_weights
 from aerona.engine.phases.disasters import strike
@@ -201,3 +201,18 @@ async def test_works_on_a_ley_line_gain_function(realm: Realm) -> None:
     work = await make(realm.session, "Ley Spire", EntityType.STRUCTURE, stats, world_id=realm.world.id, location_id=realm.region.id)
     await ley_lines(context(realm.session))
     assert (stat(work, "function") or 0) == 40 + RULES.environment.ley_function_gain
+
+
+async def test_every_shown_value_can_be_set_and_held(realm: Realm) -> None:
+    ground = await surveyed(realm)
+    for field, value in (("seasonality", 77), ("magic_density", 66), ("harvest_pct", 150), ("passability.on_foot", 9), ("temperature", 12)):
+        set_region_field(ground, field, value, lock=True)
+    await environment_derive(context(realm.session))
+    await ley_lines(context(realm.session))
+    assert (ground.seasonality, ground.magic_density, ground.passability["on_foot"], ground.temperature) == (77, 66, 9, 12)
+    await people(realm, "Reapers", population=6000)
+    await harvest(context(realm.session))
+    assert ground.harvest_pct == 150
+    assert unlock_region_field(ground, "passability.on_foot")
+    await environment_derive(context(realm.session))
+    assert ground.passability["on_foot"] != 9

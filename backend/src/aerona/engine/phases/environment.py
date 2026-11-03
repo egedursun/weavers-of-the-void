@@ -174,7 +174,8 @@ def refresh_climate(rules: Rules, env: RegionEnvironmentRow, around: Surrounding
     if "rainfall" not in locked:
         env.rainfall = rainfall_of(rules, geography, around)
     env.temperature_band = band_of(rules, env.temperature)
-    env.seasonality = seasonality_of(rules, env.latitude, axial_tilt)
+    if "seasonality" not in locked:
+        env.seasonality = seasonality_of(rules, env.latitude, axial_tilt)
     if "wetland" not in locked:
         env.wetland = clamp_int(env.base_wetland * (PERCENT + (env.rainfall - rules.environment.ideal_rainfall)) / PERCENT, 0, PERCENT)
     if "forest_cover" not in locked:
@@ -182,7 +183,8 @@ def refresh_climate(rules: Rules, env: RegionEnvironmentRow, around: Surrounding
     if "dominant_terrain" not in locked:
         reading = TerrainReading(geography, around, env.temperature, env.rainfall, env.wetland, env.built)
         env.dominant_terrain = terrain_of(rules, reading)
-    env.passability = passability_of(
+    held = {key.removeprefix("passability."): env.passability.get(key.removeprefix("passability.")) for key in locked if key.startswith("passability.")}
+    fresh = passability_of(
         rules,
         roughness=env.roughness,
         forest=env.forest_cover,
@@ -192,6 +194,7 @@ def refresh_climate(rules: Rules, env: RegionEnvironmentRow, around: Surrounding
         coast=env.coast_kind,
         tides=tides,
     )
+    env.passability = {**fresh, **{mode: value for mode, value in held.items() if value is not None}}
     if "defensibility" not in locked:
         env.defensibility = defensibility_of(rules, roughness=env.roughness, forest=env.forest_cover, river=env.river_class, chokepoints=around.chokepoints)
 
@@ -458,7 +461,8 @@ async def environment_derive(ctx: TickContext) -> None:
         if env is None or context is None:
             continue
         decay_scars(rules, env)
-        env.magic_density = clamp_int(stat_or(region, "magic", env.magic_density), 0, PERCENT)
+        if "magic_density" not in env.locked:
+            env.magic_density = clamp_int(stat_or(region, "magic", env.magic_density), 0, PERCENT)
         around = context.surroundings(rules, env)
         refresh_climate(rules, env, around, context.world.axial_tilt or 0, context.world.tidal_strength or 0)
         load = loads.get(("region", region.id))
@@ -658,6 +662,7 @@ class HarvestSeason:
     growing: WorldSeasonRow | None
     years: list[SampledYear]
     worst_weather: tuple[int, YearHarvest, RegionEnvironmentRow] | None = None
+    best_plenty: tuple[YearHarvest, RegionEnvironmentRow] | None = None
 
 
 def region_years(ctx: TickContext, season: HarvestSeason, env: RegionEnvironmentRow) -> list[YearHarvest]:
@@ -688,7 +693,8 @@ def region_years(ctx: TickContext, season: HarvestSeason, env: RegionEnvironment
 async def region_harvest(ctx: TickContext, world: WorldRow, season: HarvestSeason, env: RegionEnvironmentRow) -> int:
     settings = ctx.rules.harvest
     results = region_years(ctx, season, env)
-    env.harvest_pct = round_half_up(sum(item.harvest for item in results) / len(results))
+    if "harvest_pct" not in env.locked:
+        env.harvest_pct = round_half_up(sum(item.harvest for item in results) / len(results))
     region = await ctx.session.get(EntityRow, env.entity_id)
     if region is None:
         return 0
@@ -703,11 +709,21 @@ async def region_harvest(ctx: TickContext, world: WorldRow, season: HarvestSeaso
             await famine_event(ctx, region, season.loads[("region", env.entity_id)].communities, name, PERCENT - worst.harvest)
         found += 1
     best = max(results, key=lambda item: (item.harvest, -item.offset))
-    if best.harvest >= settings.plenty_threshold:
-        text = f"The granaries of {region.name} overflowed in the year {best.year}."
-        await record_notable(ctx, world, region, Notable(NotableYearKind.PLENTY, best, best.harvest - PERCENT, f"the Year of Plenty in {region.name}", text))
-        found += 1
+    if best.harvest >= settings.plenty_threshold and (season.best_plenty is None or best.harvest > season.best_plenty[0].harvest):
+        season.best_plenty = (best, env)
     return found
+
+
+async def plenty_year(ctx: TickContext, world: WorldRow, season: HarvestSeason) -> int:
+    if season.best_plenty is None:
+        return 0
+    best, env = season.best_plenty
+    region = await ctx.session.get(EntityRow, env.entity_id)
+    if region is None:
+        return 0
+    text = f"The granaries of {region.name} overflowed in the year {best.year}."
+    await record_notable(ctx, world, region, Notable(NotableYearKind.PLENTY, best, best.harvest - PERCENT, f"the Year of Plenty in {region.name}", text))
+    return 1
 
 
 async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason) -> int:
@@ -748,6 +764,7 @@ async def harvest(ctx: TickContext) -> None:
         for env in regions:
             notable += await region_harvest(ctx, world, season, env)
         notable += await weather_year(ctx, world, season)
+        notable += await plenty_year(ctx, world, season)
     await ctx.session.flush()
     ctx.count("notable_years", notable)
 
@@ -886,7 +903,8 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
         if place.region_entity_id is not None:
             by_region.setdefault(place.region_entity_id, []).append(place)
     for region_id, ground in grounds.items():
-        ground.magic_density = clamp_int(ground.magic_density + degree[region_id] * settings.ley_convergence, 0, PERCENT)
+        if "magic_density" not in ground.locked:
+            ground.magic_density = clamp_int(ground.magic_density + degree[region_id] * settings.ley_convergence, 0, PERCENT)
         candidates = by_region.get(region_id, [])
         chosen: PlaceEnvironmentRow | None = None
         if degree[region_id] >= settings.nexus_lines and candidates:
@@ -896,6 +914,8 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
                 mystery[place.entity_id] = (stat(entity, "mystery") or 0) if entity is not None else 0
             chosen = max(candidates, key=lambda place: (mystery[place.entity_id], -place.entity_id))
         for place in candidates:
+            if "nexus" in place.locked:
+                continue
             becomes = place is chosen
             if becomes and not place.nexus:
                 crowned += 1

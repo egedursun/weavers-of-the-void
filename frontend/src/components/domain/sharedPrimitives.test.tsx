@@ -268,9 +268,11 @@ describe('RecordNavLink', () => {
     await expect
       .element(screen.getByRole('link', { name: 'Show in network' }))
       .toHaveAttribute('href', '/network?focus=12')
-    await expect
-      .element(screen.getByRole('link', { name: 'Climate' }))
-      .toHaveAttribute('href', '/cosmos?world=3&panel=command&section=climate')
+    const climate = screen.getByRole('link', { name: 'Climate' })
+    await expect.element(climate).toBeVisible()
+    expect(
+      decodeURIComponent(climate.element().getAttribute('href') ?? '')
+    ).toContain('drawer=world:3')
     await expect
       .element(screen.getByRole('link', { name: 'Peoples' }))
       .toHaveAttribute('href', '/atlas?type=people')

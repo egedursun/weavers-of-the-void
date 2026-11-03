@@ -1,4 +1,5 @@
 import {
+  CloudSun,
   ArrowDownToLine,
   Building2,
   Clock,
@@ -25,6 +26,7 @@ import { unwrap } from '@/api/errors'
 import { formatCompact, formatDecimal, formatInteger } from '@/lib/format'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   EmptyState,
@@ -118,7 +120,12 @@ function WorldHero({ wiki }: { wiki: WorldWiki }) {
         <div className='flex min-w-0 flex-wrap gap-2'>
           <RecordNavLink to={{ view: 'world-map', world: world.id }} />
           <RecordNavLink to={{ view: 'chronicle', world: world.id }} />
-          <RecordNavLink to={{ view: 'climate', world: world.id }} />
+          <Button variant='outline' size='sm' asChild>
+            <a href='#section-seasons'>
+              <CloudSun />
+              Climate and seasons
+            </a>
+          </Button>
           <EntityLink kind='world-guide' id={String(world.id)}>
             Traveller's guide
           </EntityLink>

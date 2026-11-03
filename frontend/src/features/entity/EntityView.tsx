@@ -218,11 +218,7 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         total={detail.chronicle_total}
         highlightEpoch={highlight}
       />
-      <EntityEnvironment
-        entityId={entity.id}
-        entityType={entity.entity_type}
-        readOnlyReason={readOnly}
-      />
+      <EntityEnvironment entityId={entity.id} entityType={entity.entity_type} />
       <EntityMechanics
         nodeId={entity.id}
         statKeys={Object.keys(entity.stats).filter((key) => key !== 'kind')}

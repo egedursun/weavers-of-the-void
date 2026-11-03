@@ -1,34 +1,75 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowDown, ArrowUp, CalendarDays, Trash2 } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowUp,
+  BookOpen,
+  CalendarDays,
+  Clock,
+  CloudSun,
+  Droplets,
+  Footprints,
+  Moon,
+  Orbit,
+  Sprout,
+  Sun,
+  Swords,
+  Thermometer,
+  Anchor,
+  Trash2,
+} from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Section } from '@/components/domain'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  ChangeChip,
+  EmptyState,
+  KpiTile,
+  Medallion,
+  MiniStat,
+  Section,
+  StatBar,
+  Timeline,
+  TimelineItem,
+} from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
-import { READ_ONLY_REASON } from '@/features/entity/actions/gate'
-import { useLoreMutation } from '@/features/entity/api/mutations'
-import { useWorldState } from '@/features/entity/api/queries'
+import {
+  CLIMATE_AGE,
+  NOTABLE,
+  named,
+} from '@/features/entity/environment/labels'
+import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
+import { useGodGate } from '@/features/pantheon/gate'
+import { useGodAction } from '@/features/pantheon/godAction'
 
 type WorldSeasons = components['schemas']['WorldSeasonsView']
 type Season = components['schemas']['SeasonView']
 type Calendar = components['schemas']['CalendarView']
+type ClimateEra = components['schemas']['ClimateEra']
 
-const BUSY_REASON = 'Another change is being applied.'
-const ENTER_VALUE = 'Enter a value first.'
-const FIRST_REASON = 'This season already comes first.'
-const LAST_REASON = 'This season already comes last.'
+const PERCENT = 100
+const SHIFT = 100
+const TILT_MAX = 90
+const WORKING = 'Working on it.'
+const FIRST = 'This season already opens the year.'
+const LAST = 'This season already closes the year.'
+const PICK_RECORD = 'Pick an astronomy record first.'
+const ERAS = Object.keys(CLIMATE_AGE) as ClimateEra[]
+const YEAR_KEY = 'year:'
+const SEASON_KEY = 'season:'
 
 function seasonsKey(worldId: number) {
-  return ['worlds', worldId, 'seasons'] as const
-}
-
-function whole(value: string): number | null {
-  const parsed = Number.parseInt(value, 10)
-  return Number.isFinite(parsed) ? parsed : null
+  return ['world', 'seasons', worldId] as const
 }
 
 function moved(seasons: Season[], index: number, step: number): number[] {
@@ -38,7 +79,151 @@ function moved(seasons: Season[], index: number, step: number): number[] {
   return order
 }
 
-function SeasonRow({
+function ClimateAge({
+  data,
+  blocked,
+}: {
+  data: WorldSeasons
+  blocked: string | null
+}) {
+  const [era, setEra] = useState<ClimateEra>(data.climate?.era ?? 'temperate')
+  const [epochs, setEpochs] = useState('')
+  const parsed = epochs.trim() === '' ? undefined : Number(epochs)
+  const command = useGodAction({
+    run: () =>
+      unwrap(
+        api.PUT('/api/climate', {
+          body: {
+            era,
+            world_id: data.world_id,
+            ...(parsed === undefined ? {} : { epochs: parsed }),
+          },
+        })
+      ),
+    success: 'A new climate age was laid on this world',
+  })
+  const age = data.climate ? named(CLIMATE_AGE, data.climate.era) : null
+  const invalid =
+    parsed !== undefined && (!Number.isInteger(parsed) || parsed < 1)
+  const reason =
+    blocked ??
+    (invalid ? 'Write a whole number of epochs.' : null) ??
+    (command.isPending ? WORKING : null)
+  return (
+    <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+      <div className='flex min-w-0 items-center gap-3'>
+        <Medallion icon={age?.icon ?? CloudSun} tone={age?.tone ?? 'muted'} />
+        <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
+          <div className='flex min-w-0 flex-wrap items-center gap-2'>
+            <Text weight='semibold'>
+              {data.climate?.label ?? 'No climate age yet'}
+            </Text>
+            {data.climate?.imposed && (
+              <Badge size='sm' variant='warning'>
+                Laid by a god
+              </Badge>
+            )}
+          </div>
+          <Muted variant='caption'>
+            {data.climate
+              ? `${data.climate.description} Since epoch ${data.climate.since_epoch ?? '—'}, ${data.climate.epochs_left ?? 0} epochs left.`
+              : 'The first age begins with the next epoch.'}
+          </Muted>
+        </div>
+      </div>
+      <div className='flex min-w-0 flex-wrap items-end gap-2'>
+        <div className='flex min-w-0 flex-col gap-1'>
+          <Label>New age</Label>
+          <Select
+            value={era}
+            onValueChange={(value) => setEra(value as ClimateEra)}
+          >
+            <SelectTrigger aria-label='New climate age'>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ERAS.map((item) => (
+                <SelectItem key={item} value={item}>
+                  {named(CLIMATE_AGE, item).label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className='flex w-32 min-w-0 flex-col gap-1'>
+          <Label as='label' htmlFor={`climate-epochs-${data.world_id}`}>
+            Epochs
+          </Label>
+          <Input
+            id={`climate-epochs-${data.world_id}`}
+            inputMode='numeric'
+            placeholder='Default'
+            value={epochs}
+            onChange={(event) => setEpochs(event.target.value)}
+          />
+        </div>
+        <Button
+          disabled={reason !== null}
+          disabledReason={reason ?? undefined}
+          onClick={() => command.mutate()}
+        >
+          <CloudSun />
+          Lay this age
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function YearTiles({ data }: { data: WorldSeasons }) {
+  return (
+    <div className='grid min-w-0 grid-cols-2 gap-2 @lg/year:grid-cols-3 @4xl/year:grid-cols-6'>
+      <MiniStat
+        icon={Orbit}
+        label='Axial tilt'
+        value={data.axial_tilt ?? '—'}
+        tone='gold'
+        hint='0 means no seasons; 90 the fullest swing'
+      />
+      <MiniStat
+        icon={Sun}
+        label='Days a year'
+        value={data.year_length_days ?? '—'}
+        tone='gold'
+        hint='More days, more holy days a calendar can keep'
+      />
+      <MiniStat
+        icon={Clock}
+        label='Hours a day'
+        value={data.day_length_hours ?? '—'}
+        tone='info'
+        hint='Longer days bring more battles by night'
+      />
+      <MiniStat
+        icon={CalendarDays}
+        label='Seasons'
+        value={data.season_count ?? data.seasons.length}
+        tone='verdigris'
+      />
+      <MiniStat
+        icon={Moon}
+        label='Moons'
+        value={data.moon_count ?? 0}
+        tone='info'
+        hint='Counted from the moons that orbit this world'
+      />
+      <MiniStat
+        icon={Anchor}
+        label='Tides'
+        value={data.tidal_strength ?? 0}
+        tone='info'
+        hint='Raised by moons; tides flood coasts and slow boats'
+      />
+    </div>
+  )
+}
+
+function SeasonCard({
   season,
   index,
   seasons,
@@ -49,110 +234,99 @@ function SeasonRow({
   index: number
   seasons: Season[]
   worldId: number
-  blocked: string | undefined
+  blocked: string | null
 }) {
-  const invalidate = [seasonsKey(worldId)]
-  const [growth, setGrowth] = useState(String(season.growth))
-  const [campaign, setCampaign] = useState(String(season.campaign))
-  const reorder = useLoreMutation({
+  const reorder = useGodAction({
     run: (order: number[]) =>
       unwrap(
         api.POST('/api/actions/seasons:reorder', {
           body: { world_id: worldId, order },
         })
       ),
-    invalidate,
+    success: 'The year turns in a new order',
   })
-  const edit = useLoreMutation({
-    run: () =>
-      unwrap(
-        api.POST('/api/actions/seasons:edit', {
-          body: {
-            season_id: season.id,
-            growth: whole(growth),
-            campaign: whole(campaign),
-          },
-        })
-      ),
-    invalidate,
-  })
-  const busy =
-    blocked ?? (reorder.isPending || edit.isPending ? BUSY_REASON : undefined)
-  const up = busy ?? (index === 0 ? FIRST_REASON : undefined)
-  const down = busy ?? (index === seasons.length - 1 ? LAST_REASON : undefined)
+  const busy = blocked ?? (reorder.isPending ? WORKING : null)
+  const earlier = busy ?? (index === 0 ? FIRST : null)
+  const later = busy ?? (index === seasons.length - 1 ? LAST : null)
   return (
-    <div className='flex min-w-0 flex-wrap items-center gap-2'>
-      <Text className='min-w-28'>
-        {season.position + 1}. {season.name}
-      </Text>
-      <Muted>
-        warmth {season.temperature_shift}, rain {season.rain_shift}, travel{' '}
-        {season.travel}
-      </Muted>
-      {season.edited && (
-        <Badge size='sm' variant='info'>
-          edited
-        </Badge>
-      )}
-      <Input
-        aria-label={`${season.name} growth`}
-        inputMode='numeric'
-        className='w-20'
-        value={growth}
-        onChange={(event) => setGrowth(event.target.value)}
+    <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+      <div className='flex min-w-0 items-center gap-2'>
+        <span className='flex size-control-sm shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/12 text-primary'>
+          <Text as='span' weight='semibold'>
+            {index + 1}
+          </Text>
+        </span>
+        <Text weight='semibold' className='flex-1' truncate>
+          {season.name}
+        </Text>
+        {season.edited && (
+          <Badge size='sm' variant='info'>
+            Shaped by hand
+          </Badge>
+        )}
+        <Button
+          size='icon'
+          variant='ghost'
+          aria-label={`Move ${season.name} earlier`}
+          disabled={earlier !== null}
+          disabledReason={earlier ?? undefined}
+          onClick={() => reorder.mutate(moved(seasons, index, -1))}
+        >
+          <ArrowUp />
+        </Button>
+        <Button
+          size='icon'
+          variant='ghost'
+          aria-label={`Move ${season.name} later`}
+          disabled={later !== null}
+          disabledReason={later ?? undefined}
+          onClick={() => reorder.mutate(moved(seasons, index, 1))}
+        >
+          <ArrowDown />
+        </Button>
+      </div>
+      <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+        <ChangeChip
+          value={season.temperature_shift}
+          icon={Thermometer}
+          label='Warmth'
+        />
+        <ChangeChip value={season.rain_shift} icon={Droplets} label='Rain' />
+      </div>
+      <StatBar
+        label='Crop growth'
+        value={season.growth}
+        max={PERCENT}
+        icon={Sprout}
+        tone='success'
       />
-      <Input
-        aria-label={`${season.name} fitness for war`}
-        inputMode='numeric'
-        className='w-20'
-        value={campaign}
-        onChange={(event) => setCampaign(event.target.value)}
+      <StatBar
+        label='Fit for war'
+        value={season.campaign}
+        max={PERCENT}
+        icon={Swords}
+        tone='destructive'
       />
-      <Button
-        size='sm'
-        variant='outline'
-        disabled={busy !== undefined}
-        disabledReason={busy}
-        onClick={() => edit.mutate()}
-      >
-        Save
-      </Button>
-      <Button
-        size='sm'
-        variant='ghost'
-        aria-label='Earlier in the year'
-        disabled={up !== undefined}
-        disabledReason={up}
-        onClick={() => reorder.mutate(moved(seasons, index, -1))}
-      >
-        <ArrowUp />
-      </Button>
-      <Button
-        size='sm'
-        variant='ghost'
-        aria-label='Later in the year'
-        disabled={down !== undefined}
-        disabledReason={down}
-        onClick={() => reorder.mutate(moved(seasons, index, 1))}
-      >
-        <ArrowDown />
-      </Button>
+      <StatBar
+        label='Ease of travel'
+        value={season.travel}
+        max={PERCENT}
+        icon={Footprints}
+        tone='info'
+      />
     </div>
   )
 }
 
-function CalendarRowView({
+function CalendarCard({
   calendar,
-  worldId,
   blocked,
 }: {
   calendar: Calendar
-  worldId: number
-  blocked: string | undefined
+  blocked: string | null
 }) {
-  const invalidate = [seasonsKey(worldId)]
   const [names, setNames] = useState(calendar.month_names.join(', '))
-  const rename = useLoreMutation({
+  const rename = useGodAction({
     run: () =>
       unwrap(
         api.POST('/api/actions/calendar:rename', {
@@ -162,162 +336,342 @@ function CalendarRowView({
           },
         })
       ),
-    invalidate,
+    success: 'The months were renamed',
   })
-  const drop = useLoreMutation({
+  const drop = useGodAction({
     run: () =>
       unwrap(
         api.POST('/api/actions/calendar:drop', {
           body: { knowledge_id: calendar.knowledge_id },
         })
       ),
-    invalidate,
+    success: 'The calendar was let go',
   })
-  const busy =
-    blocked ?? (rename.isPending || drop.isPending ? BUSY_REASON : undefined)
+  const busy = blocked ?? (rename.isPending || drop.isPending ? WORKING : null)
+  const renameReason =
+    busy ??
+    (names === calendar.month_names.join(', ')
+      ? 'These are the present names.'
+      : null)
   return (
-    <div className='flex min-w-0 flex-col gap-2'>
-      <Text>
-        {calendar.name}: kept since epoch {calendar.adopted_epoch}, counted from
-        year {calendar.anchor_year}
-      </Text>
-      {calendar.holy_days.length > 0 && (
-        <Muted>
-          Holy days: {calendar.holy_days.map((day) => day.name).join(' · ')}
-        </Muted>
-      )}
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Input
-          aria-label='Month names'
-          value={names}
-          onChange={(event) => setNames(event.target.value)}
-        />
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== undefined}
-          disabledReason={busy}
-          onClick={() => rename.mutate()}
-        >
-          Rename months
-        </Button>
+    <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+      <div className='flex min-w-0 items-center gap-2'>
+        <Medallion icon={BookOpen} tone='verdigris' size='sm' />
+        <div className='flex min-w-0 flex-1 flex-col'>
+          <Text weight='semibold' truncate>
+            {calendar.name}
+          </Text>
+          <Muted variant='caption'>
+            {`Kept since epoch ${calendar.adopted_epoch}, counted from year ${calendar.anchor_year}`}
+          </Muted>
+        </div>
         <Button
           size='sm'
           variant='ghost'
-          disabled={busy !== undefined}
-          disabledReason={busy}
+          disabled={busy !== null}
+          disabledReason={busy ?? undefined}
           onClick={() => drop.mutate()}
         >
           <Trash2 />
-          Drop calendar
+          Let go
+        </Button>
+      </div>
+      <div className='flex min-w-0 flex-wrap gap-1.5'>
+        {calendar.month_names.map((month) => (
+          <Badge key={month} size='sm' variant='secondary'>
+            {month}
+          </Badge>
+        ))}
+      </div>
+      {calendar.holy_days.length > 0 && (
+        <div className='flex min-w-0 flex-wrap gap-1.5'>
+          {calendar.holy_days.map((day) => (
+            <Badge key={day.name} size='sm' variant='warning'>
+              {day.name}
+            </Badge>
+          ))}
+        </div>
+      )}
+      <div className='flex min-w-0 items-end gap-2'>
+        <div className='flex min-w-0 flex-1 flex-col gap-1'>
+          <Label as='label' htmlFor={`months-${calendar.knowledge_id}`}>
+            Month names, in order
+          </Label>
+          <Input
+            id={`months-${calendar.knowledge_id}`}
+            value={names}
+            onChange={(event) => setNames(event.target.value)}
+          />
+        </div>
+        <Button
+          variant='outline'
+          disabled={renameReason !== null}
+          disabledReason={renameReason ?? undefined}
+          onClick={() => rename.mutate()}
+        >
+          Rename
         </Button>
       </div>
     </div>
   )
 }
 
-function CalendarSettings({
+function Calendars({
   data,
   blocked,
 }: {
   data: WorldSeasons
-  blocked: string | undefined
+  blocked: string | null
 }) {
-  const [tilt, setTilt] = useState(String(data.axial_tilt ?? ''))
-  const [year, setYear] = useState(String(data.year_length_days ?? ''))
-  const [day, setDay] = useState(String(data.day_length_hours ?? ''))
-  const [knowledge, setKnowledge] = useState('')
-  const invalidate = [seasonsKey(data.world_id)]
-  const save = useLoreMutation({
-    run: () =>
-      unwrap(
-        api.POST('/api/actions/seasons:calendar', {
-          body: {
-            world_id: data.world_id,
-            axial_tilt: whole(tilt),
-            year_length_days: whole(year),
-            day_length_hours: whole(day),
-            regenerate_seasons: true,
-          },
-        })
-      ),
-    invalidate,
-  })
-  const adopt = useLoreMutation({
+  const [record, setRecord] = useState('')
+  const adopt = useGodAction({
     run: () =>
       unwrap(
         api.POST('/api/actions/calendar:adopt', {
-          body: { knowledge_id: whole(knowledge) ?? 0 },
+          body: { knowledge_id: Number(record) },
         })
       ),
-    invalidate,
+    success: 'A calendar began to count the year',
+    onDone: () => setRecord(''),
   })
-  const busy =
-    blocked ?? (save.isPending || adopt.isPending ? BUSY_REASON : undefined)
-  const adoptReason =
-    busy ?? (whole(knowledge) === null ? ENTER_VALUE : undefined)
+  const reason =
+    blocked ??
+    (record === '' ? PICK_RECORD : null) ??
+    (adopt.isPending ? WORKING : null)
   return (
-    <div className='flex min-w-0 flex-col gap-2'>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Input
-          aria-label='Axial tilt'
-          inputMode='numeric'
-          className='w-24'
-          placeholder='Tilt'
-          value={tilt}
-          onChange={(event) => setTilt(event.target.value)}
+    <div className='flex min-w-0 flex-col gap-3'>
+      {data.calendars.length === 0 ? (
+        <Muted>
+          No people counts the year yet; astronomy records become calendars.
+        </Muted>
+      ) : (
+        <div className='grid min-w-0 grid-cols-1 gap-3 @xl/year:grid-cols-2'>
+          {data.calendars.map((calendar) => (
+            <CalendarCard
+              key={`${calendar.knowledge_id}-${calendar.month_names.join()}`}
+              calendar={calendar}
+              blocked={blocked}
+            />
+          ))}
+        </div>
+      )}
+      {data.astronomy_records.length > 0 && (
+        <div className='flex min-w-0 flex-wrap items-end gap-2'>
+          <div className='flex min-w-0 flex-col gap-1'>
+            <Label>Make a record keep a calendar</Label>
+            <Select value={record} onValueChange={setRecord}>
+              <SelectTrigger aria-label='Astronomy record'>
+                <SelectValue placeholder='Astronomy record' />
+              </SelectTrigger>
+              <SelectContent>
+                {data.astronomy_records.map((item) => (
+                  <SelectItem key={item.id} value={String(item.id)}>
+                    {item.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            variant='outline'
+            disabled={reason !== null}
+            disabledReason={reason ?? undefined}
+            onClick={() => adopt.mutate()}
+          >
+            <BookOpen />
+            Keep a calendar
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function controlGroups(data: WorldSeasons): AdjustGroup[] {
+  return [
+    {
+      title: 'The year',
+      fields: [
+        {
+          key: `${YEAR_KEY}axial_tilt`,
+          label: 'Axial tilt',
+          value: data.axial_tilt ?? 0,
+          min: 0,
+          max: TILT_MAX,
+        },
+        {
+          key: `${YEAR_KEY}year_length_days`,
+          label: 'Days a year',
+          value: data.year_length_days ?? 1,
+          min: 1,
+        },
+        {
+          key: `${YEAR_KEY}day_length_hours`,
+          label: 'Hours a day',
+          value: data.day_length_hours ?? 1,
+          min: 1,
+        },
+      ],
+    },
+    ...data.seasons.map((season) => ({
+      title: season.name,
+      fields: [
+        {
+          key: `${SEASON_KEY}${season.id}:temperature_shift`,
+          label: 'Warmth',
+          value: season.temperature_shift,
+          min: -SHIFT,
+          max: SHIFT,
+        },
+        {
+          key: `${SEASON_KEY}${season.id}:rain_shift`,
+          label: 'Rain',
+          value: season.rain_shift,
+          min: -SHIFT,
+          max: SHIFT,
+        },
+        {
+          key: `${SEASON_KEY}${season.id}:growth`,
+          label: 'Crop growth',
+          value: season.growth,
+          min: 0,
+          max: PERCENT,
+        },
+        {
+          key: `${SEASON_KEY}${season.id}:campaign`,
+          label: 'Fit for war',
+          value: season.campaign,
+          min: 0,
+          max: PERCENT,
+        },
+        {
+          key: `${SEASON_KEY}${season.id}:travel`,
+          label: 'Ease of travel',
+          value: season.travel,
+          min: 0,
+          max: PERCENT,
+        },
+      ],
+    })),
+  ]
+}
+
+function SeasonNames({
+  data,
+  blocked,
+}: {
+  data: WorldSeasons
+  blocked: string | null
+}) {
+  return (
+    <div className='grid min-w-0 grid-cols-1 gap-3 @md/year:grid-cols-2 @xl/year:grid-cols-3'>
+      {data.seasons.map((season) => (
+        <SeasonName
+          key={`${season.id}-${season.name}`}
+          season={season}
+          blocked={blocked}
         />
+      ))}
+    </div>
+  )
+}
+
+function SeasonName({
+  season,
+  blocked,
+}: {
+  season: Season
+  blocked: string | null
+}) {
+  const [name, setName] = useState(season.name)
+  const save = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/seasons:edit', {
+          body: { season_id: season.id, name: name.trim() },
+        })
+      ),
+    success: 'The season was renamed',
+  })
+  const reason =
+    blocked ??
+    (name.trim() === '' ? 'Write a name.' : null) ??
+    (name.trim() === season.name ? 'This is the present name.' : null) ??
+    (save.isPending ? WORKING : null)
+  return (
+    <form
+      className='flex min-w-0 items-end gap-2'
+      onSubmit={(event) => {
+        event.preventDefault()
+        if (reason === null) save.mutate()
+      }}
+    >
+      <div className='flex min-w-0 flex-1 flex-col gap-1'>
+        <Label as='label' htmlFor={`season-name-${season.id}`} truncate>
+          {`Name of season ${season.position + 1}`}
+        </Label>
         <Input
-          aria-label='Days in a year'
-          inputMode='numeric'
-          className='w-24'
-          placeholder='Days'
-          value={year}
-          onChange={(event) => setYear(event.target.value)}
+          id={`season-name-${season.id}`}
+          value={name}
+          onChange={(event) => setName(event.target.value)}
         />
-        <Input
-          aria-label='Hours in a day'
-          inputMode='numeric'
-          className='w-24'
-          placeholder='Hours'
-          value={day}
-          onChange={(event) => setDay(event.target.value)}
-        />
-        <Button
-          size='sm'
-          disabled={busy !== undefined}
-          disabledReason={busy}
-          onClick={() => save.mutate()}
-        >
-          Reshape the year
-        </Button>
       </div>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Input
-          aria-label='Astronomy record id'
-          inputMode='numeric'
-          className='w-40'
-          placeholder='Astronomy record #'
-          value={knowledge}
-          onChange={(event) => setKnowledge(event.target.value)}
-        />
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={adoptReason !== undefined}
-          disabledReason={adoptReason}
-          onClick={() => adopt.mutate()}
-        >
-          Keep a calendar
-        </Button>
+      <Button
+        type='submit'
+        variant='outline'
+        disabled={reason !== null}
+        disabledReason={reason ?? undefined}
+      >
+        Rename
+      </Button>
+    </form>
+  )
+}
+
+function YearControls({ data }: { data: WorldSeasons }) {
+  const { reason } = useGodGate()
+  const run = ({ key, value }: { key: string; value: number }) => {
+    if (key.startsWith(YEAR_KEY)) {
+      const field = key.slice(YEAR_KEY.length)
+      return unwrap(
+        api.POST('/api/actions/seasons:calendar', {
+          body: {
+            world_id: data.world_id,
+            [field]: value,
+            regenerate_seasons: field === 'axial_tilt',
+          },
+        })
+      )
+    }
+    const [seasonId, field] = key.slice(SEASON_KEY.length).split(':')
+    return unwrap(
+      api.POST('/api/actions/seasons:edit', {
+        body: { season_id: Number(seasonId), [field]: value },
+      })
+    )
+  }
+  return (
+    <div className='flex min-w-0 flex-col gap-4 rounded-lg border border-dashed bg-muted/20 p-3'>
+      <div className='flex min-w-0 flex-col gap-0.5'>
+        <Text weight='semibold'>Shape the year</Text>
+        <Muted variant='caption'>
+          Every value above can be set here. A new axial tilt redraws the
+          seasons from the sky; every change goes into the ledger and can be
+          undone.
+        </Muted>
       </div>
+      <SeasonNames data={data} blocked={reason()} />
+      <AdjustStats
+        id={`world-${data.world_id}-year`}
+        groups={controlGroups(data)}
+        run={run}
+      />
     </div>
   )
 }
 
 export function WorldSeasonsSection({ worldId }: { worldId: number }) {
-  const state = useWorldState()
-  const readOnlyReason = state.data?.read_only ? READ_ONLY_REASON : null
+  const { reason } = useGodGate()
   const view = useQuery({
     queryKey: seasonsKey(worldId),
     queryFn: () =>
@@ -328,67 +682,116 @@ export function WorldSeasonsSection({ worldId }: { worldId: number }) {
       ),
   })
   const data = view.data
-  const blocked = readOnlyReason ?? undefined
+  const blocked = reason()
   return (
     <Section
       id='section-seasons'
-      title='Seasons and calendar'
-      description='How the year turns: tilt, length of year and day, moons and tides, the seasons in order, calendars kept and the years remembered.'
+      title='Climate and seasons'
+      description='The age the sky has laid on this world, how its year turns, the calendars its peoples keep and the years they remember.'
       icon={CalendarDays}
     >
-      {data && (
-        <div className='flex min-w-0 flex-col gap-4'>
-          <Text>
-            Axial tilt {data.axial_tilt ?? '—'}, {data.year_length_days ?? '—'}{' '}
-            days a year, {data.day_length_hours ?? '—'} hours a day,{' '}
-            {data.moon_count ?? 0} moons, tides {data.tidal_strength ?? 0}.
-          </Text>
-          <CalendarSettings
-            key={`${data.axial_tilt}-${data.year_length_days}`}
+      {!data ? (
+        <EmptyState
+          icon={CalendarDays}
+          title='Reading the sky'
+          description='The seasons of this world are being gathered.'
+        />
+      ) : (
+        <div className='@container/year flex min-w-0 flex-col gap-4'>
+          <ClimateAge
+            key={data.climate?.era ?? 'none'}
             data={data}
             blocked={blocked}
           />
+          <YearTiles data={data} />
+          <KpiTileRow data={data} />
           <div className='flex min-w-0 flex-col gap-2'>
-            <Label variant='overline'>The year, in order (growth · war)</Label>
-            {data.seasons.map((season, index) => (
-              <SeasonRow
-                key={`${season.id}-${season.growth}-${season.campaign}`}
-                season={season}
-                index={index}
-                seasons={data.seasons}
-                worldId={worldId}
-                blocked={blocked}
-              />
-            ))}
+            <Label variant='overline'>The year, in order</Label>
+            <div className='grid min-w-0 grid-cols-1 gap-3 @md/year:grid-cols-2 @2xl/year:grid-cols-3'>
+              {data.seasons.map((season, index) => (
+                <SeasonCard
+                  key={season.id}
+                  season={season}
+                  index={index}
+                  seasons={data.seasons}
+                  worldId={worldId}
+                  blocked={blocked}
+                />
+              ))}
+            </div>
           </div>
           <div className='flex min-w-0 flex-col gap-2'>
             <Label variant='overline'>Calendars</Label>
-            {data.calendars.length === 0 && (
-              <Muted>No people counts the year yet.</Muted>
-            )}
-            {data.calendars.map((calendar) => (
-              <CalendarRowView
-                key={`${calendar.knowledge_id}-${calendar.month_names.join()}`}
-                calendar={calendar}
-                worldId={worldId}
-                blocked={blocked}
-              />
-            ))}
+            <Calendars data={data} blocked={blocked} />
           </div>
-          <div className='flex min-w-0 flex-col gap-1'>
+          <div className='flex min-w-0 flex-col gap-2'>
             <Label variant='overline'>Years remembered</Label>
-            {data.notable_years.length === 0 && (
-              <Muted>No year stands out yet.</Muted>
+            {data.notable_years.length === 0 ? (
+              <Muted>
+                No year stands out yet; hungry, plentiful and wild years are
+                written here.
+              </Muted>
+            ) : (
+              <Timeline label='Years remembered'>
+                {data.notable_years.map((year, index) => {
+                  const kind = named(NOTABLE, year.kind)
+                  return (
+                    <TimelineItem
+                      key={year.id}
+                      icon={kind.icon}
+                      tone={
+                        kind.tone === 'danger'
+                          ? 'destructive'
+                          : kind.tone === 'success'
+                            ? 'success'
+                            : 'warning'
+                      }
+                      title={year.name}
+                      timestamp={`Year ${year.year} · epoch ${year.epoch}`}
+                      last={index === data.notable_years.length - 1}
+                    >
+                      <Muted variant='caption'>{kind.label}</Muted>
+                    </TimelineItem>
+                  )
+                })}
+              </Timeline>
             )}
-            {data.notable_years.map((year) => (
-              <Text key={year.id}>
-                {year.year}: {year.name}
-              </Text>
-            ))}
           </div>
+          <YearControls data={data} />
         </div>
       )}
-      {readOnlyReason && <Muted variant='caption'>{readOnlyReason}</Muted>}
     </Section>
+  )
+}
+
+function KpiTileRow({ data }: { data: WorldSeasons }) {
+  const growing = data.seasons.reduce<Season | null>(
+    (best, season) =>
+      best === null || season.growth > best.growth ? season : best,
+    null
+  )
+  const campaign = data.seasons.reduce<Season | null>(
+    (best, season) =>
+      best === null || season.campaign > best.campaign ? season : best,
+    null
+  )
+  if (!growing || !campaign) return null
+  return (
+    <div className='grid min-w-0 grid-cols-1 gap-3 @md/year:grid-cols-2'>
+      <KpiTile
+        label='Growing season'
+        value={growing.name}
+        icon={Sprout}
+        tone='success'
+        hint='The harvest of every sampled year is read in this season'
+      />
+      <KpiTile
+        label='Campaign season'
+        value={campaign.name}
+        icon={Swords}
+        tone='danger'
+        hint='Armies meet most often in this season'
+      />
+    </div>
   )
 }

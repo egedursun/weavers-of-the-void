@@ -9,7 +9,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, LeyLineRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.environment import CoastKind, PlaceCover, RiverClass, ScarKind, SoilKind, TerrainKind, WaterSource
+from aerona.domain.enums.environment import CoastKind, MovementMode, PlaceCover, RiverClass, ScarKind, SoilKind, TerrainKind, WaterSource
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.environment.seasons import season_count_for
 from aerona.engine.primitives.numbers import clamp_int
@@ -44,6 +44,8 @@ REGION_NUMBERS = frozenset(
         "mined",
         "built",
         "erosion",
+        "seasonality",
+        "harvest_pct",
     }
 )
 LOCKABLE = frozenset(
@@ -63,10 +65,18 @@ LOCKABLE = frozenset(
         "rainfall",
         "disease_load",
         "defensibility",
+        "seasonality",
+        "magic_density",
+        "harvest_pct",
     }
 )
 PLACE_ENUMS: dict[str, type[StrEnum]] = {"terrain": TerrainKind, "cover": PlaceCover, "water_source": WaterSource}
 PLACE_NUMBERS = frozenset({"height_advantage", "soil_fertility"})
+PASSABILITY_PREFIX = "passability."
+PLACE_FLAGS = frozenset({"chokepoint", "nexus"})
+HARVEST_MAX = 200
+CAPS: dict[str, int] = {"harvest_pct": HARVEST_MAX}
+MODES = frozenset(mode.value for mode in MovementMode)
 SEASON_NUMBERS: dict[str, tuple[int, int]] = {
     "temperature_shift": (-PERCENT, PERCENT),
     "rain_shift": (-PERCENT, PERCENT),
@@ -99,14 +109,26 @@ def coerce(field: str, value: int | str, enums: dict[str, type[StrEnum]], number
     if field in numbers:
         if not isinstance(value, int):
             raise ValidationFailedError(f"{field.replace('_', ' ')} takes a whole number.")
-        return clamp_int(value, 0, PERCENT)
+        return clamp_int(value, 0, CAPS.get(field, PERCENT))
     raise ValidationFailedError(f"{field.replace('_', ' ')} cannot be set by hand.")
 
 
+def set_passability(ground: RegionEnvironmentRow, field: str, value: int | str) -> None:
+    mode = field.removeprefix(PASSABILITY_PREFIX)
+    if mode not in MODES:
+        raise ValidationFailedError(f"{mode.replace('_', ' ')} is not a way of moving.")
+    if not isinstance(value, int):
+        raise ValidationFailedError("Passability takes a whole number.")
+    ground.passability = {**ground.passability, mode: clamp_int(value, 0, PERCENT)}
+
+
 def set_region_field(ground: RegionEnvironmentRow, field: str, value: int | str, *, lock: bool) -> None:
-    setattr(ground, field, coerce(field, value, REGION_ENUMS, REGION_NUMBERS))
+    if field.startswith(PASSABILITY_PREFIX):
+        set_passability(ground, field, value)
+    else:
+        setattr(ground, field, coerce(field, value, REGION_ENUMS, REGION_NUMBERS))
     locked = set(ground.locked)
-    if lock and field in LOCKABLE:
+    if lock and (field in LOCKABLE or field.startswith(PASSABILITY_PREFIX)):
         locked.add(field)
     ground.locked = sorted(locked)
 
@@ -119,8 +141,10 @@ def unlock_region_field(ground: RegionEnvironmentRow, field: str) -> bool:
 
 
 def set_place_field(ground: PlaceEnvironmentRow, field: str, value: int | str | bool) -> None:
-    if field == "chokepoint":
-        ground.chokepoint = bool(value)
+    if field in PLACE_FLAGS:
+        setattr(ground, field, bool(value))
+        if field == "nexus":
+            ground.locked = sorted({*ground.locked, field})
         return
     if isinstance(value, bool):
         raise ValidationFailedError(f"{field.replace('_', ' ')} does not take yes or no.")

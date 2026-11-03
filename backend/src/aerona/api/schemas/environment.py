@@ -11,6 +11,7 @@ from aerona.domain.enums.environment import (
     WeatherEffect,
     WeatherKind,
 )
+from aerona.domain.enums.world import ClimateEra
 
 
 class WeatherForecast(ApiModel):
@@ -117,8 +118,23 @@ class NotableYearView(ApiModel):
     region_id: int | None
 
 
+class ClimateAgeView(ApiModel):
+    era: ClimateEra
+    label: str
+    description: str
+    since_epoch: int | None
+    epochs_left: int | None
+    imposed: bool
+
+
+class AstronomyRecordView(ApiModel):
+    id: int
+    name: str
+
+
 class WorldSeasonsView(ApiModel):
     world_id: int
+    climate: ClimateAgeView | None
     axial_tilt: int | None
     year_length_days: int | None
     season_count: int | None
@@ -128,3 +144,4 @@ class WorldSeasonsView(ApiModel):
     seasons: list[SeasonView]
     calendars: list[CalendarView]
     notable_years: list[NotableYearView]
+    astronomy_records: list[AstronomyRecordView]

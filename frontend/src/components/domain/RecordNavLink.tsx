@@ -10,6 +10,12 @@ import {
   Waypoints,
 } from 'lucide-react'
 import { Button, type ButtonProps } from '@/components/ui/button'
+import {
+  type DrawerSearch,
+  parseDrawerStack,
+  pushDrawerEntry,
+} from '@/components/layout/drawer/drawerEntries'
+import { drawerSearchWith } from '@/components/layout/drawer/useDrawerStack'
 
 export type NavTarget =
   | { view: 'map'; world?: number | null; focus?: number }
@@ -78,6 +84,24 @@ function TargetLink({
   if (view === 'world-map')
     return (
       <Link {...rest} to='/map' search={{ world: target.world }}>
+        {children}
+      </Link>
+    )
+  if (view === 'climate' && present(target.world) !== undefined)
+    return (
+      <Link
+        {...rest}
+        to='.'
+        search={(previous: DrawerSearch) =>
+          drawerSearchWith(
+            previous,
+            pushDrawerEntry(parseDrawerStack(previous.drawer), {
+              kind: 'world',
+              id: String(target.world),
+            })
+          )
+        }
+      >
         {children}
       </Link>
     )

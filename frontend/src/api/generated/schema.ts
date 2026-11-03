@@ -7436,6 +7436,10 @@ export interface components {
             essence: number;
             target: components["schemas"]["Rarity"];
         };
+        AstronomyRecordView: {
+            id: number;
+            name: string;
+        };
         Atmosphere: "none" | "thin" | "normal" | "dense" | "toxic";
         BackupInfo: {
             file: string;
@@ -7811,6 +7815,14 @@ export interface components {
             alliance: boolean;
         };
         ClaudeAuth: "token" | "login";
+        ClimateAgeView: {
+            era: components["schemas"]["ClimateEra"];
+            label: string;
+            description: string;
+            since_epoch: number | null;
+            epochs_left: number | null;
+            imposed: boolean;
+        };
         ClimateEra: "temperate" | "drought" | "rain" | "ice_age" | "scorching";
         ClimateShare: {
             biome: components["schemas"]["Biome"];
@@ -12500,6 +12512,7 @@ export interface components {
         };
         WorldSeasonsView: {
             world_id: number;
+            climate: components["schemas"]["ClimateAgeView"] | null;
             axial_tilt: number | null;
             year_length_days: number | null;
             season_count: number | null;
@@ -12509,6 +12522,7 @@ export interface components {
             seasons: components["schemas"]["SeasonView"][];
             calendars: components["schemas"]["CalendarView"][];
             notable_years: components["schemas"]["NotableYearView"][];
+            astronomy_records: components["schemas"]["AstronomyRecordView"][];
         };
         WorldSettingsView: {
             fate_mode: components["schemas"]["FateMode"];
