@@ -58,6 +58,21 @@ class MapWar(ApiModel):
     ongoing: bool
 
 
+class RegionGround(ApiModel):
+    terrain: str
+    soil: str
+    climate: str
+    land_use: str
+    ley_lines: int
+    nexus: bool
+
+
+class RegionStocks(ApiModel):
+    population: int
+    followers: int
+    soldiers: int
+
+
 class MapView(ApiModel):
     world: WorldRecord
     geometry: WorldMap
@@ -71,5 +86,7 @@ class MapView(ApiModel):
     dominance: dict[int, RegionDominance]
     region_creators: dict[int, int | None]
     population: dict[int, int]
+    ground: dict[int, RegionGround]
+    stocks: dict[int, RegionStocks]
     notes: list[MapNoteRecord]
     time: MapTime

@@ -28,6 +28,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.profiles import Epic
+from aerona.engine.interconnect.incidents import chains_in
 from aerona.engine.mind.book import traits_of
 from aerona.engine.primitives.folk_names import clashes, folk_god_name, guarded_names
 from aerona.engine.primitives.naming import Namer
@@ -56,6 +57,9 @@ MECHANICAL_KINDS = (
 class VoicesResult:
     views: int
     beliefs: int
+
+
+CHAIN_MINIMUM = 2
 
 
 def population(entity: EntityRow) -> int:
@@ -178,6 +182,7 @@ async def voices_of_peoples(runtime: AgentRuntime, epoch: int) -> VoicesResult:
             world_header=await world_header(scope),
             age=epoch,
             age_events=await age_events(scope, epoch, rules.fate.voices_events_chars),
+            chains=[chain.line for chain in await chains_in(scope.session, epoch, CHAIN_MINIMUM, rules.incidents.chain_depth)],
             world_events=[section for section in sections if section.world_id is not None],
             historians=writers,
             beliefs=pairs,

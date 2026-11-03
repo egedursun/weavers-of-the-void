@@ -11,6 +11,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import TributeStatus, WarCause
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.numbers import round_half_up
@@ -64,6 +65,58 @@ async def _note(ctx: TickContext, text: str, key: str, ids: tuple[int, ...]) -> 
     await ctx.chronicle(ChronicleKind.WAR, text, template_key=key, entity_ids=ids, feed_category=FeedCategory.WAR)
 
 
+@reads(
+    "cult.followers",
+    "cult.zeal",
+    "faction.strength",
+    "faction.sway",
+    "faction.wealth",
+    "item.damage",
+    "item.might",
+    "item.protection",
+    "people.martiality",
+    "people.prosperity",
+    "people.wealth",
+    "settlement.defense",
+    "table.bonds",
+    "table.community_relations",
+    "table.community_societies",
+    "table.culture_values",
+    "table.epoch_year_cursors",
+    "table.memories",
+    "table.minds",
+    "table.nodes",
+    "table.personality_values",
+    "table.traits",
+    "table.tributes",
+)
+@writes(
+    "faction.wealth",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_relations",
+    "table.community_societies",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+    "table.tributes",
+)
+@reads(
+    "faction.strength",
+    "faction.sway",
+    "faction.wealth",
+    "item.damage",
+    "item.might",
+    "item.protection",
+    "people.martiality",
+    "people.prosperity",
+    "people.wealth",
+    "settlement.defense",
+)
+@writes("faction.wealth")
 async def tribute(ctx: TickContext) -> None:
     rules = ctx.rules.campaigns
     ctx.count("tributes_adopted", await adopt_untracked_tributes(ctx))

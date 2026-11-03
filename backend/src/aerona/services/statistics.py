@@ -27,6 +27,8 @@ NUMERIC_FIELDS = (
     "dead",
     "godless",
     "doom",
+    "soldiers",
+    "travelling",
 )
 SON_FIELDS = ("faith", "fame", "existence", "level")
 

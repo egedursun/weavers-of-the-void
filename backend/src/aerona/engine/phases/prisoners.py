@@ -12,6 +12,7 @@ from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.body.book import effective
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import closeness, cruelty_drive
 from aerona.engine.mind.hooks import judged, witnessed
 from aerona.engine.phase import Phase
@@ -98,6 +99,8 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
         await defect(ctx, row, captive, captor)
 
 
+@reads("table.bonds", "table.captives", "table.minds", "table.traits")
+@writes("table.captives")
 async def prisoners(ctx: TickContext) -> None:
     rows = list(await ctx.session.scalars(select(CaptiveRow).where(CaptiveRow.status == CaptiveStatus.HELD).order_by(CaptiveRow.id)))
     for row in rows:

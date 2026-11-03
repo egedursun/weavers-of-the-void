@@ -13,6 +13,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityStatus, E
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.aging import effective_lifespan, immortal, medicine_regions
 from aerona.engine.lifecycle.mortal_death import die, world_year
 from aerona.engine.lifecycle.wounds import fatal_injury
@@ -47,6 +48,8 @@ async def succumb(ctx: TickContext, mortal: EntityRow) -> None:
     await die(ctx, mortal, cause=WOUND_DEATH)
 
 
+@reads("mortal.hp")
+@reads("mortal.hp")
 async def mortal_wounds(ctx: TickContext) -> None:
     for mortal in await canon(ctx.session, [EntityType.MORTAL]):
         hp = stat(mortal, "hp")
@@ -109,6 +112,47 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     await die(ctx, mortal, natural=True, year=death_year)
 
 
+@reads(
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "table.bonds",
+    "table.community_societies",
+    "table.cosmos",
+    "table.designated_heirs",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.memories",
+    "table.minds",
+    "table.name_registry",
+    "table.nodes",
+    "table.routes",
+    "table.traits",
+    "table.world_maps",
+)
+@writes(
+    "mortal.age",
+    "mortal.death_year",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.language_profiles",
+    "table.memories",
+    "table.name_registry",
+    "table.sons",
+)
+@reads("mortal.age", "mortal.agility", "mortal.charisma", "mortal.intellect", "mortal.lifespan", "mortal.strength")
+@writes("mortal.age", "mortal.death_year")
 async def mortal_aging(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     world = AgingWorld(

@@ -123,6 +123,7 @@ class EnginePhasesRules:
     mind_skills: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: teaching, rusting skills and changing callings")
     mind_memories: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: fading memories")
     mind_needs: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: needs of mortals and pressures on communities")
+    incident_threads: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: long chains of causes open story threads")
     famine_aid: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: well-stocked neighbours feed the starving")
     mind_opinion: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: community relations from opinion")
     environment_derive: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: environment derive")

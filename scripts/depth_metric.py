@@ -1,58 +1,127 @@
 import argparse
+import re
 import sys
-from datetime import UTC, datetime
+from dataclasses import dataclass
 from pathlib import Path
 from typing import get_args
 
+from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.cosmos import CreatorRow
+from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.routes import RouteRow
+from aerona.db.tables.sons import SonRow
+from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.models.entity_stats import EntityStats
 from aerona.engine.interconnect.catalog import REGISTERED
+from aerona.engine.interconnect.edges import all_edges, mechanic_reads, mechanic_writes
+from aerona.engine.interconnect.registry import EdgeKind
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = ROOT / "docs" / "spec" / "13-depth-metric.md"
+SPEC = ROOT / "docs" / "spec" / "13-depth-expansion.md"
 STAT_MODELS = {model.model_fields["kind"].default: model for model in get_args(get_args(EntityStats)[0])}
+NODE_TABLES = {"son": SonRow, "creator": CreatorRow, "foreign_god": ForeignGodRow, "war": WarRow, "world": WorldRow, "star": StarRow, "route": RouteRow}
+GENERIC_CARRIERS = frozenset({"table.entities", "table.bonds", "table.entity_flags", "table.entity_traits"})
+TARGET_ROW = re.compile(r"^\| (?P<name>[a-z_ ]+?)(?: \(new\))? \| (?P<a>[^|]*) \| (?P<b>[^|]*) \| (?P<c>[^|]*) \|$")
+TARGET_NUMBER = re.compile(r"→\s*~?(\d+)")
+TARGET_COLUMNS = 3
 
 
-def stat_fields(entity_type: EntityType) -> int:
-    model = STAT_MODELS.get(entity_type.value)
-    return 0 if model is None else len([name for name in model.model_fields if name != "kind"])
+@dataclass(frozen=True)
+class Row:
+    name: str
+    a: int
+    b: int
+    c: int
+    targets: tuple[int, int, int] | None
 
 
-def measure() -> list[tuple[str, int, int, int]]:
-    rows = []
-    for entity_type in EntityType:
-        mechanics = [mechanic for mechanic in REGISTERED.values() if entity_type.value in mechanic.targets]
+def node_types() -> list[str]:
+    return [*(entity_type.value for entity_type in EntityType), *NODE_TABLES]
+
+
+def typed_fields(name: str) -> set[str]:
+    if name in NODE_TABLES:
+        return {column.key for column in NODE_TABLES[name].__table__.columns if not column.primary_key}
+    model = STAT_MODELS.get(name)
+    return set() if model is None else {field for field in model.model_fields if field != "kind"}
+
+
+def spec_targets() -> dict[str, tuple[int, int, int]]:
+    text = SPEC.read_text(encoding="utf-8")
+    section = text[text.index("### J.7 Depth metric: target") :]
+    section = section[: section.index("\n### ", 10)]
+    found: dict[str, tuple[int, int, int]] = {}
+    for line in section.splitlines():
+        match = TARGET_ROW.match(line.strip())
+        if match is None:
+            continue
+        numbers = [int(found_number.group(1)) for column in ("a", "b", "c") if (found_number := TARGET_NUMBER.search(match.group(column)))]
+        if len(numbers) == TARGET_COLUMNS:
+            found[match.group("name").strip().replace(" ", "_")] = (numbers[0], numbers[1], numbers[2])
+    return found
+
+
+def measure() -> list[Row]:
+    edges = all_edges()
+    targets = spec_targets()
+    rows: list[Row] = []
+    for name in node_types():
+        mechanics = [mechanic for mechanic in REGISTERED.values() if name in mechanic.targets]
+        prefix = f"{name}."
+        read = {key for mechanic in REGISTERED.values() for key in mechanic_reads(mechanic) if key.startswith(prefix)}
         declared = {field for mechanic in mechanics for field in mechanic.fields}
-        couplings = {(mechanic.subsystem, coupling.target) for mechanic in mechanics for coupling in mechanic.couplings}
-        subsystems = {mechanic.subsystem for mechanic in mechanics}
-        rows.append((entity_type.value, stat_fields(entity_type) + len(declared), len(mechanics), len(couplings) + len(subsystems)))
+        attributes = {key.removeprefix(prefix) for key in read} | declared | (typed_fields(name) if name in NODE_TABLES else set())
+        writers = {mechanic.key for mechanic in REGISTERED.values() if any(key.startswith(prefix) for key in mechanic_writes(mechanic))}
+        keys = {mechanic.key for mechanic in mechanics} | writers
+        carried = {
+            (edge.source, edge.target, edge.carrier)
+            for edge in edges
+            if edge.kind is not EdgeKind.RULE_SWITCH
+            and edge.carrier not in GENERIC_CARRIERS
+            and (edge.carrier.startswith(prefix) or (edge.carrier.startswith("table.") and edge.writer in keys))
+        }
+        rows.append(Row(name, len(attributes), len(keys), len(carried), targets.get(name)))
     return rows
 
 
-def render(rows: list[tuple[str, int, int, int]]) -> str:
+def mark(value: int, target: int | None) -> str:
+    if target is None:
+        return f"{value}"
+    return f"{value} / {target} {'met' if value >= target else 'short'}"
+
+
+def render(rows: list[Row]) -> str:
     lines = [
         "# Depth metric",
         "",
-        f"Generated by `scripts/depth_metric.py` on {datetime.now(UTC).date().isoformat()} (spec 13, section 0.2 and J.7).",
-        "A counts typed fields the engine reads, B the registered mechanics acting on the type, and C the subsystem couplings they carry.",
-        "Mechanics of the original port have targets inferred from their modules and no declared couplings yet.",
+        "Generated by `scripts/depth_metric.py` (spec 13, section 0.2 and J.7) from the `@reads`/`@writes` annotations and the interconnection registry.",
+        "A counts the typed attributes the engine reads, B the registered mechanics that act on or write the type, and C the coupling edges they carry.",
+        "Where J.7 sets a target the cell shows value / target and whether it is met.",
         "",
-        "| Entity type | A | B | C |",
+        "| Node type | A | B | C |",
         "|---|---:|---:|---:|",
     ]
-    lines.extend(f"| {name} | {a} | {b} | {c} |" for name, a, b, c in rows)
+    for row in rows:
+        a, b, c = row.targets if row.targets is not None else (None, None, None)
+        lines.append(f"| {row.name} | {mark(row.a, a)} | {mark(row.b, b)} | {mark(row.c, c)} |")
     lines.append("")
     return "\n".join(lines)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=("write", "print"), nargs="?", default="print")
+    parser.add_argument("mode", choices=("write", "print", "check"), nargs="?", default="print")
     mode = parser.parse_args().mode
     text = render(measure())
     if mode == "write":
         OUTPUT.write_text(text, encoding="utf-8")
         print(f"written to {OUTPUT.relative_to(ROOT)}")
+    elif mode == "check":
+        if not OUTPUT.exists() or OUTPUT.read_text(encoding="utf-8") != text:
+            print(f"{OUTPUT.relative_to(ROOT)} is stale: run scripts/depth_metric.py write")
+            return 1
     else:
         print(text)
     return 0

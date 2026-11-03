@@ -19,6 +19,7 @@ from aerona.domain.enums.world import Discovery
 from aerona.engine.context import TickContext
 from aerona.engine.gods.essence import spend
 from aerona.engine.gods.worship import cult_effect
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.essence import Overflow, overflow_to_land
@@ -95,6 +96,20 @@ async def overflow_to_sons(session: AsyncSession, rules: Rules, budget: int) -> 
     return given
 
 
+@reads(
+    "people.piety",
+    "people.population",
+    "region.fertility",
+    "settlement.piety",
+    "settlement.population",
+    "table.bonds",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.nodes",
+)
+@writes("region.fertility", "table.chronicle", "table.creator", "table.entities", "table.epoch_year_cursors", "table.incidents")
+@reads("people.piety", "people.population", "region.fertility", "settlement.piety", "settlement.population")
+@writes("region.fertility")
 async def creator_essence(ctx: TickContext) -> None:
     rules = ctx.rules
     balance = rules.balance
@@ -130,6 +145,8 @@ async def creator_essence(ctx: TickContext) -> None:
             )
 
 
+@reads("table.cosmos")
+@writes("table.chronicle", "table.chronicle_entities", "table.cosmos", "table.incident_participants", "table.incidents")
 async def advance_epoch(ctx: TickContext) -> None:
     cosmos = await cosmos_of(ctx.session)
     years = ctx.rules.time.years_per_epoch

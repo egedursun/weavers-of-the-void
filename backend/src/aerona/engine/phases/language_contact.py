@@ -14,6 +14,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import LanguageStats
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.first_bonds import store_words
@@ -362,6 +363,38 @@ async def language_stats(ctx: TickContext) -> int:
     return changed
 
 
+@reads(
+    "language.complexity",
+    "language.sacredness",
+    "language.spread",
+    "people.piety",
+    "people.population",
+    "settlement.piety",
+    "settlement.population",
+    "table.bonds",
+    "table.epoch_year_cursors",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.name_registry",
+    "table.nodes",
+)
+@writes(
+    "language.complexity",
+    "language.sacredness",
+    "language.spread",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.name_registry",
+)
+@reads("language.complexity", "language.sacredness", "language.spread", "people.piety", "people.population", "settlement.piety", "settlement.population")
+@writes("language.complexity", "language.sacredness", "language.spread")
 async def language_contact(ctx: TickContext) -> None:
     tally = ContactTally(loans_left=ctx.rules.language_contact.loan_cap)
     await conquest_contact(ctx, tally)

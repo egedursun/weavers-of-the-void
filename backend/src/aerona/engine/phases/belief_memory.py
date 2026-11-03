@@ -14,6 +14,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, EntityFl
 from aerona.domain.enums.environment import NotableYearKind
 from aerona.domain.models.entity_stats import EntityStats, ItemStats, LegendStats, ResourceStats, SpeciesStats, SpiritStats
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -375,6 +376,35 @@ async def fairy_tales(ctx: TickContext) -> None:
         await note(ctx, f"{legend.name} is now only a fairy tale told to children; adults no longer believe it.", key="memory.fairy_tale", ids=[legend.id])
 
 
+@reads(
+    "event.severity",
+    "legend.spread",
+    "table.bonds",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.name_registry",
+    "table.nodes",
+    "table.notable_years",
+    "table.routes",
+    "table.world_maps",
+    "tradition.rigidity",
+    "tradition.spread",
+)
+@writes(
+    "legend.spread",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+    "tradition.spread",
+)
+@reads("event.severity", "legend.spread", "tradition.rigidity", "tradition.spread")
+@writes("legend.spread", "tradition.spread")
 async def belief_and_memory(ctx: TickContext) -> None:
     await legend_spread(ctx)
     await traditions(ctx)

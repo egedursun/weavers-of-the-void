@@ -17,6 +17,7 @@ from aerona.engine.body.book import factor
 from aerona.engine.body.cohorts import healer_demand
 from aerona.engine.body.hits import weighted
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.ruler_roles import ruler_role
 from aerona.engine.mind.book import effect_of, scaled_by
 from aerona.engine.notes import note
@@ -634,6 +635,40 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
         born += 1
 
 
+@reads(
+    "cult.followers",
+    "people.piety",
+    "people.population",
+    "settlement.piety",
+    "settlement.population",
+    "species.intelligence",
+    "table.bonds",
+    "table.community_societies",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.maimed_cohorts",
+    "table.name_registry",
+    "table.nodes",
+    "table.world_maps",
+)
+@writes(
+    "people.population",
+    "settlement.population",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.language_profiles",
+    "table.name_registry",
+)
+@reads("cult.followers", "people.piety", "people.population", "settlement.piety", "settlement.population", "species.intelligence")
+@writes("people.population", "settlement.population")
 async def spontaneous_births(ctx: TickContext) -> None:
     await single_rule(ctx)
     namer = Namer(ctx.session, ctx.rules)
@@ -701,6 +736,7 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
     return child
 
 
+@reads("table.bodies", "table.bonds", "table.traits")
 async def couples_bear_children(ctx: TickContext) -> None:
     rules = ctx.rules
     rng = ctx.rng()

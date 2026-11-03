@@ -9,6 +9,7 @@ from aerona.db.repositories.base import Repository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.bond import ROLE_BOND_KINDS, BondKind, BondRole, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.node import NodeKind
@@ -45,6 +46,10 @@ def _pair_filter(first: int, second: int, both_directions: bool) -> ColumnElemen
     return or_(forward, and_(BondRow.source_node_id == second, BondRow.target_node_id == first))
 
 
+BOND_KEY = "bonds"
+ANCHORED_BOND_KINDS = frozenset({BondKind.OWES, BondKind.PURSUES, BondKind.HOLDS_CAPTIVE, BondKind.PAYS_TRIBUTE})
+
+
 class BondRepository(Repository):
     async def connect(self, draft: BondDraft) -> BondRow:
         normalized = await self.normalize(draft)
@@ -55,7 +60,11 @@ class BondRepository(Repository):
                     existing.description = normalized.description
                     await self.flush()
                 return existing
-        await self._apply_side_effects(normalized)
+        guarded = normalized.kind not in ANCHORED_BOND_KINDS and (
+            write_blocked(normalized.source_node_id, BOND_KEY) or write_blocked(normalized.target_node_id, BOND_KEY)
+        )
+        if not guarded:
+            await self._apply_side_effects(normalized)
         bond = BondRow(
             source_node_id=normalized.source_node_id,
             target_node_id=normalized.target_node_id,
@@ -72,7 +81,7 @@ class BondRepository(Repository):
             incited_by_son_id=normalized.incited_by_son_id,
             state=BondState.ACTIVE,
         )
-        return await self.insert(bond)
+        return bond if guarded else await self.insert(bond)
 
     async def normalize(self, draft: BondDraft) -> BondDraft:
         kinds = await NodeRepository(self.session).kinds_of([draft.source_node_id, draft.target_node_id])

@@ -16,6 +16,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.domain import DEATH_DOMAINS
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.models.entity_stats import SpiritStats, TraditionStats
 from aerona.engine.context import TickContext
@@ -96,7 +97,8 @@ async def die(
         text = f"{mortal.name} {cause}{'; an heir took their place' if heir is not None else ''}."
     ids = [mortal.id] + ([heir.id] if heir is not None else []) + ([killer_id] if killer_id is not None and killer_kind is NodeKind.ENTITY else [])
     son_id = killer_id if killer_kind is NodeKind.SON else mortal.creator_son_id
-    await note(ctx, text, key="mortal.death.natural" if natural else "mortal.death.cause", ids=ids, son_id=son_id)
+    roles = {mortal.id: IncidentRole.TARGET, **({killer_id: IncidentRole.ACTOR} if killer_id is not None else {})}
+    await note(ctx, text, key="mortal.death.natural" if natural else "mortal.death.cause", ids=ids, son_id=son_id, roles=roles)
     await after_death(ctx, mortal)
     await sweep_dead_bonds(session, ctx.epoch, mortal.id)
     if await raise_lifespan_to_death_age(session, ctx.rules, mortal):

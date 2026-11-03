@@ -1,4 +1,6 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 
 from sqlalchemy import delete, or_, select
@@ -7,9 +9,37 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.db.tables.interconnect import ModifierRow
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
+from aerona.rules.registry import Rules
 
 NEUTRAL_MULTIPLIER = 1.0
 GUARD_SOURCES = (ModifierSource.PIN, ModifierSource.SUPPRESSION)
+UNMODIFIABLE_KEYS = frozenset({"population", "followers", "size"})
+
+
+@dataclass
+class LiveModifiers:
+    index: "ModifierIndex"
+    epoch: int
+    rules: Rules
+
+
+LIVE_MODIFIERS: ContextVar[LiveModifiers | None] = ContextVar("live_modifiers", default=None)
+
+
+@contextmanager
+def live_modifiers(index: "ModifierIndex", epoch: int, rules: Rules) -> Iterator[None]:
+    token = LIVE_MODIFIERS.set(LiveModifiers(index, epoch, rules))
+    try:
+        yield
+    finally:
+        LIVE_MODIFIERS.reset(token)
+
+
+def live_contributions(node_id: int, key: str) -> list["Contribution"]:
+    live = LIVE_MODIFIERS.get()
+    if live is None or key in UNMODIFIABLE_KEYS or not live.index.has(node_id, key):
+        return []
+    return live.index.contributions(node_id, key)
 
 
 @dataclass(frozen=True)
@@ -76,6 +106,18 @@ def combine(base: float, contributions: Iterable[Contribution]) -> Breakdown:
     return Breakdown(base=base, applied=ordered, ignored=tuple(sorted(ignored, key=lambda item: item.modifier_id)), value=total)
 
 
+def base_for(contributions: Iterable[Contribution], value: float) -> float | None:
+    breakdown = combine(0.0, contributions)
+    adds = sum(item.magnitude for item in breakdown.applied if item.op is ModifierOp.ADD)
+    product = 1.0
+    for item in breakdown.applied:
+        if item.op is ModifierOp.MULTIPLY:
+            product *= item.magnitude
+    if product == 0:
+        return None
+    return value / product - adds
+
+
 class ModifierIndex:
     def __init__(self, rows: Iterable[ModifierRow]) -> None:
         self._by_target: dict[tuple[int, str], list[Contribution]] = {}
@@ -104,6 +146,16 @@ class ModifierIndex:
     def effective(self, node_id: int, key: str, base: float) -> float:
         return self.breakdown(node_id, key, base).value
 
+    def add(self, row: ModifierRow) -> None:
+        if row.source_kind in GUARD_SOURCES:
+            return
+        self._by_target.setdefault((row.target_node_id, row.target_key), []).append(
+            Contribution(row.id, row.op, row.magnitude, row.source_kind, row.source_node_id, row.reason_key, row.stacking_group)
+        )
+
+    def has(self, node_id: int, key: str) -> bool:
+        return (node_id, key) in self._by_target
+
     def keys_of(self, node_id: int) -> list[str]:
         return sorted(key for target, key in self._by_target if target == node_id)
 
@@ -122,8 +174,13 @@ async def add_modifier(session: AsyncSession, draft: ModifierDraft) -> ModifierR
         decay_pct=draft.decay_pct,
         reason_key=draft.reason_key,
     )
+    if draft.target_key in UNMODIFIABLE_KEYS and draft.source_kind not in GUARD_SOURCES:
+        raise ValueError(f"{draft.target_key} is a conserved count and cannot carry a modifier.")
     session.add(row)
     await session.flush()
+    live = LIVE_MODIFIERS.get()
+    if live is not None and row.start_epoch <= live.epoch and (row.end_epoch is None or row.end_epoch >= live.epoch):
+        live.index.add(row)
     return row
 
 

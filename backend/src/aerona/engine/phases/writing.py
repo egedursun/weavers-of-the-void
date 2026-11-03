@@ -4,6 +4,7 @@ from aerona.domain.enums.chronicle import WritingSystem
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -22,6 +23,19 @@ async def adopt_script(ctx: TickContext, language: EntityRow, writer: EntityRow,
     await note(ctx, script_note(writer.name, language.name, system), key="writing.script", ids=[writer.id, language.id])
 
 
+@reads("language.complexity", "language.sacredness", "table.bonds", "table.community_societies", "table.epoch_year_cursors", "table.language_profiles")
+@writes(
+    "language.complexity",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.language_profiles",
+)
+@reads("language.complexity", "language.sacredness")
+@writes("language.complexity")
 async def writing_systems(ctx: TickContext) -> None:
     rules = ctx.rules
     rng = ctx.rng()

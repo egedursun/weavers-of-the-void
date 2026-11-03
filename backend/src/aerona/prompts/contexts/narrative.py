@@ -61,6 +61,7 @@ class VoicesContext(LoreRulesContext):
     world_header: str
     age: int
     age_events: str = ""
+    chains: list[str] = Field(default_factory=list)
     world_events: list[WorldEvents] = Field(default_factory=list)
     historians: list[HistorianEntry] = Field(default_factory=list)
     beliefs: list[BeliefPair] = Field(default_factory=list)

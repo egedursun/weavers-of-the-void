@@ -9,7 +9,7 @@ from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, Personali
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.domain.enums.body import ConditionKind, InjuryKind
 from aerona.domain.enums.entity import EntityType
-from aerona.engine.interconnect.registry import MECHANICS, Coupling, Exposure, Mechanic, Subsystem, Surface, register
+from aerona.engine.interconnect.registry import MECHANICS, Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface, register
 from aerona.engine.phase import Phase
 from aerona.engine.pipeline import PHASE_REGISTRY
 
@@ -34,17 +34,19 @@ BUILT_IN = (
         surface=Surface(drawer=MECHANICS_SECTION),
         backfill="none: modifiers start empty",
         tables=(ModifierRow.__tablename__,),
-        couplings=tuple(Coupling(subsystem, "typed modifiers on stats and capacities") for subsystem in Subsystem if subsystem is not Subsystem.CORE),
+        templates=("modifier.wonder", "modifier.condition"),
     ),
     Mechanic(
         key="incidents",
         spec_item="F10",
         title="Causality log",
         subsystem=Subsystem.CORE,
-        phases=(),
+        phases=("incident_threads",),
         surface=Surface(drawer=MECHANICS_SECTION),
         backfill="migration 26caa21842b3: incidents from chronicle rows",
-        templates=("chronicle template keys",),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal", "people", "settlement", "son"),
+        couplings=(Coupling(Subsystem.CULTURE, "long chains of causes open story threads", EdgeKind.TRIGGER, "incidents.thread_chain_min"),),
         tables=(IncidentRow.__tablename__, IncidentParticipantRow.__tablename__),
     ),
     Mechanic(
@@ -54,7 +56,7 @@ BUILT_IN = (
         targets=("people", "settlement", "cult", "army"),
         subsystem=Subsystem.WAR,
         phases=("war_upkeep", "campaigns"),
-        surface=Surface(drawer=MECHANICS_SECTION),
+        surface=Surface(drawer=MECHANICS_SECTION, layer="map-layer-soldiers", chart="chart-soldiers"),
         backfill="none: armies already raised keep their soldiers",
         fields=("population", "followers"),
         flows=("population -> army size", "army size -> population"),
@@ -83,7 +85,7 @@ BUILT_IN = (
         title="Region and place environment",
         subsystem=Subsystem.ENVIRONMENT,
         phases=("environment_survey", "environment_derive"),
-        surface=Surface(drawer=ENVIRONMENT_SECTION),
+        surface=Surface(drawer=ENVIRONMENT_SECTION, layer="map-layer-terrain"),
         backfill="environment_survey: every region is profiled from its stored map; soil is solved so the derived fertility equals the stored stat",
         fields=("fertility", "danger"),
         tables=(RegionEnvironmentRow.__tablename__, PlaceEnvironmentRow.__tablename__),
@@ -125,7 +127,7 @@ BUILT_IN = (
         title="Weather on demand",
         subsystem=Subsystem.ENVIRONMENT,
         phases=("harvest", "campaigns", "travel", "trade_income", "famine_migration", "sky"),
-        surface=Surface(drawer=ENVIRONMENT_SECTION),
+        surface=Surface(drawer=ENVIRONMENT_SECTION, layer="map-layer-climate"),
         backfill="none: weather is drawn when a mechanic needs it; only weather held by a son or the player is stored",
         templates=("tools.son.shape_weather",),
         tables=(ForcedWeatherRow.__tablename__,),
@@ -146,7 +148,7 @@ BUILT_IN = (
         title="Derived fertility, harvest and passability",
         subsystem=Subsystem.ENVIRONMENT,
         phases=("environment_derive", "harvest", "society_economy"),
-        surface=Surface(drawer=ENVIRONMENT_SECTION),
+        surface=Surface(drawer=ENVIRONMENT_SECTION, layer="map-layer-soil"),
         backfill="environment_survey: fertility is kept as it was and its soil solved backwards",
         fields=("fertility",),
         targets=("region", "place", "people", "settlement"),
@@ -161,7 +163,7 @@ BUILT_IN = (
         title="Ley lines and magic geography",
         subsystem=Subsystem.MAGIC,
         phases=("ley_lines", "magic_storms", "wizards"),
-        surface=Surface(drawer=ENVIRONMENT_SECTION),
+        surface=Surface(drawer=ENVIRONMENT_SECTION, layer="map-layer-ley"),
         backfill="ley_lines: lines and nexus are woven from the existing magic of neighbouring regions on the first run",
         templates=("environment.ley_line_formed", "environment.nexus_formed", "tools.son.sever_ley"),
         fields=("function",),
@@ -181,7 +183,7 @@ BUILT_IN = (
         title="Land use and ecological pressure",
         subsystem=Subsystem.ENVIRONMENT,
         phases=("land_use", "resource_economy"),
-        surface=Surface(drawer=ENVIRONMENT_SECTION),
+        surface=Surface(drawer=ENVIRONMENT_SECTION, layer="map-layer-land-use"),
         backfill="environment_survey: inhabited regions start at the land use their people already need",
         templates=("land.erosion", "land.overfarmed", "land.soil_exhausted", "land.rewilded"),
         targets=("region",),
@@ -395,7 +397,7 @@ BUILT_IN = (
         phases=("mind_survey", "mind_memories", "diplomacy", "campaigns", "prisoners", "body_healing", "mortal_wounds"),
         surface=Surface(drawer=MEMORIES_SECTION),
         backfill=(
-            "mind_survey and the migration: memories rebuilt from kin killings, captivity, apprenticeship, enmity and tribute, "
+            "mind_survey: with migration c42218f12748, memories rebuilt from kin killings, captivity, apprenticeship, enmity and tribute, "
             "and every community relation event of the past"
         ),
         templates=("memory.vengeance",),
@@ -416,7 +418,9 @@ BUILT_IN = (
         subsystem=Subsystem.SOCIAL,
         phases=("mind_opinion", "diplomacy"),
         surface=Surface(drawer=RELATIONS_SECTION),
-        backfill=("the migration turned the twelve-event relation history into memories on both sides; the next epoch recomputes every relation from them"),
+        backfill=(
+            "migration c42218f12748: the twelve-event relation history became memories on both sides; the next epoch recomputes every relation from them"
+        ),
         fields=("value", "blood_feud_since_epoch"),
         tables=(CommunityRelationRow.__tablename__, MemoryRow.__tablename__),
         exposure=Exposure.CONTEXT,
@@ -536,10 +540,29 @@ def subsystem_of(module: str) -> Subsystem:
 ENTITY_TYPE_TOKEN = re.compile(r"\bEntityType\.([A-Z_]+)\b")
 
 
+NODE_TOKENS: dict[str, str] = {
+    "SonRow": "son",
+    "CreatorRow": "creator",
+    "ForeignGodRow": "foreign_god",
+    "WarRow": "war",
+    "WorldRow": "world",
+    "StarRow": "star",
+    "RouteRow": "route",
+}
+
+
 def targets_of(module: str) -> tuple[str, ...]:
     source = inspect.getsource(sys.modules[module])
     names = {EntityType[name].value for name in ENTITY_TYPE_TOKEN.findall(source) if name in EntityType.__members__}
+    names |= {node for token, node in NODE_TOKENS.items() if re.search(rf"\b{token}\b", source)}
     return tuple(sorted(names))
+
+
+STOCK_SURFACES: dict[str, Surface] = {
+    "population_growth": Surface(drawer=MECHANICS_SECTION, layer="map-layer-population", chart="chart-population"),
+    "religion_spread": Surface(drawer=MECHANICS_SECTION, layer="map-layer-followers", chart="chart-followers"),
+    "travel": Surface(drawer=MECHANICS_SECTION, chart="chart-travelling"),
+}
 
 
 def existing_mechanic(phase: Phase) -> Mechanic:
@@ -549,7 +572,7 @@ def existing_mechanic(phase: Phase) -> Mechanic:
         title=phase.name.replace("_", " ").capitalize(),
         subsystem=subsystem_of(phase.run.__module__),
         phases=(phase.name,),
-        surface=Surface(drawer=MECHANICS_SECTION),
+        surface=STOCK_SURFACES.get(phase.name, Surface(drawer=MECHANICS_SECTION)),
         backfill=EXISTING_BACKFILL,
         targets=targets_of(phase.run.__module__),
     )

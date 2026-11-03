@@ -90,6 +90,7 @@ from aerona.engine.phases import (
     writing,
 )
 from aerona.engine.primitives.manual import silent
+from aerona.engine.snapshot import store_tick_flows
 from aerona.engine.stats import TickStats
 from aerona.events.kinds import EventKind
 from aerona.rules.registry import Rules
@@ -104,6 +105,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + transition.PHASES
     + snapshot.PHASES
     + interconnect.PHASES
+    + interconnect.THREAD_PHASES
     + afterlife.PHASES
     + belief_memory.PHASES
     + births.PHASES
@@ -276,7 +278,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "remembrance",
 )
 AGING_STAGE = stage("body_healing", "mortal_wounds", "body_conditions", "body_society", "mortal_aging", "dead_bonds_closing")
-MIND_STAGE = stage("mind_values", "mind_skills", "mind_memories", "mind_needs", "famine_aid", "mind_opinion")
+MIND_STAGE = stage("mind_values", "mind_skills", "mind_memories", "mind_needs", "famine_aid", "mind_opinion", "incident_threads")
 
 TICK_ORDER: tuple[Phase, ...] = (
     CLEANUP_STAGE + GRUDGE_STAGE + SUB_ENGINE_STAGE + RAID_STAGE + ECONOMY_STAGE + SOCIETY_STAGE + SOCIETY_ENGINE_STAGE + AGING_STAGE + MIND_STAGE
@@ -392,6 +394,7 @@ async def run_tick(
     await run_phases(environment, database, phases, disabled)
     async with database.write() as session:
         fold = await fold_tick_lines(session, environment.rules, environment.epoch, since)
+        await store_tick_flows(session, environment.epoch, environment.stats.flows)
         if finalize is not None:
             await finalize(session)
     return TickResult(stats=environment.stats, fold=fold, since_chronicle_id=since)

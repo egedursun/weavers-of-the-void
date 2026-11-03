@@ -23,8 +23,9 @@ from aerona.domain.enums.war import CaptiveStatus, TributeStatus, WarCause, WarS
 from aerona.domain.models.entity_stats import ArmyStats, EventStats
 from aerona.engine.body.book import effective
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.flows import flowing
 from aerona.engine.mind.hooks import freed, taken_captive
-from aerona.engine.primitives.levies import levy
+from aerona.engine.primitives.levies import levy, levy_category
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
@@ -415,21 +416,22 @@ async def raise_army(ctx: TickContext, strength: MilitaryStrength, sides: SideIn
     event = await war_event(ctx.session, war)
     led = f"; {commander.name} leads it" if commander is not None else ""
     derived = await Namer(ctx.session, ctx.rules).from_speaker(community.id, seed_of(community.id, war.id, "army"), NameKind.ARMY)
-    army = await create_record(
-        ctx,
-        RecordSpec(
-            name=ARMY_NAME_TEMPLATE.format(root=derived or community.name),
-            flags=(EntityFlag.NAME_FROM_LANGUAGE,) if derived else (),
-            entity_type=EntityType.ARMY,
-            stats=ArmyStats(size=size, morale=morale, equipment=equipment, experience=experience),
-            body=f"{community.name} raised an army of {size} for {event.name}{led}.",
-            power=clamp_int(community.power_level, campaigns.army_power_min, campaigns.army_power_max),
-            world_id=community.world_id,
-            location_id=community.id if community.entity_type is EntityType.SETTLEMENT else community.location_id,
-            subtype=subtype,
-            engine_kind=engine_kind,
-        ),
-    )
+    with flowing(levy_category(community)):
+        army = await create_record(
+            ctx,
+            RecordSpec(
+                name=ARMY_NAME_TEMPLATE.format(root=derived or community.name),
+                flags=(EntityFlag.NAME_FROM_LANGUAGE,) if derived else (),
+                entity_type=EntityType.ARMY,
+                stats=ArmyStats(size=size, morale=morale, equipment=equipment, experience=experience),
+                body=f"{community.name} raised an army of {size} for {event.name}{led}.",
+                power=clamp_int(community.power_level, campaigns.army_power_min, campaigns.army_power_max),
+                world_id=community.world_id,
+                location_id=community.id if community.entity_type is EntityType.SETTLEMENT else community.location_id,
+                subtype=subtype,
+                engine_kind=engine_kind,
+            ),
+        )
     row = ArmyRow(
         entity_id=army.id,
         war_id=war.id,

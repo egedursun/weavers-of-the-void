@@ -5,6 +5,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import fatal_injury
 from aerona.engine.notes import note
@@ -56,10 +57,14 @@ async def retire_record(ctx: TickContext, entity_id: int, reason: str, status: E
     return await retire(ctx.session, found, ctx.epoch, f"Epoch {ctx.epoch}: {reason}.", status=status, close_bonds=True)
 
 
+@reads("table.bonds", "table.routes")
+@writes("table.bonds")
 async def dead_bonds_before(ctx: TickContext) -> None:
     await sweep_bonds_of_the_dead(ctx)
 
 
+@reads("table.bonds", "table.routes")
+@writes("table.bonds")
 async def dead_bonds_after(ctx: TickContext) -> None:
     await sweep_bonds_of_the_dead(ctx)
 

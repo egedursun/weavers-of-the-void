@@ -14,6 +14,7 @@ from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.gods.worship import cult_effect
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import apply_disaster, record_disaster_event
@@ -117,6 +118,37 @@ async def destroy_leakiest_world(ctx: TickContext) -> None:
     )
 
 
+@reads(
+    "people.piety",
+    "people.population",
+    "people.prosperity",
+    "settlement.piety",
+    "settlement.population",
+    "settlement.prosperity",
+    "spirit.unrest",
+    "table.bonds",
+    "table.chronicle",
+    "table.community_societies",
+    "table.cosmos",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.nodes",
+    "table.war_sides",
+    "table.wars",
+)
+@writes(
+    "settlement.prosperity",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_societies",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
+@reads("people.piety", "people.population", "people.prosperity", "settlement.piety", "settlement.population", "settlement.prosperity", "spirit.unrest")
+@writes("settlement.prosperity")
 async def doom_clock(ctx: TickContext) -> None:
     rules = ctx.rules
     doom = rules.apocalypse

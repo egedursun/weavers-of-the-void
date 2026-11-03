@@ -4,6 +4,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
@@ -31,6 +32,26 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int) ->
     ground.mineral_layers = {key: value for key, value in layers.items() if value > 0}
 
 
+@reads(
+    "faction.wealth",
+    "people.craft",
+    "people.prosperity",
+    "people.wealth",
+    "resource.abundance",
+    "resource.value",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.calendars",
+    "table.forced_weather",
+    "table.place_environment",
+    "table.region_environment",
+    "table.sky_events",
+    "table.world_maps",
+    "table.world_seasons",
+)
+@writes("faction.wealth", "people.craft", "resource.abundance", "settlement.prosperity", "table.entities", "table.region_environment")
+@reads("faction.wealth", "people.craft", "people.prosperity", "people.wealth", "resource.abundance", "resource.value", "settlement.prosperity")
+@writes("faction.wealth", "people.craft", "resource.abundance", "settlement.prosperity")
 async def resource_economy(ctx: TickContext) -> None:
     rules = ctx.rules
     effects = rules.world_effects
@@ -67,6 +88,19 @@ def regrowth(rules: Rules, ground: RegionEnvironmentRow | None) -> int:
     return round_half_up(regen * (rules.land_use.barren_regen_pct + ground.mineral_layers[material]) / PERCENT)
 
 
+@reads(
+    "resource.abundance",
+    "table.calendars",
+    "table.forced_weather",
+    "table.place_environment",
+    "table.region_environment",
+    "table.sky_events",
+    "table.world_maps",
+    "table.world_seasons",
+)
+@writes("resource.abundance")
+@reads("resource.abundance")
+@writes("resource.abundance")
 async def resource_regeneration(ctx: TickContext) -> None:
     book = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch)
     for resource in await canon(ctx.session, [EntityType.RESOURCE]):

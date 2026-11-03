@@ -27,6 +27,7 @@ from aerona.domain.models.entity_stats import FactionStats, ItemStats, Knowledge
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import RouteBook, method_label, world_name
 from aerona.engine.cosmos.tiers import TierScene, may, planned_tiers, tier_lock, tier_of
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -577,6 +578,69 @@ async def spontaneous_treaty(ctx: TickContext) -> None:
         await note(ctx, await sign_treaty(ctx, best), key="civilization.treaty_note", ids=[best.first.id, best.second.id])
 
 
+@reads(
+    "faction.wealth",
+    "item.damage",
+    "item.might",
+    "item.protection",
+    "mortal.age",
+    "people.population",
+    "people.prosperity",
+    "people.wealth",
+    "region.danger",
+    "resource.value",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.captives",
+    "table.civilization_tier_locks",
+    "table.community_relations",
+    "table.cosmos",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.memories",
+    "table.minds",
+    "table.name_registry",
+    "table.nodes",
+    "table.personality_values",
+    "table.routes",
+    "table.traits",
+    "table.tributes",
+    "table.world_maps",
+)
+@writes(
+    "faction.wealth",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_relations",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+    "table.name_registry",
+    "table.thread_links",
+    "table.threads",
+)
+@reads(
+    "faction.wealth",
+    "item.damage",
+    "item.might",
+    "item.protection",
+    "mortal.age",
+    "people.population",
+    "people.prosperity",
+    "people.wealth",
+    "region.danger",
+    "resource.value",
+    "settlement.population",
+    "settlement.prosperity",
+)
+@writes("faction.wealth", "settlement.prosperity")
 async def civilization_phase(ctx: TickContext) -> None:
     await update_tiers(ctx)
     await colony_independence(ctx)

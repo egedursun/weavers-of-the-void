@@ -32,6 +32,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.environment.battleground import BattleGround, attack_factor, defend_factor, night_chance, omen_morale, scar_battlefield, season_losses
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment, scar_region
 from aerona.engine.environment.years import grant_sub_steps
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import best_effective, effect_of, scaled_by, values_for
 from aerona.engine.mind.hooks import duelled, fought, judged
@@ -208,6 +209,10 @@ async def idle_armies(ctx: TickContext) -> int:
     return disbanded
 
 
+@reads("army.size", "settlement.population", "table.armies", "table.battles", "table.bonds", "table.entity_flags", "table.war_sides", "table.wars")
+@writes("army.size", "settlement.population", "table.armies", "table.entities")
+@reads("army.size", "settlement.population")
+@writes("army.size", "settlement.population")
 async def war_upkeep(ctx: TickContext) -> None:
     ctx.count("armies_stood_down", await idle_armies(ctx))
     ctx.count("stale_wars_closed", await close_stale_wars(ctx))
@@ -737,6 +742,151 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     return fought
 
 
+@reads(
+    "army.equipment",
+    "army.experience",
+    "army.morale",
+    "army.size",
+    "cult.followers",
+    "cult.zeal",
+    "faction.strength",
+    "faction.sway",
+    "faction.wealth",
+    "item.damage",
+    "item.might",
+    "item.protection",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "people.martiality",
+    "people.population",
+    "people.prosperity",
+    "people.wealth",
+    "region.danger",
+    "settlement.defense",
+    "settlement.population",
+    "table.armies",
+    "table.bodies",
+    "table.bonds",
+    "table.calendars",
+    "table.captives",
+    "table.community_relations",
+    "table.community_societies",
+    "table.cosmos",
+    "table.culture_values",
+    "table.designated_heirs",
+    "table.entity_flags",
+    "table.entity_traits",
+    "table.epoch_year_cursors",
+    "table.forced_weather",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.maimed_cohorts",
+    "table.memories",
+    "table.minds",
+    "table.name_registry",
+    "table.nodes",
+    "table.personality_values",
+    "table.place_environment",
+    "table.region_environment",
+    "table.routes",
+    "table.sieges",
+    "table.skills",
+    "table.sky_events",
+    "table.son_powers",
+    "table.son_relations",
+    "table.traits",
+    "table.tributes",
+    "table.war_sides",
+    "table.wars",
+    "table.world_maps",
+    "table.world_seasons",
+)
+@writes(
+    "army.experience",
+    "army.morale",
+    "army.size",
+    "cult.followers",
+    "event.severity",
+    "faction.wealth",
+    "mortal.charisma",
+    "mortal.death_year",
+    "people.population",
+    "people.prosperity",
+    "people.wealth",
+    "region.danger",
+    "settlement.population",
+    "table.armies",
+    "table.battles",
+    "table.bonds",
+    "table.captives",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_relations",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.injuries",
+    "table.maimed_cohorts",
+    "table.memories",
+    "table.name_registry",
+    "table.region_environment",
+    "table.sieges",
+    "table.skills",
+    "table.son_relations",
+    "table.sons",
+    "table.traits",
+    "table.tributes",
+    "table.war_sides",
+    "table.wars",
+)
+@reads(
+    "army.equipment",
+    "army.experience",
+    "army.morale",
+    "army.size",
+    "cult.followers",
+    "cult.zeal",
+    "faction.strength",
+    "faction.sway",
+    "faction.wealth",
+    "item.damage",
+    "item.might",
+    "item.protection",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "people.martiality",
+    "people.population",
+    "people.prosperity",
+    "people.wealth",
+    "region.danger",
+    "settlement.defense",
+    "settlement.population",
+)
+@writes(
+    "army.experience",
+    "army.morale",
+    "army.size",
+    "cult.followers",
+    "event.severity",
+    "faction.wealth",
+    "mortal.charisma",
+    "mortal.death_year",
+    "people.population",
+    "people.prosperity",
+    "people.wealth",
+    "region.danger",
+    "settlement.population",
+)
 async def campaigns(ctx: TickContext) -> None:
     rules = ctx.rules
     theatre = await Theatre.load(ctx)

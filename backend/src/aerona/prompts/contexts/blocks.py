@@ -205,6 +205,8 @@ class EntityDetailContext(PromptContext):
     facts: list[str] = Field(default_factory=list)
     body: list[str] = Field(default_factory=list)
     mind: list[str] = Field(default_factory=list)
+    effects: list[str] = Field(default_factory=list)
+    chain: str | None = None
 
 
 class RecentChronicleContext(PromptContext):

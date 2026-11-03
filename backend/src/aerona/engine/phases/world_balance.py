@@ -18,6 +18,7 @@ from aerona.domain.enums.world import Discovery
 from aerona.domain.models.entity_stats import CultStats, FactionStats, TraditionStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.worlds import declare_holy_world
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.births import NOTABLE_ROLES, pick_class, raise_notable
@@ -386,6 +387,32 @@ async def revive(ctx: TickContext, world: WorldRow, *, forced: bool = False) -> 
     return created
 
 
+@reads(
+    "people.piety",
+    "people.population",
+    "settlement.piety",
+    "settlement.population",
+    "table.bonds",
+    "table.community_societies",
+    "table.epoch_year_cursors",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.name_registry",
+    "table.nodes",
+    "table.world_maps",
+)
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+)
+@reads("people.piety", "people.population", "settlement.piety", "settlement.population")
 async def world_balance(ctx: TickContext) -> None:
     ctx.count("guardians", await guard_patronless(ctx))
     worlds = await living_worlds(ctx.session)

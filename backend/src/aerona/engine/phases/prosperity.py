@@ -1,6 +1,7 @@
 from aerona.constants.units import PERCENT
 from aerona.domain.enums.entity import COMMUNITY_TYPES
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.numbers import clamp_int, stochastic_round
 from aerona.engine.primitives.queries import canon
@@ -13,6 +14,10 @@ def reverted(prosperity: int, target: int, share_pct: int, roll: float | None = 
     return max(0, min(PERCENT, prosperity + stochastic_round((target - prosperity) * share_pct / PERCENT, roll)))
 
 
+@reads("people.prosperity", "settlement.prosperity")
+@writes("people.prosperity", "settlement.prosperity")
+@reads("people.prosperity", "settlement.prosperity")
+@writes("people.prosperity", "settlement.prosperity")
 async def prosperity_reversion(ctx: TickContext) -> None:
     effects = ctx.rules.world_effects
     for community in await canon(ctx.session, COMMUNITY_TYPES):

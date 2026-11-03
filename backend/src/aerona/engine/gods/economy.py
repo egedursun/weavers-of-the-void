@@ -25,6 +25,7 @@ from aerona.domain.models.entity_stats import FactionStats, ResourceStats
 from aerona.engine.context import TickContext
 from aerona.engine.gods.queries import cosmos_row, owners_of, world_count
 from aerona.engine.gods.stats import Trait, add_trait, headcount_floor, headcount_trait, set_trait, trait, trait_or
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.primitives.doom import advance_doom
 from aerona.engine.primitives.faith import patron_node
 from aerona.engine.primitives.numbers import clamp_int
@@ -201,6 +202,42 @@ async def withdrawal(ctx: TickContext) -> None:
         )
 
 
+@reads(
+    "faction.wealth",
+    "mortal.strength",
+    "people.piety",
+    "people.population",
+    "people.prosperity",
+    "people.wealth",
+    "resource.abundance",
+    "settlement.prosperity",
+    "table.addiction_immunities",
+    "table.addictions",
+    "table.bonds",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.nodes",
+    "table.resource_mechanics",
+)
+@writes(
+    "mortal.strength",
+    "people.piety",
+    "people.population",
+    "resource.abundance",
+    "settlement.prosperity",
+    "table.addictions",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.sons",
+)
+@reads("mortal.strength", "people.piety", "people.population", "people.prosperity", "people.wealth", "resource.abundance", "settlement.prosperity")
+@writes("mortal.strength", "people.piety", "people.population", "resource.abundance", "settlement.prosperity")
 async def resource_mechanics(ctx: TickContext) -> None:
     economy = ctx.rules.economy
     resources = list(
@@ -489,6 +526,32 @@ async def _pirates(ctx: TickContext, traffic: int) -> None:
                 route.danger = max(floor, route.danger - economy.pirate_danger_decay)
 
 
+@reads(
+    "people.prosperity",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.cosmos",
+    "table.epoch_year_cursors",
+    "table.journeys",
+    "table.name_registry",
+    "table.nodes",
+    "table.routes",
+)
+@writes(
+    "people.prosperity",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+    "table.routes",
+)
+@reads("people.prosperity", "settlement.prosperity")
+@writes("people.prosperity", "settlement.prosperity")
 async def cosmic_economy(ctx: TickContext) -> None:
     if await world_count(ctx.session) < MULTI_WORLD_MINIMUM:
         return

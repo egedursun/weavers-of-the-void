@@ -2,6 +2,7 @@ from dataclasses import dataclass, field, replace
 from enum import StrEnum
 
 from aerona.catalog.anatomy import FINGERS
+from aerona.db.repositories.chronicle import incident_for
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import SEVERITY_MAX, BodyRow, InjuryRow
 from aerona.db.tables.entities import EntityRow
@@ -83,6 +84,7 @@ async def _record(ctx: TickContext, bearer: Bearer, body: BodyRow, harm: Harm, h
             epoch=ctx.epoch,
             year=ctx.environment.window.start if ctx.environment.window is not None else None,
             visible=hit.part.visible,
+            incident_id=incident_for(bearer.id, ctx.epoch),
         )
         ctx.session.add(row)
         rows.append(row)
@@ -107,6 +109,8 @@ async def _announce(ctx: TickContext, bearer: Bearer, rows: list[InjuryRow]) -> 
         part = anatomy.part(row.part) if anatomy is not None else None
         label = (part.label if part is not None else row.part).lower()
         await note(ctx, f"{wound_sentence(bearer.name, row.kind, label)}.", key=f"injury.{row.kind.value}", ids=[bearer.id])
+    for row in grave:
+        row.incident_id = incident_for(bearer.id, ctx.epoch) or row.incident_id
 
 
 INJURY_PHRASES: dict[InjuryKind, str] = {

@@ -3,6 +3,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.heroism import encounter, monsters_of
@@ -48,6 +49,73 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
     )
 
 
+@reads(
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "settlement.defense",
+    "settlement.population",
+    "settlement.prosperity",
+    "species.agility",
+    "species.danger",
+    "species.strength",
+    "table.bodies",
+    "table.bonds",
+    "table.community_societies",
+    "table.cosmos",
+    "table.designated_heirs",
+    "table.entity_flags",
+    "table.entity_traits",
+    "table.epoch_year_cursors",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.memories",
+    "table.minds",
+    "table.name_registry",
+    "table.nodes",
+    "table.routes",
+    "table.skills",
+    "table.traits",
+    "table.world_maps",
+)
+@writes(
+    "mortal.charisma",
+    "mortal.death_year",
+    "settlement.defense",
+    "settlement.population",
+    "settlement.prosperity",
+    "species.danger",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.injuries",
+    "table.memories",
+    "table.name_registry",
+    "table.sons",
+)
+@reads(
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "settlement.defense",
+    "settlement.population",
+    "settlement.prosperity",
+    "species.agility",
+    "species.danger",
+    "species.strength",
+)
+@writes("mortal.charisma", "mortal.death_year", "settlement.defense", "settlement.population", "settlement.prosperity", "species.danger")
 async def monster_raids(ctx: TickContext) -> None:
     rules = ctx.rules
     rng = ctx.rng()

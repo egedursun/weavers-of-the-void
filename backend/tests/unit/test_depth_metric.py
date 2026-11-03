@@ -13,9 +13,18 @@ def load() -> ModuleType:
     return module
 
 
-def test_depth_metric_measures_every_entity_type() -> None:
+def test_depth_metric_measures_every_node_type_against_its_target() -> None:
     metric = load()
     rows = metric.measure()
-    assert len(rows) == len(metric.EntityType)
-    assert all(a >= 0 and b >= 0 and c >= 0 for _, a, b, c in rows)
+    names = {row.name for row in rows}
+    assert {entity_type.value for entity_type in metric.EntityType} <= names
+    assert {"son", "creator", "foreign_god", "war", "world", "star", "route"} <= names
+    assert all(row.a >= 0 and row.b >= 0 and row.c >= 0 for row in rows)
+    mortal = next(row for row in rows if row.name == "mortal")
+    assert mortal.targets == (75, 140, 80)
     assert "| mortal |" in metric.render(rows)
+
+
+def test_the_published_depth_metric_is_current() -> None:
+    metric = load()
+    assert metric.OUTPUT.read_text(encoding="utf-8") == metric.render(metric.measure()), "run scripts/depth_metric.py write"

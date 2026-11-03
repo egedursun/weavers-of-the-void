@@ -80,6 +80,9 @@ WHAT HAPPENED DURING AGE {{ age }}{% if multi_world %} (world by world){% endif 
 RESULTS OF THE WORLD ENGINE:
 {{ engine_text if engine_text else "(none)" }}
 
+CHAINS OF CAUSE (tell them as causes, not as separate events):
+{{ chains | join("\n") if chains else "(none)" }}
+
 BORN OF THE WORLD'S OWN COURSE:
 {{ pending_text if pending_text else "(none)" }}
 {% endif %}

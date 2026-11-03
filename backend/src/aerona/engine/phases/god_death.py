@@ -30,6 +30,7 @@ from aerona.engine.gods.god_death import gods_fate
 from aerona.engine.gods.mortality import Killer, attempt_kill
 from aerona.engine.gods.queries import creator_row, sons
 from aerona.engine.gods.stats import Trait, trait_or
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 
 logger = logging.getLogger(__name__)
@@ -111,6 +112,8 @@ async def _foreign_strikes(ctx: TickContext) -> None:
             logger.debug("Foreign strike skipped for god %s: %s", god.id, error)
 
 
+@reads("table.sons", "table.bonds", "table.foreign_gods", "table.entities")
+@writes("table.sons", "table.bonds", "table.chronicle", "table.incidents", "table.entities")
 async def death_engine(ctx: TickContext) -> None:
     everyone = await sons(ctx.session)
     active = [son for son in everyone if son.status is SonStatus.ACTIVE]

@@ -1,3 +1,5 @@
+from collections import Counter
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,11 +9,14 @@ from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.epochs import EpochStatsRow
 from aerona.db.tables.lore import LexemeRow
+from aerona.db.tables.routes import JourneyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.travel import JourneyStatus
 from aerona.domain.models.records import EpochStatsData, LedgerItem, SonEpochStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.leak import leak_breakdown
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.ledger import LedgerKey, doom_items, essence_items, has, read
 from aerona.engine.primitives.queries import canon, flags_by_entity, living_sons
@@ -31,6 +36,9 @@ async def _count(session: AsyncSession, entity_type: EntityType) -> int:
 async def _bond_count(session: AsyncSession, kind: BondKind) -> int:
     statement = select(func.count()).select_from(BondRow).where(BondRow.kind == kind, BondRow.state == BondState.ACTIVE)
     return int(await session.scalar(statement) or 0)
+
+
+TRAVELLING = (JourneyStatus.UNDERWAY, JourneyStatus.WAITING, JourneyStatus.STRANDED)
 
 
 async def world_snapshot(session: AsyncSession) -> EpochStatsData:
@@ -55,7 +63,30 @@ async def world_snapshot(session: AsyncSession) -> EpochStatsData:
         godless=len(godless & canon_ids),
         doom=await current_doom(session),
         sons=sons,
+        soldiers=sum(stat(army, "size") or 0 for army in await canon(session, [EntityType.ARMY])),
+        travelling=int(await session.scalar(select(func.coalesce(func.sum(JourneyRow.population), 0)).where(JourneyRow.status.in_(TRAVELLING))) or 0),
     )
+
+
+def item_pairs(items: tuple[LedgerItem, ...]) -> list[tuple[str, int]]:
+    return [(item.item, round(item.delta)) for item in items]
+
+
+def flow_summary(flows: Counter[tuple[str, str, int, str]]) -> dict[str, int]:
+    totals: Counter[str] = Counter()
+    for (_, key, _, category), delta in flows.items():
+        totals[f"{category}.{key}"] += delta
+    return dict(totals)
+
+
+async def store_tick_flows(session: AsyncSession, epoch: int, flows: Counter[tuple[str, str, int, str]]) -> None:
+    row = await session.get(EpochStatsRow, epoch)
+    summary = _items(flow_summary(flows))
+    if row is None:
+        session.add(EpochStatsRow(epoch=epoch, data=EpochStatsData(flow_items=summary)))
+    else:
+        row.data = row.data.model_copy(update={"flow_items": summary})
+    await session.flush()
 
 
 def _items(values: dict[str, int]) -> tuple[LedgerItem, ...]:
@@ -99,6 +130,10 @@ async def epoch_statistics(ctx: TickContext) -> EpochStatsData:
         }
     )
     row = await ctx.session.get(EpochStatsRow, ctx.epoch)
+    earlier = dict(item_pairs(row.data.flow_items)) if row is not None else {}
+    for key, delta in flow_summary(ctx.environment.stats.flows).items():
+        earlier[key] = earlier.get(key, 0) + delta
+    data = data.model_copy(update={"flow_items": _items(earlier)})
     if row is None:
         ctx.session.add(EpochStatsRow(epoch=ctx.epoch, data=data))
     else:
@@ -107,6 +142,19 @@ async def epoch_statistics(ctx: TickContext) -> EpochStatsData:
     return data
 
 
+@reads(
+    "cult.followers",
+    "people.population",
+    "settlement.population",
+    "table.bonds",
+    "table.cosmos",
+    "table.entity_flags",
+    "table.epoch_stats",
+    "table.lexemes",
+    "table.world_leak_items",
+)
+@writes("table.epoch_stats")
+@reads("cult.followers", "people.population", "settlement.population")
 async def record_statistics(ctx: TickContext) -> None:
     await epoch_statistics(ctx)
 

@@ -24,6 +24,9 @@ WHAT HAPPENED DURING AGE {{ age }}:
 RESULTS OF THE WORLD ENGINE:
 {{ budget(engine_notes | join("\n"), f.budget_engine_notes_chars, "rest in the chronicle", trim) if engine_notes else "(none)" }}
 
+CHAINS OF CAUSE THIS AGE (each link led to the next; build consequences on them):
+{{ chains | join("\n") if chains else "(none)" }}
+
 WHAT THE SONS AND MORTALS CREATED THIS AGE:
 {{ new_creations | join("\n\n---\n\n") if new_creations else "(none)" }}
 

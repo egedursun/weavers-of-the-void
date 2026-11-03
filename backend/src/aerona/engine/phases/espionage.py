@@ -13,6 +13,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import deceit_drive
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.knowledge import teach
@@ -136,6 +137,37 @@ async def run_networks(ctx: TickContext) -> None:
         ctx.count("spy_operations")
 
 
+@reads(
+    "cult.influence",
+    "faction.sway",
+    "knowledge.spread",
+    "people.wealth",
+    "settlement.defense",
+    "table.bonds",
+    "table.community_relations",
+    "table.cosmos",
+    "table.culture_values",
+    "table.epoch_year_cursors",
+    "table.memories",
+    "table.minds",
+    "table.nodes",
+    "table.personality_values",
+    "table.traits",
+)
+@writes(
+    "knowledge.spread",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_relations",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+)
+@reads("cult.influence", "faction.sway", "knowledge.spread", "people.wealth", "settlement.defense")
+@writes("knowledge.spread")
 async def espionage(ctx: TickContext) -> None:
     ctx.count("spy_networks_founded", await found_networks(ctx))
     await run_networks(ctx)

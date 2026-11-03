@@ -29,6 +29,7 @@ from aerona.engine.cosmos.stars import black_sun, flare, require_star, supernova
 from aerona.engine.cosmos.world_types import mechanics_of
 from aerona.engine.cosmos.worlds import align_moons
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.manual import manual_context
@@ -456,6 +457,45 @@ async def drift_worlds(ctx: TickContext) -> None:
     await session.flush()
 
 
+@reads(
+    "mortal.charisma",
+    "table.bonds",
+    "table.calendars",
+    "table.community_relations",
+    "table.cosmos",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.forced_weather",
+    "table.memories",
+    "table.minds",
+    "table.name_registry",
+    "table.nodes",
+    "table.personality_values",
+    "table.place_environment",
+    "table.region_environment",
+    "table.sky_events",
+    "table.traits",
+    "table.war_sides",
+    "table.wars",
+    "table.world_maps",
+    "table.world_seasons",
+)
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_relations",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+    "table.name_registry",
+    "table.sky_events",
+)
+@reads("mortal.charisma")
 async def sky_phase(ctx: TickContext) -> None:
     result = await spontaneous_sky_event(ctx)
     if result is not None:

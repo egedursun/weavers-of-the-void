@@ -35,6 +35,7 @@ from aerona.engine.cosmos.sanity import sanity_of, shift_sanity
 from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.world_types import mechanics_of
 from aerona.engine.environment.book import scar_region
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.knowledge import teach
@@ -545,6 +546,34 @@ async def spontaneous_horror(ctx: TickContext) -> str | None:
     return await horror_event(ctx, rng.pick(list(HorrorEventKind)), world)
 
 
+@reads(
+    "people.population",
+    "settlement.population",
+    "table.addictions",
+    "table.bonds",
+    "table.community_societies",
+    "table.cosmos",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.nodes",
+    "table.outer_bargains",
+    "table.routes",
+)
+@writes(
+    "people.population",
+    "settlement.population",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.sons",
+    "table.world_leak_items",
+    "table.worlds",
+)
+@reads("people.population", "settlement.population")
+@writes("people.population", "settlement.population")
 async def horror_phase(ctx: TickContext) -> None:
     await reopen_severed(ctx)
     await reseal_temporary(ctx)

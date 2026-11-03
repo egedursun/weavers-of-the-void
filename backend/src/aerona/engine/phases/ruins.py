@@ -3,6 +3,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.queries import add_flag, canon, flags_by_entity, living_entity, remove_flag
@@ -22,6 +23,18 @@ async def abandon(ctx: TickContext, settlement: EntityRow) -> EntityRow:
     return settlement
 
 
+@reads("settlement.population", "table.bonds", "table.entity_flags", "table.epoch_year_cursors", "table.routes")
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
+@reads("settlement.population")
 async def abandonment(ctx: TickContext) -> None:
     world_rules = ctx.rules.deep_world
     sheltered = await flags_by_entity(ctx.session, EntityFlag.PROTECTED_FROM_RUIN)

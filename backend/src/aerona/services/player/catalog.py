@@ -1148,8 +1148,10 @@ MECHANIC_ACTIONS = (
         ("J.16c",),
     ),
     _sync(Meta("lever:run", "Run a mechanic now", G.SETTINGS), levers.run_mechanic, levers.RunMechanic, free, ("J.16c",)),
+    _sync(Meta("lever:set", "Set a value a mechanic owns", G.SETTINGS), levers.set_field, levers.SetField, free, ("J.16c",)),
     _sync(Meta("modifier:add", "Add a modifier to a record", G.SETTINGS), levers.add_player_modifier, levers.AddModifier, free, ("F9", "J.16c")),
     _sync(Meta("modifier:remove", "Remove a modifier", G.SETTINGS), levers.remove_player_modifier, levers.RemoveModifier, free, ("F9", "J.16c")),
+    _sync(Meta("incident:annotate", "Keep a note beside an incident", G.SETTINGS), levers.annotate_incident, levers.AnnotateIncident, free, ("F10",)),
 )
 ACTIONS: tuple[ActionSpec, ...] = (
     *CREATOR_ACTIONS,

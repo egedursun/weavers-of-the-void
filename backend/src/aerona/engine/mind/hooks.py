@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.mind import COMMAND_SKILLS, HEALING_SKILLS, MELEE_SKILLS, MEMORIES, MISSILE_SKILLS
 from aerona.constants.units import PERCENT
+from aerona.db.repositories.chronicle import ChronicleRepository, incident_for
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import InjuryKind, InjuryState
@@ -192,8 +193,12 @@ async def judged(ctx: TickContext, actor_id: int, victim_id: int, act: ActKind, 
     if not base:
         return 0
     moved = 0
-    for holder in await onlookers(ctx, actor_id, victim_id):
+    seen = await onlookers(ctx, actor_id, victim_id)
+    for holder in seen:
         moved += abs(await witnessed(ctx, holder, actor_id, act, base=base, note=note))
+    incident = incident_for(actor_id, ctx.epoch) or incident_for(victim_id, ctx.epoch)
+    if incident is not None and seen:
+        await ChronicleRepository(ctx.session).witness(incident, seen)
     return moved
 
 

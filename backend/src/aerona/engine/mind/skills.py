@@ -10,13 +10,14 @@ from aerona.core.random import SeededRandom
 from aerona.db.tables.body import BodyCustomRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SKILL_MAX, SkillRow
+from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.mind import CareerChange, MemoryKind, SkillKind, SkillSource, TraitEffect, ValueAxis
 from aerona.engine.body.book import factor
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
-from aerona.engine.mind.book import clamp_skill, effect_of, is_locked, mind_of, scaled_by, set_skill, skills_of, values_for
+from aerona.engine.mind.book import SKILLS_KEY, clamp_skill, effect_of, is_locked, mind_of, scaled_by, set_skill, skills_of, values_for
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.space import blend
 from aerona.engine.mind.traits import teach_trait
@@ -76,7 +77,7 @@ def level_cost(rules: Rules, level: int) -> int:
 async def practise(
     session: AsyncSession, rules: Rules, node_id: int, skill: SkillKind, xp: float, *, epoch: int, source: SkillSource = SkillSource.PRACTICE
 ) -> int:
-    if xp <= 0:
+    if xp <= 0 or write_blocked(node_id, SKILLS_KEY):
         return 0
     mind = await mind_of(session, node_id)
     if is_locked(mind, SKILL_LOCK):

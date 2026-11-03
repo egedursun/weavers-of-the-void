@@ -9,6 +9,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, 
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.drives import unrest
 from aerona.engine.notes import note
@@ -27,6 +28,8 @@ BOOTSTRAP_EXCLUDED_FLAGS = (EntityFlag.GODLESS, EntityFlag.WORSHIPS_PLANET)
 REBELS_SUBTYPE = "rebels"
 
 
+@reads("table.bonds", "table.entity_flags", "table.nodes", "table.world_maps")
+@writes("table.bonds")
 async def language_and_faith(ctx: TickContext) -> None:
     session = ctx.session
     excluded: set[int] = set()
@@ -97,6 +100,10 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     return rebels
 
 
+@reads(
+    "law.justice", "settlement.population", "settlement.prosperity", "table.bonds", "table.entity_flags", "table.pressures", "table.traits", "table.tributes"
+)
+@reads("law.justice", "settlement.population", "settlement.prosperity")
 async def uprisings(ctx: TickContext) -> None:
     settings = ctx.rules.society
     session = ctx.session
@@ -126,6 +133,9 @@ async def uprisings(ctx: TickContext) -> None:
     ctx.count("uprisings", raised)
 
 
+@reads("mortal.age", "table.bonds", "table.epoch_year_cursors", "table.nodes")
+@writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
+@reads("mortal.age")
 async def love_and_rivalry(ctx: TickContext) -> None:
     settings = ctx.rules.society
     session = ctx.session

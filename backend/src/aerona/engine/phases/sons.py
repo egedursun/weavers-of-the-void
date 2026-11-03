@@ -17,6 +17,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.son import ExistenceBand, PowerEffect, SonStatus
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.faith import has_unlocked_power, son_faith, worshipper_count
@@ -124,6 +125,20 @@ async def regenerate_essence(ctx: TickContext, son: SonRow, faith: int, band: Ex
     son.essence = min(max_essence(rules, son.might), son.essence + regen)
 
 
+@reads(
+    "celestial.influence",
+    "cult.followers",
+    "cult.influence",
+    "people.piety",
+    "people.population",
+    "settlement.piety",
+    "settlement.population",
+    "table.cosmos",
+    "table.epoch_year_cursors",
+    "table.son_powers",
+)
+@writes("table.chronicle", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.sons")
+@reads("celestial.influence", "cult.followers", "cult.influence", "people.piety", "people.population", "settlement.piety", "settlement.population")
 async def sons_renewal(ctx: TickContext) -> None:
     total = 0
     for son in await living_sons(ctx.session):
@@ -138,6 +153,8 @@ async def sons_renewal(ctx: TickContext) -> None:
     record(ctx, LedgerKey.TOTAL_FAITH, total)
 
 
+@reads("table.bonds")
+@writes("table.sons")
 async def works_remember_gods(ctx: TickContext) -> None:
     transition = ctx.rules.world_epoch_transition
     for son in await living_sons(ctx.session):
@@ -155,6 +172,8 @@ async def works_remember_gods(ctx: TickContext) -> None:
             son.existence = min(PERCENT, son.existence + transition.dedicated_work_existence)
 
 
+@reads("table.sons", "table.son_relations")
+@writes("table.son_relations")
 async def domain_rivalry(ctx: TickContext) -> None:
     transition = ctx.rules.world_epoch_transition
     repository = SonRepository(ctx.session)
@@ -167,6 +186,8 @@ async def domain_rivalry(ctx: TickContext) -> None:
             await repository.change_relation(first.id, second.id, -min(transition.domain_rivalry * shared, relation + transition.domain_rivalry_floor))
 
 
+@reads("table.epoch_year_cursors")
+@writes("table.chronicle", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.sons")
 async def rebel_theft(ctx: TickContext) -> None:
     transition = ctx.rules.world_epoch_transition
     stolen = 0

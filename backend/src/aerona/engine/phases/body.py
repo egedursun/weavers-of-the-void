@@ -26,6 +26,7 @@ from aerona.engine.body.state import has_reader, refresh
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import sanity_of
 from aerona.engine.gods.queries import community_of
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.lifecycle.succession import pass_rule
@@ -48,6 +49,30 @@ BACKFILL_CAUSE = "fell long ago"
 PLAN_FIXUP = "body.species_plans"
 
 
+@reads(
+    "item.protection",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "table.applied_fixups",
+    "table.bodies",
+    "table.body_customs",
+    "table.bonds",
+    "table.conditions",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.entity_tags",
+    "table.entity_traits",
+    "table.injuries",
+    "table.nodes",
+    "table.prostheses",
+)
+@writes("table.applied_fixups", "table.bodies", "table.body_customs", "table.injuries")
+@reads("item.protection", "mortal.age", "mortal.agility", "mortal.charisma", "mortal.hp", "mortal.intellect", "mortal.lifespan", "mortal.strength")
 async def body_survey(ctx: TickContext) -> None:
     rules = ctx.rules
     known = set(await ctx.session.scalars(select(BodyRow.node_id)))
@@ -142,6 +167,61 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     return found
 
 
+@reads(
+    "item.protection",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "table.bodies",
+    "table.body_customs",
+    "table.bonds",
+    "table.community_societies",
+    "table.conditions",
+    "table.cosmos",
+    "table.culture_values",
+    "table.designated_heirs",
+    "table.entity_flags",
+    "table.entity_tags",
+    "table.epoch_year_cursors",
+    "table.injuries",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.memories",
+    "table.minds",
+    "table.name_registry",
+    "table.nodes",
+    "table.prostheses",
+    "table.region_environment",
+    "table.routes",
+    "table.skills",
+    "table.traits",
+    "table.world_maps",
+)
+@writes(
+    "mortal.death_year",
+    "mortal.hp",
+    "table.bodies",
+    "table.body_customs",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.injuries",
+    "table.memories",
+    "table.name_registry",
+    "table.skills",
+    "table.sons",
+)
+@reads("item.protection", "mortal.age", "mortal.agility", "mortal.charisma", "mortal.hp", "mortal.intellect", "mortal.lifespan", "mortal.strength")
+@writes("mortal.death_year", "mortal.hp")
 async def body_healing(ctx: TickContext) -> None:
     await heal_wounds(ctx)
 
@@ -285,6 +365,56 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
     return reader
 
 
+@reads(
+    "item.protection",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "settlement.piety",
+    "spirit.unrest",
+    "table.addictions",
+    "table.bodies",
+    "table.body_customs",
+    "table.bonds",
+    "table.conditions",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.entity_tags",
+    "table.epoch_year_cursors",
+    "table.injuries",
+    "table.minds",
+    "table.nodes",
+    "table.prostheses",
+    "table.traits",
+    "table.world_maps",
+)
+@writes(
+    "table.bodies",
+    "table.body_customs",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.conditions",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.traits",
+)
+@reads(
+    "item.protection",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "settlement.piety",
+    "spirit.unrest",
+)
 async def body_conditions(ctx: TickContext) -> None:
     mortals = [mortal for mortal in await canon(ctx.session, [EntityType.MORTAL]) if mortal.status is EntityStatus.CANON]
     addicted = {row.community_entity_id: row for row in await ctx.session.scalars(select(AddictionRow))}
@@ -352,6 +482,21 @@ async def _recruit(ctx: TickContext) -> None:
             )
 
 
+@reads(
+    "people.population",
+    "people.prosperity",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.bodies",
+    "table.body_customs",
+    "table.bonds",
+    "table.culture_values",
+    "table.injuries",
+    "table.maimed_cohorts",
+    "table.nodes",
+)
+@writes("table.body_customs", "table.maimed_cohorts")
+@reads("people.population", "people.prosperity", "settlement.population", "settlement.prosperity")
 async def body_society(ctx: TickContext) -> None:
     await tend_cohorts(ctx)
     await _wholeness(ctx)

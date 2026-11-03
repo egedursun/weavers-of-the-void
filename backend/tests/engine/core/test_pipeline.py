@@ -101,7 +101,7 @@ def test_order_lists_every_phase_once() -> None:
     names = [phase.name for phase in TICK_ORDER + TRANSITION_ORDER]
     assert len(names) == len(set(names))
     assert names[0] == "dead_bonds_opening"
-    assert names[len(TICK_ORDER) - 1] == "mind_opinion"
+    assert names[len(TICK_ORDER) - 1] == "incident_threads"
     assert names.index("dead_bonds_closing") < names.index("mind_values")
     assert names[-1] == "advance_epoch"
     assert len(describe_order()) == len(names) + len(POST_TRANSITION_ORDER) + len(PRE_TRANSITION_ORDER)

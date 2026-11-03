@@ -35,6 +35,7 @@ from aerona.engine.body.book import factor
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import RouteSpec, has_tamed_mount, open_route
 from aerona.engine.cosmos.vessels import set_vessel_kind
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.capacity import CapacityModel
@@ -681,6 +682,63 @@ async def foreign_god_land(ctx: TickContext, god_id: int | None = None) -> list[
     return raised
 
 
+@reads(
+    "cult.followers",
+    "mortal.agility",
+    "mortal.intellect",
+    "people.piety",
+    "people.population",
+    "people.prosperity",
+    "place.fertility",
+    "region.breadth",
+    "region.fertility",
+    "settlement.piety",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.bodies",
+    "table.bonds",
+    "table.community_societies",
+    "table.epoch_year_cursors",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.name_registry",
+    "table.nodes",
+    "table.place_environment",
+    "table.routes",
+    "table.vessel_profiles",
+    "table.world_maps",
+)
+@writes(
+    "people.population",
+    "settlement.population",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.language_profiles",
+    "table.name_registry",
+    "table.routes",
+    "table.vessel_profiles",
+)
+@reads(
+    "cult.followers",
+    "mortal.agility",
+    "mortal.intellect",
+    "people.piety",
+    "people.population",
+    "people.prosperity",
+    "place.fertility",
+    "region.breadth",
+    "region.fertility",
+    "settlement.piety",
+    "settlement.population",
+    "settlement.prosperity",
+)
+@writes("people.population", "settlement.population")
 async def exploration_phase(ctx: TickContext) -> None:
     await planet_exploration(ctx)
     await cosmic_exploration(ctx)

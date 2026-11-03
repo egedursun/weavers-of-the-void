@@ -19,6 +19,11 @@ WHAT REALLY HAPPENED DURING AGE {{ age }} (world by world; a people lived only w
 WHAT REALLY HAPPENED DURING AGE {{ age }}:
 {{ age_events[:rules.fate.voices_events_chars] if age_events else "(a quiet age)" }}
 {% endif %}
+{% if chains %}
+
+CHAINS OF CAUSE (a bard tells why, each people from its own side):
+{{ chains | join("\n") }}
+{% endif %}
 
 {% if historians %}
 HISTORIANS (for each, this age's account through its own people's eyes; do not open with "We …", do not repeat the opening of the previous account; the previous historian continues or their apprentice takes over{% if world_events %}; every historian tells as "we" ONLY the events of its own world, never another world's event as if it befell its own people, at most as news from afar{% endif %}):

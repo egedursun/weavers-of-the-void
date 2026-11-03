@@ -1,4 +1,4 @@
-from sqlalchemy import CheckConstraint, Float, ForeignKey, Index, String
+from sqlalchemy import CheckConstraint, Float, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import KEY_MAX_LENGTH
@@ -49,6 +49,8 @@ class IncidentRow(CreatedAtMixin, Base):
     place_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     cause_incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
     chronicle_id: Mapped[int | None] = mapped_column(ForeignKey("chronicle.id", ondelete="SET NULL"), unique=True)
+    thread_id: Mapped[int | None] = mapped_column(ForeignKey("threads.id", ondelete="SET NULL"))
+    note: Mapped[str | None] = mapped_column(Text)
     magnitude: Mapped[int] = mapped_column(default=0)
 
 

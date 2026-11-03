@@ -9,6 +9,7 @@ from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import closeness
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -127,6 +128,29 @@ async def flee(
     return None
 
 
+@reads(
+    "event.severity",
+    "people.population",
+    "settlement.population",
+    "table.bonds",
+    "table.culture_values",
+    "table.epoch_year_cursors",
+    "table.nodes",
+    "table.world_maps",
+)
+@writes(
+    "people.population",
+    "settlement.population",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
+@reads("event.severity", "people.population", "settlement.population")
+@writes("people.population", "settlement.population")
 async def refugees(ctx: TickContext) -> None:
     rules = ctx.rules
     life = rules.deep_life

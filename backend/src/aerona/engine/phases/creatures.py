@@ -28,6 +28,7 @@ from aerona.engine.cosmos.fauna import (
 )
 from aerona.engine.cosmos.resources import set_mechanics, travel_resource
 from aerona.engine.cosmos.sanity import sanity_of, shift_sanity
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -436,6 +437,55 @@ async def invasive_pressure(ctx: TickContext) -> None:
             shift_bounded(ctx.rules, location, FERTILITY_KEY, -loss)
 
 
+@reads(
+    "place.danger",
+    "place.fertility",
+    "region.danger",
+    "region.fertility",
+    "species.agility",
+    "species.danger",
+    "species.hp",
+    "species.intelligence",
+    "species.might",
+    "species.strength",
+    "table.bonds",
+    "table.entity_flags",
+    "table.entity_traits",
+    "table.epoch_year_cursors",
+    "table.name_registry",
+    "table.nodes",
+    "table.world_maps",
+)
+@writes(
+    "place.danger",
+    "place.fertility",
+    "region.danger",
+    "region.fertility",
+    "species.danger",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.entity_traits",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+)
+@reads(
+    "place.danger",
+    "place.fertility",
+    "region.danger",
+    "region.fertility",
+    "species.agility",
+    "species.danger",
+    "species.hp",
+    "species.intelligence",
+    "species.might",
+    "species.strength",
+)
+@writes("place.danger", "place.fertility", "region.danger", "region.fertility", "species.danger")
 async def creature_phase(ctx: TickContext) -> None:
     for species in await _species(ctx):
         await assign_traits(ctx, species)
@@ -695,14 +745,42 @@ async def run_creature_phase(session: AsyncSession, rules: Rules) -> None:
     await creature_phase(await manual_context(session, "creatures", rules))
 
 
+@reads("species.danger", "table.bonds", "table.entity_traits", "table.epoch_year_cursors", "table.nodes", "table.world_maps")
+@writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
+@reads("species.danger")
 async def creature_migration_phase(ctx: TickContext) -> None:
     await creature_migration(ctx)
 
 
+@reads("species.danger", "species.intelligence")
+@reads("species.danger", "species.intelligence")
 async def creature_rebellion_phase(ctx: TickContext) -> None:
     await creature_rebellion(ctx)
 
 
+@reads(
+    "species.agility",
+    "species.danger",
+    "species.intelligence",
+    "species.strength",
+    "table.bonds",
+    "table.entity_traits",
+    "table.epoch_year_cursors",
+    "table.name_registry",
+    "table.nodes",
+)
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_traits",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+)
+@reads("species.agility", "species.danger", "species.intelligence", "species.strength")
 async def speciation_phase(ctx: TickContext) -> None:
     await speciation(ctx)
 

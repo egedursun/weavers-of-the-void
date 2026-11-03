@@ -1,5 +1,5 @@
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
@@ -9,6 +9,7 @@ from aerona.constants.engine import FOLDED_TEMPLATE_SUFFIX
 from aerona.db.repositories.chronicle import ChronicleDraft, ChronicleRepository
 from aerona.db.tables.lore import ChronicleRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.events.kinds import EventKind
 from aerona.rules.registry import Rules
@@ -32,8 +33,9 @@ async def note(
     kind: ChronicleKind = ChronicleKind.WORLD,
     feed: FeedCategory | None = None,
     world_id: int | None = None,
+    roles: Mapping[int, IncidentRole] | None = None,
 ) -> ChronicleRow:
-    write = await ctx.chronicle(kind, text, template_key=key, entity_ids=ids, son_id=son_id, feed_category=feed, world_id=world_id)
+    write = await ctx.chronicle(kind, text, template_key=key, entity_ids=ids, son_id=son_id, feed_category=feed, world_id=world_id, roles=roles)
     ctx.count("notes")
     ctx.publish(
         EventKind.ENGINE_NOTE,

@@ -5,13 +5,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import MEMORIES
 from aerona.constants.units import PERCENT
+from aerona.db.repositories.chronicle import incident_for
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow
+from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.mind import MemoryKind, TraitEffect
-from aerona.engine.mind.book import effect_of, locked_for, scaled_by
+from aerona.engine.mind.book import MEMORIES_KEY, effect_of, locked_for, scaled_by
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.rules.registry import Rules
@@ -52,7 +54,7 @@ async def remember(
     merge: bool = True,
 ) -> MemoryRow | None:
     size = clamp_int(magnitude, RELATION_MIN, RELATION_MAX)
-    if holder_id == subject_id or size == 0:
+    if holder_id == subject_id or size == 0 or write_blocked(holder_id, MEMORIES_KEY):
         return None
     if not forced and await locked_for(session, holder_id, MEMORY_LOCK):
         return None
@@ -87,6 +89,7 @@ async def remember(
         epoch=epoch,
         note=note,
         event_entity_id=event_id,
+        incident_id=incident_for(holder_id, epoch) or incident_for(subject_id, epoch) if inherited_from is None else None,
         inherited_from_node_id=inherited_from,
     )
     session.add(row)

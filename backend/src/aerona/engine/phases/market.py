@@ -19,6 +19,7 @@ from aerona.domain.enums.war import DebtStatus, WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.gods.economy import depletion_price, mechanics_of
 from aerona.engine.gods.queries import owners_of
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.manual import manual_context
@@ -313,6 +314,46 @@ async def resource_market(ctx: TickContext) -> None:
     ctx.count("exhausted", exhausted)
 
 
+@reads(
+    "cult.followers",
+    "people.population",
+    "people.prosperity",
+    "people.wealth",
+    "resource.abundance",
+    "resource.value",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.community_societies",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.nodes",
+)
+@writes(
+    "resource.abundance",
+    "resource.value",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_societies",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
+@reads(
+    "cult.followers",
+    "people.population",
+    "people.prosperity",
+    "people.wealth",
+    "resource.abundance",
+    "resource.value",
+    "settlement.population",
+    "settlement.prosperity",
+)
+@writes("resource.abundance", "resource.value", "settlement.prosperity")
 async def market(ctx: TickContext) -> None:
     tally = MarketTally()
     await trade_flow(ctx, tally)

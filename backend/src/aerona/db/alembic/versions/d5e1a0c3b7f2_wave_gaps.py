@@ -596,6 +596,10 @@ def rename_templates(pairs: tuple[tuple[str, str], ...]) -> None:
 
 
 def upgrade() -> None:
+    with op.batch_alter_table("incidents", schema=None) as batch_op:
+        batch_op.add_column(sa.Column("thread_id", sa.Integer(), nullable=True))
+        batch_op.add_column(sa.Column("note", sa.Text(), nullable=True))
+        batch_op.create_foreign_key(batch_op.f("fk_incidents_thread_id_threads"), "threads", ["thread_id"], ["id"], ondelete="SET NULL")
     with op.batch_alter_table("bodies", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column(
@@ -646,6 +650,10 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    with op.batch_alter_table("incidents", schema=None) as batch_op:
+        batch_op.drop_constraint(batch_op.f("fk_incidents_thread_id_threads"), type_="foreignkey")
+        batch_op.drop_column("note")
+        batch_op.drop_column("thread_id")
     with op.batch_alter_table("bodies", schema=None) as batch_op:
         batch_op.drop_column("build")
         batch_op.drop_column("height_class")

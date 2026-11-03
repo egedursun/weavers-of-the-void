@@ -3,6 +3,7 @@ import asyncio
 from fastapi import APIRouter, Path, Query
 from pydantic import ValidationError
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.geography import geography_lines
 from aerona.agents.context.scope import load_scope
@@ -10,7 +11,7 @@ from aerona.api.actions import Alias, mount_all
 from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.common import Done
 from aerona.api.schemas.entities import MapPositionRequest
-from aerona.api.schemas.maps import GeographyPreview, MapPoint, MapRelation, MapRoad, MapTime, MapView, MapWar, RelationLineKind
+from aerona.api.schemas.maps import GeographyPreview, MapPoint, MapRelation, MapRoad, MapTime, MapView, MapWar, RegionGround, RegionStocks, RelationLineKind
 from aerona.api.schemas.records import EntitySummary, MapNoteRecord, WorldRecord
 from aerona.cartography.generator import generate_map
 from aerona.cartography.model import MARKER_TYPES, WorldMap
@@ -18,9 +19,14 @@ from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.environment import LandUse
 from aerona.engine.cosmos.maps import MAPPED_STATUSES, map_is_stale, map_request, store_world_map, world_entities
+from aerona.engine.environment.ley import LeyWeb
+from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import stat
 from aerona.services.container import Services
 from aerona.services.images.records import covers_of
@@ -123,9 +129,56 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
             markers=await event_markers(session, world_id),
             dominance=await region_dominance(session, world_id),
             population=population,
+            ground=await region_ground(session, world_id),
+            stocks=await region_stocks(session, world_id),
             notes=[MapNoteRecord.model_validate(row) for row in await map_notes(session, world_id)],
             time=MapTime(current=current, shown=shown, snapshots=await snapshot_epochs(session, world_id)),
         )
+
+
+WILD = "wild"
+STOCK_KEYS = {EntityType.PEOPLE: "population", EntityType.SETTLEMENT: "population", EntityType.CULT: "followers", EntityType.ARMY: "soldiers"}
+
+
+def main_use(ground: RegionEnvironmentRow) -> str:
+    uses = {use.value: getattr(ground, use.value) for use in LandUse}
+    best = max(sorted(uses), key=lambda key: uses[key])
+    return best if uses[best] > 0 else WILD
+
+
+async def region_ground(session: AsyncSession, world_id: int) -> dict[int, RegionGround]:
+    web = await LeyWeb.load(session)
+    degree = web.degree()
+    nexus = set(
+        await session.scalars(
+            select(PlaceEnvironmentRow.region_entity_id).where(PlaceEnvironmentRow.nexus.is_(True), PlaceEnvironmentRow.region_entity_id.is_not(None))
+        )
+    )
+    return {
+        row.entity_id: RegionGround(
+            terrain=row.dominant_terrain.value,
+            soil=row.soil.value,
+            climate=row.temperature_band.value,
+            land_use=main_use(row),
+            ley_lines=degree[row.entity_id],
+            nexus=row.entity_id in nexus,
+        )
+        for row in await session.scalars(select(RegionEnvironmentRow).where(RegionEnvironmentRow.world_id == world_id))
+    }
+
+
+async def region_stocks(session: AsyncSession, world_id: int) -> dict[int, RegionStocks]:
+    atlas = await RegionAtlas.load(session)
+    totals: dict[int, dict[str, int]] = {}
+    for entity in await canon(session, list(STOCK_KEYS), world_id):
+        region = atlas.top_region(entity.id)
+        if region is None:
+            continue
+        key = STOCK_KEYS[entity.entity_type]
+        value = stat(entity, "size" if key == "soldiers" else key) or 0
+        bucket = totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0})
+        bucket[key] += value
+    return {region: RegionStocks(**values) for region, values in totals.items()}
 
 
 @router.get("/worlds/{world_id}/geography", response_model=GeographyPreview)

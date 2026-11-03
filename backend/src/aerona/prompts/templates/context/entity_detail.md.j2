@@ -44,6 +44,15 @@ Mind:
 - {{ line }}
 {% endfor %}
 {% endif %}
+{% if chain %}
+How its latest deed came about: {{ chain }}
+{% endif %}
+{% if effects %}
+What bears on it now:
+{% for line in effects %}
+- {{ line }}
+{% endfor %}
+{% endif %}
 {% if facts %}
 Canon facts (do not violate):
 {% for fact in facts %}

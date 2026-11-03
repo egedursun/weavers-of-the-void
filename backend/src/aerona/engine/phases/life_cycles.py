@@ -13,6 +13,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.war import TributeStatus, WarEnding
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.hooks import desecrated
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -263,6 +264,35 @@ async def desolation(ctx: TickContext, atlas: RegionAtlas) -> int:
     return changed
 
 
+@reads(
+    "people.population",
+    "people.prosperity",
+    "settlement.population",
+    "settlement.prosperity",
+    "structure.durability",
+    "table.bonds",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.map_snapshots",
+    "table.nodes",
+    "table.routes",
+    "table.tributes",
+    "table.wars",
+    "table.world_maps",
+)
+@writes(
+    "structure.durability",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
+@reads("people.population", "people.prosperity", "settlement.population", "settlement.prosperity", "structure.durability")
+@writes("structure.durability")
 async def settlement_cycles(ctx: TickContext) -> None:
     history = await population_history(ctx)
     atlas = await RegionAtlas.load(ctx.session)

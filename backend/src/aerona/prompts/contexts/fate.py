@@ -61,6 +61,7 @@ class FateJudgmentContext(LoreRulesContext):
     world_summary: str
     age_events: str = ""
     engine_notes: list[str] = Field(default_factory=list)
+    chains: list[str] = Field(default_factory=list)
     new_creations: list[str] = Field(default_factory=list)
     pending: list[str] = Field(default_factory=list)
     world_records: list[WorldRecordLine] = Field(default_factory=list)

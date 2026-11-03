@@ -21,6 +21,7 @@ from aerona.db.tables.lore import ChronicleEntityRow
 from aerona.db.tables.lore import ChronicleRow as ChronicleRecord
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.engine.interconnect.incidents import chains_in
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.chronicler import ChroniclerContinuity, ChroniclerLink, ChroniclerUserContext, NameKind
 from aerona.prompts.contexts.common import WorldItem
@@ -202,6 +203,9 @@ async def pending_items(scope: Scope) -> list[EntityRow]:
     return list(await scope.session.scalars(select(EntityRow).where(EntityRow.pending_name.is_(True)).order_by(EntityRow.world_id, EntityRow.id)))
 
 
+CHAIN_MINIMUM = 2
+
+
 async def chronicler_context(
     scope: Scope,
     epoch: int,
@@ -230,6 +234,7 @@ async def chronicler_context(
         previous_verdicts=await previous_verdicts(scope, epoch),
         events=await events_by_world(scope, epoch, chosen),
         engine_notes=list(engine_notes),
+        chains=[chain.line for chain in await chains_in(scope.session, epoch, CHAIN_MINIMUM, scope.rules.incidents.chain_depth)],
         pending=pending,
         facts=(await epoch_facts(scope, epoch)).sheet,
     )

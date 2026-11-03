@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.bond_lines import bond_line_lists
 from aerona.agents.context.entity_line import line_item, line_items
@@ -7,11 +8,18 @@ from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.lore import LexemeRow
+from aerona.db.tables.lore import ChronicleRow, LexemeRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.modifier import ModifierOp
 from aerona.engine.body.describe import body_lines
+from aerona.engine.interconnect.catalog import REGISTERED
+from aerona.engine.interconnect.incidents import last_incident, recent_chain
+from aerona.engine.interconnect.registry import Exposure
+from aerona.engine.interconnect.sources import reason_text
 from aerona.engine.mind.describe import mind_lines
+from aerona.engine.primitives.modifiers import ModifierIndex
+from aerona.engine.primitives.stats import base_stat
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import EntityAuthor, EntityDetailContext
 from aerona.prompts.contexts.common import LabelValue, LexiconWord, NamedRecord, WorldItem
@@ -75,7 +83,39 @@ async def entity_detail_context(scope: Scope, entity: EntityRow, *, private: boo
         facts=await fact_lines(session, scope.rules, entity),
         body=await body_lines(session, scope.rules, entity, private=private),
         mind=await mind_lines(session, scope.rules, entity, scope.epoch, private=private),
+        effects=[
+            *await effect_lines(session, entity, scope.epoch),
+            *await mechanic_lines(session, entity, scope.epoch, scope.rules.context.mechanic_window_epochs),
+        ],
+        chain=chain.line if (chain := await recent_chain(session, entity.id, scope.rules.incidents.chain_depth)) is not None else None,
     )
+
+
+async def mechanic_lines(session: AsyncSession, entity: EntityRow, epoch: int, window: int) -> list[str]:
+    lines: list[str] = []
+    for mechanic in sorted(REGISTERED.values(), key=lambda item: item.key):
+        if mechanic.exposure is not Exposure.CONTEXT or entity.entity_type.value not in mechanic.targets:
+            continue
+        last = await last_incident(session, entity.id, mechanic.templates)
+        if last is None or epoch - last.epoch > window or last.chronicle_id is None:
+            continue
+        chronicle = await session.get(ChronicleRow, last.chronicle_id)
+        if chronicle is not None:
+            lines.append(f"{mechanic.title} (age {last.epoch}): {chronicle.text}")
+    return lines
+
+
+async def effect_lines(session: AsyncSession, entity: EntityRow, epoch: int) -> list[str]:
+    index = await ModifierIndex.load(session, epoch, [entity.id])
+    lines: list[str] = []
+    for key in index.keys_of(entity.id):
+        base = base_stat(entity, key)
+        breakdown = index.breakdown(entity.id, key, float(base or 0))
+        for item in breakdown.applied:
+            source = await session.get(EntityRow, item.source_node_id) if item.source_node_id is not None else None
+            sign = f"{item.magnitude:+g}" if item.op is ModifierOp.ADD else f"x{item.magnitude:g}"
+            lines.append(f"{key.replace('_', ' ')} {sign}: {reason_text(item.reason_key, source.name if source is not None else None)}")
+    return lines
 
 
 async def entity_detail(scope: Scope, entity: EntityRow, *, private: bool = False) -> str:

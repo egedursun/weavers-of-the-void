@@ -12,6 +12,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityFlag, EntityType
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -181,6 +182,34 @@ async def track_endangered(ctx: TickContext, item: EntityRow, marks: EcologyMark
     return warnings
 
 
+@reads(
+    "people.population",
+    "place.fertility",
+    "region.fertility",
+    "settlement.population",
+    "species.abundance",
+    "species.danger",
+    "table.bonds",
+    "table.entity_flags",
+    "table.entity_traits",
+    "table.epoch_year_cursors",
+    "table.nodes",
+    "table.region_environment",
+    "table.world_maps",
+)
+@writes(
+    "species.abundance",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
+@reads("people.population", "place.fertility", "region.fertility", "settlement.population", "species.abundance", "species.danger")
+@writes("species.abundance")
 async def ecology(ctx: TickContext) -> None:
     settings = ctx.rules.ecology
     species = await canon(ctx.session, [EntityType.SPECIES])

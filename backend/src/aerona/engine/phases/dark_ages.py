@@ -17,6 +17,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, ENDED_STATUSES, SOCIETY_
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarEnding
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_economy import society_of
@@ -213,6 +214,32 @@ async def _rediscovery(ctx: TickContext, holdings: KnowledgeHoldings, lost: set[
     return found
 
 
+@reads(
+    "event.severity",
+    "knowledge.spread",
+    "people.prosperity",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.community_societies",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.nodes",
+    "table.wars",
+    "table.world_maps",
+)
+@writes(
+    "knowledge.spread",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
+@reads("event.severity", "knowledge.spread", "people.prosperity", "settlement.prosperity")
+@writes("knowledge.spread")
 async def dark_ages(ctx: TickContext) -> None:
     holdings = await KnowledgeHoldings.load(ctx.session)
     ctx.count("forgotten", await _forgetting(ctx, holdings))

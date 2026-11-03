@@ -7,6 +7,7 @@ from aerona.domain.enums.society import Commodity
 from aerona.domain.models.entity_stats import SettlementStats
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.interconnect.annotations import reads
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.drives import closeness, hunger
 from aerona.engine.notes import note
@@ -103,6 +104,21 @@ async def migrate(ctx: TickContext, atlas: RegionAtlas, source: EntityRow, targe
     return settlement, ruin is not None
 
 
+@reads(
+    "people.population",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.calendars",
+    "table.community_societies",
+    "table.forced_weather",
+    "table.place_environment",
+    "table.pressures",
+    "table.region_environment",
+    "table.sky_events",
+    "table.world_maps",
+    "table.world_seasons",
+)
+@reads("people.population", "settlement.population", "settlement.prosperity")
 async def famine_migration(ctx: TickContext) -> None:
     rules = ctx.rules
     effects = rules.world_effects

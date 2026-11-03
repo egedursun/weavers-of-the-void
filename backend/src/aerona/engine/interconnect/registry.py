@@ -43,10 +43,30 @@ class Surface:
         return tuple(key for key in (self.drawer, self.layer, self.chart) if key)
 
 
+class EdgeKind(StrEnum):
+    MODIFIER = "modifier"
+    RULE_SWITCH = "rule_switch"
+    FLOW = "flow"
+    TRIGGER = "trigger"
+
+
 @dataclass(frozen=True)
 class Coupling:
     target: Subsystem
     carrier: str
+    kind: EdgeKind = EdgeKind.FLOW
+    rule_key: str | None = None
+
+
+@dataclass(frozen=True)
+class Edge:
+    source: Subsystem
+    target: Subsystem
+    carrier: str
+    rule_key: str | None
+    kind: EdgeKind
+    writer: str
+    reader: str | None = None
 
 
 @dataclass(frozen=True)

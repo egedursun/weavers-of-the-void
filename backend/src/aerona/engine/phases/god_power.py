@@ -16,6 +16,7 @@ from aerona.engine.gods.power import declare_rebellion, drain_son, drained_recen
 from aerona.engine.gods.queries import community_of, creator_row, flagged_ids, sons
 from aerona.engine.gods.stats import Trait, trait_or
 from aerona.engine.gods.worship import creator_node_id, creator_worshippers
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.faith import worship_creator
 from aerona.engine.primitives.numbers import roll_top
@@ -206,6 +207,8 @@ async def prophet_conversions(ctx: TickContext, creator: CreatorRow) -> None:
             )
 
 
+@reads("table.bonds", "table.entity_flags", "table.epoch_year_cursors", "table.nodes", "table.son_relations")
+@writes("table.chronicle", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.son_relations", "table.sons")
 async def god_power(ctx: TickContext) -> None:
     creator = await creator_row(ctx.session)
     if creator is None:

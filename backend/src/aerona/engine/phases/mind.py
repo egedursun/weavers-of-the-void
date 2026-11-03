@@ -18,6 +18,7 @@ from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import HeroQuestKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import (
@@ -146,6 +147,77 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
         )
 
 
+@reads(
+    "cult.zeal",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "people.craft",
+    "people.magic",
+    "people.martiality",
+    "people.piety",
+    "people.population",
+    "people.prosperity",
+    "people.wealth",
+    "place.fertility",
+    "region.fertility",
+    "settlement.piety",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.applied_fixups",
+    "table.bonds",
+    "table.community_relations",
+    "table.community_societies",
+    "table.culture_values",
+    "table.entity_tags",
+    "table.injuries",
+    "table.memories",
+    "table.minds",
+    "table.needs",
+    "table.nodes",
+    "table.personality_values",
+    "table.pressures",
+    "table.skills",
+    "table.traits",
+    "table.war_sides",
+    "table.wars",
+)
+@writes(
+    "table.applied_fixups",
+    "table.community_relations",
+    "table.culture_values",
+    "table.memories",
+    "table.minds",
+    "table.needs",
+    "table.personality_values",
+    "table.pressures",
+    "table.skills",
+    "table.traits",
+)
+@reads(
+    "cult.zeal",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "people.craft",
+    "people.magic",
+    "people.martiality",
+    "people.piety",
+    "people.population",
+    "people.prosperity",
+    "people.wealth",
+    "place.fertility",
+    "region.fertility",
+    "settlement.piety",
+    "settlement.population",
+    "settlement.prosperity",
+)
 async def mind_survey(ctx: TickContext) -> None:
     known = set(await ctx.session.scalars(select(MindRow.node_id)))
     created = 0
@@ -212,6 +284,17 @@ async def plagued_communities(ctx: TickContext) -> set[int]:
     return struck
 
 
+@reads(
+    "table.bonds",
+    "table.community_relations",
+    "table.culture_values",
+    "table.memories",
+    "table.minds",
+    "table.nodes",
+    "table.personality_values",
+    "table.traits",
+)
+@writes("table.culture_values", "table.personality_values")
 async def mind_values(ctx: TickContext) -> None:
     index = await ValueIndex.load(ctx.session)
     plagued = await plagued_communities(ctx)
@@ -242,6 +325,47 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     return home is not None and bool(await ongoing_wars(ctx.session, home))
 
 
+@reads(
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "table.bodies",
+    "table.bonds",
+    "table.conditions",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.injuries",
+    "table.memories",
+    "table.minds",
+    "table.nodes",
+    "table.personality_values",
+    "table.prostheses",
+    "table.skills",
+    "table.traits",
+    "table.war_sides",
+    "table.wars",
+)
+@writes(
+    "mortal.hp",
+    "table.bodies",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.injuries",
+    "table.memories",
+    "table.skills",
+    "table.traits",
+)
+@reads("mortal.age", "mortal.agility", "mortal.charisma", "mortal.hp", "mortal.intellect", "mortal.lifespan", "mortal.strength")
+@writes("mortal.hp")
 async def mind_skills(ctx: TickContext) -> None:
     ctx.count("lessons", await teach_apprentices(ctx))
     index = await ValueIndex.load(ctx.session)
@@ -301,11 +425,57 @@ async def vengeance(ctx: TickContext) -> int:
     return sworn
 
 
+@reads("table.memories")
 async def mind_memories(ctx: TickContext) -> None:
     ctx.count("vengeance_sworn", await vengeance(ctx))
     ctx.count("memories_forgotten", await forget_faded(ctx.session, ctx.rules, ctx.epoch))
 
 
+@reads(
+    "people.piety",
+    "people.population",
+    "people.prosperity",
+    "place.fertility",
+    "region.fertility",
+    "settlement.piety",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.community_societies",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.entity_tags",
+    "table.epoch_year_cursors",
+    "table.injuries",
+    "table.memories",
+    "table.minds",
+    "table.needs",
+    "table.personality_values",
+    "table.pressures",
+    "table.skills",
+    "table.traits",
+    "table.war_sides",
+    "table.wars",
+)
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.needs",
+    "table.pressures",
+)
+@reads(
+    "people.piety",
+    "people.population",
+    "people.prosperity",
+    "place.fertility",
+    "region.fertility",
+    "settlement.piety",
+    "settlement.population",
+    "settlement.prosperity",
+)
 async def mind_needs(ctx: TickContext) -> None:
     index = await ValueIndex.load(ctx.session)
     minds = await living_minds(ctx.session)
@@ -323,6 +493,8 @@ async def mind_needs(ctx: TickContext) -> None:
     ctx.count("needs", needy)
 
 
+@reads("table.bonds", "table.community_relations", "table.culture_values", "table.memories", "table.nodes", "table.personality_values", "table.traits")
+@writes("table.community_relations")
 async def mind_opinion(ctx: TickContext) -> None:
     ctx.count("relations_refreshed", await refresh_relations(ctx.session, ctx.rules, ctx.epoch))
 
@@ -330,6 +502,31 @@ async def mind_opinion(ctx: TickContext) -> None:
 SURVEY_PHASES = (Phase("mind_survey", mind_survey),)
 
 
+@reads(
+    "table.bonds",
+    "table.community_relations",
+    "table.community_societies",
+    "table.cosmos",
+    "table.culture_values",
+    "table.epoch_year_cursors",
+    "table.memories",
+    "table.minds",
+    "table.nodes",
+    "table.personality_values",
+    "table.pressures",
+    "table.traits",
+    "table.world_maps",
+)
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_relations",
+    "table.community_societies",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+)
 async def famine_aid(ctx: TickContext) -> None:
     table = ctx.rules.needs
     atlas = await RegionAtlas.load(ctx.session)

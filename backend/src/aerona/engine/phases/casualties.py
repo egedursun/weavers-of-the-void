@@ -19,6 +19,7 @@ from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.body.book import bedridden, blow_style, effective
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits, fatal_injury
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -355,6 +356,62 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     return marked
 
 
+@reads(
+    "army.experience",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "table.armies",
+    "table.battles",
+    "table.bodies",
+    "table.bonds",
+    "table.captives",
+    "table.community_societies",
+    "table.conditions",
+    "table.cosmos",
+    "table.designated_heirs",
+    "table.entity_flags",
+    "table.entity_traits",
+    "table.epoch_year_cursors",
+    "table.injuries",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.memories",
+    "table.minds",
+    "table.name_registry",
+    "table.nodes",
+    "table.prostheses",
+    "table.routes",
+    "table.skills",
+    "table.traits",
+    "table.wars",
+    "table.world_maps",
+)
+@writes(
+    "army.experience",
+    "mortal.death_year",
+    "mortal.hp",
+    "table.armies",
+    "table.bodies",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.injuries",
+    "table.memories",
+    "table.name_registry",
+    "table.sons",
+)
+@reads("army.experience", "mortal.age", "mortal.agility", "mortal.charisma", "mortal.hp", "mortal.intellect", "mortal.lifespan", "mortal.strength")
+@writes("army.experience", "mortal.death_year", "mortal.hp")
 async def war_casualties(ctx: TickContext) -> None:
     clashes = await clashes_of(ctx)
     ctx.count("duel_dead", await mark_duel_dead(ctx, clashes))
@@ -379,6 +436,49 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     return marked
 
 
+@reads(
+    "event.severity",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "table.bodies",
+    "table.bonds",
+    "table.captives",
+    "table.community_societies",
+    "table.cosmos",
+    "table.designated_heirs",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.memories",
+    "table.minds",
+    "table.name_registry",
+    "table.nodes",
+    "table.routes",
+    "table.traits",
+    "table.world_maps",
+)
+@writes(
+    "mortal.death_year",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.injuries",
+    "table.memories",
+    "table.name_registry",
+    "table.sons",
+)
+@reads("event.severity", "mortal.age", "mortal.agility", "mortal.charisma", "mortal.intellect", "mortal.lifespan", "mortal.strength")
+@writes("mortal.death_year")
 async def disaster_casualties(ctx: TickContext) -> None:
     losses = ctx.rules.casualties
     session = ctx.session

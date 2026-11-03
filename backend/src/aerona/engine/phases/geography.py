@@ -12,6 +12,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import PlaceStats
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.naming import Namer, seed_of
@@ -132,6 +133,31 @@ async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None =
     return SeededPlace(place, moved, text)
 
 
+@reads(
+    "region.danger",
+    "region.fertility",
+    "region.magic",
+    "settlement.population",
+    "table.bonds",
+    "table.epoch_year_cursors",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.name_registry",
+    "table.nodes",
+    "table.region_environment",
+)
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+)
+@reads("region.danger", "region.fertility", "region.magic", "settlement.population")
 async def geography(ctx: TickContext) -> None:
     settings = ctx.rules.geography
     if not settings.seed_cap:

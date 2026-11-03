@@ -23,6 +23,7 @@ from aerona.domain.models.entity_stats import FactionStats, ItemStats
 from aerona.engine.body.cohorts import labour_factor
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_types import ore_yield_pct
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.community import CommunityBook
@@ -548,6 +549,64 @@ async def trade_flows(ctx: TickContext, book: CommunityBook, entities: Mapping[i
     return flows
 
 
+@reads(
+    "law.justice",
+    "people.craft",
+    "people.martiality",
+    "people.piety",
+    "people.population",
+    "people.prosperity",
+    "place.fertility",
+    "region.fertility",
+    "settlement.defense",
+    "settlement.piety",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.community_societies",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.maimed_cohorts",
+    "table.name_registry",
+    "table.nodes",
+    "table.region_environment",
+    "table.resource_commodities",
+    "table.reverences",
+    "table.tributes",
+    "table.world_maps",
+)
+@writes(
+    "people.martiality",
+    "people.piety",
+    "people.prosperity",
+    "settlement.defense",
+    "settlement.piety",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_societies",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+)
+@reads(
+    "law.justice",
+    "people.craft",
+    "people.martiality",
+    "people.piety",
+    "people.population",
+    "people.prosperity",
+    "place.fertility",
+    "region.fertility",
+    "settlement.defense",
+    "settlement.piety",
+    "settlement.population",
+    "settlement.prosperity",
+)
+@writes("people.martiality", "people.piety", "people.prosperity", "settlement.defense", "settlement.piety", "settlement.prosperity")
 async def society_economy(ctx: TickContext) -> None:
     session = ctx.session
     world = await EconomyWorld.load(session)

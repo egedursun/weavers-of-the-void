@@ -21,6 +21,7 @@ from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import CultStats
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.book import ValueIndex
 from aerona.engine.mind.drives import zeal_drive
 from aerona.engine.mind.hooks import converted
@@ -117,6 +118,32 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
     return sect
 
 
+@reads(
+    "cult.followers",
+    "cult.influence",
+    "cult.zeal",
+    "table.bonds",
+    "table.epoch_year_cursors",
+    "table.name_registry",
+    "table.nodes",
+    "table.reverences",
+    "table.son_relations",
+    "table.wars",
+)
+@writes(
+    "cult.followers",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+    "table.son_relations",
+)
+@reads("cult.followers", "cult.influence", "cult.zeal")
+@writes("cult.followers")
 async def schisms(ctx: TickContext) -> None:
     settings = ctx.rules.religion
     cults = await canon(ctx.session, [EntityType.CULT])
@@ -142,6 +169,8 @@ async def schisms(ctx: TickContext) -> None:
     ctx.count("schisms", split)
 
 
+@reads("settlement.piety", "table.bonds", "table.entity_flags", "table.nodes", "table.reverences")
+@reads("settlement.piety")
 async def godlessness(ctx: TickContext) -> None:
     settings = ctx.rules.religion
     faith = await FaithIndex.load(ctx.session)
@@ -295,6 +324,35 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     await note(ctx, text, key=key, ids=[community.id], son_id=son_id, feed=FeedCategory.WORLD, kind=ChronicleKind.WORSHIP)
 
 
+@reads(
+    "cult.followers",
+    "cult.influence",
+    "people.population",
+    "settlement.population",
+    "table.bonds",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.memories",
+    "table.minds",
+    "table.nodes",
+    "table.personality_values",
+    "table.pressures",
+    "table.reverences",
+    "table.traits",
+    "table.world_maps",
+)
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+    "table.reverences",
+)
+@reads("cult.followers", "cult.influence", "people.population", "settlement.population")
 async def religion_spread(ctx: TickContext) -> None:
     settings = ctx.rules.religion
     session = ctx.session

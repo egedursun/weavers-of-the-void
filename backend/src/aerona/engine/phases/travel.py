@@ -50,6 +50,7 @@ from aerona.engine.cosmos.routes import (
     world_name,
 )
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.drives import expedition_drive
 from aerona.engine.notes import note
@@ -815,6 +816,87 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     await note(ctx, f"{traveller.name}'s travellers reached {arrival.target.name} and {did}.{contact}{tail}", key="travel.arrival", ids=ids, feed=None)
 
 
+@reads(
+    "knowledge.spread",
+    "people.craft",
+    "people.magic",
+    "people.martiality",
+    "people.piety",
+    "people.population",
+    "people.prosperity",
+    "region.fertility",
+    "settlement.defense",
+    "settlement.piety",
+    "settlement.population",
+    "species.danger",
+    "table.bonds",
+    "table.calendars",
+    "table.community_relations",
+    "table.cosmos",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.entity_traits",
+    "table.epoch_year_cursors",
+    "table.forced_weather",
+    "table.journeys",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.memories",
+    "table.minds",
+    "table.name_registry",
+    "table.nodes",
+    "table.personality_values",
+    "table.place_environment",
+    "table.pressures",
+    "table.region_environment",
+    "table.reverences",
+    "table.routes",
+    "table.sky_events",
+    "table.traits",
+    "table.war_sides",
+    "table.wars",
+    "table.world_maps",
+    "table.world_seasons",
+)
+@writes(
+    "knowledge.spread",
+    "people.piety",
+    "people.population",
+    "settlement.piety",
+    "settlement.population",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_relations",
+    "table.entities",
+    "table.entity_flags",
+    "table.entity_traits",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.journeys",
+    "table.lexemes",
+    "table.memories",
+    "table.name_registry",
+    "table.reverences",
+    "table.routes",
+    "table.sons",
+)
+@reads(
+    "knowledge.spread",
+    "people.craft",
+    "people.magic",
+    "people.martiality",
+    "people.piety",
+    "people.population",
+    "people.prosperity",
+    "region.fertility",
+    "settlement.defense",
+    "settlement.piety",
+    "settlement.population",
+    "species.danger",
+)
+@writes("knowledge.spread", "people.piety", "people.population", "settlement.piety", "settlement.population")
 async def travel_phase(ctx: TickContext) -> None:
     await hidden_routes(ctx)
     await route_knowledge(ctx)

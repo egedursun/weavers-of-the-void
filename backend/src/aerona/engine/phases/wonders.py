@@ -8,6 +8,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -82,6 +83,46 @@ async def envy(ctx: TickContext, work: EntityRow, owner: EntityRow, neighbours: 
     return wars
 
 
+@reads(
+    "people.piety",
+    "people.prosperity",
+    "settlement.piety",
+    "settlement.prosperity",
+    "structure.splendor",
+    "table.bonds",
+    "table.community_relations",
+    "table.cosmos",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.memories",
+    "table.minds",
+    "table.nodes",
+    "table.personality_values",
+    "table.reverences",
+    "table.traits",
+    "table.war_sides",
+    "table.wars",
+    "table.world_maps",
+)
+@writes(
+    "people.piety",
+    "settlement.piety",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_relations",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+    "table.sons",
+)
+@reads("people.piety", "people.prosperity", "settlement.piety", "settlement.prosperity", "structure.splendor")
+@writes("people.piety", "settlement.piety", "settlement.prosperity")
 async def wonders(ctx: TickContext) -> None:
     session = ctx.session
     settings = ctx.rules.wonders

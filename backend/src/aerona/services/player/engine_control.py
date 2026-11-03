@@ -12,6 +12,7 @@ COUNTERS_SHOWN = 6
 class RunPhase(Command):
     phase: str
     replay: bool = False
+    target_node_id: int | None = None
 
 
 def summarize(counters: dict[str, int]) -> str:
@@ -26,10 +27,11 @@ async def run_phase(scope: PlayerScope, command: RunPhase) -> Effect:
     phase = find_phase(command.phase)
     manual = await scope.context(f"phase.{phase.name}")
     ctx = TickContext(manual.environment, scope.session, phase.name) if command.replay else manual
-    await run_guarded(phase, ctx)
+    await run_guarded(phase, ctx, only=command.target_node_id)
     prefix = f"{ctx.phase}."
     counters = {name.removeprefix(prefix): value for name, value in ctx.environment.stats.counters.items() if value}
     detail = summarize(counters)
     seed = "with the epoch's own seed" if command.replay else "now"
+    seed += " on its one target" if command.target_node_id is not None else ""
     message = f"The {phase.name} step ran {seed}" + (f": {detail}." if detail else " and found nothing to change.")
     return Effect(message, values={"changes": sum(counters.values()), "stream": ctx.phase, "world_seed": ctx.environment.world_seed})

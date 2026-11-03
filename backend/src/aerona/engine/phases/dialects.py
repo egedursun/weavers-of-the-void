@@ -6,6 +6,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.models.entity_stats import LanguageStats
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -53,6 +54,19 @@ async def found_dialect(ctx: TickContext, settlement: EntityRow, parent: EntityR
     return dialect
 
 
+@reads("table.bonds", "table.epoch_year_cursors", "table.language_profiles", "table.lexemes", "table.name_registry", "table.nodes", "table.world_maps")
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.name_registry",
+)
 async def dialect_divergence(ctx: TickContext) -> None:
     rules = ctx.rules
     rng = ctx.rng()

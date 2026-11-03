@@ -1,8 +1,16 @@
+import re
 from pathlib import Path
 
 from aerona.db.base import Base
+from aerona.engine.interconnect.annotations import declared_writes
 from aerona.engine.interconnect.catalog import REGISTERED
+from aerona.engine.interconnect.compliance import CATALOGUE
+from aerona.engine.interconnect.flows import PHASE_FLOWS
+from aerona.engine.interconnect.guards import CONSERVED_KEYS
+from aerona.engine.interconnect.registry import Exposure
 from aerona.engine.pipeline import PHASE_REGISTRY
+from aerona.prompts.ids import PromptId
+from aerona.prompts.tools.ids import MortalToolId, SonToolId
 from aerona.services.player.catalog import ACTIONS_BY_ID
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -38,9 +46,80 @@ def test_every_registered_mechanic_is_traceable_and_complete() -> None:
         if not mechanic.backfill.strip():
             problems.append(f"{key}: no backfill rule")
         problems.extend(f"{key}: unknown table {table}" for table in mechanic.tables if table not in tables)
-    assert problems == []
+    assert problems == [], "\n".join(problems)
 
 
 def test_every_engine_step_is_claimed_by_a_registered_mechanic() -> None:
     claimed = {phase for mechanic in REGISTERED.values() for phase in mechanic.phases}
     assert [name for name in PHASE_REGISTRY if name not in claimed] == []
+
+
+BACKEND = ROOT / "backend" / "src" / "aerona"
+VERSIONS = BACKEND / "db" / "alembic" / "versions"
+PLAIN_BACKFILLS = ("none", "computed", "existing mechanic")
+
+
+def backend_source() -> str:
+    return "\n".join(path.read_text(encoding="utf-8") for path in BACKEND.rglob("*.py") if "alembic" not in path.parts)
+
+
+def template_written(template: str, source: str) -> bool:
+    if f'"{template}"' in source or f'"{template}' in source:
+        return True
+    prefixes = set(re.findall(r'f"([a-z_.]+)\{', source))
+    return any(template.startswith(prefix) for prefix in prefixes)
+
+
+def fixup_keys() -> set[str]:
+    return set(re.findall(r'_FIXUP = "([a-z_.]+)"', backend_source()))
+
+
+def backfill_known(text: str) -> bool:
+    head = text.split(":", 1)[0].strip()
+    if head in PLAIN_BACKFILLS or head in PHASE_REGISTRY or head in fixup_keys():
+        return True
+    revision = head.removeprefix("migration ").strip()
+    return head.startswith("migration ") and any(VERSIONS.glob(f"{revision}_*.py"))
+
+
+def test_the_generic_layer_holds_for_every_mechanic() -> None:
+    source = backend_source()
+    tools = {item.value for item in SonToolId} | {item.value for item in MortalToolId}
+    problems: list[str] = []
+    for key, mechanic in REGISTERED.items():
+        if not mechanic.phases:
+            problems.append(f"{key}: no step, so it can be neither run now nor suppressed")
+        problems.extend(f"{key}: template {template} is never written" for template in mechanic.templates if not template_written(template, source))
+        if mechanic.exposure is Exposure.TOOL and not mechanic.tools:
+            problems.append(f"{key}: exposed as a tool but names none")
+        problems.extend(f"{key}: unknown tool {tool}" for tool in mechanic.tools if tool not in tools)
+        if mechanic.exposure is Exposure.CONTEXT and not mechanic.targets:
+            problems.append(f"{key}: exposed in context but acts on nobody")
+        if not backfill_known(mechanic.backfill):
+            problems.append(f"{key}: backfill {mechanic.backfill[:40]} is not a step, fix-up, migration or plain rule")
+        for name in mechanic.phases:
+            conserved = {item for item in declared_writes(PHASE_REGISTRY[name].run) if item.split(".")[-1] in CONSERVED_KEYS and not item.startswith("table.")}
+            if conserved and name not in PHASE_FLOWS:
+                problems.append(f"{key}: step {name} moves {sorted(conserved)} without a flow category")
+    assert problems == [], "\n".join(problems)
+
+
+def test_the_compliance_catalogue_resolves_to_real_code() -> None:
+    source = backend_source()
+    frontend = frontend_source()
+    tables = set(Base.metadata.tables)
+    prompts = {item.value for item in PromptId}
+    tools = {item.value for item in SonToolId} | {item.value for item in MortalToolId}
+    problems: list[str] = []
+    for row in CATALOGUE:
+        problems.extend(f"{row.section}: unknown table {table}" for table in row.tables if table not in tables)
+        problems.extend(f"{row.section}: unknown step {phase}" for phase in row.phases if phase not in PHASE_REGISTRY)
+        problems.extend(f"{row.section}: missing lever {lever}" for lever in row.levers if lever not in ACTIONS_BY_ID)
+        problems.extend(f"{row.section}: surface {surface} is not rendered" for surface in row.surfaces if surface not in frontend)
+        problems.extend(f"{row.section}: unknown context {context}" for context in row.contexts if context not in prompts)
+        problems.extend(f"{row.section}: unknown tool {tool}" for tool in row.tools if tool not in tools)
+        problems.extend(f"{row.section}: no template starts with {prefix}" for prefix in row.templates if not template_written(prefix, source))
+        problems.extend(
+            f"{row.section}: backfill {item} is not in the code" for item in row.backfill if item not in source and not any(VERSIONS.glob(f"{item}_*.py"))
+        )
+    assert problems == [], "\n".join(problems)

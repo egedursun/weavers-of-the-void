@@ -1,4 +1,4 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -8,6 +8,7 @@ from aerona.core.random import SeededRandom
 from aerona.db.repositories.chronicle import ChronicleClock, ChronicleDraft, ChronicleRepository, ChronicleWrite
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.epoch import EpochPhase
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.world import LoreLanguage
 from aerona.domain.models.calendar import YearWindow
 from aerona.engine.primitives.knowledge import LawBook
@@ -90,6 +91,7 @@ class TickContext:
         place_entity_id: int | None = None,
         magnitude: int = 0,
         year: int | None = None,
+        roles: Mapping[int, IncidentRole] | None = None,
     ) -> ChronicleWrite:
         years = self.rules.time.years_per_epoch
         clock = ChronicleClock(
@@ -111,5 +113,6 @@ class TickContext:
             place_entity_id=place_entity_id,
             magnitude=magnitude,
             year=year,
+            roles=roles or {},
         )
         return await ChronicleRepository(self.session).append(draft, clock)

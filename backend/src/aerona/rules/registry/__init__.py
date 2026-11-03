@@ -99,7 +99,7 @@ from aerona.rules.registry.mind import (
     TraitsRules,
 )
 from aerona.rules.registry.model import ModelRules
-from aerona.rules.registry.modifiers import ModifiersRules
+from aerona.rules.registry.modifiers import IncidentRules, ModifiersRules
 from aerona.rules.registry.mortal_agents import MortalAgentsRules
 from aerona.rules.registry.mortal_tools import MortalToolsRules
 from aerona.rules.registry.naming import NamingRules
@@ -146,6 +146,7 @@ from aerona.rules.registry.world_war_strength import WorldWarStrengthRules
 class Rules:
     agents: AgentsRules = field(default_factory=AgentsRules)
     modifiers: ModifiersRules = field(default_factory=ModifiersRules)
+    incidents: IncidentRules = field(default_factory=IncidentRules)
     environment: EnvironmentRules = field(default_factory=EnvironmentRules)
     scars: ScarsRules = field(default_factory=ScarsRules)
     passability: PassabilityRules = field(default_factory=PassabilityRules)

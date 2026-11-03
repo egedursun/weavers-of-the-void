@@ -6,6 +6,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import PowerEffect
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.capacity import GROWING_TYPES, LAND_COMMUNITY_TYPES, CapacityModel, RegionLoad
 from aerona.engine.primitives.faith import faith_dominance, faith_shares, has_unlocked_power, living_patron
@@ -20,6 +21,8 @@ async def total_population(ctx: TickContext) -> int:
     return sum(stat(community, "population") or 0 for community in await canon(ctx.session, LAND_COMMUNITY_TYPES))
 
 
+@reads("people.population", "settlement.population")
+@reads("people.population", "settlement.population")
 async def population_baseline(ctx: TickContext) -> None:
     record(ctx, LedgerKey.POPULATION_START, await total_population(ctx))
 
@@ -93,6 +96,33 @@ async def grow_community(ctx: TickContext, model: CapacityModel, laws: LawBook, 
     return after - before
 
 
+@reads(
+    "cult.followers",
+    "cult.influence",
+    "people.population",
+    "place.fertility",
+    "region.breadth",
+    "region.fertility",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.nodes",
+    "table.place_environment",
+    "table.son_powers",
+    "table.world_maps",
+)
+@writes("cult.followers", "people.population", "settlement.population", "table.entities")
+@reads(
+    "cult.followers",
+    "cult.influence",
+    "people.population",
+    "place.fertility",
+    "region.breadth",
+    "region.fertility",
+    "settlement.population",
+    "settlement.prosperity",
+)
+@writes("cult.followers", "people.population", "settlement.population")
 async def population_growth(ctx: TickContext) -> None:
     record(ctx, LedgerKey.POPULATION_BEFORE_GROWTH, await total_population(ctx))
     model = await CapacityModel.load(ctx.session, ctx.rules)

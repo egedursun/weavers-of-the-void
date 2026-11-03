@@ -17,6 +17,7 @@ from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.body.book import effective, strike_style
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import apply_hits, fatal_injury
 from aerona.engine.notes import note
@@ -264,6 +265,7 @@ async def encounter(ctx: TickContext, hero: EntityRow, monster: EntityRow, conte
     return await _hero_loses(ctx, hero, monster, patron, context)
 
 
+@reads("table.bonds")
 async def sworn_hunts(ctx: TickContext) -> None:
     for bond in await active_bonds(ctx.session, [BondKind.HUNTS]):
         hunter = await living_entity(ctx.session, bond.source_node_id)
@@ -274,6 +276,80 @@ async def sworn_hunts(ctx: TickContext) -> None:
         await encounter(ctx, hunter, prey, "in a sworn hunt")
 
 
+@reads(
+    "item.damage",
+    "item.might",
+    "item.protection",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "species.agility",
+    "species.danger",
+    "species.strength",
+    "table.bodies",
+    "table.bonds",
+    "table.community_societies",
+    "table.conditions",
+    "table.cosmos",
+    "table.designated_heirs",
+    "table.entity_flags",
+    "table.entity_tags",
+    "table.entity_traits",
+    "table.epoch_year_cursors",
+    "table.injuries",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.memories",
+    "table.minds",
+    "table.name_registry",
+    "table.nodes",
+    "table.prostheses",
+    "table.routes",
+    "table.skills",
+    "table.traits",
+    "table.world_maps",
+)
+@writes(
+    "item.might",
+    "item.protection",
+    "mortal.charisma",
+    "mortal.death_year",
+    "mortal.hp",
+    "species.danger",
+    "table.bodies",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.injuries",
+    "table.memories",
+    "table.name_registry",
+    "table.sons",
+)
+@reads(
+    "item.damage",
+    "item.might",
+    "item.protection",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "species.agility",
+    "species.danger",
+    "species.strength",
+)
+@writes("item.might", "item.protection", "mortal.charisma", "mortal.death_year", "mortal.hp", "species.danger")
 async def glory_hunts(ctx: TickContext) -> None:
     engine = ctx.rules.world_engine
     rng = ctx.rng()

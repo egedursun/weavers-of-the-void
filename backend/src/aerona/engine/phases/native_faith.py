@@ -18,6 +18,7 @@ from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.foreign_gods import believers_faith, worshippers
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.faith import change_religion, patron_son
@@ -197,6 +198,29 @@ async def feed_god(ctx: TickContext, god: ForeignGodRow) -> None:
         god.stance = clamp_int(god.stance + await stance_shift(ctx, god), RELATION_MIN, RELATION_MAX)
 
 
+@reads(
+    "people.piety",
+    "people.population",
+    "settlement.piety",
+    "settlement.population",
+    "table.bonds",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.nodes",
+    "table.reverences",
+)
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.foreign_gods",
+    "table.incident_participants",
+    "table.incidents",
+    "table.reverences",
+)
+@reads("people.piety", "people.population", "settlement.piety", "settlement.population")
 async def native_faith(ctx: TickContext) -> None:
     gods = list(await ctx.session.scalars(select(ForeignGodRow).where(ForeignGodRow.status != ForeignGodStatus.DEAD).order_by(ForeignGodRow.id)))
     struck = await struck_places(ctx.session, ctx.epoch)

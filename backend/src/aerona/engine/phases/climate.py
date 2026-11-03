@@ -16,6 +16,7 @@ from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.world import ClimateEra
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.star_types import star_mechanics
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_economy import population_bounds
@@ -115,6 +116,8 @@ async def advance_world(ctx: TickContext, world: WorldRow, many_worlds: bool) ->
     await apply_climate_effect(ctx, world, era)
 
 
+@reads("table.climate_orders", "table.epoch_year_cursors")
+@writes("table.chronicle", "table.epoch_year_cursors", "table.incidents", "table.worlds")
 async def climate_transition(ctx: TickContext) -> None:
     worlds = await WorldRepository(ctx.session).reachable_worlds()
     for world in worlds:
@@ -123,6 +126,8 @@ async def climate_transition(ctx: TickContext) -> None:
     ctx.count("worlds", len(worlds))
 
 
+@reads("region.fertility", "place.fertility")
+@writes("region.fertility", "place.fertility")
 async def law_fertility(ctx: TickContext) -> None:
     laws = await ctx.laws()
     if not (laws.anywhere(NaturalLaw.BOUNTY) or laws.anywhere(NaturalLaw.DROUGHT)):

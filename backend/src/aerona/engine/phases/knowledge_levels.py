@@ -18,6 +18,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.models.entity_stats import KnowledgeStats
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.knowledge import teach
@@ -292,6 +293,32 @@ async def decline_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     return declined
 
 
+@reads(
+    "knowledge.spread",
+    "people.prosperity",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.community_societies",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.name_registry",
+    "table.nodes",
+)
+@writes(
+    "knowledge.spread",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+)
+@reads("knowledge.spread", "people.prosperity", "settlement.prosperity")
+@writes("knowledge.spread")
 async def knowledge_levels(ctx: TickContext) -> None:
     scene = await KnowledgeScene.load(ctx)
     ctx.count("deepened", await deepen_round(ctx, scene))

@@ -20,6 +20,7 @@ from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.body.book import factor
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import apply_hits, fatal_injury
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -358,6 +359,86 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
         counters.apprentices += 1
 
 
+@reads(
+    "item.damage",
+    "item.protection",
+    "knowledge.spread",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "species.agility",
+    "species.danger",
+    "species.strength",
+    "table.bodies",
+    "table.body_customs",
+    "table.bonds",
+    "table.captives",
+    "table.community_relations",
+    "table.community_societies",
+    "table.conditions",
+    "table.cosmos",
+    "table.culture_values",
+    "table.designated_heirs",
+    "table.entity_flags",
+    "table.entity_tags",
+    "table.entity_traits",
+    "table.epoch_year_cursors",
+    "table.hero_quests",
+    "table.injuries",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.memories",
+    "table.name_registry",
+    "table.nodes",
+    "table.prostheses",
+    "table.reverences",
+    "table.routes",
+    "table.skills",
+    "table.thread_links",
+    "table.threads",
+    "table.traits",
+    "table.world_maps",
+)
+@writes(
+    "knowledge.spread",
+    "mortal.charisma",
+    "mortal.death_year",
+    "mortal.hp",
+    "species.danger",
+    "table.bodies",
+    "table.body_customs",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.hero_quests",
+    "table.incident_participants",
+    "table.incidents",
+    "table.injuries",
+    "table.name_registry",
+    "table.sons",
+)
+@reads(
+    "item.protection",
+    "knowledge.spread",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "species.agility",
+    "species.danger",
+    "species.strength",
+)
+@writes("knowledge.spread", "mortal.charisma", "mortal.death_year", "mortal.hp", "species.danger")
 async def heroes(ctx: TickContext) -> None:
     world = await load_hero_world(ctx)
     counters = HeroCounters()
@@ -417,6 +498,29 @@ async def bear_hero(ctx: TickContext, community: EntityRow) -> EntityRow:
     return hero
 
 
+@reads(
+    "people.population",
+    "settlement.population",
+    "table.bonds",
+    "table.epoch_year_cursors",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.name_registry",
+    "table.nodes",
+    "table.reverences",
+)
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+)
+@reads("people.population", "settlement.population")
 async def hero_births(ctx: TickContext) -> None:
     settings = ctx.rules.heroes
     communities = await canon(ctx.session, SOCIETY_TYPES)

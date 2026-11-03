@@ -2,12 +2,14 @@ from pydantic import Field
 from sqlalchemy import delete
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.db.tables.interconnect import ModifierRow
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.interconnect import IncidentRow, ModifierRow
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 from aerona.engine.interconnect.registry import MECHANICS, suppression_key
 from aerona.engine.primitives.modifiers import ModifierDraft, add_modifier
+from aerona.engine.primitives.stats import has_stat, set_stats, stat_bounds
 from aerona.services.player import engine_control
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -54,6 +56,7 @@ class RemoveModifier(Command):
 
 class RunMechanic(Command):
     mechanic: str = Field(pattern=KEY_PATTERN)
+    target_node_id: int | None = None
 
 
 async def _node(scope: PlayerScope, node_id: int) -> NodeRow:
@@ -153,5 +156,44 @@ async def run_mechanic(scope: PlayerScope, command: RunMechanic) -> Effect:
         raise NotFoundError(f"No mechanic is called {command.mechanic}.")
     if not mechanic.phases:
         raise ValidationFailedError(f"{mechanic.title} runs only when its events happen; it has no step to run.")
-    messages = [(await engine_control.run_phase(scope, engine_control.RunPhase(phase=phase))).message for phase in mechanic.phases]
-    return Effect(" ".join(messages))
+    if command.target_node_id is not None:
+        await _node(scope, command.target_node_id)
+    messages = [
+        (await engine_control.run_phase(scope, engine_control.RunPhase(phase=phase, target_node_id=command.target_node_id))).message
+        for phase in mechanic.phases
+    ]
+    return Effect(" ".join(messages), target_node_id=command.target_node_id)
+
+
+class AnnotateIncident(Command):
+    incident_id: int
+    note: str | None = Field(default=None, max_length=2000)
+
+
+@player_action("incident:annotate", ActionKind.OTHER)
+async def annotate_incident(scope: PlayerScope, command: AnnotateIncident) -> Effect:
+    row = await scope.session.get(IncidentRow, command.incident_id)
+    if row is None:
+        raise NotFoundError("No such incident.")
+    row.note = command.note.strip() if command.note and command.note.strip() else None
+    return Effect("Your note was written beside the incident." if row.note else "Your note was taken away.")
+
+
+class SetField(Command):
+    node_id: int
+    key: str = Field(pattern=KEY_PATTERN)
+    value: int
+
+
+@player_action("lever:set", ActionKind.OTHER)
+async def set_field(scope: PlayerScope, command: SetField) -> Effect:
+    entity = await scope.session.get(EntityRow, command.node_id)
+    if entity is None:
+        raise NotFoundError("Only a record's own values can be set here.")
+    if not has_stat(entity, command.key):
+        raise ValidationFailedError(f"{entity.name} has no {command.key.replace('_', ' ')}.")
+    low, high = stat_bounds(scope.rules, entity, command.key)
+    if not low <= command.value <= high:
+        raise ValidationFailedError(f"{command.key.replace('_', ' ').capitalize()} must lie between {low} and {high}.")
+    set_stats(entity, **{command.key: command.value})
+    return Effect(f"{entity.name}'s {command.key.replace('_', ' ')} is now {command.value}.", target_node_id=entity.id)

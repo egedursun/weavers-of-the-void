@@ -28,6 +28,8 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.quests import abandon_quest, legendary_quests, live_archive, worlds_known
 from aerona.engine.cosmos.routes import sever_route
 from aerona.engine.cosmos.world_types import is_living, is_mirror, is_realm_of_dead
+from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import apply_disaster
@@ -195,7 +197,8 @@ async def harvest_soul(ctx: TickContext, cult: EntityRow, soul: EntityRow) -> No
     record = await ctx.session.get(SoulRow, soul.id)
     if record is not None:
         record.harvested_by_entity_id = cult.id
-    scale_stat(ctx.rules, cult, FOLLOWERS_KEY, beyond.soul_harvest_follower_mult_pct / PERCENT, default=beyond.cult_default_followers)
+    with flowing(FlowCategory.CONVERSION):
+        scale_stat(ctx.rules, cult, FOLLOWERS_KEY, beyond.soul_harvest_follower_mult_pct / PERCENT, default=beyond.cult_default_followers)
     shift_bounded(ctx.rules, cult, INFLUENCE_KEY, beyond.soul_harvest_influence_gain, default=beyond.cult_default_influence)
     await EntityRepository(ctx.session).add_flag(cult.id, EntityFlag.SOUL_HARVESTER, ctx.epoch)
     await note(ctx, f"{cult.name} harvested {soul.name}; the cult's power grew, the dead are restless.", key="beyond.soul_harvest", ids=[cult.id, soul.id])
@@ -565,6 +568,63 @@ async def pursuit_of_immortality(ctx: TickContext) -> int:
     return count
 
 
+@reads(
+    "cult.followers",
+    "cult.influence",
+    "cult.zeal",
+    "knowledge.spread",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "settlement.population",
+    "table.archive_holdings",
+    "table.bonds",
+    "table.cosmos",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.journeys",
+    "table.name_registry",
+    "table.nodes",
+    "table.routes",
+    "table.souls",
+)
+@writes(
+    "cult.followers",
+    "cult.influence",
+    "settlement.population",
+    "table.archive_holdings",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.cosmos",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.legendary_quests",
+    "table.name_registry",
+    "table.routes",
+    "table.sky_events",
+    "table.souls",
+    "table.threads",
+    "table.worlds",
+)
+@reads(
+    "cult.followers",
+    "cult.influence",
+    "cult.zeal",
+    "knowledge.spread",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "settlement.population",
+)
+@writes("cult.followers", "cult.influence", "settlement.population")
 async def beyond_phase(ctx: TickContext) -> None:
     await soul_buildup(ctx)
     await soul_descent(ctx)

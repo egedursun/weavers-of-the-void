@@ -26,6 +26,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.gods.essence import gain
 from aerona.engine.gods.queries import cosmos_row, creator_row, sons, worshippers_of
 from aerona.engine.gods.stats import Trait, set_trait, trait_or
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import canon, living_sons, top_region
 from aerona.engine.primitives.stats import headcount
@@ -331,6 +332,8 @@ async def tend_living_son(ctx: TickContext, son: SonRow) -> bool:
     return False
 
 
+@reads("table.cosmos")
+@writes("table.sons")
 async def gods_fate(ctx: TickContext) -> None:
     if await cosmos_row(ctx.session) is None:
         return

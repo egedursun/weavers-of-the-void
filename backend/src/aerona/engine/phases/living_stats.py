@@ -9,6 +9,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityType
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.knowledge_levels import known_records, shift_level
@@ -185,6 +186,52 @@ async def _hold_piety(session: AsyncSession, rules: Rules, entity_id: int, floor
     set_stats(entity, piety=clamp_int(piety + rules.record_schema.function_step, 0, floor))
 
 
+@reads(
+    "knowledge.spread",
+    "people.piety",
+    "people.prosperity",
+    "place.mystery",
+    "prophecy.certainty",
+    "settlement.defense",
+    "settlement.piety",
+    "settlement.prosperity",
+    "structure.durability",
+    "structure.function",
+    "table.bonds",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.nodes",
+)
+@writes(
+    "knowledge.spread",
+    "people.piety",
+    "place.mystery",
+    "prophecy.certainty",
+    "settlement.defense",
+    "structure.function",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.sons",
+)
+@reads(
+    "knowledge.spread",
+    "people.piety",
+    "people.prosperity",
+    "place.mystery",
+    "prophecy.certainty",
+    "settlement.defense",
+    "settlement.piety",
+    "settlement.prosperity",
+    "structure.durability",
+    "structure.function",
+)
+@writes("knowledge.spread", "people.piety", "place.mystery", "prophecy.certainty", "settlement.defense", "structure.function")
 async def living_stats(ctx: TickContext) -> None:
     ctx.count("mysteries", await solve_mysteries(ctx))
     ctx.count("functions", await work_functions(ctx))

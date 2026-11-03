@@ -5,6 +5,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.language_profile import has_script
@@ -34,6 +35,7 @@ async def last_home_phrase(ctx: TickContext, language_id: int) -> str | None:
     return community_phrase(home.entity_type, home.name) if home is not None else None
 
 
+@reads("table.bonds", "table.entity_flags", "table.language_profiles")
 async def language_death(ctx: TickContext) -> None:
     rules = ctx.rules
     notes_written = 0

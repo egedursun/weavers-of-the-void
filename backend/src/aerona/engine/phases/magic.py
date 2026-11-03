@@ -7,6 +7,7 @@ from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
 from aerona.engine.environment.ley import LeyWeb
 from aerona.engine.gods.interventions import apply_abundance
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -20,6 +21,33 @@ MAGIC_STORM_SUBTYPE = "magic storm"
 WARDED_HOME_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.PLACE})
 
 
+@reads(
+    "item.curse",
+    "item.might",
+    "region.magic",
+    "resource.might",
+    "table.bonds",
+    "table.epoch_year_cursors",
+    "table.ley_lines",
+    "table.name_registry",
+    "table.nodes",
+    "table.world_maps",
+)
+@writes(
+    "item.curse",
+    "item.might",
+    "resource.might",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+)
+@reads("item.curse", "item.might", "region.magic", "resource.might")
+@writes("item.curse", "item.might", "resource.might")
 async def magic_storms(ctx: TickContext) -> None:
     rules = ctx.rules
     effects = rules.world_effects
@@ -86,6 +114,27 @@ async def ward_home(ctx: TickContext, wizard: EntityRow, home: EntityRow, protec
     await note(ctx, text, key="magic.ward" if protective else "magic.plenty", ids=[wizard.id, home.id])
 
 
+@reads(
+    "mortal.intellect",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.ley_lines",
+    "table.resurrection_orders",
+    "table.world_maps",
+)
+@writes(
+    "settlement.prosperity",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
+@reads("mortal.intellect")
 async def wizards(ctx: TickContext) -> None:
     rules = ctx.rules
     rng = ctx.rng()
@@ -113,6 +162,8 @@ async def wizards(ctx: TickContext) -> None:
             await ward_home(ctx, mortal, home, rng.chance(rules.world_effects.sorcerer_protect_chance))
 
 
+@reads("people.magic", "people.population")
+@writes("people.population")
 async def price_of_magic(ctx: TickContext) -> None:
     laws = await ctx.laws()
     if not laws.anywhere(NaturalLaw.MAGIC_PRICE):

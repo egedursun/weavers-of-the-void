@@ -18,6 +18,7 @@ from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -81,6 +82,23 @@ def route_income(
     return {entity_id: (prosperity[entity_id], wealth[entity_id]) for entity_id in prosperity}
 
 
+@reads(
+    "faction.wealth",
+    "people.prosperity",
+    "people.wealth",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.calendars",
+    "table.forced_weather",
+    "table.place_environment",
+    "table.region_environment",
+    "table.sky_events",
+    "table.world_maps",
+    "table.world_seasons",
+)
+@writes("faction.wealth", "people.prosperity", "people.wealth", "settlement.prosperity")
+@reads("faction.wealth", "people.prosperity", "people.wealth", "settlement.prosperity")
+@writes("faction.wealth", "people.prosperity", "people.wealth", "settlement.prosperity")
 async def trade_income(ctx: TickContext) -> None:
     settings = ctx.rules.trade
     entities = {entity.id: entity for entity in await canon(ctx.session)}
@@ -140,6 +158,8 @@ async def _barter(ctx: TickContext, first: EntityRow, second: EntityRow, entitie
     return True
 
 
+@reads("table.bonds", "table.epoch_year_cursors", "table.nodes", "table.world_maps")
+@writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
 async def barter_and_rivalry(ctx: TickContext) -> None:
     session = ctx.session
     entities = {entity.id: entity for entity in await canon(session)}
@@ -250,6 +270,21 @@ async def _spread_round(ctx: TickContext, entities: Mapping[int, EntityRow], bon
     return adopted
 
 
+@reads(
+    "faction.wealth", "people.prosperity", "people.wealth", "settlement.prosperity", "table.bonds", "table.epoch_year_cursors", "table.nodes", "table.routes"
+)
+@writes(
+    "settlement.prosperity",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
+@reads("faction.wealth", "people.prosperity", "people.wealth", "settlement.prosperity")
+@writes("settlement.prosperity")
 async def currency(ctx: TickContext) -> None:
     session = ctx.session
     entities = {entity.id: entity for entity in await canon(session)}

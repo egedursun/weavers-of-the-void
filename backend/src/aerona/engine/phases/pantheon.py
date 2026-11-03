@@ -33,6 +33,7 @@ from aerona.engine.cosmos.duels import ARENA_STATS, duel_history, duel_winner, s
 from aerona.engine.cosmos.foreign_gods import awaken_text, destroy_temple, god_faith, powers_of, stat_effect, wake, worshippers
 from aerona.engine.cosmos.routes import RouteBook
 from aerona.engine.cosmos.worlds import declare_holy_world
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.manual import manual_context
@@ -502,6 +503,45 @@ async def outer_gnaw(ctx: TickContext) -> int:
     return gnaw
 
 
+@reads(
+    "people.population",
+    "settlement.population",
+    "table.bodies",
+    "table.bonds",
+    "table.conditions",
+    "table.cosmos",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.foreign_god_powers",
+    "table.god_conflicts",
+    "table.injuries",
+    "table.journeys",
+    "table.memories",
+    "table.minds",
+    "table.nodes",
+    "table.prostheses",
+    "table.routes",
+    "table.son_powers",
+    "table.son_relations",
+    "table.traits",
+)
+@writes(
+    "table.bodies",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.epoch_year_cursors",
+    "table.foreign_gods",
+    "table.god_conflicts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.injuries",
+    "table.memories",
+    "table.son_relations",
+    "table.sons",
+    "table.worlds",
+)
+@reads("people.population", "settlement.population")
 async def pantheon_phase(ctx: TickContext) -> None:
     await defeated_waking(ctx)
     await sleep_waking(ctx)

@@ -14,6 +14,7 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.engine.body.cohorts import war_appetite
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import betrayal_drive, closeness, war_drive
 from aerona.engine.phase import Phase
 from aerona.engine.phases.afterlife import cosmic_court
@@ -52,6 +53,8 @@ class DiplomacyCounters:
     exhaustion_peaces: int = 0
 
 
+@reads("table.bonds")
+@writes("table.bonds")
 async def expire_truces_phase(ctx: TickContext) -> None:
     ctx.count("truces_expired", await expire_truces(ctx.session, ctx.rules, ctx.epoch))
 
@@ -334,6 +337,54 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     return ended
 
 
+@reads(
+    "army.size",
+    "cult.followers",
+    "mortal.age",
+    "people.population",
+    "settlement.population",
+    "table.armies",
+    "table.body_customs",
+    "table.bonds",
+    "table.captives",
+    "table.community_relations",
+    "table.cosmos",
+    "table.culture_values",
+    "table.epoch_year_cursors",
+    "table.maimed_cohorts",
+    "table.memories",
+    "table.minds",
+    "table.nodes",
+    "table.personality_values",
+    "table.pressures",
+    "table.routes",
+    "table.sieges",
+    "table.traits",
+    "table.war_sides",
+    "table.wars",
+    "table.world_maps",
+)
+@writes(
+    "army.size",
+    "cult.followers",
+    "people.population",
+    "settlement.population",
+    "table.armies",
+    "table.body_customs",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_relations",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+    "table.war_sides",
+    "table.wars",
+)
+@reads("army.size", "mortal.age", "people.population", "settlement.population")
+@writes("army.size", "people.population", "settlement.population")
 async def diplomacy(ctx: TickContext) -> None:
     ctx.count("alliances_lapsed", await alliance_lifetimes(ctx))
     counters = DiplomacyCounters()

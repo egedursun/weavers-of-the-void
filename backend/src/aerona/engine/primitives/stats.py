@@ -3,7 +3,8 @@ from aerona.constants.engine import UNBOUNDED_STAT
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityType
-from aerona.engine.interconnect.guards import blocked, record_flow
+from aerona.engine.interconnect.guards import READ_MODE, WRITE_MODE, blocked, observed, record_flow
+from aerona.engine.primitives.modifiers import LIVE_MODIFIERS, base_for, combine, live_contributions
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.rules.registry import Rules
 
@@ -15,11 +16,41 @@ def has_stat(entity: EntityRow, key: str) -> bool:
     return key in type(entity.stats).model_fields
 
 
-def stat(entity: EntityRow, key: str) -> int | None:
+def base_stat(entity: EntityRow, key: str) -> int | None:
     if not has_stat(entity, key):
         return None
+    observed(entity.entity_type.value, key, READ_MODE)
     value = getattr(entity.stats, key)
     return value if isinstance(value, int) else None
+
+
+def stat(entity: EntityRow, key: str) -> int | None:
+    base = base_stat(entity, key)
+    if base is None:
+        return None
+    contributions = live_contributions(entity.id, key)
+    if not contributions:
+        return base
+    return clamp_to_field(entity, key, combine(base, contributions).value)
+
+
+def clamp_to_field(entity: EntityRow, key: str, value: float) -> int:
+    live = LIVE_MODIFIERS.get()
+    field = ENTITY_TYPES[entity.entity_type].stat(key)
+    low, high = field.bounds(live.rules) if field is not None and live is not None else (0, None)
+    bounded = max(low, round_half_up(value))
+    return bounded if high is None else min(high, bounded)
+
+
+def to_base(entity: EntityRow, key: str, value: int | None) -> int | None:
+    if value is None:
+        return None
+    contributions = live_contributions(entity.id, key)
+    if not contributions:
+        return value
+    base = base_for(contributions, value)
+    current = base_stat(entity, key)
+    return current if base is None else clamp_to_field(entity, key, base)
 
 
 def stat_or(entity: EntityRow, key: str, default: int) -> int:
@@ -28,10 +59,12 @@ def stat_or(entity: EntityRow, key: str, default: int) -> int:
 
 
 def set_stats(entity: EntityRow, **values: int | None) -> bool:
-    update = {key: value for key, value in values.items() if has_stat(entity, key) and getattr(entity.stats, key) != value and not blocked(entity.id, key)}
+    based = {key: to_base(entity, key, value) for key, value in values.items() if has_stat(entity, key)}
+    update = {key: value for key, value in based.items() if getattr(entity.stats, key) != value and not blocked(entity.id, key)}
     if not update:
         return False
     for key, value in update.items():
+        observed(entity.entity_type.value, key, WRITE_MODE)
         before = getattr(entity.stats, key)
         if isinstance(before, int) and isinstance(value, int):
             record_flow(entity.id, key, value - before)

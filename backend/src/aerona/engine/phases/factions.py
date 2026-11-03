@@ -15,6 +15,7 @@ from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import faction_drive
 from aerona.engine.phase import Phase
 from aerona.engine.phases.warfare import is_uprising
@@ -166,6 +167,32 @@ async def found_factions(ctx: TickContext) -> int:
     return founded
 
 
+@reads(
+    "people.population",
+    "people.prosperity",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.community_societies",
+    "table.epoch_year_cursors",
+    "table.name_registry",
+    "table.nodes",
+    "table.pressures",
+    "table.routes",
+    "table.war_sides",
+    "table.wars",
+)
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+)
+@reads("people.population", "people.prosperity", "settlement.population", "settlement.prosperity")
 async def factions(ctx: TickContext) -> None:
     ctx.count("uprisings_disbanded", await disband_uprisings(ctx))
     await found_factions(ctx)

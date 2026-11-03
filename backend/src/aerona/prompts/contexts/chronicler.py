@@ -103,6 +103,7 @@ class ChroniclerUserContext(LoreRulesContext):
     previous_verdicts: list[str] = Field(default_factory=list)
     events: list[WorldEvents] = Field(default_factory=list)
     engine_notes: list[str] = Field(default_factory=list)
+    chains: list[str] = Field(default_factory=list)
     pending: list[EntityLineItem] = Field(default_factory=list)
     facts: ChroniclerFactSheet | None = None
 

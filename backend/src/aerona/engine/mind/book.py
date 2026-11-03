@@ -22,6 +22,7 @@ from aerona.db.tables.mind import (
     TraitRow,
 )
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import NeedKind, PressureKind, SkillKind, SkillSource, TraitEffect, TraitKind, TraitSource, ValueAxis, ValueHolder
@@ -44,6 +45,14 @@ PRESSURE_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
 NEUTRAL = 0
 
 Values = dict[ValueAxis, int]
+
+
+VALUES_KEY = "values"
+TRAITS_KEY = "traits"
+NEEDS_KEY = "needs"
+PRESSURES_KEY = "pressures"
+SKILLS_KEY = "skills"
+MEMORIES_KEY = "memories"
 
 
 def holder_kind(node: object) -> ValueHolder | None:
@@ -102,6 +111,8 @@ async def stored_values(session: AsyncSession, holder: ValueHolder, node_id: int
 
 
 async def write_values(session: AsyncSession, holder: ValueHolder, node_id: int, values: Values) -> None:
+    if write_blocked(node_id, VALUES_KEY):
+        return
     if holder in CULTURE_HOLDERS:
         await session.execute(delete(CultureValueRow).where(CultureValueRow.entity_id == node_id))
         session.add_all(CultureValueRow(entity_id=node_id, axis=axis, value=clamp_value(values.get(axis, NEUTRAL))) for axis in ValueAxis)
@@ -166,7 +177,7 @@ async def traits_of(session: AsyncSession, node_id: int) -> set[TraitKind]:
 
 
 async def add_trait(session: AsyncSession, node_id: int, trait: TraitKind, source: TraitSource, epoch: int, *, source_node_id: int | None = None) -> bool:
-    if await session.get(TraitRow, (node_id, trait)) is not None:
+    if write_blocked(node_id, TRAITS_KEY) or await session.get(TraitRow, (node_id, trait)) is not None:
         return False
     opposite = TRAITS[trait].opposite
     if opposite is not None:
@@ -272,6 +283,8 @@ async def pressure(session: AsyncSession, entity_id: int, kind: PressureKind) ->
 
 
 async def write_needs(session: AsyncSession, node_id: int, needs: dict[NeedKind, int]) -> None:
+    if write_blocked(node_id, NEEDS_KEY):
+        return
     for need, value in needs.items():
         row = await session.get(NeedRow, (node_id, need))
         if row is None:
@@ -282,6 +295,8 @@ async def write_needs(session: AsyncSession, node_id: int, needs: dict[NeedKind,
 
 
 async def write_pressures(session: AsyncSession, entity_id: int, pressures: dict[PressureKind, int]) -> None:
+    if write_blocked(entity_id, PRESSURES_KEY):
+        return
     for kind, value in pressures.items():
         row = await session.get(PressureRow, (entity_id, kind))
         if row is None:

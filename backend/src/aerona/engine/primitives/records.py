@@ -27,6 +27,7 @@ from aerona.domain.enums.entity import (
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic, SocialClass
 from aerona.domain.models.entity_stats import EntityStats
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.guards import CONSERVED_KEYS, record_flow
 from aerona.engine.primitives.queries import active_bonds, connect, living_entity
 
 SOURCE_STATE_KINDS = frozenset(
@@ -169,7 +170,7 @@ async def open_record(session: AsyncSession, epoch: int, spec: RecordSpec) -> En
     noun = spec.subtype or entity_type_spec(spec.entity_type).noun
     description = introduce(name, noun, location.name if location is not None else None, spec.body)
     world_id = spec.world_id if spec.world_id is not None else (location.world_id if location is not None else None)
-    return await EntityRepository(session).create(
+    created = await EntityRepository(session).create(
         EntityDraft(
             name=name,
             entity_type=spec.entity_type,
@@ -204,6 +205,15 @@ async def open_record(session: AsyncSession, epoch: int, spec: RecordSpec) -> En
             split_title=False,
         )
     )
+    founded(created)
+    return created
+
+
+def founded(entity: EntityRow) -> None:
+    for key in CONSERVED_KEYS:
+        value = getattr(entity.stats, key, None)
+        if isinstance(value, int) and value:
+            record_flow(entity.id, key, value)
 
 
 async def create_record(ctx: TickContext, spec: RecordSpec) -> EntityRow:

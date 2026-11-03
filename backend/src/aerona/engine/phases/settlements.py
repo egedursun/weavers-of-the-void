@@ -11,6 +11,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -77,6 +78,10 @@ async def restore_ruin(
     return ruin
 
 
+@reads("law.justice", "settlement.defense", "settlement.prosperity")
+@writes("settlement.defense")
+@reads("law.justice", "settlement.defense", "settlement.prosperity")
+@writes("settlement.defense")
 async def settlement_laws(ctx: TickContext) -> None:
     effects = ctx.rules.world_effects
     justice: dict[int, list[int]] = defaultdict(list)
@@ -100,6 +105,10 @@ async def settlement_laws(ctx: TickContext) -> None:
         )
 
 
+@reads("settlement.defense")
+@writes("settlement.defense")
+@reads("settlement.defense")
+@writes("settlement.defense")
 async def architecture(ctx: TickContext) -> None:
     effects = ctx.rules.world_effects
     knowledge = await KnowledgeMap.load(ctx.session)

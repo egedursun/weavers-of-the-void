@@ -13,6 +13,7 @@ from aerona.domain.enums.entity import AGENT_TYPES, COMMUNITY_TYPES, EntityStatu
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.hooks import converted
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -92,6 +93,19 @@ async def _spread_language(ctx: TickContext, source: EntityRow, target: EntityRo
     )
 
 
+@reads("knowledge.spread", "table.bonds", "table.epoch_year_cursors", "table.nodes")
+@writes(
+    "knowledge.spread",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
+@reads("knowledge.spread")
+@writes("knowledge.spread")
 async def knowledge_diffusion(ctx: TickContext) -> None:
     session = ctx.session
     entities = {entity.id: entity for entity in await canon(session)}
@@ -226,6 +240,20 @@ def _trading_communities(bond_entities: tuple[EntityRow | None, EntityRow | None
     return first, second
 
 
+@reads("knowledge.spread", "table.bonds", "table.epoch_year_cursors", "table.lexemes", "table.nodes", "table.reverences")
+@writes(
+    "knowledge.spread",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.lexemes",
+)
+@reads("knowledge.spread")
+@writes("knowledge.spread")
 async def cultural_exchange(ctx: TickContext) -> None:
     culture = ctx.rules.culture
     entities: Mapping[int, EntityRow] = {entity.id: entity for entity in await canon(ctx.session, COMMUNITY_TYPES)}

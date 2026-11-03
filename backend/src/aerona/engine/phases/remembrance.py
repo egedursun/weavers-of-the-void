@@ -17,6 +17,7 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.entity_stats import ArtworkStats, EntityStats, LegendStats, StructureStats, TraditionStats
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.faith import change_religion, living_patron
@@ -560,6 +561,55 @@ async def plague_faith(ctx: TickContext) -> int:
     return shaken
 
 
+@reads(
+    "event.severity",
+    "people.piety",
+    "people.population",
+    "people.prosperity",
+    "people.wealth",
+    "settlement.piety",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.community_relations",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.memories",
+    "table.minds",
+    "table.name_registry",
+    "table.nodes",
+    "table.personality_values",
+    "table.traits",
+    "table.war_sides",
+    "table.wars",
+)
+@writes(
+    "people.piety",
+    "settlement.piety",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_relations",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+    "table.name_registry",
+)
+@reads(
+    "event.severity",
+    "people.piety",
+    "people.population",
+    "people.prosperity",
+    "people.wealth",
+    "settlement.piety",
+    "settlement.population",
+    "settlement.prosperity",
+)
+@writes("people.piety", "settlement.piety")
 async def remembrance(ctx: TickContext) -> None:
     cap = ctx.rules.remembrance.epoch_cap
     made = await wars_remembered(ctx, cap)

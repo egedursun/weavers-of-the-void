@@ -11,8 +11,11 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.son import SonStatus
+from aerona.engine.interconnect.incidents import chains_in
 from aerona.prompts.contexts.common import NamedRecord
 from aerona.prompts.contexts.fate import FateJudgmentContext, FateThreadLine, WorldRecordLine
+
+CHAIN_MINIMUM = 2
 
 
 async def world_records(scope: Scope, epoch: int) -> list[WorldRecordLine]:
@@ -60,6 +63,7 @@ async def fate_judgment_context(
         world_summary=await world_summary(scope),
         age_events=age_events,
         engine_notes=list(engine_notes),
+        chains=[chain.line for chain in await chains_in(scope.session, epoch, CHAIN_MINIMUM, scope.rules.incidents.chain_depth)],
         new_creations=list(creations),
         pending=list(pending),
         world_records=await world_records(scope, epoch),

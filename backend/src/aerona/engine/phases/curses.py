@@ -10,6 +10,7 @@ from aerona.engine.body.conditions import end_condition
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import add_scar, region_environment
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -33,6 +34,57 @@ async def curser_of(ctx: TickContext, entity: EntityRow) -> int | None:
     return bonds[-1].source_node_id if bonds else None
 
 
+@reads(
+    "item.protection",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "people.population",
+    "people.prosperity",
+    "people.wealth",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.bodies",
+    "table.body_customs",
+    "table.bonds",
+    "table.conditions",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.entity_tags",
+    "table.injuries",
+    "table.prostheses",
+)
+@writes(
+    "mortal.hp",
+    "mortal.strength",
+    "people.population",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.bodies",
+    "table.body_customs",
+    "table.entities",
+    "table.injuries",
+)
+@reads(
+    "item.protection",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "people.population",
+    "people.prosperity",
+    "people.wealth",
+    "settlement.population",
+    "settlement.prosperity",
+)
+@writes("mortal.hp", "mortal.strength", "people.population", "settlement.population", "settlement.prosperity")
 async def curse_decay(ctx: TickContext) -> None:
     rules = ctx.rules
     effects = rules.world_effects
@@ -58,6 +110,8 @@ async def curse_decay(ctx: TickContext) -> None:
             await apply_hits(ctx, entity, Harm(rules.world_engine.curse_hp_loss, HarmCause.CURSE, CURSE_DEATH, source_node_id=curser, killer_id=curser))
 
 
+@reads("table.conditions", "table.epoch_year_cursors")
+@writes("table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
 async def lift_curses(ctx: TickContext) -> None:
     engine = ctx.rules.world_engine
     rng = ctx.rng()
@@ -79,6 +133,62 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
     return True
 
 
+@reads(
+    "item.curse",
+    "item.protection",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "people.prosperity",
+    "settlement.defense",
+    "settlement.prosperity",
+    "table.bodies",
+    "table.body_customs",
+    "table.bonds",
+    "table.conditions",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.entity_tags",
+    "table.epoch_year_cursors",
+    "table.injuries",
+    "table.memories",
+    "table.minds",
+    "table.prostheses",
+    "table.traits",
+)
+@writes(
+    "mortal.hp",
+    "settlement.defense",
+    "settlement.prosperity",
+    "table.bodies",
+    "table.body_customs",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.injuries",
+    "table.memories",
+)
+@reads(
+    "item.curse",
+    "item.protection",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "people.prosperity",
+)
+@writes("mortal.hp")
 async def cursed_items(ctx: TickContext) -> None:
     rules = ctx.rules
     effects = rules.world_effects

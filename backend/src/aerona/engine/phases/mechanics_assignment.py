@@ -8,6 +8,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.context import TickContext
 from aerona.engine.gods.economy import mechanics_of
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.manual import manual_context
@@ -61,6 +62,16 @@ async def weigh(ctx: TickContext, entities: list[EntityRow], announce: bool) -> 
     return weighed
 
 
+@reads("table.bonds", "table.entity_flags", "table.epoch_year_cursors", "table.nodes", "table.resource_mechanics")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
 async def mechanics_assignment(ctx: TickContext) -> None:
     ctx.count("weighed", await weigh(ctx, await unweighed(ctx.session), announce=True))
 

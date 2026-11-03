@@ -11,6 +11,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityType
 from aerona.domain.enums.world import Discovery
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -31,6 +32,10 @@ async def lay_to_rest(ctx: TickContext, spirit: EntityRow, reason: str) -> None:
     await retire(ctx.session, spirit, ctx.epoch, f"Epoch {ctx.epoch}: {reason}.", close_bonds=True)
 
 
+@reads("spirit.unrest", "table.bonds", "table.entity_flags", "table.epoch_year_cursors", "table.nodes", "table.routes")
+@writes("spirit.unrest", "table.bonds", "table.chronicle", "table.entities", "table.entity_flags", "table.epoch_year_cursors", "table.incidents")
+@reads("spirit.unrest")
+@writes("spirit.unrest")
 async def spirits_rest(ctx: TickContext) -> None:
     rules = ctx.rules
     life = rules.deep_life
@@ -84,6 +89,19 @@ async def spirits_rest(ctx: TickContext) -> None:
     ctx.count("crossed", crossed)
 
 
+@reads("settlement.prosperity", "spirit.unrest", "table.epoch_year_cursors", "table.world_maps")
+@writes(
+    "settlement.prosperity",
+    "spirit.unrest",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
+@reads("settlement.prosperity", "spirit.unrest")
+@writes("settlement.prosperity", "spirit.unrest")
 async def hauntings(ctx: TickContext) -> None:
     rules = ctx.rules
     effects = rules.world_effects

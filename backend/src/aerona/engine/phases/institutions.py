@@ -16,6 +16,7 @@ from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.war import WarEnding
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import closeness
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -326,6 +327,39 @@ async def peoples(ctx: TickContext) -> int:
     return done
 
 
+@reads(
+    "cult.followers",
+    "cult.influence",
+    "cult.zeal",
+    "knowledge.spread",
+    "law.justice",
+    "law.rigidity",
+    "people.population",
+    "table.bonds",
+    "table.community_relations",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.nodes",
+    "table.routes",
+    "table.wars",
+    "table.world_maps",
+)
+@writes(
+    "cult.followers",
+    "knowledge.spread",
+    "people.population",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.routes",
+)
+@reads("cult.followers", "cult.influence", "cult.zeal", "law.justice", "law.rigidity", "people.population")
 async def institution_cycles(ctx: TickContext) -> None:
     await laws(ctx)
     await cults(ctx)
@@ -464,6 +498,31 @@ async def swallowed_places(ctx: TickContext) -> int:
     return swallowed
 
 
+@reads(
+    "artwork.influence",
+    "artwork.renown",
+    "event.severity",
+    "item.might",
+    "table.bonds",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.nodes",
+    "table.routes",
+)
+@writes(
+    "artwork.influence",
+    "artwork.renown",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
+@reads("artwork.influence", "artwork.renown", "event.severity", "item.might")
+@writes("artwork.influence", "artwork.renown")
 async def culture_cycles(ctx: TickContext) -> None:
     await works(ctx)
     await items(ctx)

@@ -4,10 +4,38 @@ from aerona.engine.context import TickContext
 from aerona.engine.gods.mood import compute_mood_update, gather_mood_inputs, mood_of, store_breakdown, store_mood
 from aerona.engine.gods.queries import cosmos_row, creator_row
 from aerona.engine.gods.signs import estranged_turn, grace_sign, lonely_dream, silence, wrath_sign
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.numbers import clamp_percent
 
 
+@reads(
+    "people.prosperity",
+    "settlement.prosperity",
+    "table.action_records",
+    "table.bonds",
+    "table.cosmos",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.messages",
+    "table.nodes",
+    "table.resurrection_orders",
+    "table.war_sides",
+    "table.wars",
+)
+@writes(
+    "settlement.prosperity",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.creator",
+    "table.creator_mood_inputs",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
+@reads("people.prosperity", "settlement.prosperity")
+@writes("settlement.prosperity")
 async def creator_mood(ctx: TickContext) -> None:
     creator = await creator_row(ctx.session)
     cosmos = await cosmos_row(ctx.session)

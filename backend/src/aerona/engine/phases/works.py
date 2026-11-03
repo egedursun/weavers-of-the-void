@@ -11,6 +11,7 @@ from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.domain.models.entity_stats import StructureStats
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.hooks import judged
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -192,6 +193,56 @@ def can_build(rules: Rules, community: EntityRow) -> bool:
     return population >= minimum and prosperity_of(rules, community) >= rules.deep_world.structure_min_prosperity
 
 
+@reads(
+    "people.craft",
+    "people.piety",
+    "people.population",
+    "people.prosperity",
+    "settlement.defense",
+    "settlement.piety",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.community_societies",
+    "table.culture_values",
+    "table.epoch_year_cursors",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.memories",
+    "table.minds",
+    "table.name_registry",
+    "table.nodes",
+    "table.traits",
+)
+@writes(
+    "people.piety",
+    "people.prosperity",
+    "settlement.defense",
+    "settlement.piety",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_societies",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.language_profiles",
+    "table.memories",
+    "table.name_registry",
+)
+@reads(
+    "people.craft",
+    "people.piety",
+    "people.population",
+    "people.prosperity",
+    "settlement.defense",
+    "settlement.piety",
+    "settlement.population",
+    "settlement.prosperity",
+)
+@writes("people.piety", "people.prosperity", "settlement.defense", "settlement.piety", "settlement.prosperity")
 async def engine_works(ctx: TickContext) -> None:
     rules = ctx.rules
     rng = ctx.rng()
@@ -223,6 +274,10 @@ async def owner_of(ctx: TickContext, work: EntityRow) -> EntityRow | None:
     return owner if owner is not None and owner.entity_type in COMMUNITY_TYPES else None
 
 
+@reads("people.craft", "people.prosperity", "settlement.prosperity", "structure.splendor", "table.bonds", "table.community_societies")
+@writes("structure.splendor", "table.entities")
+@reads("people.craft", "people.prosperity", "settlement.prosperity", "structure.splendor")
+@writes("structure.splendor")
 async def splendor_growth(ctx: TickContext) -> None:
     rules = ctx.rules
     life = rules.deep_life
