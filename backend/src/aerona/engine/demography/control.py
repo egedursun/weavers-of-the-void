@@ -1,0 +1,104 @@
+from collections.abc import Mapping
+
+from aerona.constants.units import PERCENT
+from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.society import CommunitySocietyRow
+from aerona.domain.enums.demography import Aesthetic, AgeBand, CohortCondition, InheritanceCustom, MarriageCustom, MartialStyle
+from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.society import SocialClass
+from aerona.engine.context import TickContext
+from aerona.engine.demography.cohorts import cohorts_of, row_for, seed
+from aerona.engine.demography.mobility import sync_bound_share
+from aerona.engine.demography.peoples import ensure_profiles
+from aerona.engine.primitives.distance import RegionAtlas
+
+BIOLOGY_NUMBERS = {"maturity_years": (1, 1000), "adult_years": (1, 10000), "elder_years": (1, 10000), "fertility_pct": (0, 500)}
+CULTURE_NUMBERS = {"cohesion": (0, PERCENT), "literacy": (0, PERCENT), "urbanisation": (0, PERCENT)}
+CULTURE_CHOICES = {"aesthetic": Aesthetic, "martial_style": MartialStyle, "marriage": MarriageCustom, "inheritance": InheritanceCustom}
+CULTURE_FLAGS = ("endogamous", "slavery_lawful")
+
+
+async def people(ctx: TickContext, people_id: int) -> EntityRow:
+    entity = await ctx.session.get(EntityRow, people_id)
+    if entity is None or entity.entity_type is not EntityType.PEOPLE or entity.status is not EntityStatus.CANON:
+        raise NotFoundError("No such people.")
+    return entity
+
+
+async def profiles(ctx: TickContext, entity: EntityRow) -> tuple[PeopleBiologyRow, PeopleCultureRow]:
+    atlas = await RegionAtlas.load(ctx.session)
+    region = atlas.top_region(entity.id)
+    ground = await ctx.session.get(RegionEnvironmentRow, region) if region is not None else None
+    return await ensure_profiles(ctx.session, ctx.rules, entity, ground)
+
+
+def lock(row: PeopleBiologyRow | PeopleCultureRow, key: str) -> None:
+    if key not in row.locked:
+        row.locked = [*row.locked, key]
+
+
+async def edit_people(
+    ctx: TickContext, people_id: int, values: Mapping[str, int | str | bool], *, release: list[str]
+) -> tuple[PeopleBiologyRow, PeopleCultureRow]:
+    entity = await people(ctx, people_id)
+    biology, culture = await profiles(ctx, entity)
+    for key, value in values.items():
+        if key in BIOLOGY_NUMBERS or key in CULTURE_NUMBERS:
+            low, high = BIOLOGY_NUMBERS.get(key) or CULTURE_NUMBERS[key]
+            if not isinstance(value, int) or isinstance(value, bool) or not low <= value <= high:
+                raise ValidationFailedError(f"{key.replace('_', ' ').capitalize()} runs from {low} to {high}.")
+            target: PeopleBiologyRow | PeopleCultureRow = biology if key in BIOLOGY_NUMBERS else culture
+            setattr(target, key, value)
+            lock(target, key)
+        elif key in CULTURE_CHOICES:
+            try:
+                setattr(culture, key, CULTURE_CHOICES[key](str(value)))
+            except ValueError as error:
+                raise ValidationFailedError(f"{value} is not a known {key.replace('_', ' ')}.") from error
+            lock(culture, key)
+        elif key in CULTURE_FLAGS:
+            setattr(culture, key, bool(value))
+            lock(culture, key)
+        else:
+            raise ValidationFailedError(f"Unknown field: {key}.")
+    for key in release:
+        biology.locked = [item for item in biology.locked if item != key]
+        culture.locked = [item for item in culture.locked if item != key]
+    await ctx.session.flush()
+    return biology, culture
+
+
+async def move_cohort(
+    ctx: TickContext, community_id: int, *, count: int, source: SocialClass, target: SocialClass, band: AgeBand | None, condition: CohortCondition | None
+) -> int:
+    community = await ctx.session.get(EntityRow, community_id)
+    if community is None or community.entity_type not in {EntityType.PEOPLE, EntityType.SETTLEMENT}:
+        raise NotFoundError("No such people or settlement.")
+    rows = await seed(ctx.session, ctx.rules, community, ctx.epoch) or await cohorts_of(ctx.session, community.id)
+    moved = 0
+    for key in sorted(rows, key=lambda item: -rows[item].count):
+        if moved >= count:
+            break
+        age, sex, social_class, state = key
+        if social_class is not source or (band is not None and age is not band) or rows[key].count <= 0:
+            continue
+        part = min(rows[key].count, count - moved)
+        rows[key].count -= part
+        landed = condition if condition is not None else (CohortCondition.ENSLAVED if target is SocialClass.SERF_OR_SLAVE else state)
+        if target is not SocialClass.SERF_OR_SLAVE and landed is CohortCondition.ENSLAVED:
+            landed = CohortCondition.NONE
+        destination = (age, sex, target, landed)
+        row_for(ctx.session, rows, community.id, destination, ctx.epoch).count += part
+        moved += part
+    society = await ctx.session.get(CommunitySocietyRow, community.id)
+    if society is not None:
+        total = sum(row.count for row in rows.values()) or 1
+        for social_class in SocialClass:
+            share = sum(row.count for key, row in rows.items() if key[2] is social_class) * PERCENT / total
+            setattr(society, f"share_{social_class.value}", round(share, 2))
+    sync_bound_share(society, rows)
+    await ctx.session.flush()
+    return moved

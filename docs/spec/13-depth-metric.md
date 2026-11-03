@@ -6,36 +6,37 @@ Where J.7 sets a target the cell shows value / target and whether it is met.
 
 | Node type | A | B | C |
 |---|---:|---:|---:|
-| region | 23 / 70 short | 45 / 60 short | 1160 / 45 met |
-| place | 10 / 25 short | 21 / 20 met | 338 / 15 met |
-| resource | 50 / 35 met | 50 / 50 met | 177 / 30 met |
-| settlement | 79 / 120 short | 123 / 100 met | 1929 / 65 met |
-| species | 19 / 70 short | 19 / 80 short | 277 / 45 met |
-| people | 86 / 150 short | 106 / 110 short | 1802 / 70 met |
-| mortal | 51 / 75 short | 53 / 140 short | 1214 / 80 met |
-| item | 18 / 40 short | 15 / 45 short | 334 / 30 met |
-| structure | 15 / 35 short | 17 / 50 short | 185 / 40 met |
-| language | 3 / 45 short | 8 / 45 short | 139 / 30 met |
-| legend | 3 / 15 short | 9 / 25 short | 84 / 20 met |
-| tradition | 2 / 20 short | 7 / 25 short | 46 / 25 met |
-| cult | 19 / 45 short | 35 / 55 short | 1213 / 45 met |
-| faction | 37 / 35 met | 65 / 45 met | 1244 / 35 met |
+| region | 53 / 70 short | 64 / 60 met | 1410 / 45 met |
+| place | 10 / 25 short | 32 / 20 met | 452 / 15 met |
+| resource | 50 / 35 met | 50 / 50 met | 184 / 30 met |
+| settlement | 243 / 120 met | 177 / 100 met | 2222 / 65 met |
+| species | 19 / 70 short | 19 / 80 short | 291 / 45 met |
+| people | 221 / 150 met | 147 / 110 met | 2061 / 70 met |
+| mortal | 156 / 75 met | 71 / 140 short | 1491 / 80 met |
+| item | 18 / 40 short | 15 / 45 short | 352 / 30 met |
+| structure | 18 / 35 short | 20 / 50 short | 262 / 40 met |
+| language | 3 / 45 short | 8 / 45 short | 140 / 30 met |
+| legend | 3 / 15 short | 9 / 25 short | 89 / 20 met |
+| tradition | 3 / 20 short | 8 / 25 short | 55 / 25 met |
+| cult | 20 / 45 short | 50 / 55 short | 1443 / 45 met |
+| faction | 117 / 35 met | 86 / 45 met | 1486 / 35 met |
 | celestial | 2 / 10 short | 0 / 12 short | 0 / 15 short |
-| artwork | 2 / 20 short | 8 / 20 short | 42 / 15 met |
+| artwork | 3 / 20 short | 9 / 20 short | 61 / 15 met |
 | law | 2 / 30 short | 4 / 35 short | 14 / 30 short |
-| spirit | 1 / 25 short | 12 / 35 short | 96 / 25 met |
-| knowledge | 1 / 30 short | 17 / 50 short | 681 / 50 met |
+| spirit | 1 / 25 short | 12 / 35 short | 99 / 25 met |
+| knowledge | 2 / 30 short | 18 / 50 short | 709 / 50 met |
 | prophecy | 1 / 15 short | 2 / 15 short | 1 / 15 short |
-| event | 1 / 15 short | 17 / 20 short | 863 / 15 met |
-| vessel | 0 / 25 short | 3 / 25 short | 85 / 15 met |
-| outer_being | 1 / 15 short | 4 / 20 short | 71 / 20 met |
-| army | 22 / 90 short | 13 / 80 short | 1009 / 45 met |
+| event | 23 / 15 met | 21 / 20 met | 1092 / 15 met |
+| vessel | 0 / 25 short | 3 / 25 short | 86 / 15 met |
+| outer_being | 1 / 15 short | 4 / 20 short | 75 / 20 met |
+| army | 130 / 90 met | 38 / 80 short | 1319 / 45 met |
 | natural_law | 0 / 10 short | 1 / 30 short | 0 / 30 short |
-| trade_route | 26 / 25 met | 26 / 25 met | 378 / 25 met |
-| son | 93 / 150 short | 28 / 150 short | 498 / 90 met |
-| creator | 15 / 35 short | 3 / 40 short | 23 / 35 short |
-| foreign_god | 60 / 100 short | 11 / 70 short | 410 / 50 met |
-| war | 16 / 60 short | 5 / 70 short | 34 / 50 short |
-| world | 37 / 60 short | 25 / 50 short | 168 / 50 met |
+| trade_route | 29 / 25 met | 28 / 25 met | 432 / 25 met |
+| disease | 45 / 20 met | 28 / 25 met | 108 / 20 met |
+| son | 94 / 150 short | 29 / 150 short | 589 / 90 met |
+| creator | 15 / 35 short | 3 / 40 short | 24 / 35 short |
+| foreign_god | 60 / 100 short | 11 / 70 short | 434 / 50 met |
+| war | 16 / 60 short | 5 / 70 short | 35 / 50 short |
+| world | 37 / 60 short | 25 / 50 short | 172 / 50 met |
 | star | 8 / 15 short | 3 / 15 short | 4 / 15 short |
-| route | 19 | 5 | 115 |
+| route | 19 | 5 | 117 |

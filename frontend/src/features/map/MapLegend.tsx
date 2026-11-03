@@ -72,10 +72,12 @@ const LINE_TOKEN: Record<LineKind, ThemeColorName> = {
   route: 'brand-gold',
   route_busy: 'brand-gold',
   route_blocked: 'destructive',
+  outbreak: 'destructive',
 }
 
 const LINE_NOTE: Partial<Record<LineKind, string>> = {
   trade_road: 'goods flow along it',
+  outbreak: 'the sickness spreads this way',
   trade: 'trade with no road between',
   rule: 'arrow points at the ruled',
   hunt: 'arrow points at the prey',

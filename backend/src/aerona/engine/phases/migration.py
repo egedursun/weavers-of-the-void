@@ -1,10 +1,13 @@
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import MovementMode
+from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import Commodity
 from aerona.domain.models.entity_stats import SettlementStats
+from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.interconnect.annotations import reads
@@ -51,6 +54,21 @@ async def kin_pull(ctx: TickContext, atlas: RegionAtlas, origin: EntityRow | Non
     return 1 + (nearest - 1) * ctx.rules.culture_drift.migration_kinship_pct / PERCENT
 
 
+async def town_pull(ctx: TickContext, atlas: RegionAtlas, region_id: int) -> float:
+    best = 0.0
+    for entity_id in atlas.communities_in(region_id):
+        town = await ctx.session.get(SettlementProfileRow, entity_id)
+        settlement = await living_entity(ctx.session, entity_id)
+        if town is None or settlement is None:
+            continue
+        values = await culture_of(ctx.session, entity_id)
+        openness = (values.get(ValueAxis.XENOPHILIA, 0) + PERCENT) / (2 * PERCENT)
+        jobs = 1.0 if (stat(settlement, "population") or 0) < town.construction_capacity * PERCENT else 0.5
+        pull = ((stat(settlement, "prosperity") or 0) / PERCENT + town.public_order / PERCENT + openness + jobs) / 4
+        best = max(best, pull)
+    return 1 + best * ctx.rules.urban.migration_pull_pct / PERCENT
+
+
 async def greener_region(
     ctx: TickContext, atlas: RegionAtlas, region: EntityRow, ground: EnvironmentBook | None = None, origin: EntityRow | None = None
 ) -> EntityRow | None:
@@ -67,7 +85,7 @@ async def greener_region(
             continue
         fertility = stat(neighbour, "fertility")
         value = fertility if fertility is not None else effects.unknown_fertility
-        appeal = value * (PERCENT + passable) / (2 * PERCENT) * await kin_pull(ctx, atlas, origin, neighbour.id)
+        appeal = value * (PERCENT + passable) / (2 * PERCENT) * await kin_pull(ctx, atlas, origin, neighbour.id) * await town_pull(ctx, atlas, neighbour.id)
         if value > floor and (best is None or appeal > best[0]):
             best = (appeal, neighbour)
     return best[1] if best is not None else None

@@ -254,6 +254,14 @@ def satisfaction_targets(rules: Rules, inputs: EconomyInputs, stocks: Mapping[Co
         + _signed(war, settings.sat_warrior_war, settings.sat_warrior_peace)
         + _when(KnowledgeBranch.WARFARE in inputs.branches, settings.sat_warrior_warcraft),
         SocialClass.SCRIBE: prosperity + _signed(writing, settings.sat_scribe_writing, settings.sat_scribe_no_writing),
+        SocialClass.NOBLE: settings.sat_noble_base
+        + _when(stocks[Commodity.GOODS] > settings.effect_goods_plenty, settings.sat_noble_luxury)
+        - _when(war, settings.sat_merchant_war),
+        SocialClass.SERF_OR_SLAVE: settings.sat_serf_base + _signed(fed, settings.sat_farmer_fed, settings.sat_farmer_hungry),
+        SocialClass.OUTCAST: settings.sat_outcast_base + _when(inputs.has_god and inputs.piety >= settings.target_piety_threshold, settings.sat_outcast_alms),
+        SocialClass.MONASTIC: settings.sat_monastic_base
+        + _signed(writing, settings.sat_scribe_writing, settings.sat_scribe_no_writing)
+        + _signed(inputs.has_god, settings.sat_priest_with_god, settings.sat_priest_godless),
     }
     shared: float = -_when(inputs.pays_tribute, settings.sat_tribute) - _when(inputs.cursed, settings.sat_curse)
     if inputs.justice is not None:

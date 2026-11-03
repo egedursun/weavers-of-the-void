@@ -4634,7 +4634,7 @@ Old namespace `DUNYA_MOTORU` · 81 rows · defined in `src/sim.js`. World-engine
 | first_epoch_years_son | ilk_cag_ogul | 35 | 0 | 50 | Heroes and mortals | Years a son-created mortal lives in the epoch of creation |
 | notable_lifespan_bonus | onemli_omur | 15 | 0 | 500 | Heroes and mortals | Extra lifespan of notable mortals (years) |
 | medicine_lifespan_bonus | tip_omur | 20 | 0 | 500 | Heroes and mortals | Extra lifespan in a region that knows medicine (years) |
-| growth_base_pct | buyume_taban | 6 | 0 | 100 | Population and growth | Base of population growth (% per epoch) |
+| ~~growth_base_pct~~ | buyume_taban | 6 | 0 | 100 | Population and growth | Removed by spec 13 4.1: births and deaths are computed per age band each sampled year |
 | growth_min_pct | buyume_en_az | 3 | 0 | 100 | Population and growth | Minimum rate of population growth (%) |
 | growth_fertility_divisor | buyume_bereket_bolen | 600 | 10 | 100,000 | Population and growth | Fertility contribution to growth: fertility / this number |
 | growth_prosperity_divisor | buyume_refah_bolen | 400 | 10 | 100,000 | Population and growth | Prosperity contribution to growth in a city: (prosperity − 40) / this number |

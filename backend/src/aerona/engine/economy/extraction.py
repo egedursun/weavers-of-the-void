@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.materials import MATERIALS
@@ -8,6 +9,7 @@ from aerona.db.tables.economy import ProductionRunRow, ResourceProfileRow, Resou
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import HarmCause, InjuryKind, MaimedKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind, ExtractionKind, GoodsFlow, HazardKind
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.mind import SkillKind
@@ -93,7 +95,24 @@ def season_fit(book: EconomyBook, world_id: int | None, kind: ExtractionKind) ->
     return warmest.travel / PERCENT
 
 
+KIND_JOBS = MappingProxyType(
+    {
+        ExtractionKind.MINING: Job.MINING,
+        ExtractionKind.QUARRYING: Job.MINING,
+        ExtractionKind.FISHING: Job.FISHING,
+        ExtractionKind.HERDING: Job.HERDING,
+        ExtractionKind.FARMING: Job.FARMING,
+        ExtractionKind.GATHERING: Job.FARMING,
+        ExtractionKind.LOGGING: Job.BUILDING,
+    }
+)
+
+
 def labour_pool(rules: Rules, book: EconomyBook, community: EntityRow, kind: ExtractionKind) -> int:
+    hands = book.hands(community.id, KIND_JOBS[kind])
+    if hands is not None:
+        labour = rules.extraction.artisan_labour_pct if kind in ARTISAN_KINDS else rules.extraction.farmer_labour_pct
+        return round_half_up(hands * (1 if kind in ARTISAN_KINDS else labour / PERCENT))
     row = book.societies.get(community.id)
     social_class = SocialClass.ARTISAN if kind in ARTISAN_KINDS else SocialClass.FARMER
     share = row.share(social_class) if row is not None else PERCENT / len(SocialClass)

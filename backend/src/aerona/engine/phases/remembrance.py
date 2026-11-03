@@ -17,6 +17,7 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.entity_stats import ArtworkStats, EntityStats, LegendStats, StructureStats, TraditionStats
 from aerona.engine.context import TickContext
+from aerona.engine.disease.outbreaks import disease_god
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -493,7 +494,15 @@ async def heroes_remembered(ctx: TickContext, budget: int) -> int:
     return made
 
 
-async def _plague_god(ctx: TickContext, community: EntityRow, current: SonRow | None) -> SonRow | None:
+async def _plague_god(ctx: TickContext, community: EntityRow, current: SonRow | None, plague: EntityRow | None = None) -> SonRow | None:
+    loosed = await disease_god(ctx.session, plague) if plague is not None else None
+    if (
+        loosed is not None
+        and loosed.status is SonStatus.ACTIVE
+        and loosed.current_world_id == community.world_id
+        and (current is None or loosed.id != current.id)
+    ):
+        return loosed
     sons = await ctx.session.scalars(select(SonRow).where(SonRow.status == SonStatus.ACTIVE, SonRow.current_world_id == community.world_id).order_by(SonRow.id))
     fitting = [
         son for son in sons if (son.domain_primary in PLAGUE_DOMAINS or son.domain_secondary in PLAGUE_DOMAINS) and (current is None or son.id != current.id)
@@ -524,7 +533,7 @@ async def plague_faith(ctx: TickContext) -> int:
             seen.add(community.id)
             current = await living_patron(ctx.session, community)
             roll = ctx.rng(seed_of("plague_faith", plague.id, community.id)).random() * 100
-            turned_to = await _plague_god(ctx, community, current)
+            turned_to = await _plague_god(ctx, community, current, plague)
             if (
                 turned_to is not None
                 and roll < settings.plague_turn_chance

@@ -21,6 +21,10 @@ SOCIAL_CLASSES: dict[SocialClass, SocialClassSpec] = {
         SocialClassSpec(SocialClass.PRIEST, "Priest", "Priests"),
         SocialClassSpec(SocialClass.WARRIOR, "Warrior", "Warriors"),
         SocialClassSpec(SocialClass.SCRIBE, "Scribe", "Scribes"),
+        SocialClassSpec(SocialClass.NOBLE, "Noble", "Nobles"),
+        SocialClassSpec(SocialClass.SERF_OR_SLAVE, "Serf", "Serfs and slaves"),
+        SocialClassSpec(SocialClass.OUTCAST, "Outcast", "Outcasts"),
+        SocialClassSpec(SocialClass.MONASTIC, "Monastic", "Monastics"),
     )
 }
 

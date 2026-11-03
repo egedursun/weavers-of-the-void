@@ -1,0 +1,53 @@
+from dataclasses import dataclass
+
+from aerona.rules.groups import RuleGroup
+from aerona.rules.model import rule
+
+G = RuleGroup.DISEASE
+
+
+@dataclass(frozen=True)
+class EpidemiologyRules:
+    neutral_lethality: int = rule(30, 1, 100, G, "Lethality at which a disease kills as many as the old plague did")
+    neutral_virulence: int = rule(40, 1, 100, G, "Virulence at which a disease spreads as readily as the old plague did")
+    reuse_disease_chance: int = rule(70, 0, 100, G, "A new plague is an old disease of the region or its neighbours rather than a new one (%)")
+    immunity_strength_pct: int = rule(85, 0, 100, G, "Protection an immune share gives against its disease (%)")
+    survivor_immunity_pct: int = rule(60, 0, 100, G, "Share of the struck who are immune after an outbreak (%)")
+    child_immunity_loss_pct: int = rule(50, 0, 100, G, "Share of children's immunity lost each epoch as the immune grow up and the newborn arrive (%)")
+    herd_floor_pct: int = rule(30, 0, 100, G, "Lowest herd-immunity threshold of the mildest disease (%)")
+    outbreak_epochs: int = rule(2, 1, 50, G, "Epochs an outbreak lingers before it wanes")
+    waning_death_pct: int = rule(30, 0, 100, G, "Deaths of a lingering outbreak compared with its first epoch (%)")
+    infected_pct: int = rule(25, 0, 100, G, "Share of a struck community infected at the outbreak's start, at neutral virulence (%)")
+    crowd_population: int = rule(30000, 1, 100000000, G, "Community size at which a disease spreads as in the most crowded land")
+    crowd_spread_pct: int = rule(60, 0, 300, G, "Extra spread at the most crowded land (%)")
+    load_spread_pct: int = rule(50, 0, 300, G, "Extra spread at the heaviest disease load of the land (%)")
+    sanitation_spread_pct: int = rule(50, 0, 100, G, "Spread removed by full sanitation (%)")
+    climate_match_pct: int = rule(140, 0, 500, G, "Spread where the climate suits the disease (%)")
+    climate_mismatch_pct: int = rule(60, 0, 500, G, "Spread where the climate is wrong for the disease (%)")
+    route_spread_chance: int = rule(25, 0, 100, G, "A busy trade route carries an outbreak to its far end in an epoch (%)")
+    army_spread_chance: int = rule(35, 0, 100, G, "An army leaving a sick land carries the disease home or to the foe (%)")
+    journey_spread_chance: int = rule(20, 0, 100, G, "Travellers leaving a sick land carry the disease to where they arrive (%)")
+    quarantine_spread_pct: int = rule(30, 0, 100, G, "Spread kept out of or into a quarantined land (%)")
+    endemic_chance: int = rule(25, 0, 100, G, "An outbreak that wanes in a wet, warm or crowded land stays endemic (%)")
+    endemic_load: int = rule(20, 0, 100, G, "Disease load an endemic disease adds to its land")
+    endemic_decay: int = rule(2, 0, 100, G, "Endemic load lost each epoch where no outbreak renews it")
+    virgin_soil_pct: int = rule(250, 100, 1000, G, "Lethality against a people that has never met the disease (%)")
+    mutation_immune_pct: int = rule(150, 0, 500, G, "Weight of an immune population in pushing a disease to a new strain (%)")
+    mutation_cap: int = rule(2, 0, 50, G, "Most new strains in an epoch")
+    stigma_purity: int = rule(40, -100, 100, G, "Purity value at which a people expels its sick")
+    expel_pct: int = rule(5, 0, 100, G, "Share of the infected a purity-minded community drives out (%)")
+    colony_min: int = rule(150, 1, 1000000, G, "Expelled sick needed to found a colony of the sick")
+    hospital_mercy: int = rule(30, -100, 100, G, "Mercy value at which a community with medicine builds a hospital")
+    hospital_lethality_pct: int = rule(70, 0, 100, G, "Lethality kept in a land with a hospital (%)")
+    hospital_healer_pct: int = rule(150, 100, 500, G, "Healing practice gained in a community with a hospital (%)")
+    cure_lethality_pct: int = rule(25, 0, 100, G, "Lethality kept where the cure is known (%)")
+    quarantine_epochs: int = rule(2, 1, 50, G, "Epochs a quarantine holds")
+    quarantine_unrest: int = rule(6, 0, 100, G, "Unrest a quarantine causes")
+    essence_per_outbreak: int = rule(3, 0, 1000, G, "Essence a plague-domain son gains per outbreak in its world")
+    creator_essence_per_outbreak: int = rule(6, 0, 1000, G, "Essence the son who loosed a disease gains per outbreak of it")
+    siege_attrition_pct: int = rule(4, 0, 100, G, "Soldiers a besieging army loses to camp disease in an epoch at the heaviest disease load (%)")
+    foreign_army_attrition_pct: int = rule(6, 0, 100, G, "Soldiers an army loses in an epoch in a land whose endemic disease its people has never met (%)")
+    minor_illness_pct: int = rule(4, 0, 100, G, "Work lost to colds and fevers in the cold and wet season at the heaviest disease load (%)")
+    tradition_dead_min: int = rule(2000, 1, 100000000, G, "Dead of one outbreak that leave a plague tradition")
+    medicine_pressure_pct: int = rule(150, 100, 1000, G, "Medicine deepening where a disease is endemic (%)")
+    neutral_chronic_rate: int = rule(15, 1, 100, G, "Chronic rate at which a named survivor keeps a lasting illness as often as after the old plague")

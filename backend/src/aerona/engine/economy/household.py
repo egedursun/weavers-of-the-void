@@ -7,6 +7,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.body import MaimedCohortRow
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.environment import CoastKind
 from aerona.domain.enums.material import MaterialKind
@@ -40,7 +41,8 @@ def mix_of(ctx: TickContext, book: EconomyBook, community: EntityRow) -> CropMix
 
 async def harvest_goods(ctx: TickContext, book: EconomyBook, community: EntityRow, rate: float, farmer_share: float) -> dict[CommodityKind, int]:
     table = ctx.rules.economy
-    farmers = round_half_up(headcount(community) * farmer_share / PERCENT)
+    hands = book.hands(community.id, Job.FARMING, Job.HERDING, Job.FISHING)
+    farmers = hands if hands is not None else round_half_up(headcount(community) * farmer_share / PERCENT)
     tools = await tools_factor(ctx, community.id, farmers)
     units = farmers * table.farm_units_per_1000_farmers / THOUSAND * rate * tools
     mix = mix_of(ctx, book, community)

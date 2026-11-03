@@ -1,0 +1,136 @@
+from sqlalchemy import select
+
+from aerona.constants.units import PERCENT
+from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.models.entity_stats import SettlementStats, StructureStats
+from aerona.engine.body.customs import culture_of, people_of
+from aerona.engine.context import TickContext
+from aerona.engine.disease.book import COLONY, HOSPITAL, DiseaseBook
+from aerona.engine.disease.course import region_communities
+from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.notes import note
+from aerona.engine.primitives.knowledge import KnowledgeMap
+from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.queries import connect
+from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat
+
+STIGMATISED = 50
+
+
+async def values_for(ctx: TickContext, community: EntityRow) -> dict[ValueAxis, int]:
+    people = await people_of(ctx.session, community)
+    return await culture_of(ctx.session, people.id) if people is not None else {}
+
+
+async def colony_in(ctx: TickContext, region: EntityRow, disease: EntityRow, founder: EntityRow) -> EntityRow:
+    found = await ctx.session.scalar(
+        select(EntityRow)
+        .where(
+            EntityRow.entity_type == EntityType.SETTLEMENT,
+            EntityRow.status == EntityStatus.CANON,
+            EntityRow.subtype == COLONY,
+            EntityRow.location_id == region.id,
+        )
+        .order_by(EntityRow.id)
+        .limit(1)
+    )
+    if found is not None:
+        return found
+    colony = await create_record(
+        ctx,
+        RecordSpec(
+            entity_type=EntityType.SETTLEMENT,
+            name=f"the colony of the sick at {region.name}",
+            body=f"Huts outside the walls where {founder.name} sent those who caught {disease.name}.",
+            stats=SettlementStats(population=0, prosperity=5, defense=0, piety=50),
+            power=1,
+            location_id=region.id,
+            world_id=region.world_id,
+            subtype=COLONY,
+            pending=False,
+        ),
+    )
+    await connect(ctx.session, colony.id, founder.id, BondKind.DESCENDS_FROM, ctx.epoch, description="cast out of it")
+    return colony
+
+
+async def expel_sick(ctx: TickContext, book: DiseaseBook) -> int:
+    table = ctx.rules.epidemiology
+    moved = 0
+    for outbreak in list(book.outbreaks):
+        disease = book.diseases.get(outbreak.disease_entity_id)
+        profile = book.profiles.get(outbreak.disease_entity_id)
+        region = await ctx.session.get(EntityRow, outbreak.region_entity_id)
+        if disease is None or profile is None or region is None or profile.stigma < STIGMATISED:
+            continue
+        for community in await region_communities(ctx, book, region.id):
+            if community.subtype == COLONY or community.entity_type is not EntityType.SETTLEMENT:
+                continue
+            if (await values_for(ctx, community)).get(ValueAxis.PURITY, 0) < table.stigma_purity:
+                continue
+            population = stat(community, "population") or 0
+            reach = min(1.0, outbreak.infected / max(1, population))
+            expelled = round_half_up(population * reach * table.expel_pct / PERCENT)
+            floor, _ = headcount_bounds(ctx.rules, community)
+            expelled = min(expelled, max(0, population - floor))
+            if expelled < table.colony_min:
+                continue
+            colony = await colony_in(ctx, region, disease, community)
+            with flowing(FlowCategory.MIGRATION):
+                set_stats(community, population=population - expelled)
+                set_stats(colony, population=(stat(colony, "population") or 0) + expelled)
+            moved += expelled
+            await note(
+                ctx,
+                f"{community.name} drove {expelled} of its sick out of the gates to {colony.name}; the clean would not live beside {disease.name}.",
+                key="disease.expelled",
+                ids=[community.id, colony.id, disease.id],
+                kind=ChronicleKind.WORLD,
+            )
+    return moved
+
+
+async def build_hospitals(ctx: TickContext, book: DiseaseBook) -> int:
+    table = ctx.rules.epidemiology
+    knowledge = await KnowledgeMap.load(ctx.session)
+    built = 0
+    for region_id in sorted({outbreak.region_entity_id for outbreak in book.outbreaks} | set(book.endemic)):
+        if book.hospitals.get(region_id):
+            continue
+        for community in await region_communities(ctx, book, region_id):
+            if community.entity_type is not EntityType.SETTLEMENT or not knowledge.knows(community.id, KnowledgeBranch.MEDICINE):
+                continue
+            if (await values_for(ctx, community)).get(ValueAxis.MERCY, 0) < table.hospital_mercy:
+                continue
+            hospital = await create_record(
+                ctx,
+                RecordSpec(
+                    entity_type=EntityType.STRUCTURE,
+                    name=f"the house of healing of {community.name}",
+                    body=f"{community.name} raised a hospital where the sick are tended instead of driven away.",
+                    stats=StructureStats(splendor=20, durability=70, function=60),
+                    power=2,
+                    location_id=community.id,
+                    world_id=community.world_id,
+                    subtype=HOSPITAL,
+                    maker_entity_id=community.id,
+                    pending=False,
+                ),
+            )
+            book.hospitals.setdefault(region_id, []).append(hospital)
+            built += 1
+            await note(
+                ctx,
+                f"Merciful {community.name} built {hospital.name}.",
+                key="disease.hospital",
+                ids=[community.id, hospital.id],
+                kind=ChronicleKind.WORLD,
+            )
+            break
+    return built

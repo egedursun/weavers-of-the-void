@@ -7,34 +7,34 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 
 | from ↓ / to → | core | body | mind | social | household | demography | economy | polity | law | intrigue | communication | war | faith | magic | knowledge | culture | language | ecology | environment | gods | cosmos |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| core | — | 33 | 29 | 15 | · | 16 | 26 | 19 | · | · | · | 29 | 14 | 6 | 3 | 24 | 4 | 12 | 30 | 12 | 11 |
-| body | 38 | — | 44 | 16 | · | 27 | 36 | 22 | · | · | · | 40 | 23 | 9 | 7 | 32 | 4 | 23 | 43 | 13 | 15 |
-| mind | 39 | 47 | — | 23 | · | 26 | 37 | 26 | · | · | · | 42 | 23 | 8 | 7 | 34 | 7 | 16 | 41 | 16 | 15 |
-| social | 11 | 11 | 11 | — | · | 7 | 10 | 8 | · | · | · | 12 | 7 | 3 | 1 | 10 | 3 | 4 | 10 | 7 | 7 |
+| core | — | 33 | 29 | 16 | · | 20 | 32 | 20 | · | · | · | 29 | 14 | 6 | 3 | 24 | 4 | 12 | 30 | 12 | 11 |
+| body | 38 | — | 44 | 17 | · | 31 | 45 | 24 | · | · | · | 40 | 23 | 9 | 7 | 32 | 4 | 23 | 43 | 13 | 15 |
+| mind | 39 | 47 | — | 25 | · | 31 | 47 | 28 | · | · | · | 42 | 23 | 8 | 7 | 34 | 7 | 16 | 41 | 16 | 15 |
+| social | 12 | 12 | 13 | — | · | 12 | 15 | 12 | 1 | · | · | 14 | 7 | 4 | 2 | 12 | 3 | 5 | 11 | 7 | 8 |
 | household | · | · | · | · | — | · | · | · | · | · | · | · | · | · | · | · | · | · | · | · | · |
-| demography | 12 | 12 | 13 | 9 | · | — | 14 | 8 | · | · | · | 12 | 8 | 6 | 4 | 13 | 6 | 8 | 12 | 8 | 8 |
-| economy | 27 | 36 | 37 | 19 | · | 28 | — | 32 | 3 | 2 | · | 43 | 17 | 12 | 14 | 42 | 12 | 17 | 47 | 14 | 21 |
-| polity | 15 | 17 | 16 | 8 | · | 12 | 23 | — | · | · | · | 23 | 10 | 7 | 6 | 24 | 4 | 8 | 16 | 9 | 11 |
+| demography | 13 | 14 | 15 | 12 | · | — | 24 | 11 | · | · | · | 15 | 9 | 6 | 5 | 15 | 6 | 8 | 13 | 8 | 8 |
+| economy | 45 | 62 | 60 | 34 | · | 62 | — | 53 | 7 | 2 | · | 67 | 26 | 14 | 17 | 56 | 12 | 24 | 73 | 18 | 28 |
+| polity | 18 | 20 | 19 | 10 | · | 15 | 33 | — | · | 1 | · | 27 | 10 | 7 | 6 | 27 | 4 | 9 | 20 | 9 | 11 |
 | law | · | · | · | · | · | · | · | · | — | · | · | · | · | · | · | · | · | · | · | · | · |
 | intrigue | · | · | · | · | · | · | · | · | · | — | · | · | · | · | · | · | · | · | · | · | · |
 | communication | · | · | · | · | · | · | · | · | · | · | — | · | · | · | · | · | · | · | · | · | · |
-| war | 28 | 32 | 30 | 16 | · | 18 | 35 | 30 | · | · | · | — | 13 | 7 | 5 | 33 | 4 | 12 | 30 | 12 | 11 |
-| faith | 11 | 15 | 15 | 6 | · | 12 | 13 | 9 | · | · | · | 11 | — | 6 | 3 | 12 | 3 | 8 | 12 | 12 | 12 |
-| magic | 9 | 9 | 8 | 3 | · | 7 | 10 | 7 | · | · | · | 8 | 5 | — | 3 | 7 | 4 | 6 | 9 | 7 | 8 |
+| war | 28 | 32 | 30 | 18 | · | 22 | 43 | 32 | · | · | · | — | 13 | 7 | 5 | 33 | 4 | 12 | 30 | 12 | 11 |
+| faith | 11 | 15 | 15 | 6 | · | 12 | 15 | 9 | · | · | · | 11 | — | 6 | 3 | 12 | 3 | 8 | 12 | 12 | 12 |
+| magic | 9 | 9 | 8 | 3 | · | 8 | 10 | 7 | · | · | · | 8 | 5 | — | 3 | 7 | 4 | 6 | 9 | 7 | 8 |
 | knowledge | 3 | 3 | 3 | 1 | · | 3 | 4 | 2 | · | · | · | 2 | 2 | 1 | — | 4 | 3 | 2 | 3 | 2 | 3 |
-| culture | 20 | 23 | 24 | 8 | · | 22 | 34 | 24 | · | · | · | 27 | 16 | 7 | 12 | — | 13 | 11 | 23 | 13 | 15 |
+| culture | 20 | 23 | 24 | 10 | · | 24 | 39 | 29 | · | · | · | 28 | 16 | 7 | 12 | — | 14 | 11 | 23 | 13 | 15 |
 | language | 4 | 3 | 3 | 1 | · | 3 | 6 | 1 | · | · | · | 3 | 1 | 1 | 5 | 6 | — | 3 | 3 | 2 | 4 |
-| ecology | 10 | 13 | 13 | 3 | · | 10 | 14 | 6 | · | · | · | 9 | 7 | 4 | 3 | 9 | 3 | — | 14 | 6 | 7 |
-| environment | 42 | 46 | 47 | 15 | · | 31 | 51 | 23 | · | · | · | 43 | 20 | 10 | 9 | 34 | 8 | 22 | — | 16 | 23 |
-| gods | 3 | 3 | 3 | 1 | · | 2 | 2 | 2 | · | · | · | 3 | 3 | 2 | 2 | 2 | 1 | 2 | 3 | — | 3 |
-| cosmos | 9 | 9 | 9 | 5 | · | 9 | 9 | 8 | · | · | · | 9 | 7 | 8 | 5 | 9 | 6 | 9 | 9 | 7 | — |
+| ecology | 10 | 13 | 13 | 3 | · | 10 | 16 | 7 | · | · | · | 9 | 7 | 4 | 3 | 9 | 3 | — | 14 | 6 | 7 |
+| environment | 42 | 46 | 47 | 17 | · | 36 | 58 | 26 | · | · | · | 43 | 20 | 10 | 9 | 34 | 8 | 22 | — | 16 | 23 |
+| gods | 3 | 3 | 3 | 1 | · | 2 | 3 | 2 | · | · | · | 3 | 3 | 2 | 2 | 2 | 1 | 2 | 3 | — | 3 |
+| cosmos | 9 | 9 | 9 | 6 | · | 9 | 9 | 8 | · | · | · | 9 | 7 | 8 | 5 | 9 | 6 | 9 | 9 | 7 | — |
 
 ## Edges by kind
 
-- modifier: 260
-- rule_switch: 239
-- flow: 64126
-- trigger: 9
+- modifier: 424
+- rule_switch: 301
+- flow: 118149
+- trigger: 13
 
 ## Feedback cycles between subsystems (length ≤ 3 listed)
 
@@ -1552,11 +1552,11 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 
 | Class | Covered by |
 |---|---|
-| A: human necessities | healing |
-| B: performing operations and transporting | coin_trust, route_capacity, route_closure, route_culture, route_danger, route_decay, route_formation, route_income, route_knowledge, route_missions, route_plague, route_wars, route_waystations, route_words, sea_seasons, trade_routes |
+| A: human necessities | healing, mobilisation |
+| B: performing operations and transporting | coin_trust, journey_contagion, route_capacity, route_closure, route_contagion, route_culture, route_danger, route_decay, route_formation, route_income, route_knowledge, route_missions, route_plague, route_wars, route_waystations, route_words, sea_seasons, trade_routes |
 | C: chemistry and metallurgy | addiction_hook, debt_seizure, decaying_reserve, depleted_refill, depletion_doom, extraction, fixed_reserve, knowledge_levels, ore_quality, prospecting, resource_value, route_knowledge, sacred_wrath, sentient_leaving, typed_resource_mechanics |
-| D: textiles and paper | engine_works, extraction, extraction_labour, refining, seam_wear |
-| E: fixed constructions | extraction, extraction_labour, refining, seam_wear |
+| D: textiles and paper | engine_works, extraction, extraction_labour, refining, seam_wear, town_prestige |
+| E: fixed constructions | bitter_emigration, ethnogenesis_divergence, extraction, extraction_labour, refining, seam_wear, town_prestige, town_tolls |
 | F: mechanical engineering, lighting, heating, weapons | not yet covered |
 | G: physics and instruments | epoch_stars |
 | H: electricity | knowledge_levels |
@@ -1568,21 +1568,21 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 | A: general economics | cosmic_economy |
 | B: history of economic thought | knowledge_levels |
 | C: mathematical and quantitative methods | epoch_statistics |
-| D: microeconomics | market, markets, needs, route_waystations |
-| E: macroeconomics and money | debt_seizure, market, markets, route_waystations |
-| F: international economics | coin_trust, sea_seasons, trade_routes |
+| D: microeconomics | city_tiers, market, markets, needs, route_waystations, urban_logistics |
+| E: macroeconomics and money | debt_seizure, market, markets, route_waystations, urban_logistics |
+| F: international economics | coin_trust, route_contagion, sea_seasons, trade_routes |
 | G: financial economics | debt_seizure |
-| H: public economics | not yet covered |
+| H: public economics | taxation |
 | I: health, education and welfare | healing, knowledge_levels |
-| J: labour and demographic economics | maimed_cohorts, population_baseline, population_growth |
+| J: labour and demographic economics | cohorts, maimed_cohorts, population_baseline, population_growth |
 | K: law and economics | not yet covered |
-| L: industrial organisation | addiction_hook, debt_seizure, decaying_reserve, depleted_refill, depletion_doom, extraction, extraction_labour, fixed_reserve, ore_quality, refining, resource_value, sacred_wrath, seam_wear, sentient_leaving, typed_resource_mechanics |
-| M: business administration | market, markets, route_waystations |
+| L: industrial organisation | addiction_hook, debt_seizure, decaying_reserve, depleted_refill, depletion_doom, extraction, extraction_labour, fixed_reserve, ore_quality, refining, resource_value, sacred_wrath, seam_wear, sentient_leaving, town_prestige, typed_resource_mechanics |
+| M: business administration | market, markets, route_waystations, urban_logistics |
 | N: economic history | remembrance, route_renown |
-| O: development, innovation and growth | fixed_reserve, knowledge_levels, regrowth, route_knowledge |
+| O: development, innovation and growth | city_tiers, disease_load_growth, fixed_reserve, knowledge_levels, regrowth, route_knowledge |
 | P: economic systems | cosmic_economy |
-| Q: agricultural, natural resource and environmental economics | addiction_hook, byproducts, debt_seizure, decaying_reserve, depleted_refill, depletion_doom, derived_environment, extraction, fixed_reserve, flooded_shafts, land_use, ore_quality, resource_value, sacred_wrath, sentient_leaving, typed_resource_mechanics |
-| R: urban, rural and regional economics | settlement_cycles, settlement_laws |
+| Q: agricultural, natural resource and environmental economics | addiction_hook, byproducts, debt_seizure, decaying_reserve, depleted_refill, depletion_doom, derived_environment, disease_choice, endemicity, extraction, fixed_reserve, flooded_shafts, land_use, mobilisation, ore_quality, quarantine, resource_value, sacred_wrath, sentient_leaving, typed_resource_mechanics |
+| R: urban, rural and regional economics | bitter_emigration, ethnogenesis_divergence, migration_pull, settlement_cycles, settlement_laws, town_tolls |
 | Y: miscellaneous categories | advance_epoch, creator_essence, dead_bonds_closing, dead_bonds_opening, epoch_statistics, incidents, modifiers, sub_clocks |
 | Z: other special topics: cultural economics | not yet covered |
 
@@ -1609,7 +1609,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 | S: unnatural cruelty | not yet covered |
 | T: sex | not yet covered |
 | U: the nature of life | not yet covered |
-| V: religion | cultural_exchange, route_diffusion, route_renown |
+| V: religion | cultural_exchange, people_profiles, route_diffusion, route_renown |
 | W: traits of character | not yet covered |
 | X: humour | route_renown |
 | Z: miscellaneous groups of motifs | remembrance, route_renown |
@@ -1626,8 +1626,8 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 | religion: religion, magic and ritual | ley_lines, price_of_magic |
 | death: mourning and death practices | remembrance |
 | art: art, music and adornment | engine_works |
-| exchange: reciprocity, gifts and trade | coin_trust, sea_seasons, trade_routes |
-| identity: self-image and in-group identity | route_diffusion, route_renown, values |
+| exchange: reciprocity, gifts and trade | coin_trust, route_contagion, sea_seasons, trade_routes |
+| identity: self-image and in-group identity | people_profiles, route_diffusion, route_renown, values |
 | emotion: emotions and their display | needs |
 | tools: tools, fire and shelter | knowledge_levels, route_knowledge |
 | worldview: worldview, time and cosmology | epoch_stars |
@@ -1641,8 +1641,8 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 | fires: fires | not yet covered |
 | manoeuvre: movement and manoeuvre | derived_environment |
 | protection: protection | not yet covered |
-| sustainment: sustainment | markets |
-| engineering: engineering | not yet covered |
+| sustainment: sustainment | markets, mobilisation |
+| engineering: engineering | camp_disease, siege_disease, siege_treason |
 | medical: medical | healing, hits, injuries |
 | civil: civil affairs | not yet covered |
 | culture: military culture | not yet covered |

@@ -5,6 +5,15 @@ from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldMapRow, WorldR
 from aerona.db.tables.climate import ClimateOrderRow
 from aerona.db.tables.cosmic_state import AddictionImmunityRow, CivilizationTierLockRow, ResourceMechanicRow, VesselProfileRow, WorldLeakItemRow
 from aerona.db.tables.cosmos import AppliedFixupRow, CosmosRow, CreatorMoodInputRow, CreatorRow
+from aerona.db.tables.demography import CohortRow, LabourRow, PeopleBiologyRow, PeopleCultureRow
+from aerona.db.tables.disease import (
+    DiseaseCureRow,
+    DiseaseProfileRow,
+    EndemicDiseaseRow,
+    ImmunityRow,
+    OutbreakRow,
+    QuarantineRow,
+)
 from aerona.db.tables.economy import (
     CommunityStockRow,
     CurrencyRow,
@@ -78,6 +87,7 @@ from aerona.db.tables.motifs import MotifOverrideRow
 from aerona.db.tables.node import NameRegistryRow, NodeRow
 from aerona.db.tables.routes import HorizonIntuitionRow, JourneyRow, RouteRow
 from aerona.db.tables.rule_override import RuleOverrideRow
+from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
 from aerona.db.tables.society import (
     AddictionRow,
     ArchiveHoldingRow,
@@ -110,6 +120,7 @@ __all__ = [
     "ChronicleRow",
     "CivilizationTierLockRow",
     "ClimateOrderRow",
+    "CohortRow",
     "CommunityRelationRow",
     "CommunitySocietyRow",
     "CommunityStockRow",
@@ -125,6 +136,10 @@ __all__ = [
     "CurrencyRow",
     "DeferredStepRow",
     "DesignatedHeirRow",
+    "DiseaseCureRow",
+    "DiseaseProfileRow",
+    "DistrictRow",
+    "EndemicDiseaseRow",
     "EntityFlagRow",
     "EntityRow",
     "EntityTagRow",
@@ -148,11 +163,13 @@ __all__ = [
     "HistorianViewRow",
     "HorizonIntuitionRow",
     "ImageRow",
+    "ImmunityRow",
     "IncidentParticipantRow",
     "IncidentRow",
     "InjuryRow",
     "JobRow",
     "JourneyRow",
+    "LabourRow",
     "LanguageProfileRow",
     "LedgerChangeRow",
     "LedgerEntryRow",
@@ -176,12 +193,16 @@ __all__ = [
     "NodeRow",
     "NotableYearRow",
     "NotificationRow",
+    "OutbreakRow",
     "OuterBargainRow",
+    "PeopleBiologyRow",
+    "PeopleCultureRow",
     "PersonalityValueRow",
     "PlaceEnvironmentRow",
     "PressureRow",
     "ProductionRunRow",
     "ProsthesisRow",
+    "QuarantineRow",
     "RegionEnvironmentRow",
     "ResourceMechanicRow",
     "ResourceProfileRow",
@@ -192,6 +213,10 @@ __all__ = [
     "RuleOverrideRow",
     "ScenarioRow",
     "ScoreRow",
+    "SettlementHistoryRow",
+    "SettlementInfrastructureRow",
+    "SettlementProfileRow",
+    "SettlementTreasuryRow",
     "SiegeRow",
     "SkillRow",
     "SkyEventRow",

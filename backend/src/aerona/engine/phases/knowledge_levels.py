@@ -18,6 +18,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.models.entity_stats import KnowledgeStats
 from aerona.engine.context import TickContext
+from aerona.engine.disease.load import DiseaseLoads, endemic_regions
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -150,6 +151,8 @@ class KnowledgeScene:
 async def deepen_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     table = ctx.rules.knowledge
     deepened = 0
+    loads = await DiseaseLoads.load(ctx.session)
+    sick = await endemic_regions(ctx.session)
     for community in scene.communities:
         if deepened >= table.deepen_cap:
             break
@@ -162,6 +165,10 @@ async def deepen_round(ctx: TickContext, scene: KnowledgeScene) -> int:
             continue
         rng = ctx.rng(f"deepen.{community.id}")
         chance = table.deepen_chance + await scribe_share(ctx.session, ctx.rules, community) / table.deepen_scribe_divisor
+        healing = [item for item in options if item.knowledge_branch is KnowledgeBranch.MEDICINE]
+        if healing and loads.atlas.top_region(community.id) in sick:
+            chance *= ctx.rules.epidemiology.medicine_pressure_pct / PERCENT
+            options = healing
         if not rng.chance(chance):
             continue
         chosen = rng.pick(options)

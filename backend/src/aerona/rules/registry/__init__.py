@@ -43,6 +43,7 @@ from aerona.rules.registry.culture import CultureRules
 from aerona.rules.registry.death import DeathRules
 from aerona.rules.registry.deep_life import DeepLifeRules
 from aerona.rules.registry.deep_world import DeepWorldRules
+from aerona.rules.registry.demography import CohortsRules, DemographyRules, LabourRules, MobilityRules, PeopleRules
 from aerona.rules.registry.diplomacy import DiplomacyRules
 from aerona.rules.registry.disasters import DisastersRules
 from aerona.rules.registry.ecology import EcologyRules
@@ -59,6 +60,7 @@ from aerona.rules.registry.environment import (
     ScarsRules,
     SeasonsRules,
 )
+from aerona.rules.registry.epidemiology import EpidemiologyRules
 from aerona.rules.registry.epoch_flow import EpochFlowRules
 from aerona.rules.registry.espionage import EspionageRules
 from aerona.rules.registry.essence import EssenceRules
@@ -120,6 +122,7 @@ from aerona.rules.registry.religion import ReligionRules
 from aerona.rules.registry.remembrance import RemembranceRules
 from aerona.rules.registry.reputation import ReputationRules
 from aerona.rules.registry.server import ServerRules
+from aerona.rules.registry.settlement import CrimeRules, FireRules, SanitationRules, TaxationRules, UrbanRules
 from aerona.rules.registry.setup_wizard import SetupWizardRules
 from aerona.rules.registry.sky import SkyRules
 from aerona.rules.registry.society import SocietyRules
@@ -223,6 +226,17 @@ class Rules:
     trade_routes: TradeRoutesRules = field(default_factory=TradeRoutesRules)
     banking: BankingRules = field(default_factory=BankingRules)
     tolls: TollsRules = field(default_factory=TollsRules)
+    cohorts: CohortsRules = field(default_factory=CohortsRules)
+    demography: DemographyRules = field(default_factory=DemographyRules)
+    epidemiology: EpidemiologyRules = field(default_factory=EpidemiologyRules)
+    urban: UrbanRules = field(default_factory=UrbanRules)
+    taxation: TaxationRules = field(default_factory=TaxationRules)
+    crime: CrimeRules = field(default_factory=CrimeRules)
+    fire: FireRules = field(default_factory=FireRules)
+    sanitation: SanitationRules = field(default_factory=SanitationRules)
+    labour: LabourRules = field(default_factory=LabourRules)
+    peoples: PeopleRules = field(default_factory=PeopleRules)
+    mobility: MobilityRules = field(default_factory=MobilityRules)
     espionage: EspionageRules = field(default_factory=EspionageRules)
     empty_world: EmptyWorldRules = field(default_factory=EmptyWorldRules)
     engine_phases: EnginePhasesRules = field(default_factory=EnginePhasesRules)

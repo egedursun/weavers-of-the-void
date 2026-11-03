@@ -92,6 +92,18 @@ class StoresLine(ContextItem):
     routes: list[str] = Field(default_factory=list)
 
 
+class HomeLine(ContextItem):
+    community: str
+    tier: str = ""
+    order: int | None = None
+    crime: int | None = None
+    unrest: int | None = None
+    social_class: str = ""
+    satisfaction: int | None = None
+    customs: list[str] = Field(default_factory=list)
+    sickness: list[str] = Field(default_factory=list)
+
+
 class ExpeditionLine(ContextItem):
     intent_label: str
     remaining: int
@@ -115,6 +127,7 @@ class MortalContextContext(RulesContext):
     resources: list[OwnedResource] = Field(default_factory=list)
     items: list[NamedRecord] = Field(default_factory=list)
     stores: StoresLine | None = None
+    home: HomeLine | None = None
     mentions: list[ChronicleRow] = Field(default_factory=list)
     languages: str = ""
     other_worlds: str = ""

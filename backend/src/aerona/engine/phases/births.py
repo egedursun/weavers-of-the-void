@@ -15,11 +15,13 @@ from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import MortalStats, PeopleStats, SettlementStats
 from aerona.engine.body.book import factor
 from aerona.engine.body.cohorts import healer_demand
+from aerona.engine.body.customs import culture_of
 from aerona.engine.body.hits import weighted
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.ruler_roles import ruler_role
 from aerona.engine.mind.book import effect_of, scaled_by
+from aerona.engine.mind.space import value_distance
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.settlements import resettle_ruin
@@ -179,6 +181,16 @@ NOTABLE_ROLES: dict[SocialClass, tuple[NotableRole, ...]] = {
             {"intellect": lambda r: r.deep_life.role_scribe_cartographer_intellect, "agility": lambda r: r.deep_life.role_scribe_cartographer_agility},
         ),
     ),
+    SocialClass.NOBLE: (
+        NotableRole("lord", "Lord", "landholder", MortalRole.RULER, {"charisma": lambda r: r.deep_life.role_noble_lord_charisma}),
+        NotableRole("knight", "Knight", "knight", MortalRole.KNIGHT, {"strength": lambda r: r.deep_life.role_noble_knight_strength}),
+    ),
+    SocialClass.SERF_OR_SLAVE: (NotableRole("bondsman", "Bondsman", "bondsman", MortalRole.COMMONER, {"strength": lambda r: r.deep_life.role_serf_strength}),),
+    SocialClass.OUTCAST: (
+        NotableRole("beggar", "Beggar", "beggar", MortalRole.COMMONER, {"charisma": lambda r: r.deep_life.role_outcast_charisma}),
+        NotableRole("outlaw", "Outlaw", "outlaw", MortalRole.BANDIT, {"agility": lambda r: r.deep_life.role_outcast_outlaw_agility}),
+    ),
+    SocialClass.MONASTIC: (NotableRole("monk", "Brother", "monk", MortalRole.SAGE, {"intellect": lambda r: r.deep_life.role_monastic_intellect}),),
 }
 
 RULER_TITLES: dict[EntityType, tuple[str, str]] = {
@@ -567,6 +579,9 @@ async def ethnogeneses(ctx: TickContext, atlas: RegionAtlas, namer: Namer) -> in
             continue
         region, ancestor_region = atlas.top_region(settlement.id), atlas.top_region(ancestor.id)
         if region is None or ancestor_region is None or region == ancestor_region:
+            continue
+        own, parent = await culture_of(ctx.session, settlement.id), await culture_of(ctx.session, ancestor.id)
+        if own and parent and value_distance(own, parent) < ctx.rules.peoples.ethnogenesis_distance:
             continue
         if await birthed_people(ctx, settlement.id) or not rng.chance(world_rules.ethnogenesis_chance):
             continue

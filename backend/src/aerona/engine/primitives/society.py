@@ -17,6 +17,10 @@ def default_class_shares(rules: Rules) -> dict[SocialClass, float]:
         SocialClass.PRIEST: float(society.class_priest_pct),
         SocialClass.WARRIOR: float(society.class_warrior_pct),
         SocialClass.SCRIBE: float(society.class_scribe_pct),
+        SocialClass.NOBLE: float(society.class_noble_pct),
+        SocialClass.SERF_OR_SLAVE: float(society.class_serf_pct),
+        SocialClass.OUTCAST: float(society.class_outcast_pct),
+        SocialClass.MONASTIC: float(society.class_monastic_pct),
     }
 
 
@@ -25,6 +29,11 @@ async def class_shares(session: AsyncSession, rules: Rules, entity_id: int) -> d
     if row is None:
         return default_class_shares(rules)
     return {social_class: row.share(social_class) for social_class in SocialClass}
+
+
+async def supply_index(session: AsyncSession, entity_id: int, commodity: Commodity) -> int | None:
+    row = await session.get(CommunitySocietyRow, entity_id)
+    return row.stock(commodity) if row is not None else None
 
 
 async def stock(session: AsyncSession, rules: Rules, entity_id: int, commodity: Commodity) -> int:

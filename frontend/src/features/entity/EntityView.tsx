@@ -24,6 +24,9 @@ import {
 import { type EntityDetail } from './api/types'
 import { RELATION_PAGE_MAX } from './constants'
 import { EntityEconomy } from './economy/EntityEconomy'
+import { DemographySection, LabourSection, PeopleProfileSection } from './society/Demography'
+import { DiseaseSection } from './society/DiseaseCard'
+import { SettlementPlanSection, TreasurySection } from './society/SettlementPlan'
 import { ResourceProfile } from './economy/ResourceProfile'
 import { PriceBoard, TradeRouteSection } from './economy/RouteAndMarket'
 import { scrollToSection } from './scrollToSection'
@@ -72,6 +75,12 @@ const SECTION_LINKS = [
   { id: 'section-facts', label: 'Facts' },
   { id: 'section-stats', label: 'Stats' },
   { id: 'section-society', label: 'Society' },
+  { id: 'section-demography', label: 'Population' },
+  { id: 'section-labour', label: 'Work' },
+  { id: 'section-people-profile', label: 'Folk' },
+  { id: 'section-settlement-plan', label: 'City' },
+  { id: 'section-treasury', label: 'Treasury' },
+  { id: 'section-disease', label: 'Sickness' },
   { id: 'section-economy', label: 'Stores' },
   { id: 'section-market', label: 'Market' },
   { id: 'section-resource-profile', label: 'Reserve' },
@@ -164,9 +173,17 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
   const trading =
     entity.entity_type === 'people' || entity.entity_type === 'settlement'
   if (!trading) {
+    present.delete('section-demography')
+    present.delete('section-labour')
     present.delete('section-economy')
     present.delete('section-market')
   }
+  if (entity.entity_type !== 'people') present.delete('section-people-profile')
+  if (entity.entity_type !== 'settlement') {
+    present.delete('section-settlement-plan')
+    present.delete('section-treasury')
+  }
+  if (entity.entity_type !== 'disease') present.delete('section-disease')
   if (entity.entity_type !== 'resource')
     present.delete('section-resource-profile')
   if (entity.entity_type !== 'trade_route')
@@ -270,6 +287,22 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         highlightEpoch={highlight}
       />
       <EntityEnvironment entityId={entity.id} entityType={entity.entity_type} />
+      {trading && (
+        <DemographySection communityId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {trading && <LabourSection communityId={entity.id} />}
+      {entity.entity_type === 'people' && (
+        <PeopleProfileSection peopleId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'settlement' && (
+        <SettlementPlanSection settlementId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'settlement' && (
+        <TreasurySection settlementId={entity.id} />
+      )}
+      {entity.entity_type === 'disease' && (
+        <DiseaseSection diseaseId={entity.id} readOnlyReason={readOnly} />
+      )}
       {(entity.entity_type === 'people' ||
         entity.entity_type === 'settlement') && (
         <EntityEconomy communityId={entity.id} readOnlyReason={readOnly} />

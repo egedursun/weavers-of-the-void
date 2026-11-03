@@ -32,12 +32,14 @@ from aerona.engine.phases import (
     culture_exchange,
     curses,
     dark_ages,
+    demography,
     dialects,
     diplomacy,
     disasters,
     doom,
     ecology,
     environment,
+    epidemics,
     espionage,
     exploration,
     factions,
@@ -76,6 +78,7 @@ from aerona.engine.phases import (
     reputation,
     resources,
     ruins,
+    settlement_life,
     settlements,
     sky,
     society,
@@ -180,6 +183,9 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + wonders.PHASES
     + works.PHASES
     + writing.PHASES
+    + epidemics.PHASES
+    + settlement_life.PHASES
+    + demography.PHASES
 )
 PHASE_REGISTRY: dict[str, Phase] = {phase.name: phase for phase in EXPORTED_PHASES}
 
@@ -201,6 +207,7 @@ CLEANUP_STAGE = stage(
 )
 GRUDGE_STAGE = stage("divine_grudges")
 SUB_ENGINE_STAGE = stage(
+    "labour_allocation",
     "harvest",
     "diplomacy",
     "war_upkeep",
@@ -251,6 +258,7 @@ SOCIETY_STAGE = stage(
     "famine_migration",
     "refugees",
     "disaster_casualties",
+    "epidemics",
     "uprisings",
     "spirits_rest",
     "hauntings",
@@ -274,6 +282,8 @@ SOCIETY_ENGINE_STAGE = stage(
     "markets",
     "trade_flow",
     "banking",
+    "society_mobility",
+    "settlement_life",
     "heroes",
     "spontaneous_births",
     "factions",
@@ -295,6 +305,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "material_decay",
     "institution_cycles",
     "culture_cycles",
+    "people_cycles",
     "remembrance",
 )
 AGING_STAGE = stage("body_healing", "mortal_wounds", "body_conditions", "body_society", "mortal_aging", "dead_bonds_closing")
@@ -305,7 +316,9 @@ TICK_ORDER: tuple[Phase, ...] = (
 )
 
 PRE_TRANSITION_ORDER = stage("local_gods")
-GROWTH_STAGE = stage("law_fertility", "population_baseline", "climate_transition", "environment_derive", "ley_lines", "population_growth", "epoch_stars")
+GROWTH_STAGE = stage(
+    "law_fertility", "population_baseline", "climate_transition", "environment_derive", "ley_lines", "population_growth", "cohort_upkeep", "epoch_stars"
+)
 GODS_STAGE = stage("sons_renewal", "gods_fate", "works_remember_gods", "domain_rivalry", "rebel_theft")
 CLOSING_STAGE = stage("doom_clock", "creator_essence", "epoch_statistics", "advance_epoch")
 

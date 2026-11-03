@@ -11,11 +11,13 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.body import ConditionKind, DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.intervention import Disaster
@@ -26,11 +28,14 @@ from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_types import disaster_pct
+from aerona.engine.disease.book import DiseaseBook
+from aerona.engine.disease.outbreaks import STRIKING, disease_for, lethality_factor, open_outbreak, spread_factor, tally
 from aerona.engine.economy.routes import link_partners
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment
 from aerona.engine.environment.notable import remember_event_year
 from aerona.engine.environment.profile import RIVER_RANK
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits, fatal_injury
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -138,7 +143,11 @@ async def _strike_mortal(ctx: TickContext, mortal: EntityRow, disaster: Disaster
         return False
     wounding = await apply_hits(ctx, mortal, harm)
     if disaster is Disaster.PLAGUE and wounding.outcome is WoundOutcome.WOUNDED:
-        await gain_condition(ctx, mortal, ConditionKind.CHRONIC_ILLNESS, HarmCause.DISASTER, chance=ctx.rules.conditions.plague_chronic_chance)
+        profile = STRIKING.get()
+        chronic = profile.chronic_rate / ctx.rules.epidemiology.neutral_chronic_rate if profile is not None else 1.0
+        await gain_condition(
+            ctx, mortal, ConditionKind.CHRONIC_ILLNESS, HarmCause.DISASTER, chance=min(PERCENT, ctx.rules.conditions.plague_chronic_chance * chronic)
+        )
     return wounding.outcome is WoundOutcome.DIED
 
 
@@ -325,12 +334,54 @@ async def scar_land(ctx: TickContext, target: EntityRow, disaster: Disaster, sev
         add_scar(ground, kind, round_half_up(severity * getattr(ctx.rules.disasters, key) / PERCENT))
 
 
+async def strike_plague(
+    ctx: TickContext,
+    target: EntityRow,
+    severity: int,
+    *,
+    disease: EntityRow | None = None,
+    path: SpreadPath = SpreadPath.ORIGIN,
+    source: OutbreakRow | None = None,
+) -> tuple[EntityRow, DisasterImpact]:
+    book = await DiseaseBook.load(ctx.session, ctx.rules, ctx.epoch)
+    region_id = target.id if target.entity_type is EntityType.REGION else book.atlas.top_region(target.id)
+    region = await ctx.session.get(EntityRow, region_id) if region_id is not None else None
+    chosen = disease if disease is not None else await disease_for(ctx, book, region) if region is not None else None
+    struck = [entity for entity in await affected_entities(ctx.session, target) if entity.entity_type in COMMUNITY_TYPES]
+    factor = lethality_factor(book, chosen.id, struck, await KnowledgeMap.load(ctx.session)) if chosen is not None else 1.0
+    token = STRIKING.set(book.profiles.get(chosen.id) if chosen is not None else None)
+    try:
+        with flowing(FlowCategory.PLAGUE):
+            impact = await apply_disaster(ctx, target, Disaster.PLAGUE, severity * factor / ctx.rules.disasters.scale_divisor)
+    finally:
+        STRIKING.reset(token)
+    if chosen is not None:
+        impact.notes.insert(0, f"the sickness was {chosen.name}")
+    await scar_land(ctx, target, Disaster.PLAGUE, severity)
+    event = await record_disaster_event(ctx, target, Disaster.PLAGUE, severity, impact)
+    await remember_event_year(ctx, event, await RegionAtlas.load(ctx.session), epoch=ctx.epoch)
+    if chosen is not None and region_id is not None:
+        outbreak = await open_outbreak(ctx, book, chosen, region_id, path=path, severity=severity, event=event, source=source)
+        record_toll(ctx, book, chosen, outbreak, struck=struck, impact=impact)
+    return event, impact
+
+
+def record_toll(ctx: TickContext, book: DiseaseBook, disease: EntityRow, outbreak: OutbreakRow, *, struck: list[EntityRow], impact: DisasterImpact) -> None:
+    table = ctx.rules.epidemiology
+    profile = book.profiles.get(disease.id)
+    virulence = profile.virulence / table.neutral_virulence if profile is not None else 1.0
+    dead = sum(value or 0 for key, value in impact.losses.items() if key in {entity.id for entity in struck})
+    people = sum(stat_or(entity, POPULATION_KEY, 0) for entity in struck)
+    infected = round_half_up(people * table.infected_pct / PERCENT * min(2.0, virulence))
+    tally(disease, outbreak, infected=infected + dead, dead=dead)
+
+
 async def strike(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: int) -> tuple[EntityRow, DisasterImpact]:
+    if disaster is Disaster.PLAGUE:
+        return await strike_plague(ctx, target, severity)
     impact = await apply_disaster(ctx, target, disaster, severity / ctx.rules.disasters.scale_divisor)
     await scar_land(ctx, target, disaster, severity)
     event = await record_disaster_event(ctx, target, disaster, severity, impact)
-    if disaster is Disaster.PLAGUE:
-        await remember_event_year(ctx, event, await RegionAtlas.load(ctx.session), epoch=ctx.epoch)
     return event, impact
 
 
@@ -416,9 +467,12 @@ async def _plague_spread(ctx: TickContext) -> int:
     links = await BondIndex.load(session, [*SPREAD_BOND_KINDS, BondKind.CAUSED])
     roads = await link_partners(ctx)
     knowledge = await KnowledgeMap.load(session)
+    book = await DiseaseBook.load(session, ctx.rules, ctx.epoch)
     spread = 0
     for plague in plagues:
         caused = links.outgoing(plague.id, BondKind.CAUSED)
+        outbreak = book.of_event(plague.id)
+        disease = book.diseases.get(outbreak.disease_entity_id) if outbreak is not None else None
         if not caused:
             continue
         source, struck = caused[0].target_node_id, {bond.target_node_id for bond in caused}
@@ -431,9 +485,24 @@ async def _plague_spread(ctx: TickContext) -> int:
                 continue
             medicine = knowledge.knows(partner.id, KnowledgeBranch.MEDICINE)
             chance = settings.plague_spread_medicine_chance if medicine else settings.plague_spread_chance
-            if not ctx.rng(f"plague_spread.{plague.id}.{partner.id}").chance(min(100, chance * traffic.get(partner.id, 1.0))):
+            target_region = book.atlas.top_region(partner.id)
+            ground = await session.get(RegionEnvironmentRow, target_region) if target_region is not None else None
+            pressure = spread_factor(book, disease.id, partner, ground, source_region=book.atlas.top_region(source)) if disease is not None else 1.0
+            if not ctx.rng(f"plague_spread.{plague.id}.{partner.id}").chance(min(100, chance * traffic.get(partner.id, 1.0) * pressure)):
                 continue
-            await apply_disaster(ctx, partner, Disaster.PLAGUE, fraction(settings.plague_spread_severity_pct))
+            lethal = lethality_factor(book, disease.id, [partner], knowledge) if disease is not None else 1.0
+            token = STRIKING.set(book.profiles.get(disease.id) if disease is not None else None)
+            try:
+                with flowing(FlowCategory.PLAGUE):
+                    impact = await apply_disaster(ctx, partner, Disaster.PLAGUE, fraction(settings.plague_spread_severity_pct) * lethal)
+            finally:
+                STRIKING.reset(token)
+            if disease is not None and outbreak is not None and target_region is not None:
+                path = SpreadPath.ROUTE if partner.id in traffic else SpreadPath.ORIGIN
+                landed = await open_outbreak(
+                    ctx, book, disease, target_region, path=path, severity=outbreak.severity * settings.plague_spread_severity_pct // PERCENT, source=outbreak
+                )
+                record_toll(ctx, book, disease, landed, struck=[partner], impact=impact)
             links.add(await BondRepository(session).connect(BondDraft(plague.id, partner.id, BondKind.CAUSED, ctx.epoch, "spread along the roads")))
             spread += 1
             await note(

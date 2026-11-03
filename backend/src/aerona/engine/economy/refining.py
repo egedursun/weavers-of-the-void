@@ -7,6 +7,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import ProductionRunRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
@@ -39,6 +40,9 @@ class RefiningTally:
 
 
 def artisan_pool(ctx: TickContext, book: EconomyBook, community: EntityRow) -> int:
+    hands = book.hands(community.id, Job.CRAFTING)
+    if hands is not None:
+        return hands
     row = book.societies.get(community.id)
     share = row.share(SocialClass.ARTISAN) if row is not None else PERCENT / len(SocialClass)
     free = PERCENT - ctx.rules.extraction.artisan_labour_pct

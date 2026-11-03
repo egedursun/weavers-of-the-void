@@ -10,7 +10,6 @@ from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow, InjuryRow, ProsthesisRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.sons import SonRow
@@ -35,6 +34,8 @@ from aerona.engine.body.conditions import end_condition, gain_condition
 from aerona.engine.body.hits import MARK_KINDS, PERMANENT_KINDS, TOTAL_LOSS_KINDS
 from aerona.engine.body.state import refresh
 from aerona.engine.context import TickContext
+from aerona.engine.disease.book import hospital_regions
+from aerona.engine.disease.load import DiseaseLoads
 from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_notable
@@ -167,6 +168,7 @@ class HealingWorld:
         healers: dict[int | None, list[Healer]] = defaultdict(list)
         artisans: dict[int | None, list[EntityRow]] = defaultdict(list)
         trained: dict[int, int] = defaultdict(int)
+        hospitals = await hospital_regions(session, atlas)
         for skill_row in await session.scalars(select(SkillRow).where(SkillRow.skill.in_(HEALING_SKILLS), SkillRow.subject_node_id.is_(None))):
             trained[skill_row.holder_node_id] = max(trained[skill_row.holder_node_id], skill_row.level)
         for mortal in await canon(session, [EntityType.MORTAL]):
@@ -179,8 +181,9 @@ class HealingWorld:
             body = await session.get(BodyRow, mortal.id)
             hands = body.craft / PERCENT if body is not None else 1.0
             raw = level * rules.skills.healer_scale_pct / PERCENT
-            healers[region].append(Healer(mortal, clamp_int(raw * hands, 0, PERCENT), region))
-        disease = {row.entity_id: row.disease_load for row in await session.scalars(select(RegionEnvironmentRow))}
+            ward = rules.epidemiology.hospital_healer_pct / PERCENT if region in hospitals else 1.0
+            healers[region].append(Healer(mortal, clamp_int(raw * hands * ward, 0, PERCENT), region))
+        disease = dict((await DiseaseLoads.load(session)).regions)
         return cls(rules=rules, atlas=atlas, knowledge=knowledge, healers=healers, disease=disease, artisans=artisans)
 
     def best_healer(self, bearer: EntityRow) -> Healer | None:

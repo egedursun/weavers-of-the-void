@@ -3,12 +3,15 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.economy import ResourceProfileRow, ResourceWorkerRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
@@ -17,6 +20,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.materials import MaterialBook
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.primitives.knowledge import KnowledgeMap
+from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import canon
 
 HOME_BONDS = (BondKind.LIVES_IN, BondKind.MEMBER_OF)
@@ -36,6 +40,7 @@ class EconomyBook:
     ground: EnvironmentBook
     materials: MaterialBook
     affiliated: dict[int, int] = field(default_factory=dict)
+    labour: dict[int, dict[Job, LabourRow]] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, ctx: TickContext) -> "EconomyBook":
@@ -80,6 +85,8 @@ class EconomyBook:
             if community is not None:
                 held = book.skills[community]
                 held[skill.skill] = max(held.get(skill.skill, 0), skill.level)
+        for labour in await session.scalars(select(LabourRow)):
+            book.labour.setdefault(labour.community_entity_id, {})[labour.job] = labour
         return book
 
     def home_of(self, entity: EntityRow, homes: dict[int, int]) -> int | None:
@@ -96,6 +103,12 @@ class EconomyBook:
         if home is not None and self.entities[home].entity_type in SOCIETY_TYPES:
             return home
         return None
+
+    def hands(self, community_id: int, *jobs: Job) -> int | None:
+        rows = self.labour.get(community_id)
+        if not rows:
+            return None
+        return sum(round_half_up(rows[job].workers * rows[job].output_pct / PERCENT) for job in jobs if job in rows)
 
     def community_of(self, entity_id: int) -> EntityRow | None:
         home = self.affiliated.get(entity_id)

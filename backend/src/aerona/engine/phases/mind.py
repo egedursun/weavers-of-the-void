@@ -19,6 +19,7 @@ from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import HeroQuestKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.demography.promotion import dormant_ids
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -371,8 +372,9 @@ async def mind_skills(ctx: TickContext) -> None:
     ctx.count("lessons", await teach_apprentices(ctx))
     index = await ValueIndex.load(ctx.session)
     rusted = changed = sparred = 0
+    sleeping = await dormant_ids(ctx)
     for mortal in await living_minds(ctx.session):
-        if mortal.entity_type is not EntityType.MORTAL:
+        if mortal.entity_type is not EntityType.MORTAL or mortal.id in sleeping:
             continue
         rusted += await weather_skills(ctx, mortal)
         sparred += 1 if await spar(ctx, mortal) else 0
@@ -487,8 +489,13 @@ async def mind_needs(ctx: TickContext) -> None:
     for community in communities:
         if await update_pressures(ctx, community, index.of(community.id), plagued):
             pressed += 1
+    sleeping = await dormant_ids(ctx)
     for mortal in minds:
-        if mortal.entity_type is EntityType.MORTAL and await update_needs(ctx, mortal, index.of(mortal.id), await traits_of(ctx.session, mortal.id)):
+        if (
+            mortal.entity_type is EntityType.MORTAL
+            and mortal.id not in sleeping
+            and await update_needs(ctx, mortal, index.of(mortal.id), await traits_of(ctx.session, mortal.id))
+        ):
             needy += 1
     ctx.count("pressures", pressed)
     ctx.count("needs", needy)

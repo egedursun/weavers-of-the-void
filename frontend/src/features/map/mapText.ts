@@ -39,9 +39,10 @@ export const LINE_LABEL: Record<LineKind, string> = {
   route: 'Trade route',
   route_busy: 'Busy trade route',
   route_blocked: 'Blockaded trade route',
+  outbreak: 'Spreading sickness',
 }
 
-const DIRECTED: ReadonlySet<LineKind> = new Set(['rule', 'hunt'])
+const DIRECTED: ReadonlySet<LineKind> = new Set(['rule', 'hunt', 'outbreak'])
 const LIST_HINT = 'Click to list everything here'
 
 function plural(count: number, noun: string): string {

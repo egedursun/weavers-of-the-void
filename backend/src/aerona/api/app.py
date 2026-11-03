@@ -16,6 +16,7 @@ from aerona.api.routers import (
     cosmos,
     council,
     creator,
+    depth_society,
     discovery,
     economy,
     engine,
@@ -108,6 +109,7 @@ ROUTERS: tuple[ModuleType, ...] = (
     mind,
     mechanics,
     economy,
+    depth_society,
     actions,
 )
 IMAGE_UPLOAD_SUFFIX = "/images"

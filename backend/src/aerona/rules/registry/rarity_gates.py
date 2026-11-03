@@ -81,6 +81,9 @@ class RarityGatesRules:
     create_trade_route: int = rule(
         5, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can create a Trade route (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
     )
+    create_disease: int = rule(
+        2, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can loose a Disease (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )
     create_natural_law: int = rule(
         4, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can create a Natural Law (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
     )

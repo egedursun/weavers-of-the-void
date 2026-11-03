@@ -3368,7 +3368,7 @@
     "DUNYA_MOTORU.buyume_bereket_bolen": "world_engine.growth_fertility_divisor",
     "DUNYA_MOTORU.buyume_en_az": "world_engine.growth_min_pct",
     "DUNYA_MOTORU.buyume_refah_bolen": "world_engine.growth_prosperity_divisor",
-    "DUNYA_MOTORU.buyume_taban": "world_engine.growth_base_pct",
+    "DUNYA_MOTORU.buyume_taban": null,
     "DUNYA_MOTORU.buyume_tarim": "world_engine.growth_agriculture_pct",
     "DUNYA_MOTORU.buyume_ust": "world_engine.growth_max_pct",
     "DUNYA_MOTORU.canavar_alt": "world_engine.monster_min_danger",
@@ -5384,6 +5384,7 @@
     "ZAMAN.cag_yil": "time.years_per_epoch"
   },
   "rules_unmapped": [
+    "DUNYA_MOTORU.buyume_taban",
     "AJAN.oto_bekle_deneme",
     "AJAN.oto_bekle_sn",
     "AJAN.oto_pay",

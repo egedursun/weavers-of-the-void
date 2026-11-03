@@ -3,6 +3,7 @@ from collections import defaultdict
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityType
@@ -119,14 +120,18 @@ async def uprisings(ctx: TickContext) -> None:
         if raised >= settings.poverty_revolt_cap:
             break
         pressed = await pressures_of(session, settlement.id)
-        if pressed:
+        town = await session.get(SettlementProfileRow, settlement.id)
+        if town is not None:
+            restless = town.unrest >= ctx.rules.crime.revolt_unrest
+        elif pressed:
             restless = await unrest(session, ctx.rules, settlement.id) >= ctx.rules.needs.uprising_pressure
         else:
             restless = stat_or(settlement, "prosperity", ctx.rules.world_effects.unknown_prosperity) < settings.poverty_revolt_prosperity
         if not restless or stat_or(settlement, "population", 0) < threshold(settlement):
             continue
         just = _just_law_present(book, settlement, settings.just_law_threshold)
-        if not rng.chance(settings.poverty_revolt_just_law_chance if just else settings.poverty_revolt_chance):
+        heat = 1 + max(0, town.unrest - ctx.rules.crime.revolt_unrest) / PERCENT if town is not None else 1.0
+        if not rng.chance((settings.poverty_revolt_just_law_chance if just else settings.poverty_revolt_chance) * heat):
             continue
         await raise_rebels(ctx, settlement, book, entities)
         raised += 1

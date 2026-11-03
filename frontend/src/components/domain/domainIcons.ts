@@ -1,5 +1,6 @@
 import {
   Activity,
+  Biohazard,
   BookOpen,
   Brain,
   Building2,
@@ -27,6 +28,7 @@ import {
   Package,
   Paintbrush,
   PawPrint,
+  Route,
   Scale,
   ScrollText,
   Shield,
@@ -39,7 +41,6 @@ import {
   Wheat,
   Wind,
   Zap,
-  Route,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 
@@ -75,6 +76,7 @@ export const ENTITY_TYPE_ICON: Record<Schemas['EntityType'], LucideIcon> = {
   army: Swords,
   natural_law: Scale,
   trade_route: Route,
+  disease: Biohazard,
 }
 
 export const STAT_ICON: Record<Schemas['Stat'], LucideIcon> = {

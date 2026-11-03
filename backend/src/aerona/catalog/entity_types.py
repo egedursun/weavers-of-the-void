@@ -106,6 +106,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("prosperity", "Prosperity"),
                 StatField("defense", "Defense"),
                 StatField("piety", "Piety"),
+                StatField("wealth", "Wealth"),
             ),
             ("village", "port city", "castle", "monastery", "nomad camp", "capital"),
             frozenset({EngineKind.COLONY}),
@@ -433,6 +434,22 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             ("trade road", "caravan way", "sea lane", "river route", "sky lane"),
         ),
         EntityTypeSpec(
+            EntityType.DISEASE,
+            "Disease",
+            "Diseases",
+            "disease",
+            None,
+            LAND,
+            False,
+            (
+                StatField("virulence", "Virulence"),
+                StatField("lethality", "Lethality"),
+                StatField("infected", "Infected", lambda rules: 0, lambda rules: rules.limits.people_population_cap),
+                StatField("dead", "Dead", lambda rules: 0, lambda rules: rules.limits.people_population_cap),
+            ),
+            ("plague", "wasting fever", "river flux", "rot of the lungs", "spirit sickness", "void blight"),
+        ),
+        EntityTypeSpec(
             EntityType.NATURAL_LAW,
             "Natural law",
             "Natural laws",
@@ -473,6 +490,7 @@ CREATION_BASE_COST_RULES: dict[EntityType, RuleBound] = {
     EntityType.ARMY: lambda rules: rules.creation_base_cost.army,
     EntityType.NATURAL_LAW: lambda rules: rules.creation_base_cost.natural_law,
     EntityType.TRADE_ROUTE: lambda rules: rules.creation_base_cost.trade_route,
+    EntityType.DISEASE: lambda rules: rules.creation_base_cost.disease,
 }
 
 

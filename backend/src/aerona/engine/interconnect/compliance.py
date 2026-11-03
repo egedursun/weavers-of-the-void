@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 
 from aerona.db.tables.body import ConditionRow, InjuryRow
+from aerona.db.tables.demography import CohortRow, LabourRow, PeopleBiologyRow, PeopleCultureRow
+from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, EndemicDiseaseRow, ImmunityRow, OutbreakRow, QuarantineRow
 from aerona.db.tables.economy import (
     CommunityStockRow,
     CurrencyRow,
@@ -18,6 +20,7 @@ from aerona.db.tables.economy import (
 from aerona.db.tables.environment import ForcedWeatherRow, LeyLineRow, NotableYearRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, PersonalityValueRow, PressureRow, SkillRow
+from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
 
 
 @dataclass(frozen=True)
@@ -165,5 +168,73 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (),
         ("trade_route.", "money.", "banking.", "tolls.", "markets."),
         ("economy.w4_backfill",),
+    ),
+    ComplianceRow(
+        "F12",
+        (CohortRow.__tablename__,),
+        ("cohort_upkeep", "population_growth"),
+        ("cohort:move",),
+        ("PopulationPyramid", "section-demography"),
+        ("mortal_context",),
+        (),
+        ("births.notable",),
+        ("cohort_upkeep",),
+    ),
+    ComplianceRow(
+        "S4.1",
+        (PeopleBiologyRow.__tablename__, PeopleCultureRow.__tablename__, LabourRow.__tablename__),
+        ("people_cycles", "labour_allocation", "population_growth"),
+        ("people:edit",),
+        ("PeopleProfile", "LabourSankey", "section-people-profile", "section-labour"),
+        ("mortal_context",),
+        (),
+        ("peoples.",),
+        ("people_cycles", "labour_allocation"),
+    ),
+    ComplianceRow(
+        "S4.9",
+        (CohortRow.__tablename__,),
+        ("society_mobility",),
+        ("cohort:move", "people:edit"),
+        ("Demography",),
+        ("mortal_context",),
+        (),
+        ("society.",),
+        ("society_mobility",),
+    ),
+    ComplianceRow(
+        "S3.4",
+        (
+            DiseaseProfileRow.__tablename__,
+            OutbreakRow.__tablename__,
+            ImmunityRow.__tablename__,
+            EndemicDiseaseRow.__tablename__,
+            DiseaseCureRow.__tablename__,
+            QuarantineRow.__tablename__,
+        ),
+        ("epidemics", "natural_disasters"),
+        ("disease:loose", "disease:edit", "disease:cure", "disease:quarantine", "disease:immunity", "outbreak:end"),
+        ("DiseaseCard", "map-layer-outbreaks"),
+        ("mortal_context",),
+        (),
+        ("disease.",),
+        ("epidemics",),
+    ),
+    ComplianceRow(
+        "S4.2",
+        (
+            SettlementProfileRow.__tablename__,
+            SettlementInfrastructureRow.__tablename__,
+            DistrictRow.__tablename__,
+            SettlementTreasuryRow.__tablename__,
+            SettlementHistoryRow.__tablename__,
+        ),
+        ("settlement_life", "uprisings"),
+        ("settlement:edit", "district:build", "district:edit", "district:raze", "settlement:tax", "settlement:free_city", "settlement:charter"),
+        ("SettlementPlan", "TreasuryLedger", "chart-order-timeline"),
+        ("mortal_context",),
+        (),
+        ("settlement.",),
+        ("settlement_life", "f2b8d4c6a1e9"),
     ),
 )

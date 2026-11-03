@@ -28,6 +28,7 @@ class EntityType(StrEnum):
     ARMY = "army"
     NATURAL_LAW = "natural_law"
     TRADE_ROUTE = "trade_route"
+    DISEASE = "disease"
 
 
 class EntityStatus(StrEnum):
@@ -123,6 +124,7 @@ HERO_ROLES = frozenset({MortalRole.HERO, MortalRole.WARRIOR, MortalRole.KNIGHT, 
 
 class EntityFlag(StrEnum):
     DISASTER = "disaster"
+    DORMANT = "dormant"
     LOST = "lost"
     DEAD_LANGUAGE = "dead_language"
     DECIPHERABLE = "decipherable"

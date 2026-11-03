@@ -1,8 +1,8 @@
 from collections import Counter
-from collections.abc import Iterator
+from collections.abc import Awaitable, Callable, Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -46,6 +46,7 @@ class GuardState:
     phase: str = ""
     flows: Counter[tuple[str, str, int, str]] | None = None
     only: int | None = None
+    moved: Counter[tuple[int, str]] = field(default_factory=Counter)
 
     def blocks(self, node_id: int, key: str) -> bool:
         if self.only is not None and node_id != self.only:
@@ -56,6 +57,9 @@ class GuardState:
 
 
 ACTIVE_GUARD: ContextVar[GuardState | None] = ContextVar("active_guard", default=None)
+HEADCOUNT_KEY = "population"
+PhaseHook = Callable[[TickContext, Counter[tuple[int, str]]], Awaitable[None]]
+AFTER_PHASE: list[PhaseHook] = []
 IO_RECORDER: ContextVar[dict[str, set[tuple[str, str]]] | None] = ContextVar("io_recorder", default=None)
 READ_MODE = "read"
 WRITE_MODE = "write"
@@ -85,8 +89,23 @@ def blocked(node_id: int, key: str) -> bool:
 
 def record_flow(node_id: int, key: str, delta: int) -> None:
     state = ACTIVE_GUARD.get()
-    if state is not None and state.flows is not None and key in CONSERVED_KEYS and delta:
-        state.flows[(state.phase, key, node_id, current_category(state.phase).value)] += delta
+    if state is None or key not in CONSERVED_KEYS or not delta:
+        return
+    category = current_category(state.phase).value
+    if state.flows is not None:
+        state.flows[(state.phase, key, node_id, category)] += delta
+    if key == HEADCOUNT_KEY:
+        state.moved[(node_id, category)] += delta
+
+
+def absorb_flow(node_id: int, delta: int) -> None:
+    state = ACTIVE_GUARD.get()
+    if state is None or not delta:
+        return
+    key = (node_id, current_category(state.phase).value)
+    state.moved[key] -= delta
+    if not state.moved[key]:
+        del state.moved[key]
 
 
 @contextmanager
@@ -105,3 +124,6 @@ async def run_guarded(phase: Phase, ctx: TickContext, *, only: int | None = None
     index = await ModifierIndex.load(ctx.session, ctx.epoch)
     with guarded(state), live_modifiers(index, ctx.epoch, ctx.rules):
         await phase.run(ctx)
+    if state.moved:
+        for hook in AFTER_PHASE:
+            await hook(ctx, state.moved)

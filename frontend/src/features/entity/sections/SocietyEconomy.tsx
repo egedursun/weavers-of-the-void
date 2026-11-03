@@ -15,6 +15,10 @@ const CLASS_ORDER = [
   'merchant',
   'warrior',
   'farmer',
+  'noble',
+  'monastic',
+  'outcast',
+  'serf_or_slave',
 ]
 const HALF = 50
 

@@ -13,6 +13,7 @@ from aerona.api.schemas.common import Done
 from aerona.api.schemas.entities import MapPositionRequest
 from aerona.api.schemas.maps import (
     GeographyPreview,
+    MapOutbreak,
     MapPoint,
     MapRelation,
     MapRoad,
@@ -30,10 +31,12 @@ from aerona.cartography.model import MARKER_TYPES, WorldMap
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
+from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
 from aerona.db.tables.economy import TradeFlowRow, TradeRouteProfileRow, TradeRouteRegionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import LandUse
 from aerona.engine.cosmos.maps import MAPPED_STATUSES, map_is_stale, map_request, store_world_map, world_entities
@@ -146,9 +149,65 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
             ground=await region_ground(session, world_id),
             stocks=await region_stocks(session, world_id),
             trade=await trade_lines(session, world_id, positions),
+            outbreaks=await outbreak_lines(session, world_id, positions),
             notes=[MapNoteRecord.model_validate(row) for row in await map_notes(session, world_id)],
             time=MapTime(current=current, shown=shown, snapshots=await snapshot_epochs(session, world_id)),
         )
+
+
+async def outbreak_lines(session: AsyncSession, world_id: int, positions: dict[int, tuple[float, float]]) -> list[MapOutbreak]:
+    regions = set(await session.scalars(select(EntityRow.id).where(EntityRow.world_id == world_id, EntityRow.entity_type == EntityType.REGION)))
+    rows = [row for row in await session.scalars(select(OutbreakRow).where(OutbreakRow.status != OutbreakStatus.ENDED)) if row.region_entity_id in regions]
+    endemic = [row for row in await session.scalars(select(EndemicDiseaseRow)) if row.region_entity_id in regions]
+    sources = {
+        row.id: row.region_entity_id
+        for row in await session.scalars(select(OutbreakRow).where(OutbreakRow.id.in_([item.source_outbreak_id for item in rows if item.source_outbreak_id])))
+    }
+    names = dict(
+        (
+            await session.execute(
+                select(EntityRow.id, EntityRow.name).where(
+                    EntityRow.id.in_([*(row.disease_entity_id for row in rows), *(row.disease_entity_id for row in endemic)])
+                )
+            )
+        ).all()
+    )
+    lines: list[MapOutbreak] = []
+    for row in rows:
+        source = sources.get(row.source_outbreak_id) if row.source_outbreak_id is not None else None
+        points = [positions.get(node) for node in ((source, row.region_entity_id) if source is not None else (row.region_entity_id,))]
+        path = [value for point in points if point is not None for value in point]
+        lines.append(
+            MapOutbreak(
+                outbreak_id=row.id,
+                disease_id=row.disease_entity_id,
+                disease=names.get(row.disease_entity_id, ""),
+                region_id=row.region_entity_id,
+                source_region_id=source,
+                status=row.status,
+                severity=row.severity,
+                dead=row.dead,
+                endemic=False,
+                path=path,
+            )
+        )
+    for sick in endemic:
+        point = positions.get(sick.region_entity_id)
+        lines.append(
+            MapOutbreak(
+                outbreak_id=0,
+                disease_id=sick.disease_entity_id,
+                disease=names.get(sick.disease_entity_id, ""),
+                region_id=sick.region_entity_id,
+                source_region_id=None,
+                status=OutbreakStatus.WANING,
+                severity=sick.load,
+                dead=0,
+                endemic=True,
+                path=list(point) if point is not None else [],
+            )
+        )
+    return lines
 
 
 async def trade_lines(session: AsyncSession, world_id: int, positions: dict[int, tuple[float, float]]) -> list[MapTrade]:

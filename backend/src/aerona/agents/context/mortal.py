@@ -7,6 +7,7 @@ from aerona.agents.context.geography import environment_facts, region_records, w
 from aerona.agents.context.language_lines import language_lines
 from aerona.agents.context.recent_chronicle import prompt_text, recent_rows
 from aerona.agents.context.scope import Scope
+from aerona.agents.context.society import home_for
 from aerona.agents.context.world_header import world_header
 from aerona.agents.context.world_line import world_line
 from aerona.agents.context.world_summary import route_lines
@@ -157,6 +158,7 @@ async def mortal_context(scope: Scope, me: EntityRow, full: bool = False) -> Mor
             for entity in await owned(scope, me, EntityType.RESOURCE)
         ],
         stores=await stores_for(scope.session, scope.rules, me),
+        home=await home_for(scope.session, me),
         items=[NamedRecord(id=entity.id, name=entity.name) for entity in await owned(scope, me, EntityType.ITEM)],
         mentions=[ChronicleRow(age=row.epoch, text=prompt_text(row.text)) for row in reversed(mentions)],
         languages=await language_lines(scope, me.world_id),

@@ -13,6 +13,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import WorldSeasonRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, TributeRow, WarRow, WarSideRow
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
@@ -23,6 +24,7 @@ from aerona.domain.enums.war import CaptiveStatus, TributeStatus, WarCause, WarS
 from aerona.domain.models.entity_stats import ArmyStats, EventStats
 from aerona.engine.body.book import effective
 from aerona.engine.context import TickContext
+from aerona.engine.demography.labour import fighting_age, mobilisation
 from aerona.engine.economy.equipment import equip_army
 from aerona.engine.interconnect.flows import flowing
 from aerona.engine.mind.hooks import freed, taken_captive
@@ -393,6 +395,14 @@ ARMY_KINDS = {EntityType.CULT: (EngineKind.HOLY_GUARD, "holy guard"), EntityType
 PEOPLES_ARMY = (EngineKind.PEOPLES_ARMY, "people's army")
 
 
+async def harvest_share(ctx: TickContext, community: EntityRow) -> float:
+    seasons = list(await ctx.session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == community.world_id)))
+    if not seasons:
+        return 0.0
+    top = max(season.growth for season in seasons)
+    return sum(1 for season in seasons if season.growth == top) / len(seasons)
+
+
 async def raise_army(ctx: TickContext, strength: MilitaryStrength, sides: SideIndex, community: EntityRow, war: WarRow) -> tuple[EntityRow, ArmyRow]:
     campaigns = ctx.rules.campaigns
     heroes = sides.heroes_of(community.id)
@@ -403,7 +413,11 @@ async def raise_army(ctx: TickContext, strength: MilitaryStrength, sides: SideIn
     }
     commander = max(heroes, key=lambda hero: (scores[hero.id], -hero.id), default=None)
     engine_kind, subtype = ARMY_KINDS.get(community.entity_type, PEOPLES_ARMY)
-    wanted = clamp_int(soldier_count(ctx.rules, strength, community), campaigns.army_min_soldiers, ctx.rules.limits.army_soldier_cap)
+    share = await mobilisation(ctx.session, ctx.rules, community, harvest_share=await harvest_share(ctx, community))
+    wanted = clamp_int(soldier_count(ctx.rules, strength, community) * share, campaigns.army_min_soldiers, ctx.rules.limits.army_soldier_cap)
+    adults = await fighting_age(ctx.session, community.id)
+    if adults is not None:
+        wanted = max(campaigns.army_min_soldiers, min(wanted, adults))
     size = levy(ctx.rules, community, wanted)
     zeal_bonus = 0
     if community.entity_type is EntityType.CULT:

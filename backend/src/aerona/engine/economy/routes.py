@@ -16,6 +16,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeLoss, Tra
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, LegendCategory
 from aerona.domain.enums.environment import CoastKind, RiverClass, TerrainKind
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import LegendStats, TradeRouteStats
@@ -33,6 +34,7 @@ from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import headcount, set_stats, stat
 from aerona.engine.services.war import declare_war
+from aerona.engine.settlement.book import credit
 
 THOUSAND = 1000
 LIVE_STATUSES = frozenset({TradeRouteStatus.FORMING, TradeRouteStatus.OPEN, TradeRouteStatus.BLOCKADED})
@@ -438,7 +440,10 @@ async def settle(ctx: TickContext, book: EconomyBook, route: Route, lane: Lane, 
         fee = round_half_up(value * toll.rate_pct / PERCENT)
         paid += fee
         pay(ctx.rules.tolls.revenue_wealth_per_value, master, fee)
-        add_prosperity(ctx.rules, master, round_half_up(fee * ctx.rules.tolls.revenue_wealth_per_value / THOUSAND))
+        if master.entity_type is EntityType.SETTLEMENT:
+            await credit(ctx, master, TreasuryEntry.TOLLS, fee, route.entity.name[:120])
+        else:
+            add_prosperity(ctx.rules, master, round_half_up(fee * ctx.rules.tolls.revenue_wealth_per_value / THOUSAND))
     return value, paid
 
 

@@ -12,10 +12,12 @@ export const LINE_KINDS = [
   'route',
   'route_busy',
   'route_blocked',
+  'outbreak',
 ] as const
 export type LineKind = (typeof LINE_KINDS)[number]
 
 export const ROAD_KINDS: ReadonlySet<LineKind> = new Set(['road', 'trade_road'])
+export const OUTBREAK_KINDS: ReadonlySet<LineKind> = new Set(['outbreak'])
 export const ROUTE_KINDS: ReadonlySet<LineKind> = new Set([
   'route',
   'route_busy',
@@ -100,7 +102,16 @@ export const LINE_STYLE: Record<LineKind, LineStyle> = {
     casing: { color: halo, width: 4, alpha: 0.4 },
     main: { color: red, width: 1.8, alpha: 0.9, dash: [5, 5] },
   },
+  outbreak: {
+    casing: { color: halo, width: 4, alpha: 0.4 },
+    main: { color: red, width: 2, alpha: 0.9, dash: [3, 3], speed: 0.02 },
+    arrow: true,
+  },
 }
+const SICK_RADIUS = 4
+const SICK_SCALE = 0.08
+const SICK_ALPHA = 0.35
+const ENDEMIC_ALPHA = 0.18
 
 const CURVE_BEND = 0.16
 const CURVE_SAMPLES = 20
@@ -171,6 +182,21 @@ function shapesOf(view: MapView): Shape[] {
       points: route.path,
       arrow: null,
     })
+  for (const sickness of view.outbreaks ?? []) {
+    if (sickness.endemic || sickness.path.length !== 4) continue
+    const bent = curve(sickness.path, sickness.region_id > (sickness.source_region_id ?? 0))
+    shapes.push({
+      info: {
+        kind: 'outbreak',
+        source: sickness.source_region_id ?? sickness.region_id,
+        target: sickness.region_id,
+        description: `${sickness.disease}: ${sickness.dead} dead`,
+        length: null,
+      },
+      points: bent.points,
+      arrow: bent.arrow,
+    })
+  }
   for (const line of view.relations) {
     const kind = line.kind as LineKind
     const info = {
@@ -197,10 +223,13 @@ function visibleShapes(
   view: MapView,
   roads: boolean,
   ties: boolean,
-  trade = false
+  trade = false,
+  outbreaks = false
 ): Shape[] {
   return shapesOf(view).filter((shape) =>
-    ROUTE_KINDS.has(shape.info.kind)
+    OUTBREAK_KINDS.has(shape.info.kind)
+      ? outbreaks
+      : ROUTE_KINDS.has(shape.info.kind)
       ? trade
       : ROAD_KINDS.has(shape.info.kind)
         ? roads
@@ -235,12 +264,14 @@ export function drawLines(
     roads: boolean
     ties: boolean
     trade?: boolean
+    outbreaks?: boolean
     time: number
     animate: boolean
     fade: number
   }
 ): void {
-  const shapes = visibleShapes(view, options.roads, options.ties, options.trade)
+  if (options.outbreaks) drawSickLands(context, view, tokens, transform.k, options.fade)
+  const shapes = visibleShapes(view, options.roads, options.ties, options.trade, options.outbreaks)
   if (shapes.length === 0) return
   const k = transform.k
   context.lineJoin = 'round'
@@ -290,6 +321,26 @@ export function drawLines(
   context.globalAlpha = options.fade
 }
 
+function drawSickLands(
+  context: CanvasRenderingContext2D,
+  view: MapView,
+  tokens: ThemeColors,
+  k: number,
+  fade: number
+): void {
+  context.fillStyle = tokens.destructive
+  for (const sickness of view.outbreaks ?? []) {
+    if (sickness.path.length < 2) continue
+    const x = sickness.path[sickness.path.length - 2]
+    const y = sickness.path[sickness.path.length - 1]
+    context.globalAlpha = (sickness.endemic ? ENDEMIC_ALPHA : SICK_ALPHA) * fade
+    context.beginPath()
+    context.arc(x, y, (SICK_RADIUS + sickness.severity * SICK_SCALE) / k, 0, Math.PI * 2)
+    context.fill()
+  }
+  context.globalAlpha = fade
+}
+
 export type LineHit = { info: LineInfo; points: number[] }
 
 export function lineHits(
@@ -297,9 +348,10 @@ export function lineHits(
   transform: Transform,
   roads: boolean,
   ties: boolean,
-  trade = false
+  trade = false,
+  outbreaks = false
 ): LineHit[] {
-  return visibleShapes(view, roads, ties, trade).map((shape) => {
+  return visibleShapes(view, roads, ties, trade, outbreaks).map((shape) => {
     const points: number[] = []
     for (let index = 0; index + 1 < shape.points.length; index += 2)
       points.push(

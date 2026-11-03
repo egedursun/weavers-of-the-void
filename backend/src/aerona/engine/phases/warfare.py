@@ -12,6 +12,7 @@ from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import VALUE_MAX
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, SiegeRow, WarRow
 from aerona.domain.enums.body import Capacity, HarmCause
@@ -305,6 +306,20 @@ async def _siege(
     society = await _society(ctx, besieged.id)
     food = society.stock_food if society is not None else campaigns.siege_default_supplies
     starving = campaigns.breach_starving_bonus_pct / PERCENT if food < campaigns.breach_starving_supplies else 0
+    town = await ctx.session.get(SettlementProfileRow, besieged.id)
+    if town is not None:
+        urban = ctx.rules.urban
+        starving = campaigns.breach_starving_bonus_pct / PERCENT if town.siege_supplies < urban.ration_supplies_days else 0
+        if town.siege_water < urban.ration_supplies_days // 2:
+            starving += campaigns.breach_starving_bonus_pct / PERCENT / 2
+        if (
+            town.unrest >= ctx.rules.crime.treason_unrest
+            and winner.id != besieged.id
+            and ctx.rng(f"treason.{besieged.id}").chance(ctx.rules.crime.treason_chance)
+        ):
+            shift_stat(besieged, "defense", -campaigns.breach_defense_loss)
+            siege.status, siege.ended_epoch = SiegeStatus.BREACHED, ctx.epoch
+            return BattleOutcome.SIEGE_BREACHED, f"a disgruntled faction opened the gates of {besieged.name}", siege
     owner = await ctx.session.get(ArmyRow, attacker_army.id)
     engines = await siege_engines(ctx, await living_entity(ctx.session, owner.owner_entity_id) if owner is not None else None, attacker_army)
     starving += engines * ctx.rules.materials.engine_breach_pct / PERCENT

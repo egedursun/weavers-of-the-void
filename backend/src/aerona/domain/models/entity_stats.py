@@ -36,6 +36,7 @@ class SettlementStats(ValueObject):
     prosperity: Percent | None = None
     defense: Percent | None = None
     piety: Percent | None = None
+    wealth: Percent | None = None
 
 
 class SpeciesStats(ValueObject):
@@ -196,6 +197,14 @@ class TradeRouteStats(ValueObject):
     culture: Percent | None = None
 
 
+class DiseaseStats(ValueObject):
+    kind: Literal["disease"] = "disease"
+    virulence: Percent | None = None
+    lethality: Percent | None = None
+    infected: Count | None = None
+    dead: Count | None = None
+
+
 EntityStats = Annotated[
     RegionStats
     | PlaceStats
@@ -222,6 +231,7 @@ EntityStats = Annotated[
     | OuterBeingStats
     | ArmyStats
     | TradeRouteStats
+    | DiseaseStats
     | NaturalLawStats,
     Field(discriminator="kind"),
 ]

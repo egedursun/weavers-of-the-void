@@ -1,8 +1,11 @@
 from enum import StrEnum
 
+from pydantic import Field
+
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import EntitySummary, MapNoteRecord, WorldRecord
 from aerona.cartography.model import WorldMap
+from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import TradeMode, TradeRouteStatus
 from aerona.domain.models.records import RegionControl
 from aerona.services.wiki import EventMarker, RegionDominance, RoadKind, SettlementInfo
@@ -86,6 +89,19 @@ class MapTrade(ApiModel):
     path: list[float]
 
 
+class MapOutbreak(ApiModel):
+    outbreak_id: int
+    disease_id: int
+    disease: str
+    region_id: int
+    source_region_id: int | None
+    status: OutbreakStatus
+    severity: int
+    dead: int
+    endemic: bool
+    path: list[float]
+
+
 class MapView(ApiModel):
     world: WorldRecord
     geometry: WorldMap
@@ -102,5 +118,6 @@ class MapView(ApiModel):
     ground: dict[int, RegionGround]
     stocks: dict[int, RegionStocks]
     trade: list[MapTrade]
+    outbreaks: list[MapOutbreak] = Field(default_factory=list)
     notes: list[MapNoteRecord]
     time: MapTime

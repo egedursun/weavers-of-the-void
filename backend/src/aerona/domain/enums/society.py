@@ -8,6 +8,10 @@ class SocialClass(StrEnum):
     PRIEST = "priest"
     WARRIOR = "warrior"
     SCRIBE = "scribe"
+    NOBLE = "noble"
+    SERF_OR_SLAVE = "serf_or_slave"
+    OUTCAST = "outcast"
+    MONASTIC = "monastic"
 
 
 class Commodity(StrEnum):

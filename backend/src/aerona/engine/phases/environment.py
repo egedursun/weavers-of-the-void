@@ -13,6 +13,7 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
@@ -489,6 +490,7 @@ def recover_soil(rules: Rules, env: RegionEnvironmentRow) -> None:
 
 async def sanitation_by_region(ctx: TickContext, book: EnvironmentBook, communities: list[EntityRow]) -> dict[int, int]:
     knowledge = await KnowledgeMap.load(ctx.session)
+    planned = {row.settlement_entity_id: row.sanitation for row in await ctx.session.scalars(select(SettlementProfileRow))}
     weighted: Counter[int] = Counter()
     totals: Counter[int] = Counter()
     for community in communities:
@@ -500,6 +502,7 @@ async def sanitation_by_region(ctx: TickContext, book: EnvironmentBook, communit
         level = knowledge.level(community.id, KnowledgeBranch.MEDICINE)
         builder = community.entity_type is EntityType.SETTLEMENT and knowledge.knows(community.id, KnowledgeBranch.ARCHITECTURE)
         share = level * ctx.rules.environment.sanitation_medicine_step + (ctx.rules.environment.sanitation_architecture if builder else 0)
+        share = planned.get(community.id, share)
         weighted[region_id] += population * min(ctx.rules.environment.sanitation_cap_pct, share)
     return {region_id: round_half_up(weighted[region_id] / totals[region_id]) for region_id in totals if totals[region_id]}
 

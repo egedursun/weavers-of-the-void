@@ -1,0 +1,264 @@
+from sqlalchemy import select
+
+from aerona.constants.units import PERCENT
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.demography import CohortRow, PeopleCultureRow
+from aerona.db.tables.economy import LoanRow
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.tables.warfare import ArmyRow, BattleRow
+from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.demography import AgeBand, CohortCondition
+from aerona.domain.enums.economy import LoanStatus
+from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.mind import MemoryKind, ValueAxis
+from aerona.domain.enums.society import SocialClass
+from aerona.engine.body.customs import culture_of, people_of
+from aerona.engine.context import TickContext
+from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for, total
+from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.notes import note
+from aerona.engine.primitives.levies import demobilise
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import active_bonds, living_entity
+from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.services.community_relations import change_relation
+from aerona.rules.registry import Rules
+
+BOUND = SocialClass.SERF_OR_SLAVE
+LEAN = 25
+
+
+def inequality(society: CommunitySocietyRow) -> int:
+    present = [social_class for social_class in SocialClass if society.share(social_class) > 0]
+    if len(present) < 2:
+        return 0
+    moods = [society.satisfaction(social_class) for social_class in present]
+    return max(moods) - min(moods)
+
+
+def inequality_pressure(rules: Rules, society: CommunitySocietyRow | None, hierarchy: int) -> int:
+    if society is None:
+        return 0
+    table = rules.mobility
+    tolerance = max(0.0, hierarchy / PERCENT) * table.hierarchy_tolerance_pct / PERCENT
+    return clamp_int(inequality(society) * table.inequality_crime_pct / PERCENT * (1 - tolerance), 0, PERCENT)
+
+
+def bound_share(rows: dict[CohortKey, CohortRow]) -> float:
+    people = total(rows)
+    bound = sum(row.count for key, row in rows.items() if key[2] is BOUND)
+    return bound / people if people else 0.0
+
+
+def sync_bound_share(society: CommunitySocietyRow | None, rows: dict[CohortKey, CohortRow]) -> None:
+    if society is None:
+        return
+    current = society.share(BOUND)
+    target = round(bound_share(rows) * PERCENT, 2)
+    if abs(current - target) < 0.01:
+        return
+    others = [social_class for social_class in SocialClass if social_class is not BOUND]
+    free = sum(society.share(social_class) for social_class in others) or 1.0
+    for social_class in others:
+        setattr(society, f"share_{social_class.value}", round(society.share(social_class) * (PERCENT - target) / free, 2))
+    society.share_serf_or_slave = target
+
+
+async def move_people(
+    ctx: TickContext, community: EntityRow, rows: dict[CohortKey, CohortRow], *, source: SocialClass, target: SocialClass, share: float
+) -> int:
+    moved = 0
+    for key in sorted(rows, key=lambda item: tuple(part.value for part in item)):
+        band, sex, social_class, condition = key
+        if social_class is not source or rows[key].count <= 0:
+            continue
+        count = round_half_up(rows[key].count * share)
+        if count <= 0:
+            continue
+        rows[key].count -= count
+        landed = CohortCondition.NONE if condition in {CohortCondition.ENSLAVED, CohortCondition.CAPTIVE} else condition
+        row_for(ctx.session, rows, community.id, (band, sex, target, landed), ctx.epoch).count += count
+        moved += count
+    return moved
+
+
+async def settle_captives(ctx: TickContext, community: EntityRow, rows: dict[CohortKey, CohortRow], lawful: bool) -> int:
+    table = ctx.rules.mobility
+    bound = 0
+    for key in sorted(rows, key=lambda item: tuple(part.value for part in item)):
+        band, sex, _social, condition = key
+        if condition is not CohortCondition.CAPTIVE or rows[key].count <= 0:
+            continue
+        count = rows[key].count
+        enslaved = round_half_up(count * table.enslave_captives_pct / PERCENT) if lawful else 0
+        rows[key].count = 0
+        if enslaved:
+            row_for(ctx.session, rows, community.id, (band, sex, BOUND, CohortCondition.ENSLAVED), ctx.epoch).count += enslaved
+        if count - enslaved:
+            row_for(ctx.session, rows, community.id, (band, sex, SocialClass.FARMER, CohortCondition.NONE), ctx.epoch).count += count - enslaved
+        bound += enslaved
+    return bound
+
+
+async def manumit(ctx: TickContext, community: EntityRow, rows: dict[CohortKey, CohortRow], lawful: bool) -> int:
+    table = ctx.rules.mobility
+    if lawful and not ctx.rng(f"manumission.{community.id}").chance(table.manumission_chance):
+        return 0
+    share = table.manumission_pct / PERCENT if lawful else 1.0
+    return await move_people(ctx, community, rows, source=BOUND, target=SocialClass.FARMER, share=share)
+
+
+async def slavery_costs(ctx: TickContext, community: EntityRow, rows: dict[CohortKey, CohortRow], culture: PeopleCultureRow | None) -> None:
+    table = ctx.rules.mobility
+    if bound_share(rows) <= 0:
+        return
+    if culture is not None and "cohesion" not in culture.locked:
+        culture.cohesion = max(0, culture.cohesion - table.slavery_cohesion_loss)
+    holder = await people_of(ctx.session, community)
+    if holder is None:
+        return
+    for bond in await active_bonds(ctx.session, [BondKind.ALLY, BondKind.ENEMY, BondKind.PAYS_TRIBUTE], sources=[holder.id]):
+        other = await living_entity(ctx.session, bond.target_node_id)
+        if other is None or other.entity_type is not EntityType.PEOPLE:
+            continue
+        if (await culture_of(ctx.session, other.id)).get(ValueAxis.XENOPHILIA, 0) >= LEAN:
+            await change_relation(ctx, other.id, holder.id, -table.slavery_opinion_loss, MemoryKind.ILL_WILL, note="keeps slaves")
+
+
+async def desertion(ctx: TickContext) -> int:
+    table = ctx.rules.mobility
+    deserted = 0
+    for row in await ctx.session.scalars(select(ArmyRow).where(ArmyRow.disbanded_epoch.is_(None)).order_by(ArmyRow.entity_id)):
+        army = await living_entity(ctx.session, row.entity_id)
+        owner = await living_entity(ctx.session, row.owner_entity_id)
+        society = await ctx.session.get(CommunitySocietyRow, row.owner_entity_id)
+        if army is None or owner is None or society is None or society.satisfaction(SocialClass.WARRIOR) >= table.bitter_satisfaction:
+            continue
+        size = stat(army, "size") or 0
+        leaving = round_half_up(size * table.desertion_pct / PERCENT)
+        if leaving <= 0:
+            continue
+        returned = demobilise(ctx.rules, owner, leaving)
+        with flowing(FlowCategory.LEVY):
+            set_stats(army, size=size - returned)
+        with flowing(FlowCategory.DEATH):
+            set_stats(army, size=size - leaving)
+        deserted += leaving
+        await note(
+            ctx,
+            f"{leaving} soldiers of {army.name} slipped away home; the warriors of {owner.name} had nothing left to fight for.",
+            key="society.desertion",
+            ids=[army.id, owner.id],
+            kind=ChronicleKind.WORLD,
+        )
+    return deserted
+
+
+async def bitter_emigration(ctx: TickContext, community: EntityRow, rows: dict[CohortKey, CohortRow], society: CommunitySocietyRow | None) -> int:
+    table = ctx.rules.mobility
+    if society is None:
+        return 0
+    bitter = [
+        social_class for social_class in SocialClass if society.share(social_class) > 0 and society.satisfaction(social_class) < table.bitter_satisfaction
+    ]
+    if not bitter:
+        return 0
+    people = await people_of(ctx.session, community)
+    if people is None:
+        return 0
+    homes = [bond.target_node_id for bond in await active_bonds(ctx.session, [BondKind.LIVES_IN], sources=[people.id])]
+    best: EntityRow | None = None
+    best_mood = -1.0
+    for home_id in homes:
+        home = await living_entity(ctx.session, home_id)
+        other = await ctx.session.get(CommunitySocietyRow, home_id)
+        if home is None or other is None or home.id == community.id or home.entity_type is not EntityType.SETTLEMENT:
+            continue
+        mood = sum(other.satisfaction(social_class) for social_class in bitter) / len(bitter)
+        if mood > best_mood:
+            best, best_mood = home, mood
+    if best is None or best_mood < table.bitter_satisfaction:
+        return 0
+    leaving = sum(
+        round_half_up(row.count * table.desertion_pct / PERCENT)
+        for key, row in rows.items()
+        if key[2] in bitter and key[0] is AgeBand.ADULT and key[3] is CohortCondition.NONE
+    )
+    population = stat(community, "population") or 0
+    leaving = min(leaving, population // 10)
+    if leaving <= 0:
+        return 0
+    with flowing(FlowCategory.MIGRATION):
+        set_stats(community, population=population - leaving)
+        set_stats(best, population=(stat(best, "population") or 0) + leaving)
+    return leaving
+
+
+async def ennoble_heroes(ctx: TickContext) -> int:
+    table = ctx.rules.mobility
+    raised = 0
+    battles = await ctx.session.scalars(select(BattleRow).where(BattleRow.epoch == ctx.epoch).order_by(BattleRow.id))
+    winners = {battle.winner_entity_id for battle in battles}
+    if not winners:
+        return 0
+    armies = await ctx.session.scalars(select(ArmyRow).where(ArmyRow.owner_entity_id.in_(winners), ArmyRow.commander_entity_id.is_not(None)))
+    for army in armies:
+        hero = await living_entity(ctx.session, army.commander_entity_id) if army.commander_entity_id is not None else None
+        if hero is None or hero.social_class is SocialClass.NOBLE or not ctx.rng(f"ennoble.{hero.id}").chance(table.ennoble_chance):
+            continue
+        hero.social_class = SocialClass.NOBLE
+        raised += 1
+        await note(ctx, f"For the victory, {hero.name} was raised among the nobles.", key="society.ennobled", ids=[hero.id], kind=ChronicleKind.WORLD)
+    return raised
+
+
+async def ruin_merchants(ctx: TickContext) -> int:
+    table = ctx.rules.mobility
+    fallen = 0
+    loans = await ctx.session.scalars(select(LoanRow).where(LoanRow.status == LoanStatus.DEFAULTED, LoanRow.due_epoch >= ctx.epoch - 1))
+    for loan in loans:
+        borrower = await living_entity(ctx.session, loan.borrower_entity_id)
+        if borrower is None or borrower.entity_type is not EntityType.FACTION or borrower.social_class is not SocialClass.MERCHANT:
+            continue
+        members = await ctx.session.scalars(
+            select(BondRow.source_node_id).where(BondRow.kind == BondKind.MEMBER_OF, BondRow.state == BondState.ACTIVE, BondRow.target_node_id == borrower.id)
+        )
+        for member_id in members:
+            member = await living_entity(ctx.session, member_id)
+            if member is None or member.entity_type is not EntityType.MORTAL or member.status is not EntityStatus.CANON:
+                continue
+            if member.social_class is SocialClass.OUTCAST or not ctx.rng(f"ruin.{member.id}.{loan.id}").chance(table.ruin_chance):
+                continue
+            member.social_class = SocialClass.OUTCAST
+            fallen += 1
+            await note(
+                ctx,
+                f"{borrower.name} could not pay; {member.name} lost everything and fell among the outcasts.",
+                key="society.ruined",
+                ids=[member.id, borrower.id],
+            )
+    return fallen
+
+
+async def class_mobility(ctx: TickContext, community: EntityRow) -> dict[str, int]:
+    rows = await cohorts_of(ctx.session, community.id)
+    if not rows:
+        return {}
+    people = await people_of(ctx.session, community)
+    culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
+    lawful = culture.slavery_lawful if culture is not None else False
+    society = await ctx.session.get(CommunitySocietyRow, community.id)
+    counts = {
+        "enslaved": await settle_captives(ctx, community, rows, lawful),
+        "freed": await manumit(ctx, community, rows, lawful),
+        "emigrated": await bitter_emigration(ctx, community, rows, society),
+    }
+    await slavery_costs(ctx, community, rows, culture)
+    sync_bound_share(society, rows)
+    return counts
+
+
+def bound_revolt(rules: Rules, rows: dict[CohortKey, CohortRow]) -> int:
+    return clamp_int(bound_share(rows) * PERCENT * rules.mobility.slavery_revolt_pct / PERCENT, 0, PERCENT)

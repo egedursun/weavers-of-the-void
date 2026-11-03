@@ -4431,6 +4431,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/entities/{entity_id}/demography": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["demography_api_entities__entity_id__demography_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/disease": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["disease_api_entities__entity_id__disease_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/worlds/{world_id}/outbreaks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["world_outbreaks_api_worlds__world_id__outbreaks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/settlement-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["settlement_plan_api_entities__entity_id__settlement_plan_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions": {
         parameters: {
             query?: never;
@@ -7823,6 +7887,246 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/people:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_people_edit_api_actions_people_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/cohort:move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_cohort_move_api_actions_cohort_move_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/disease:loose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_disease_loose_api_actions_disease_loose_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/disease:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_disease_edit_api_actions_disease_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/disease:cure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_disease_cure_api_actions_disease_cure_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/disease:quarantine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_disease_quarantine_api_actions_disease_quarantine_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/disease:immunity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_disease_immunity_api_actions_disease_immunity_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/outbreak:end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_outbreak_end_api_actions_outbreak_end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/settlement:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_settlement_edit_api_actions_settlement_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/district:build": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_district_build_api_actions_district_build_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/district:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_district_edit_api_actions_district_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/district:raze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_district_raze_api_actions_district_raze_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/settlement:tax": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_settlement_tax_api_actions_settlement_tax_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/settlement:free_city": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_settlement_free_city_api_actions_settlement_free_city_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/settlement:charter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_settlement_charter_api_actions_settlement_charter_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/body:heal": {
         parameters: {
             query?: never;
@@ -8324,6 +8628,8 @@ export interface components {
             addicted_since_epoch: number | null;
             withdrawal_since_epoch: number | null;
         };
+        Aesthetic: "austere" | "ornate" | "geometric" | "natural" | "macabre" | "celestial";
+        AgeBand: "child" | "adult" | "elder";
         AgentKind: "son" | "mortal";
         AgentRetryEvent: {
             id: number;
@@ -8475,6 +8781,16 @@ export interface components {
         BeliefRenameInput: {
             people_id: number;
             son_id?: number | null;
+        };
+        BiologyView: {
+            maturity_years: number;
+            adult_years: number;
+            elder_years: number;
+            fertility_pct: number;
+            acclimatised: components["schemas"]["TemperatureBand"];
+            staple: components["schemas"]["CommodityKind"];
+            traits: string[];
+            locked: string[];
         };
         Biome: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
         BlessingKind: "essence" | "hp" | "stat" | "existence";
@@ -8655,6 +8971,7 @@ export interface components {
             kinds: components["schemas"]["BorderKind"][];
             coordinates: number[];
         };
+        BuildMaterial: "timber" | "stone";
         BulkLogPayload: {
             epoch?: number | null;
             level: string;
@@ -8964,7 +9281,13 @@ export interface components {
             second_id: number;
             alliance: boolean;
         };
+        ClassMood: {
+            social_class: components["schemas"]["SocialClass"];
+            share: number;
+            satisfaction: number;
+        };
         ClaudeAuth: "token" | "login";
+        ClimateAffinity: "warm" | "wet" | "cold" | "dry" | "any";
         ClimateAgeView: {
             era: components["schemas"]["ClimateEra"];
             label: string;
@@ -8985,6 +9308,15 @@ export interface components {
             second_word: string;
             first_meaning: string;
             second_meaning: string;
+        };
+        CohortCondition: "none" | "veteran" | "sick" | "enslaved" | "captive";
+        CohortMoveInput: {
+            community_id: number;
+            count: number;
+            source: components["schemas"]["SocialClass"];
+            target: components["schemas"]["SocialClass"];
+            band?: components["schemas"]["AgeBand"] | null;
+            condition?: components["schemas"]["CohortCondition"] | null;
         };
         CohortView: {
             kind: components["schemas"]["MaimedKind"];
@@ -9290,6 +9622,26 @@ export interface components {
             influence?: number | null;
             devotion?: number | null;
         };
+        CultureView: {
+            cohesion: number;
+            literacy: number;
+            urbanisation: number;
+            aesthetic: components["schemas"]["Aesthetic"];
+            martial_style: components["schemas"]["MartialStyle"];
+            marriage: components["schemas"]["MarriageCustom"];
+            endogamous: boolean;
+            inheritance: components["schemas"]["InheritanceCustom"];
+            slavery_lawful: boolean;
+            staples: string[];
+            locked: string[];
+        };
+        CureSource: "knowledge" | "granted";
+        CureView: {
+            community_id: number;
+            community: string;
+            source: components["schemas"]["CureSource"];
+            since_epoch: number;
+        };
         CurrencyDebaseInput: {
             currency_id: number;
         };
@@ -9355,6 +9707,21 @@ export interface components {
             currency_id: number | null;
         };
         DecreeKind: "war" | "peace" | "alliance" | "marriage" | "trade";
+        DemographyView: {
+            entity_id: number;
+            people_id: number | null;
+            cohorts: components["schemas"]["PopulationCohortView"][];
+            labour: components["schemas"]["LabourView"][];
+            flows: components["schemas"]["LabourFlowView"][];
+            pressures: components["schemas"]["aerona__api__schemas__depth_society__PressureView"][];
+            classes: components["schemas"]["ClassMood"][];
+            biology: components["schemas"]["BiologyView"] | null;
+            culture: components["schemas"]["CultureView"] | null;
+            values: components["schemas"]["ValuePoint"][];
+            neighbours: components["schemas"]["NeighbourCulture"][];
+            inequality: number;
+            mobilisation_pct: number;
+        };
         DepositOwnerInput: {
             deposit_id: number;
             owner_id?: number | null;
@@ -9381,6 +9748,67 @@ export interface components {
             places: number;
             communities: number;
         };
+        DiseaseCureInput: {
+            disease_id: number;
+            community_id: number;
+            revoke: boolean;
+        };
+        DiseaseEditInput: {
+            disease_id: number;
+            values?: {
+                [key: string]: number | string;
+            };
+        };
+        DiseaseImmunityInput: {
+            community_id: number;
+            disease_id: number;
+            immune_pct: number;
+        };
+        DiseaseLooseInput: {
+            target_id: number;
+            disease_id?: number | null;
+            severity: number;
+            son_id?: number | null;
+        };
+        DiseaseQuarantineInput: {
+            region_id: number;
+            epochs?: number | null;
+        };
+        DiseaseStats: {
+            kind: "disease";
+            virulence?: number | null;
+            lethality?: number | null;
+            infected?: number | null;
+            dead?: number | null;
+        };
+        DiseaseTarget: "breath" | "vital" | "cognition" | "sight" | "skin";
+        DiseaseVector: "air" | "water" | "touch" | "bite" | "spirit" | "void" | "curse";
+        DiseaseView: {
+            entity_id: number;
+            name: string;
+            vector: components["schemas"]["DiseaseVector"];
+            virulence: number;
+            lethality: number;
+            chronic_rate: number;
+            incubation: number;
+            target_functions: components["schemas"]["DiseaseTarget"][];
+            climate_affinity: components["schemas"]["ClimateAffinity"];
+            host_species_id: number | null;
+            immunity_epochs: number;
+            mutation_rate: number;
+            stigma: number;
+            cure_level: number;
+            generation: number;
+            parent_id: number | null;
+            origin_region_id: number | null;
+            emerged_epoch: number;
+            locked: string[];
+            strains: components["schemas"]["StrainView"][];
+            outbreaks: components["schemas"]["OutbreakView"][];
+            endemic: components["schemas"]["EndemicView"][];
+            cures: components["schemas"]["CureView"][];
+            immunities: components["schemas"]["ImmunityView"][];
+        };
         DistributionCandidateView: {
             son_id: number;
             name: string;
@@ -9392,6 +9820,29 @@ export interface components {
             candidates: components["schemas"]["DistributionCandidateView"][];
             next_son_id: number | null;
             godless_world_ids: number[];
+        };
+        DistrictBuildInput: {
+            settlement_id: number;
+            kind: components["schemas"]["DistrictKind"];
+            material: components["schemas"]["BuildMaterial"];
+        };
+        DistrictEditInput: {
+            district_id: number;
+            level?: number | null;
+            condition?: number | null;
+            material?: components["schemas"]["BuildMaterial"] | null;
+        };
+        DistrictKind: "farmland" | "market" | "craft_quarter" | "temple_quarter" | "harbour" | "citadel" | "slums" | "palace" | "foreign_quarter" | "necropolis";
+        DistrictRazeInput: {
+            district_id: number;
+        };
+        DistrictView: {
+            id: number;
+            kind: components["schemas"]["DistrictKind"];
+            level: number;
+            condition: number;
+            material: components["schemas"]["BuildMaterial"];
+            built_epoch: number;
         };
         Domain: "sea" | "fire" | "earth" | "sky" | "storm" | "death" | "life" | "dream" | "time" | "light" | "shadow" | "war" | "craft" | "knowledge" | "love" | "trickery" | "hunt" | "plants" | "bone" | "blood" | "sound" | "stone" | "ice" | "madness" | "trade" | "road" | "plague" | "harvest" | "moon" | "sun" | "star" | "lies" | "oath" | "memory" | "hunger" | "glass" | "salt" | "ash" | "border" | "sleep";
         Done: {
@@ -9443,6 +9894,12 @@ export interface components {
             epoch?: number | null;
         } & {
             [key: string]: unknown;
+        };
+        EndemicView: {
+            region_id: number;
+            region: string;
+            load: number;
+            since_epoch: number;
         };
         EngineFinishedEvent: {
             id: number;
@@ -9564,7 +10021,7 @@ export interface components {
             images: components["schemas"]["ImageRecord"][];
             insight: components["schemas"]["EntityInsight"];
         };
-        EntityFlag: "disaster" | "lost" | "dead_language" | "decipherable" | "previous_creation" | "ruin" | "rebuilt" | "remnant" | "void" | "cursed" | "godless" | "seeking_god" | "empire" | "federation" | "independent" | "colony" | "pioneer" | "golden_age" | "immortal" | "chimera" | "mutation" | "mutant" | "mutated" | "discovery" | "native" | "revelation" | "soul_descended" | "soul_bound" | "soul_harvester" | "crossed_to_the_dead" | "wonder" | "chosen" | "manifested" | "born_of_belief" | "corrupted_memory" | "fairy_tale" | "name_from_language" | "fixed_name" | "species_became_people" | "original_resource" | "cosmic_monopoly" | "outer_cult" | "whisper_source" | "nameless" | "escaped" | "megafauna" | "invasive" | "worships_planet" | "planet_closed" | "burned" | "cosmic_plague" | "mirror" | "mirror_born" | "oathbreaker" | "exile" | "omen" | "time_echo" | "two_timed" | "empty_tomb" | "resurrection_complete" | "protected_from_disaster" | "mechanics_weighed" | "depleting" | "syncretic" | "returned_to_old_god" | "revived_language" | "on_watch" | "mocked" | "protected_from_ruin" | "spared_soul" | "ghost" | "wizard" | "age_changer" | "time_returned" | "legendary" | "prophet" | "bloodline_curse" | "essence_drained" | "returned_from_death" | "saw_the_creator" | "deified" | "protected" | "depleted" | "agent_selected" | "capital" | "abandoned" | "dissolved" | "desolate" | "razed" | "fell_in_battle" | "died_in_siege" | "died_in_disaster" | "died_of_plague" | "slain_in_captivity" | "doomed" | "fate_shielded" | "commemoration" | "estranged_by_plague" | "endangered" | "extinct" | "pilgrimage_site" | "repealed" | "merged" | "disbanded" | "assimilated" | "forgotten" | "swallowed";
+        EntityFlag: "disaster" | "dormant" | "lost" | "dead_language" | "decipherable" | "previous_creation" | "ruin" | "rebuilt" | "remnant" | "void" | "cursed" | "godless" | "seeking_god" | "empire" | "federation" | "independent" | "colony" | "pioneer" | "golden_age" | "immortal" | "chimera" | "mutation" | "mutant" | "mutated" | "discovery" | "native" | "revelation" | "soul_descended" | "soul_bound" | "soul_harvester" | "crossed_to_the_dead" | "wonder" | "chosen" | "manifested" | "born_of_belief" | "corrupted_memory" | "fairy_tale" | "name_from_language" | "fixed_name" | "species_became_people" | "original_resource" | "cosmic_monopoly" | "outer_cult" | "whisper_source" | "nameless" | "escaped" | "megafauna" | "invasive" | "worships_planet" | "planet_closed" | "burned" | "cosmic_plague" | "mirror" | "mirror_born" | "oathbreaker" | "exile" | "omen" | "time_echo" | "two_timed" | "empty_tomb" | "resurrection_complete" | "protected_from_disaster" | "mechanics_weighed" | "depleting" | "syncretic" | "returned_to_old_god" | "revived_language" | "on_watch" | "mocked" | "protected_from_ruin" | "spared_soul" | "ghost" | "wizard" | "age_changer" | "time_returned" | "legendary" | "prophet" | "bloodline_curse" | "essence_drained" | "returned_from_death" | "saw_the_creator" | "deified" | "protected" | "depleted" | "agent_selected" | "capital" | "abandoned" | "dissolved" | "desolate" | "razed" | "fell_in_battle" | "died_in_siege" | "died_in_disaster" | "died_of_plague" | "slain_in_captivity" | "doomed" | "fate_shielded" | "commemoration" | "estranged_by_plague" | "endangered" | "extinct" | "pilgrimage_site" | "repealed" | "merged" | "disbanded" | "assimilated" | "forgotten" | "swallowed";
         EntityInsight: {
             society?: components["schemas"]["SocietyInsight"] | null;
             life?: components["schemas"]["LifeInsight"] | null;
@@ -9601,7 +10058,7 @@ export interface components {
             favorite: boolean;
             pending_name: boolean;
             description: string;
-            stats: components["schemas"]["RegionStats"] | components["schemas"]["PlaceStats"] | components["schemas"]["ResourceStats"] | components["schemas"]["SettlementStats"] | components["schemas"]["SpeciesStats"] | components["schemas"]["PeopleStats"] | components["schemas"]["MortalStats"] | components["schemas"]["ItemStats"] | components["schemas"]["StructureStats"] | components["schemas"]["LanguageStats"] | components["schemas"]["LegendStats"] | components["schemas"]["TraditionStats"] | components["schemas"]["CultStats"] | components["schemas"]["FactionStats"] | components["schemas"]["CelestialStats"] | components["schemas"]["ArtworkStats"] | components["schemas"]["LawStats"] | components["schemas"]["SpiritStats"] | components["schemas"]["KnowledgeStats"] | components["schemas"]["ProphecyStats"] | components["schemas"]["EventStats"] | components["schemas"]["VesselStats"] | components["schemas"]["OuterBeingStats"] | components["schemas"]["ArmyStats"] | components["schemas"]["TradeRouteStats"] | components["schemas"]["NaturalLawStats"];
+            stats: components["schemas"]["RegionStats"] | components["schemas"]["PlaceStats"] | components["schemas"]["ResourceStats"] | components["schemas"]["SettlementStats"] | components["schemas"]["SpeciesStats"] | components["schemas"]["PeopleStats"] | components["schemas"]["MortalStats"] | components["schemas"]["ItemStats"] | components["schemas"]["StructureStats"] | components["schemas"]["LanguageStats"] | components["schemas"]["LegendStats"] | components["schemas"]["TraditionStats"] | components["schemas"]["CultStats"] | components["schemas"]["FactionStats"] | components["schemas"]["CelestialStats"] | components["schemas"]["ArtworkStats"] | components["schemas"]["LawStats"] | components["schemas"]["SpiritStats"] | components["schemas"]["KnowledgeStats"] | components["schemas"]["ProphecyStats"] | components["schemas"]["EventStats"] | components["schemas"]["VesselStats"] | components["schemas"]["OuterBeingStats"] | components["schemas"]["ArmyStats"] | components["schemas"]["TradeRouteStats"] | components["schemas"]["DiseaseStats"] | components["schemas"]["NaturalLawStats"];
             domain: components["schemas"]["Domain"] | null;
             origin: components["schemas"]["EntityOrigin"];
             creator_son_id: number | null;
@@ -9638,7 +10095,7 @@ export interface components {
             favorite: boolean;
             pending_name: boolean;
         };
-        EntityType: "region" | "place" | "resource" | "settlement" | "species" | "people" | "mortal" | "item" | "structure" | "language" | "legend" | "tradition" | "cult" | "faction" | "celestial" | "artwork" | "law" | "spirit" | "knowledge" | "prophecy" | "event" | "vessel" | "outer_being" | "army" | "natural_law" | "trade_route";
+        EntityType: "region" | "place" | "resource" | "settlement" | "species" | "people" | "mortal" | "item" | "structure" | "language" | "legend" | "tradition" | "cult" | "faction" | "celestial" | "artwork" | "law" | "spirit" | "knowledge" | "prophecy" | "event" | "vessel" | "outer_being" | "army" | "natural_law" | "trade_route" | "disease";
         EntityTypeInfo: {
             key: string;
             label: string;
@@ -10229,6 +10686,11 @@ export interface components {
             effect: components["schemas"]["ForeignGodPowerEffect"];
             description: string;
         };
+        ForeignShare: {
+            people_id: number;
+            name: string;
+            share: number;
+        };
         FunctionView: {
             key: components["schemas"]["BodyFunction"];
             level: number;
@@ -10433,6 +10895,17 @@ export interface components {
             historian: string | null;
             text: string;
         };
+        HistoryPoint: {
+            epoch: number;
+            size_tier: components["schemas"]["SizeTier"];
+            public_order: number;
+            crime: number;
+            unrest: number;
+            sanitation: number;
+            wealth: number;
+            treasury: number;
+            population: number;
+        };
         HoardInjectInput: {
             community_id: number;
             metal: components["schemas"]["MaterialKind"];
@@ -10556,6 +11029,12 @@ export interface components {
             payload: components["schemas"]["EmptyPayload"];
             at: string;
         };
+        ImmunityView: {
+            community_id: number;
+            community: string;
+            age_band: components["schemas"]["AgeBand"];
+            immune_pct: number;
+        };
         ImportMode: "replace" | "merge" | "discovery";
         ImportResult: {
             mode: components["schemas"]["ImportMode"];
@@ -10589,6 +11068,21 @@ export interface components {
             consequences: number[];
         };
         IncidentRole: "subject" | "actor" | "target" | "witness" | "place";
+        InfrastructureView: {
+            walls_level: number;
+            walls_material: components["schemas"]["BuildMaterial"];
+            walls_condition: number;
+            gates: number;
+            roads: number;
+            water: components["schemas"]["WaterSupply"];
+            sewers: boolean;
+            granary_capacity: number;
+            warehouse_capacity: number;
+            harbour_capacity: number;
+            towers: number;
+            locked: string[];
+        };
+        InheritanceCustom: "gavelkind" | "primogeniture" | "ultimogeniture" | "matrilineal" | "elective" | "by_merit";
         InjuryKind: "bruise" | "cut" | "deep_cut" | "puncture" | "fracture" | "crush" | "burn" | "frostbite" | "bite" | "venom" | "severed" | "gouged" | "destroyed" | "curse_wither" | "void_touch" | "divine_brand";
         InjuryState: "fresh" | "infected" | "healing" | "healed_scar" | "permanent" | "lethal";
         InjuryView: {
@@ -10643,6 +11137,7 @@ export interface components {
             might?: number | null;
             curse?: number | null;
         };
+        Job: "farming" | "herding" | "fishing" | "mining" | "crafting" | "trade" | "soldiering" | "clergy" | "scholarship" | "building" | "idle";
         JobAccepted: {
             job_id: string;
         };
@@ -10816,6 +11311,16 @@ export interface components {
         Labelled: {
             key: string;
             label: string;
+        };
+        LabourFlowView: {
+            social_class: components["schemas"]["SocialClass"];
+            job: components["schemas"]["Job"];
+            workers: number;
+        };
+        LabourView: {
+            job: components["schemas"]["Job"];
+            workers: number;
+            output_pct: number;
         };
         LandKind: "region" | "place";
         LanguageCreoleInput: {
@@ -11120,6 +11625,18 @@ export interface components {
             color: string | null;
             created_at: string;
         };
+        MapOutbreak: {
+            outbreak_id: number;
+            disease_id: number;
+            disease: string;
+            region_id: number;
+            source_region_id: number | null;
+            status: components["schemas"]["OutbreakStatus"];
+            severity: number;
+            dead: number;
+            endemic: boolean;
+            path: number[];
+        };
         MapPoint: {
             entity: components["schemas"]["EntitySummary"];
             x: number | null;
@@ -11190,6 +11707,7 @@ export interface components {
                 [key: string]: components["schemas"]["RegionStocks"];
             };
             trade: components["schemas"]["MapTrade"][];
+            outbreaks?: components["schemas"]["MapOutbreak"][];
             notes: components["schemas"]["MapNoteRecord"][];
             time: components["schemas"]["MapTime"];
         };
@@ -11239,6 +11757,8 @@ export interface components {
         MarketWriteOffInput: {
             bond_id: number;
         };
+        MarriageCustom: "monogamy" | "polygyny" | "polyandry" | "group";
+        MartialStyle: "shieldwall" | "horse_archer" | "skirmisher" | "chariot" | "phalanx" | "berserker" | "naval_raider" | "siege_engineer" | "war_magic" | "beast_war";
         MaterialEditInput: {
             world_id: number;
             material?: components["schemas"]["MaterialKind"] | null;
@@ -11432,7 +11952,7 @@ export interface components {
             traits: components["schemas"]["TraitView"][];
             skills: components["schemas"]["SkillView"][];
             needs: components["schemas"]["NeedView"][];
-            pressures: components["schemas"]["PressureView"][];
+            pressures: components["schemas"]["aerona__api__schemas__mind__PressureView"][];
             memories: components["schemas"]["MemoryView"][];
             opinions: components["schemas"]["OpinionView"][];
             career: components["schemas"]["CareerView"] | null;
@@ -11650,6 +12170,11 @@ export interface components {
             label: string;
             value: number;
         };
+        NeighbourCulture: {
+            entity_id: number;
+            name: string;
+            values: components["schemas"]["ValuePoint"][];
+        };
         NeighbourRegion: {
             id: number;
             name: string;
@@ -11834,6 +12359,33 @@ export interface components {
             type_label: string;
             cover: string | null;
             population: number;
+        };
+        OutbreakEndInput: {
+            outbreak_id: number;
+        };
+        OutbreakMapView: {
+            world_id: number;
+            outbreaks: components["schemas"]["OutbreakView"][];
+            endemic: components["schemas"]["EndemicView"][];
+            quarantines: components["schemas"]["QuarantineView"][];
+        };
+        OutbreakStatus: "active" | "waning" | "ended";
+        OutbreakView: {
+            id: number;
+            disease_id: number;
+            disease: string;
+            region_id: number;
+            region: string;
+            source_region_id: number | null;
+            path: components["schemas"]["SpreadPath"];
+            status: components["schemas"]["OutbreakStatus"];
+            severity: number;
+            infected: number;
+            dead: number;
+            started_epoch: number;
+            ended_epoch: number | null;
+            quarantined: boolean;
+            event_id: number | null;
         };
         OuterBargainMode: "force" | "forbid" | "allow";
         OuterBeingStats: {
@@ -12037,6 +12589,13 @@ export interface components {
             population: number;
             cover: string | null;
         };
+        PeopleEditInput: {
+            people_id: number;
+            values?: {
+                [key: string]: number | string | boolean;
+            };
+            release?: string[];
+        };
         PeopleLine: {
             id: number;
             name: string;
@@ -12150,6 +12709,13 @@ export interface components {
             sons_without_image: number;
             unread_notifications: number;
             epoch_in_progress: boolean;
+        };
+        PopulationCohortView: {
+            age_band: components["schemas"]["AgeBand"];
+            sex: components["schemas"]["Sex"];
+            social_class: components["schemas"]["SocialClass"];
+            condition: components["schemas"]["CohortCondition"];
+            count: number;
         };
         PositionUpdate: {
             id: number;
@@ -12377,11 +12943,6 @@ export interface components {
             sender_cover?: string | null;
         };
         PressureKind: "hunger" | "insecurity" | "overcrowding" | "poverty" | "impiety" | "humiliation" | "stagnation";
-        PressureView: {
-            pressure: components["schemas"]["PressureKind"];
-            label: string;
-            value: number;
-        };
         PricePoint: {
             epoch: number;
             price: number;
@@ -12526,6 +13087,11 @@ export interface components {
         PutWorldsWorldIdOrbitBody: {
             star_id?: number | null;
             parent_world_id?: number | null;
+        };
+        QuarantineView: {
+            region_id: number;
+            region: string;
+            until_epoch: number;
         };
         QuestAbandonInput: {
             thread_id: number;
@@ -13098,13 +13664,60 @@ export interface components {
         SettlementCapitalInput: {
             settlement_id: number;
         };
+        SettlementCharterInput: {
+            settlement_id: number;
+            name?: string | null;
+        };
+        SettlementEditInput: {
+            settlement_id: number;
+            values?: {
+                [key: string]: number | string | boolean;
+            };
+            release?: string[];
+        };
         SettlementEthnogenesisInput: {
             settlement_id: number;
+        };
+        SettlementFreeCityInput: {
+            settlement_id: number;
+            free: boolean;
         };
         SettlementInfo: {
             tier: components["schemas"]["SettlementTier"];
             population: number;
             previous_population: number | null;
+        };
+        SettlementPlanView: {
+            entity_id: number;
+            size_tier: components["schemas"]["SizeTier"];
+            treasury: number;
+            tax_rate: number;
+            public_order: number;
+            crime: number;
+            unrest: number;
+            sanitation: number;
+            fire_risk: number;
+            wealth: number;
+            prestige: number;
+            militia: number;
+            garrison_id: number | null;
+            free_city: boolean;
+            charter_id: number | null;
+            siege_supplies: number;
+            siege_water: number;
+            siege_disease: number;
+            investment_pool: number;
+            construction_capacity: number;
+            hauling_capacity: number;
+            rationing: boolean;
+            district_slots: number;
+            housing: number;
+            locked: string[];
+            foreigners: components["schemas"]["ForeignShare"][];
+            infrastructure: components["schemas"]["InfrastructureView"];
+            districts: components["schemas"]["DistrictView"][];
+            treasury_ledger: components["schemas"]["TreasuryLine"][];
+            history: components["schemas"]["HistoryPoint"][];
         };
         SettlementResettleInput: {
             ruin_id: number;
@@ -13121,8 +13734,14 @@ export interface components {
             prosperity?: number | null;
             defense?: number | null;
             piety?: number | null;
+            wealth?: number | null;
+        };
+        SettlementTaxInput: {
+            settlement_id: number;
+            rate: number;
         };
         SettlementTier: "capital" | "village" | "town" | "city" | "great_city";
+        Sex: "female" | "male";
         SiblingView: {
             son: components["schemas"]["NodeRef"];
             value: number;
@@ -13145,6 +13764,7 @@ export interface components {
             score: number;
             reasons: string[];
         };
+        SizeTier: "hamlet" | "village" | "town" | "city" | "metropolis";
         SkillFamily: "combat" | "command" | "social" | "craft" | "knowledge" | "survival" | "faith";
         SkillKind: "blade" | "spear" | "axe" | "blunt" | "bow" | "sling" | "throwing" | "shield" | "unarmed" | "riding" | "mounted_combat" | "siegecraft" | "naval_combat" | "beast_handling" | "tactics" | "strategy" | "logistics" | "leadership" | "intimidation" | "oratory" | "negotiation" | "intrigue" | "etiquette" | "deception" | "teaching" | "smithing" | "carpentry" | "masonry" | "weaving" | "pottery" | "jewelling" | "shipwright" | "engineering" | "alchemy" | "lore" | "medicine" | "surgery" | "astronomy" | "law" | "theology" | "languages" | "writing" | "accounting" | "hunting" | "tracking" | "foraging" | "sailing" | "navigation" | "mountaineering" | "swimming" | "ritual" | "prophecy" | "spellcraft" | "spirit_speaking";
         SkillSource: "backfill" | "birth" | "practice" | "teaching" | "player";
@@ -13176,7 +13796,7 @@ export interface components {
         SkyTimeEchoInput: {
             thread_id: number;
         };
-        SocialClass: "farmer" | "artisan" | "merchant" | "priest" | "warrior" | "scribe";
+        SocialClass: "farmer" | "artisan" | "merchant" | "priest" | "warrior" | "scribe" | "noble" | "serf_or_slave" | "outcast" | "monastic";
         SocietyFamineInput: {
             entity_id: number;
         };
@@ -13619,6 +14239,7 @@ export interface components {
             unrest?: number | null;
         };
         SpokenIntent: "friendship" | "alliance" | "love" | "threat" | "mockery" | "warning" | "bargain";
+        SpreadPath: "origin" | "route" | "army" | "journey" | "siege" | "loosed" | "mutation";
         SpyOperation: "steal" | "sabotage";
         StarDepthInput: {
             history?: string | null;
@@ -13715,6 +14336,13 @@ export interface components {
             label: string;
             quantity: number;
             quality: number;
+        };
+        StrainView: {
+            id: number;
+            name: string;
+            generation: number;
+            virulence: number;
+            lethality: number;
         };
         StreamHelloEvent: {
             id: number;
@@ -13974,6 +14602,14 @@ export interface components {
             foreign_gods: components["schemas"]["GodLine"][];
             sky: components["schemas"]["EntitySummary"][];
         };
+        TreasuryEntry: "tax" | "tolls" | "investment" | "garrison" | "walls" | "building" | "festival" | "alms" | "fire" | "plunder" | "grant";
+        TreasuryLine: {
+            epoch: number;
+            entry: components["schemas"]["TreasuryEntry"];
+            amount: number;
+            balance: number;
+            note: string | null;
+        };
         TributeForgiveInput: {
             bond_id: number;
         };
@@ -14015,6 +14651,10 @@ export interface components {
         };
         ValueAxis: "honour" | "tradition" | "hierarchy" | "martial" | "piety" | "purity" | "kinship" | "mercy" | "knowledge" | "wealth" | "nature" | "superstition" | "xenophilia" | "death";
         ValueHolder: "culture" | "doctrine" | "agenda" | "personal" | "divine" | "community";
+        ValuePoint: {
+            axis: components["schemas"]["ValueAxis"];
+            value: number;
+        };
         ValueView: {
             axis: components["schemas"]["ValueAxis"];
             value: number;
@@ -14092,6 +14732,7 @@ export interface components {
             victor_id: number;
         };
         WaterSource: "none" | "spring" | "well" | "river" | "lake" | "sea";
+        WaterSupply: "none" | "well" | "cistern" | "aqueduct";
         WeakNode: {
             id: number;
             name: string;
@@ -14443,6 +15084,15 @@ export interface components {
             magnitude: number;
             name?: string | null;
             weather?: components["schemas"]["WeatherKind"] | null;
+        };
+        aerona__api__schemas__depth_society__PressureView: {
+            kind: components["schemas"]["PressureKind"];
+            value: number;
+        };
+        aerona__api__schemas__mind__PressureView: {
+            pressure: components["schemas"]["PressureKind"];
+            label: string;
+            value: number;
         };
     };
     responses: never;
@@ -22816,6 +23466,122 @@ export interface operations {
             };
         };
     };
+    demography_api_entities__entity_id__demography_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemographyView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disease_api_entities__entity_id__disease_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiseaseView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    world_outbreaks_api_worlds__world_id__outbreaks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutbreakMapView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    settlement_plan_api_entities__entity_id__settlement_plan_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettlementPlanView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_actions_api_actions_get: {
         parameters: {
             query?: never;
@@ -29172,6 +29938,471 @@ export interface operations {
             };
         };
     };
+    action_people_edit_api_actions_people_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeopleEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_cohort_move_api_actions_cohort_move_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CohortMoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_disease_loose_api_actions_disease_loose_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiseaseLooseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_disease_edit_api_actions_disease_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiseaseEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_disease_cure_api_actions_disease_cure_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiseaseCureInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_disease_quarantine_api_actions_disease_quarantine_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiseaseQuarantineInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_disease_immunity_api_actions_disease_immunity_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiseaseImmunityInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_outbreak_end_api_actions_outbreak_end_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OutbreakEndInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_settlement_edit_api_actions_settlement_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettlementEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_district_build_api_actions_district_build_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DistrictBuildInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_district_edit_api_actions_district_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DistrictEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_district_raze_api_actions_district_raze_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DistrictRazeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_settlement_tax_api_actions_settlement_tax_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettlementTaxInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_settlement_free_city_api_actions_settlement_free_city_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettlementFreeCityInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_settlement_charter_api_actions_settlement_charter_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettlementCharterInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_body_heal_api_actions_body_heal_post: {
         parameters: {
             query?: never;
@@ -30023,6 +31254,8 @@ export const actionGroupValues: ReadonlyArray<FlattenedDeepRequired<components>[
 export const actionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActionKind"]> = ["create_entity", "revelation", "summon_son", "bear_child", "command", "absolute_command", "bless_essence", "bless_hp", "bless_stat", "bless_existence", "add_star", "ascend", "lightning", "chain", "exile_son", "suppress_rebellion", "suppress_failed", "forgive", "answer_prayer", "chat", "resurrect_son", "kill_son", "take_life", "resurrect_mortal", "deify", "demote", "grant_power", "choose_prophet", "manifestation", "lineage_curse", "lift_lineage_curse", "convert", "wrath", "world_wrath", "drain_essence", "devour", "harvest_community", "kill_foreign_god", "canon_restore", "canon_strike", "edit_record", "edit_creator", "merge_records", "archive_record", "create_world", "birth_world", "forget_world", "remember_world", "exile_entity", "pardon", "ignite_star", "hang_star", "extinguish_star", "rekindle_star", "seal_gate", "sever_route", "stitch_route", "reveal_route", "recall_journey", "cleanse_leak", "sky_event", "spirit_cloak", "legendary_quest", "miracle", "disaster", "teach_knowledge", "advance_knowledge", "set_knowledge_level", "assign_mechanics", "syncretize_faith", "birth_creole", "curse", "dream", "influence", "declare_chosen", "incite_war", "transform", "destroy", "covenant", "change_anchor", "challenge", "speak_to_sibling", "weave_bond", "pray_to_creator", "harvest_resource", "gift", "holy_world", "interworld_treaty", "foreign_god_war", "open_cosmic_bed", "stitch_leak", "outer_bargain", "rebel", "convene_council", "awaken_peoples", "set_passions", "push_reputation", "found_language", "coin_words", "produce", "build", "create_culture", "discover_resource", "claim", "found_settlement", "establish_trade", "declare_war", "worship", "develop_knowledge", "learn", "diplomacy", "adventure", "discover_route", "explore_land", "resurrection_rite", "build_ship", "set_out", "tame", "weave_chimera", "bind_spirit", "search_ruins", "sabotage", "preach", "defy_god", "deny_god", "prophesy", "escape", "pay_ransom", "rescue_captive", "raise_army", "appoint_commander", "build_spy_network", "barter", "lend", "repay", "adopt", "network_repair", "ledger_undo", "sibling_scheme", "scatter_bones", "move_to_world", "reorder_seasons", "shape_weather", "sever_ley", "foreign_god_talk", "write_plan", "abandon_settlement", "apocalypse", "awaken_species", "betrayal", "bless_army", "cosmic_archive", "cosmic_plague", "creator_sign", "crown_ruler", "cultural_contact", "designate_heir", "disband_army", "dissolve_faction", "end_blood_feud", "epoch_star", "ethnogenesis", "evaluate_goals", "force_battle", "foreign_god_land", "forget_legend", "forgive_debt", "forgive_tribute", "found_faction", "found_market", "fulfil_prophecy", "golden_age", "grant_independence", "grant_victory", "horror_event", "hunt", "impose_tribute", "incite_uprising", "introduce_species", "lay_spirit_to_rest", "megafauna_trail", "mint_coin", "mirror_birth", "mutate_species", "order_exodus", "order_feeding", "outer_cult", "planet_act", "pour_essence", "raise_hero", "raise_notable", "recall_hero", "reclaim_colony", "regenerate_map", "resettle_ruin", "reveal_previous_creation", "revive_legend", "set_doom_clock", "set_immortal", "set_route_danger", "set_sanity", "set_son_relation", "set_tier", "shape_society", "shelter_from_ruin", "soul_descent", "soul_harvest", "spare_prey", "spawn_pirates", "split_people", "summon_outer_being", "time_echo", "train_apprentice", "wake_foreign_god", "edit_language", "regenerate_signature", "add_epoch_words", "discard_intuition", "rejudge_fate", "retry_fate", "override_verdict", "retry_voices", "audit_chronicle", "retry_births", "edit_historian_view", "delete_historian_view", "maintenance", "dissolve_community", "raze_structure", "write_fate", "commemorate", "revive_world", "appoint_guardian", "set_abundance", "seed_place", "declare_pilgrimage_site", "order_end", "other"];
 export const actionModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActionMode"]> = ["ledgered", "job"];
 export const actorKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActorKind"]> = ["creator", "son", "mortal", "foreign_god", "fate", "engine", "system"];
+export const aestheticValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Aesthetic"]> = ["austere", "ornate", "geometric", "natural", "macabre", "celestial"];
+export const ageBandValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgeBand"]> = ["child", "adult", "elder"];
 export const agentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentKind"]> = ["son", "mortal"];
 export const agentRetryEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentRetryEvent"]["kind"]> = ["agent.retry"];
 export const agentStreamEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentStreamEvent"]["kind"]> = ["agent.stream"];
@@ -30051,6 +31284,7 @@ export const bondKindValues: ReadonlyArray<FlattenedDeepRequired<components>["sc
 export const bondRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BondRole"]> = ["side", "victor", "loser", "commander", "dueled", "spirit_binding", "homeland", "mentioned_in_fate", "fulfilled_prophecy"];
 export const bondStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BondState"]> = ["active", "past", "hidden_rejected", "hidden_closed"];
 export const borderKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BorderKind"]> = ["coast", "region", "sub_region"];
+export const buildMaterialValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BuildMaterial"]> = ["timber", "stone"];
 export const canonVerdictValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CanonVerdict"]> = ["canon", "rejected"];
 export const capacityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Capacity"]> = ["melee", "missile", "command", "craft", "scholarship", "presence", "mobility", "fertility"];
 export const captiveStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CaptiveStatus"]> = ["held", "ransomed", "escaped", "executed", "turncoat", "rescued", "released"];
@@ -30059,8 +31293,10 @@ export const chatAttitudeValues: ReadonlyArray<FlattenedDeepRequired<components>
 export const chronicleAuditKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ChronicleAuditKind"]> = ["rejected_mentioned", "son_skipped", "event_skipped", "verdict_skipped", "winner_as_loser", "active_as_silent", "deed_miscredited", "number_contradiction"];
 export const chronicleKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ChronicleKind"]> = ["creation", "speech", "challenge", "prayer", "order", "fate", "death", "birth", "system", "message", "creator_hand", "world", "engine_raw", "knowledge", "resource", "culture", "trade", "exploration", "diplomacy", "production", "language", "miracle", "civilization", "creator_reputation", "construction", "existence", "dream", "star", "divine_sign", "climate", "cosmic", "debt", "foreign_god", "world_age", "council", "previous_creation", "sky", "gift", "worship", "world_birth", "prophecy", "covenant", "army", "ascension", "migration", "legendary_quest", "war", "war_of_gods", "cosmic_law", "horror", "outer_being", "immortality", "rebellion", "apocalypse", "resurrection", "lineage", "disaster", "adventure", "intrigue", "rescue", "chimera", "escape", "domestication", "age_change", "expedition", "spirit", "curse", "denial", "ransom", "prohibition"];
 export const claudeAuthValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClaudeAuth"]> = ["token", "login"];
+export const climateAffinityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClimateAffinity"]> = ["warm", "wet", "cold", "dry", "any"];
 export const climateEraValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClimateEra"]> = ["temperate", "drought", "rain", "ice_age", "scorching"];
 export const coastKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CoastKind"]> = ["none", "cliff", "beach", "harbour_site", "reef"];
+export const cohortConditionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CohortCondition"]> = ["none", "veteran", "sick", "enslaved", "captive"];
 export const commodityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Commodity"]> = ["food", "ore", "goods"];
 export const commodityFamilyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommodityFamily"]> = ["subsistence", "industrial", "strategic", "luxury"];
 export const commodityKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommodityKind"]> = ["grain", "livestock", "fish", "fodder", "timber", "fuel", "bread", "ore", "stone", "cloth", "tools", "weapons", "armour", "mounts", "siege_materiel", "medicine", "luxuries", "incense", "sacred_goods", "magical_reagents"];
@@ -30078,11 +31314,16 @@ export const creatorRevelationEventKindValues: ReadonlyArray<FlattenedDeepRequir
 export const creatorSignKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatorSignKind"]> = ["wrath", "grace", "silence", "dream"];
 export const creatureTraitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatureTrait"]> = ["flying", "venomous", "soul_eater", "radiant", "fissiparous", "hive_mind", "stoneskin", "time_rewinder", "shapeshifter", "mind_reader"];
 export const cultStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CultStats"]["kind"]> = ["cult"];
+export const cureSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CureSource"]> = ["knowledge", "granted"];
 export const damageTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DamageType"]> = ["cut", "pierce", "blunt", "fire", "cold", "venom", "magic", "void", "holy"];
 export const debtStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DebtStatus"]> = ["open", "overdue", "repaid", "forgiven"];
 export const decreeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DecreeKind"]> = ["war", "peace", "alliance", "marriage", "trade"];
 export const disasterValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Disaster"]> = ["earthquake", "flood", "plague", "drought", "storm"];
 export const discoveryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Discovery"]> = ["known", "legend", "unknown", "forgotten"];
+export const diseaseStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DiseaseStats"]["kind"]> = ["disease"];
+export const diseaseTargetValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DiseaseTarget"]> = ["breath", "vital", "cognition", "sight", "skin"];
+export const diseaseVectorValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DiseaseVector"]> = ["air", "water", "touch", "bite", "spirit", "void", "curse"];
+export const districtKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DistrictKind"]> = ["farmland", "market", "craft_quarter", "temple_quarter", "harbour", "citadel", "slums", "palace", "foreign_quarter", "necropolis"];
 export const domainValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Domain"]> = ["sea", "fire", "earth", "sky", "storm", "death", "life", "dream", "time", "light", "shadow", "war", "craft", "knowledge", "love", "trickery", "hunt", "plants", "bone", "blood", "sound", "stone", "ice", "madness", "trade", "road", "plague", "harvest", "moon", "sun", "star", "lies", "oath", "memory", "hunger", "glass", "salt", "ash", "border", "sleep"];
 export const elevationClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ElevationClass"]> = ["mountainous", "hilly", "plain", "water"];
 export const engineFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EngineFinishedEvent"]["kind"]> = ["engine.finished"];
@@ -30091,10 +31332,10 @@ export const engineNoteEventKindValues: ReadonlyArray<FlattenedDeepRequired<comp
 export const enginePhaseEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EnginePhaseEvent"]["kind"]> = ["engine.phase"];
 export const engineStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EngineStartedEvent"]["kind"]> = ["engine.started"];
 export const entityDeepenedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityDeepenedEvent"]["kind"]> = ["entity.deepened"];
-export const entityFlagValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityFlag"]> = ["disaster", "lost", "dead_language", "decipherable", "previous_creation", "ruin", "rebuilt", "remnant", "void", "cursed", "godless", "seeking_god", "empire", "federation", "independent", "colony", "pioneer", "golden_age", "immortal", "chimera", "mutation", "mutant", "mutated", "discovery", "native", "revelation", "soul_descended", "soul_bound", "soul_harvester", "crossed_to_the_dead", "wonder", "chosen", "manifested", "born_of_belief", "corrupted_memory", "fairy_tale", "name_from_language", "fixed_name", "species_became_people", "original_resource", "cosmic_monopoly", "outer_cult", "whisper_source", "nameless", "escaped", "megafauna", "invasive", "worships_planet", "planet_closed", "burned", "cosmic_plague", "mirror", "mirror_born", "oathbreaker", "exile", "omen", "time_echo", "two_timed", "empty_tomb", "resurrection_complete", "protected_from_disaster", "mechanics_weighed", "depleting", "syncretic", "returned_to_old_god", "revived_language", "on_watch", "mocked", "protected_from_ruin", "spared_soul", "ghost", "wizard", "age_changer", "time_returned", "legendary", "prophet", "bloodline_curse", "essence_drained", "returned_from_death", "saw_the_creator", "deified", "protected", "depleted", "agent_selected", "capital", "abandoned", "dissolved", "desolate", "razed", "fell_in_battle", "died_in_siege", "died_in_disaster", "died_of_plague", "slain_in_captivity", "doomed", "fate_shielded", "commemoration", "estranged_by_plague", "endangered", "extinct", "pilgrimage_site", "repealed", "merged", "disbanded", "assimilated", "forgotten", "swallowed"];
+export const entityFlagValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityFlag"]> = ["disaster", "dormant", "lost", "dead_language", "decipherable", "previous_creation", "ruin", "rebuilt", "remnant", "void", "cursed", "godless", "seeking_god", "empire", "federation", "independent", "colony", "pioneer", "golden_age", "immortal", "chimera", "mutation", "mutant", "mutated", "discovery", "native", "revelation", "soul_descended", "soul_bound", "soul_harvester", "crossed_to_the_dead", "wonder", "chosen", "manifested", "born_of_belief", "corrupted_memory", "fairy_tale", "name_from_language", "fixed_name", "species_became_people", "original_resource", "cosmic_monopoly", "outer_cult", "whisper_source", "nameless", "escaped", "megafauna", "invasive", "worships_planet", "planet_closed", "burned", "cosmic_plague", "mirror", "mirror_born", "oathbreaker", "exile", "omen", "time_echo", "two_timed", "empty_tomb", "resurrection_complete", "protected_from_disaster", "mechanics_weighed", "depleting", "syncretic", "returned_to_old_god", "revived_language", "on_watch", "mocked", "protected_from_ruin", "spared_soul", "ghost", "wizard", "age_changer", "time_returned", "legendary", "prophet", "bloodline_curse", "essence_drained", "returned_from_death", "saw_the_creator", "deified", "protected", "depleted", "agent_selected", "capital", "abandoned", "dissolved", "desolate", "razed", "fell_in_battle", "died_in_siege", "died_in_disaster", "died_of_plague", "slain_in_captivity", "doomed", "fate_shielded", "commemoration", "estranged_by_plague", "endangered", "extinct", "pilgrimage_site", "repealed", "merged", "disbanded", "assimilated", "forgotten", "swallowed"];
 export const entityOriginValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityOrigin"]> = ["son", "creator", "engine", "mortal", "cosmos"];
 export const entityStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityStatus"]> = ["canon", "rejected", "destroyed", "dead", "fulfilled"];
-export const entityTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityType"]> = ["region", "place", "resource", "settlement", "species", "people", "mortal", "item", "structure", "language", "legend", "tradition", "cult", "faction", "celestial", "artwork", "law", "spirit", "knowledge", "prophecy", "event", "vessel", "outer_being", "army", "natural_law", "trade_route"];
+export const entityTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityType"]> = ["region", "place", "resource", "settlement", "species", "people", "mortal", "item", "structure", "language", "legend", "tradition", "cult", "faction", "celestial", "artwork", "law", "spirit", "knowledge", "prophecy", "event", "vessel", "outer_being", "army", "natural_law", "trade_route", "disease"];
 export const epicWrittenEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpicWrittenEvent"]["kind"]> = ["epic.written"];
 export const epochBackupEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochBackupEvent"]["kind"]> = ["epoch.backup"];
 export const epochFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochFinishedEvent"]["kind"]> = ["epoch.finished"];
@@ -30141,11 +31382,13 @@ export const imageQueuedEventKindValues: ReadonlyArray<FlattenedDeepRequired<com
 export const imageStatusEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageStatusEvent"]["kind"]> = ["image.status"];
 export const importModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImportMode"]> = ["replace", "merge", "discovery"];
 export const incidentRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IncidentRole"]> = ["subject", "actor", "target", "witness", "place"];
+export const inheritanceCustomValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["InheritanceCustom"]> = ["gavelkind", "primogeniture", "ultimogeniture", "matrilineal", "elective", "by_merit"];
 export const injuryKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["InjuryKind"]> = ["bruise", "cut", "deep_cut", "puncture", "fracture", "crush", "burn", "frostbite", "bite", "venom", "severed", "gouged", "destroyed", "curse_wither", "void_touch", "divine_brand"];
 export const injuryStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["InjuryState"]> = ["fresh", "infected", "healing", "healed_scar", "permanent", "lethal"];
 export const integrityTaskValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IntegrityTask"]> = ["dead_bonds", "checkpoint"];
 export const interventionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["InterventionKind"]> = ["miracle", "disaster", "teach_knowledge", "curse"];
 export const itemStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ItemStats"]["kind"]> = ["item"];
+export const jobValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Job"]> = ["farming", "herding", "fishing", "mining", "crafting", "trade", "soldiering", "clergy", "scholarship", "building", "idle"];
 export const jobCancelledEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JobCancelledEvent"]["kind"]> = ["job.cancelled"];
 export const jobFailedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JobFailedEvent"]["kind"]> = ["job.failed"];
 export const jobFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JobFinishedEvent"]["kind"]> = ["job.finished"];
@@ -30178,6 +31421,8 @@ export const loreLanguageValues: ReadonlyArray<FlattenedDeepRequired<components>
 export const maimedKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaimedKind"]> = ["one_armed", "one_legged", "one_eyed", "blind", "deaf", "mute", "lame", "scarred", "broken_minded"];
 export const maintenanceTaskValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaintenanceTask"]> = ["completion", "network_rules", "loose_ends", "data_repairs", "history_repairs", "epoch_years", "mortal_ages", "importance", "endings", "narrative_sweep", "certain_facts", "intuitions", "mirror_pairs", "captions", "planner_statistics", "prune"];
 export const markerKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MarkerKind"]> = ["battle", "disaster", "ruin", "remnant", "event"];
+export const marriageCustomValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MarriageCustom"]> = ["monogamy", "polygyny", "polyandry", "group"];
+export const martialStyleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MartialStyle"]> = ["shieldwall", "horse_archer", "skirmisher", "chariot", "phalanx", "berserker", "naval_raider", "siege_engineer", "war_magic", "beast_war"];
 export const materialFamilyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaterialFamily"]> = ["organic", "stone", "metal", "precious", "exotic"];
 export const materialKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaterialKind"]> = ["wood", "bone", "hide", "leather", "cloth", "stone", "flint", "obsidian", "copper", "tin", "bronze", "iron", "steel", "silver", "gold", "glass", "crystal", "ivory", "chitin", "dragonbone", "star_metal", "void_glass", "godflesh", "living_wood", "salt", "amber", "lead", "skysteel", "sulfur", "clay", "gems"];
 export const materialOriginValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaterialOrigin"]> = ["catalog", "god_remains", "dead_star", "beast", "leak_crystal", "research"];
@@ -30204,6 +31449,7 @@ export const notableYearKindValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const notificationCategoryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotificationCategory"]> = ["rebellion", "death", "birth", "prophecy", "apocalypse", "horror", "war", "prayer", "cosmos", "ascension", "disaster", "epoch", "achievement", "society", "reputation", "error", "note", "work"];
 export const notificationCreatedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotificationCreatedEvent"]["kind"]> = ["notification.created"];
 export const opinionComponentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OpinionComponent"]> = ["trust", "fear", "respect", "affection", "grievance"];
+export const outbreakStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OutbreakStatus"]> = ["active", "waning", "ended"];
 export const outerBargainModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OuterBargainMode"]> = ["force", "forbid", "allow"];
 export const outerBeingStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OuterBeingStats"]["kind"]> = ["outer_being"];
 export const partOfSpeechValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PartOfSpeech"]> = ["noun", "verb", "adjective", "affix", "title", "place_name", "proper_name", "number", "interjection"];
@@ -30240,12 +31486,14 @@ export const scoreComponentValues: ReadonlyArray<FlattenedDeepRequired<component
 export const searchCategoryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SearchCategory"]> = ["son", "foreign_god", "world", "star", "entity", "word", "epoch", "chronicle", "note", "map_note", "message", "council"];
 export const settlementStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SettlementStats"]["kind"]> = ["settlement"];
 export const settlementTierValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SettlementTier"]> = ["capital", "village", "town", "city", "great_city"];
+export const sexValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Sex"]> = ["female", "male"];
 export const siegeStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SiegeStatus"]> = ["ongoing", "breached", "repulsed", "lifted"];
+export const sizeTierValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SizeTier"]> = ["hamlet", "village", "town", "city", "metropolis"];
 export const skillFamilyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SkillFamily"]> = ["combat", "command", "social", "craft", "knowledge", "survival", "faith"];
 export const skillKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SkillKind"]> = ["blade", "spear", "axe", "blunt", "bow", "sling", "throwing", "shield", "unarmed", "riding", "mounted_combat", "siegecraft", "naval_combat", "beast_handling", "tactics", "strategy", "logistics", "leadership", "intimidation", "oratory", "negotiation", "intrigue", "etiquette", "deception", "teaching", "smithing", "carpentry", "masonry", "weaving", "pottery", "jewelling", "shipwright", "engineering", "alchemy", "lore", "medicine", "surgery", "astronomy", "law", "theology", "languages", "writing", "accounting", "hunting", "tracking", "foraging", "sailing", "navigation", "mountaineering", "swimming", "ritual", "prophecy", "spellcraft", "spirit_speaking"];
 export const skillSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SkillSource"]> = ["backfill", "birth", "practice", "teaching", "player"];
 export const skyEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SkyEventKind"]> = ["eclipse", "comet", "alignment", "supernova", "black_sun", "void_storm", "flare"];
-export const socialClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SocialClass"]> = ["farmer", "artisan", "merchant", "priest", "warrior", "scribe"];
+export const socialClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SocialClass"]> = ["farmer", "artisan", "merchant", "priest", "warrior", "scribe", "noble", "serf_or_slave", "outcast", "monastic"];
 export const soilKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SoilKind"]> = ["thin", "loam", "clay", "sand", "volcanic", "peat", "salt", "ash", "crystal", "bone"];
 export const sonAscendedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonAscendedEvent"]["kind"]> = ["son.ascended"];
 export const sonChatRepliedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonChatRepliedEvent"]["kind"]> = ["son.chat_replied"];
@@ -30261,6 +31509,7 @@ export const sonTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<
 export const speciesStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpeciesStats"]["kind"]> = ["species"];
 export const spiritStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpiritStats"]["kind"]> = ["spirit"];
 export const spokenIntentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpokenIntent"]> = ["friendship", "alliance", "love", "threat", "mockery", "warning", "bargain"];
+export const spreadPathValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpreadPath"]> = ["origin", "route", "army", "journey", "siege", "loosed", "mutation"];
 export const spyOperationValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpyOperation"]> = ["steal", "sabotage"];
 export const starTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StarType"]> = ["yellow_dwarf", "red_giant", "blue_giant", "binary", "white_dwarf", "dead_star", "black_sun", "broken_star", "pulsar", "star_remnant", "reborn_star", "blue_star", "blue_white_star", "white_star", "yellow_white_star", "orange_dwarf", "red_dwarf", "brown_dwarf", "yellow_giant", "red_supergiant", "blue_supergiant", "hypergiant", "wolf_rayet", "protostar", "carbon_star", "neutron_star", "magnetar", "black_hole", "variable_star", "trinary", "chained_star", "watching_star"];
 export const statValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Stat"]> = ["strength", "endurance", "agility", "wisdom", "cunning", "will", "creativity", "charisma", "might"];
@@ -30285,6 +31534,7 @@ export const traitEffectValues: ReadonlyArray<FlattenedDeepRequired<components>[
 export const traitKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraitKind"]> = ["brave", "craven", "wrathful", "patient", "cruel", "kind", "ambitious", "content", "greedy", "generous", "honest", "deceitful", "zealous", "cynical", "paranoid", "trusting", "lustful", "chaste", "gluttonous", "ascetic", "scholarly", "illiterate_proud", "gregarious", "reclusive", "vengeful", "forgiving", "stubborn", "fickle", "just", "arbitrary", "humble", "proud", "curious", "incurious", "melancholic", "sanguine", "iron_willed", "impressionable", "cunning_tactician", "reckless"];
 export const traitSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraitSource"]> = ["birth", "inherited", "experience", "condition", "education", "divine", "player"];
 export const travelMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TravelMethod"]> = ["ancient_gate", "space_fold", "light_sail", "cosmic_mount", "dream_journey", "river_of_dead", "divine_bridge", "slingshot_orbit", "swallowed", "wormhole"];
+export const treasuryEntryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TreasuryEntry"]> = ["tax", "tolls", "investment", "garrison", "walls", "building", "festival", "alms", "fire", "plunder", "grant"];
 export const tributeStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TributeStatus"]> = ["active", "ended", "revolted"];
 export const turnCounterValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TurnCounter"]> = ["season_order", "weather_shaping", "sibling_messages", "narrative_bonds", "prayers", "free_living_creation", "free_land_creation", "anchor_chosen", "words_coined", "gifts", "holy_world", "leak_stitched", "take_life", "intrigue", "outer_bargain", "harvests", "discoveries", "claims", "worship_changes", "learning", "prophecies", "commander_appointments", "adoptions", "explorations", "repeated_creations", "resurrection_rites", "languages_founded", "cultures_created", "land_rewards"];
 export const valueAxisValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ValueAxis"]> = ["honour", "tradition", "hierarchy", "martial", "piety", "purity", "kinship", "mercy", "knowledge", "wealth", "nature", "superstition", "xenophilia", "death"];
@@ -30296,6 +31546,7 @@ export const warEndingValues: ReadonlyArray<FlattenedDeepRequired<components>["s
 export const warSideValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarSide"]> = ["attacker", "defender"];
 export const warStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarStatus"]> = ["mobilizing", "ongoing", "ended"];
 export const waterSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WaterSource"]> = ["none", "spring", "well", "river", "lake", "sea"];
+export const waterSupplyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WaterSupply"]> = ["none", "well", "cistern", "aqueduct"];
 export const weatherEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WeatherEffect"]> = ["visibility", "footing", "cold", "heat", "wet", "wind", "morale", "growth"];
 export const weatherKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WeatherKind"]> = ["clear", "overcast", "rain", "downpour", "storm", "fog", "snow", "blizzard", "heat_wave", "drought_wind", "sandstorm", "hail", "magic_storm", "ash_fall", "void_rain", "eclipse_dark", "aurora"];
 export const wordKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WordKind"]> = ["noun", "verb", "adjective", "affix", "title", "place_name", "proper_name", "number", "interjection"];

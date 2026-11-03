@@ -23,12 +23,20 @@ class CommunitySocietyRow(Base):
     share_priest: Mapped[float] = mapped_column(Float)
     share_warrior: Mapped[float] = mapped_column(Float)
     share_scribe: Mapped[float] = mapped_column(Float)
+    share_noble: Mapped[float] = mapped_column(Float, default=0.0)
+    share_serf_or_slave: Mapped[float] = mapped_column(Float, default=0.0)
+    share_outcast: Mapped[float] = mapped_column(Float, default=0.0)
+    share_monastic: Mapped[float] = mapped_column(Float, default=0.0)
     satisfaction_farmer: Mapped[int]
     satisfaction_artisan: Mapped[int]
     satisfaction_merchant: Mapped[int]
     satisfaction_priest: Mapped[int]
     satisfaction_warrior: Mapped[int]
     satisfaction_scribe: Mapped[int]
+    satisfaction_noble: Mapped[int] = mapped_column(default=55)
+    satisfaction_serf_or_slave: Mapped[int] = mapped_column(default=30)
+    satisfaction_outcast: Mapped[int] = mapped_column(default=25)
+    satisfaction_monastic: Mapped[int] = mapped_column(default=55)
     stock_food: Mapped[int]
     stock_ore: Mapped[int]
     stock_goods: Mapped[int]
