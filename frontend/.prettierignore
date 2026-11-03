@@ -17,3 +17,5 @@
 
 # Ignore auto generated routeTree.gen.ts
 /src/routeTree.gen.ts
+# Generated anatomy drawings (scripts/anatomy/build.py)
+/src/features/entity/body/anatomy

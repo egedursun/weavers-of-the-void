@@ -163,12 +163,13 @@ async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyVie
         hp, hp_max = hp_of(rules, bearer, body)
         parts = []
         for part in anatomy.parts:
-            on_part = [row for row in injuries if row.part == part.key and row.state is not InjuryState.LETHAL]
+            on_part = [row for row in injuries if row.part == part.key]
+            lasting = [row for row in on_part if row.state is not InjuryState.LETHAL]
             worst = max(on_part, key=lambda row: STATE_RANK[row.state], default=None)
-            loss = max((row.function_loss for row in on_part), default=0)
+            loss = max((row.function_loss for row in lasting), default=0)
             if part.counted:
                 loss = max(loss, round((part.counted - min(part.counted, body.fingers)) * PERCENT / part.counted))
-            prosthesis = next((fitted[row.id].material for row in on_part if row.id in fitted), None)
+            prosthesis = next((fitted[row.id].material for row in lasting if row.id in fitted), None)
             parts.append(
                 PartView(
                     key=part.key,

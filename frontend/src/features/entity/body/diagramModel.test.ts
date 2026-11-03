@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import type { components } from '@/api/generated/schema'
-import { LEGEND, isLost, partTone } from './diagramModel'
+import {
+  DRAW_STATES,
+  calloutSpots,
+  drawState,
+  isLost,
+  partTone,
+} from './diagramModel'
 import {
   CAPACITIES,
   CONDITIONS,
@@ -49,7 +55,30 @@ describe('body diagram model', () => {
     expect(
       isLost(part({ state: 'permanent', loss: 100, prosthesis: 'wood' }))
     ).toBe(false)
-    expect(LEGEND.some((item) => item.dashed)).toBe(true)
+  })
+
+  it('draws every wound state the backend sends', () => {
+    expect(drawState(part({}))).toBe('unhurt')
+    expect(drawState(part({ state: 'fresh' }))).toBe('open')
+    expect(drawState(part({ state: 'healing' }))).toBe('open')
+    expect(drawState(part({ state: 'infected' }))).toBe('festering')
+    expect(drawState(part({ state: 'healed_scar' }))).toBe('scarred')
+    expect(drawState(part({ state: 'permanent', loss: 40 }))).toBe('lasting')
+    expect(drawState(part({ state: 'permanent', loss: 100 }))).toBe('lost')
+    expect(
+      drawState(part({ state: 'permanent', loss: 100, prosthesis: 'iron' }))
+    ).toBe('prosthesis')
+    expect(drawState(part({ state: 'lethal', loss: 100 }))).toBe('fatal')
+    expect(partTone(part({ state: 'lethal' }))).toContain('destructive')
+    expect(DRAW_STATES.map((item) => item.state)).toContain('fatal')
+  })
+
+  it('spaces wound labels apart and keeps them inside the figure', () => {
+    expect(calloutSpots([40, 50, 200], 300)).toEqual([40, 70, 200])
+    expect(calloutSpots([], 300)).toEqual([])
+    const crowded = calloutSpots([280, 282, 284], 300)
+    expect(crowded.at(-1)).toBe(286)
+    expect(crowded).toEqual([226, 256, 286])
   })
 
   it('names every kind the backend sends', () => {

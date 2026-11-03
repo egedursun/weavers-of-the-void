@@ -46,7 +46,7 @@ import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { loreKeys } from '../api/keys'
-import { BodyDiagram, DiagramLegend } from '../body/BodyDiagram'
+import { BodyDiagram } from '../body/BodyDiagram'
 import {
   ARMOUR_ICON,
   CAPACITIES,
@@ -1102,7 +1102,6 @@ export function BodySection({ nodeId }: { nodeId: number }) {
           <div className='grid min-w-0 grid-cols-1 gap-3 @xl/body:grid-cols-2'>
             <Card title='The body' icon={PersonStanding} wide>
               <BodyDiagram parts={body.parts} plan={body.plan} />
-              <DiagramLegend />
             </Card>
             {body.bearer_kind !== 'species' && (
               <>

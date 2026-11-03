@@ -1,7 +1,7 @@
 BACKEND := backend
 FRONTEND := frontend
 
-.PHONY: install dev backend frontend test lint typecheck rules version migration typegen check migrate-legacy legacy-rule-map
+.PHONY: install dev backend frontend test lint typecheck rules version migration typegen check migrate-legacy legacy-rule-map anatomy
 
 install:
 	cd $(BACKEND) && uv sync
@@ -51,6 +51,9 @@ migrate-legacy:
 
 legacy-rule-map:
 	cd $(BACKEND) && uv run python ../scripts/build_legacy_rule_map.py
+
+anatomy:
+	cd scripts/anatomy && python3 build.py
 
 check: rules lint typecheck test
 

@@ -96,3 +96,4 @@ layers = [
 "src/aerona/rules/registry/*" = ["E501"]
 "src/aerona/prompts/*" = ["E501"]
 "src/aerona/db/alembic/versions/*" = ["E501", "PLR0915"]
+"../scripts/anatomy/*" = ["E501"]
