@@ -58,9 +58,9 @@ function toneOf(value: number, harmful: boolean) {
 
 type MeasureProps = {
   field: NumericStat
-  after: number
+  after: number | null
   before: number | null
-  delta: number
+  delta: number | null
 }
 
 function Measure({ field, after, before, delta }: MeasureProps) {
@@ -73,8 +73,14 @@ function Measure({ field, after, before, delta }: MeasureProps) {
       <div className='flex min-w-0 flex-1 flex-col'>
         <Label truncate>{STAT_LABEL[field]}</Label>
         <div className='flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1'>
-          <Stat value={after} />
-          <ChangeChip value={delta} harmful={HARMFUL_STATS.has(field)} />
+          {after === null ? (
+            <Muted variant='caption'>Not counted in this epoch yet</Muted>
+          ) : (
+            <Stat value={after} />
+          )}
+          {delta !== null && (
+            <ChangeChip value={delta} harmful={HARMFUL_STATS.has(field)} />
+          )}
         </div>
         {before !== null && (
           <Muted
@@ -193,6 +199,12 @@ export function EpochBreakdownPanel({ state }: EpochBreakdownPanelProps) {
   const current = breakdown.data?.current ?? null
   const previous = breakdown.data?.previous ?? null
   const deltas = breakdown.data?.deltas ?? {}
+  const changeOf = (field: NumericStat): number | null => {
+    const after = current?.[field] ?? null
+    const before = previous ? (previous[field] ?? null) : 0
+    if (deltas[field] !== undefined) return deltas[field]
+    return after === null || before === null ? null : after - before
+  }
 
   return (
     <Section
@@ -240,11 +252,9 @@ export function EpochBreakdownPanel({ state }: EpochBreakdownPanelProps) {
               <Measure
                 key={field}
                 field={field}
-                after={current[field]}
-                before={previous ? previous[field] : null}
-                delta={
-                  deltas[field] ?? current[field] - (previous?.[field] ?? 0)
-                }
+                after={current[field] ?? null}
+                before={previous?.[field] ?? null}
+                delta={changeOf(field)}
               />
             ))}
           </div>

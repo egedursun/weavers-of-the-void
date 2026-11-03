@@ -99,7 +99,8 @@ function toPoints(series: EpochStatistics[]): Point[] {
     .map((item) => {
       const point: Point = { epoch: item.epoch }
       for (const spec of CHARTS)
-        for (const field of spec.fields) point[field] = item.data[field]
+        for (const field of spec.fields)
+          point[field] = item.data[field] ?? undefined
       return point
     })
 }
@@ -124,7 +125,7 @@ function SmallChart({ spec, points }: { spec: ChartSpec; points: Point[] }) {
     >
       <div className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2'>
         <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
-        <Text as='span' weight='semibold' className='flex-1'>
+        <Text as='span' weight='semibold' className='flex-auto'>
           {spec.title}
         </Text>
         {spec.fields.length === 1 && last !== null && (

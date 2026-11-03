@@ -164,6 +164,25 @@ describe('epoch breakdown popover', () => {
     )
   })
 
+  it('says a count was not kept yet instead of showing a zero', async () => {
+    const { screen } = await renderScreen(
+      <EpochBreakdownPanel state={summaryState()} />,
+      {
+        'GET /api/epochs/4/breakdown': {
+          current: { ...current, soldiers: null, travelling: 40 },
+          previous: { ...current, soldiers: null, travelling: null },
+          deltas: {},
+          sons: [],
+        },
+      }
+    )
+    await expect
+      .element(screen.getByText('Not counted in this epoch yet'))
+      .toBeInTheDocument()
+    expect(changeOf('soldiers')).toBeNull()
+    expect(changeOf('travelling')).toBeNull()
+  })
+
   it('loads another epoch from the selector', async () => {
     const { screen, server } = await renderScreen(
       <EpochBreakdownPanel state={summaryState()} />,

@@ -76,7 +76,13 @@ async def series(session: AsyncSession) -> list[EpochStatistics]:
 
 
 def numeric_deltas(current: EpochStatsData, previous: EpochStatsData | None) -> dict[str, int]:
-    return {name: getattr(current, name) - (getattr(previous, name) if previous is not None else 0) for name in NUMERIC_FIELDS}
+    deltas: dict[str, int] = {}
+    for name in NUMERIC_FIELDS:
+        after = getattr(current, name)
+        before = getattr(previous, name) if previous is not None else 0
+        if after is not None and before is not None:
+            deltas[name] = after - before
+    return deltas
 
 
 def son_deltas(current: EpochStatsData, previous: EpochStatsData | None) -> list[SonDelta]:

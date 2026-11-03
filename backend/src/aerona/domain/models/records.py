@@ -101,8 +101,8 @@ class EpochStatsData(ValueObject):
     leak_items: dict[int, tuple[LedgerItem, ...]] = Field(default_factory=dict)
     population_items: tuple[LedgerItem, ...] = ()
     essence_items: tuple[LedgerItem, ...] = ()
-    soldiers: int = 0
-    travelling: int = 0
+    soldiers: int | None = None
+    travelling: int | None = None
     flow_items: tuple[LedgerItem, ...] = ()
 
 

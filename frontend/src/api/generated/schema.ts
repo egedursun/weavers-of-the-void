@@ -9462,8 +9462,8 @@ export interface components {
             };
             population_items: components["schemas"]["LedgerItem"][];
             essence_items: components["schemas"]["LedgerItem"][];
-            soldiers: number;
-            travelling: number;
+            soldiers?: number | null;
+            travelling?: number | null;
             flow_items: components["schemas"]["LedgerItem"][];
         };
         EpochStepKind: "completion" | "backup" | "distribution" | "naming" | "fate_judgment" | "chronicle" | "voices" | "council" | "epoch_words" | "local_gods" | "transition" | "horizon_intuitions" | "world_birth" | "network_repair" | "prune" | "images" | "localisation" | "background";
