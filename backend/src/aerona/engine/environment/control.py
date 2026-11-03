@@ -74,6 +74,7 @@ PLACE_ENUMS: dict[str, type[StrEnum]] = {"terrain": TerrainKind, "cover": PlaceC
 PLACE_NUMBERS = frozenset({"height_advantage", "soil_fertility"})
 PASSABILITY_PREFIX = "passability."
 PLACE_FLAGS = frozenset({"chokepoint", "nexus"})
+INHERIT = "inherit"
 HARVEST_MAX = 200
 CAPS: dict[str, int] = {"harvest_pct": HARVEST_MAX}
 MODES = frozenset(mode.value for mode in MovementMode)
@@ -148,6 +149,9 @@ def set_place_field(ground: PlaceEnvironmentRow, field: str, value: int | str | 
         return
     if isinstance(value, bool):
         raise ValidationFailedError(f"{field.replace('_', ' ')} does not take yes or no.")
+    if field == "terrain" and value == INHERIT:
+        ground.terrain = None
+        return
     setattr(ground, field, coerce(field, value, PLACE_ENUMS, PLACE_NUMBERS))
 
 

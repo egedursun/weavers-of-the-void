@@ -100,7 +100,11 @@ const PLACE_CHOICES: {
   label: string
   table: Record<string, string>
 }[] = [
-  { key: 'terrain', label: 'Terrain', table: TERRAIN_NAMES },
+  {
+    key: 'terrain',
+    label: 'Terrain',
+    table: { inherit: 'As its region', ...TERRAIN_NAMES },
+  },
   { key: 'cover', label: 'Cover', table: COVER },
   { key: 'water_source', label: 'Water', table: WATER },
 ]
@@ -840,7 +844,7 @@ function PlaceEnvironmentSection({ placeId }: { placeId: number }) {
                 <ChoiceRow
                   key={item.key}
                   label={item.label}
-                  value={ground[item.key] ?? ''}
+                  value={ground[item.key] ?? 'inherit'}
                   table={item.table}
                   blocked={busy}
                   onPick={(value) => set.mutate({ key: item.key, value })}

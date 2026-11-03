@@ -11,7 +11,7 @@ from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.world import ClimateEra, SkyEventKind, WorldType
 from aerona.domain.models.entity_stats import PlaceStats, StructureStats
-from aerona.engine.environment.control import reorder_seasons, set_region_field, sever_ley, unlock_region_field
+from aerona.engine.environment.control import reorder_seasons, set_place_field, set_region_field, sever_ley, unlock_region_field
 from aerona.engine.environment.seasons import season_drafts, world_calendar
 from aerona.engine.environment.weather import WeatherInputs, weather_at, weather_weights
 from aerona.engine.phases.disasters import strike
@@ -216,3 +216,14 @@ async def test_every_shown_value_can_be_set_and_held(realm: Realm) -> None:
     assert unlock_region_field(ground, "passability.on_foot")
     await environment_derive(context(realm.session))
     assert ground.passability["on_foot"] != 9
+
+
+async def test_a_place_can_go_back_to_its_region_terrain(realm: Realm) -> None:
+    await surveyed(realm)
+    stats = PlaceStats(danger=10, fertility=50, mystery=10)
+    place = await make(realm.session, "High Pass", EntityType.PLACE, stats, world_id=realm.world.id, location_id=realm.region.id, subtype="pass")
+    await environment_survey(context(realm.session))
+    ground = await realm.session.get(PlaceEnvironmentRow, place.id)
+    assert ground is not None and ground.terrain is TerrainKind.HIGH_PASS
+    set_place_field(ground, "terrain", "inherit")
+    assert ground.terrain is None
