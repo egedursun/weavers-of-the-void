@@ -904,7 +904,8 @@
       "kaptan": "captain_of",
       "evcil": "tamed",
       "ateskes": "truce",
-      "borclu": "owes"
+      "borclu": "owes",
+      "tedavi_eden": "treated_by"
     },
     "dropped_bond_kind": {
       "bilirdi": "knew",
