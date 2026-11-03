@@ -85,7 +85,9 @@ function Pyramid({ cohorts }: { cohorts: Cohort[] }) {
       CLASS_ORDER.map((socialClass) => ({
         socialClass,
         count: cells
-          .filter((cell) => cell.sex === sex && cell.social_class === socialClass)
+          .filter(
+            (cell) => cell.sex === sex && cell.social_class === socialClass
+          )
           .reduce((sum, cell) => sum + cell.count, 0),
       })).filter((part) => part.count > 0)
     return { band, male: side('male'), female: side('female') }
@@ -99,19 +101,35 @@ function Pyramid({ cohorts }: { cohorts: Cohort[] }) {
   )
   const half = (PYRAMID_WIDTH - PYRAMID_LABEL) / 2
   const centre = PYRAMID_WIDTH / 2
-  const present = CLASS_ORDER.filter((socialClass) => cohorts.some((cohort) => cohort.social_class === socialClass))
+  const present = CLASS_ORDER.filter((socialClass) =>
+    cohorts.some((cohort) => cohort.social_class === socialClass)
+  )
   return (
-    <div data-surface='PopulationPyramid' className='flex min-w-0 flex-col gap-2'>
+    <div
+      data-surface='PopulationPyramid'
+      className='flex min-w-0 flex-col gap-2'
+    >
       <svg
         viewBox={`0 0 ${PYRAMID_WIDTH} ${rows.length * PYRAMID_ROW + PYRAMID_ROW}`}
         className='w-full min-w-0'
         role='img'
         aria-label='Population by age, sex and class'
       >
-        <text x={centre - PYRAMID_LABEL / 2 - 4} y={LABEL_SIZE + 2} textAnchor='end' fontSize={LABEL_SIZE} className='fill-muted-foreground'>
+        <text
+          x={centre - PYRAMID_LABEL / 2 - 4}
+          y={LABEL_SIZE + 2}
+          textAnchor='end'
+          fontSize={LABEL_SIZE}
+          className='fill-muted-foreground'
+        >
           Men
         </text>
-        <text x={centre + PYRAMID_LABEL / 2 + 4} y={LABEL_SIZE + 2} fontSize={LABEL_SIZE} className='fill-muted-foreground'>
+        <text
+          x={centre + PYRAMID_LABEL / 2 + 4}
+          y={LABEL_SIZE + 2}
+          fontSize={LABEL_SIZE}
+          className='fill-muted-foreground'
+        >
           Women
         </text>
         {rows.map((row, index) => {
@@ -124,12 +142,26 @@ function Pyramid({ cohorts }: { cohorts: Cohort[] }) {
                 const width = (part.count / widest) * half
                 leftEdge -= width
                 return (
-                  <rect key={`m-${part.socialClass}`} x={leftEdge} y={y} width={width} height={PYRAMID_BAR} fill={classColor(part.socialClass)}>
+                  <rect
+                    key={`m-${part.socialClass}`}
+                    x={leftEdge}
+                    y={y}
+                    width={width}
+                    height={PYRAMID_BAR}
+                    fill={classColor(part.socialClass)}
+                  >
                     <title>{`${CLASS_SPEC[part.socialClass].label}: ${formatInteger(part.count)}`}</title>
                   </rect>
                 )
               })}
-              <text x={centre} y={y + PYRAMID_BAR / 2} textAnchor='middle' dominantBaseline='middle' fontSize={LABEL_SIZE} className='fill-foreground'>
+              <text
+                x={centre}
+                y={y + PYRAMID_BAR / 2}
+                textAnchor='middle'
+                dominantBaseline='middle'
+                fontSize={LABEL_SIZE}
+                className='fill-foreground'
+              >
                 {AGE_SPEC[row.band].label}
               </text>
               {row.female.map((part) => {
@@ -137,7 +169,14 @@ function Pyramid({ cohorts }: { cohorts: Cohort[] }) {
                 const x = rightEdge
                 rightEdge += width
                 return (
-                  <rect key={`f-${part.socialClass}`} x={x} y={y} width={width} height={PYRAMID_BAR} fill={classColor(part.socialClass)}>
+                  <rect
+                    key={`f-${part.socialClass}`}
+                    x={x}
+                    y={y}
+                    width={width}
+                    height={PYRAMID_BAR}
+                    fill={classColor(part.socialClass)}
+                  >
                     <title>{`${CLASS_SPEC[part.socialClass].label}: ${formatInteger(part.count)}`}</title>
                   </rect>
                 )
@@ -149,8 +188,17 @@ function Pyramid({ cohorts }: { cohorts: Cohort[] }) {
       <div className='flex min-w-0 flex-wrap gap-3'>
         {present.map((socialClass) => (
           <span key={socialClass} className='flex items-center gap-1'>
-            <svg aria-hidden='true' viewBox={`0 0 ${LEGEND_DOT * 2} ${LEGEND_DOT * 2}`} className='size-icon-sm'>
-              <circle cx={LEGEND_DOT} cy={LEGEND_DOT} r={LEGEND_DOT} fill={classColor(socialClass)} />
+            <svg
+              aria-hidden='true'
+              viewBox={`0 0 ${LEGEND_DOT * 2} ${LEGEND_DOT * 2}`}
+              className='size-icon-sm'
+            >
+              <circle
+                cx={LEGEND_DOT}
+                cy={LEGEND_DOT}
+                r={LEGEND_DOT}
+                fill={classColor(socialClass)}
+              />
             </svg>
             <Muted variant='caption'>{CLASS_SPEC[socialClass].label}</Muted>
           </span>
@@ -160,7 +208,13 @@ function Pyramid({ cohorts }: { cohorts: Cohort[] }) {
   )
 }
 
-function MoveCohort({ view, blocked }: { view: Demography; blocked: string | null }) {
+function MoveCohort({
+  view,
+  blocked,
+}: {
+  view: Demography
+  blocked: string | null
+}) {
   const [count, setCount] = useState('100')
   const [source, setSource] = useState<string>('farmer')
   const [target, setTarget] = useState<string>('serf_or_slave')
@@ -196,16 +250,33 @@ function MoveCohort({ view, blocked }: { view: Demography; blocked: string | nul
         />
       </div>
       <div className='min-w-36 flex-1'>
-        <MindPicker label='From' value={source} table={classes} blocked={busy} onPick={setSource} />
+        <MindPicker
+          label='From'
+          value={source}
+          table={classes}
+          blocked={busy}
+          onPick={setSource}
+        />
       </div>
       <div className='min-w-36 flex-1'>
-        <MindPicker label='Into' value={target} table={classes} blocked={busy} onPick={setTarget} />
+        <MindPicker
+          label='Into'
+          value={target}
+          table={classes}
+          blocked={busy}
+          onPick={setTarget}
+        />
       </div>
       <div className='min-w-32 flex-1'>
         <MindPicker
           label='Of age'
           value={band}
-          table={{ [ANY]: 'Any age', ...Object.fromEntries(AGE_ORDER.map((item) => [item, AGE_SPEC[item].label])) }}
+          table={{
+            [ANY]: 'Any age',
+            ...Object.fromEntries(
+              AGE_ORDER.map((item) => [item, AGE_SPEC[item].label])
+            ),
+          }}
           blocked={busy}
           onPick={setBand}
         />
@@ -233,7 +304,8 @@ export function DemographySection({
   const view = useDemography(communityId)
   const { reason } = useGodGate()
   const blocked = readOnlyReason ?? reason()
-  const total = view.data?.cohorts.reduce((sum, cohort) => sum + cohort.count, 0) ?? 0
+  const total =
+    view.data?.cohorts.reduce((sum, cohort) => sum + cohort.count, 0) ?? 0
   return (
     <Section
       id='section-demography'
@@ -243,15 +315,27 @@ export function DemographySection({
     >
       {view.isPending && <Muted>Counting the people…</Muted>}
       {view.isError && (
-        <EmptyState icon={TriangleAlert} title='The census failed' description={view.error.message} />
+        <EmptyState
+          icon={TriangleAlert}
+          title='The census failed'
+          description={view.error.message}
+        />
       )}
       {view.data && view.data.cohorts.length === 0 && (
-        <EmptyState icon={Users} title='Not counted yet' description='The people are counted at the end of the next epoch.' />
+        <EmptyState
+          icon={Users}
+          title='Not counted yet'
+          description='The people are counted at the end of the next epoch.'
+        />
       )}
       {view.data && view.data.cohorts.length > 0 && (
         <div data-surface='Demography' className='flex min-w-0 flex-col gap-5'>
           <div className='grid min-w-0 grid-cols-2 gap-3 md:grid-cols-4'>
-            <KpiTile label='Counted' value={formatInteger(total)} icon={Users} />
+            <KpiTile
+              label='Counted'
+              value={formatInteger(total)}
+              icon={Users}
+            />
             <KpiTile
               label='Inequality'
               value={String(view.data.inequality)}
@@ -288,7 +372,13 @@ export function DemographySection({
                     icon={CLASS_SPEC[item.social_class].icon}
                     value={item.satisfaction}
                     max={PERCENT}
-                    tone={item.satisfaction < 30 ? 'destructive' : item.satisfaction > 65 ? 'success' : 'default'}
+                    tone={
+                      item.satisfaction < 30
+                        ? 'destructive'
+                        : item.satisfaction > 65
+                          ? 'success'
+                          : 'default'
+                    }
                   />
                 ))}
             </div>
@@ -304,7 +394,13 @@ export function DemographySection({
                     icon={Gauge}
                     value={item.value}
                     max={PERCENT}
-                    tone={item.value > 60 ? 'destructive' : item.value > 30 ? 'warning' : 'success'}
+                    tone={
+                      item.value > 60
+                        ? 'destructive'
+                        : item.value > 30
+                          ? 'warning'
+                          : 'success'
+                    }
                   />
                 ))}
               </div>
@@ -319,10 +415,23 @@ export function DemographySection({
 
 type Flow = components['schemas']['LabourFlowView']
 
-function Sankey({ flows, output }: { flows: Flow[]; output: Record<string, number> }) {
-  const classes = CLASS_ORDER.filter((item) => flows.some((flow) => flow.social_class === item))
-  const jobs = (Object.keys(JOB_SPEC) as Job[]).filter((item) => flows.some((flow) => flow.job === item))
-  const total = Math.max(1, flows.reduce((sum, flow) => sum + flow.workers, 0))
+function Sankey({
+  flows,
+  output,
+}: {
+  flows: Flow[]
+  output: Record<string, number>
+}) {
+  const classes = CLASS_ORDER.filter((item) =>
+    flows.some((flow) => flow.social_class === item)
+  )
+  const jobs = (Object.keys(JOB_SPEC) as Job[]).filter((item) =>
+    flows.some((flow) => flow.job === item)
+  )
+  const total = Math.max(
+    1,
+    flows.reduce((sum, flow) => sum + flow.workers, 0)
+  )
   const rows = Math.max(classes.length, jobs.length)
   const height = rows * (SANKEY_ROW + SANKEY_GAP)
   const usable = height - SANKEY_GAP * rows
@@ -337,8 +446,16 @@ function Sankey({ flows, output }: { flows: Flow[]; output: Record<string, numbe
       })
     )
   }
-  const left = layout(classes, (key) => flows.filter((flow) => flow.social_class === key).reduce((sum, flow) => sum + flow.workers, 0))
-  const right = layout(jobs, (key) => flows.filter((flow) => flow.job === key).reduce((sum, flow) => sum + flow.workers, 0))
+  const left = layout(classes, (key) =>
+    flows
+      .filter((flow) => flow.social_class === key)
+      .reduce((sum, flow) => sum + flow.workers, 0)
+  )
+  const right = layout(jobs, (key) =>
+    flows
+      .filter((flow) => flow.job === key)
+      .reduce((sum, flow) => sum + flow.workers, 0)
+  )
   const leftUsed: Record<string, number> = {}
   const rightUsed: Record<string, number> = {}
   return (
@@ -373,16 +490,43 @@ function Sankey({ flows, output }: { flows: Flow[]; output: Record<string, numbe
       })}
       {classes.map((item) => (
         <g key={item}>
-          <rect x={SANKEY_LEFT - SANKEY_NODE} y={left[item].top} width={SANKEY_NODE} height={left[item].size} fill={classColor(item)} rx={2} />
-          <text x={SANKEY_LEFT - SANKEY_NODE - 6} y={left[item].top + left[item].size / 2} textAnchor='end' dominantBaseline='middle' fontSize={LABEL_SIZE} className='fill-foreground'>
+          <rect
+            x={SANKEY_LEFT - SANKEY_NODE}
+            y={left[item].top}
+            width={SANKEY_NODE}
+            height={left[item].size}
+            fill={classColor(item)}
+            rx={2}
+          />
+          <text
+            x={SANKEY_LEFT - SANKEY_NODE - 6}
+            y={left[item].top + left[item].size / 2}
+            textAnchor='end'
+            dominantBaseline='middle'
+            fontSize={LABEL_SIZE}
+            className='fill-foreground'
+          >
             {CLASS_SPEC[item].label}
           </text>
         </g>
       ))}
       {jobs.map((item) => (
         <g key={item}>
-          <rect x={SANKEY_RIGHT} y={right[item].top} width={SANKEY_NODE} height={right[item].size} fill='var(--muted-foreground)' rx={2} />
-          <text x={SANKEY_RIGHT + SANKEY_NODE + 6} y={right[item].top + right[item].size / 2} dominantBaseline='middle' fontSize={LABEL_SIZE} className='fill-foreground'>
+          <rect
+            x={SANKEY_RIGHT}
+            y={right[item].top}
+            width={SANKEY_NODE}
+            height={right[item].size}
+            fill='var(--muted-foreground)'
+            rx={2}
+          />
+          <text
+            x={SANKEY_RIGHT + SANKEY_NODE + 6}
+            y={right[item].top + right[item].size / 2}
+            dominantBaseline='middle'
+            fontSize={LABEL_SIZE}
+            className='fill-foreground'
+          >
             {`${JOB_SPEC[item].label} · ${output[item] ?? PERCENT}%`}
           </text>
         </g>
@@ -394,7 +538,9 @@ function Sankey({ flows, output }: { flows: Flow[]; output: Record<string, numbe
 export function LabourSection({ communityId }: { communityId: number }) {
   const view = useDemography(communityId)
   if (!view.data || view.data.labour.length === 0) return null
-  const output = Object.fromEntries(view.data.labour.map((row) => [row.job, row.output_pct]))
+  const output = Object.fromEntries(
+    view.data.labour.map((row) => [row.job, row.output_pct])
+  )
   return (
     <Section
       id='section-labour'
@@ -409,8 +555,14 @@ export function LabourSection({ communityId }: { communityId: number }) {
           .map((row) => {
             const Icon = JOB_SPEC[row.job].icon
             return (
-              <div key={row.job} className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'>
-                <Icon aria-hidden='true' className='size-icon-sm shrink-0 text-muted-foreground' />
+              <div
+                key={row.job}
+                className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
+              >
+                <Icon
+                  aria-hidden='true'
+                  className='size-icon-sm shrink-0 text-muted-foreground'
+                />
                 <Text className='min-w-0 flex-1' truncate>
                   {JOB_SPEC[row.job].label}
                 </Text>
@@ -434,17 +586,57 @@ const CULTURE_FIELDS = [
   { key: 'literacy', label: 'Literacy' },
   { key: 'urbanisation', label: 'Urbanisation' },
 ] as const
-const AESTHETICS = ['austere', 'ornate', 'geometric', 'natural', 'macabre', 'celestial'] as const
-const MARTIAL = ['shieldwall', 'horse_archer', 'skirmisher', 'chariot', 'phalanx', 'berserker', 'naval_raider', 'siege_engineer', 'war_magic', 'beast_war'] as const
+const AESTHETICS = [
+  'austere',
+  'ornate',
+  'geometric',
+  'natural',
+  'macabre',
+  'celestial',
+] as const
+const MARTIAL = [
+  'shieldwall',
+  'horse_archer',
+  'skirmisher',
+  'chariot',
+  'phalanx',
+  'berserker',
+  'naval_raider',
+  'siege_engineer',
+  'war_magic',
+  'beast_war',
+] as const
 const MARRIAGE = ['monogamy', 'polygyny', 'polyandry', 'group'] as const
-const INHERITANCE = ['primogeniture', 'gavelkind', 'elective', 'by_merit', 'matrilineal'] as const
+const INHERITANCE = [
+  'primogeniture',
+  'gavelkind',
+  'elective',
+  'by_merit',
+  'matrilineal',
+] as const
 
-function ProfileForm({ view, blocked }: { view: Demography; blocked: string | null }) {
+function ProfileForm({
+  view,
+  blocked,
+}: {
+  view: Demography
+  blocked: string | null
+}) {
   const biology = view.biology
   const culture = view.culture
   const [numbers, setNumbers] = useState<Record<string, string>>(() => ({
-    ...Object.fromEntries(BIOLOGY_FIELDS.map((field) => [field.key, String(biology?.[field.key] ?? '')])),
-    ...Object.fromEntries(CULTURE_FIELDS.map((field) => [field.key, String(culture?.[field.key] ?? '')])),
+    ...Object.fromEntries(
+      BIOLOGY_FIELDS.map((field) => [
+        field.key,
+        String(biology?.[field.key] ?? ''),
+      ])
+    ),
+    ...Object.fromEntries(
+      CULTURE_FIELDS.map((field) => [
+        field.key,
+        String(culture?.[field.key] ?? ''),
+      ])
+    ),
   }))
   const [picks, setPicks] = useState<Record<string, string>>(() => ({
     aesthetic: culture?.aesthetic ?? 'geometric',
@@ -452,7 +644,10 @@ function ProfileForm({ view, blocked }: { view: Demography; blocked: string | nu
     marriage: culture?.marriage ?? 'monogamy',
     inheritance: culture?.inheritance ?? 'gavelkind',
   }))
-  const [flags, setFlags] = useState({ endogamous: culture?.endogamous ?? false, slavery_lawful: culture?.slavery_lawful ?? false })
+  const [flags, setFlags] = useState({
+    endogamous: culture?.endogamous ?? false,
+    slavery_lawful: culture?.slavery_lawful ?? false,
+  })
   const locked = [...(biology?.locked ?? []), ...(culture?.locked ?? [])]
   const save = useGodAction({
     run: (release: string[]) =>
@@ -464,7 +659,12 @@ function ProfileForm({ view, blocked }: { view: Demography; blocked: string | nu
               release.length > 0
                 ? {}
                 : {
-                    ...Object.fromEntries(Object.entries(numbers).map(([key, value]) => [key, Math.round(Number(value) || 0)])),
+                    ...Object.fromEntries(
+                      Object.entries(numbers).map(([key, value]) => [
+                        key,
+                        Math.round(Number(value) || 0),
+                      ])
+                    ),
                     ...picks,
                     ...flags,
                   },
@@ -485,32 +685,91 @@ function ProfileForm({ view, blocked }: { view: Demography; blocked: string | nu
               min={0}
               value={numbers[field.key]}
               aria-label={field.label}
-              onChange={(event) => setNumbers((current) => ({ ...current, [field.key]: event.target.value }))}
+              onChange={(event) =>
+                setNumbers((current) => ({
+                  ...current,
+                  [field.key]: event.target.value,
+                }))
+              }
             />
           </div>
         ))}
       </div>
       <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-4'>
-        <MindPicker label='Aesthetic' value={picks.aesthetic} table={choices(AESTHETICS)} blocked={busy} onPick={(value) => setPicks((current) => ({ ...current, aesthetic: value }))} />
-        <MindPicker label='Way of war' value={picks.martial_style} table={choices(MARTIAL)} blocked={busy} onPick={(value) => setPicks((current) => ({ ...current, martial_style: value }))} />
-        <MindPicker label='Marriage' value={picks.marriage} table={choices(MARRIAGE)} blocked={busy} onPick={(value) => setPicks((current) => ({ ...current, marriage: value }))} />
-        <MindPicker label='Inheritance' value={picks.inheritance} table={choices(INHERITANCE)} blocked={busy} onPick={(value) => setPicks((current) => ({ ...current, inheritance: value }))} />
+        <MindPicker
+          label='Aesthetic'
+          value={picks.aesthetic}
+          table={choices(AESTHETICS)}
+          blocked={busy}
+          onPick={(value) =>
+            setPicks((current) => ({ ...current, aesthetic: value }))
+          }
+        />
+        <MindPicker
+          label='Way of war'
+          value={picks.martial_style}
+          table={choices(MARTIAL)}
+          blocked={busy}
+          onPick={(value) =>
+            setPicks((current) => ({ ...current, martial_style: value }))
+          }
+        />
+        <MindPicker
+          label='Marriage'
+          value={picks.marriage}
+          table={choices(MARRIAGE)}
+          blocked={busy}
+          onPick={(value) =>
+            setPicks((current) => ({ ...current, marriage: value }))
+          }
+        />
+        <MindPicker
+          label='Inheritance'
+          value={picks.inheritance}
+          table={choices(INHERITANCE)}
+          blocked={busy}
+          onPick={(value) =>
+            setPicks((current) => ({ ...current, inheritance: value }))
+          }
+        />
       </div>
       <div className='flex min-w-0 flex-wrap gap-4'>
         {(['endogamous', 'slavery_lawful'] as const).map((key) => (
           <label key={key} className='flex items-center gap-2'>
-            <Switch checked={flags[key]} disabled={busy !== null} onCheckedChange={(value) => setFlags((current) => ({ ...current, [key]: value }))} aria-label={words(key)} />
-            <Text as='span'>{key === 'endogamous' ? 'Marry only among themselves' : 'Slavery is lawful'}</Text>
+            <Switch
+              checked={flags[key]}
+              disabled={busy !== null}
+              onCheckedChange={(value) =>
+                setFlags((current) => ({ ...current, [key]: value }))
+              }
+              aria-label={words(key)}
+            />
+            <Text as='span'>
+              {key === 'endogamous'
+                ? 'Marry only among themselves'
+                : 'Slavery is lawful'}
+            </Text>
           </label>
         ))}
       </div>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Button size='sm' disabled={busy !== null} disabledReason={busy ?? undefined} onClick={() => save.mutate([])}>
+        <Button
+          size='sm'
+          disabled={busy !== null}
+          disabledReason={busy ?? undefined}
+          onClick={() => save.mutate([])}
+        >
           <Save />
           Hold these customs
         </Button>
         {locked.length > 0 && (
-          <Button size='sm' variant='outline' disabled={busy !== null} disabledReason={busy ?? undefined} onClick={() => save.mutate(locked)}>
+          <Button
+            size='sm'
+            variant='outline'
+            disabled={busy !== null}
+            disabledReason={busy ?? undefined}
+            onClick={() => save.mutate(locked)}
+          >
             <Unlock />
             Let them drift again
           </Button>
@@ -523,20 +782,38 @@ function ProfileForm({ view, blocked }: { view: Demography; blocked: string | nu
   )
 }
 
-export function PeopleProfileSection({ peopleId, readOnlyReason }: { peopleId: number; readOnlyReason?: string | null }) {
+export function PeopleProfileSection({
+  peopleId,
+  readOnlyReason,
+}: {
+  peopleId: number
+  readOnlyReason?: string | null
+}) {
   const view = useDemography(peopleId)
   const { reason } = useGodGate()
   const [neighbour, setNeighbour] = useState<string>('all')
   const axes = useMemo(() => {
     if (!view.data) return []
-    const chosen = neighbour === 'all' ? view.data.neighbours : view.data.neighbours.filter((item) => String(item.entity_id) === neighbour)
+    const chosen =
+      neighbour === 'all'
+        ? view.data.neighbours
+        : view.data.neighbours.filter(
+            (item) => String(item.entity_id) === neighbour
+          )
     return view.data.values.map((point) => {
-      const others = chosen.flatMap((item) => item.values.filter((value) => value.axis === point.axis).map((value) => value.value))
+      const others = chosen.flatMap((item) =>
+        item.values
+          .filter((value) => value.axis === point.axis)
+          .map((value) => value.value)
+      )
       return {
         key: point.axis,
         label: words(point.axis),
         value: point.value,
-        reference: others.length > 0 ? others.reduce((sum, value) => sum + value, 0) / others.length : null,
+        reference:
+          others.length > 0
+            ? others.reduce((sum, value) => sum + value, 0) / others.length
+            : null,
       }
     })
   }, [view.data, neighbour])
@@ -544,7 +821,9 @@ export function PeopleProfileSection({ peopleId, readOnlyReason }: { peopleId: n
   const blocked = readOnlyReason ?? reason()
   const neighbours = {
     all: 'All neighbours',
-    ...Object.fromEntries(view.data.neighbours.map((item) => [String(item.entity_id), item.name])),
+    ...Object.fromEntries(
+      view.data.neighbours.map((item) => [String(item.entity_id), item.name])
+    ),
   }
   return (
     <Section
@@ -565,7 +844,9 @@ export function PeopleProfileSection({ peopleId, readOnlyReason }: { peopleId: n
             <>
               <Badge variant='outline'>{`Fights as ${words(view.data.culture.martial_style)}`}</Badge>
               <Badge variant='outline'>{`${words(view.data.culture.aesthetic)} art`}</Badge>
-              {view.data.culture.slavery_lawful && <Badge variant='warning'>Keeps slaves</Badge>}
+              {view.data.culture.slavery_lawful && (
+                <Badge variant='warning'>Keeps slaves</Badge>
+              )}
             </>
           )}
         </div>
@@ -573,10 +854,22 @@ export function PeopleProfileSection({ peopleId, readOnlyReason }: { peopleId: n
           <div className='flex min-w-0 flex-col gap-2'>
             {view.data.neighbours.length > 0 && (
               <div className='max-w-64'>
-                <MindPicker label='Compared with' value={neighbour} table={neighbours} blocked={null} onPick={setNeighbour} />
+                <MindPicker
+                  label='Compared with'
+                  value={neighbour}
+                  table={neighbours}
+                  blocked={null}
+                  onPick={setNeighbour}
+                />
               </div>
             )}
-            <ValueRadar axes={axes} label='Values' referenceLabel={view.data.neighbours.length > 0 ? 'Neighbours' : null} />
+            <ValueRadar
+              axes={axes}
+              label='Values'
+              referenceLabel={
+                view.data.neighbours.length > 0 ? 'Neighbours' : null
+              }
+            />
           </div>
         )}
         <ProfileForm

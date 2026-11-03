@@ -1,0 +1,157 @@
+from dataclasses import dataclass
+
+from aerona.rules.groups import RuleGroup
+from aerona.rules.model import rule
+
+P = RuleGroup.POLITY
+H = RuleGroup.HOUSES
+
+
+@dataclass(frozen=True)
+class GovernmentRules:
+    theocracy_piety: int = rule(50, -100, 100, P, "Piety value at which a realm ruled by a priest becomes a theocracy")
+    republic_hierarchy: int = rule(-25, -100, 100, P, "Hierarchy value below which a merchant realm becomes a republic")
+    oligarchy_merchant_pct: int = rule(20, 0, 100, P, "Merchant share at which a realm is ruled by its merchants (%)")
+    empire_members: int = rule(6, 1, 1000, P, "Communities a realm must hold to count as an empire")
+    confederation_peoples: int = rule(3, 1, 1000, P, "Peoples a loose realm must hold to count as a confederation")
+    chiefdom_tier: int = rule(1, 0, 10, P, "Realm tier at or below which a monarchy is still a chiefdom")
+    council_offices: int = rule(3, 1, 20, P, "Office holders needed to decide by council vote")
+    decision_cap: int = rule(4, 0, 100, P, "Most decisions a realm takes in an epoch")
+    tax_greed_step: int = rule(5, 0, 50, P, "Tax a greedy ruler adds when the treasury is low")
+    temple_piety: int = rule(40, -100, 100, P, "Piety at which a ruler funds temples")
+    temple_cost: int = rule(200, 0, 1000000, P, "Treasury a funded temple costs")
+    purge_paranoia: int = rule(60, 0, 100, P, "Paranoia at which a ruler purges disloyal officers")
+    office_upkeep: int = rule(5, 0, 100000, P, "Treasury each office costs per epoch")
+    polity_tax_pct: int = rule(30, 0, 100, P, "Share of members' taxes the realm takes (%)")
+    min_founding_population: int = rule(300, 0, 10000000, P, "People a community needs to found a realm of its own")
+
+
+@dataclass(frozen=True)
+class SuccessionRules:
+    regency_age: int = rule(16, 0, 200, P, "Age below which an heir rules through a regent")
+    senile_age_pct: int = rule(90, 0, 200, P, "Share of the lifespan at which a ruler counts as senile (%)")
+    claim_press_pct: int = rule(60, 0, 100, P, "Claim strength at which a rival claimant may press it")
+    war_chance: int = rule(30, 0, 100, P, "A pressed claim against a weak heir becomes a succession war (%)")
+    usurp_chance: int = rule(10, 0, 100, P, "An ambitious regent seizes the throne in an epoch (%)")
+    elective_charisma_pct: int = rule(60, 0, 100, P, "Weight of charisma against kinship in an election (%)")
+    combat_strength_pct: int = rule(70, 0, 100, P, "Weight of strength in succession by combat (%)")
+
+
+@dataclass(frozen=True)
+class LegitimacyRules:
+    base: int = rule(50, 0, 100, P, "Legitimacy of a ruler with nothing for or against them")
+    rightful: int = rule(15, 0, 100, P, "Legitimacy from taking the throne by the law of succession")
+    usurper: int = rule(25, 0, 100, P, "Legitimacy lost by a usurper")
+    unwhole: int = rule(15, 0, 100, P, "Legitimacy lost by a maimed ruler where wholeness is required")
+    renown_per_10: int = rule(2, 0, 100, P, "Legitimacy per ten points of the ruler's importance")
+    oathbreaker: int = rule(15, 0, 100, P, "Legitimacy lost by an oathbreaker ruler")
+    sanction: int = rule(10, 0, 100, P, "Legitimacy from a state religion that favours the ruler")
+    excommunication: int = rule(20, 0, 100, P, "Legitimacy lost when the state religion turns against the ruler")
+    victory: int = rule(5, 0, 100, P, "Legitimacy per war won in the last epochs")
+    defeat: int = rule(8, 0, 100, P, "Legitimacy per war lost in the last epochs")
+    prosperity_pct: int = rule(20, 0, 100, P, "Legitimacy at full prosperity of the realm (%)")
+    child: int = rule(10, 0, 100, P, "Legitimacy lost by a child ruler")
+    senile: int = rule(10, 0, 100, P, "Legitimacy lost by a senile ruler")
+    divine_kingship: int = rule(20, 0, 100, P, "Legitimacy of a ruler who is a god's chosen or a god")
+    weariness_pct: int = rule(40, 0, 100, P, "Stability lost at the worst war weariness (%)")
+    faction_pct: int = rule(30, 0, 100, P, "Stability lost when one faction overwhelms the rest (%)")
+    unrest_pct: int = rule(50, 0, 100, P, "Stability lost at the worst unrest of the realm's cities (%)")
+    weariness_war_gain: int = rule(15, 0, 100, P, "War weariness gained per epoch at war")
+    weariness_decay: int = rule(10, 0, 100, P, "War weariness lost per epoch at peace")
+
+
+@dataclass(frozen=True)
+class AdministrationRules:
+    base: int = rule(3, 0, 1000, P, "Administration of the simplest realm")
+    per_literacy: int = rule(6, 0, 1000, P, "Administration per ten points of literacy")
+    per_scribe_pct: int = rule(2, 0, 1000, P, "Administration per point of the scribe class share")
+    per_writing_level: int = rule(2, 0, 1000, P, "Administration per level of writing")
+    per_road: int = rule(1, 0, 1000, P, "Administration per level of roads in the realm's cities")
+    land_weight: int = rule(1, 0, 100, P, "Administration a held region needs")
+    member_weight: int = rule(1, 0, 100, P, "Administration a member community needs")
+
+
+@dataclass(frozen=True)
+class OverextensionRules:
+    autonomy_gain: int = rule(8, 0, 100, P, "Autonomy a distant member gains per epoch of overextension")
+    autonomy_decay: int = rule(4, 0, 100, P, "Autonomy lost per epoch when the realm is well run")
+    tax_leak_pct: int = rule(60, 0, 100, P, "Share of an autonomous member's taxes that never arrives at full autonomy (%)")
+    secession_autonomy: int = rule(80, 0, 100, P, "Autonomy at which a member may break away")
+    secession_chance: int = rule(20, 0, 100, P, "A member at the brink breaks away in an epoch (%)")
+
+
+@dataclass(frozen=True)
+class RevoltsRules:
+    noble_bitter: int = rule(25, 0, 100, P, "Noble satisfaction below which a revolt is a revolt of the nobles")
+    secession_autonomy: int = rule(60, 0, 100, P, "Autonomy above which a revolt is a war of secession")
+    rebel_share_pct: int = rule(8, 0, 100, P, "Share of the people who take up arms in a revolt (%)")
+    slave_share_pct: int = rule(25, 0, 100, P, "Share of the bound at which a revolt is a slave revolt (%)")
+
+
+@dataclass(frozen=True)
+class LegislationRules:
+    enact_chance: int = rule(20, 0, 100, P, "A realm under pressure enacts a law in an epoch (%)")
+    repeal_chance: int = rule(10, 0, 100, P, "A realm repeals a law at odds with its people in an epoch (%)")
+    plague_quarantine_chance: int = rule(40, 0, 100, P, "A plague-struck realm enacts a quarantine law (%)")
+    defeat_conscription_chance: int = rule(40, 0, 100, P, "A realm that lost a war enacts conscription (%)")
+    enforcement_order_pct: int = rule(60, 0, 100, P, "Weight of order in a law's enforcement (%)")
+    enforcement_judge_pct: int = rule(40, 0, 100, P, "Weight of the high judge's skill in a law's enforcement (%)")
+    discord_distance: int = rule(40, 0, 100, P, "Distance from the people's values at which a law loses its legitimacy")
+    discord_unrest: int = rule(6, 0, 100, P, "Unrest a law at odds with the people causes")
+    rigidity_resist_pct: int = rule(60, 0, 100, P, "How strongly a customary law's rigidity resists repeal (%)")
+    conquest_conflict: int = rule(60, 0, 100, P, "Conflict between conqueror and local law at the conquest")
+    conflict_decay: int = rule(15, 0, 100, P, "Conflict that fades per epoch as the laws settle")
+    conflict_unrest_pct: int = rule(20, 0, 100, P, "Unrest from legal conflict (%)")
+    levy_share_pct: int = rule(100, 0, 500, P, "Weight of the levy law's share in raising an army (%)")
+    pension_outcast_pct: int = rule(50, 0, 100, P, "Share of the maimed a veteran pension keeps out of the outcasts (%)")
+    pension_opinion: int = rule(3, 0, 100, P, "Satisfaction warriors gain from a veteran pension")
+    sumptuary_pct: int = rule(50, 0, 200, P, "How strongly sumptuary law moves luxury demand by class (%)")
+    tolerance_spread_pct: int = rule(140, 0, 500, P, "Spread of foreign faith where worship is free (%)")
+    persecution_spread_pct: int = rule(30, 0, 500, P, "Spread of foreign faith under persecution (%)")
+    foreigner_pull_pct: int = rule(30, 0, 300, P, "Migration pull of a realm that grants foreigners citizenship (%)")
+    sanitation_gain: int = rule(10, 0, 100, P, "Sanitation a sanitation law adds to its cities")
+
+
+@dataclass(frozen=True)
+class HousesRules:
+    branch_members: int = rule(12, 2, 1000, H, "Living members at which a house splits off a cadet branch")
+    prestige_office: int = rule(3, 0, 100, H, "Prestige per office held by a member")
+    prestige_victory: int = rule(4, 0, 100, H, "Prestige per war won by a member's realm")
+    prestige_renown_per_20: int = rule(1, 0, 100, H, "Prestige per twenty points of a member's importance")
+    prestige_defeat: int = rule(4, 0, 100, H, "Prestige lost per war lost")
+    prestige_maimed_purity: int = rule(5, 0, 100, H, "Prestige lost per maimed member in a purity-minded culture")
+    prestige_decay: int = rule(3, 0, 100, H, "Prestige that fades each epoch")
+    marriage_chance: int = rule(25, 0, 100, H, "A house head arranges a marriage for an eligible member in an epoch (%)")
+    marriage_cap: int = rule(12, 0, 1000, H, "Most arranged marriages in an epoch")
+    claim_inherit_pct: int = rule(70, 0, 100, H, "Share of a claim a child inherits (%)")
+    marriage_claim: int = rule(30, 0, 100, H, "Claim a spouse's children gain on their mother's or father's realm")
+    divine_prestige: int = rule(20, 0, 100, H, "Prestige of a house with divine blood")
+
+
+@dataclass(frozen=True)
+class OathsRules:
+    fealty_on_office: int = rule(1, 0, 1, H, "Office holders swear fealty to the ruler (1 yes)")
+    vengeance_chance: int = rule(30, 0, 100, H, "A mortal whose kin was slain swears vengeance (%)")
+    protection_chance: int = rule(20, 0, 100, H, "A knight swears to protect their lord (%)")
+    brotherhood_chance: int = rule(10, 0, 100, H, "Companions in arms swear blood brotherhood (%)")
+    deadline_epochs: int = rule(3, 1, 100, H, "Epochs a vengeance or pilgrimage oath gives the swearer")
+    witness_chance: int = rule(40, 0, 100, H, "A god of oaths witnesses a sworn oath (%)")
+    essence_per_kept: int = rule(2, 0, 1000, H, "Essence an oath god gains per oath kept in its sight")
+    honour_loss: int = rule(20, 0, 100, H, "Importance an oathbreaker loses")
+    wrath_relation: int = rule(15, 0, 100, H, "Relation the witnessing god's faithful lose with the oathbreaker")
+    breach_relation: int = rule(25, 0, 100, H, "Relation the betrayed party loses with the oathbreaker")
+
+
+@dataclass(frozen=True)
+class TreatiesRules:
+    truce_epochs: int = rule(2, 1, 100, P, "Epochs a truce holds")
+    alliance_epochs: int = rule(5, 1, 100, P, "Epochs an alliance holds before it must be renewed")
+    trade_epochs: int = rule(4, 1, 100, P, "Epochs a trade pact holds")
+    renew_relation: int = rule(30, -100, 100, P, "Relation at which parties renew an expiring treaty")
+    call_to_arms_chance: int = rule(80, 0, 100, P, "An ally answers a call to arms (%)")
+    refuse_relation_loss: int = rule(20, 0, 100, P, "Relation lost by an ally who refuses the call")
+    guarantor_chance: int = rule(60, 0, 100, P, "A guarantor joins against the breaker (%)")
+    breach_infamy: int = rule(15, 0, 100, P, "Importance a treaty breaker's ruler loses")
+    hostage_epochs: int = rule(2, 1, 100, P, "Epochs a hostage stays with the other party")
+    wergild_value: int = rule(30, 0, 100000, P, "Wealth a wergild clause transfers")
+    marriage_treaty_epochs: int = rule(10, 1, 1000, P, "Epochs a marriage pact holds")

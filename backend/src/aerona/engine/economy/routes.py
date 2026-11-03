@@ -433,7 +433,8 @@ async def settle(ctx: TickContext, book: EconomyBook, route: Route, lane: Lane, 
             kind=ChronicleKind.TRADE,
         )
     paid = 0
-    for toll in route.tolls.values():
+    waived = frozenset({lane.seller_id, lane.buyer_id}) in book.waived
+    for toll in () if waived else route.tolls.values():
         master = book.entities.get(toll.controller_entity_id)
         if master is None:
             continue

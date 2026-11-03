@@ -22,6 +22,7 @@ from aerona.api.schemas.maps import (
     MapView,
     MapWar,
     RegionGround,
+    RegionRealm,
     RegionStocks,
     RelationLineKind,
 )
@@ -35,9 +36,10 @@ from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
 from aerona.db.tables.economy import TradeFlowRow, TradeRouteProfileRow, TradeRouteRegionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
+from aerona.db.tables.polity import PolityTerritoryRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.disease import OutbreakStatus
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import LandUse
 from aerona.engine.cosmos.maps import MAPPED_STATUSES, map_is_stale, map_request, store_world_map, world_entities
 from aerona.engine.economy.routes import LIVE_STATUSES
@@ -150,9 +152,24 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
             stocks=await region_stocks(session, world_id),
             trade=await trade_lines(session, world_id, positions),
             outbreaks=await outbreak_lines(session, world_id, positions),
+            realms=await region_realms(session, world_id),
             notes=[MapNoteRecord.model_validate(row) for row in await map_notes(session, world_id)],
             time=MapTime(current=current, shown=shown, snapshots=await snapshot_epochs(session, world_id)),
         )
+
+
+async def region_realms(session: AsyncSession, world_id: int) -> dict[int, RegionRealm]:
+    statement = (
+        select(PolityTerritoryRow, EntityRow.name)
+        .join(EntityRow, EntityRow.id == PolityTerritoryRow.polity_entity_id)
+        .where(EntityRow.world_id == world_id, EntityRow.status == EntityStatus.CANON)
+    )
+    found: dict[int, RegionRealm] = {}
+    for row, name in await session.execute(statement):
+        current = found.get(row.region_entity_id)
+        if current is None or row.control > current.control:
+            found[row.region_entity_id] = RegionRealm(polity_id=row.polity_entity_id, name=name, control=row.control)
+    return found
 
 
 async def outbreak_lines(session: AsyncSession, world_id: int, positions: dict[int, tuple[float, float]]) -> list[MapOutbreak]:

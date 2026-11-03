@@ -113,6 +113,18 @@ from aerona.rules.registry.notifications import NotificationsRules
 from aerona.rules.registry.opportunities import OpportunitiesRules
 from aerona.rules.registry.pantheon import PantheonRules
 from aerona.rules.registry.politics import PoliticsRules
+from aerona.rules.registry.polity import (
+    AdministrationRules,
+    GovernmentRules,
+    HousesRules,
+    LegislationRules,
+    LegitimacyRules,
+    OathsRules,
+    OverextensionRules,
+    RevoltsRules,
+    SuccessionRules,
+    TreatiesRules,
+)
 from aerona.rules.registry.power_unlock_levels import PowerUnlockLevelsRules
 from aerona.rules.registry.production import ExtractionRules, MiningHazardsRules, RefiningRules
 from aerona.rules.registry.rarities import RaritiesRules
@@ -234,6 +246,16 @@ class Rules:
     crime: CrimeRules = field(default_factory=CrimeRules)
     fire: FireRules = field(default_factory=FireRules)
     sanitation: SanitationRules = field(default_factory=SanitationRules)
+    government: GovernmentRules = field(default_factory=GovernmentRules)
+    succession: SuccessionRules = field(default_factory=SuccessionRules)
+    legitimacy: LegitimacyRules = field(default_factory=LegitimacyRules)
+    administration: AdministrationRules = field(default_factory=AdministrationRules)
+    overextension: OverextensionRules = field(default_factory=OverextensionRules)
+    revolts: RevoltsRules = field(default_factory=RevoltsRules)
+    legislation: LegislationRules = field(default_factory=LegislationRules)
+    houses: HousesRules = field(default_factory=HousesRules)
+    oaths: OathsRules = field(default_factory=OathsRules)
+    treaties: TreatiesRules = field(default_factory=TreatiesRules)
     labour: LabourRules = field(default_factory=LabourRules)
     peoples: PeopleRules = field(default_factory=PeopleRules)
     mobility: MobilityRules = field(default_factory=MobilityRules)

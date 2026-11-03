@@ -5,6 +5,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import MovementMode
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.models.entity_stats import SettlementStats
 from aerona.engine.body.customs import culture_of
@@ -16,6 +17,7 @@ from aerona.engine.mind.drives import closeness, hunger
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.settlements import resettle_ruin
+from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
 from aerona.engine.primitives.naming import Namer, seed_of
@@ -66,7 +68,12 @@ async def town_pull(ctx: TickContext, atlas: RegionAtlas, region_id: int) -> flo
         jobs = 1.0 if (stat(settlement, "population") or 0) < town.construction_capacity * PERCENT else 0.5
         pull = ((stat(settlement, "prosperity") or 0) / PERCENT + town.public_order / PERCENT + openness + jobs) / 4
         best = max(best, pull)
-    return 1 + best * ctx.rules.urban.migration_pull_pct / PERCENT
+    welcome = 1.0
+    for entity_id in atlas.communities_in(region_id):
+        if await law_param(ctx.session, entity_id, LawKind.FOREIGNER_RIGHTS, "level") == "citizenship":
+            welcome = 1 + ctx.rules.legislation.foreigner_pull_pct / PERCENT
+            break
+    return (1 + best * ctx.rules.urban.migration_pull_pct / PERCENT) * welcome
 
 
 async def greener_region(

@@ -184,7 +184,10 @@ function shapesOf(view: MapView): Shape[] {
     })
   for (const sickness of view.outbreaks ?? []) {
     if (sickness.endemic || sickness.path.length !== 4) continue
-    const bent = curve(sickness.path, sickness.region_id > (sickness.source_region_id ?? 0))
+    const bent = curve(
+      sickness.path,
+      sickness.region_id > (sickness.source_region_id ?? 0)
+    )
     shapes.push({
       info: {
         kind: 'outbreak',
@@ -230,10 +233,10 @@ function visibleShapes(
     OUTBREAK_KINDS.has(shape.info.kind)
       ? outbreaks
       : ROUTE_KINDS.has(shape.info.kind)
-      ? trade
-      : ROAD_KINDS.has(shape.info.kind)
-        ? roads
-        : ties
+        ? trade
+        : ROAD_KINDS.has(shape.info.kind)
+          ? roads
+          : ties
   )
 }
 
@@ -270,8 +273,15 @@ export function drawLines(
     fade: number
   }
 ): void {
-  if (options.outbreaks) drawSickLands(context, view, tokens, transform.k, options.fade)
-  const shapes = visibleShapes(view, options.roads, options.ties, options.trade, options.outbreaks)
+  if (options.outbreaks)
+    drawSickLands(context, view, tokens, transform.k, options.fade)
+  const shapes = visibleShapes(
+    view,
+    options.roads,
+    options.ties,
+    options.trade,
+    options.outbreaks
+  )
   if (shapes.length === 0) return
   const k = transform.k
   context.lineJoin = 'round'
@@ -335,7 +345,13 @@ function drawSickLands(
     const y = sickness.path[sickness.path.length - 1]
     context.globalAlpha = (sickness.endemic ? ENDEMIC_ALPHA : SICK_ALPHA) * fade
     context.beginPath()
-    context.arc(x, y, (SICK_RADIUS + sickness.severity * SICK_SCALE) / k, 0, Math.PI * 2)
+    context.arc(
+      x,
+      y,
+      (SICK_RADIUS + sickness.severity * SICK_SCALE) / k,
+      0,
+      Math.PI * 2
+    )
     context.fill()
   }
   context.globalAlpha = fade

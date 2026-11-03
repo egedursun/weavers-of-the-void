@@ -9,6 +9,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES
 from aerona.domain.enums.mind import ActKind, MemoryKind
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.body.book import effective
 from aerona.engine.context import TickContext
@@ -16,6 +17,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import closeness, cruelty_drive
 from aerona.engine.mind.hooks import judged, witnessed
 from aerona.engine.phase import Phase
+from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
@@ -38,6 +40,13 @@ async def home_of(ctx: TickContext, captive: EntityRow, row: CaptiveRow) -> Enti
             if target is not None and target.entity_type in COMMUNITY_TYPES:
                 return target
     return await living_entity(ctx.session, row.home_entity_id)
+
+
+async def ransom_lawful(ctx: TickContext, captor: EntityRow | None) -> bool:
+    if captor is None:
+        return True
+    allowed = await law_param(ctx.session, captor.id, LawKind.RANSOM_CUSTOM, "allowed")
+    return allowed is None or bool(allowed)
 
 
 def _is_rich(ctx: TickContext, home: EntityRow) -> bool:
@@ -73,7 +82,7 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
     campaigns = ctx.rules.campaigns
     rng = ctx.rng("captivity")
     home = await home_of(ctx, captive, row)
-    if home is not None and _is_rich(ctx, home) and rng.chance(campaigns.ransom_chance):
+    if home is not None and _is_rich(ctx, home) and await ransom_lawful(ctx, captor) and rng.chance(campaigns.ransom_chance):
         await pay_ransom(ctx, row, captive, captor, home)
         return
     agility = await effective(ctx.session, captive, "agility", campaigns.captive_default_stat, rules=ctx.rules)

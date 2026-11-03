@@ -89,6 +89,12 @@ class MapTrade(ApiModel):
     path: list[float]
 
 
+class RegionRealm(ApiModel):
+    polity_id: int
+    name: str
+    control: int
+
+
 class MapOutbreak(ApiModel):
     outbreak_id: int
     disease_id: int
@@ -119,5 +125,6 @@ class MapView(ApiModel):
     stocks: dict[int, RegionStocks]
     trade: list[MapTrade]
     outbreaks: list[MapOutbreak] = Field(default_factory=list)
+    realms: dict[int, RegionRealm] = Field(default_factory=dict)
     notes: list[MapNoteRecord]
     time: MapTime

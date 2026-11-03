@@ -102,6 +102,10 @@ class HomeLine(ContextItem):
     satisfaction: int | None = None
     customs: list[str] = Field(default_factory=list)
     sickness: list[str] = Field(default_factory=list)
+    realm: str = ""
+    office: str = ""
+    house: str = ""
+    oaths: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

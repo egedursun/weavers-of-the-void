@@ -70,6 +70,9 @@ CREATION_GATE_RULES: dict[EntityType, Callable[[Rules], int]] = {
     EntityType.NATURAL_LAW: lambda rules: rules.rarity_gates.create_natural_law,
     EntityType.TRADE_ROUTE: lambda rules: rules.rarity_gates.create_trade_route,
     EntityType.DISEASE: lambda rules: rules.rarity_gates.create_disease,
+    EntityType.POLITY: lambda rules: rules.rarity_gates.create_polity,
+    EntityType.HOUSE: lambda rules: rules.rarity_gates.create_house,
+    EntityType.TREATY: lambda rules: rules.rarity_gates.create_treaty,
 }
 
 

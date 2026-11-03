@@ -8,6 +8,7 @@ import {
   Crown,
   Flag,
   Flame,
+  Landmark,
   Languages,
   Layers,
   type LucideIcon,
@@ -69,6 +70,7 @@ import {
 const LAYER_ICON: Record<LayerMode, LucideIcon> = {
   terrain: Mountain,
   political: Flag,
+  realms: Landmark,
   regions: MapIcon,
   creators: Crown,
   religions: Church,

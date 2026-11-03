@@ -18,6 +18,7 @@ import {
   HandHeart,
   Handshake,
   Heart,
+  Landmark,
   Languages,
   Lightbulb,
   type LucideIcon,
@@ -77,6 +78,9 @@ export const ENTITY_TYPE_ICON: Record<Schemas['EntityType'], LucideIcon> = {
   natural_law: Scale,
   trade_route: Route,
   disease: Biohazard,
+  polity: Landmark,
+  house: Shield,
+  treaty: Handshake,
 }
 
 export const STAT_ICON: Record<Schemas['Stat'], LucideIcon> = {

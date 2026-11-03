@@ -32,4 +32,7 @@ class CreationBaseCostRules:
     army: int = rule(0, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of an army")
     trade_route: int = rule(0, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of a trade route")
     disease: int = rule(40, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of loosing a disease")
+    polity: int = rule(60, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of founding a polity")
+    house: int = rule(15, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of founding a house")
+    treaty: int = rule(10, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of brokering a treaty")
     natural_law: int = rule(30, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of decreeing a natural law")

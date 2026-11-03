@@ -72,6 +72,7 @@ from aerona.engine.phases import (
     prisoners,
     production,
     prosperity,
+    realms,
     refugees,
     religion_spread,
     remembrance,
@@ -184,6 +185,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + works.PHASES
     + writing.PHASES
     + epidemics.PHASES
+    + realms.PHASES
     + settlement_life.PHASES
     + demography.PHASES
 )
@@ -212,6 +214,7 @@ SUB_ENGINE_STAGE = stage(
     "diplomacy",
     "war_upkeep",
     "tribute",
+    "treaty_cycles",
     "campaigns",
     "prisoners",
     "war_casualties",
@@ -230,6 +233,7 @@ SUB_ENGINE_STAGE = stage(
     "death_engine",
     "civilization",
     "world_balance",
+    "polity_cycles",
     "sky",
     "beyond",
 )
@@ -269,6 +273,7 @@ SOCIETY_STAGE = stage(
     "godlessness",
     "speciation",
     "couple_births",
+    "house_cycles",
     "love_and_rivalry",
     "dialect_divergence",
     "language_death",

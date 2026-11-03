@@ -84,6 +84,15 @@ class RarityGatesRules:
     create_disease: int = rule(
         2, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can loose a Disease (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
     )
+    create_polity: int = rule(
+        3, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can found a Polity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )
+    create_house: int = rule(
+        1, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can found a House (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )
+    create_treaty: int = rule(
+        1, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can broker a Treaty (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )
     create_natural_law: int = rule(
         4, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can create a Natural Law (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
     )

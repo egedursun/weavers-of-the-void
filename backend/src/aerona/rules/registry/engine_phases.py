@@ -146,3 +146,6 @@ class EnginePhasesRules:
     society_mobility: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: society mobility")
     people_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: people cycles")
     settlement_life: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: settlement life")
+    polity_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: polity cycles")
+    treaty_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: treaty cycles")
+    house_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: house cycles")

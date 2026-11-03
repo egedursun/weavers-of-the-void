@@ -1,12 +1,18 @@
 from collections import defaultdict
 
+from sqlalchemy import select
+
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityType
+from aerona.domain.enums.polity import RevoltKind
+from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
@@ -17,8 +23,9 @@ from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.community import CommunityBook
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
-from aerona.engine.primitives.numbers import clamp_int, fraction
+from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up
 from aerona.engine.primitives.queries import canon, flags_by_entity, spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat, stat, stat_or
@@ -58,16 +65,38 @@ def _just_law_present(book: CommunityBook, settlement: EntityRow, threshold: int
     return any(value >= threshold for value in book.justice_values(settlement.id))
 
 
+async def revolt_kind(ctx: TickContext, settlement: EntityRow) -> RevoltKind:
+    table = ctx.rules.revolts
+    society = await ctx.session.get(CommunitySocietyRow, settlement.id)
+    member = await ctx.session.scalar(select(PolityMemberRow).where(PolityMemberRow.member_entity_id == settlement.id).limit(1))
+    if society is not None and society.share(SocialClass.SERF_OR_SLAVE) >= table.slave_share_pct:
+        return RevoltKind.SLAVE
+    if member is not None and member.autonomy >= table.secession_autonomy:
+        return RevoltKind.SECESSION
+    if society is not None and society.share(SocialClass.NOBLE) > 0 and society.satisfaction(SocialClass.NOBLE) < table.noble_bitter:
+        return RevoltKind.NOBLE
+    profile = await ctx.session.get(PolityProfileRow, member.polity_entity_id) if member is not None else None
+    if profile is not None and profile.state_religion_id is not None:
+        patron = await living_patron(ctx.session, settlement)
+        cult = await ctx.session.get(EntityRow, profile.state_religion_id)
+        faith = await living_patron(ctx.session, cult) if cult is not None else None
+        if patron is not None and faith is not None and faith.id != patron.id:
+            return RevoltKind.RELIGIOUS
+    return RevoltKind.PEASANT
+
+
 async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityBook, entities: dict[int, EntityRow]) -> EntityRow:
     settings = ctx.rules.society
     rng = ctx.rng(f"rebels.{settlement.id}")
+    kind = await revolt_kind(ctx, settlement)
+    risen = round_half_up((stat(settlement, "population") or 0) * ctx.rules.revolts.rebel_share_pct / PERCENT)
     rebels = await create_record(
         ctx,
         RecordSpec(
-            name=f"{settlement.name} Rebels",
+            name=f"{settlement.name} Rebels" if kind is RevoltKind.PEASANT else f"the {kind.value} revolt of {settlement.name}",
             entity_type=EntityType.FACTION,
             stats=FactionStats(
-                strength=clamp_int(settings.rebel_strength_base + rng.die(settings.rebel_strength_die), 0, PERCENT),
+                strength=clamp_int(settings.rebel_strength_base + rng.die(settings.rebel_strength_die) + risen // 100, 0, PERCENT),
                 wealth=clamp_int(settings.rebel_wealth_base + rng.die(settings.rebel_wealth_die), 0, PERCENT),
                 sway=clamp_int(settings.rebel_sway_base + rng.die(settings.rebel_sway_die), 0, PERCENT),
             ),
@@ -75,8 +104,9 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
             power=settings.rebel_power,
             world_id=settlement.world_id,
             location_id=settlement.id,
-            subtype=REBELS_SUBTYPE,
+            subtype=REBELS_SUBTYPE if kind is RevoltKind.PEASANT else f"{kind.value} revolt",
             engine_kind=EngineKind.REBELS,
+            social_class=SocialClass.SERF_OR_SLAVE if kind is RevoltKind.SLAVE else SocialClass.NOBLE if kind is RevoltKind.NOBLE else None,
             affiliated_entity_id=settlement.id,
         ),
     )

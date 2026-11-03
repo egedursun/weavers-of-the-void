@@ -56,6 +56,7 @@ export type LayerPalette = {
 const ALPHA: Record<LayerMode, number> = {
   terrain: 0,
   political: 0.2,
+  realms: 0.15,
   regions: 0.3,
   creators: 0.3,
   religions: 0.42,
@@ -156,6 +157,20 @@ function regionKey(
       const band = stocks ? stockBand(stocks[mode]) : null
       return band ? { key: `${mode}:${band}`, alpha } : null
     }
+    case 'realms': {
+      const held =
+        view.realms?.[String(regionId)] ?? view.realms?.[String(topId)]
+      if (!held) return null
+      return {
+        key: `realm:${held.polity_id}`,
+        alpha:
+          alpha +
+          Math.min(
+            POLITICAL_ALPHA_GAIN,
+            held.control / POLITICAL_SHARE_DIVISOR
+          ),
+      }
+    }
     case 'political': {
       const control = controlOf(view, regionId, topId)
       if (!control) return null
@@ -196,6 +211,12 @@ function labelFor(
     kind === 'land_use'
   )
     return words(raw)
+  if (kind === 'realm') {
+    const held = Object.values(view.realms ?? {}).find(
+      (item) => item.polity_id === id
+    )
+    return held?.name ?? `Realm ${id}`
+  }
   if (kind === 'ruler') {
     const control = Object.values(view.political).find(
       (item) => item.ruler_id === id

@@ -24,11 +24,10 @@ import {
 import { type EntityDetail } from './api/types'
 import { RELATION_PAGE_MAX } from './constants'
 import { EntityEconomy } from './economy/EntityEconomy'
-import { DemographySection, LabourSection, PeopleProfileSection } from './society/Demography'
-import { DiseaseSection } from './society/DiseaseCard'
-import { SettlementPlanSection, TreasurySection } from './society/SettlementPlan'
 import { ResourceProfile } from './economy/ResourceProfile'
 import { PriceBoard, TradeRouteSection } from './economy/RouteAndMarket'
+import { HouseSection, OathsSection, TreatySection } from './realm/HouseTreaty'
+import { RealmSection } from './realm/Realm'
 import { scrollToSection } from './scrollToSection'
 import { ArrangeExtras } from './sections/ArrangeExtras'
 import { BiographySection } from './sections/BiographySection'
@@ -62,6 +61,16 @@ import { PeopleBeliefs } from './sections/PeopleBeliefs'
 import { SkillsSection } from './sections/SkillsSection'
 import { SocietyEconomy } from './sections/SocietyEconomy'
 import { TagEditor } from './sections/TagEditor'
+import {
+  DemographySection,
+  LabourSection,
+  PeopleProfileSection,
+} from './society/Demography'
+import { DiseaseSection } from './society/DiseaseCard'
+import {
+  SettlementPlanSection,
+  TreasurySection,
+} from './society/SettlementPlan'
 
 const MIND_TYPES = new Set([
   'mortal',
@@ -81,6 +90,10 @@ const SECTION_LINKS = [
   { id: 'section-settlement-plan', label: 'City' },
   { id: 'section-treasury', label: 'Treasury' },
   { id: 'section-disease', label: 'Sickness' },
+  { id: 'section-realm', label: 'Realm' },
+  { id: 'section-house', label: 'House' },
+  { id: 'section-treaty', label: 'Terms' },
+  { id: 'section-oaths', label: 'Oaths' },
   { id: 'section-economy', label: 'Stores' },
   { id: 'section-market', label: 'Market' },
   { id: 'section-resource-profile', label: 'Reserve' },
@@ -184,6 +197,15 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
     present.delete('section-treasury')
   }
   if (entity.entity_type !== 'disease') present.delete('section-disease')
+  if (entity.entity_type !== 'house') present.delete('section-house')
+  if (entity.entity_type !== 'treaty') present.delete('section-treaty')
+  if (entity.entity_type !== 'mortal') present.delete('section-oaths')
+  if (
+    !trading &&
+    entity.entity_type !== 'polity' &&
+    entity.entity_type !== 'mortal'
+  )
+    present.delete('section-realm')
   if (entity.entity_type !== 'resource')
     present.delete('section-resource-profile')
   if (entity.entity_type !== 'trade_route')
@@ -295,13 +317,30 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         <PeopleProfileSection peopleId={entity.id} readOnlyReason={readOnly} />
       )}
       {entity.entity_type === 'settlement' && (
-        <SettlementPlanSection settlementId={entity.id} readOnlyReason={readOnly} />
+        <SettlementPlanSection
+          settlementId={entity.id}
+          readOnlyReason={readOnly}
+        />
       )}
       {entity.entity_type === 'settlement' && (
         <TreasurySection settlementId={entity.id} />
       )}
       {entity.entity_type === 'disease' && (
         <DiseaseSection diseaseId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {(trading ||
+        entity.entity_type === 'polity' ||
+        entity.entity_type === 'mortal') && (
+        <RealmSection entityId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'house' && (
+        <HouseSection houseId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'treaty' && (
+        <TreatySection treatyId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'mortal' && (
+        <OathsSection entityId={entity.id} readOnlyReason={readOnly} />
       )}
       {(entity.entity_type === 'people' ||
         entity.entity_type === 'settlement') && (

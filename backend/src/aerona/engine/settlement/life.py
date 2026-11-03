@@ -1,5 +1,6 @@
 from sqlalchemy import func, select
 
+from aerona.catalog.laws import PENALTY_HARM
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleCultureRow
 from aerona.db.tables.disease import QuarantineRow
@@ -17,6 +18,7 @@ from aerona.domain.enums.demography import AgeBand, Job
 from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.settlement import TIER_ORDER, WATER_ORDER, BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import SiegeStatus
@@ -32,10 +34,11 @@ from aerona.engine.mind.drives import unrest as needs_unrest
 from aerona.engine.mind.space import value_distance
 from aerona.engine.notes import note
 from aerona.engine.phases.disasters import strike_plague
+from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import active_bonds, living_entity
+from aerona.engine.primitives.queries import active_bonds, add_flag, living_entity
 from aerona.engine.primitives.society import supply_index
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat
 from aerona.engine.settlement.book import Town, ledger, tier_for
@@ -343,7 +346,15 @@ async def punish(ctx: TickContext, town: Town) -> bool:
     if not candidates:
         return False
     culprit = ctx.rng(f"culprit.{town.entity.id}").pick(candidates)
-    await apply_hits(ctx, culprit, Harm(table.punishment_hp, HarmCause.PUNISHMENT, f"punished by the watch of {town.entity.name}"))
+    penalty = await law_param(ctx.session, town.entity.id, LawKind.PENAL_CODE, "theft")
+    if penalty == "exile":
+        culprit.location_id = None
+        await add_flag(ctx.session, culprit.id, EntityFlag.EXILE, ctx.epoch)
+        return True
+    hp = PENALTY_HARM.get(str(penalty), table.punishment_hp) if penalty is not None else table.punishment_hp
+    if hp <= 0:
+        return True
+    await apply_hits(ctx, culprit, Harm(hp, HarmCause.PUNISHMENT, f"punished by the watch of {town.entity.name}"))
     return True
 
 

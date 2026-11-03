@@ -4,10 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.polity import HouseMemberRow, OathRow, OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import SOCIETY_TYPES
+from aerona.domain.enums.polity import OathStatus
 from aerona.engine.body.customs import people_of
 from aerona.engine.gods.queries import community_of
 from aerona.engine.primitives.distance import RegionAtlas
@@ -46,7 +48,21 @@ async def home_for(session: AsyncSession, me: EntityRow) -> HomeLine | None:
             if disease is not None:
                 sickness.append(f"{disease.name} ({label})")
     social = me.social_class
+    realm_id = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == home.id).limit(1))
+    realm = await session.get(EntityRow, realm_id) if realm_id is not None else None
+    profile = await session.get(PolityProfileRow, realm_id) if realm_id is not None else None
+    office = await session.scalar(select(OfficeRow).where(OfficeRow.holder_entity_id == me.id).limit(1))
+    house_id = await session.scalar(select(HouseMemberRow.house_entity_id).where(HouseMemberRow.mortal_entity_id == me.id).limit(1))
+    house = await session.get(EntityRow, house_id) if house_id is not None else None
+    oaths = [
+        f"{row.kind.value.replace('_', ' ')} oath{' before a god' if row.witness_son_id else ''}"
+        for row in await session.scalars(select(OathRow).where(OathRow.swearer_entity_id == me.id, OathRow.status == OathStatus.SWORN))
+    ]
     return HomeLine(
+        realm=f"{realm.name} ({words(profile.government.value)}, legitimacy {profile.legitimacy})" if realm is not None and profile is not None else "",
+        office=words(office.kind.value) if office is not None else "",
+        house=house.name if house is not None else "",
+        oaths=oaths,
         community=home.name,
         tier=town.size_tier.value if town is not None else "",
         order=town.public_order if town is not None else None,

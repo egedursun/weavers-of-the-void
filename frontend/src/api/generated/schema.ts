@@ -4495,6 +4495,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/entities/{entity_id}/realm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["realm_link_api_entities__entity_id__realm_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/polities/{polity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["realm_api_polities__polity_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/houses/{house_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["house_api_houses__house_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/treaties/{treaty_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["treaty_api_treaties__treaty_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/oaths": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["oaths_api_entities__entity_id__oaths_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/laws/kinds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["law_kinds_api_laws_kinds_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions": {
         parameters: {
             query?: never;
@@ -8127,6 +8223,294 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/polity:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_polity_edit_api_actions_polity_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/polity:appoint": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_polity_appoint_api_actions_polity_appoint_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/polity:depose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_polity_depose_api_actions_polity_depose_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/polity:split": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_polity_split_api_actions_polity_split_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/polity:merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_polity_merge_api_actions_polity_merge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/polity:independence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_polity_independence_api_actions_polity_independence_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/law:enact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_law_enact_api_actions_law_enact_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/law:repeal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_law_repeal_api_actions_law_repeal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/law:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_law_edit_api_actions_law_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/house:found": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_house_found_api_actions_house_found_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/house:merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_house_merge_api_actions_house_merge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/house:extinguish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_house_extinguish_api_actions_house_extinguish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/claim:grant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_claim_grant_api_actions_claim_grant_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/treaty:sign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_treaty_sign_api_actions_treaty_sign_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/treaty:break": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_treaty_break_api_actions_treaty_break_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/treaty:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_treaty_edit_api_actions_treaty_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/oath:swear": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_oath_swear_api_actions_oath_swear_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/oath:break": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_oath_break_api_actions_oath_break_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/body:heal": {
         parameters: {
             query?: never;
@@ -8971,6 +9355,12 @@ export interface components {
             kinds: components["schemas"]["BorderKind"][];
             coordinates: number[];
         };
+        BreachView: {
+            epoch: number;
+            breaker_id: number | null;
+            breaker: string | null;
+            note: string | null;
+        };
         BuildMaterial: "timber" | "stone";
         BulkLogPayload: {
             epoch?: number | null;
@@ -9281,12 +9671,43 @@ export interface components {
             second_id: number;
             alliance: boolean;
         };
+        ClaimBasis: "inheritance" | "marriage" | "conquest" | "divine" | "fabricated";
+        ClaimGrantInput: {
+            mortal_id: number;
+            polity_id: number;
+            strength: number;
+            basis: components["schemas"]["ClaimBasis"];
+        };
+        ClaimView: {
+            id: number;
+            claimant_id: number;
+            claimant: string;
+            house_id: number | null;
+            polity_id: number;
+            strength: number;
+            basis: components["schemas"]["ClaimBasis"];
+            pressed: boolean;
+            since_epoch: number;
+        };
         ClassMood: {
             social_class: components["schemas"]["SocialClass"];
             share: number;
             satisfaction: number;
         };
         ClaudeAuth: "token" | "login";
+        ClauseKind: "call_to_arms" | "tribute" | "cession" | "hostage" | "marriage" | "trade_rights" | "tolls_waived" | "religious_freedom" | "demilitarised" | "champion" | "extradition" | "wergild" | "non_aggression";
+        ClauseView: {
+            id: number;
+            kind: components["schemas"]["ClauseKind"];
+            obligor_id: number | null;
+            obligor: string | null;
+            beneficiary_id: number | null;
+            beneficiary: string | null;
+            params: {
+                [key: string]: number | string | boolean;
+            };
+            last_kept_epoch: number | null;
+        };
         ClimateAffinity: "warm" | "wet" | "cold" | "dry" | "any";
         ClimateAgeView: {
             era: components["schemas"]["ClimateEra"];
@@ -9706,6 +10127,7 @@ export interface components {
             due_epoch: number | null;
             currency_id: number | null;
         };
+        DecisionRule: "autocratic" | "council" | "assembly" | "divine";
         DecreeKind: "war" | "peace" | "alliance" | "marriage" | "trade";
         DemographyView: {
             entity_id: number;
@@ -10058,7 +10480,7 @@ export interface components {
             favorite: boolean;
             pending_name: boolean;
             description: string;
-            stats: components["schemas"]["RegionStats"] | components["schemas"]["PlaceStats"] | components["schemas"]["ResourceStats"] | components["schemas"]["SettlementStats"] | components["schemas"]["SpeciesStats"] | components["schemas"]["PeopleStats"] | components["schemas"]["MortalStats"] | components["schemas"]["ItemStats"] | components["schemas"]["StructureStats"] | components["schemas"]["LanguageStats"] | components["schemas"]["LegendStats"] | components["schemas"]["TraditionStats"] | components["schemas"]["CultStats"] | components["schemas"]["FactionStats"] | components["schemas"]["CelestialStats"] | components["schemas"]["ArtworkStats"] | components["schemas"]["LawStats"] | components["schemas"]["SpiritStats"] | components["schemas"]["KnowledgeStats"] | components["schemas"]["ProphecyStats"] | components["schemas"]["EventStats"] | components["schemas"]["VesselStats"] | components["schemas"]["OuterBeingStats"] | components["schemas"]["ArmyStats"] | components["schemas"]["TradeRouteStats"] | components["schemas"]["DiseaseStats"] | components["schemas"]["NaturalLawStats"];
+            stats: components["schemas"]["RegionStats"] | components["schemas"]["PlaceStats"] | components["schemas"]["ResourceStats"] | components["schemas"]["SettlementStats"] | components["schemas"]["SpeciesStats"] | components["schemas"]["PeopleStats"] | components["schemas"]["MortalStats"] | components["schemas"]["ItemStats"] | components["schemas"]["StructureStats"] | components["schemas"]["LanguageStats"] | components["schemas"]["LegendStats"] | components["schemas"]["TraditionStats"] | components["schemas"]["CultStats"] | components["schemas"]["FactionStats"] | components["schemas"]["CelestialStats"] | components["schemas"]["ArtworkStats"] | components["schemas"]["LawStats"] | components["schemas"]["SpiritStats"] | components["schemas"]["KnowledgeStats"] | components["schemas"]["ProphecyStats"] | components["schemas"]["EventStats"] | components["schemas"]["VesselStats"] | components["schemas"]["OuterBeingStats"] | components["schemas"]["ArmyStats"] | components["schemas"]["TradeRouteStats"] | components["schemas"]["DiseaseStats"] | components["schemas"]["PolityStats"] | components["schemas"]["HouseStats"] | components["schemas"]["TreatyStats"] | components["schemas"]["NaturalLawStats"];
             domain: components["schemas"]["Domain"] | null;
             origin: components["schemas"]["EntityOrigin"];
             creator_son_id: number | null;
@@ -10095,7 +10517,7 @@ export interface components {
             favorite: boolean;
             pending_name: boolean;
         };
-        EntityType: "region" | "place" | "resource" | "settlement" | "species" | "people" | "mortal" | "item" | "structure" | "language" | "legend" | "tradition" | "cult" | "faction" | "celestial" | "artwork" | "law" | "spirit" | "knowledge" | "prophecy" | "event" | "vessel" | "outer_being" | "army" | "natural_law" | "trade_route" | "disease";
+        EntityType: "region" | "place" | "resource" | "settlement" | "species" | "people" | "mortal" | "item" | "structure" | "language" | "legend" | "tradition" | "cult" | "faction" | "celestial" | "artwork" | "law" | "spirit" | "knowledge" | "prophecy" | "event" | "vessel" | "outer_being" | "army" | "natural_law" | "trade_route" | "disease" | "polity" | "house" | "treaty";
         EntityTypeInfo: {
             key: string;
             label: string;
@@ -10771,6 +11193,7 @@ export interface components {
             used_by: string;
             meaning: string;
         };
+        GovernmentKind: "chiefdom" | "monarchy" | "theocracy" | "oligarchy" | "republic" | "tribal_confederation" | "empire" | "hive_council" | "god_kingdom" | "occupation";
         GraphLink: {
             source: number;
             target: number;
@@ -10860,6 +11283,11 @@ export interface components {
             running_jobs: number;
         };
         HeightClass: "short" | "average" | "tall" | "giant";
+        HeirloomView: {
+            id: number;
+            name: string;
+            since_epoch: number;
+        };
         HeroApprenticeInput: {
             hero_id: number;
         };
@@ -10929,6 +11357,55 @@ export interface components {
         };
         HorrorSuppressCultInput: {
             cult_id: number;
+        };
+        HouseExtinguishInput: {
+            house_id: number;
+        };
+        HouseFoundInput: {
+            mortal_id: number;
+        };
+        HouseMemberView: {
+            id: number;
+            name: string;
+            alive: boolean;
+            sex: string | null;
+            age: number | null;
+            parents: number[];
+            by_marriage: boolean;
+            lasting_injuries: number;
+            fate: string | null;
+            office: components["schemas"]["OfficeKind"] | null;
+        };
+        HouseMergeInput: {
+            house_id: number;
+            into_id: number;
+        };
+        HouseStats: {
+            kind: "house";
+            prestige?: number | null;
+            members?: number | null;
+            wealth?: number | null;
+        };
+        HouseView: {
+            id: number;
+            name: string;
+            prestige: number;
+            wealth: number;
+            motto: string | null;
+            emblem: {
+                [key: string]: string;
+            };
+            traits: string[];
+            founder: components["schemas"]["NamedNode"] | null;
+            head: components["schemas"]["NamedNode"] | null;
+            parent: components["schemas"]["NamedNode"] | null;
+            polity: components["schemas"]["NamedNode"] | null;
+            divine_son_id: number | null;
+            branches: components["schemas"]["NamedNode"][];
+            members: components["schemas"]["HouseMemberView"][];
+            claims: components["schemas"]["ClaimView"][];
+            heirlooms: components["schemas"]["HeirloomView"][];
+            locked: string[];
         };
         ImageBulkLogEvent: {
             id: number;
@@ -11379,10 +11856,59 @@ export interface components {
             words: components["schemas"]["Lexeme"][];
             word_total: number;
         };
+        LawArea: "succession" | "property" | "fiscal" | "penal" | "military" | "social" | "public_health" | "magic";
+        LawEditInput: {
+            law_id: number;
+            params?: {
+                [key: string]: number | string | boolean;
+            };
+            enforcement?: number | null;
+        };
+        LawEnactInput: {
+            holder_id: number;
+            kind: components["schemas"]["LawKind"];
+            params?: {
+                [key: string]: number | string | boolean;
+            };
+        };
+        LawKind: "succession_rule" | "inheritance_split" | "land_tenure" | "slavery" | "serfdom" | "tax_rate" | "tithe" | "tolls" | "debt_law" | "penal_code" | "levy_law" | "conscription" | "standing_army" | "veteran_pension" | "ransom_custom" | "marriage_law" | "sumptuary" | "guild_charter" | "foreigner_rights" | "religious_tolerance" | "worship_ban" | "blood_feud" | "quarantine" | "burial_law" | "sanitation" | "magic_ban" | "licensed_magic" | "rite_restrictions" | "custom";
+        LawKindSpec: {
+            kind: components["schemas"]["LawKind"];
+            area: components["schemas"]["LawArea"];
+            params: components["schemas"]["LawParamSpec"][];
+        };
+        LawParamSpec: {
+            key: string;
+            kind: string;
+            default: number | string | boolean;
+            low: number;
+            high: number;
+            choices: string[];
+        };
+        LawRepealInput: {
+            law_id: number;
+        };
         LawStats: {
             kind: "law";
             rigidity?: number | null;
             justice?: number | null;
+        };
+        LawView: {
+            id: number;
+            name: string;
+            kind: components["schemas"]["LawKind"];
+            area: components["schemas"]["LawArea"];
+            params: {
+                [key: string]: number | string | boolean;
+            };
+            effect: string;
+            enforcement: number;
+            conflict: number;
+            legitimacy_basis: components["schemas"]["LegitimacyBasis"];
+            justice: number;
+            enacted_epoch: number;
+            holder_id: number | null;
+            locked: string[];
         };
         LedgerEntry: {
             id: number;
@@ -11452,6 +11978,7 @@ export interface components {
         };
         LegendaryQuestKind: "dead_star" | "sealed_gate" | "archive" | "expel_outer";
         LegendaryQuestOutcome: "completed" | "failed" | "invalidated";
+        LegitimacyBasis: "custom" | "decree" | "divine" | "council";
         LeverPinInput: {
             node_id: number;
             key: string;
@@ -11708,6 +12235,9 @@ export interface components {
             };
             trade: components["schemas"]["MapTrade"][];
             outbreaks?: components["schemas"]["MapOutbreak"][];
+            realms?: {
+                [key: string]: components["schemas"]["RegionRealm"];
+            };
             notes: components["schemas"]["MapNoteRecord"][];
             time: components["schemas"]["MapTime"];
         };
@@ -11819,6 +12349,13 @@ export interface components {
             couplings: components["schemas"]["Subsystem"][];
         };
         MedicineTier: "none" | "herbs" | "surgery" | "prosthetics" | "reattachment";
+        MemberView: {
+            id: number;
+            name: string;
+            entity_type: components["schemas"]["EntityType"];
+            autonomy: number;
+            population: number;
+        };
         MemorialForm: "monument" | "epic" | "lament" | "tradition" | "tale";
         MemorialOrderInput: {
             target_id: number;
@@ -12076,6 +12613,7 @@ export interface components {
             age?: number | null;
             lifespan?: number | null;
             death_year?: number | null;
+            sex?: ("female" | "male") | null;
         };
         MortalToolId: "look_at_world" | "inspect_entity" | "search_entities" | "found_language" | "coin_words" | "produce_item" | "build_structure" | "create_culture" | "discover_resource" | "claim_resource" | "found_settlement" | "establish_trade" | "declare_war" | "worship" | "pray_to_creator" | "develop_knowledge" | "learn_knowledge" | "diplomacy" | "go_on_adventure" | "find_route" | "explore_land" | "resurrection_rite" | "build_ship" | "launch_expedition" | "tame_species" | "weave_chimera" | "bind_spirit" | "search_ruins" | "sabotage" | "preach" | "challenge_god" | "deny_god" | "prophesy" | "escape" | "pay_ransom" | "rescue_captive" | "raise_army" | "appoint_commander" | "build_spy_network" | "barter" | "lend" | "repay_debt" | "adopt";
         MortalTurnFinishedEvent: {
@@ -12159,6 +12697,10 @@ export interface components {
             weak_names: number;
             numbered_borrowed_names: number;
             god_lookalikes: number;
+        };
+        NamedNode: {
+            id: number;
+            name: string;
         };
         NaturalLaw: "none" | "immortality" | "short_life" | "dead_return" | "magic_price" | "war_ban" | "bounty" | "drought" | "sea_ban" | "one_language" | "disasters";
         NaturalLawStats: {
@@ -12316,6 +12858,45 @@ export interface components {
             job_id?: string | null;
             entity_ids?: number[];
         };
+        OathBreakInput: {
+            oath_id: number;
+        };
+        OathKind: "fealty" | "vengeance" | "celibacy" | "pilgrimage" | "protection" | "silence" | "blood_brotherhood";
+        OathStatus: "sworn" | "kept" | "broken" | "fulfilled";
+        OathSwearInput: {
+            swearer_id: number;
+            kind: components["schemas"]["OathKind"];
+            recipient_id?: number | null;
+        };
+        OathView: {
+            id: number;
+            kind: components["schemas"]["OathKind"];
+            status: components["schemas"]["OathStatus"];
+            swearer_id: number;
+            swearer: string;
+            recipient_id: number | null;
+            recipient: string | null;
+            witness_son_id: number | null;
+            sworn_epoch: number;
+            deadline_epoch: number | null;
+            ended_epoch: number | null;
+            note: string | null;
+        };
+        OathsView: {
+            entity_id: number;
+            sworn: components["schemas"]["OathView"][];
+            received: components["schemas"]["OathView"][];
+        };
+        OfficeKind: "ruler" | "heir_designate" | "regent" | "chancellor" | "marshal" | "treasurer" | "high_judge" | "spymaster" | "governor" | "ambassador";
+        OfficeView: {
+            id: number;
+            kind: components["schemas"]["OfficeKind"];
+            holder_id: number | null;
+            holder: string | null;
+            region_id: number | null;
+            region: string | null;
+            since_epoch: number;
+        };
         OpinionComponent: "trust" | "fear" | "respect" | "affection" | "grievance";
         OpinionComponentView: {
             component: components["schemas"]["OpinionComponent"];
@@ -12466,6 +13047,12 @@ export interface components {
             loss: number;
             state: components["schemas"]["InjuryState"] | null;
             prosthesis: components["schemas"]["MaterialKind"] | null;
+        };
+        PartyRole: "signatory" | "overlord" | "vassal" | "guarantor";
+        PartyView: {
+            id: number;
+            name: string;
+            role: components["schemas"]["PartyRole"];
         };
         Passion: "loyalty" | "ambition" | "wrath" | "mercy";
         PassionInfo: {
@@ -12709,6 +13296,40 @@ export interface components {
             sons_without_image: number;
             unread_notifications: number;
             epoch_in_progress: boolean;
+        };
+        PolityAppointInput: {
+            polity_id: number;
+            office: components["schemas"]["OfficeKind"];
+            mortal_id?: number | null;
+            region_id?: number | null;
+        };
+        PolityDeposeInput: {
+            polity_id: number;
+        };
+        PolityEditInput: {
+            polity_id: number;
+            values?: {
+                [key: string]: number | string | boolean | null;
+            };
+            release?: string[];
+        };
+        PolityIndependenceInput: {
+            polity_id: number;
+        };
+        PolityMergeInput: {
+            polity_id: number;
+            into_id: number;
+        };
+        PolitySplitInput: {
+            polity_id: number;
+            member_ids: number[];
+        };
+        PolityStats: {
+            kind: "polity";
+            legitimacy?: number | null;
+            stability?: number | null;
+            subjects?: number | null;
+            territory?: number | null;
         };
         PopulationCohortView: {
             age_band: components["schemas"]["AgeBand"];
@@ -13126,6 +13747,45 @@ export interface components {
             exported: number;
         };
         Rarity: "common" | "uncommon" | "rare" | "epic" | "legendary" | "mythic";
+        RealmLink: {
+            polity_id: number | null;
+        };
+        RealmView: {
+            id: number;
+            name: string;
+            government: components["schemas"]["GovernmentKind"];
+            decision_rule: components["schemas"]["DecisionRule"];
+            legitimacy: number;
+            stability: number;
+            treasury: number;
+            debt: number;
+            war_chest: number;
+            administration: number;
+            overextension: number;
+            war_weariness: number;
+            tier: number;
+            standing: components["schemas"]["RegionalStanding"];
+            core: components["schemas"]["NamedNode"] | null;
+            capital: components["schemas"]["NamedNode"] | null;
+            state_religion: components["schemas"]["NamedNode"] | null;
+            ruler: components["schemas"]["NamedNode"] | null;
+            patron_son_id: number | null;
+            emblem: {
+                [key: string]: string;
+            };
+            locked: string[];
+            members: components["schemas"]["MemberView"][];
+            territory: components["schemas"]["TerritoryView"][];
+            offices: components["schemas"]["OfficeView"][];
+            why: components["schemas"]["WhyPart"][];
+            succession: components["schemas"]["NamedNode"][];
+            laws: components["schemas"]["LawView"][];
+            claims: components["schemas"]["ClaimView"][];
+            treasury_ledger: components["schemas"]["TreasuryLineView"][];
+            treaties: components["schemas"]["TreatyBrief"][];
+            overlord: components["schemas"]["NamedNode"] | null;
+            vassals: components["schemas"]["NamedNode"][];
+        };
         RecordEnd: "repeal" | "abandon" | "forget" | "disband" | "lose" | "assimilate";
         RecordEndInput: {
             entity_id: number;
@@ -13217,6 +13877,11 @@ export interface components {
             ley_lines: number;
             nexus: boolean;
         };
+        RegionRealm: {
+            polity_id: number;
+            name: string;
+            control: number;
+        };
         RegionRecord: {
             id: number;
             parent_id: number | null;
@@ -13259,6 +13924,7 @@ export interface components {
             followers: number;
             soldiers: number;
         };
+        RegionalStanding: "hegemon" | "great_power" | "minor_power" | "client";
         RelationEntry: {
             other: components["schemas"]["NodeRef"];
             value: number;
@@ -14388,6 +15054,11 @@ export interface components {
         TechnologyEra: "stone" | "bronze" | "iron" | "medieval" | "renaissance" | "steam";
         TemperatureBand: "frozen" | "cold" | "temperate" | "warm" | "hot" | "searing";
         TerrainKind: "plain" | "steppe" | "forest" | "jungle" | "marsh" | "hills" | "mountains" | "high_pass" | "desert" | "tundra" | "ice_sheet" | "volcanic" | "coast" | "island" | "river_valley" | "canyon" | "underground" | "crystal_field" | "flesh" | "void_shore" | "ruin_field" | "urban" | "sea";
+        TerritoryView: {
+            region_id: number;
+            name: string;
+            control: number;
+        };
         TextPayload: {
             epoch?: number | null;
             text: string;
@@ -14610,6 +15281,69 @@ export interface components {
             balance: number;
             note: string | null;
         };
+        TreasuryLineView: {
+            epoch: number;
+            entry: components["schemas"]["TreasuryEntry"];
+            amount: number;
+            balance: number;
+            note: string | null;
+        };
+        TreatyBreakInput: {
+            treaty_id: number;
+            breaker_id: number;
+        };
+        TreatyBrief: {
+            id: number;
+            name: string;
+            kind: components["schemas"]["TreatyKind"];
+            status: components["schemas"]["TreatyStatus"];
+            until_epoch: number | null;
+        };
+        TreatyClause: {
+            kind: components["schemas"]["ClauseKind"];
+            obligor_id?: number | null;
+            beneficiary_id?: number | null;
+            params?: {
+                [key: string]: number | string | boolean;
+            };
+        };
+        TreatyEditInput: {
+            treaty_id: number;
+            until_epoch?: number | null;
+            status?: components["schemas"]["TreatyStatus"] | null;
+        };
+        TreatyKind: "peace" | "truce" | "alliance_defensive" | "alliance_offensive" | "non_aggression" | "vassalage" | "tribute" | "marriage_pact" | "trade_pact" | "condotta" | "guarantee" | "interworld";
+        TreatyParty: {
+            party_id: number;
+            role: components["schemas"]["PartyRole"];
+        };
+        TreatySignInput: {
+            kind: components["schemas"]["TreatyKind"];
+            parties: components["schemas"]["TreatyParty"][];
+            clauses?: components["schemas"]["TreatyClause"][];
+            epochs?: number | null;
+        };
+        TreatyStats: {
+            kind: "treaty";
+            parties?: number | null;
+            trust?: number | null;
+        };
+        TreatyStatus: "in_force" | "fulfilled" | "broken" | "expired";
+        TreatyView: {
+            id: number;
+            name: string;
+            kind: components["schemas"]["TreatyKind"];
+            status: components["schemas"]["TreatyStatus"];
+            signed_epoch: number;
+            until_epoch: number | null;
+            ended_epoch: number | null;
+            witness_son_id: number | null;
+            renewals: number;
+            parties: components["schemas"]["PartyView"][];
+            clauses: components["schemas"]["ClauseView"][];
+            breaches: components["schemas"]["BreachView"][];
+            locked: string[];
+        };
         TributeForgiveInput: {
             bond_id: number;
         };
@@ -14758,6 +15492,10 @@ export interface components {
         WeatherKind: "clear" | "overcast" | "rain" | "downpour" | "storm" | "fog" | "snow" | "blizzard" | "heat_wave" | "drought_wind" | "sandstorm" | "hail" | "magic_storm" | "ash_fall" | "void_rain" | "eclipse_dark" | "aurora";
         WeatherReleaseInput: {
             forced_id: number;
+        };
+        WhyPart: {
+            label: string;
+            value: number;
         };
         WizardInput: {
             template?: string | null;
@@ -23582,6 +24320,170 @@ export interface operations {
             };
         };
     };
+    realm_link_api_entities__entity_id__realm_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RealmLink"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    realm_api_polities__polity_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                polity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RealmView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    house_api_houses__house_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                house_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HouseView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    treaty_api_treaties__treaty_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                treaty_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TreatyView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    oaths_api_entities__entity_id__oaths_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OathsView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    law_kinds_api_laws_kinds_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LawKindSpec"][];
+                };
+            };
+        };
+    };
     list_actions_api_actions_get: {
         parameters: {
             query?: never;
@@ -30403,6 +31305,564 @@ export interface operations {
             };
         };
     };
+    action_polity_edit_api_actions_polity_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolityEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_polity_appoint_api_actions_polity_appoint_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolityAppointInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_polity_depose_api_actions_polity_depose_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolityDeposeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_polity_split_api_actions_polity_split_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolitySplitInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_polity_merge_api_actions_polity_merge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolityMergeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_polity_independence_api_actions_polity_independence_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolityIndependenceInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_law_enact_api_actions_law_enact_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LawEnactInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_law_repeal_api_actions_law_repeal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LawRepealInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_law_edit_api_actions_law_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LawEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_house_found_api_actions_house_found_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HouseFoundInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_house_merge_api_actions_house_merge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HouseMergeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_house_extinguish_api_actions_house_extinguish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HouseExtinguishInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_claim_grant_api_actions_claim_grant_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClaimGrantInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_treaty_sign_api_actions_treaty_sign_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TreatySignInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_treaty_break_api_actions_treaty_break_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TreatyBreakInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_treaty_edit_api_actions_treaty_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TreatyEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_oath_swear_api_actions_oath_swear_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OathSwearInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_oath_break_api_actions_oath_break_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OathBreakInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_body_heal_api_actions_body_heal_post: {
         parameters: {
             query?: never;
@@ -31292,7 +32752,9 @@ export const celestialStatsKindValues: ReadonlyArray<FlattenedDeepRequired<compo
 export const chatAttitudeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ChatAttitude"]> = ["loyal", "distant", "rebellious", "afraid", "grateful", "mocking"];
 export const chronicleAuditKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ChronicleAuditKind"]> = ["rejected_mentioned", "son_skipped", "event_skipped", "verdict_skipped", "winner_as_loser", "active_as_silent", "deed_miscredited", "number_contradiction"];
 export const chronicleKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ChronicleKind"]> = ["creation", "speech", "challenge", "prayer", "order", "fate", "death", "birth", "system", "message", "creator_hand", "world", "engine_raw", "knowledge", "resource", "culture", "trade", "exploration", "diplomacy", "production", "language", "miracle", "civilization", "creator_reputation", "construction", "existence", "dream", "star", "divine_sign", "climate", "cosmic", "debt", "foreign_god", "world_age", "council", "previous_creation", "sky", "gift", "worship", "world_birth", "prophecy", "covenant", "army", "ascension", "migration", "legendary_quest", "war", "war_of_gods", "cosmic_law", "horror", "outer_being", "immortality", "rebellion", "apocalypse", "resurrection", "lineage", "disaster", "adventure", "intrigue", "rescue", "chimera", "escape", "domestication", "age_change", "expedition", "spirit", "curse", "denial", "ransom", "prohibition"];
+export const claimBasisValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClaimBasis"]> = ["inheritance", "marriage", "conquest", "divine", "fabricated"];
 export const claudeAuthValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClaudeAuth"]> = ["token", "login"];
+export const clauseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClauseKind"]> = ["call_to_arms", "tribute", "cession", "hostage", "marriage", "trade_rights", "tolls_waived", "religious_freedom", "demilitarised", "champion", "extradition", "wergild", "non_aggression"];
 export const climateAffinityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClimateAffinity"]> = ["warm", "wet", "cold", "dry", "any"];
 export const climateEraValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClimateEra"]> = ["temperate", "drought", "rain", "ice_age", "scorching"];
 export const coastKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CoastKind"]> = ["none", "cliff", "beach", "harbour_site", "reef"];
@@ -31317,6 +32779,7 @@ export const cultStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components
 export const cureSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CureSource"]> = ["knowledge", "granted"];
 export const damageTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DamageType"]> = ["cut", "pierce", "blunt", "fire", "cold", "venom", "magic", "void", "holy"];
 export const debtStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DebtStatus"]> = ["open", "overdue", "repaid", "forgiven"];
+export const decisionRuleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DecisionRule"]> = ["autocratic", "council", "assembly", "divine"];
 export const decreeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DecreeKind"]> = ["war", "peace", "alliance", "marriage", "trade"];
 export const disasterValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Disaster"]> = ["earthquake", "flood", "plague", "drought", "storm"];
 export const discoveryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Discovery"]> = ["known", "legend", "unknown", "forgotten"];
@@ -31335,7 +32798,7 @@ export const entityDeepenedEventKindValues: ReadonlyArray<FlattenedDeepRequired<
 export const entityFlagValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityFlag"]> = ["disaster", "dormant", "lost", "dead_language", "decipherable", "previous_creation", "ruin", "rebuilt", "remnant", "void", "cursed", "godless", "seeking_god", "empire", "federation", "independent", "colony", "pioneer", "golden_age", "immortal", "chimera", "mutation", "mutant", "mutated", "discovery", "native", "revelation", "soul_descended", "soul_bound", "soul_harvester", "crossed_to_the_dead", "wonder", "chosen", "manifested", "born_of_belief", "corrupted_memory", "fairy_tale", "name_from_language", "fixed_name", "species_became_people", "original_resource", "cosmic_monopoly", "outer_cult", "whisper_source", "nameless", "escaped", "megafauna", "invasive", "worships_planet", "planet_closed", "burned", "cosmic_plague", "mirror", "mirror_born", "oathbreaker", "exile", "omen", "time_echo", "two_timed", "empty_tomb", "resurrection_complete", "protected_from_disaster", "mechanics_weighed", "depleting", "syncretic", "returned_to_old_god", "revived_language", "on_watch", "mocked", "protected_from_ruin", "spared_soul", "ghost", "wizard", "age_changer", "time_returned", "legendary", "prophet", "bloodline_curse", "essence_drained", "returned_from_death", "saw_the_creator", "deified", "protected", "depleted", "agent_selected", "capital", "abandoned", "dissolved", "desolate", "razed", "fell_in_battle", "died_in_siege", "died_in_disaster", "died_of_plague", "slain_in_captivity", "doomed", "fate_shielded", "commemoration", "estranged_by_plague", "endangered", "extinct", "pilgrimage_site", "repealed", "merged", "disbanded", "assimilated", "forgotten", "swallowed"];
 export const entityOriginValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityOrigin"]> = ["son", "creator", "engine", "mortal", "cosmos"];
 export const entityStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityStatus"]> = ["canon", "rejected", "destroyed", "dead", "fulfilled"];
-export const entityTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityType"]> = ["region", "place", "resource", "settlement", "species", "people", "mortal", "item", "structure", "language", "legend", "tradition", "cult", "faction", "celestial", "artwork", "law", "spirit", "knowledge", "prophecy", "event", "vessel", "outer_being", "army", "natural_law", "trade_route", "disease"];
+export const entityTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EntityType"]> = ["region", "place", "resource", "settlement", "species", "people", "mortal", "item", "structure", "language", "legend", "tradition", "cult", "faction", "celestial", "artwork", "law", "spirit", "knowledge", "prophecy", "event", "vessel", "outer_being", "army", "natural_law", "trade_route", "disease", "polity", "house", "treaty"];
 export const epicWrittenEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpicWrittenEvent"]["kind"]> = ["epic.written"];
 export const epochBackupEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochBackupEvent"]["kind"]> = ["epoch.backup"];
 export const epochFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochFinishedEvent"]["kind"]> = ["epoch.finished"];
@@ -31365,12 +32828,14 @@ export const foreignGodPowerEffectValues: ReadonlyArray<FlattenedDeepRequired<co
 export const foreignGodStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodStatus"]> = ["awake", "asleep", "defeated", "dead"];
 export const genesisFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisFinishedEvent"]["kind"]> = ["genesis.finished"];
 export const genesisTemplateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisTemplate"]> = ["dark_fantasy", "mythic_age", "cosmic_horror", "fairy_tale", "star_myth", "sand_and_ash", "primordial_dawn", "crowns_and_knives", "drowned_world", "long_winter", "after_the_fall", "sky_islands", "age_of_engines"];
+export const governmentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GovernmentKind"]> = ["chiefdom", "monarchy", "theocracy", "oligarchy", "republic", "tribal_confederation", "empire", "hive_council", "god_kingdom", "occupation"];
 export const gravityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Gravity"]> = ["low", "normal", "high"];
 export const harmCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HarmCause"]> = ["battle", "duel", "punishment", "torture", "accident", "monster", "disaster", "curse", "magic_backlash", "god", "poison", "quest", "escape", "sacrifice", "age", "player"];
 export const heightClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HeightClass"]> = ["short", "average", "tall", "giant"];
 export const heroQuestKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HeroQuestKind"]> = ["hunt", "thread", "relic", "knowledge", "vengeance"];
 export const horizonStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HorizonStatus"]> = ["pending", "processing", "born", "wasted"];
 export const horrorEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HorrorEventKind"]> = ["stars_align", "eye_in_the_sky", "wave_of_silence", "reverse_rain", "visit_of_the_void", "the_dimming", "whispers_from_beyond"];
+export const houseStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HouseStats"]["kind"]> = ["house"];
 export const imageBulkLogEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageBulkLogEvent"]["kind"]> = ["image.bulk_log"];
 export const imageClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageClass"]> = ["manual", "bulk", "auto"];
 export const imageDoneEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageDoneEvent"]["kind"]> = ["image.done"];
@@ -31406,12 +32871,15 @@ export const landKindValues: ReadonlyArray<FlattenedDeepRequired<components>["sc
 export const languageStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LanguageStats"]["kind"]> = ["language"];
 export const languageTextureValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LanguageTexture"]> = ["flowing", "hard", "guttural", "sibilant", "long", "free"];
 export const languageTranslatedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LanguageTranslatedEvent"]["kind"]> = ["language.translated"];
+export const lawAreaValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LawArea"]> = ["succession", "property", "fiscal", "penal", "military", "social", "public_health", "magic"];
+export const lawKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LawKind"]> = ["succession_rule", "inheritance_split", "land_tenure", "slavery", "serfdom", "tax_rate", "tithe", "tolls", "debt_law", "penal_code", "levy_law", "conscription", "standing_army", "veteran_pension", "ransom_custom", "marriage_law", "sumptuary", "guild_charter", "foreigner_rights", "religious_tolerance", "worship_ban", "blood_feud", "quarantine", "burial_law", "sanitation", "magic_ban", "licensed_magic", "rite_restrictions", "custom"];
 export const lawStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LawStats"]["kind"]> = ["law"];
 export const ledgerUndoneEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LedgerUndoneEvent"]["kind"]> = ["ledger.undone"];
 export const legendCategoryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LegendCategory"]> = ["creature", "spirit", "resource", "relic"];
 export const legendStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LegendStats"]["kind"]> = ["legend"];
 export const legendaryQuestKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LegendaryQuestKind"]> = ["dead_star", "sealed_gate", "archive", "expel_outer"];
 export const legendaryQuestOutcomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LegendaryQuestOutcome"]> = ["completed", "failed", "invalidated"];
+export const legitimacyBasisValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LegitimacyBasis"]> = ["custom", "decree", "divine", "council"];
 export const linkGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LinkGroup"]> = ["all", "travel", "no_location", "conflict", "faith", "lineage", "knowledge"];
 export const llmCallKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LlmCallKind"]> = ["agent", "structured"];
 export const llmCallStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LlmCallStatus"]> = ["ok", "partial", "error"];
@@ -31435,6 +32903,7 @@ export const modifierOpValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const modifierSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ModifierSource"]> = ["injury", "condition", "trait", "law", "tradition", "artwork", "doctrine", "treaty", "structure", "wonder", "terrain", "weather", "season", "natural_law", "god_power", "blessing", "curse", "dominion", "phenomenon", "god_death", "player", "suppression", "pin"];
 export const mortalRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalRole"]> = ["ruler", "hero", "warrior", "knight", "hunter", "chosen", "seer", "priest", "sage", "healer", "artisan", "merchant", "scribe", "farmer", "explorer", "captain", "bandit", "saint", "apprentice", "commoner"];
 export const mortalStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalStats"]["kind"]> = ["mortal"];
+export const mortalStatsSexAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalStats"]["sex"]> = ["female", "male"];
 export const mortalToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalToolId"]> = ["look_at_world", "inspect_entity", "search_entities", "found_language", "coin_words", "produce_item", "build_structure", "create_culture", "discover_resource", "claim_resource", "found_settlement", "establish_trade", "declare_war", "worship", "pray_to_creator", "develop_knowledge", "learn_knowledge", "diplomacy", "go_on_adventure", "find_route", "explore_land", "resurrection_rite", "build_ship", "launch_expedition", "tame_species", "weave_chimera", "bind_spirit", "search_ruins", "sabotage", "preach", "challenge_god", "deny_god", "prophesy", "escape", "pay_ransom", "rescue_captive", "raise_army", "appoint_commander", "build_spy_network", "barter", "lend", "repay_debt", "adopt"];
 export const mortalTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalTurnFinishedEvent"]["kind"]> = ["mortal.turn_finished"];
 export const mortalTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalTurnStartedEvent"]["kind"]> = ["mortal.turn_started"];
@@ -31448,16 +32917,21 @@ export const nodeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["sc
 export const notableYearKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotableYearKind"]> = ["hunger", "plenty", "weather", "pestilence"];
 export const notificationCategoryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotificationCategory"]> = ["rebellion", "death", "birth", "prophecy", "apocalypse", "horror", "war", "prayer", "cosmos", "ascension", "disaster", "epoch", "achievement", "society", "reputation", "error", "note", "work"];
 export const notificationCreatedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotificationCreatedEvent"]["kind"]> = ["notification.created"];
+export const oathKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OathKind"]> = ["fealty", "vengeance", "celibacy", "pilgrimage", "protection", "silence", "blood_brotherhood"];
+export const oathStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OathStatus"]> = ["sworn", "kept", "broken", "fulfilled"];
+export const officeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OfficeKind"]> = ["ruler", "heir_designate", "regent", "chancellor", "marshal", "treasurer", "high_judge", "spymaster", "governor", "ambassador"];
 export const opinionComponentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OpinionComponent"]> = ["trust", "fear", "respect", "affection", "grievance"];
 export const outbreakStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OutbreakStatus"]> = ["active", "waning", "ended"];
 export const outerBargainModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OuterBargainMode"]> = ["force", "forbid", "allow"];
 export const outerBeingStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OuterBeingStats"]["kind"]> = ["outer_being"];
 export const partOfSpeechValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PartOfSpeech"]> = ["noun", "verb", "adjective", "affix", "title", "place_name", "proper_name", "number", "interjection"];
+export const partyRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PartyRole"]> = ["signatory", "overlord", "vassal", "guarantor"];
 export const passionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Passion"]> = ["loyalty", "ambition", "wrath", "mercy"];
 export const peopleStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PeopleStats"]["kind"]> = ["people"];
 export const phaseStageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PhaseStage"]> = ["tick", "pre_transition", "transition", "post_transition"];
 export const placeCoverValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PlaceCover"]> = ["open", "light", "heavy"];
 export const placeStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PlaceStats"]["kind"]> = ["place"];
+export const polityStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PolityStats"]["kind"]> = ["polity"];
 export const powerEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PowerEffect"]> = ["cheap_creation", "duel_master", "essence_spring", "worshipped", "tireless", "untouchable", "dream_whisper", "war_father", "harvester", "seer", "reviving", "bounty_giver", "curser"];
 export const prayerRequestValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PrayerRequest"]> = ["essence", "blessing", "permission", "vengeance", "forgiveness", "none", "wish"];
 export const pressureKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PressureKind"]> = ["hunger", "insecurity", "overcrowding", "poverty", "impiety", "humiliation", "stagnation"];
@@ -31468,6 +32942,7 @@ export const punishmentKindValues: ReadonlyArray<FlattenedDeepRequired<component
 export const rarityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Rarity"]> = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
 export const recordEndValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RecordEnd"]> = ["repeal", "abandon", "forget", "disband", "lose", "assimilate"];
 export const regionStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RegionStats"]["kind"]> = ["region"];
+export const regionalStandingValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RegionalStanding"]> = ["hegemon", "great_power", "minor_power", "client"];
 export const relationLineKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RelationLineKind"]> = ["trade", "hostility", "rule", "hunt"];
 export const reputationLabelValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ReputationLabel"]> = ["forgotten", "hated", "respected", "feared", "loved", "distant", "acknowledged"];
 export const resourceMechanicValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ResourceMechanic"]> = ["decaying", "addictive", "sentient", "depletion_price", "fixed", "sacred"];
@@ -31535,6 +33010,9 @@ export const traitKindValues: ReadonlyArray<FlattenedDeepRequired<components>["s
 export const traitSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraitSource"]> = ["birth", "inherited", "experience", "condition", "education", "divine", "player"];
 export const travelMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TravelMethod"]> = ["ancient_gate", "space_fold", "light_sail", "cosmic_mount", "dream_journey", "river_of_dead", "divine_bridge", "slingshot_orbit", "swallowed", "wormhole"];
 export const treasuryEntryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TreasuryEntry"]> = ["tax", "tolls", "investment", "garrison", "walls", "building", "festival", "alms", "fire", "plunder", "grant"];
+export const treatyKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TreatyKind"]> = ["peace", "truce", "alliance_defensive", "alliance_offensive", "non_aggression", "vassalage", "tribute", "marriage_pact", "trade_pact", "condotta", "guarantee", "interworld"];
+export const treatyStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TreatyStats"]["kind"]> = ["treaty"];
+export const treatyStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TreatyStatus"]> = ["in_force", "fulfilled", "broken", "expired"];
 export const tributeStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TributeStatus"]> = ["active", "ended", "revolted"];
 export const turnCounterValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TurnCounter"]> = ["season_order", "weather_shaping", "sibling_messages", "narrative_bonds", "prayers", "free_living_creation", "free_land_creation", "anchor_chosen", "words_coined", "gifts", "holy_world", "leak_stitched", "take_life", "intrigue", "outer_bargain", "harvests", "discoveries", "claims", "worship_changes", "learning", "prophecies", "commander_appointments", "adoptions", "explorations", "repeated_creations", "resurrection_rites", "languages_founded", "cultures_created", "land_rewards"];
 export const valueAxisValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ValueAxis"]> = ["honour", "tradition", "hierarchy", "martial", "piety", "purity", "kinship", "mercy", "knowledge", "wealth", "nature", "superstition", "xenophilia", "death"];

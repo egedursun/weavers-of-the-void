@@ -2,6 +2,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
@@ -10,6 +11,7 @@ from aerona.engine.gods.interventions import apply_abundance
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
+from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int
@@ -141,10 +143,14 @@ async def wizards(ctx: TickContext) -> None:
     knowledge = await KnowledgeMap.load(ctx.session)
     web = await LeyWeb.load(ctx.session)
     atlas = await RegionAtlas.load(ctx.session)
+    laws = await LawBook.load(ctx.session)
     for mortal in await canon(ctx.session, [EntityType.MORTAL]):
         if mortal.status is not EntityStatus.CANON or (stat(mortal, "intellect") or 0) < rules.world_effects.sorcerer_min_intellect:
             continue
         if not knowledge.knows(mortal.id, KnowledgeBranch.MAGIC):
+            continue
+        banned = laws.param(mortal.location_id or 0, LawKind.MAGIC_BAN, "severity")
+        if banned is not None and rng.chance(int(banned)):
             continue
         if not await has_flag(ctx.session, mortal.id, EntityFlag.WIZARD):
             await add_flag(ctx.session, mortal.id, EntityFlag.WIZARD, ctx.epoch)

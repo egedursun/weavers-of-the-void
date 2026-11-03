@@ -13,12 +13,14 @@ from aerona.domain.enums.demography import AgeBand, CohortCondition
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for, total
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.notes import note
+from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.levies import demobilise
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, living_entity
@@ -231,7 +233,8 @@ async def ruin_merchants(ctx: TickContext) -> int:
                 continue
             if member.social_class is SocialClass.OUTCAST or not ctx.rng(f"ruin.{member.id}.{loan.id}").chance(table.ruin_chance):
                 continue
-            member.social_class = SocialClass.OUTCAST
+            remedy = await law_param(ctx.session, member.location_id or 0, LawKind.DEBT_LAW, "remedy")
+            member.social_class = SocialClass.SERF_OR_SLAVE if remedy == "bondage" else SocialClass.OUTCAST
             fallen += 1
             await note(
                 ctx,

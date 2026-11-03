@@ -450,6 +450,51 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             ("plague", "wasting fever", "river flux", "rot of the lungs", "spirit sickness", "void blight"),
         ),
         EntityTypeSpec(
+            EntityType.POLITY,
+            "Polity",
+            "Polities",
+            "realm",
+            None,
+            frozenset(),
+            False,
+            (
+                StatField("legitimacy", "Legitimacy"),
+                StatField("stability", "Stability"),
+                StatField("subjects", "Subjects", lambda rules: 0, lambda rules: rules.limits.people_population_cap),
+                StatField("territory", "Lands held", lambda rules: 0, lambda rules: 100000),
+            ),
+            ("kingdom", "chiefdom", "republic", "empire", "theocracy", "merchant league"),
+        ),
+        EntityTypeSpec(
+            EntityType.HOUSE,
+            "House",
+            "Houses",
+            "house",
+            None,
+            frozenset(),
+            False,
+            (
+                StatField("prestige", "Prestige"),
+                StatField("members", "Living members", lambda rules: 0, lambda rules: 100000),
+                StatField("wealth", "Wealth"),
+            ),
+            ("royal house", "noble line", "clan", "merchant dynasty", "priestly lineage"),
+        ),
+        EntityTypeSpec(
+            EntityType.TREATY,
+            "Treaty",
+            "Treaties",
+            "treaty",
+            None,
+            frozenset(),
+            False,
+            (
+                StatField("parties", "Parties", lambda rules: 0, lambda rules: 1000),
+                StatField("trust", "Trust"),
+            ),
+            ("peace", "alliance", "vassal oath", "marriage pact", "trade pact"),
+        ),
+        EntityTypeSpec(
             EntityType.NATURAL_LAW,
             "Natural law",
             "Natural laws",
@@ -491,6 +536,9 @@ CREATION_BASE_COST_RULES: dict[EntityType, RuleBound] = {
     EntityType.NATURAL_LAW: lambda rules: rules.creation_base_cost.natural_law,
     EntityType.TRADE_ROUTE: lambda rules: rules.creation_base_cost.trade_route,
     EntityType.DISEASE: lambda rules: rules.creation_base_cost.disease,
+    EntityType.POLITY: lambda rules: rules.creation_base_cost.polity,
+    EntityType.HOUSE: lambda rules: rules.creation_base_cost.house,
+    EntityType.TREATY: lambda rules: rules.creation_base_cost.treaty,
 }
 
 

@@ -29,6 +29,9 @@ class EntityType(StrEnum):
     NATURAL_LAW = "natural_law"
     TRADE_ROUTE = "trade_route"
     DISEASE = "disease"
+    POLITY = "polity"
+    HOUSE = "house"
+    TREATY = "treaty"
 
 
 class EntityStatus(StrEnum):

@@ -12,6 +12,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.polity import LawProfileRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
@@ -94,14 +95,14 @@ async def conquered_this_epoch(ctx: TickContext) -> set[int]:
     return {item for item in losers if item is not None} | set(ruled)
 
 
-def repeal_chance(rules: Rules, law: EntityRow, *, orphaned: bool, conquered: bool, rebels: bool) -> tuple[float, str | None]:
+def repeal_chance(rules: Rules, law: EntityRow, *, orphaned: bool, conquered: float, rebels: bool) -> tuple[float, str | None]:
     cycles = rules.life_cycles
     if orphaned:
         return float(cycles.repeal_orphan_chance), "its settlement is gone"
     unjust = (stat(law, "justice") or 0) < cycles.unjust_justice
     chance, reason = 0.0, None
-    if conquered:
-        chance, reason = chance + cycles.repeal_conquest_chance, "the new masters did not recognise it"
+    if conquered > 0:
+        chance, reason = chance + cycles.repeal_conquest_chance * conquered, "the new masters did not recognise it"
     if unjust:
         chance, reason = chance + cycles.repeal_unjust_chance, reason or "the people could not bear its injustice"
     if rebels and unjust:
@@ -124,9 +125,9 @@ async def laws(ctx: TickContext) -> int:
         if repealed >= cycles.repeal_cap or ctx.epoch - law.birth_epoch < cycles.law_grace_epochs:
             continue
         orphaned = place is not None and place.status is not EntityStatus.CANON
-        chance, reason = repeal_chance(
-            ctx.rules, law, orphaned=orphaned, conquered=place is not None and place.id in conquered, rebels=place is not None and place.id in rebels
-        )
+        profile = await ctx.session.get(LawProfileRow, law.id)
+        clash = profile.conflict / 100 if profile is not None else (1.0 if place is not None and place.id in conquered else 0.0)
+        chance, reason = repeal_chance(ctx.rules, law, orphaned=orphaned, conquered=clash, rebels=place is not None and place.id in rebels)
         if not chance or reason is None or not rng.chance(chance):
             continue
         await end_record(ctx, law, EntityFlag.REPEALED, f"repealed; {reason}")

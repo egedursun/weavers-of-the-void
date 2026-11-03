@@ -26,6 +26,8 @@ from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, Personali
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.domain.enums.body import ConditionKind, InjuryKind
 from aerona.domain.enums.entity import EntityType
+from aerona.engine.interconnect.catalog_realm import BEHAVIOURS as REALM_BEHAVIOURS
+from aerona.engine.interconnect.catalog_realm import REALM_MECHANICS
 from aerona.engine.interconnect.catalog_society import BEHAVIOURS as SOCIETY_BEHAVIOURS
 from aerona.engine.interconnect.catalog_society import SOCIETY_MECHANICS
 from aerona.engine.interconnect.registry import MECHANICS, Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface, register
@@ -808,7 +810,7 @@ CORE_MECHANICS = (
         ),
     ),
 )
-BUILT_IN = (*CORE_MECHANICS, *SOCIETY_MECHANICS)
+BUILT_IN = (*CORE_MECHANICS, *SOCIETY_MECHANICS, *REALM_MECHANICS)
 
 MODULE_SUBSYSTEMS: dict[str, Subsystem] = {
     "warfare": Subsystem.WAR,
@@ -1576,7 +1578,7 @@ ROUTE_DIFFUSION = Mechanic(
         Coupling(Subsystem.DEMOGRAPHY, "plague follows the busiest roads", EdgeKind.FLOW),
     ),
 )
-for entry in (*BEHAVIOURS, *SOCIETY_BEHAVIOURS):
+for entry in (*BEHAVIOURS, *SOCIETY_BEHAVIOURS, *REALM_BEHAVIOURS):
     register(behaviour(entry))
 register(ROUTE_DIFFUSION)
 CLAIMED = {phase for mechanic in BUILT_IN for phase in mechanic.phases}

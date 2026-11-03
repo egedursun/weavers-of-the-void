@@ -13,16 +13,19 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.demography import AgeBand, CohortCondition, Job
 from aerona.domain.enums.environment import CoastKind
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import cohorts_of, seed
+from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
 
 C = SocialClass
 J = Job
 FED = 100
+LEVY_BASE = 10
 SEASON_SICK_PCT = 50
 AGE_WORK: Mapping[AgeBand, float] = MappingProxyType({AgeBand.CHILD: 0.2, AgeBand.ADULT: 1.0, AgeBand.ELDER: 0.5})
 CONDITION_WORK: Mapping[CohortCondition, float] = MappingProxyType(
@@ -155,7 +158,15 @@ async def mobilisation(session: AsyncSession, rules: Rules, community: EntityRow
     martial = 1 + values.get(ValueAxis.MARTIAL, 0) / PERCENT * table.levy_martial_pct / PERCENT
     cohesion = 1 + ((culture.cohesion if culture is not None else table.cohesion_base) - table.cohesion_base) / PERCENT * table.levy_cohesion_pct / PERCENT
     season = 1 - harvest_share * (1 - table.harvest_levy_pct / PERCENT)
-    return max(0.1, martial * cohesion * season)
+    laws = await LawBook.load(session)
+    share = laws.param(community.id, LawKind.LEVY_LAW, "share")
+    drafted = laws.param(community.id, LawKind.CONSCRIPTION, "share")
+    law = 1.0
+    if share is not None:
+        law *= 1 + (int(share) - LEVY_BASE) / LEVY_BASE * rules.legislation.levy_share_pct / PERCENT * laws.weight(community.id, LawKind.LEVY_LAW)
+    if drafted is not None:
+        law *= 1 + int(drafted) / PERCENT * laws.weight(community.id, LawKind.CONSCRIPTION)
+    return max(0.1, martial * cohesion * season * law)
 
 
 async def fighting_age(session: AsyncSession, community_id: int) -> int | None:

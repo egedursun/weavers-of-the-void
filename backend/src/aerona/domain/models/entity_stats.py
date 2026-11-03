@@ -71,6 +71,7 @@ class MortalStats(ValueObject):
     age: Count | None = None
     lifespan: Count | None = None
     death_year: int | None = None
+    sex: Literal["female", "male"] | None = None
 
 
 class ItemStats(ValueObject):
@@ -205,6 +206,27 @@ class DiseaseStats(ValueObject):
     dead: Count | None = None
 
 
+class PolityStats(ValueObject):
+    kind: Literal["polity"] = "polity"
+    legitimacy: Percent | None = None
+    stability: Percent | None = None
+    subjects: Count | None = None
+    territory: Count | None = None
+
+
+class HouseStats(ValueObject):
+    kind: Literal["house"] = "house"
+    prestige: Percent | None = None
+    members: Count | None = None
+    wealth: Percent | None = None
+
+
+class TreatyStats(ValueObject):
+    kind: Literal["treaty"] = "treaty"
+    parties: Count | None = None
+    trust: Percent | None = None
+
+
 EntityStats = Annotated[
     RegionStats
     | PlaceStats
@@ -232,6 +254,9 @@ EntityStats = Annotated[
     | ArmyStats
     | TradeRouteStats
     | DiseaseStats
+    | PolityStats
+    | HouseStats
+    | TreatyStats
     | NaturalLawStats,
     Field(discriminator="kind"),
 ]

@@ -11,6 +11,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.engine.body.cohorts import war_appetite
 from aerona.engine.context import TickContext
@@ -19,6 +20,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import betrayal_drive, closeness, war_drive
 from aerona.engine.phase import Phase
 from aerona.engine.phases.afterlife import cosmic_court
+from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.queries import BondIndex, active_bonds, canon, living_entity
 from aerona.engine.primitives.stats import stat
 from aerona.engine.services.community_relations import (
@@ -233,6 +235,16 @@ async def _pair_context(ctx: TickContext) -> PairContext:
     return PairContext(bonds, await blood_feud_pairs(ctx.session))
 
 
+async def settled_by_wergild(ctx: TickContext, first: EntityRow, second: EntityRow) -> bool:
+    if not ctx.rng(f"wergild.{first.id}.{second.id}.{ctx.epoch}").chance(50):
+        return False
+    if not await law_param(ctx.session, first.id, LawKind.BLOOD_FEUD, "wergild_allowed"):
+        return False
+    await change_relation(ctx, first.id, second.id, ctx.rules.treaties.wergild_value // 3, MemoryKind.GIFTED_ME, note="blood money paid")
+    await _note(ctx, f"{first.name} and {second.name} settled their blood feud with wergild instead of war.", "diplomacy.wergild", (first.id, second.id))
+    return True
+
+
 async def _neighbour_pair(
     ctx: TickContext,
     first: EntityRow,
@@ -260,6 +272,7 @@ async def _neighbour_pair(
     if (
         not enemy
         and value <= rules.grudge_threshold
+        and not (feud and await settled_by_wergild(ctx, first, second))
         and counters.declared < rules.declarations_cap
         and await ongoing_war_count(ctx.session, first.id) < cap
         and await ongoing_war_count(ctx.session, second.id) < cap

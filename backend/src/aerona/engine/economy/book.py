@@ -1,5 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
+from itertools import combinations
 
 from sqlalchemy import select
 
@@ -9,12 +10,14 @@ from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.economy import ResourceProfileRow, ResourceWorkerRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
+from aerona.db.tables.polity import TreatyClauseRow, TreatyPartyRow, TreatyProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.polity import ClauseKind, TreatyStatus
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.economy.materials import MaterialBook
@@ -41,6 +44,7 @@ class EconomyBook:
     materials: MaterialBook
     affiliated: dict[int, int] = field(default_factory=dict)
     labour: dict[int, dict[Job, LabourRow]] = field(default_factory=dict)
+    waived: set[frozenset[int]] = field(default_factory=set)
 
     @classmethod
     async def load(cls, ctx: TickContext) -> "EconomyBook":
@@ -87,6 +91,12 @@ class EconomyBook:
                 held[skill.skill] = max(held.get(skill.skill, 0), skill.level)
         for labour in await session.scalars(select(LabourRow)):
             book.labour.setdefault(labour.community_entity_id, {})[labour.job] = labour
+        live = select(TreatyProfileRow.treaty_entity_id).where(TreatyProfileRow.status == TreatyStatus.IN_FORCE)
+        waivers = select(TreatyClauseRow.treaty_entity_id).where(TreatyClauseRow.kind == ClauseKind.TOLLS_WAIVED, TreatyClauseRow.treaty_entity_id.in_(live))
+        signers: dict[int, set[int]] = defaultdict(set)
+        for party in await session.scalars(select(TreatyPartyRow).where(TreatyPartyRow.treaty_entity_id.in_(waivers))):
+            signers[party.treaty_entity_id].add(party.party_node_id)
+        book.waived = {frozenset(pair) for parties in signers.values() for pair in combinations(sorted(parties), 2)}
         return book
 
     def home_of(self, entity: EntityRow, homes: dict[int, int]) -> int | None:

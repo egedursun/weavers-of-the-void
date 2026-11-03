@@ -14,6 +14,7 @@ export const SCALE_BAR_PX = 120
 export const LAYER_MODES = [
   'terrain',
   'political',
+  'realms',
   'regions',
   'creators',
   'religions',
@@ -32,6 +33,7 @@ export type LayerMode = (typeof LAYER_MODES)[number]
 export const LAYER_LABEL: Record<LayerMode, string> = {
   terrain: 'Terrain',
   political: 'Political',
+  realms: 'Realms',
   regions: 'Regions',
   creators: 'Creators',
   religions: 'Religions',
@@ -47,6 +49,7 @@ export const LAYER_LABEL: Record<LayerMode, string> = {
 }
 
 export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
+  realms: 'map-layer-realms',
   ground: 'map-layer-terrain',
   soil: 'map-layer-soil',
   climate: 'map-layer-climate',

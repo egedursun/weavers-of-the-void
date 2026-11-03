@@ -15,6 +15,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import ActKind, CareerChange, MemoryKind, PressureKind, TraitEffect, ValueHolder
+from aerona.domain.enums.polity import OathKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import HeroQuestKind
 from aerona.engine.body.hits import Harm
@@ -50,6 +51,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.phases.heroes import active_quest, start_quest
 from aerona.engine.phases.remembrance import disaster_toll
 from aerona.engine.phases.society_support.quests import QuestOption
+from aerona.engine.polity.oaths import swear
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import round_half_up
@@ -424,6 +426,8 @@ async def vengeance(ctx: TickContext) -> int:
         reason = row.note or MEMORIES[row.kind].label.lower()
         await start_quest(ctx, avenger, QuestOption(HeroQuestKind.VENGEANCE, target.id, 1.0, f"to avenge {reason} on {target.name}"))
         await note(ctx, f"{avenger.name} swore vengeance on {target.name} for {reason}.", key="memory.vengeance", ids=[avenger.id, target.id])
+        if ctx.rng(seed_of("vengeance_oath", row.id)).chance(ctx.rules.oaths.vengeance_chance):
+            await swear(ctx, avenger, OathKind.VENGEANCE, recipient_id=target.id, note_text=reason)
         sworn += 1
     return sworn
 

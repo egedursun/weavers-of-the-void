@@ -439,5 +439,163 @@
       "düşüncesiz",
       "atılgan"
     ]
+  },
+  "laws": {
+    "succession_rule": [
+      "succession",
+      "throne",
+      "heir",
+      "veraset",
+      "taht",
+      "miras töresi",
+      "tahta"
+    ],
+    "inheritance_split": [
+      "inheritance",
+      "miras"
+    ],
+    "land_tenure": [
+      "land",
+      "tenure",
+      "toprak",
+      "tarla"
+    ],
+    "slavery": [
+      "slave",
+      "slavery",
+      "köle",
+      "kölelik"
+    ],
+    "serfdom": [
+      "serf",
+      "serfdom",
+      "angarya"
+    ],
+    "tax_rate": [
+      "tax",
+      "vergi",
+      "haraç"
+    ],
+    "tithe": [
+      "tithe",
+      "öşür",
+      "ondalık"
+    ],
+    "tolls": [
+      "trade",
+      "toll",
+      "market",
+      "ticaret",
+      "gümrük",
+      "tartı",
+      "kantar",
+      "pazar"
+    ],
+    "debt_law": [
+      "debt",
+      "borç"
+    ],
+    "penal_code": [
+      "penal",
+      "punishment",
+      "crime",
+      "ceza",
+      "suç"
+    ],
+    "levy_law": [
+      "levy",
+      "asker",
+      "seferberlik"
+    ],
+    "conscription": [
+      "conscription",
+      "zorunlu"
+    ],
+    "veteran_pension": [
+      "veteran",
+      "pension",
+      "gazi"
+    ],
+    "ransom_custom": [
+      "ransom",
+      "fidye"
+    ],
+    "marriage_law": [
+      "marriage",
+      "wedding",
+      "evlilik",
+      "nikah"
+    ],
+    "sumptuary": [
+      "sumptuary",
+      "luxury",
+      "lüks",
+      "giyim"
+    ],
+    "guild_charter": [
+      "guild",
+      "lonca"
+    ],
+    "foreigner_rights": [
+      "foreigner",
+      "stranger",
+      "yabancı",
+      "misafir"
+    ],
+    "religious_tolerance": [
+      "temple",
+      "faith",
+      "tolerance",
+      "tapınak",
+      "inanç"
+    ],
+    "worship_ban": [
+      "worship ban",
+      "ban on worship",
+      "yasak tapınma"
+    ],
+    "blood_feud": [
+      "blood feud",
+      "feud",
+      "wergild",
+      "kan davası",
+      "kan bedeli"
+    ],
+    "quarantine": [
+      "quarantine",
+      "karantina",
+      "salgın"
+    ],
+    "burial_law": [
+      "burial",
+      "funeral",
+      "defin",
+      "cenaze"
+    ],
+    "sanitation": [
+      "sanitation",
+      "water",
+      "su",
+      "temizlik"
+    ],
+    "magic_ban": [
+      "sorcery",
+      "magic ban",
+      "büyü yasağı"
+    ],
+    "licensed_magic": [
+      "licensed magic",
+      "büyü izni"
+    ],
+    "rite_restrictions": [
+      "rite",
+      "ayin"
+    ],
+    "custom": [
+      "custom",
+      "oath",
+      "töre",
+      "söz"
+    ]
   }
 }

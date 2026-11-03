@@ -17,6 +17,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import PressureKind
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import CultStats
@@ -29,6 +30,7 @@ from aerona.engine.mind.hooks import converted
 from aerona.engine.mind.space import DISTANCE_MAX, NEUTRAL_DISTANCE, value_distance
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
+from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import FaithIndex, change_religion, faith_dominance, faith_shares
 from aerona.engine.primitives.numbers import clamp_float, clamp_int, fraction, round_half_up
@@ -298,6 +300,16 @@ def conversion_sources(rules: Rules, community: EntityRow, world: SpreadWorld, s
     return sources
 
 
+def tolerance(ctx: TickContext, laws: LawBook, community_id: int) -> float:
+    level = laws.param(community_id, LawKind.RELIGIOUS_TOLERANCE, "level")
+    table = ctx.rules.legislation
+    if level == "free":
+        return table.tolerance_spread_pct / PERCENT
+    if level == "persecution":
+        return table.persecution_spread_pct / PERCENT
+    return 1.0
+
+
 def best_source(
     rules: Rules, sources: Sequence[ConversionSource], old: int | None, seeker: bool, world: tuple[FaithIndex, WorshipShares]
 ) -> ConversionSource | None:
@@ -385,6 +397,7 @@ async def religion_spread(ctx: TickContext) -> None:
     shares.faith = await faith_shares(session)
     creator_id = await NodeRepository(session).creator_id()
     rng = ctx.rng("spread")
+    laws = await LawBook.load(session)
     conversions = syncretisms = 0
     for community in world.communities:
         if conversions >= settings.conversion_cap and syncretisms >= settings.syncretism_cap:
@@ -396,7 +409,7 @@ async def religion_spread(ctx: TickContext) -> None:
             continue
         seeker = old is None or community.id in flags[EntityFlag.SEEKING_GOD] or community.id in flags[EntityFlag.GODLESS]
         chosen = best_source(ctx.rules, conversion_sources(ctx.rules, community, world, seeker), old, seeker, (faith, shares))
-        if chosen is None or not rng.probability(chosen.pull):
+        if chosen is None or not rng.probability(min(1.0, chosen.pull * tolerance(ctx, laws, community.id))):
             continue
         syncretic = old is not None and not seeker and rng.chance(settings.syncretism_pct * god_kinship(world, old, chosen.god_id))
         if (syncretisms if syncretic else conversions) >= (settings.syncretism_cap if syncretic else settings.conversion_cap):
