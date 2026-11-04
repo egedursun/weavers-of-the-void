@@ -10,6 +10,6 @@ backend/.import_linter_cache/
 frontend/node_modules/
 frontend/dist/
 image-worker/.venv/
-data-fresh/
+data-fresh*/
 frontend/.vitest-attachments/
 *.tmp.mjs
