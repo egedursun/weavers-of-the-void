@@ -59,7 +59,7 @@ def subsystem_links() -> tuple[Link, ...]:
 def mechanic_links() -> dict[str, tuple[MechanicLink, ...]]:
     grouped: dict[tuple[str, str, str, Subsystem | None, EdgeKind], set[str]] = defaultdict(set)
     for edge in cached_edges():
-        if edge.kind is EdgeKind.RULE_SWITCH:
+        if edge.kind is EdgeKind.RULE_SWITCH or edge.carrier in GENERIC_CARRIERS:
             continue
         grouped[(edge.writer, "out", edge.reader or "", edge.target, edge.kind)].add(edge.carrier)
         if edge.reader is not None:

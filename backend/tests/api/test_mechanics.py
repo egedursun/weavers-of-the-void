@@ -30,3 +30,30 @@ async def test_a_place_without_stats_still_opens_its_mechanics(api: ApiWorld) ->
     response = await api.http.get(f"/api/nodes/{region.id}/mechanics")
     assert response.status_code == 200, response.text
     assert response.json()["node_id"] == region.id
+
+
+async def test_the_registry_graph_and_a_mechanic_s_links_are_served(api: ApiWorld) -> None:
+    graph = await api.http.get("/api/mechanics/graph")
+    assert graph.status_code == 200, graph.text
+    body = graph.json()
+    assert {item["key"] for item in body["subsystems"]} >= {"core", "body", "environment"}
+    assert any("modifier" in link["kinds"] for link in body["links"])
+    links = await api.http.get("/api/mechanics/modifiers/links")
+    assert links.status_code == 200, links.text
+    assert links.json()["mechanic"]["key"] == "modifiers"
+    assert (await api.http.get("/api/mechanics/nowhere/links")).status_code == 404
+
+
+async def test_a_written_incident_shows_in_the_causality_graph(api: ApiWorld) -> None:
+    region = seeded(api).core.regions[0]
+    place = [{"node_id": region.id, "role": "place"}]
+    first = await api.http.post("/api/actions/incident:create", json={"text": "The river rose.", "kind": "player.history", "magnitude": 30, "participants": place})
+    assert first.status_code == 200, first.text
+    root = first.json()["created_ids"][0]
+    struck = [{"node_id": region.id, "role": "target"}]
+    body = {"text": "The fields drowned.", "kind": "player.history", "magnitude": 30, "cause_incident_id": root, "participants": struck}
+    second = await api.http.post("/api/actions/incident:create", json=body)
+    assert second.status_code == 200, second.text
+    response = await api.http.get(f"/api/nodes/{region.id}/causality")
+    assert response.status_code == 200, response.text
+    assert {"cause": root, "effect": second.json()["created_ids"][0], "span": 0} in response.json()["edges"]
