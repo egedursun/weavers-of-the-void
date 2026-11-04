@@ -45,7 +45,7 @@ from aerona.engine.mind.opinion import OpinionContext
 from aerona.engine.mind.skills import choose_career, left_to_beg, practise_any, seed_skills, teach_apprentices, weather_skills
 from aerona.engine.mind.space import value_reading
 from aerona.engine.mind.traits import seed_traits
-from aerona.engine.mind.values import drift_body, drift_culture, drift_person, seed_values
+from aerona.engine.mind.values import drift_body, drift_culture, drift_divine, drift_person, seed_values
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.heroes import active_quest, start_quest
@@ -289,6 +289,10 @@ async def mind_values(ctx: TickContext) -> None:
             moved += 1 if await drift_person(ctx, entity, index, await traits_of(ctx.session, entity.id)) else 0
         elif entity.entity_type in (EntityType.FACTION, EntityType.CULT):
             moved += 1 if await drift_body(ctx, entity, index) else 0
+    for son in await ctx.session.scalars(select(SonRow).order_by(SonRow.id)):
+        moved += 1 if await drift_divine(ctx, son, index) else 0
+    for god in await ctx.session.scalars(select(ForeignGodRow).order_by(ForeignGodRow.id)):
+        moved += 1 if await drift_divine(ctx, god, index) else 0
     ctx.count("values_drifted", moved)
 
 

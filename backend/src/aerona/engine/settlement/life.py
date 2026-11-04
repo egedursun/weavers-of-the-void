@@ -1,6 +1,5 @@
 from sqlalchemy import func, select
 
-from aerona.catalog.laws import PENALTY_HARM
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleCultureRow
 from aerona.db.tables.disease import QuarantineRow
@@ -11,37 +10,34 @@ from aerona.db.tables.mind import CultureValueRow
 from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementTreasuryRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow
-from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import AgeBand, Job
 from aerona.domain.enums.disease import SpreadPath
-from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import ValueAxis
-from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.settlement import TIER_ORDER, WATER_ORDER, BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.body.customs import culture_of, people_of
-from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import cohorts_of
 from aerona.engine.demography.mobility import bound_revolt, inequality_pressure
 from aerona.engine.economy.routes import BANDIT_KINDS
 from aerona.engine.interconnect.flows import FlowCategory, flowing
-from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.research import lacks
 from aerona.engine.military.occupation import occupation_over, occupation_tax, pay_occupier
 from aerona.engine.mind.drives import unrest as needs_unrest
 from aerona.engine.mind.space import value_distance
+from aerona.engine.mortal.justice import code_punishment, community_ruler, sentence
 from aerona.engine.notes import note
 from aerona.engine.phases.disasters import strike_plague
-from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import active_bonds, add_flag, living_entity
+from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.society import supply_index
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat
 from aerona.engine.settlement.book import Town, ledger, tier_for
@@ -358,22 +354,13 @@ async def punish(ctx: TickContext, town: Town) -> bool:
         .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == town.entity.id)
         .order_by(EntityRow.id)
     )
-    candidates = [
-        mortal for mortal in culprits if mortal.social_class is SocialClass.OUTCAST or (mortal.subtype or "").lower() in {"bandit", "thief", "outlaw"}
-    ]
+    candidates = [mortal for mortal in culprits if mortal.social_class is SocialClass.OUTCAST or mortal.mortal_role is MortalRole.BANDIT]
     if not candidates:
         return False
     culprit = ctx.rng(f"culprit.{town.entity.id}").pick(candidates)
-    penalty = await law_param(ctx.session, town.entity.id, LawKind.PENAL_CODE, "theft")
-    if penalty == "exile":
-        culprit.location_id = None
-        await add_flag(ctx.session, culprit.id, EntityFlag.EXILE, ctx.epoch)
-        return True
-    hp = PENALTY_HARM.get(str(penalty), table.punishment_hp) if penalty is not None else table.punishment_hp
-    if hp <= 0:
-        return True
-    await apply_hits(ctx, culprit, Harm(hp, HarmCause.PUNISHMENT, f"punished by the watch of {town.entity.name}"))
-    return True
+    punishment = await code_punishment(ctx, town.entity.id, CrimeKind.THEFT)
+    judge = await community_ruler(ctx.session, town.entity.id)
+    return await sentence(ctx, culprit, CrimeKind.THEFT, punishment, judge=judge)
 
 
 async def quarantined(ctx: TickContext, region: int | None) -> bool:

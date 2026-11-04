@@ -67,6 +67,7 @@ from aerona.engine.phases import (
     migration,
     mind,
     monsters,
+    mortal_life,
     mortals,
     native_faith,
     pantheon,
@@ -165,6 +166,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + migration.PHASES
     + monsters.PHASES
     + mortals.PHASES
+    + mortal_life.PHASES
     + native_faith.PHASES
     + pantheon.PHASES
     + population.PHASES
@@ -211,6 +213,7 @@ CLEANUP_STAGE = stage(
     "environment_survey",
     "mind_survey",
     "body_survey",
+    "mortal_survey",
     "economy_survey",
     "expire_truces",
     "language_and_faith",
@@ -335,8 +338,20 @@ SOCIETY_ENGINE_STAGE = stage(
     "item_cycles",
     "artwork_cycles",
 )
-AGING_STAGE = stage("body_healing", "mortal_wounds", "body_conditions", "body_society", "mortal_aging", "dead_bonds_closing")
-MIND_STAGE = stage("mind_values", "mind_skills", "mind_memories", "mind_needs", "famine_aid", "mind_opinion", "incident_threads")
+AGING_STAGE = stage("body_healing", "mortal_wounds", "body_conditions", "body_society", "mortal_life_course", "mortal_aging", "dead_bonds_closing")
+MIND_STAGE = stage(
+    "mind_values",
+    "mind_skills",
+    "mind_memories",
+    "mind_needs",
+    "mortal_kin",
+    "mortal_standing",
+    "mortal_minds",
+    "famine_aid",
+    "mind_opinion",
+    "ethnic_relations",
+    "incident_threads",
+)
 
 TICK_ORDER: tuple[Phase, ...] = (
     CLEANUP_STAGE + GRUDGE_STAGE + SUB_ENGINE_STAGE + RAID_STAGE + ECONOMY_STAGE + SOCIETY_STAGE + SOCIETY_ENGINE_STAGE + AGING_STAGE + MIND_STAGE

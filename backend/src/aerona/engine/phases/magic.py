@@ -11,6 +11,7 @@ from aerona.engine.environment.ley import LeyWeb
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.rites import cast, choose
+from aerona.engine.mortal.equipment import focus_pct
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.polity.book import RealmBook
@@ -164,7 +165,7 @@ async def wizards(ctx: TickContext) -> None:
             await add_flag(ctx.session, mortal.id, EntityFlag.WIZARD, ctx.epoch)
             await note(ctx, f"{mortal.name} deciphered the language of magic; now a wizard.", key="magic.wizard", ids=[mortal.id])
         ley = rules.environment.ley_wizard_pct / PERCENT if web.on_line(atlas.top_region(mortal.id)) else 1
-        if not rng.chance(rules.world_engine.sorcerer_act_chance * ley * holy):
+        if not rng.chance(rules.world_engine.sorcerer_act_chance * ley * holy * await focus_pct(ctx.session, rules, mortal.id)):
             continue
         home = await living_entity(ctx.session, mortal.location_id)
         if home is None or worked >= rules.rites.cap:

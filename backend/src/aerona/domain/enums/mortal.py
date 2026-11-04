@@ -92,6 +92,7 @@ class CrimeKind(StrEnum):
 
 class PunishmentKind(StrEnum):
     FINE = "fine"
+    FLOGGING = "flogging"
     EXILE = "exile"
     BRANDING = "branding"
     HAND = "hand"

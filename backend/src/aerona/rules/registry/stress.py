@@ -17,6 +17,7 @@ class StressRules:
     loss_stress: int = rule(15, 0, 100, G, "Stress the death of kin adds")
     war_stress: int = rule(5, 0, 100, G, "Stress living through a war adds per epoch")
     duty_conflict_stress: int = rule(6, 0, 100, G, "Stress conflicting loyalties add per epoch")
+    duty_gap: int = rule(40, 0, 100, G, "Gap between loyalty to liege and to people at which duties conflict")
     willpower_relief_pct: int = rule(50, 0, 200, G, "How much willpower dampens stress (%)")
     despair_suicide: int = rule(0, 0, 1, G, "Despair can end in suicide")
     despair_suicide_chance: int = rule(10, 0, 100, G, "Chance a despairing break ends in suicide when allowed (%)")

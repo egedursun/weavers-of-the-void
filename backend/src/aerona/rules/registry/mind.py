@@ -24,6 +24,12 @@ class CultureDriftRules:
     neighbour_pull_pct: int = rule(20, 0, 100, G, "Pull of a people's neighbours on its values (%)")
     ruler_pull_pct: int = rule(25, 0, 100, G, "Pull of a ruler's values on their people (%)")
     god_pull_pct: int = rule(20, 0, 100, G, "Pull of the patron god's values on a people (%)")
+    person_ruler_pct: int = rule(20, 0, 100, G, "Pull of a liege's values on the mortals they rule (%)")
+    person_god_pct: int = rule(15, 0, 100, G, "Pull of a mortal's god on their values (%)")
+    maimed_shift: int = rule(10, 0, 100, G, "How far being maimed turns a mortal toward death and piety")
+    war_shift: int = rule(8, 0, 100, G, "How far living through war turns a mortal toward martial values and away from mercy")
+    conversion_shift: int = rule(12, 0, 100, G, "How far a conversion turns a mortal toward piety and away from tradition")
+    divine_drift_pct: int = rule(20, 0, 100, G, "How fast a god's values follow its changing domains and passions (%)")
     agenda_drift_pct: int = rule(8, 0, 100, G, "Share of the gap to its people and its members a faction's agenda closes each epoch (%)")
     doctrine_drift_pct: int = rule(3, 0, 100, G, "Share of the gap to its believers a cult's doctrine closes each epoch (%)")
     leader_weight_pct: int = rule(60, 0, 100, G, "Weight members carry against the people when a faction or cult drifts (%)")
@@ -41,6 +47,7 @@ class CultureDriftRules:
     notable_value: int = rule(50, 1, 100, G, "Strength a value must reach before the chronicle notes a people's change of heart")
     refugee_kinship_weight: int = rule(15, 0, 100, G, "Shelter weight refugees give a host whose values are close to theirs")
     migration_kinship_pct: int = rule(40, 0, 200, G, "How much migrants prefer lands whose settlers share their values (%)")
+    migration_opinion_pct: int = rule(60, 0, 200, G, "How much migrants prefer lands whose settlers they think well of, and shun those they hate (%)")
 
 
 @dataclass(frozen=True)
@@ -105,6 +112,13 @@ class CareersRules:
     values_weight_pct: int = rule(30, 0, 200, G, "How much a mortal's values steer the calling they choose (%)")
     culture_weight_pct: int = rule(40, 0, 100, G, "Share of a calling's honour that comes from the mortal's people rather than themselves (%)")
     beggar_mercy_below: int = rule(10, -100, 100, G, "Mercy below which a people without pensions leaves its broken to beg")
+    choice_chance: int = rule(20, 0, 100, G, "Chance each epoch an adult without office weighs a new path in life (%)")
+    stay_score: int = rule(40, 0, 100, G, "How much a mortal favours staying on their current path")
+    need_weight_pct: int = rule(100, 0, 300, G, "How much unmet needs push a mortal toward a new path (%)")
+    bandit_wealth_below: int = rule(15, 0, 100, G, "Wealth below which a mortal of low honour may turn bandit")
+    bandit_honour_below: int = rule(35, 0, 100, G, "Honour below which a poor mortal may turn bandit")
+    trait_weight: int = rule(20, 0, 100, G, "How much a fitting trait draws a mortal to a path")
+    skill_weight_pct: int = rule(50, 0, 200, G, "How much skill draws a mortal to a path (%)")
 
 
 @dataclass(frozen=True)

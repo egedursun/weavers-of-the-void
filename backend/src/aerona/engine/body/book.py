@@ -24,6 +24,7 @@ from aerona.engine.body.capacities import FUNCTION_LEVELS, BearerStats, BodyStat
 from aerona.engine.body.functions import Wound
 from aerona.engine.body.hits import Armour
 from aerona.engine.lore.arms import guard_of, held_profiles
+from aerona.engine.mortal.equipment import worn_coverage
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.stats import stat
@@ -265,6 +266,10 @@ async def armour_of(session: AsyncSession, rules: Rules, bearer: Bearer, communi
             limbs = max(limbs, min(table.coverage_cap, protection * table.shield_limbs_pct // PERCENT))
             torso = max(torso, min(table.coverage_cap, protection * table.shield_torso_pct // PERCENT))
     guard = guard_of(await held_profiles(session, bearer.id)) * table.armour_torso_pct // PERCENT
+    worn = await worn_coverage(session, bearer.id)
+    if worn is not None:
+        head = max(head, min(table.coverage_cap, worn[0] * table.armour_head_pct // PERCENT))
+        torso = max(torso, min(table.coverage_cap, worn[1] * table.armour_torso_pct // PERCENT))
     return Armour(head, min(table.coverage_cap, max(torso, guard)), limbs)
 
 

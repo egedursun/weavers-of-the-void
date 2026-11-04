@@ -156,6 +156,7 @@ from aerona.rules.registry.mind import (
 )
 from aerona.rules.registry.model import ModelRules
 from aerona.rules.registry.modifiers import IncidentRules, ModifiersRules
+from aerona.rules.registry.mortal_acts import ActsRules, EthnicRules, LoyaltyRules
 from aerona.rules.registry.mortal_agents import MortalAgentsRules
 from aerona.rules.registry.mortal_life import AgingRules, EducationRules, FertilityRules, KinshipRules
 from aerona.rules.registry.mortal_standing import EquipmentRules, PunishmentRules, StandingRules
@@ -255,6 +256,9 @@ class Rules:
     standing: StandingRules = field(default_factory=StandingRules)
     punishment: PunishmentRules = field(default_factory=PunishmentRules)
     equipment: EquipmentRules = field(default_factory=EquipmentRules)
+    loyalty: LoyaltyRules = field(default_factory=LoyaltyRules)
+    acts: ActsRules = field(default_factory=ActsRules)
+    ethnic: EthnicRules = field(default_factory=EthnicRules)
     casualties: CasualtiesRules = field(default_factory=CasualtiesRules)
     ecology: EcologyRules = field(default_factory=EcologyRules)
     habitat: HabitatRules = field(default_factory=HabitatRules)

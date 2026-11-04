@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import ARMOUR_COLUMNS, BodyRow, InjuryRow
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.body import InjuryKind
+from aerona.domain.enums.body import Capacity, InjuryKind
 from aerona.domain.enums.bond import BondKind
 from aerona.engine.body.book import (
     Bearer,
@@ -23,6 +23,7 @@ from aerona.engine.body.book import (
 from aerona.engine.body.capacities import BodyState, function_percents, pain_of
 from aerona.engine.body.customs import customs_of, presence_pct
 from aerona.engine.gods.queries import community_of
+from aerona.engine.mortal.equipment import mount_pct
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.queries import active_bonds
 from aerona.rules.registry import Rules
@@ -55,6 +56,12 @@ async def refresh(session: AsyncSession, rules: Rules, bearer: Bearer, epoch: in
     for capacity, value in factors_of(rules, bearer, body, injuries=injuries, prostheses=prostheses, conditions=conditions, reading=reading).items():
         if capacity.value not in locked:
             setattr(body, capacity.value, value)
+    if isinstance(bearer, EntityRow):
+        moving, riding = await mount_pct(session, rules, bearer.id)
+        if Capacity.MOBILITY.value not in locked:
+            body.mobility = round(body.mobility * moving)
+        if Capacity.MELEE.value not in locked:
+            body.melee = round(body.melee * riding)
     if PAIN not in locked:
         body.pain = pain_of(rules.capacities, open_severity(injuries))
     functions = function_percents(rules, BodyState(anatomy_for(body), wounds_from(injuries, prostheses), body.fingers, open_severity(injuries)))

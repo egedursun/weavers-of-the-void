@@ -21,9 +21,10 @@ from aerona.engine.economy.equipment import weapon_of
 from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_immortal, is_notable
 from aerona.engine.lifecycle.mortal_death import die
-from aerona.engine.lore.arms import best_weapon, grip, held_profiles
+from aerona.engine.lore.arms import grip
 from aerona.engine.mind.hooks import wound_memories
 from aerona.engine.mortal.death import manner_of
+from aerona.engine.mortal.equipment import mount_pct, off_hand_pct, wielded
 from aerona.engine.notes import note
 from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.naming import seed_of
@@ -200,11 +201,13 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
         blade = await weapon_of(ctx.session, wielder)
         if blade is not None:
             harm = replace(harm, edge=blade.edge, heft=blade.weight)
-        held = best_weapon(await held_profiles(ctx.session, wielder))
+        held = await wielded(ctx.session, wielder)
         if held is not None:
+            _, riding = await mount_pct(ctx.session, ctx.rules, wielder) if wielder is not None else (1.0, 1.0)
+            second = await off_hand_pct(ctx.session, ctx.rules, wielder) if wielder is not None else 1.0
             harm = replace(
                 harm,
-                damage=harm.damage * grip(held),
+                damage=harm.damage * grip(held) * riding * second,
                 damage_type=DamageType(held.damage_type) if held.damage_type in DAMAGE_TYPES else None,
                 heft=(harm.heft or 0) + held.weight,
             )

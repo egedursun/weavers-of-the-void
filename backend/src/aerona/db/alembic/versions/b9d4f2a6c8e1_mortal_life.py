@@ -2,7 +2,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision = "b9d4f2a6c8e1"
-down_revision = "f2a6c8e0b4d7"
+down_revision = "a7c3e9d1f5b2"
 branch_labels = None
 depends_on = None
 
@@ -58,6 +58,111 @@ OLD_BONDS = (
     "owes",
     "treated_by",
 )
+OLD_TRAITS = (
+    "flying",
+    "venomous",
+    "soul_eater",
+    "radiant",
+    "fissiparous",
+    "hive_mind",
+    "stoneskin",
+    "time_rewinder",
+    "shapeshifter",
+    "mind_reader",
+    "armoured",
+    "burrowing",
+    "aquatic",
+    "amphibious",
+    "pack_hunter",
+    "ambush_predator",
+    "regenerating",
+    "poisonous_flesh",
+    "fire_breathing",
+    "cold_breathing",
+    "echolocation",
+    "camouflage",
+    "swarm_breeder",
+    "long_lived",
+    "mimic",
+    "spirit_sight",
+    "iron_eating",
+    "crop_pest",
+    "plague_bearer",
+    "sacred_animal",
+)
+NEW_TRAITS = (*OLD_TRAITS, "horned", "tailed")
+OLD_CAUSES = (
+    "battle",
+    "duel",
+    "punishment",
+    "torture",
+    "accident",
+    "monster",
+    "disaster",
+    "curse",
+    "magic_backlash",
+    "god",
+    "poison",
+    "quest",
+    "escape",
+    "sacrifice",
+    "age",
+    "player",
+)
+NEW_CAUSES = (*OLD_CAUSES, "exposure")
+BODY_PARTS = (
+    "aura",
+    "core",
+    "eye",
+    "face",
+    "fingers",
+    "gills",
+    "groin",
+    "gut",
+    "head",
+    "heart",
+    "horn",
+    "jaw",
+    "left_antenna",
+    "left_arm",
+    "left_branch",
+    "left_ear",
+    "left_eye",
+    "left_fin",
+    "left_foot",
+    "left_foreleg",
+    "left_hand",
+    "left_hindleg",
+    "left_leg",
+    "left_midleg",
+    "left_wing",
+    "lungs",
+    "neck",
+    "nose",
+    "pseudopods",
+    "right_antenna",
+    "right_arm",
+    "right_branch",
+    "right_ear",
+    "right_eye",
+    "right_fin",
+    "right_foot",
+    "right_foreleg",
+    "right_hand",
+    "right_hindleg",
+    "right_leg",
+    "right_midleg",
+    "right_wing",
+    "roots",
+    "tail",
+    "tongue",
+    "torso",
+    "venom_gland",
+    "wings",
+)
+FULL_FUNCTIONS = ("vital", "cognition", "hearing", "sight")
+EMPTY_FUNCTIONS = ("venom", "horn", "tail")
+PART_TABLES = (("injuries", False), ("conditions", True), ("prostheses", False))
 NEW_BONDS = (*OLD_BONDS, "parent_of", "spouse_of", "betrothed_to", "concubine_of", "fostered_by", "sworn_kin")
 
 
@@ -79,8 +184,51 @@ def change_bond_kinds(old: tuple[str, ...], new: tuple[str, ...]) -> None:
         op.execute(sa.text(sql))
 
 
+def named_enum(name: str, values: tuple[str, ...]) -> sa.Enum:
+    return sa.Enum(*values, name=name, native_enum=False, create_constraint=True, length=40)
+
+
+def body_upgrade() -> None:
+    with op.batch_alter_table("entity_traits", schema=None) as batch_op:
+        batch_op.alter_column("trait", existing_type=named_enum("trait", OLD_TRAITS), type_=named_enum("trait", NEW_TRAITS), existing_nullable=False)
+    for table, column in (("injuries", "cause_kind"), ("conditions", "source")):
+        with op.batch_alter_table(table, schema=None) as batch_op:
+            batch_op.alter_column(column, existing_type=named_enum(column, OLD_CAUSES), type_=named_enum(column, NEW_CAUSES), existing_nullable=False)
+    for table, nullable in PART_TABLES:
+        with op.batch_alter_table(table, schema=None) as batch_op:
+            batch_op.alter_column("part", existing_type=sa.String(length=120), type_=named_enum("part", BODY_PARTS), existing_nullable=nullable)
+    with op.batch_alter_table("bodies", schema=None) as batch_op:
+        for column in FULL_FUNCTIONS:
+            batch_op.add_column(sa.Column(column, sa.Integer(), nullable=False, server_default="100"))
+        for column in EMPTY_FUNCTIONS:
+            batch_op.add_column(sa.Column(column, sa.Integer(), nullable=False, server_default="0"))
+    with op.batch_alter_table("bodies", schema=None) as batch_op:
+        for column in (*FULL_FUNCTIONS, *EMPTY_FUNCTIONS):
+            batch_op.alter_column(column, server_default=None)
+            batch_op.create_check_constraint(op.f(f"ck_bodies_{column}_range"), f"{column} BETWEEN 0 AND 100")
+
+
+def body_downgrade() -> None:
+    with op.batch_alter_table("bodies", schema=None) as batch_op:
+        for column in (*FULL_FUNCTIONS, *EMPTY_FUNCTIONS):
+            batch_op.drop_constraint(op.f(f"ck_bodies_{column}_range"), type_="check")
+            batch_op.drop_column(column)
+    for table, nullable in PART_TABLES:
+        with op.batch_alter_table(table, schema=None) as batch_op:
+            batch_op.alter_column("part", existing_type=named_enum("part", BODY_PARTS), type_=sa.String(length=120), existing_nullable=nullable)
+    op.execute(sa.text("DELETE FROM injuries WHERE cause_kind = 'exposure'"))
+    op.execute(sa.text("DELETE FROM conditions WHERE source = 'exposure'"))
+    for table, column in (("injuries", "cause_kind"), ("conditions", "source")):
+        with op.batch_alter_table(table, schema=None) as batch_op:
+            batch_op.alter_column(column, existing_type=named_enum(column, NEW_CAUSES), type_=named_enum(column, OLD_CAUSES), existing_nullable=False)
+    op.execute(sa.text("DELETE FROM entity_traits WHERE trait IN ('horned', 'tailed')"))
+    with op.batch_alter_table("entity_traits", schema=None) as batch_op:
+        batch_op.alter_column("trait", existing_type=named_enum("trait", NEW_TRAITS), type_=named_enum("trait", OLD_TRAITS), existing_nullable=False)
+
+
 def upgrade() -> None:
     change_bond_kinds(OLD_BONDS, NEW_BONDS)
+    body_upgrade()
     op.create_table(
         "marriages",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -214,6 +362,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    body_downgrade()
     with op.batch_alter_table("mortal_profiles", schema=None) as batch_op:
         batch_op.drop_index("ix_mortal_profiles_polity")
 

@@ -18,6 +18,8 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.aging import effective_lifespan, immortal, medicine_regions
 from aerona.engine.lifecycle.mortal_death import die, world_year
 from aerona.engine.lifecycle.wounds import fatal_injury
+from aerona.engine.mortal.life import hazard_chance
+from aerona.engine.mortal.profile import profile_of
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -89,12 +91,15 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     lived = years_lived(ctx, mortal)
     multiplier = (effects.short_life_aging_mult if laws.has(NaturalLaw.SHORT_LIFE, mortal.world_id) else 1) * physics.of(mortal.world_id).time
     aged = age + round_half_up(lived * multiplier)
-    limit = (await effective_lifespan(ctx.session, rules, mortal, world.atlas, world.medicine)).effective
-    if aged < limit:
+    info = await effective_lifespan(ctx.session, rules, mortal, world.atlas, world.medicine)
+    limit = info.effective
+    profile = await profile_of(ctx.session, mortal.id)
+    health = profile.health if profile is not None else PERCENT
+    if not rng.chance(hazard_chance(rules, aged, limit, health, medicine=info.medicine > 0)):
         set_stats(mortal, age=aged)
         return
     years = rules.time.years_per_epoch
-    death_age = max(age, limit)
+    death_age = aged
     offset = years - lived if first else 0
     death_year = world.start_year + offset + min(years - 1, max(0, round_half_up((death_age - age) / max(MIN_AGING_MULTIPLIER, multiplier))))
     set_stats(mortal, age=death_age)

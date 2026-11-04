@@ -15,6 +15,8 @@ class StandingRules:
     infamy_atrocity: int = rule(15, 0, 100, G, "Infamy a mortal gains for an atrocity")
     infamy_decay: int = rule(2, 0, 100, G, "Infamy that fades each epoch")
     wealth_drift_pct: int = rule(20, 0, 100, G, "How fast personal wealth moves toward what a mortal's class earns (%)")
+    wealth_status_pct: int = rule(80, 0, 200, G, "Personal wealth a calling brings, as a share of the standing it holds (%)")
+    office_legitimacy: int = rule(50, 0, 100, G, "Legitimacy an office holder starts from")
     patronage_wealth: int = rule(40, 0, 100, G, "Wealth above which a mortal funds works and artists")
     patronage_cost: int = rule(10, 0, 100, G, "Wealth a patron spends on one work")
     patronage_renown: int = rule(4, 0, 100, G, "Renown a patron wins from a funded work")

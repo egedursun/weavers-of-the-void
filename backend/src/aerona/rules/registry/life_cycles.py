@@ -65,6 +65,7 @@ class LifeCyclesRules:
     cult_cap: int = rule(1, 0, 20, RuleGroup.RELIGION_AND_LANGUAGE, "Most cults disbanded and most cults merged per epoch (each)")
     assimilation_ratio_pct: int = rule(20, 1, 100, G, "A small people at or below this share of a larger people of its region can be assimilated (%)")
     assimilation_chance: int = rule(1, 0, 100, G, "Per-epoch chance that a small people is assimilated (%)")
+    assimilation_opinion_pct: int = rule(80, 0, 200, G, "How much a small people's regard for the larger one speeds or stalls its assimilation (%)")
     assimilation_rule_bonus: int = rule(5, 0, 100, G, "Extra assimilation chance when the larger people rules the smaller (%)")
     assimilation_language_bonus: int = rule(3, 0, 100, G, "Extra assimilation chance when both peoples speak the same tongue (%)")
     union_ratio_pct: int = rule(60, 1, 100, G, "Two friendly peoples whose population ratio exceeds this can unite (%)")
