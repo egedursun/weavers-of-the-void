@@ -1,4 +1,5 @@
 from collections.abc import Mapping
+from enum import StrEnum
 
 from sqlalchemy import delete, select
 
@@ -9,25 +10,82 @@ from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.interconnect import ModifierRow
 from aerona.db.tables.society import CommunitySocietyRow
-from aerona.domain.enums.demography import Aesthetic, AgeBand, CohortCondition, InheritanceCustom, MarriageCustom, MartialStyle
+from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.demography import (
+    Aesthetic,
+    AgeBand,
+    CohortCondition,
+    FolkDiet,
+    FuneralCustom,
+    InheritanceCustom,
+    MarriageCustom,
+    MartialStyle,
+    NaturalTrait,
+)
+from aerona.domain.enums.ecology import SizeClass
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.models.entity_stats import PeopleStats
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for, seed
+from aerona.engine.demography.keys import DORMANT_KEY
 from aerona.engine.demography.mobility import sync_bound_share
 from aerona.engine.demography.peoples import ensure_profiles
-from aerona.engine.demography.promotion import DORMANT_KEY
+from aerona.engine.demography.rites import rite_tradition, set_rite
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.first_bonds import bind_language_and_faith
 from aerona.engine.primitives.modifiers import ModifierDraft, add_modifier
-from aerona.engine.primitives.queries import add_flag, remove_flag
+from aerona.engine.primitives.queries import add_flag, connect, remove_flag
+from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.stats import headcount_bounds, set_stats
+
+FOUNDED_POWER = 2
+FOUNDED_SUBTYPE = "people"
 
 BIOLOGY_NUMBERS = {"maturity_years": (1, 1000), "adult_years": (1, 10000), "elder_years": (1, 10000), "fertility_pct": (0, 500)}
 CULTURE_NUMBERS = {"cohesion": (0, PERCENT), "literacy": (0, PERCENT), "urbanisation": (0, PERCENT)}
-CULTURE_CHOICES = {"aesthetic": Aesthetic, "martial_style": MartialStyle, "marriage": MarriageCustom, "inheritance": InheritanceCustom}
+BIOLOGY_CHOICES: dict[str, type[StrEnum]] = {
+    "acclimatised": TemperatureBand,
+    "staple": CommodityKind,
+    "body_plan": BodyPlan,
+    "size_class": SizeClass,
+    "diet": FolkDiet,
+}
+CULTURE_CHOICES: dict[str, type[StrEnum]] = {
+    "aesthetic": Aesthetic,
+    "martial_style": MartialStyle,
+    "marriage": MarriageCustom,
+    "inheritance": InheritanceCustom,
+    "funeral_rite": FuneralCustom,
+}
 CULTURE_FLAGS = ("endogamous", "slavery_lawful")
 DORMANCY_REASON = "player.dormancy"
+BIOLOGY_LISTS: dict[str, type[StrEnum]] = {"traits": NaturalTrait}
+CULTURE_LISTS: dict[str, type[StrEnum]] = {"staples": CommodityKind}
+CULTURE_LINKS = {"liturgical_language_id": EntityType.LANGUAGE, "trade_language_id": EntityType.LANGUAGE, "funeral_rite_id": EntityType.TRADITION}
+RECORD_KEYS = {"martial_wins": 0, "martial_losses": 1}
+RECORD_LOCK = "martial_record"
+RECORD_MAX = 100000
+IMMUNITY_KEY = "immunities"
+EDITABLE = frozenset(
+    {
+        *BIOLOGY_NUMBERS,
+        *CULTURE_NUMBERS,
+        *BIOLOGY_CHOICES,
+        *CULTURE_CHOICES,
+        *CULTURE_FLAGS,
+        *BIOLOGY_LISTS,
+        *CULTURE_LISTS,
+        *CULTURE_LINKS,
+        IMMUNITY_KEY,
+        RECORD_LOCK,
+    }
+)
+Value = int | str | bool | list[int] | list[str] | None
 
 
 async def people(ctx: TickContext, people_id: int) -> EntityRow:
@@ -37,11 +95,14 @@ async def people(ctx: TickContext, people_id: int) -> EntityRow:
     return entity
 
 
-async def profiles(ctx: TickContext, entity: EntityRow) -> tuple[PeopleBiologyRow, PeopleCultureRow]:
+async def ground_of(ctx: TickContext, entity: EntityRow) -> RegionEnvironmentRow | None:
     atlas = await RegionAtlas.load(ctx.session)
     region = atlas.top_region(entity.id)
-    ground = await ctx.session.get(RegionEnvironmentRow, region) if region is not None else None
-    return await ensure_profiles(ctx.session, ctx.rules, entity, ground)
+    return await ctx.session.get(RegionEnvironmentRow, region) if region is not None else None
+
+
+async def profiles(ctx: TickContext, entity: EntityRow) -> tuple[PeopleBiologyRow, PeopleCultureRow]:
+    return await ensure_profiles(ctx.session, ctx.rules, entity, await ground_of(ctx, entity))
 
 
 def lock(row: PeopleBiologyRow | PeopleCultureRow, key: str) -> None:
@@ -49,35 +110,153 @@ def lock(row: PeopleBiologyRow | PeopleCultureRow, key: str) -> None:
         row.locked = [*row.locked, key]
 
 
-async def edit_people(
-    ctx: TickContext, people_id: int, values: Mapping[str, int | str | bool], *, release: list[str]
-) -> tuple[PeopleBiologyRow, PeopleCultureRow]:
+def label(key: str) -> str:
+    return key.removesuffix("_id").replace("_", " ").capitalize()
+
+
+def number(key: str, value: Value, low: int, high: int) -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or not low <= value <= high:
+        raise ValidationFailedError(f"{label(key)} runs from {low} to {high}.")
+    return value
+
+
+def choice[E: StrEnum](key: str, value: Value, kind: type[E]) -> E:
+    try:
+        return kind(str(value))
+    except ValueError as error:
+        raise ValidationFailedError(f"{value} is not a known {label(key).lower()}.") from error
+
+
+def choices[E: StrEnum](key: str, value: Value, kind: type[E]) -> list[str]:
+    if not isinstance(value, list):
+        raise ValidationFailedError(f"{label(key)} takes a list.")
+    return sorted({choice(key, item, kind).value for item in value})
+
+
+async def linked(ctx: TickContext, key: str, value: Value, kind: EntityType) -> int | None:
+    if value is None:
+        return None
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise ValidationFailedError(f"{label(key)} takes a record.")
+    found = await ctx.session.get(EntityRow, value)
+    if found is None or found.entity_type is not kind:
+        raise ValidationFailedError(f"{label(key)} must be a {kind.value}.")
+    return found.id
+
+
+async def diseases(ctx: TickContext, value: Value) -> list[int]:
+    if not isinstance(value, list):
+        raise ValidationFailedError("Immunities take a list of diseases.")
+    found: list[int] = []
+    for item in value:
+        disease = await ctx.session.get(EntityRow, item) if isinstance(item, int) and not isinstance(item, bool) else None
+        if disease is None or disease.entity_type is not EntityType.DISEASE:
+            raise ValidationFailedError(f"{item} is not a disease.")
+        found.append(disease.id)
+    return sorted(set(found))
+
+
+def set_record(culture: PeopleCultureRow, key: str, value: Value) -> None:
+    count = number(key, value, 0, RECORD_MAX)
+    record = {name: list(entry) for name, entry in (culture.martial_record or {}).items()}
+    entry = [*record.get(culture.martial_style.value, []), 0, 0][:2]
+    entry[RECORD_KEYS[key]] = count
+    record[culture.martial_style.value] = entry
+    culture.martial_record = record
+
+
+async def apply(ctx: TickContext, entity: EntityRow, rows: tuple[PeopleBiologyRow, PeopleCultureRow], key: str, value: Value) -> None:
+    biology, culture = rows
+    if key in BIOLOGY_NUMBERS:
+        setattr(biology, key, number(key, value, *BIOLOGY_NUMBERS[key]))
+        lock(biology, key)
+    elif key in CULTURE_NUMBERS:
+        setattr(culture, key, number(key, value, *CULTURE_NUMBERS[key]))
+        lock(culture, key)
+    elif key in BIOLOGY_CHOICES:
+        setattr(biology, key, choice(key, value, BIOLOGY_CHOICES[key]))
+        lock(biology, key)
+    elif key == "funeral_rite":
+        set_rite(culture, choice(key, value, FuneralCustom))
+        await rite_tradition(ctx.session, ctx.rules, entity, culture, ctx.epoch)
+        lock(culture, key)
+    elif key in CULTURE_CHOICES:
+        setattr(culture, key, choice(key, value, CULTURE_CHOICES[key]))
+        lock(culture, key)
+    elif key in CULTURE_FLAGS:
+        setattr(culture, key, bool(value))
+        lock(culture, key)
+    elif key in BIOLOGY_LISTS:
+        setattr(biology, key, choices(key, value, BIOLOGY_LISTS[key]))
+        lock(biology, key)
+    elif key in CULTURE_LISTS:
+        setattr(culture, key, choices(key, value, CULTURE_LISTS[key]))
+        lock(culture, key)
+    elif key in CULTURE_LINKS:
+        setattr(culture, key, await linked(ctx, key, value, CULTURE_LINKS[key]))
+        lock(culture, key)
+    elif key == IMMUNITY_KEY:
+        biology.immunities = await diseases(ctx, value)
+        lock(biology, key)
+    elif key in RECORD_KEYS:
+        set_record(culture, key, value)
+        lock(culture, RECORD_LOCK)
+    else:
+        raise ValidationFailedError(f"Unknown field: {key}.")
+
+
+async def edit_people(ctx: TickContext, people_id: int, values: Mapping[str, Value], *, release: list[str]) -> tuple[PeopleBiologyRow, PeopleCultureRow]:
     entity = await people(ctx, people_id)
-    biology, culture = await profiles(ctx, entity)
+    rows = await profiles(ctx, entity)
     for key, value in values.items():
-        if key in BIOLOGY_NUMBERS or key in CULTURE_NUMBERS:
-            low, high = BIOLOGY_NUMBERS.get(key) or CULTURE_NUMBERS[key]
-            if not isinstance(value, int) or isinstance(value, bool) or not low <= value <= high:
-                raise ValidationFailedError(f"{key.replace('_', ' ').capitalize()} runs from {low} to {high}.")
-            target: PeopleBiologyRow | PeopleCultureRow = biology if key in BIOLOGY_NUMBERS else culture
-            setattr(target, key, value)
-            lock(target, key)
-        elif key in CULTURE_CHOICES:
-            try:
-                setattr(culture, key, CULTURE_CHOICES[key](str(value)))
-            except ValueError as error:
-                raise ValidationFailedError(f"{value} is not a known {key.replace('_', ' ')}.") from error
-            lock(culture, key)
-        elif key in CULTURE_FLAGS:
-            setattr(culture, key, bool(value))
-            lock(culture, key)
-        else:
-            raise ValidationFailedError(f"Unknown field: {key}.")
+        await apply(ctx, entity, rows, key, value)
+    biology, culture = rows
     for key in release:
-        biology.locked = [item for item in biology.locked if item != key]
-        culture.locked = [item for item in culture.locked if item != key]
+        if key not in EDITABLE and key not in RECORD_KEYS:
+            raise ValidationFailedError(f"Unknown field: {key}.")
+        held = RECORD_LOCK if key in RECORD_KEYS else key
+        biology.locked = [item for item in biology.locked if item != held]
+        culture.locked = [item for item in culture.locked if item != held]
     await ctx.session.flush()
     return biology, culture
+
+
+async def found_people(
+    ctx: TickContext, *, name: str, region_id: int, population: int, species_id: int | None, language_id: int | None, values: Mapping[str, Value]
+) -> EntityRow:
+    region = await ctx.session.get(EntityRow, region_id)
+    if region is None or region.entity_type is not EntityType.REGION or region.status is not EntityStatus.CANON:
+        raise NotFoundError("No such land.")
+    limits = ctx.rules.limits
+    if not limits.people_population_floor <= population <= limits.people_population_cap:
+        raise ValidationFailedError(f"A people numbers from {limits.people_population_floor} to {limits.people_population_cap}.")
+    species = await linked(ctx, "species", species_id, EntityType.SPECIES)
+    language = await linked(ctx, "language", language_id, EntityType.LANGUAGE)
+    founded = await open_record(
+        ctx.session,
+        ctx.epoch,
+        RecordSpec(
+            entity_type=EntityType.PEOPLE,
+            name=name,
+            body=f"A people raised by the will of the Creator in {region.name}.",
+            stats=PeopleStats(population=population),
+            power=FOUNDED_POWER,
+            location_id=region.id,
+            world_id=region.world_id,
+            subtype=FOUNDED_SUBTYPE,
+        ),
+    )
+    if species is not None:
+        await connect(ctx.session, founded.id, species, BondKind.DESCENDS_FROM, ctx.epoch, description="raised from this kind")
+    if language is not None:
+        await connect(ctx.session, founded.id, language, BondKind.SPEAKS, ctx.epoch)
+    await bind_language_and_faith(ctx, founded)
+    rows = await profiles(ctx, founded)
+    for key, value in values.items():
+        await apply(ctx, founded, rows, key, value)
+    await rite_tradition(ctx.session, ctx.rules, founded, rows[1], ctx.epoch)
+    await ctx.session.flush()
+    return founded
 
 
 async def move_cohort(

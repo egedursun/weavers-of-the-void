@@ -1,19 +1,23 @@
 from sqlalchemy import select
 
 from aerona.catalog.lore import ART_MESSAGES, ART_WORDS
+from aerona.catalog.peoples import AESTHETIC_AXES, AESTHETIC_IMAGES, AESTHETIC_MEDIA, AESTHETIC_SHUNS, IMAGE_NAMES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ArtworkProfileRow
+from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import SpiritProfileRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import PERFORMED_MEDIA, VERBAL_MEDIA, ArtMedium, Technique
+from aerona.domain.enums.demography import Aesthetic
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, ValueAxis, ValueHolder
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.models.entity_stats import ArtworkStats
+from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import stored_values, write_values
@@ -22,8 +26,32 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire
 from aerona.engine.primitives.stats import stat
+from aerona.rules.registry import Rules
 
 WEAK_CLAIM = 50
+
+
+async def taste_of(ctx: TickContext, holder: EntityRow) -> Aesthetic | None:
+    people = await people_of(ctx.session, holder)
+    culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
+    return culture.aesthetic if culture is not None else None
+
+
+def aesthetic_fit(rules: Rules, taste: Aesthetic | None, medium: ArtMedium) -> float:
+    if taste is None:
+        return 1.0
+    if medium in AESTHETIC_MEDIA[taste]:
+        return rules.customs.aesthetic_fit_pct / PERCENT
+    if medium in AESTHETIC_SHUNS[taste]:
+        return rules.customs.aesthetic_clash_pct / PERCENT
+    return 1.0
+
+
+def taste_message(rules: Rules, taste: Aesthetic | None, medium: ArtMedium, message: dict[str, int]) -> dict[str, int]:
+    if taste is None or medium not in AESTHETIC_MEDIA[taste]:
+        return dict(message)
+    axis = AESTHETIC_AXES[taste].value
+    return {**message, axis: message.get(axis, 0) + rules.customs.aesthetic_message}
 
 
 def medium_of(artwork: EntityRow) -> ArtMedium:
@@ -101,8 +129,10 @@ async def pressure(ctx: TickContext, artwork: EntityRow, row: ArtworkProfileRow)
     values = await stored_values(ctx.session, ValueHolder.CULTURE, holder.id)
     if not values:
         return False
+    taste = await taste_of(ctx, holder)
+    weight *= aesthetic_fit(ctx.rules, taste, row.medium)
     moved = False
-    for key, value in row.message.items():
+    for key, value in taste_message(ctx.rules, taste, row.medium, row.message).items():
         step = round_half_up(value * weight * row.copies)
         if step:
             axis = ValueAxis(key)
@@ -182,10 +212,13 @@ async def commission(ctx: TickContext, realm: PolityProfileRow) -> EntityRow | N
     if ruler is None or seat is None:
         return None
     realm.treasury -= table.cost
+    taste = await taste_of(ctx, seat)
+    medium = AESTHETIC_IMAGES[taste] if taste is not None else ArtMedium.STATUE
+    message = {ValueAxis.HIERARCHY.value: 5, ValueAxis.HONOUR.value: 2}
     work = await create_record(
         ctx,
         RecordSpec(
-            name=f"The Statue of {ruler.name}",
+            name=IMAGE_NAMES.get(medium, IMAGE_NAMES[ArtMedium.STATUE]).format(ruler=ruler.name),
             entity_type=EntityType.ARTWORK,
             stats=ArtworkStats(renown=PERCENT // 2, influence=PERCENT // 2),
             body=f"Raised in {seat.name} by order of the realm to praise {ruler.name}.",
@@ -197,11 +230,11 @@ async def commission(ctx: TickContext, realm: PolityProfileRow) -> EntityRow | N
     ctx.session.add(
         ArtworkProfileRow(
             artwork_entity_id=work.id,
-            medium=ArtMedium.STATUE,
-            performed=False,
+            medium=medium,
+            performed=medium in PERFORMED_MEDIA,
             patron_entity_id=realm.polity_entity_id,
             subject_node_id=ruler.id,
-            message={ValueAxis.HIERARCHY.value: 5, ValueAxis.HONOUR.value: 2},
+            message=taste_message(ctx.rules, taste, medium, message),
             quality=PERCENT // 2,
             copies=1,
             translations=[],

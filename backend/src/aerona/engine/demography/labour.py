@@ -18,6 +18,7 @@ from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
+from aerona.engine.demography.biology import job_factors, profiles_of
 from aerona.engine.demography.cohorts import cohorts_of, seed
 from aerona.engine.disease.harm import community_targets, sick_levy, sick_work
 from aerona.engine.polity.laws import LawBook
@@ -114,6 +115,8 @@ async def allocate(
     if not rows:
         rows = await cohorts_of(ctx.session, community.id)
     society = await ctx.session.get(CommunitySocietyRow, community.id)
+    biology, _ = await profiles_of(ctx.session, community)
+    kin = job_factors(rules, biology)
     plan: Counter[Job] = Counter()
     output: dict[Job, float] = {}
     food = split_food(region)
@@ -126,7 +129,7 @@ async def allocate(
             for target, part in spread.items():
                 workers = hands * condition_work(rules, condition, target, targets) * share * part
                 plan[target] += round_half_up(workers)
-                boost = rules.labour.slave_output_pct / PERCENT if bound and target in BOUND_JOBS else 1.0
+                boost = (rules.labour.slave_output_pct / PERCENT if bound and target in BOUND_JOBS else 1.0) * kin.get(target, 1.0)
                 output[target] = output.get(target, 0.0) + workers * mood * boost
     price_pull(
         rules, plan, goods=society.stock(Commodity.GOODS) if society is not None else None, food=society.stock(Commodity.FOOD) if society is not None else None

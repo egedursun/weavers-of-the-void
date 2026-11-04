@@ -8943,6 +8943,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/people:found": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_people_found_api_actions_people_found_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/cohort:move": {
         parameters: {
             query?: never;
@@ -10932,7 +10948,13 @@ export interface components {
             fertility_pct: number;
             acclimatised: components["schemas"]["TemperatureBand"];
             staple: components["schemas"]["CommodityKind"];
-            traits: string[];
+            traits: components["schemas"]["NaturalTrait"][];
+            immunities: components["schemas"]["LinkedRecord"][];
+            body_plan: components["schemas"]["BodyPlan"];
+            size_class: components["schemas"]["SizeClass"];
+            diet: components["schemas"]["FolkDiet"];
+            edible: components["schemas"]["CommodityKind"][];
+            effects: components["schemas"]["KinEffectsView"];
             locked: string[];
         };
         Biome: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
@@ -11906,7 +11928,13 @@ export interface components {
             endogamous: boolean;
             inheritance: components["schemas"]["InheritanceCustom"];
             slavery_lawful: boolean;
-            staples: string[];
+            staples: components["schemas"]["CommodityKind"][];
+            liturgical_language: components["schemas"]["LinkedRecord"] | null;
+            trade_language: components["schemas"]["LinkedRecord"] | null;
+            funeral_rite: components["schemas"]["FuneralCustom"];
+            funeral_tradition: components["schemas"]["LinkedRecord"] | null;
+            martial_record: components["schemas"]["MartialRecordView"][];
+            martial_net: number;
             locked: string[];
         };
         CureSource: "knowledge" | "granted";
@@ -12973,6 +13001,7 @@ export interface components {
             flow: string;
             quantity: number;
         };
+        FolkDiet: "omnivore" | "herbivore" | "carnivore" | "piscivore" | "scavenger" | "sanguivore" | "lithovore" | "essence_feeder" | "phototroph";
         FolkView: {
             people_id: number;
             people_name: string;
@@ -13124,6 +13153,7 @@ export interface components {
             key: components["schemas"]["BodyFunction"];
             level: number;
         };
+        FuneralCustom: "burial" | "cremation" | "sky_burial" | "sea_burial" | "entombment" | "ancestor_shrine" | "endocannibalism" | "reanimation" | "soul_binding";
         FuneralRite: "burial" | "burning" | "exposure" | "none";
         GateNeed: {
             branch: components["schemas"]["KnowledgeBranch"];
@@ -13866,6 +13896,16 @@ export interface components {
             name: string;
             value: number;
         };
+        KinEffectsView: {
+            food_pct: number;
+            room_pct: number;
+            strength_pct: number;
+            disease_pct: number;
+            fleet_pct: number;
+            mount: string;
+            hunger_pct: number;
+            work: components["schemas"]["WorkFactor"][];
+        };
         KinView: {
             language: components["schemas"]["NodeRef"] | null;
             value: number;
@@ -14235,6 +14275,10 @@ export interface components {
             label: string;
             kinds: string[];
         };
+        LinkedRecord: {
+            id: number;
+            name: string;
+        };
         LlmCall: {
             id: number;
             epoch: number | null;
@@ -14540,6 +14584,11 @@ export interface components {
             bond_id: number;
         };
         MarriageCustom: "monogamy" | "polygyny" | "polyandry" | "group";
+        MartialRecordView: {
+            style: components["schemas"]["MartialStyle"];
+            wins: number;
+            losses: number;
+        };
         MartialStyle: "shieldwall" | "horse_archer" | "skirmisher" | "chariot" | "phalanx" | "berserker" | "naval_raider" | "siege_engineer" | "war_magic" | "beast_war";
         MaterialEditInput: {
             world_id: number;
@@ -14998,6 +15047,7 @@ export interface components {
         NaturalLawStats: {
             kind: "natural_law";
         };
+        NaturalTrait: "dark_sight" | "cold_blooded" | "winged" | "amphibious" | "thick_hide" | "keen_senses" | "venomous" | "regenerating" | "burrowing" | "hive_minded";
         NeedKind: "sustenance" | "safety" | "belonging" | "status" | "purpose" | "faith" | "pleasure";
         NeedView: {
             need: components["schemas"]["NeedKind"];
@@ -15512,9 +15562,19 @@ export interface components {
         PeopleEditInput: {
             people_id: number;
             values?: {
-                [key: string]: number | string | boolean;
+                [key: string]: number | string | boolean | number[] | string[] | null;
             };
             release?: string[];
+        };
+        PeopleFoundInput: {
+            name: string;
+            region_id: number;
+            population: number;
+            species_id?: number | null;
+            language_id?: number | null;
+            values?: {
+                [key: string]: number | string | boolean | number[] | string[] | null;
+            };
         };
         PeopleLine: {
             id: number;
@@ -17361,7 +17421,7 @@ export interface components {
             value: number;
         };
         SonStatus: "active" | "asleep" | "exiled" | "dead";
-        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_father" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "sever_ley" | "loose_disease" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world" | "raise_district" | "design_district" | "open_trade_route" | "close_trade_route";
+        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_father" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "shape_folk" | "sever_ley" | "loose_disease" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world" | "raise_district" | "design_district" | "open_trade_route" | "close_trade_route";
         SonToolsView: {
             son_id: number;
             rarity: components["schemas"]["Rarity"];
@@ -18535,6 +18595,10 @@ export interface components {
             example?: string | null;
         };
         WordKind: "noun" | "verb" | "adjective" | "affix" | "title" | "place_name" | "proper_name" | "number" | "interjection";
+        WorkFactor: {
+            job: components["schemas"]["Job"];
+            pct: number;
+        };
         WorkerView: {
             community_id: number;
             community_name: string;
@@ -35641,6 +35705,37 @@ export interface operations {
             };
         };
     };
+    action_people_found_api_actions_people_found_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeopleFoundInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_cohort_move_api_actions_cohort_move_post: {
         parameters: {
             query?: never;
@@ -38755,9 +38850,11 @@ export const fateStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<com
 export const fateStepEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FateStepEvent"]["kind"]> = ["fate.step"];
 export const fateWritValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FateWrit"]> = ["doom", "shield", "clear"];
 export const feedCategoryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FeedCategory"]> = ["voyage", "gate", "leak", "war", "disaster", "sky", "life", "civilization", "world"];
+export const folkDietValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FolkDiet"]> = ["omnivore", "herbivore", "carnivore", "piscivore", "scavenger", "sanguivore", "lithovore", "essence_feeder", "phototroph"];
 export const foreignGodDeepenedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodDeepenedEvent"]["kind"]> = ["foreign_god.deepened"];
 export const foreignGodPowerEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodPowerEffect"]> = ["shield", "caller", "thief", "destroyer", "fertile", "reviving", "deathless", "sharp_tongued"];
 export const foreignGodStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodStatus"]> = ["awake", "asleep", "defeated", "dead"];
+export const funeralCustomValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FuneralCustom"]> = ["burial", "cremation", "sky_burial", "sea_burial", "entombment", "ancestor_shrine", "endocannibalism", "reanimation", "soul_binding"];
 export const funeralRiteValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FuneralRite"]> = ["burial", "burning", "exposure", "none"];
 export const genesisFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisFinishedEvent"]["kind"]> = ["genesis.finished"];
 export const genesisTemplateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisTemplate"]> = ["dark_fantasy", "mythic_age", "cosmic_horror", "fairy_tale", "star_myth", "sand_and_ash", "primordial_dawn", "crowns_and_knives", "drowned_world", "long_winter", "after_the_fall", "sky_islands", "age_of_engines"];
@@ -38853,6 +38950,7 @@ export const mortalsStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<
 export const motifOverrideModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MotifOverrideMode"]> = ["pinned", "allowed"];
 export const naturalLawValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalLaw"]> = ["none", "immortality", "short_life", "dead_return", "magic_price", "war_ban", "bounty", "drought", "sea_ban", "one_language", "disasters", "souls_reincarnate"];
 export const naturalLawStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalLawStats"]["kind"]> = ["natural_law"];
+export const naturalTraitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalTrait"]> = ["dark_sight", "cold_blooded", "winged", "amphibious", "thick_hide", "keen_senses", "venomous", "regenerating", "burrowing", "hive_minded"];
 export const needKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NeedKind"]> = ["sustenance", "safety", "belonging", "status", "purpose", "faith", "pleasure"];
 export const networkRepairedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NetworkRepairedEvent"]["kind"]> = ["network.repaired"];
 export const nodeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NodeKind"]> = ["entity", "son", "creator", "foreign_god", "world", "star"];
@@ -38930,7 +39028,7 @@ export const sonDistributedEventKindValues: ReadonlyArray<FlattenedDeepRequired<
 export const sonDistributionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonDistribution"]> = ["auto", "manual"];
 export const sonNewEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonNewEvent"]["kind"]> = ["son.new"];
 export const sonStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonStatus"]> = ["active", "asleep", "exiled", "dead"];
-export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_father", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "sever_ley", "loose_disease", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world", "raise_district", "design_district", "open_trade_route", "close_trade_route"];
+export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_father", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "shape_folk", "sever_ley", "loose_disease", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world", "raise_district", "design_district", "open_trade_route", "close_trade_route"];
 export const sonTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnFinishedEvent"]["kind"]> = ["son.turn_finished"];
 export const sonTurnQueuedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnQueuedEvent"]["kind"]> = ["son.turn_queued"];
 export const sonTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnStartedEvent"]["kind"]> = ["son.turn_started"];

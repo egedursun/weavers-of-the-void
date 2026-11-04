@@ -3,7 +3,20 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
-from aerona.domain.enums.demography import Aesthetic, AgeBand, CohortCondition, InheritanceCustom, Job, MarriageCustom, MartialStyle, Sex
+from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.demography import (
+    Aesthetic,
+    AgeBand,
+    CohortCondition,
+    FolkDiet,
+    FuneralCustom,
+    InheritanceCustom,
+    Job,
+    MarriageCustom,
+    MartialStyle,
+    Sex,
+)
+from aerona.domain.enums.ecology import SizeClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
@@ -52,6 +65,9 @@ class PeopleBiologyRow(Base):
     traits: Mapped[list[str]] = mapped_column(JSON, default=list)
     staple: Mapped[CommodityKind] = mapped_column(enum_type(CommodityKind, "staple"))
     immunities: Mapped[list[int]] = mapped_column(JSON, default=list)
+    body_plan: Mapped[BodyPlan] = mapped_column(enum_type(BodyPlan, "body_plan"), default=BodyPlan.HUMANOID)
+    size_class: Mapped[SizeClass] = mapped_column(enum_type(SizeClass, "size_class"), default=SizeClass.MEDIUM)
+    diet: Mapped[FolkDiet] = mapped_column(enum_type(FolkDiet, "diet"), default=FolkDiet.OMNIVORE)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
@@ -73,6 +89,9 @@ class PeopleCultureRow(Base):
     aesthetic: Mapped[Aesthetic] = mapped_column(enum_type(Aesthetic, "aesthetic"))
     martial_style: Mapped[MartialStyle] = mapped_column(enum_type(MartialStyle, "martial_style"))
     funeral_rite_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    funeral_rite: Mapped[FuneralCustom] = mapped_column(enum_type(FuneralCustom, "funeral_rite"), default=FuneralCustom.BURIAL)
+    martial_record: Mapped[dict[str, list[int]]] = mapped_column(JSON, default=dict)
+    martial_epoch: Mapped[int] = mapped_column(default=0)
     marriage: Mapped[MarriageCustom] = mapped_column(enum_type(MarriageCustom, "marriage"))
     endogamous: Mapped[bool] = mapped_column(default=False)
     inheritance: Mapped[InheritanceCustom] = mapped_column(enum_type(InheritanceCustom, "inheritance"))

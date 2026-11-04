@@ -17,6 +17,7 @@ from aerona.engine.body.book import anatomy_for, ensure_body
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for
+from aerona.engine.demography.keys import DORMANT_KEY
 from aerona.engine.disease.harm import lasting_illness
 from aerona.engine.interconnect.flows import FlowCategory
 from aerona.engine.interconnect.guards import blocked
@@ -27,7 +28,6 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import active_bonds, add_flag, living_entity, remove_flag
 from aerona.engine.primitives.stats import stat
 
-DORMANT_KEY = "dormant"
 MAIMED_KEY = "maimed"
 F = BodyFunction
 IK = InjuryKind

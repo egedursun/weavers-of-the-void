@@ -6,6 +6,7 @@ from aerona.catalog.society import SOCIAL_CLASSES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind, BondRole
@@ -18,6 +19,7 @@ from aerona.engine.body.cohorts import healer_demand
 from aerona.engine.body.customs import culture_of
 from aerona.engine.body.hits import weighted
 from aerona.engine.context import TickContext
+from aerona.engine.demography.urban import founding_factor
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.ruler_roles import ruler_role
 from aerona.engine.mind.book import effect_of, scaled_by
@@ -493,7 +495,8 @@ async def villages(ctx: TickContext, atlas: RegionAtlas, namer: Namer) -> None:
             continue
         if existing >= math.ceil(population / world_rules.people_per_village):
             continue
-        if not rng.chance(life.extra_village_chance if existing else life.first_village_chance):
+        culture = await ctx.session.get(PeopleCultureRow, people.id)
+        if not rng.chance(min(PERCENT, (life.extra_village_chance if existing else life.first_village_chance) * founding_factor(rules, culture))):
             continue
         migrants = village_migrants(rules, population)
         if migrants < world_rules.village_min_population:
@@ -666,6 +669,8 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
     "table.maimed_cohorts",
     "table.name_registry",
     "table.nodes",
+    "table.people_biology",
+    "table.people_culture",
     "table.world_maps",
 )
 @writes(

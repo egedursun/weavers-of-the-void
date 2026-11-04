@@ -78,6 +78,7 @@ from aerona.rules.registry.exploration import ExplorationRules
 from aerona.rules.registry.factions import FactionsRules
 from aerona.rules.registry.faith import FaithRules
 from aerona.rules.registry.fate import FateRules
+from aerona.rules.registry.folk import BiologyRules, CustomsRules
 from aerona.rules.registry.folk_belief import FolkBeliefRules
 from aerona.rules.registry.foreign_gods import ForeignGodsRules
 from aerona.rules.registry.genesis import GenesisRules
@@ -369,6 +370,8 @@ class Rules:
     vendetta: VendettaRules = field(default_factory=VendettaRules)
     labour: LabourRules = field(default_factory=LabourRules)
     peoples: PeopleRules = field(default_factory=PeopleRules)
+    biology: BiologyRules = field(default_factory=BiologyRules)
+    customs: CustomsRules = field(default_factory=CustomsRules)
     mobility: MobilityRules = field(default_factory=MobilityRules)
     espionage: EspionageRules = field(default_factory=EspionageRules)
     empty_world: EmptyWorldRules = field(default_factory=EmptyWorldRules)

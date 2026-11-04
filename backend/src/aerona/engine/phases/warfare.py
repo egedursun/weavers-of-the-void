@@ -33,6 +33,7 @@ from aerona.engine.body.book import effective, strike_style
 from aerona.engine.body.cohorts import return_maimed
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.demography.biology import acclimatised, profiles_of
 from aerona.engine.economy.equipment import march_burden, siege_engines, suffer_heat
 from aerona.engine.environment.battleground import BattleGround, attack_factor, defend_factor, night_chance, omen_morale, scar_battlefield, season_losses
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment, scar_region
@@ -905,14 +906,19 @@ def _battle_chance(ctx: TickContext, theatre: Theatre, attacker: EntityRow, defe
     return ctx.rules.campaigns.battle_chance_war_ban if banned else ctx.rules.campaigns.battle_chance
 
 
-def _acclimatised(ctx: TickContext, theatre: Theatre, side: EntityRow, ground: BattleGround) -> bool:
+async def _acclimatised(ctx: TickContext, theatre: Theatre, side: EntityRow, ground: BattleGround) -> bool:
+    if ground.region is None:
+        return True
+    biology, _ = await profiles_of(ctx.session, side)
+    if biology is not None:
+        return acclimatised(ctx.rules, biology, ground.region.temperature_band)
     home = theatre.ground.region_of(side.id)
-    if home is None or ground.region is None:
+    if home is None:
         return True
     return abs(home.temperature - ground.region.temperature) <= ctx.rules.weather.acclimatised_within
 
 
-def _weather_losses(
+async def _weather_losses(
     ctx: TickContext, theatre: Theatre, ground: BattleGround, sides: tuple[EntityRow, ...], armies: dict[int, tuple[EntityRow, ArmyRow]]
 ) -> int:
     lost = 0
@@ -921,7 +927,7 @@ def _weather_losses(
         army = armies[side.id][0]
         size = stat(army, "size") or 0
         share = season_losses(
-            ctx.rules, ground.weather, ground.region, armour_pct=stat(army, "equipment") or 0, acclimatised=_acclimatised(ctx, theatre, side, ground)
+            ctx.rules, ground.weather, ground.region, armour_pct=stat(army, "equipment") or 0, acclimatised=await _acclimatised(ctx, theatre, side, ground)
         )
         dead = round_half_up(size * share)
         if dead:
@@ -1070,7 +1076,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     for index in range(seasons):
         year = base + min(years - 1, first_year + (start + index) // count)
         ground = theatre.battleground(ctx, war, defender, slot=f"war.{war.id}.{index}", season_index=start + index, year=year)
-        lost += _weather_losses(ctx, theatre, ground, (attacker, defender), armies)
+        lost += await _weather_losses(ctx, theatre, ground, (attacker, defender), armies)
         contact = await _manoeuvre(ctx, theatre, marches, index, ground=ground, war_id=war.id)
         if await occupy(ctx, war, marches[0], defender, theatre.neighbourhood.atlas) is not None:
             ctx.count("occupation_seasons")
@@ -1166,6 +1172,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.occupations",
     "table.offices",
     "table.outbreaks",
+    "table.people_biology",
     "table.people_culture",
     "table.personality_values",
     "table.place_environment",

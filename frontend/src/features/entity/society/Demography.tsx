@@ -50,6 +50,7 @@ import { COMMODITY, type CommodityKind } from '../economy/labels'
 import { BAND, named } from '../environment/labels'
 import { PRESSURE_ICONS, VALUE_ICONS } from '../mind/labels'
 import { MindPicker } from '../mind/parts'
+import { FolkBody, FolkControls, FolkWays, FoundPeoplePanel } from './Folk'
 import { useDemography } from './api'
 import { DormancyPanel, SetCohort, SickCohorts } from './cohortParts'
 import { ForgeDisease } from './diseaseParts'
@@ -75,17 +76,7 @@ import {
   type Spec,
   fieldLabel,
 } from './labels'
-import {
-  AdjustPanel,
-  ChoiceEditor,
-  EditorGroup,
-  FlagEditor,
-  HeldStrip,
-  IconPicker,
-  type NumberField,
-  NumberEditor,
-  Panel,
-} from './parts'
+import { AdjustPanel, IconPicker, Panel } from './parts'
 import {
   METER_TONE,
   TONE_COLOR,
@@ -102,7 +93,6 @@ type Labour = components['schemas']['LabourView']
 
 const PERCENT = 100
 const OUTPUT_MAX = 200
-const FERTILITY_MAX = 500
 const ANY = 'any'
 const KEEP = 'keep'
 const PALETTE = [
@@ -1044,18 +1034,6 @@ export function LabourSection({ communityId }: { communityId: number }) {
   )
 }
 
-const LIFE_FIELDS = [
-  { key: 'maturity_years', icon: Sprout, min: 1, max: 1000, unit: 'years' },
-  { key: 'adult_years', icon: Users, min: 1, max: 10000, unit: 'years' },
-  { key: 'elder_years', icon: Hourglass, min: 1, max: 10000, unit: 'years' },
-  { key: 'fertility_pct', icon: Sprout, min: 0, max: FERTILITY_MAX, unit: '%' },
-] as const
-const SOCIETY_FIELDS = [
-  { key: 'cohesion', icon: Users2, min: 0, max: PERCENT },
-  { key: 'literacy', icon: BookOpen, min: 0, max: PERCENT },
-  { key: 'urbanisation', icon: Building, min: 0, max: PERCENT },
-] as const
-
 function LifeCourse({
   biology,
 }: {
@@ -1120,155 +1098,6 @@ function LifeCourse({
         ))}
       </div>
     </div>
-  )
-}
-
-function ProfileControls({
-  view,
-  blocked,
-}: {
-  view: Demography
-  blocked: string | null
-}) {
-  const biology = view.biology
-  const culture = view.culture
-  const locked = [...(biology?.locked ?? []), ...(culture?.locked ?? [])]
-  const peopleId = view.people_id ?? view.entity_id
-  const edit = useGodAction({
-    run: ({ key, value }: { key: string; value: number | string | boolean }) =>
-      unwrap(
-        api.POST('/api/actions/people:edit', {
-          body: { people_id: peopleId, values: { [key]: value }, release: [] },
-        })
-      ),
-    success: (_result, change) => `${fieldLabel(change.key)} held`,
-  })
-  const release = useGodAction({
-    run: (keys: string[]) =>
-      unwrap(
-        api.POST('/api/actions/people:edit', {
-          body: { people_id: peopleId, values: {}, release: keys },
-        })
-      ),
-    success: 'They drift with the world again',
-  })
-  const busy = blocked ?? (edit.isPending || release.isPending ? WORKING : null)
-  const numbers: NumberField[] = [
-    ...(biology
-      ? LIFE_FIELDS.map((field) => ({
-          key: field.key,
-          label: fieldLabel(field.key),
-          icon: field.icon,
-          value: biology[field.key],
-          min: field.min,
-          max: field.max,
-          unit: field.unit,
-        }))
-      : []),
-  ]
-  const society: NumberField[] = culture
-    ? SOCIETY_FIELDS.map((field) => ({
-        key: field.key,
-        label: fieldLabel(field.key),
-        icon: field.icon,
-        value: culture[field.key],
-        min: field.min,
-        max: field.max,
-      }))
-    : []
-  const editor = (field: NumberField) => (
-    <NumberEditor
-      key={`${field.key}-${field.value}`}
-      id={`people-${peopleId}`}
-      field={field}
-      held={locked.includes(field.key)}
-      blocked={blocked}
-      pending={edit.isPending && edit.variables?.key === field.key}
-      onSet={(value) => edit.mutate({ key: field.key, value })}
-    />
-  )
-  return (
-    <AdjustPanel
-      title='Shape these folk'
-      note='Set how they age, breed, hold together and live. What you set is held against the drift of the world until you release it; every change can be undone from the ledger.'
-    >
-      <HeldStrip
-        keys={locked}
-        labelOf={fieldLabel}
-        blocked={busy}
-        onRelease={(keys) => release.mutate(keys)}
-      />
-      {numbers.length > 0 && (
-        <EditorGroup title='A life' icon={Hourglass} pairs>
-          {numbers.map(editor)}
-        </EditorGroup>
-      )}
-      {society.length > 0 && (
-        <EditorGroup title='Society' icon={Users2}>
-          {society.map(editor)}
-        </EditorGroup>
-      )}
-      {culture && (
-        <EditorGroup title='Customs' icon={Palette} pairs>
-          <ChoiceEditor
-            label='Art'
-            hint='What they find beautiful'
-            value={culture.aesthetic}
-            table={AESTHETIC_SPEC}
-            held={locked.includes('aesthetic')}
-            blocked={busy}
-            onPick={(value) => edit.mutate({ key: 'aesthetic', value })}
-          />
-          <ChoiceEditor
-            label='Way of war'
-            hint='How their levies fight'
-            value={culture.martial_style}
-            table={MARTIAL_SPEC}
-            held={locked.includes('martial_style')}
-            blocked={busy}
-            onPick={(value) => edit.mutate({ key: 'martial_style', value })}
-          />
-          <ChoiceEditor
-            label='Marriage'
-            hint='Who may wed whom'
-            value={culture.marriage}
-            table={MARRIAGE_SPEC}
-            held={locked.includes('marriage')}
-            blocked={busy}
-            onPick={(value) => edit.mutate({ key: 'marriage', value })}
-          />
-          <ChoiceEditor
-            label='Inheritance'
-            hint='Who takes what the dead leave'
-            value={culture.inheritance}
-            table={INHERITANCE_SPEC}
-            held={locked.includes('inheritance')}
-            blocked={busy}
-            onPick={(value) => edit.mutate({ key: 'inheritance', value })}
-          />
-          <FlagEditor
-            label='Marry within'
-            hint='Only their own people are taken as spouses'
-            icon={Fingerprint}
-            tone='verdigris'
-            checked={culture.endogamous}
-            held={locked.includes('endogamous')}
-            blocked={busy}
-            onToggle={(value) => edit.mutate({ key: 'endogamous', value })}
-          />
-          <FlagEditor
-            label='Slavery lawful'
-            hint='They may hold others in bondage'
-            icon={Link}
-            tone='warning'
-            checked={culture.slavery_lawful}
-            held={locked.includes('slavery_lawful')}
-            blocked={busy}
-            onToggle={(value) => edit.mutate({ key: 'slavery_lawful', value })}
-          />
-        </EditorGroup>
-      )}
-    </AdjustPanel>
   )
 }
 
@@ -1428,6 +1257,8 @@ export function PeopleProfileSection({
               <LifeCourse biology={biology} />
             </Panel>
           )}
+          {biology && <FolkBody biology={biology} />}
+          {culture && <FolkWays culture={culture} />}
           {culture && (
             <Panel
               title='Customs'
@@ -1534,7 +1365,8 @@ export function PeopleProfileSection({
             </div>
           </Panel>
         )}
-        <ProfileControls view={view.data} blocked={blocked} />
+        <FolkControls view={view.data} blocked={blocked} />
+        <FoundPeoplePanel view={view.data} blocked={blocked} />
       </div>
     </Section>
   )

@@ -15,7 +15,8 @@ from aerona.domain.enums.demography import CohortCondition
 from aerona.domain.enums.disease import DiseaseTarget, OutbreakStatus
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.modifier import ModifierSource
-from aerona.engine.demography.promotion import DORMANT_KEY, MAIMED_KEY
+from aerona.engine.demography.keys import DORMANT_KEY
+from aerona.engine.demography.promotion import MAIMED_KEY
 from aerona.engine.disease.sickness import SICK_KEY
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.rules.registry import Rules

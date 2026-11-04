@@ -84,6 +84,9 @@ WHITELISTED_TABLES = frozenset(
         "community_cohorts",
         "species_hosts",
         "community_societies",
+        "people_biology",
+        "people_culture",
+        "tradition_profiles",
     }
 )
 PERMANENT_BIRTH_TABLES = frozenset({"sons", "worlds"})

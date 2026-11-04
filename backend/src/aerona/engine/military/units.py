@@ -18,6 +18,7 @@ from aerona.domain.enums.military import ArmourType, ShieldType, Stance, UnitFam
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.demography.biology import kin_army, profiles_of
 from aerona.engine.ecology.domestication import herd_uses
 from aerona.engine.economy.stocks import holding
 from aerona.engine.lore.research import techniques_of
@@ -128,9 +129,8 @@ async def composition(ctx: TickContext, community: EntityRow, size: int, knowled
         plan[kind] = plan.get(kind, 0.0) + table.style_share_pct / PERCENT / (index + 1) / sum(1 / (i + 1) for i in range(len(styled)))
     for kind, share in (await extras(ctx, community, knowledge, society)).items():
         add(plan, kind, share)
-    beasts = await herd_uses(ctx, community.id)
-    for kind in [kind for kind in plan if MOUNT_NEEDS.get(kind, "") not in beasts and kind in MOUNT_NEEDS]:
-        plan.pop(kind)
+    biology, culture = await profiles_of(ctx.session, community)
+    plan = kin_army(ctx.rules, biology, culture, plan, beasts=await herd_uses(ctx, community.id), mount_needs=MOUNT_NEEDS)
     rest = max(0.0, 1 - sum(plan.values()))
     plan[FALLBACK] = plan.get(FALLBACK, 0.0) + rest
     total = sum(plan.values()) or 1.0

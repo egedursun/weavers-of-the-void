@@ -16,14 +16,15 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.demography import InheritanceCustom, MarriageCustom
+from aerona.domain.enums.demography import MarriageCustom
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.mind import TraitKind, ValueAxis
-from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind
+from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind, SuccessionRule
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, TreasuryEntry
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
+from aerona.engine.demography.kinship import INHERITANCE_RULES
 from aerona.engine.lore.research import lacks
 from aerona.engine.mind.book import traits_of
 from aerona.engine.notes import note
@@ -41,12 +42,6 @@ CREED_SCALE = 10
 LEAN = 25
 BASELINE_LAWS = frozenset({LawKind.SUCCESSION_RULE, LawKind.SLAVERY, LawKind.RELIGIOUS_TOLERANCE, LawKind.TAX_RATE, LawKind.PENAL_CODE})
 COUNCIL_KINDS = 5
-INHERITANCE_RULES = {
-    InheritanceCustom.PRIMOGENITURE: "primogeniture",
-    InheritanceCustom.GAVELKIND: "seniority",
-    InheritanceCustom.ELECTIVE: "elective",
-    InheritanceCustom.BY_MERIT: "tanistry",
-}
 
 
 async def base_will(ctx: TickContext, realm: Realm) -> dict[ValueAxis, int]:
@@ -107,9 +102,9 @@ async def wanted_laws(
     wants: list[tuple[LawKind, dict[str, int | str | bool]]] = []
     if laws.in_force(polity.id, LawKind.SUCCESSION_RULE) is None and realm.profile.tier >= 1:
         core = await ctx.session.get(PeopleCultureRow, realm.profile.core_entity_id or -1)
-        rule = INHERITANCE_RULES.get(core.inheritance, "primogeniture") if core is not None else "primogeniture"
+        rule = INHERITANCE_RULES[core.inheritance].value if core is not None else SuccessionRule.PRIMOGENITURE.value
         if values.get(ValueAxis.KINSHIP, 0) <= -LEAN and core is not None and core.marriage is MarriageCustom.POLYANDRY:
-            rule = "matrilineal"
+            rule = SuccessionRule.MATRILINEAL.value
         wants.append((LawKind.SUCCESSION_RULE, {"rule": rule}))
     if await plagued(ctx, realm) and laws.in_force(polity.id, LawKind.QUARANTINE) is None and rng.chance(table.plague_quarantine_chance):
         wants.append((LawKind.QUARANTINE, {}))

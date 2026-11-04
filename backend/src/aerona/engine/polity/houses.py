@@ -16,6 +16,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import HouseStats
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
+from aerona.engine.demography.kinship import has_room, match_bonus, may_wed, terms_of
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.lifecycle.succession import dynasty_root
 from aerona.engine.mind.space import value_distance
@@ -345,8 +346,7 @@ async def keep_heirlooms(ctx: TickContext, house_id: int, alive: list[EntityRow]
 async def eligible(ctx: TickContext, mortal: EntityRow) -> bool:
     if (stat(mortal, "age") or 0) < ctx.rules.society.love_min_age:
         return False
-    _, _, spouses = await kin_ids(ctx, mortal.id)
-    return not spouses
+    return await has_room(ctx.session, ctx.rules, mortal)
 
 
 async def arrange_marriages(ctx: TickContext, book: HouseBook, realms: RealmBook) -> list[tuple[EntityRow, EntityRow]]:
@@ -368,6 +368,8 @@ async def arrange_marriages(ctx: TickContext, book: HouseBook, realms: RealmBook
         for other_house, other in pool:
             if other_house == house_id or other.id in taken or other.world_id != mortal.world_id or sex_of(other) == sex_of(mortal):
                 continue
+            if not await may_wed(ctx.session, ctx.rules, mortal, other):
+                continue
             theirs = await values_of(ctx, other)
             distance = value_distance(mine, theirs)
             if distance > FIT_DISTANCE:
@@ -376,6 +378,7 @@ async def arrange_marriages(ctx: TickContext, book: HouseBook, realms: RealmBook
                 book.profiles[other_house].prestige
                 - distance / 2
                 + (TWENTY if realms.member_of.get(other.location_id or -1) != realms.member_of.get(mortal.location_id or -1) else 0)
+                + match_bonus(ctx.rules, await terms_of(ctx.session, mortal), await terms_of(ctx.session, other))
             )
             if best is None or gain > best[0]:
                 best = (gain, other)

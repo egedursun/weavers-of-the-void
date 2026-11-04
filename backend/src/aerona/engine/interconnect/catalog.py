@@ -32,6 +32,7 @@ from aerona.engine.interconnect.catalog_lore import BEHAVIOURS as LORE_BEHAVIOUR
 from aerona.engine.interconnect.catalog_lore import LORE_MECHANICS
 from aerona.engine.interconnect.catalog_military import BEHAVIOURS as MILITARY_BEHAVIOURS
 from aerona.engine.interconnect.catalog_military import MILITARY_MECHANICS
+from aerona.engine.interconnect.catalog_peoples import PEOPLE_MECHANICS
 from aerona.engine.interconnect.catalog_realm import BEHAVIOURS as REALM_BEHAVIOURS
 from aerona.engine.interconnect.catalog_realm import REALM_MECHANICS
 from aerona.engine.interconnect.catalog_routes import ROUTE_MECHANICS
@@ -819,7 +820,17 @@ CORE_MECHANICS = (
         ),
     ),
 )
-BUILT_IN = (*CORE_MECHANICS, *SOCIETY_MECHANICS, *REALM_MECHANICS, *MILITARY_MECHANICS, *FAITH_MECHANICS, *LORE_MECHANICS, *WILDS_MECHANICS, *ROUTE_MECHANICS)
+BUILT_IN = (
+    *CORE_MECHANICS,
+    *SOCIETY_MECHANICS,
+    *REALM_MECHANICS,
+    *MILITARY_MECHANICS,
+    *FAITH_MECHANICS,
+    *LORE_MECHANICS,
+    *WILDS_MECHANICS,
+    *ROUTE_MECHANICS,
+    *PEOPLE_MECHANICS,
+)
 
 MODULE_SUBSYSTEMS: dict[str, Subsystem] = {
     "warfare": Subsystem.WAR,

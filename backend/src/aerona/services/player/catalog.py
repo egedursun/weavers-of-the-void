@@ -1035,6 +1035,7 @@ ECONOMY_ACTIONS = (
     _sync(Meta("loan:forgive", "Forgive a bank loan", G.SOCIETY), economy.forgive_loan, economy.LoanTarget, free, ("S6.4",)),
     _sync(Meta("hoard:inject", "Pour a hoard of treasure into a market", G.SOCIETY), economy.inject_hoard, economy.InjectHoard, free, ("S6.4",)),
     _sync(Meta("people:edit", "Edit a people's biology, culture and customs", G.SOCIETY), peoples.edit_people, peoples.EditPeople, free, ("S4.1",)),
+    _sync(Meta("people:found", "Found a new people with its own body and customs", G.SOCIETY), peoples.found_people, peoples.FoundPeople, free, ("S4.1",)),
     _sync(Meta("cohort:move", "Move people from one class to another", G.SOCIETY), peoples.move_cohort, peoples.MoveCohort, free, ("F12", "S4.9")),
     _sync(Meta("disease:loose", "Loose a disease on a land or community", G.INTERVENTIONS), disease.loose, disease.Loose, free, ("S3.4",)),
     _sync(Meta("disease:edit", "Edit a disease's nature", G.INTERVENTIONS), disease.edit_disease, disease.EditDisease, free, ("S3.4",)),

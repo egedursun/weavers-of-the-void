@@ -1,6 +1,20 @@
 from aerona.api.schemas.common import ApiModel
-from aerona.domain.enums.demography import Aesthetic, AgeBand, CohortCondition, InheritanceCustom, Job, MarriageCustom, MartialStyle, Sex
+from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.demography import (
+    Aesthetic,
+    AgeBand,
+    CohortCondition,
+    FolkDiet,
+    FuneralCustom,
+    InheritanceCustom,
+    Job,
+    MarriageCustom,
+    MartialStyle,
+    NaturalTrait,
+    Sex,
+)
 from aerona.domain.enums.disease import ClimateAffinity, CureSource, DiseaseTarget, DiseaseVector, OutbreakStatus, SpreadPath
+from aerona.domain.enums.ecology import SizeClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.mind import PressureKind, ValueAxis
@@ -33,6 +47,27 @@ class PressureView(ApiModel):
     value: int
 
 
+class LinkedRecord(ApiModel):
+    id: int
+    name: str
+
+
+class WorkFactor(ApiModel):
+    job: Job
+    pct: int
+
+
+class KinEffectsView(ApiModel):
+    food_pct: int
+    room_pct: int
+    strength_pct: int
+    disease_pct: int
+    fleet_pct: int
+    mount: str
+    hunger_pct: int
+    work: list[WorkFactor]
+
+
 class BiologyView(ApiModel):
     maturity_years: int
     adult_years: int
@@ -40,8 +75,20 @@ class BiologyView(ApiModel):
     fertility_pct: int
     acclimatised: TemperatureBand
     staple: CommodityKind
-    traits: list[str]
+    traits: list[NaturalTrait]
+    immunities: list[LinkedRecord]
+    body_plan: BodyPlan
+    size_class: SizeClass
+    diet: FolkDiet
+    edible: list[CommodityKind]
+    effects: KinEffectsView
     locked: list[str]
+
+
+class MartialRecordView(ApiModel):
+    style: MartialStyle
+    wins: int
+    losses: int
 
 
 class CultureView(ApiModel):
@@ -54,7 +101,13 @@ class CultureView(ApiModel):
     endogamous: bool
     inheritance: InheritanceCustom
     slavery_lawful: bool
-    staples: list[str]
+    staples: list[CommodityKind]
+    liturgical_language: LinkedRecord | None
+    trade_language: LinkedRecord | None
+    funeral_rite: FuneralCustom
+    funeral_tradition: LinkedRecord | None
+    martial_record: list[MartialRecordView]
+    martial_net: int
     locked: list[str]
 
 

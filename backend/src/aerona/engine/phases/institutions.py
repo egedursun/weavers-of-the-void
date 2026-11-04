@@ -20,6 +20,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, 
 from aerona.domain.enums.war import WarEnding
 from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
+from aerona.engine.demography.kinship import assimilation_factor
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.language import intelligibility
 from aerona.engine.mind.drives import closeness
@@ -298,7 +299,7 @@ async def joining(ctx: TickContext, people: EntityRow, largest: EntityRow, *, ra
     cycles = ctx.rules.life_cycles
     shared = bool(await tongues(ctx, people.id) & await tongues(ctx, largest.id))
     rng = ctx.rng(f"peoples.{people.id}")
-    kinship = await closeness(ctx.session, people.id, largest.id)
+    kinship = await closeness(ctx.session, people.id, largest.id) * assimilation_factor(ctx.rules, await ctx.session.get(PeopleCultureRow, people.id))
     if await folds_in(ctx, people, largest, shared=shared):
         return False if rng.chance(cycles.assimilation_chance * 2 * kinship) else None
     if ratio <= cycles.assimilation_ratio_pct:

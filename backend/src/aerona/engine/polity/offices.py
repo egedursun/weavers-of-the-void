@@ -215,6 +215,7 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
         SuccessionRule.MATRILINEAL: [*[item for item in siblings if sex_of(item) == "female"], *grandchildren, *children],
         SuccessionRule.BY_COMBAT: [*children, *siblings, *housemates],
         SuccessionRule.DIVINE_CHOICE: [*children, *housemates, *siblings],
+        SuccessionRule.ULTIMOGENITURE: [*sorted(children, key=lambda item: (stat(item, "age") or 0, item.id)), *grandchildren, *siblings],
     }
     seen: set[int] = set()
     pool: list[EntityRow] = []
@@ -234,8 +235,8 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
     def key(entry: tuple[int, EntityRow]) -> tuple[float, ...]:
         rank, item = entry
         age = stat(item, "age") or 0
-        if rule is SuccessionRule.PRIMOGENITURE:
-            return (order[item.id] >= len(children), rank, -age, item.id)
+        if rule in {SuccessionRule.PRIMOGENITURE, SuccessionRule.ULTIMOGENITURE}:
+            return (order[item.id] >= len(children), rank, age if rule is SuccessionRule.ULTIMOGENITURE else -age, item.id)
         if rule is SuccessionRule.SENIORITY:
             return (rank, -age, item.id)
         if rule is SuccessionRule.ELECTIVE:

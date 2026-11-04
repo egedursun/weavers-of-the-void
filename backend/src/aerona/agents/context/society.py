@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.agents.context.lore import lore_lines
 from aerona.agents.context.wilds import wild_lines
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.demography import CohortRow, PeopleCultureRow
+from aerona.db.tables.demography import CohortRow, PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.disease import DiseaseProfileRow, EndemicDiseaseRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultDoctrineRow
@@ -18,11 +18,12 @@ from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.demography import CohortCondition
 from aerona.domain.enums.disease import OutbreakStatus
-from aerona.domain.enums.entity import SOCIETY_TYPES
+from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
 from aerona.domain.enums.military import CaptiveFate
 from aerona.domain.enums.polity import OathStatus
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.body.customs import people_of
+from aerona.engine.demography.biology import record_of
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.gods.queries import community_of
 from aerona.engine.primitives.distance import RegionAtlas
@@ -42,16 +43,8 @@ async def home_for(session: AsyncSession, me: EntityRow) -> HomeLine | None:
     society = await session.get(CommunitySocietyRow, home.id)
     people = await people_of(session, home)
     culture = await session.get(PeopleCultureRow, people.id) if people is not None else None
-    customs: list[str] = []
-    if culture is not None:
-        customs = [
-            f"fights as {words(culture.martial_style.value)}",
-            f"{words(culture.marriage.value)}",
-            f"inheritance by {words(culture.inheritance.value)}",
-            f"{words(culture.aesthetic.value)} art",
-        ]
-        if culture.slavery_lawful:
-            customs.append("keeps slaves")
+    biology = await session.get(PeopleBiologyRow, people.id) if people is not None else None
+    customs: list[str] = await folk_lines(session, biology, culture)
     region = (await RegionAtlas.load(session)).top_region(home.id)
     sickness = await sickness_lines(session, home, region)
     social = me.social_class
@@ -136,6 +129,52 @@ async def disease_traits(session: AsyncSession, profile: DiseaseProfileRow | Non
         text = await session.scalar(select(ChronicleRow.text).where(ChronicleRow.id == origin.chronicle_id)) if origin.chronicle_id is not None else None
         parts.append(f"first rose in epoch {origin.epoch}{': ' + text if text else ''}")
     return "; " + "; ".join(parts)
+
+
+async def record_name(session: AsyncSession, entity_id: int | None) -> str:
+    found = await session.get(EntityRow, entity_id) if entity_id is not None else None
+    return found.name if found is not None else ""
+
+
+async def folk_lines(session: AsyncSession, biology: PeopleBiologyRow | None, culture: PeopleCultureRow | None) -> list[str]:
+    lines: list[str] = []
+    if biology is not None:
+        lines += [
+            f"{words(biology.size_class.value)} {words(biology.body_plan.value)} folk",
+            f"{words(biology.diet.value)}, living on {words(biology.staple.value)}",
+            f"at home in {words(biology.acclimatised.value)} lands",
+        ]
+        lines += [words(trait) for trait in biology.traits]
+        immune = [name for name in [await record_name(session, item) for item in biology.immunities] if name]
+        if immune:
+            lines.append(f"hardened against {', '.join(immune)}")
+    if culture is None:
+        return lines
+    wins, losses = record_of(culture, culture.martial_style.value)
+    lines += [
+        f"fights as {words(culture.martial_style.value)} ({wins} victories, {losses} defeats)",
+        f"{words(culture.marriage.value)}, {'marrying only their own' if culture.endogamous else 'marrying outside their people'}",
+        f"inheritance by {words(culture.inheritance.value)}",
+        f"{words(culture.aesthetic.value)} art",
+        f"funeral rite: {words(culture.funeral_rite.value)}",
+        f"urbanisation {culture.urbanisation}",
+    ]
+    liturgy = await record_name(session, culture.liturgical_language_id)
+    trade = await record_name(session, culture.trade_language_id)
+    if liturgy:
+        lines.append(f"prays in {liturgy}")
+    if trade:
+        lines.append(f"trades in {trade}")
+    if culture.slavery_lawful:
+        lines.append("keeps slaves")
+    return lines
+
+
+async def people_facts(session: AsyncSession, entity: EntityRow) -> list[str]:
+    if entity.entity_type is not EntityType.PEOPLE:
+        return []
+    lines = await folk_lines(session, await session.get(PeopleBiologyRow, entity.id), await session.get(PeopleCultureRow, entity.id))
+    return [f"Folk and customs: {', '.join(lines)}"] if lines else []
 
 
 async def war_lines(session: AsyncSession, me: EntityRow, home: EntityRow, region: int | None) -> tuple[list[str], str, str, int]:

@@ -142,6 +142,8 @@ async def polity_cycles(ctx: TickContext) -> None:
     "table.name_registry",
     "table.nodes",
     "table.offices",
+    "table.people_biology",
+    "table.people_culture",
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
