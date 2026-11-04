@@ -18,11 +18,14 @@ from aerona.constants.tool_inputs import (
     SAYING_MIN,
     SUBTYPE_MAX,
 )
+from aerona.domain.enums.culture import CalendarSlot, LegendArchetype, ProphecyConsequence, ProphecyPredicate, TraditionKind
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.entity import LegendCategory
+from aerona.domain.enums.entity import EngineKind, LegendCategory
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import KnowledgeBranch, ResourceMechanic
 from aerona.domain.enums.travel import JourneyIntent
+from aerona.domain.enums.world import SkyEventKind
 from aerona.tools.framework.inputs import ToolInput
 
 Name = Annotated[str, Field(min_length=NAME_MIN, max_length=NAME_MAX)]
@@ -105,6 +108,11 @@ class CultureInput(ToolInput):
     related_ids: list[int] | None = None
     image_prompt: ImagePrompt | None = None
     legend_category: LegendCategory | None = None
+    archetype: LegendArchetype | None = None
+    tradition_kind: TraditionKind | None = None
+    calendar_slot: CalendarSlot | None = None
+    taboo_target: CommodityKind | None = None
+    taboo_act: ActKind | None = None
 
 
 class DiscoverInput(ToolInput):
@@ -256,6 +264,15 @@ class ProphesyInput(ToolInput):
     name: Name
     saying: Annotated[str, Field(min_length=SAYING_MIN, max_length=SAYING_MAX)]
     related_ids: list[int] | None = None
+    predicate: ProphecyPredicate
+    subject_id: int | None = None
+    second_id: int | None = None
+    archetype: LegendArchetype | None = None
+    sky_kind: SkyEventKind | None = None
+    event_kind: EngineKind | None = None
+    within_epochs: int | None = None
+    consequence: ProphecyConsequence | None = None
+    consequence_id: int | None = None
 
 
 class EscapeInput(ToolInput):

@@ -135,6 +135,48 @@ STATUS_FREE = "Free."
 ESSENCE_GIFT_CAP = "{{ rules.son_tools.gift_max_essence }}"
 
 SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
+    T.COMMISSION_ARTWORK: ToolText(
+        "You commission a work of art: a song, epic, statue, fresco... It presses its message on those who keep it, remembers whom it portrays,"
+        " and a realm or town pays for it from its treasury. 1 action.",
+        {
+            "name": "A proper name for it, in the world's naming language",
+            "medium": "What kind of work: {{ art_media }}; songs, plays and dances live only while someone can perform them",
+            "subject_id": "Whom or what it portrays (an entity id), if anyone",
+            "author_id": "The artist who makes it (a mortal id), if any; a skilled hand makes a finer work",
+            "patron_id": "Who commissions and keeps it (a community id); one of your worshipping communities",
+        },
+    ),
+    T.DESIGN_RITE: ToolText(
+        "You devise a new rite of magic with the workings you choose; it must still be cast to take effect. 1 action.",
+        {
+            "name": "A proper name for the rite",
+            "school": "Its school of magic: {{ magic_schools }}",
+            "source": "What it draws on: {{ magic_sources }}; divine costs a god's essence, blood costs blood (captives' first), void costs sanity",
+            "power": "Its power, 1 to 10; stronger rites cost more and backfire more often",
+            "workings": "What it does, at most 4 workings",
+            "workings.effect": "The working: {{ rite_effects }}",
+            "workings.magnitude": "Its strength, 1 to 100",
+            "workings.damage_type": "For destruction: fire, cold, void or another wound",
+            "workings.summon_form": "For a summoning: spirit, beast or undead",
+            "holder_id": "The worshipping community or follower who will keep the rite",
+        },
+    ),
+    T.CAST_RITE: ToolText(
+        "You work a rite you know. It must be lawful where it is worked, its requirements met and its price paid; it may backfire. 1 action.",
+        {
+            "rite_id": "The rite to work (a rite id)",
+            "target_id": "Whom or where it is aimed at, if anyone",
+            "vessel_id": "The worshipping community the rite is worked through; you pay its price in essence",
+        },
+    ),
+    T.FOUND_SCHOOL: ToolText(
+        "You found a school of thought, a creed that spreads along roads, through scholars, books and schools, and can move a realm. 1 action.",
+        {
+            "name": "A proper name for the school or creed",
+            "tenets": "What it teaches, 1 to 3 tenets: {{ ideology_tenets }}",
+            "founder_id": "The mortal follower who founds it in your name",
+        },
+    ),
     T.WORLD_SUMMARY: ToolText(
         "Shows the world's current map, laws, pantheon, open stories and recent events. Give section to see in full a section that was truncated in the prompt "
         "({{ summary_sections | join(', ') }}). Free.",

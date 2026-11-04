@@ -131,6 +131,7 @@ class TechGraphRules:
 @dataclass(frozen=True)
 class IdeologiesRules:
     emergence_chance: int = rule(5, 0, 100, C, "A learned mortal founds a creed in an epoch (%)")
+    founding_tenets: int = rule(3, 1, 13, C, "Most tenets a creed founded from a mortal's convictions carries")
     spread_chance: int = rule(10, 0, 100, C, "A creed spreads along a road or through a school (%)")
     discontent_pct: int = rule(100, 0, 500, C, "Weight of an unhappy class in a creed's appeal (%)")
     adoption_strength: int = rule(60, 0, 100, C, "Adherence at which a realm takes a creed as its own")

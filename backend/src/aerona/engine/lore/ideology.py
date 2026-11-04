@@ -51,8 +51,12 @@ async def found(ctx: TickContext, founder: EntityRow) -> EntityRow | None:
     tenets = [high if values.get(axis, 0) >= SEED_VALUE else low for axis, (high, low) in VALUE_IDEOLOGY.items() if abs(values.get(axis, 0)) >= SEED_VALUE]
     if not tenets:
         return None
-    tenets = list(dict.fromkeys(tenets))[:3]
-    name = f"The {tenets[0].value.replace('_', ' ').title()} of {founder.name}"
+    return await found_school(ctx, founder, list(dict.fromkeys(tenets))[: ctx.rules.ideologies.founding_tenets])
+
+
+async def found_school(ctx: TickContext, founder: EntityRow, tenets: list[IdeologyTenet], name: str | None = None) -> EntityRow:
+    tenets = list(dict.fromkeys(tenets))
+    name = (name or "").strip() or f"The {tenets[0].value.replace('_', ' ').title()} of {founder.name}"
     creed = await create_record(
         ctx,
         RecordSpec(

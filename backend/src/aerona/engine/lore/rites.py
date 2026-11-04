@@ -801,6 +801,43 @@ async def cast(
     return casting
 
 
+@dataclass(frozen=True)
+class Design:
+    name: str
+    school: MagicSchool
+    source: MagicSource | None
+    power: int
+    workings: tuple[tuple[RiteEffectKind, int, DamageType | None, SummonForm | None], ...]
+
+
+async def design(ctx: TickContext, plan: Design, holder: EntityRow) -> tuple[EntityRow, RiteProfileRow]:
+    rite = await create_record(
+        ctx,
+        RecordSpec(
+            name=plan.name.strip() or RITE_TEMPLATES[plan.school].name,
+            entity_type=EntityType.RITE,
+            stats=RiteStats(power=plan.power, castings=0),
+            body=f"A rite of the {plan.school.value.replace('_', ' ')} school, devised for {holder.name}.",
+            power=plan.power,
+            world_id=holder.world_id,
+            location_id=holder.location_id if holder.entity_type is EntityType.MORTAL else holder.id,
+        ),
+    )
+    row = profile_for(ctx, rite, plan.school, holder.id if holder.entity_type is EntityType.MORTAL else None)
+    row.power = clamp_int(plan.power, 1, 10)
+    if plan.source is not None:
+        row.source, row.holy = plan.source, plan.source is MagicSource.DIVINE
+    row.backlash_chance = clamp_int(row.power * ctx.rules.backlash.per_power_pct, 0, PERCENT)
+    row.cost = cost_of(ctx, row, priced=False)
+    await ctx.session.flush()
+    await ctx.session.execute(delete(RiteEffectRow).where(RiteEffectRow.rite_entity_id == rite.id))
+    for effect, magnitude, damage, form in plan.workings:
+        ctx.session.add(RiteEffectRow(rite_entity_id=rite.id, effect=effect, magnitude=clamp_int(magnitude, 1, PERCENT), damage_type=damage, summon_form=form))
+    await connect(ctx.session, holder.id, rite.id, BondKind.OWNS, ctx.epoch, description="devised")
+    await ctx.session.flush()
+    return rite, row
+
+
 async def cast_by_son(ctx: TickContext, son: SonRow, rite: EntityRow, row: RiteProfileRow, *, vessel: EntityRow, target: EntityRow | None) -> CastingRow:
     cost = max(1, row.power * ctx.rules.rites.essence_per_power)
     if son.essence < cost:

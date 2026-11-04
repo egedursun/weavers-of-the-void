@@ -1,3 +1,5 @@
+from aerona.domain.enums.culture import CalendarSlot, LegendArchetype, TraditionKind
+from aerona.domain.enums.mind import ActKind
 from aerona.prompts.tools.ids import MortalToolId
 from aerona.prompts.tools.shared import IMAGE_PROMPT_FIELD, WORD_FIELDS
 from aerona.prompts.tools.text import ToolText
@@ -9,6 +11,48 @@ NAME_FIELD = "A name from your own language"
 DESCRIPTION_FIELD = "What it is, how it came to be, what makes it strange and concrete"
 
 MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
+    T.COMMISSION_ARTWORK: ToolText(
+        "You commission a work of art: a song, epic, statue, fresco... It presses its message on those who keep it, remembers whom it portrays,"
+        " and a realm or town pays for it from its treasury. 1 action.",
+        {
+            "name": "A proper name for it, in the world's naming language",
+            "medium": "What kind of work: {{ art_media }}; songs, plays and dances live only while someone can perform them",
+            "subject_id": "Whom or what it portrays (an entity id), if anyone",
+            "author_id": "The artist who makes it (a mortal id), if any; a skilled hand makes a finer work",
+            "patron_id": "Who commissions and keeps it (a community id); you if empty",
+        },
+    ),
+    T.DESIGN_RITE: ToolText(
+        "You devise a new rite of magic with the workings you choose; it must still be cast to take effect. 1 action.",
+        {
+            "name": "A proper name for the rite",
+            "school": "Its school of magic: {{ magic_schools }}",
+            "source": "What it draws on: {{ magic_sources }}; divine costs a god's essence, blood costs blood (captives' first), void costs sanity",
+            "power": "Its power, 1 to 10; stronger rites cost more and backfire more often",
+            "workings": "What it does, at most 4 workings",
+            "workings.effect": "The working: {{ rite_effects }}",
+            "workings.magnitude": "Its strength, 1 to 100",
+            "workings.damage_type": "For destruction: fire, cold, void or another wound",
+            "workings.summon_form": "For a summoning: spirit, beast or undead",
+            "holder_id": "Ignored: you devise it yourself",
+        },
+    ),
+    T.CAST_RITE: ToolText(
+        "You work a rite you know. It must be lawful where it is worked, its requirements met and its price paid; it may backfire. 1 action.",
+        {
+            "rite_id": "The rite to work (a rite id)",
+            "target_id": "Whom or where it is aimed at, if anyone",
+            "vessel_id": "Ignored: you work it yourself",
+        },
+    ),
+    T.FOUND_SCHOOL: ToolText(
+        "You found a school of thought, a creed that spreads along roads, through scholars, books and schools, and can move a realm. 1 action.",
+        {
+            "name": "A proper name for the school or creed",
+            "tenets": "What it teaches, 1 to 3 tenets: {{ ideology_tenets }}",
+            "founder_id": "Ignored: you found it yourself",
+        },
+    ),
     T.LOOK_AT_WORLD: ToolText(
         "Shows your land, those near you, your language, what you know, what you own and recent events more widely than the prompt. Free."
     ),
@@ -72,6 +116,11 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "related_ids": "Existing records it tells of (at most {{ " + M + ".culture_max_related }})",
             "image_prompt": 'English photoreal prompt: the ritual being performed or a scene of the legend. {% include "shared/image_prompt_rules.md.j2" %}',
             "legend_category": "Only for a legend: what it would become if belief made it real: {{ legend_categories | join(', ') }}",
+            "archetype": "Only for a legend: the kind of tale, which sets its lesson: " + ", ".join(item.value for item in LegendArchetype),
+            "tradition_kind": "Only for a tradition: what kind of custom it is: " + ", ".join(item.value for item in TraditionKind),
+            "calendar_slot": "Only for a tradition kept at a set time: " + ", ".join(item.value for item in CalendarSlot),
+            "taboo_target": "Only for a taboo: the good its keepers will not touch",
+            "taboo_act": "Only for a taboo: the deed its keepers will not do: " + ", ".join(item.value for item in ActKind),
         },
     ),
     T.DISCOVER_RESOURCE: ToolText(
@@ -243,6 +292,15 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "You make a prophecy: you say something that will happen in the future. If it comes true Fate records it and your reputation (charisma) rises; if it is misread it "
         "is shaken. 1 action, {{ " + M + ".prophesy_per_epoch }} per age.",
         {
+            "predicate": "What exactly must happen for the prophecy to come true, which the world itself will check: {{ prophecy_predicates }}",
+            "subject_id": "The one the foretelling names: who dies, what falls, the house, the realm, or the first side of a war",
+            "second_id": "For a war: the second side",
+            "archetype": "For who will rule: the kind of legend the coming ruler must fit",
+            "sky_kind": "For a sign in the sky: which sign",
+            "event_kind": "For a foretold happening: what kind (war, plague, flood...)",
+            "within_epochs": "In how many ages it must come true; if it does not, you are mocked and your cult loses heart",
+            "consequence": "What it means when it comes true: {{ prophecy_consequences }}",
+            "consequence_id": "Whom the consequence touches",
             "name": "The prophecy's name, from your own language",
             "saying": "The words of the prophecy: imagistic but testable; who or what, and when",
             "related_ids": "Records the prophecy concerns (at most {{ " + M + ".prophecy_max_related }})",

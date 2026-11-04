@@ -14,7 +14,23 @@ from aerona.rules.registry import Rules
 from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.ports import ToolPorts
 from aerona.tools.framework.spec import ToolSpec
-from aerona.tools.mortal import armies, barter, captivity, cosmos, creatures, diplomacy, heroes, knowledge, language, production, read, religion, trade, war
+from aerona.tools.mortal import (
+    armies,
+    barter,
+    captivity,
+    cosmos,
+    creatures,
+    diplomacy,
+    heroes,
+    knowledge,
+    language,
+    lore,
+    production,
+    read,
+    religion,
+    trade,
+    war,
+)
 from aerona.tools.mortal.support import civilization_tier, worships_dead_son
 
 T = MortalToolId
@@ -30,6 +46,9 @@ ACTOR_TYPES: dict[MortalToolId, frozenset[EntityType]] = {
     T.PREACH: frozenset({EntityType.CULT}),
     T.DENY_GOD: frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.FACTION, EntityType.CULT}),
     T.PROPHESY: frozenset({EntityType.MORTAL, EntityType.CULT}),
+    T.FOUND_SCHOOL: NAMED,
+    T.DESIGN_RITE: NAMED,
+    T.COMMISSION_ARTWORK: frozenset({*COMMUNITY_TYPES, EntityType.POLITY, EntityType.MORTAL}),
     T.GO_ON_ADVENTURE: NAMED,
     T.CHALLENGE_GOD: NAMED,
     T.ESCAPE: NAMED,
@@ -94,6 +113,7 @@ FAMILIES: tuple[Callable[[], list[MortalSpec]], ...] = (
     captivity.specs,
     armies.specs,
     barter.specs,
+    lore.specs,
 )
 
 

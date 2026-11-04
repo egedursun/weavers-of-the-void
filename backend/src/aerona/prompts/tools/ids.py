@@ -73,6 +73,10 @@ class SonToolId(StrEnum):
     WAR_ON_FOREIGN_GOD = "war_on_foreign_god"
     BARGAIN_WITH_OUTSIDER = "bargain_with_outsider"
     BIRTH_WORLD = "birth_world"
+    COMMISSION_ARTWORK = "commission_artwork"
+    DESIGN_RITE = "design_rite"
+    CAST_RITE = "cast_rite"
+    FOUND_SCHOOL = "found_school"
 
 
 class MortalToolId(StrEnum):
@@ -119,6 +123,10 @@ class MortalToolId(StrEnum):
     LEND = "lend"
     REPAY_DEBT = "repay_debt"
     ADOPT = "adopt"
+    COMMISSION_ARTWORK = "commission_artwork"
+    DESIGN_RITE = "design_rite"
+    CAST_RITE = "cast_rite"
+    FOUND_SCHOOL = "found_school"
 
 
 ToolId = SonToolId | MortalToolId
