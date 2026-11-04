@@ -5,7 +5,7 @@ from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.culture import CustomCatalog, IdeologyTenet, MagicSchool, RiteEffectKind, SpeakerKind, SummonForm, Technique
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.society import KnowledgeBranch
-from aerona.engine.lore import control, kinds
+from aerona.engine.lore import control, kinds, learning_control
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 
@@ -70,6 +70,31 @@ class HolderTechnique(Command):
     technique: Technique
     held: bool = True
     secret: bool = False
+
+
+class EditHolder(Command):
+    holder_id: int
+    branch: KnowledgeBranch
+    values: dict[str, int | bool] = Field(default_factory=dict)
+    release: list[str] = Field(default_factory=list)
+
+
+class HolderCustomTechnique(Command):
+    holder_id: int
+    kind_id: int
+    held: bool = True
+    secret: bool = False
+
+
+class CreedCustomTenet(Command):
+    ideology_id: int
+    kind_id: int
+    held: bool = True
+
+
+class SuppressCreed(Command):
+    ideology_id: int
+    authority_id: int | None = None
 
 
 class CreedTenet(Command):
@@ -297,3 +322,28 @@ async def dispel_rite(scope: PlayerScope, command: RiteTarget) -> Effect:
 async def set_rite_requirements(scope: PlayerScope, command: RiteRequirements) -> Effect:
     row = await control.set_requirements(await scope.context("rite_requirements"), command.rite_id, command.requirements)
     return Effect(f"The rite now asks {len(row.requirements)} things of its caster.", command.rite_id)
+
+
+@player_action("research:holder", ActionKind.EDIT_RECORD)
+async def edit_holder(scope: PlayerScope, command: EditHolder) -> Effect:
+    row = await learning_control.edit_holder(await scope.context("research_holder"), command.holder_id, command.branch, command.values, command.release)
+    return Effect(f"Their {row.branch.value.replace('_', ' ')} stands at level {row.level}, {row.progress}% toward the next.", command.holder_id)
+
+
+@player_action("research:custom_technique", ActionKind.EDIT_RECORD)
+async def set_custom_technique(scope: PlayerScope, command: HolderCustomTechnique) -> Effect:
+    ctx = await scope.context("research_custom_technique")
+    row = await learning_control.set_custom_technique(ctx, command.holder_id, command.kind_id, held=command.held, secret=command.secret)
+    return Effect("They learn your technique." if row is not None else "They forget your technique.", command.holder_id)
+
+
+@player_action("creed:custom_tenet", ActionKind.EDIT_RECORD)
+async def set_custom_tenet(scope: PlayerScope, command: CreedCustomTenet) -> Effect:
+    row = await learning_control.set_custom_tenet(await scope.context("creed_custom_tenet"), command.ideology_id, command.kind_id, held=command.held)
+    return Effect("The creed takes up your tenet." if row is not None else "The creed casts off your tenet.", command.ideology_id)
+
+
+@player_action("creed:suppress", ActionKind.EDIT_RECORD)
+async def suppress_creed(scope: PlayerScope, command: SuppressCreed) -> Effect:
+    count = await learning_control.suppress_creed(await scope.context("creed_suppress"), command.ideology_id, command.authority_id)
+    return Effect(f"The creed is hunted down among {count} of its followers.", command.ideology_id)

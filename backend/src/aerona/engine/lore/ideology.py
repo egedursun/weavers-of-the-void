@@ -10,19 +10,22 @@ from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.culture import IdeologyTenet
+from aerona.domain.enums.culture import IdeologyTenet, ItemClass
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import MemoryKind, ValueAxis, ValueHolder
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarCause
-from aerona.domain.models.entity_stats import IdeologyStats
+from aerona.domain.models.entity_stats import IdeologyStats, ItemStats
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import patron_node
+from aerona.engine.lore.items import profile_of
+from aerona.engine.lore.research import institutions
 from aerona.engine.mind.book import stored_values, values_for, write_values
 from aerona.engine.mind.memories import remember
+from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.services.war import declare_war
@@ -122,6 +125,53 @@ def appeal_for(profile: IdeologyProfileRow, society: CommunitySocietyRow | None,
     return total
 
 
+async def learned_paths(ctx: TickContext, creed: EntityRow, profile: IdeologyProfileRow, held: dict[int, IdeologyAdherentRow]) -> list[tuple[int, int]]:
+    paths: list[tuple[int, int]] = []
+    for book in profile.texts:
+        owner = await ctx.session.scalar(
+            select(BondRow.source_node_id).where(BondRow.target_node_id == book, BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE).limit(1)
+        )
+        reader = await living_entity(ctx.session, owner)
+        home = reader.location_id if reader is not None and reader.entity_type is EntityType.MORTAL else owner
+        source = next(iter(held), None)
+        if home is not None and source is not None:
+            paths.append((source, home))
+    scholars = select(IdeologyAdherentRow.adherent_entity_id).where(IdeologyAdherentRow.ideology_entity_id == creed.id)
+    for mortal in await ctx.session.scalars(
+        select(EntityRow).where(EntityRow.id.in_(scholars), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+    ):
+        if mortal.location_id is not None and mortal.id in held:
+            paths.append((mortal.id, mortal.location_id))
+    return paths
+
+
+async def write_text(ctx: TickContext, creed: EntityRow, profile: IdeologyProfileRow) -> EntityRow | None:
+    if profile.texts and len(profile.texts) >= ctx.rules.ideologies.texts_max:
+        return None
+    founder = await living_entity(ctx.session, profile.founder_entity_id)
+    if founder is None or founder.entity_type is not EntityType.MORTAL or (stat(founder, "intellect") or 0) < FOUNDER_INTELLECT:
+        return None
+    if not ctx.rng(f"creed_text.{creed.id}.{ctx.epoch}").chance(ctx.rules.ideologies.text_chance):
+        return None
+    book = await create_record(
+        ctx,
+        RecordSpec(
+            name=f"The Book of {creed.name.removeprefix('The ')}",
+            entity_type=EntityType.ITEM,
+            stats=ItemStats(might=PERCENT // 10),
+            body=f"{founder.name} set down the teachings of {creed.name}.",
+            power=2,
+            world_id=founder.world_id,
+            location_id=founder.location_id,
+            maker_entity_id=founder.id,
+        ),
+    )
+    await profile_of(ctx, book, ItemClass.BOOK)
+    await connect(ctx.session, founder.id, book.id, BondKind.OWNS, ctx.epoch, description="wrote it")
+    profile.texts = [*profile.texts, book.id]
+    return book
+
+
 async def spread(ctx: TickContext, creed: EntityRow, profile: IdeologyProfileRow) -> int:
     table = ctx.rules.ideologies
     held = {
@@ -133,14 +183,16 @@ async def spread(ctx: TickContext, creed: EntityRow, profile: IdeologyProfileRow
             BondRow.source_node_id.in_(list(held)), BondRow.kind.in_([BondKind.TRADES_WITH, BondKind.ALLY, BondKind.RULES]), BondRow.state == BondState.ACTIVE
         )
     )
-    for source, target in links.all():
+    paths = [*links.all(), *await learned_paths(ctx, creed, profile, held)]
+    for source, target in paths:
         if target in held:
             continue
         community = await living_entity(ctx.session, target)
         if community is None or community.entity_type not in COMMUNITY_TYPES:
             continue
         society = await ctx.session.get(CommunitySocietyRow, target)
-        chance = table.spread_chance * (1 + appeal_for(profile, society, table.discontent_pct))
+        schooled = 1 + table.school_pct / PERCENT if await institutions(ctx.session, target) else 1.0
+        chance = table.spread_chance * (1 + appeal_for(profile, society, table.discontent_pct)) * schooled
         if ctx.rng(f"creed_spread.{creed.id}.{target}.{ctx.epoch}").chance(chance):
             row = IdeologyAdherentRow(
                 ideology_entity_id=creed.id, adherent_entity_id=target, strength=held[source].strength // 2, state=False, since_epoch=ctx.epoch
@@ -235,7 +287,65 @@ async def godless(ctx: TickContext, creed: EntityRow) -> int:
             son.faith = max(0, son.faith - loss)
             son.existence = clamp_int(son.existence - 1, 0, PERCENT)
             drained += loss
+            await answer(ctx, son, creed, row)
     return drained
+
+
+async def answer(ctx: TickContext, son: SonRow, creed: EntityRow, row: IdeologyAdherentRow) -> str:
+    table = ctx.rules.ideologies
+    if son.mercy < table.persecuting_mercy:
+        row.strength = clamp_int(row.strength - table.persecution_blow, 0, PERCENT)
+        await remember(
+            ctx.session,
+            ctx.rules,
+            holder_id=row.adherent_entity_id,
+            subject_id=son.id,
+            kind=MemoryKind.ILL_WILL,
+            magnitude=-table.persecution_blow,
+            epoch=ctx.epoch,
+            note=f"struck down for {creed.name}",
+        )
+        await note(
+            ctx, f"{son.name} struck at those who follow {creed.name}.", key="lore.godless_persecuted", ids=[creed.id, row.adherent_entity_id], son_id=son.id
+        )
+        return "persecuted"
+    if son.essence < table.miracle_essence:
+        return "silent"
+    son.essence -= table.miracle_essence
+    son.faith += table.miracle_faith
+    row.strength = clamp_int(row.strength - table.miracle_doubt, 0, PERCENT)
+    await note(
+        ctx,
+        f"{son.name} answered {creed.name} with a sign, and some of its followers wavered.",
+        key="lore.godless_miracle",
+        ids=[creed.id, row.adherent_entity_id],
+        son_id=son.id,
+    )
+    return "miracle"
+
+
+async def suppress(ctx: TickContext, creed: EntityRow, authority_id: int | None) -> int:
+    table = ctx.rules.ideologies
+    rows = list(await ctx.session.scalars(select(IdeologyAdherentRow).where(IdeologyAdherentRow.ideology_entity_id == creed.id)))
+    for row in rows:
+        row.strength = clamp_int(row.strength - table.suppression_blow, 0, PERCENT)
+        if row.state:
+            row.state = False
+            realm = await ctx.session.scalar(select(PolityProfileRow).where(PolityProfileRow.ideology_entity_id == creed.id).limit(1))
+            if realm is not None:
+                realm.ideology_entity_id = None
+        if authority_id is not None and authority_id != row.adherent_entity_id:
+            await remember(
+                ctx.session,
+                ctx.rules,
+                holder_id=row.adherent_entity_id,
+                subject_id=authority_id,
+                kind=MemoryKind.ILL_WILL,
+                magnitude=-table.suppression_blow,
+                epoch=ctx.epoch,
+                note=f"suppressed {creed.name}",
+            )
+    return len(rows)
 
 
 async def revolution(ctx: TickContext, creed: EntityRow) -> str | None:

@@ -18,6 +18,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, 
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.gods.worship import creator_node_id, creator_worshippers
+from aerona.engine.lore.research import mean_spread
 from aerona.engine.primitives.numbers import clamp_percent, decay_weight, saturating
 from aerona.engine.services.war import ongoing_war_count
 from aerona.rules.registry import Rules
@@ -233,6 +234,7 @@ async def gather_mood_inputs(session: AsyncSession, rules: Rules, old_epoch: int
     leak = float(await session.scalar(select(func.avg(WorldRow.leakage))) or 0.0)
     born = select(func.count(EntityRow.id)).where(EntityRow.birth_epoch == old_epoch, EntityRow.status == EntityStatus.CANON)
     discoveries = int(await session.scalar(born.where(EntityRow.entity_type == EntityType.KNOWLEDGE)) or 0)
+    discoveries += round(await mean_spread(session) * rules.creator.spread_interest_pct / PERCENT)
     works = int(await session.scalar(born.where(EntityRow.entity_type.in_([EntityType.ARTWORK, EntityType.STRUCTURE]))) or 0)
     creator_row = await session.scalar(select(CreatorRow).limit(1))
     return MoodInputs(

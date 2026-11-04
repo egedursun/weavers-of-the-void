@@ -234,6 +234,12 @@ class StalePlan(OpportunityLine):
     thread_ids: list[int]
 
 
+class GodlessCreeds(OpportunityLine):
+    kind: Literal["godless_creeds"] = "godless_creeds"
+    creeds: list[NamedRecord]
+    strongest: int
+
+
 class KnowledgePairs(OpportunityLine):
     kind: Literal["knowledge_pairs"] = "knowledge_pairs"
     pairs: list[RecordPair]
@@ -386,6 +392,7 @@ SonOpportunity = Annotated[
     | UnknownBranches
     | DeepenableKnowledge
     | KnowledgePairs
+    | GodlessCreeds
     | RivalOptions
     | UntriedTools
     | OverusedTool

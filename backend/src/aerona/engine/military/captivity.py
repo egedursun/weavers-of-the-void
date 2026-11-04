@@ -12,6 +12,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.gods.progress import cap_gained_essence
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.lore.taboos import forbidden
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.hooks import judged
 from aerona.engine.polity.laws import law_param
@@ -84,7 +85,7 @@ async def decide(ctx: TickContext, row: CaptiveCohortRow) -> CaptiveFate:
         settle_into(ctx, home, row.count)
         return CaptiveFate.RELEASED
     sacrificial = values.get(ValueAxis.DEATH, 0) >= table.sacrifice_death or TenetKind.HUMAN_SACRIFICE in await faith_tenets(ctx.session, captor.id)
-    if sacrificial and rng.chance(table.sacrifice_chance):
+    if sacrificial and rng.chance(table.sacrifice_chance) and not await forbidden(ctx, captor.id, ActKind.HUMAN_SACRIFICE):
         await sacrifice(ctx, row, captor)
         return CaptiveFate.SACRIFICED
     if rng.chance(table.labour_pct) or ctx.epoch - row.since_epoch >= ctx.rules.campaigns.captive_defection_epochs:

@@ -8,6 +8,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import fatal_injury
+from aerona.engine.lore.taboos import guest_killed
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.queries import connect, entity
@@ -29,6 +30,7 @@ async def death_path(
     if victim.status is not EntityStatus.CANON:
         return False
     if victim.entity_type is EntityType.MORTAL:
+        await guest_killed(ctx, killer_id, victim)
         if harm is not None:
             await fatal_injury(ctx, victim, Harm(ctx.rules.casualties.wound_hp, harm, cause, killer_id=killer_id, event_entity_id=event_id, style=style))
         return await die(ctx, victim, cause=cause, killer_id=killer_id, forced=forced, event_id=event_id) is not None

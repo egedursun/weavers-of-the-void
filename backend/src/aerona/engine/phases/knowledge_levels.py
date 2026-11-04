@@ -5,12 +5,14 @@ from enum import StrEnum
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.knowledge import BRANCH_PREREQUISITES, ENGINE_UNDISCOVERABLE_BRANCHES, KNOWLEDGE_BRANCHES, branch_label
+from aerona.catalog.knowledge import ENGINE_UNDISCOVERABLE_BRANCHES, KNOWLEDGE_BRANCHES, branch_label
+from aerona.catalog.techniques import BRANCH_GRAPH, Gate
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -20,14 +22,14 @@ from aerona.domain.models.entity_stats import KnowledgeStats
 from aerona.engine.context import TickContext
 from aerona.engine.disease.load import DiseaseLoads, endemic_regions
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.lore.research import holder_levels, raise_holder, research_factor
+from aerona.engine.lore.research import gate_open, holder_levels, raise_holder, research_factor
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.knowledge import knowledge_level
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.naming import Namer, seed_of
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import class_shares
@@ -149,6 +151,18 @@ class KnowledgeScene:
         return cls(communities, knowledge, holders, held, await flags_by_entity(ctx.session, EntityFlag.LOST))
 
 
+async def progressed(ctx: TickContext, holder_id: int, branch: KnowledgeBranch, pressure: float, levels: dict[int, dict[KnowledgeBranch, int]]) -> bool:
+    row = await ctx.session.get(HolderLevelRow, (holder_id, branch))
+    if row is None or "progress" in row.locked:
+        return False
+    if "progress" not in row.locked:
+        row.progress = clamp_int(row.progress + round_half_up(pressure * ctx.rules.research.progress_pct / PERCENT), 0, PERCENT)
+    if row.progress < PERCENT or not gate_open(BRANCH_GRAPH.get(branch, Gate()), levels.get(holder_id, {})):
+        return False
+    row.progress = 0
+    return True
+
+
 async def deepen_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     table = ctx.rules.knowledge
     deepened = 0
@@ -176,9 +190,9 @@ async def deepen_round(ctx: TickContext, scene: KnowledgeScene) -> int:
         held = levels.get(community.id, {}).get(branch, knowledge_level(ctx.rules, chosen)) if branch is not None else 0
         if branch is not None:
             chance *= await research_factor(ctx, community, branch, held, levels)
-        if not rng.chance(chance):
+        if branch is None or not await progressed(ctx, community.id, branch, chance, levels):
             continue
-        reached = await raise_holder(ctx, community.id, branch, table.level_cap) if branch is not None else None
+        reached = await raise_holder(ctx, community.id, branch, table.level_cap)
         level = shift_level(ctx.rules, chosen, 1) if reached is None or reached > knowledge_level(ctx.rules, chosen) else None
         if reached is None and level is None:
             continue
@@ -204,13 +218,15 @@ class BranchOption:
 
 def branch_options(ctx: TickContext, scene: KnowledgeScene, discoverer: EntityRow, empty: list[KnowledgeBranch]) -> list[BranchOption]:
     known = {scene.knowledge[item].knowledge_branch: scene.knowledge[item] for item in scene.held.get(discoverer.id, [])}
+    levels = {branch: knowledge_level(ctx.rules, record) for branch, record in known.items() if branch is not None}
     options: list[BranchOption] = []
     for branch in empty:
-        prerequisites = BRANCH_PREREQUISITES.get(branch, ())
-        base = next((known[item] for item in prerequisites if item in known), None)
-        if prerequisites and base is None:
+        gate = BRANCH_GRAPH.get(branch, Gate())
+        needed = [item for item, _ in (*gate.all_of, *gate.any_of)]
+        if not gate_open(gate, levels):
             continue
-        weight = ctx.rules.knowledge.rare_branch_weight_pct if branch in BRANCH_PREREQUISITES else ORDINARY_WEIGHT
+        base = next((known[item] for item in needed if item in known), None)
+        weight = ctx.rules.knowledge.rare_branch_weight_pct if needed else ORDINARY_WEIGHT
         options.append(BranchOption(branch, base, weight))
     return options
 

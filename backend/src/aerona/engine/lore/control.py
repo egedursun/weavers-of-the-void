@@ -210,7 +210,7 @@ async def set_intelligibility(ctx: TickContext, first: int, second: int, value: 
     low, high = sorted((first, second))
     row = await ctx.session.get(LanguageIntelligibilityRow, (low, high))
     if row is None:
-        row = LanguageIntelligibilityRow(first_entity_id=low, second_entity_id=high, value=0, epoch=ctx.epoch)
+        row = LanguageIntelligibilityRow(first_entity_id=low, second_entity_id=high, value=0, epoch=ctx.epoch, locked=[])
         ctx.session.add(row)
     row.value, row.epoch = share(value, "Intelligibility"), ctx.epoch
     row.locked = lock(row.locked, "value")
@@ -235,7 +235,7 @@ async def set_speakers(ctx: TickContext, community_id: int, language_id: int, ki
             await ctx.session.flush()
         return None
     if row is None:
-        row = SpeakerCohortRow(community_entity_id=community_id, language_entity_id=language_id, kind=kind, share=0, since_epoch=ctx.epoch)
+        row = SpeakerCohortRow(community_entity_id=community_id, language_entity_id=language_id, kind=kind, share=0, since_epoch=ctx.epoch, locked=[])
         ctx.session.add(row)
     row.share = share(value, "Share of speakers")
     row.locked = lock(row.locked, "share")

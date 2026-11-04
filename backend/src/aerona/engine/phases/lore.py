@@ -132,7 +132,7 @@ async def courts_and_liturgies(ctx: TickContext) -> tuple[dict[int, int | None],
 async def cohort(ctx: TickContext, community_id: int, language_id: int, kind: SpeakerKind, share: int) -> None:
     row = await ctx.session.get(SpeakerCohortRow, (community_id, language_id, kind))
     if row is None:
-        row = SpeakerCohortRow(community_entity_id=community_id, language_entity_id=language_id, kind=kind, share=0, since_epoch=ctx.epoch)
+        row = SpeakerCohortRow(community_entity_id=community_id, language_entity_id=language_id, kind=kind, share=0, since_epoch=ctx.epoch, locked=[])
         ctx.session.add(row)
     if "share" not in (row.locked or []):
         row.share = clamp_int(share, 0, PERCENT)
@@ -439,6 +439,8 @@ async def research_cycles(ctx: TickContext) -> None:
     ctx.count("techniques_adopted", await research.adopt_techniques(ctx))
     ctx.count("techniques_diffused", await research.diffuse_techniques(ctx))
     ctx.count("books_filled", await research.fill_books(ctx))
+    ctx.count("books_read", await research.read_books(ctx))
+    ctx.count("knowledge_spread_measured", await research.spread_of(ctx))
 
 
 @reads(
@@ -482,6 +484,8 @@ async def ideology_cycles(ctx: TickContext) -> None:
         await note(ctx, f"A new creed was taught: {founded.name}.", key="lore.creed_founded", ids=[founded.id])
     events = 0
     for creed, profile in await ideology.living_creeds(ctx):
+        if await ideology.write_text(ctx, creed, profile) is not None:
+            ctx.count("creed_texts")
         ctx.count("creed_spread", await ideology.spread(ctx, creed, profile))
         ctx.count("creed_pressed", await ideology.press(ctx, creed, profile))
         ctx.count("creed_adopted", await ideology.adopt(ctx, creed))

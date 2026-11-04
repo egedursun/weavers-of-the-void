@@ -19,6 +19,7 @@ from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.lore.items import regalia_holder
+from aerona.engine.lore.legends import foretold_return
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook
@@ -60,6 +61,7 @@ async def legitimacy(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawB
         return parts
     if "usurper" in realm.profile.legitimacy_parts:
         parts["usurper"] = -table.usurper
+        parts.update(await foretold_return(ctx, ruler))
     else:
         parts["rightful heir"] = table.rightful
     if bool(laws.param(realm.entity.id, LawKind.SUCCESSION_RULE, "wholeness_required")):

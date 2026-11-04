@@ -3,14 +3,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.culture import ArtworkProfileRow, LanguageIntelligibilityRow, LanguageStandingRow, SpeakerCohortRow
+from aerona.db.tables.culture import ArtworkProfileRow, LanguageIntelligibilityRow, LanguageRegisterRow, LanguageStandingRow, SpeakerCohortRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import WritingSystem
-from aerona.domain.enums.culture import SpeakerKind
+from aerona.domain.enums.culture import LanguageRegister, SpeakerKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.engine.context import TickContext
@@ -66,7 +66,26 @@ async def compute(session: AsyncSession, rules: Rules, first: int, second: int) 
         steps = common + other.index(one[common])
         kinship = max(0, KIN_BASE - steps * KIN_STEP)
     words = round_half_up(await lexicon_overlap(session, first, second) * PERCENT * rules.interpreters.shared_lexicon_pct / PERCENT)
-    return clamp_int(max(kinship, words), 0, PERCENT)
+    heard = max(kinship, words)
+    if heard <= 0:
+        return 0
+    sounds = round_half_up(await phonology_similarity(session, first, second) * rules.interpreters.phonology_pct)
+    return clamp_int(heard + sounds, 0, PERCENT)
+
+
+def overlap(first: tuple[str, ...], second: tuple[str, ...]) -> float:
+    one, other = {item.casefold() for item in first}, {item.casefold() for item in second}
+    union = one | other
+    return len(one & other) / len(union) if union else 0.0
+
+
+async def phonology_similarity(session: AsyncSession, first: int, second: int) -> float:
+    one, other = await session.get(LanguageProfileRow, first), await session.get(LanguageProfileRow, second)
+    if one is None or other is None:
+        return 0.0
+    a, b = one.phonology, other.phonology
+    parts = (overlap(a.vowels, b.vowels), overlap(a.consonants, b.consonants), overlap(a.syllable_patterns, b.syllable_patterns))
+    return sum(parts) / len(parts)
 
 
 async def intelligibility(session: AsyncSession, rules: Rules, first: int | None, second: int | None, epoch: int) -> int:
@@ -77,7 +96,7 @@ async def intelligibility(session: AsyncSession, rules: Rules, first: int | None
     low, high = sorted((first, second))
     row = await session.get(LanguageIntelligibilityRow, (low, high))
     if row is None:
-        row = LanguageIntelligibilityRow(first_entity_id=low, second_entity_id=high, value=await compute(session, rules, low, high), epoch=epoch)
+        row = LanguageIntelligibilityRow(first_entity_id=low, second_entity_id=high, value=await compute(session, rules, low, high), epoch=epoch, locked=[])
         session.add(row)
     return row.value
 
@@ -105,7 +124,27 @@ async def tongues_of(session: AsyncSession, community_id: int) -> set[int]:
 
 
 async def barrier(session: AsyncSession, rules: Rules, first: int, second: int, epoch: int) -> float:
-    ours, theirs = await tongues_of(session, first), await tongues_of(session, second)
+    return await understood(session, rules, (first, second), (await tongues_of(session, first), await tongues_of(session, second)), epoch)
+
+
+async def register_tongues(session: AsyncSession, holder_id: int, register: LanguageRegister) -> set[int]:
+    row = await session.get(LanguageRegisterRow, (holder_id, register))
+    if row is not None:
+        return {row.language_entity_id}
+    return await tongues_of(session, holder_id)
+
+
+async def register_barrier(
+    session: AsyncSession, rules: Rules, first: int, second: int, epoch: int, *, ours: LanguageRegister, theirs: LanguageRegister = LanguageRegister.COMMON
+) -> float:
+    one = await register_tongues(session, first, ours)
+    other = await register_tongues(session, second, theirs)
+    return await understood(session, rules, (first, second), (one, other), epoch)
+
+
+async def understood(session: AsyncSession, rules: Rules, pair: tuple[int, int], tongues: tuple[set[int], set[int]], epoch: int) -> float:
+    first, second = pair
+    ours, theirs = tongues
     if not ours or not theirs or ours & theirs:
         return 1.0
     best = max([await intelligibility(session, rules, one, other, epoch) for one in ours for other in theirs] or [SAME])
@@ -166,15 +205,80 @@ SCRIPT_KEYS = {
 async def script_factor(session: AsyncSession, rules: Rules, community_id: int) -> float:
     language = await spoken_language(session, community_id)
     profile = await session.get(LanguageProfileRow, language.id) if language is not None else None
-    if profile is None or profile.writing_system is None:
+    if language is None:
         return 1.0
-    return int(getattr(rules.script, SCRIPT_KEYS[profile.writing_system])) / PERCENT
+    standard = 1 + await standardisation_of(session, language.id) * rules.prestige.standard_literacy_pct / (PERCENT * PERCENT)
+    if profile is None or profile.writing_system is None:
+        return standard
+    return int(getattr(rules.script, SCRIPT_KEYS[profile.writing_system])) / PERCENT * standard
+
+
+async def standardisation_of(session: AsyncSession, language_id: int | None) -> int:
+    row = await session.get(LanguageStandingRow, language_id) if language_id is not None else None
+    return row.standardisation if row is not None else 0
 
 
 async def learn_second(ctx: TickContext, community_id: int, language_id: int, gain: int) -> int:
     row = await ctx.session.get(SpeakerCohortRow, (community_id, language_id, SpeakerKind.SECOND))
     if row is None:
-        row = SpeakerCohortRow(community_entity_id=community_id, language_entity_id=language_id, kind=SpeakerKind.SECOND, share=0, since_epoch=ctx.epoch)
+        row = SpeakerCohortRow(
+            community_entity_id=community_id, language_entity_id=language_id, kind=SpeakerKind.SECOND, share=0, since_epoch=ctx.epoch, locked=[]
+        )
         ctx.session.add(row)
-    row.share = clamp_int(row.share + gain, 0, PERCENT)
+    if "share" not in (row.locked or []):
+        row.share = clamp_int(row.share + gain, 0, PERCENT)
     return row.share
+
+
+async def remeasure(ctx: TickContext) -> int:
+    every = ctx.rules.interpreters.remeasure_epochs
+    if every <= 0 or ctx.epoch % every:
+        return 0
+    measured = 0
+    for row in list(await ctx.session.scalars(select(LanguageIntelligibilityRow).order_by(LanguageIntelligibilityRow.first_entity_id))):
+        if "value" in (row.locked or []):
+            continue
+        row.value, row.epoch = await compute(ctx.session, ctx.rules, row.first_entity_id, row.second_entity_id), ctx.epoch
+        measured += 1
+    return measured
+
+
+async def hold_register(ctx: TickContext, holder_id: int, register: LanguageRegister, language_id: int | None) -> bool:
+    if language_id is None:
+        return False
+    row = await ctx.session.get(LanguageRegisterRow, (holder_id, register))
+    if row is None:
+        ctx.session.add(LanguageRegisterRow(holder_entity_id=holder_id, register=register, language_entity_id=language_id, since_epoch=ctx.epoch, locked=[]))
+        return True
+    if "language_entity_id" in row.locked or row.language_entity_id == language_id:
+        return False
+    row.language_entity_id, row.since_epoch = language_id, ctx.epoch
+    return True
+
+
+async def traders(session: AsyncSession) -> set[int]:
+    roads = await session.execute(
+        select(BondRow.source_node_id, BondRow.target_node_id).where(BondRow.kind == BondKind.TRADES_WITH, BondRow.state == BondState.ACTIVE)
+    )
+    return {end for pair in roads.all() for end in pair}
+
+
+async def derive_registers(ctx: TickContext, courts: dict[int, int | None], liturgies: dict[int, int | None], franca: int | None) -> int:
+    changed = 0
+    for holder_id, language_id in sorted(courts.items()):
+        changed += int(await hold_register(ctx, holder_id, LanguageRegister.COURT, language_id))
+    for holder_id, language_id in sorted(liturgies.items()):
+        changed += int(await hold_register(ctx, holder_id, LanguageRegister.LITURGICAL, language_id))
+    speech = await ctx.session.execute(
+        select(BondRow.source_node_id, BondRow.target_node_id).where(BondRow.kind == BondKind.SPEAKS, BondRow.state == BondState.ACTIVE).order_by(BondRow.id)
+    )
+    common: dict[int, int] = {}
+    for community_id, language_id in speech.all():
+        common.setdefault(community_id, language_id)
+    trading = await traders(ctx.session)
+    for community_id, language_id in sorted(common.items()):
+        changed += int(await hold_register(ctx, community_id, LanguageRegister.COMMON, language_id))
+        if community_id in trading:
+            trade = franca if franca is not None and franca in await tongues_of(ctx.session, community_id) else language_id
+            changed += int(await hold_register(ctx, community_id, LanguageRegister.TRADE, trade))
+    return changed

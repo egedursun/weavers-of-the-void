@@ -91,6 +91,7 @@ from aerona.rules.registry.heroes import HeroesRules
 from aerona.rules.registry.image_gen import ImageGenRules
 from aerona.rules.registry.intervention_costs import InterventionCostsRules
 from aerona.rules.registry.intervention_effects import InterventionEffectsRules
+from aerona.rules.registry.items import EnchantmentsRules, ItemPowersRules
 from aerona.rules.registry.knowledge import KnowledgeRules
 from aerona.rules.registry.language import LanguageRules
 from aerona.rules.registry.language_contact import LanguageContactRules
@@ -182,10 +183,9 @@ from aerona.rules.registry.rarities import RaritiesRules
 from aerona.rules.registry.rarity_gates import RarityGatesRules
 from aerona.rules.registry.record_schema import RecordSchemaRules
 from aerona.rules.registry.religion import ReligionRules
-from aerona.rules.registry.rumours import RumoursRules
-from aerona.rules.registry.items import EnchantmentsRules, ItemPowersRules
 from aerona.rules.registry.remembrance import RemembranceRules
 from aerona.rules.registry.reputation import ReputationRules
+from aerona.rules.registry.rumours import RumoursRules
 from aerona.rules.registry.server import ServerRules
 from aerona.rules.registry.settlement import CrimeRules, FireRules, SanitationRules, TaxationRules, UrbanRules
 from aerona.rules.registry.setup_wizard import SetupWizardRules

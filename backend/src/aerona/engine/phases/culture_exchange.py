@@ -6,6 +6,7 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.domain.enums.bond import BondKind
@@ -18,6 +19,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.routes import link_weight, trade_links
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.research import books_of, has_technique, masters
+from aerona.engine.lore.traditions import best_fit
 from aerona.engine.mind.hooks import converted
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -64,10 +66,12 @@ async def _diffuse_direction(
     chance = min(100.0, settings.diffusion_chance * writing * weight)
     written = await books_of(ctx.session, source.id)
     paper = ctx.rules.technique_effects.paper_pct if await has_technique(ctx.session, source.id, Technique.PAPER) else 0
-    taught = ctx.rules.research.teacher_pct / PERCENT if await masters(ctx.session, source.id) else 0.0
+    hidden = set(await ctx.session.scalars(select(HolderLevelRow.branch).where(HolderLevelRow.holder_entity_id == source.id, HolderLevelRow.secret.is_(True))))
     for knowledge in holdings.known_by(source.id):
-        if spread[0] >= cap or holdings.knows(target.id, knowledge.id):
+        if spread[0] >= cap or holdings.knows(target.id, knowledge.id) or knowledge.knowledge_branch in hidden:
             continue
+        mastered = await masters(ctx.session, source.id, knowledge.knowledge_branch, ctx.rules.research.master_skill)
+        taught = ctx.rules.research.teacher_pct / PERCENT if mastered else 0.0
         books = (ctx.rules.research.book_diffusion_pct + paper) / PERCENT if knowledge.id in written else 0.0
         if not rng.chance(min(100.0, chance * (1 + books + taught))):
             continue
@@ -192,7 +196,10 @@ async def _pass_tradition(ctx: TickContext, source: EntityRow, target: EntityRow
     rng = ctx.rng(f"tradition.{source.id}.{target.id}")
     if not offered or not rng.chance(rate):
         return None
-    tradition = rng.pick(offered)
+    chosen = await best_fit(ctx, offered, target.id)
+    if chosen is None or chosen[1] > ctx.rules.traditions.adoption_fit:
+        return None
+    tradition = chosen[0]
     await BondRepository(ctx.session).connect(BondDraft(target.id, tradition.id, BondKind.CELEBRATES, ctx.epoch, f"passed from {source.name}"))
     return f"{target.name} adopted the {tradition.name} tradition"
 

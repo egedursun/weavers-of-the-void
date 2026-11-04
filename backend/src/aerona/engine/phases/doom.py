@@ -15,6 +15,7 @@ from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.gods.worship import cult_effect
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lore.research import mean_spread
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import apply_disaster, record_disaster_event
@@ -90,6 +91,7 @@ async def doom_items(ctx: TickContext, new_epoch: int) -> dict[DoomItem, float]:
         DoomItem.GOLDEN_AGE: -doom.golden_age * age.golden_worlds,
         DoomItem.WORLD_AGE: -age.relief,
         DoomItem.CREATOR_CULT: -cult.doom_pushback,
+        DoomItem.ENLIGHTENMENT: -min(rules.research.enlightenment_cap, await mean_spread(ctx.session) * rules.research.enlightenment_relief_pct / PERCENT),
     }
 
 

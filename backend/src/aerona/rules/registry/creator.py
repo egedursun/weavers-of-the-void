@@ -6,6 +6,9 @@ from aerona.rules.model import rule
 
 @dataclass(frozen=True)
 class CreatorRules:
+    spread_interest_pct: int = rule(
+        5, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Share of the world's mean spread of learning a Creator who loves knowledge counts as discovery (%)"
+    )
     cult_faith_per_essence: int = rule(4, 1, 100, RuleGroup.CREATOR_AND_ESSENCE, "Every this much cult faith gives the god 1 essence")
     cult_faith_per_apocalypse_push: int = rule(25, 1, 1000, RuleGroup.APOCALYPSE, "Every this much cult faith pushes the apocalypse back by 1")
     cult_apocalypse_push_cap: int = rule(5, 0, 100, RuleGroup.APOCALYPSE, "Maximum apocalypse push-back by the cult in one epoch")

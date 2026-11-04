@@ -15,6 +15,7 @@ from aerona.db.tables.mind import PressureRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.culture import LanguageRegister
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import PressureKind
@@ -27,7 +28,8 @@ from aerona.engine.economy.routes import link_partners
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.faith.zealotry import drifted, record_heresy
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.lore.language import barrier
+from aerona.engine.lore.language import register_barrier
+from aerona.engine.lore.traditions import absorb_festivals
 from aerona.engine.mind.book import ValueIndex
 from aerona.engine.mind.drives import zeal_drive
 from aerona.engine.mind.hooks import converted
@@ -462,7 +464,9 @@ async def religion_spread(ctx: TickContext) -> None:
         seeker = old is None or community.id in flags[EntityFlag.SEEKING_GOD] or community.id in flags[EntityFlag.GODLESS]
         chosen = best_source(ctx.rules, conversion_sources(ctx.rules, community, world, seeker), old, seeker, (faith, shares))
         understood = (
-            await barrier(session, ctx.rules, chosen.converter_id, community.id, ctx.epoch) if chosen is not None and chosen.converter_id is not None else 1.0
+            await register_barrier(session, ctx.rules, chosen.converter_id, community.id, ctx.epoch, ours=LanguageRegister.LITURGICAL)
+            if chosen is not None and chosen.converter_id is not None
+            else 1.0
         )
         if chosen is None or not rng.probability(min(1.0, chosen.pull * understood * tolerance(ctx, laws, community.id))):
             continue
@@ -480,6 +484,14 @@ async def religion_spread(ctx: TickContext) -> None:
         await _announce(ctx, community, faith, old, chosen, syncretic=syncretic)
         if chosen.converter_id is not None:
             await converted(ctx, community.id, chosen.converter_id, note=chosen.reason)
+            for festival in await absorb_festivals(ctx, community, chosen.converter_id):
+                ctx.count("festivals_absorbed")
+                await note(
+                    ctx,
+                    f"{community.name} kept {festival.name} even under the new faith, and the converters took the festival as their own.",
+                    key="lore.festival_absorbed",
+                    ids=[community.id, festival.id, chosen.converter_id],
+                )
     ctx.count("conversions", conversions)
     ctx.count("syncretisms", syncretisms)
 

@@ -118,6 +118,11 @@ class ResearchRules:
     loss_chance: int = rule(30, 0, 100, C, "A level is lost when its practitioners die and no books or masters remain (%)")
     book_diffusion_pct: int = rule(50, 0, 300, C, "Weight of books in carrying knowledge without a teacher (%)")
     teacher_pct: int = rule(100, 0, 300, C, "Weight of a teacher bond in passing knowledge (%)")
+    master_skill: int = rule(50, 0, 100, C, "Skill in its craft a mortal needs to keep a branch of knowledge alive as its master")
+    book_progress: int = rule(10, 0, 100, C, "Progress toward the next level a faithful book gives its readers each epoch")
+    progress_pct: int = rule(100, 0, 500, C, "Weight of research pressure in the progress toward a deeper level (%)")
+    enlightenment_relief_pct: int = rule(10, 0, 100, C, "Share of the world's mean spread of learning that eases the doom each epoch (%)")
+    enlightenment_cap: int = rule(5, 0, 100, C, "Most doom the spread of learning can ease in an epoch")
 
 
 @dataclass(frozen=True)
@@ -132,6 +137,15 @@ class TechGraphRules:
 class IdeologiesRules:
     emergence_chance: int = rule(5, 0, 100, C, "A learned mortal founds a creed in an epoch (%)")
     founding_tenets: int = rule(3, 1, 13, C, "Most tenets a creed founded from a mortal's convictions carries")
+    school_pct: int = rule(50, 0, 300, C, "Weight a school, academy or library lends a creed spreading into its town (%)")
+    text_chance: int = rule(10, 0, 100, C, "A learned founder sets down the teachings of their creed in a book in an epoch (%)")
+    texts_max: int = rule(3, 0, 100, C, "Most books of teachings a creed is written into")
+    persecuting_mercy: int = rule(40, 0, 100, C, "Mercy below which a god answers a godless creed by striking its followers")
+    persecution_blow: int = rule(15, 0, 100, C, "Adherence a god's persecution strikes from a godless creed's followers")
+    miracle_essence: int = rule(5, 0, 1000, C, "Essence a god spends on a sign to win back the godless")
+    miracle_faith: int = rule(5, 0, 1000, C, "Faith a god's sign wins back from the godless")
+    miracle_doubt: int = rule(8, 0, 100, C, "Adherence a god's sign takes from a godless creed")
+    suppression_blow: int = rule(25, 0, 100, C, "Adherence a suppression strikes from every follower of a creed")
     spread_chance: int = rule(10, 0, 100, C, "A creed spreads along a road or through a school (%)")
     discontent_pct: int = rule(100, 0, 500, C, "Weight of an unhappy class in a creed's appeal (%)")
     adoption_strength: int = rule(60, 0, 100, C, "Adherence at which a realm takes a creed as its own")
