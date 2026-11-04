@@ -316,7 +316,15 @@ async def market_prices(services: ServicesDep, market_id: int = Path(ge=1)) -> M
             select(MarketPriceRow).where(MarketPriceRow.market_entity_id == market_id).order_by(MarketPriceRow.commodity, MarketPriceRow.epoch)
         ):
             series[row.commodity.value].append(
-                PricePoint(epoch=row.epoch, price=row.price, supply=row.supply, demand=row.demand, imported=row.imported, exported=row.exported)
+                PricePoint(
+                    epoch=row.epoch,
+                    price=row.price,
+                    supply=row.supply,
+                    demand=row.demand,
+                    imported=row.imported,
+                    exported=row.exported,
+                    swing=row.swing,
+                )
             )
         return MarketView(
             market_id=market_id,

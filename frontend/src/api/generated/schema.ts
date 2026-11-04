@@ -15717,6 +15717,7 @@ export interface components {
             demand: number;
             imported: number;
             exported: number;
+            swing: number;
         };
         PriceSeries: {
             commodity: components["schemas"]["CommodityKind"];
