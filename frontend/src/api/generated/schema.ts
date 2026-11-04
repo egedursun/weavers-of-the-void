@@ -4575,6 +4575,54 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/entities/{entity_id}/event': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['event_api_entities__entity_id__event_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/entities/{entity_id}/happenings': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['happenings_here_api_entities__entity_id__happenings_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/entities/{entity_id}/land-shape': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['land_shape_api_entities__entity_id__land_shape_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/entities/{entity_id}/realm': {
     parameters: {
       query?: never
@@ -9055,6 +9103,182 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/event:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_event_create_api_actions_event_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/event:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_event_edit_api_actions_event_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/event:phase': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_event_phase_api_actions_event_phase_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/event:release': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_event_release_api_actions_event_release_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/event:footprint': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_event_footprint_api_actions_event_footprint_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/event:casualties': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_event_casualties_api_actions_event_casualties_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/event:end': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_event_end_api_actions_event_end_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/land:stir': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_land_stir_api_actions_land_stir_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/land:river': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_land_river_api_actions_land_river_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/land:shape': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_land_shape_api_actions_land_shape_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/land:release': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_land_release_api_actions_land_release_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/material:edit': {
     parameters: {
       query?: never
@@ -10896,6 +11120,7 @@ export interface components {
       | 'reorder_seasons'
       | 'shape_weather'
       | 'sever_ley'
+      | 'reshape_land'
       | 'foreign_god_talk'
       | 'write_plan'
       | 'abandon_settlement'
@@ -11858,6 +12083,15 @@ export interface components {
       succeeded: boolean
       backlash: components['schemas']['BacklashKind'] | null
       effect: string
+    }
+    CasualtyView: {
+      community_id: number
+      community: string
+      age_band: components['schemas']['AgeBand']
+      sex: components['schemas']['Sex']
+      social_class: components['schemas']['SocialClass']
+      phase: components['schemas']['EventPhase']
+      count: number
     }
     Catalogue: {
       enums: components['schemas']['EnumCatalogue']
@@ -12862,7 +13096,14 @@ export interface components {
       | 'mineral'
       | 'soul'
       | 'void'
-    Disaster: 'earthquake' | 'flood' | 'plague' | 'drought' | 'storm'
+    Disaster:
+      | 'earthquake'
+      | 'flood'
+      | 'plague'
+      | 'drought'
+      | 'storm'
+      | 'eruption'
+      | 'volcanic_quake'
     Discovery: 'known' | 'legend' | 'unknown' | 'forgotten'
     DiscoveryEnded: {
       ok: boolean
@@ -13183,6 +13424,16 @@ export interface components {
       | 'resurrection_order'
       | 'ghost_ship'
       | 'colony'
+      | 'festival_of_note'
+      | 'coronation'
+      | 'wedding'
+      | 'massacre'
+      | 'sack'
+      | 'fire'
+      | 'eruption'
+      | 'riot'
+      | 'schism_council'
+      | 'eclipse_watch'
     EngineNoteEvent: {
       id: number
       kind: 'engine.note'
@@ -13876,6 +14127,43 @@ export interface components {
     EssencePourInput: {
       amount: number
     }
+    EventCasualtiesInput: {
+      event_id: number
+      community_id: number
+      age_band: components['schemas']['AgeBand']
+      sex: components['schemas']['Sex']
+      social_class: components['schemas']['SocialClass']
+      phase: components['schemas']['EventPhase']
+      count: number
+    }
+    EventCreateInput: {
+      kind: components['schemas']['EngineKind']
+      where_id: number
+      name: string
+      description: string
+      severity: number
+      phase: components['schemas']['EventPhase']
+      hold_phase: boolean
+      start_year?: number | null
+      start_season?: number | null
+      footprint?: number[]
+      partner_id?: number | null
+    }
+    EventEditInput: {
+      event_id: number
+      values?: {
+        [key: string]: number | string | null
+      }
+      lock: boolean
+    }
+    EventEndInput: {
+      event_id: number
+    }
+    EventFootprintInput: {
+      event_id: number
+      region_id: number
+      present: boolean
+    }
     EventKind:
       | 'job.queued'
       | 'job.started'
@@ -13955,9 +14243,59 @@ export interface components {
     } & {
       [key: string]: unknown
     }
+    EventPhase: 'onset' | 'peak' | 'aftermath'
+    EventPhaseInput: {
+      event_id: number
+      phase: components['schemas']['EventPhase']
+      hold: boolean
+    }
+    EventReleaseInput: {
+      event_id: number
+      field: 'phase' | 'start_year' | 'start_season' | 'end_year' | 'end_season'
+    }
     EventStats: {
       kind: 'event'
       severity?: number | null
+    }
+    EventSummaryView: {
+      entity_id: number
+      name: string
+      kind: components['schemas']['EngineKind'] | null
+      phase: components['schemas']['EventPhase']
+      ended: boolean
+      start_year: number | null
+      end_year: number | null
+      toll: number
+      severity: number | null
+    }
+    EventView: {
+      entity_id: number
+      name: string
+      kind: components['schemas']['EngineKind'] | null
+      severity: number | null
+      world_id: number | null
+      location_id: number | null
+      location: string | null
+      start_epoch: number
+      start_year: number | null
+      start_season: components['schemas']['SeasonRef'] | null
+      end_epoch: number | null
+      end_year: number | null
+      end_season: components['schemas']['SeasonRef'] | null
+      phase: components['schemas']['EventPhase']
+      phase_epoch: number
+      multi_season: boolean
+      ended: boolean
+      locked: string[]
+      incident_id: number | null
+      incident_text: string | null
+      siege_id: number | null
+      footprint: components['schemas']['FootprintView'][]
+      casualties: components['schemas']['CasualtyView'][]
+      toll: number
+      steps: components['schemas']['PhaseStepView'][]
+      seasons: components['schemas']['SeasonRef'][]
+      kinds: components['schemas']['EngineKind'][]
     }
     ExistenceBand: 'radiant' | 'solid' | 'faded' | 'being_forgotten'
     ExistenceMode:
@@ -14115,6 +14453,11 @@ export interface components {
       region_id: number
       nodes: components['schemas']['WebNode'][]
       links: components['schemas']['WebLink'][]
+    }
+    FootprintView: {
+      region_id: number
+      region: string
+      joined_epoch: number
     }
     ForcedWeatherView: {
       id: number
@@ -14443,6 +14786,14 @@ export interface components {
       epoch: number
       phase: number
       started: boolean
+    }
+    HappeningsHereView: {
+      location_id: number
+      world_id: number | null
+      region_id: number | null
+      events: components['schemas']['EventSummaryView'][]
+      kinds: components['schemas']['EngineKind'][]
+      seasons: components['schemas']['SeasonRef'][]
     }
     HarmCause:
       | 'battle'
@@ -15323,6 +15674,53 @@ export interface components {
       output_pct: number
     }
     LandKind: 'region' | 'place'
+    LandReleaseInput: {
+      region_id: number
+      field:
+        'desertification' | 'desertified' | 'volcanic' | 'volcanic_pressure'
+    }
+    LandRiverInput: {
+      from_region_id: number
+      to_region_id?: number | null
+    }
+    LandShapeInput: {
+      region_id: number
+      desertification?: number | null
+      desertified?: boolean | null
+      volcanic?: boolean | null
+      volcanic_pressure?: number | null
+      hold: boolean
+    }
+    LandShapeView: {
+      region_id: number
+      region: string
+      soil: components['schemas']['SoilKind'] | null
+      terrain: components['schemas']['TerrainKind'] | null
+      river_class: components['schemas']['RiverClass'] | null
+      rainfall: number | null
+      grazed: number | null
+      desertification: number
+      desertified: boolean
+      desert_since_epoch: number | null
+      river_course: components['schemas']['RiverClass'] | null
+      course_changed_epoch: number | null
+      volcanic: boolean
+      volcanic_pressure: number
+      eruption_chance: number
+      last_eruption_epoch: number | null
+      ash_since_epoch: number | null
+      ash_weathering_epochs: number
+      desertified_at: number
+      locked: string[]
+      soil_locked: boolean
+      shifts: components['schemas']['RiverShiftView'][]
+      neighbours: components['schemas']['RegionRef'][]
+    }
+    LandStirInput: {
+      region_id: number
+      disaster: components['schemas']['Disaster']
+      severity?: number | null
+    }
     LanguageCard: {
       prestige: number
       prestige_parts: {
@@ -17328,6 +17726,12 @@ export interface components {
       text: string
     }
     PhaseStage: 'tick' | 'pre_transition' | 'transition' | 'post_transition'
+    PhaseStepView: {
+      phase: components['schemas']['EventPhase']
+      reached: boolean
+      current: boolean
+      since_epoch: number | null
+    }
     Phonology: {
       vowels: string[]
       consonants: string[]
@@ -18350,6 +18754,10 @@ export interface components {
       bordering: number[]
       geography?: components['schemas']['RegionGeography'] | null
     }
+    RegionRef: {
+      region_id: number
+      region: string
+    }
     RegionSeedPlaceInput: {
       region_id: number
     }
@@ -18633,6 +19041,18 @@ export interface components {
       castings?: number | null
     }
     RiverClass: 'none' | 'stream' | 'river' | 'great_river'
+    RiverShiftCause: 'flood' | 'quake' | 'divine' | 'player'
+    RiverShiftView: {
+      id: number
+      from_region_id: number
+      from_region: string
+      to_region_id: number
+      to_region: string
+      epoch: number
+      year: number | null
+      river_class: components['schemas']['RiverClass']
+      cause: components['schemas']['RiverShiftCause']
+    }
     RoadKind: 'road' | 'trade'
     RouteClosure:
       'sealed' | 'severed' | 'forgotten' | 'collapsed' | 'snapped' | 'scorched'
@@ -18856,6 +19276,10 @@ export interface components {
       subtitle: string | null
       snippet: string | null
       epoch?: number | null
+    }
+    SeasonRef: {
+      position: number
+      name: string
     }
     SeasonView: {
       id: number
@@ -19570,6 +19994,7 @@ export interface components {
       | 'hide_secret'
       | 'sanctify_place'
       | 'raise_nexus'
+      | 'reshape_land'
       | 'declare_holy_world'
       | 'seal_gate'
       | 'rekindle_star'
@@ -30271,6 +30696,93 @@ export interface operations {
       }
     }
   }
+  event_api_entities__entity_id__event_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        entity_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['EventView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  happenings_here_api_entities__entity_id__happenings_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        entity_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HappeningsHereView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  land_shape_api_entities__entity_id__land_shape_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        entity_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LandShapeView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   realm_link_api_entities__entity_id__realm_get: {
     parameters: {
       query?: never
@@ -38643,6 +39155,347 @@ export interface operations {
       }
     }
   }
+  action_event_create_api_actions_event_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EventCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_event_edit_api_actions_event_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EventEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_event_phase_api_actions_event_phase_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EventPhaseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_event_release_api_actions_event_release_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EventReleaseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_event_footprint_api_actions_event_footprint_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EventFootprintInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_event_casualties_api_actions_event_casualties_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EventCasualtiesInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_event_end_api_actions_event_end_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EventEndInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_land_stir_api_actions_land_stir_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LandStirInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_land_river_api_actions_land_river_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LandRiverInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_land_shape_api_actions_land_shape_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LandShapeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_land_release_api_actions_land_release_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LandReleaseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   action_material_edit_api_actions_material_edit_post: {
     parameters: {
       query?: never
@@ -41978,6 +42831,7 @@ export const actionKindValues: ReadonlyArray<
   'reorder_seasons',
   'shape_weather',
   'sever_ley',
+  'reshape_land',
   'foreign_god_talk',
   'write_plan',
   'abandon_settlement',
@@ -42690,7 +43544,15 @@ export const dietValues: ReadonlyArray<
 ]
 export const disasterValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Disaster']
-> = ['earthquake', 'flood', 'plague', 'drought', 'storm']
+> = [
+  'earthquake',
+  'flood',
+  'plague',
+  'drought',
+  'storm',
+  'eruption',
+  'volcanic_quake',
+]
 export const discoveryValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Discovery']
 > = ['known', 'legend', 'unknown', 'forgotten']
@@ -42826,6 +43688,16 @@ export const engineKindValues: ReadonlyArray<
   'resurrection_order',
   'ghost_ship',
   'colony',
+  'festival_of_note',
+  'coronation',
+  'wedding',
+  'massacre',
+  'sack',
+  'fire',
+  'eruption',
+  'riot',
+  'schism_council',
+  'eclipse_watch',
 ]
 export const engineNoteEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EngineNoteEvent']['kind']
@@ -43125,6 +43997,12 @@ export const eventKindValues: ReadonlyArray<
   'agent.tool_result',
   'agent.writing',
 ]
+export const eventPhaseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['EventPhase']
+> = ['onset', 'peak', 'aftermath']
+export const eventReleaseInputFieldValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['EventReleaseInput']['field']
+> = ['phase', 'start_year', 'start_season', 'end_year', 'end_season']
 export const eventStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EventStats']['kind']
 > = ['event']
@@ -43541,6 +44419,9 @@ export const knowledgeStatsKindValues: ReadonlyArray<
 export const landKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LandKind']
 > = ['region', 'place']
+export const landReleaseInputFieldValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LandReleaseInput']['field']
+> = ['desertification', 'desertified', 'volcanic', 'volcanic_pressure']
 export const languageStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LanguageStats']['kind']
 > = ['language']
@@ -44415,6 +45296,9 @@ export const riteStatsKindValues: ReadonlyArray<
 export const riverClassValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RiverClass']
 > = ['none', 'stream', 'river', 'great_river']
+export const riverShiftCauseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RiverShiftCause']
+> = ['flood', 'quake', 'divine', 'player']
 export const roadKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RoadKind']
 > = ['road', 'trade']
@@ -44735,6 +45619,7 @@ export const sonToolIdValues: ReadonlyArray<
   'hide_secret',
   'sanctify_place',
   'raise_nexus',
+  'reshape_land',
   'declare_holy_world',
   'seal_gate',
   'rekindle_star',

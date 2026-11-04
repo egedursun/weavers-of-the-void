@@ -63,6 +63,7 @@ class SonToolId(StrEnum):
     HIDE_SECRET = "hide_secret"
     SANCTIFY_PLACE = "sanctify_place"
     RAISE_NEXUS = "raise_nexus"
+    RESHAPE_LAND = "reshape_land"
     DECLARE_HOLY_WORLD = "declare_holy_world"
     SEAL_GATE = "seal_gate"
     REKINDLE_STAR = "rekindle_star"

@@ -21,6 +21,7 @@ from aerona.db.tables.economy import (
     WorldMaterialRow,
 )
 from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, PersonalityValueRow, PressureRow, SkillRow, TraitRow
 from aerona.db.tables.society import CommunityRelationRow
@@ -261,6 +262,62 @@ CORE_MECHANICS = (
             Coupling(Subsystem.ENVIRONMENT, "ley convergence raises magic density; salted earth and leak wounds cut lines"),
             Coupling(Subsystem.CULTURE, "works standing on ley lines and nexus gain function"),
             Coupling(Subsystem.MAGIC, "magic storms run down the lines; wizards on a line act more often"),
+        ),
+    ),
+    Mechanic(
+        key="events",
+        spec_item="S8.8",
+        title="Events: kinds, years and seasons, footprint, phases and the toll by cohort",
+        subsystem=Subsystem.CORE,
+        phases=("event_phases", "natural_disasters", "settlement_life", "campaigns"),
+        surface=Surface(drawer="EventCard"),
+        backfill=(
+            "event_phases: every existing event gains a profile (years, season, footprint, incident) as if it had always had one; "
+            "casualties are read once from old records (events.casualties_backfill)"
+        ),
+        templates=("event.", "event.phase."),
+        fields=("phase", "start_year", "end_year", "start_season", "end_season", "severity"),
+        tables=(EventProfileRow.__tablename__, EventFootprintRow.__tablename__, EventCasualtyRow.__tablename__),
+        flows=("famine", "plague", "casualty"),
+        exposure=Exposure.CONTEXT,
+        targets=("event", "region", "settlement", "people"),
+        couplings=(
+            Coupling(Subsystem.DEMOGRAPHY, "famines, plagues and sieges kill by cohort at their height", EdgeKind.FLOW, "events.famine_peak_death_pct"),
+            Coupling(Subsystem.ECONOMY, "a plague's aftermath makes the survivors' labour dear", EdgeKind.MODIFIER, "events.plague_aftermath_prosperity_pct"),
+            Coupling(
+                Subsystem.ENVIRONMENT,
+                "famine and siege aftermaths leave sickness in the soil; massacres haunt the land",
+                EdgeKind.FLOW,
+                "events.famine_aftermath_disease",
+            ),
+            Coupling(Subsystem.SOCIAL, "festivals and coronations calm unrest; riots vent it", EdgeKind.MODIFIER, "events.festival_unrest_relief"),
+            Coupling(Subsystem.FAITH, "eclipse watches raise piety; schism councils split the faith", EdgeKind.MODIFIER, "events.eclipse_piety"),
+            Coupling(Subsystem.CULTURE, "the chronicler marks every turn of a famine, plague or siege", EdgeKind.TRIGGER),
+        ),
+    ),
+    Mechanic(
+        key="geomorphology",
+        spec_item="S6.1",
+        title="River courses, desertification, eruptions and salt",
+        subsystem=Subsystem.ENVIRONMENT,
+        phases=("geomorphology", "natural_disasters", "environment_survey", "environment_derive"),
+        surface=Surface(drawer="LandShapeSection"),
+        backfill="geomorphology: every region gains a shape row on the first run; volcanic lands and hycean and salted soils are derived from the profile",
+        templates=("land.desertified", "land.desert_retreat", "land.salted", "land.ash_weathered", "land.river_shift", "tools.son.reshape_land"),
+        fields=("desertification", "desertified", "river_course", "volcanic", "volcanic_pressure", "soil"),
+        tables=(RegionGeomorphRow.__tablename__, RiverShiftRow.__tablename__),
+        exposure=Exposure.TOOL,
+        tools=("reshape_land", "send_disaster"),
+        targets=("region", "place"),
+        couplings=(
+            Coupling(
+                Subsystem.ENVIRONMENT,
+                "deserts lose rain and turn sandy; great floods move rivers; ash weathers into rich soil",
+                EdgeKind.FLOW,
+                "geomorphology.desert_rainfall_drop",
+            ),
+            Coupling(Subsystem.ECONOMY, "a moved river takes wells and irrigation with it", EdgeKind.FLOW, "geomorphology.river_shift_chance"),
+            Coupling(Subsystem.DEMOGRAPHY, "eruptions and volcanic quakes kill and bury towns", EdgeKind.FLOW, "geomorphology.eruption_population_loss"),
         ),
     ),
     Mechanic(

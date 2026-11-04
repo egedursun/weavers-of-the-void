@@ -74,6 +74,7 @@ from aerona.rules.registry.epidemiology import EpidemiologyRules
 from aerona.rules.registry.epoch_flow import EpochFlowRules
 from aerona.rules.registry.espionage import EspionageRules
 from aerona.rules.registry.essence import EssenceRules
+from aerona.rules.registry.events import EventsRules
 from aerona.rules.registry.exploration import ExplorationRules
 from aerona.rules.registry.factions import FactionsRules
 from aerona.rules.registry.faith import FaithRules
@@ -82,6 +83,7 @@ from aerona.rules.registry.folk_belief import FolkBeliefRules
 from aerona.rules.registry.foreign_gods import ForeignGodsRules
 from aerona.rules.registry.genesis import GenesisRules
 from aerona.rules.registry.geography import GeographyRules
+from aerona.rules.registry.geomorphology import GeomorphologyRules
 from aerona.rules.registry.goals import GoalsRules
 from aerona.rules.registry.god_actions import GodActionsRules
 from aerona.rules.registry.god_hand import GodHandRules
@@ -289,6 +291,8 @@ class Rules:
     deep_world: DeepWorldRules = field(default_factory=DeepWorldRules)
     diplomacy: DiplomacyRules = field(default_factory=DiplomacyRules)
     disasters: DisastersRules = field(default_factory=DisastersRules)
+    events: EventsRules = field(default_factory=EventsRules)
+    geomorphology: GeomorphologyRules = field(default_factory=GeomorphologyRules)
     economy: EconomyRules = field(default_factory=EconomyRules)
     materials: MaterialsRules = field(default_factory=MaterialsRules)
     extraction: ExtractionRules = field(default_factory=ExtractionRules)

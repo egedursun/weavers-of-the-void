@@ -92,6 +92,7 @@ WORLD_SOIL: dict[WorldType, SoilKind] = {
     WorldType.SHATTERED: SoilKind.THIN,
     WorldType.ICE_SHELL: SoilKind.THIN,
     WorldType.METHANE: SoilKind.THIN,
+    WorldType.HYCEAN: SoilKind.SALT,
 }
 
 WORLD_MINERALS: dict[WorldType, tuple[MaterialKind, ...]] = {

@@ -42,6 +42,7 @@ HIDE_SECRET = Line("tools.son.hide_secret", "{son} hid something in {place}: {re
 SANCTIFY_PLACE = Line("tools.son.sanctify_place", "{son} sanctified {place}: {reason}")
 RAISE_NEXUS = Line("tools.son.raise_nexus", "{son} drew the ley lines together at {place}: {reason}")
 SEVER_LEY = Line("tools.son.sever_ley", "{son} cut the ley line between {first} and {second}: {reason}")
+RESHAPE_LAND = Line("tools.son.reshape_land", "{son} laid a hand on {region} and {act}: {reason}")
 SHAPE_WEATHER = Line("tools.son.shape_weather", "{son} held {weather} over {region} for {epochs} ages: {reason}.")
 REORDER_SEASONS = Line("tools.son.reorder_seasons", "{son} turned the year of {world}: its seasons now run {order}.")
 SEAL = Line("tools.son.seal", "{son} sealed the road between {first} and {second}; the two worlds' leakage decreased.")

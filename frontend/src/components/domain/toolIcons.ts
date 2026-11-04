@@ -89,6 +89,7 @@ import {
   Wheat,
   Wrench,
   Zap,
+  Shovel,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 
@@ -171,6 +172,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   hide_secret: KeyRound,
   sanctify_place: Sparkles,
   raise_nexus: Waypoints,
+  reshape_land: Shovel,
   declare_holy_world: Sun,
   seal_gate: Lock,
   rekindle_star: Flame,

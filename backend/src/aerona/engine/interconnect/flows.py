@@ -73,6 +73,7 @@ PHASE_FLOWS: dict[str, FlowCategory] = {
     "creature_rebellion": C.CASUALTY,
     "life_seed": C.CREATION,
     "natural_disasters": C.DISASTER,
+    "event_phases": C.FAMINE,
     "settlement_life": C.DISASTER,
     "treaty_cycles": C.LEVY,
     "people_cycles": C.MERGE,

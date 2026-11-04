@@ -312,6 +312,20 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "{{ rules.places.raise_nexus_essence }} essence, 1 action.",
         {"place_id": "The place's id", "reason": "Why you raise it"},
     ),
+    T.RESHAPE_LAND: ToolText(
+        "You lay a hand on a land and reshape it: move its river into a neighbouring land (shift_river), parch it into desert (parch), "
+        "bring the grass back to a desert (green), sow its soil with salt (salt_soil) or make its soil rich (enrich_soil). "
+        "Rivers bow to gods of sea, storm, earth or stone; deserts to gods of sun, fire, hunger, salt or ash; green to gods of plants, harvest, "
+        "life or sea; salt to gods of salt, sea or death; rich soil to gods of earth, fire, ash, harvest, plants or stone. Wells and fields follow "
+        "the river, deserts lose their rain and harvests, salt kills the soil. {{ rules.son_tools.reshape_land_essence }} essence, "
+        "{{ rules.son_tools.reshape_land_ap }} actions.",
+        {
+            "region_id": "The land's id",
+            "act": "shift_river, parch, green, salt_soil or enrich_soil",
+            "target_region_id": "For shift_river: the neighbouring land the river should flow into (leave empty to let it find the lowest bed)",
+            "reason": "Why you do it",
+        },
+    ),
     T.REORDER_SEASONS: ToolText(
         "You reorder the seasons of a world: the year runs in the order you name, so harvests, campaigns, travel and festivals fall differently. "
         "Only gods of sky, storm, time, sun, moon, harvest, ice or plants can do it. {{ rules.son_tools.reorder_seasons_essence }} essence, "

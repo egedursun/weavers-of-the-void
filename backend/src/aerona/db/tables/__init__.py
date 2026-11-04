@@ -97,6 +97,7 @@ from aerona.db.tables.faith import (
     SpiritProfileRow,
 )
 from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow, GodConflictRow, OuterBargainRow
+from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.job import JobRow
 from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
@@ -247,6 +248,9 @@ __all__ = [
     "EpochStepRow",
     "EpochWorldNarrativeRow",
     "EpochYearCursorRow",
+    "EventCasualtyRow",
+    "EventFootprintRow",
+    "EventProfileRow",
     "FateRewardRow",
     "FolkBeliefRow",
     "ForeignGodPowerRow",
@@ -328,6 +332,7 @@ __all__ = [
     "ProsthesisRow",
     "QuarantineRow",
     "RegionEnvironmentRow",
+    "RegionGeomorphRow",
     "ReincarnationRow",
     "RelicRow",
     "ResourceMechanicRow",
@@ -337,6 +342,7 @@ __all__ = [
     "ReverenceRow",
     "RiteEffectRow",
     "RiteProfileRow",
+    "RiverShiftRow",
     "RouteRow",
     "RuleOverrideRow",
     "ScenarioRow",

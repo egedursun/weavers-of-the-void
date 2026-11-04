@@ -29,6 +29,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import cohorts_of
 from aerona.engine.demography.mobility import bound_revolt, inequality_pressure
 from aerona.engine.economy.routes import BANDIT_KINDS
+from aerona.engine.happenings.emergence import record_fire
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.research import lacks
@@ -461,6 +462,7 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
             feed=FeedCategory.DISASTER,
             kind=ChronicleKind.WORLD,
         )
+        await record_fire(ctx, town.entity, dead)
     return burned
 
 
