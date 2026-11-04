@@ -8,6 +8,7 @@ from aerona.constants.agents import LARGE_REGION_RATIO, SMALL_REGION_RATIO
 from aerona.db.tables.celestial import WorldMapRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
+from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import LandUse, RiverClass
 from aerona.engine.environment.book import EnvironmentBook
@@ -85,6 +86,41 @@ async def nexus_names(scope: Scope, region_ids: set[int]) -> dict[int, str]:
     return {region_id: name for region_id, name in rows if region_id is not None}
 
 
+def place_words(place: EntityRow, profile: PlaceProfileRow, known: list[PlaceSecretRow], rules: Rules) -> str:
+    parts = [words(profile.kind.value)]
+    if profile.sacredness >= rules.places.pilgrimage_threshold:
+        parts.append(f"sacred {profile.sacredness}")
+    if profile.pilgrims:
+        parts.append(f"{profile.pilgrims} pilgrims")
+    for secret in known:
+        state = ", still sealed" if secret.sealed else ""
+        parts.append(f"found {words(secret.kind.value)}{state}")
+    return f"#{place.id} {place.name} ({', '.join(parts)})"
+
+
+async def place_lines(scope: Scope, region_ids: set[int]) -> dict[int, list[str]]:
+    rows = list(
+        await scope.session.execute(
+            select(EntityRow, PlaceProfileRow, PlaceEnvironmentRow.region_entity_id)
+            .join(PlaceProfileRow, PlaceProfileRow.entity_id == EntityRow.id)
+            .join(PlaceEnvironmentRow, PlaceEnvironmentRow.entity_id == EntityRow.id)
+            .where(EntityRow.status == EntityStatus.CANON, PlaceEnvironmentRow.region_entity_id.in_(list(region_ids)))
+            .order_by(EntityRow.id)
+        )
+    )
+    place_ids = [place.id for place, _, _ in rows]
+    known: dict[int, list[PlaceSecretRow]] = {}
+    for secret in await scope.session.scalars(
+        select(PlaceSecretRow).where(PlaceSecretRow.place_entity_id.in_(place_ids), PlaceSecretRow.revealed_epoch.is_not(None)).order_by(PlaceSecretRow.id)
+    ):
+        known.setdefault(secret.place_entity_id, []).append(secret)
+    found: dict[int, list[str]] = {}
+    for place, profile, region_id in rows:
+        if region_id is not None:
+            found.setdefault(region_id, []).append(place_words(place, profile, known.get(place.id, []), scope.rules))
+    return found
+
+
 async def geography_lines(scope: Scope, world_id: int | None) -> str:
     if world_id is None:
         return ""
@@ -103,6 +139,7 @@ async def geography_lines(scope: Scope, world_id: int | None) -> str:
     web = await LeyWeb.load(scope.session)
     nexus = await nexus_names(scope, set(regions))
     book = await EnvironmentBook.load(scope.session, scope.rules, scope.epoch)
+    places = await place_lines(scope, set(regions))
     lines = [
         RegionGeography(
             id=record.id,
@@ -116,6 +153,7 @@ async def geography_lines(scope: Scope, world_id: int | None) -> str:
             ley=[NamedRecord(id=other, name=regions[other].name) for other in web.partners(record.id) if other in regions],
             nexus=nexus.get(record.id),
             weather=weather_words(scope, book, grounds.get(record.id)),
+            places=places.get(record.id, []),
         )
         for record in known
     ]

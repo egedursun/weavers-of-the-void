@@ -46,6 +46,7 @@ class SetPlaceEnvironment(Command):
     place_id: int
     field: str = Field(pattern=FIELD_PATTERN)
     value: int | str | bool
+    lock: bool = True
 
 
 class ReorderSeasons(Command):
@@ -136,8 +137,9 @@ async def set_region_mineral(scope: PlayerScope, command: SetMineral) -> Effect:
 async def set_place_environment(scope: PlayerScope, command: SetPlaceEnvironment) -> Effect:
     place = await _entity(scope, command.place_id)
     ground = await control.place_ground(scope.session, place.id)
-    control.set_place_field(ground, command.field, command.value)
-    return Effect(f"{place.name}'s {command.field.replace('_', ' ')} is now {getattr(ground, command.field)}.", target_node_id=place.id)
+    control.set_place_field(ground, command.field, command.value, lock=command.lock)
+    held = " and held there" if command.field in ground.locked else ""
+    return Effect(f"{place.name}'s {command.field.replace('_', ' ')} is now {getattr(ground, command.field)}{held}.", target_node_id=place.id)
 
 
 @player_action("seasons:reorder", ActionKind.OTHER)

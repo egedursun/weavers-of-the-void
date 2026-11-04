@@ -180,6 +180,7 @@ async def place_environment(services: ServicesDep, place_id: int = Path(ge=1)) -
             chokepoint=ground.chokepoint,
             nexus=ground.nexus,
             soil_fertility=ground.soil_fertility,
+            locked=list(ground.locked),
         )
 
 

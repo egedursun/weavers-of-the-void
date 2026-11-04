@@ -53,6 +53,8 @@ WHITELISTED_TABLES = frozenset(
         "pressures",
         "region_environment",
         "place_environment",
+        "place_profiles",
+        "place_secrets",
         "world_seasons",
         "calendars",
         "ley_lines",

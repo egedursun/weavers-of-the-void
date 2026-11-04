@@ -141,6 +141,7 @@ from aerona.db.tables.mind import (
 )
 from aerona.db.tables.motifs import MotifOverrideRow
 from aerona.db.tables.node import NameRegistryRow, NodeRow
+from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.db.tables.polity import (
     ClaimRow,
     HeirloomRow,
@@ -314,6 +315,8 @@ __all__ = [
     "PeopleCultureRow",
     "PersonalityValueRow",
     "PlaceEnvironmentRow",
+    "PlaceProfileRow",
+    "PlaceSecretRow",
     "PolityMemberRow",
     "PolityProfileRow",
     "PolityTerritoryRow",

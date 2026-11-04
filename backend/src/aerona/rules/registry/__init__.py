@@ -164,6 +164,7 @@ from aerona.rules.registry.native_faith import NativeFaithRules
 from aerona.rules.registry.notifications import NotificationsRules
 from aerona.rules.registry.opportunities import OpportunitiesRules
 from aerona.rules.registry.pantheon import PantheonRules
+from aerona.rules.registry.places import PlacesRules
 from aerona.rules.registry.politics import PoliticsRules
 from aerona.rules.registry.polity import (
     AdministrationRules,
@@ -404,6 +405,7 @@ class Rules:
     notifications: NotificationsRules = field(default_factory=NotificationsRules)
     opportunities: OpportunitiesRules = field(default_factory=OpportunitiesRules)
     pantheon: PantheonRules = field(default_factory=PantheonRules)
+    places: PlacesRules = field(default_factory=PlacesRules)
     politics: PoliticsRules = field(default_factory=PoliticsRules)
     power_unlock_levels: PowerUnlockLevelsRules = field(default_factory=PowerUnlockLevelsRules)
     rarities: RaritiesRules = field(default_factory=RaritiesRules)

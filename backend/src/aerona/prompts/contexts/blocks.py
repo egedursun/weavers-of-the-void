@@ -317,6 +317,7 @@ class RegionGeography(ContextItem):
     use: str | None = None
     nexus: str | None = None
     weather: str | None = None
+    places: list[str] = Field(default_factory=list)
 
 
 class GeographyLinesContext(PromptContext):

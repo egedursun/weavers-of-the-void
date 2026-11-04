@@ -10,6 +10,7 @@ from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import LIVING_CREATION_TYPES, EntityType, LegendCategory
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.place import PlaceKind, SecretKind
 from aerona.domain.enums.travel import VehicleKind
 from aerona.prompts.contexts.blocks import SummarySection
 from aerona.prompts.environment import normalize, string_template
@@ -73,6 +74,8 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "legend_categories": [category.value for category in LegendCategory],
         "commodities": [commodity.value for commodity in CommodityKind],
         "materials": [material.value for material in MaterialKind],
+        "place_kinds": [kind.value for kind in PlaceKind],
+        "secret_kinds": [kind.value for kind in SecretKind],
     }
 
 

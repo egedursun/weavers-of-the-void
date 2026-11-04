@@ -8,6 +8,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import MovementMode, ScarKind, WeatherEffect
 from aerona.domain.enums.world import SkyEventKind
 from aerona.engine.environment.weather import Weather, WeatherInputs, weather_at, weather_of
@@ -56,6 +57,7 @@ class EnvironmentBook:
     sky: dict[int | None, frozenset[SkyEventKind]] = field(default_factory=dict)
     stars: dict[int, StarRow] = field(default_factory=dict)
     forced: dict[int, list[ForcedWeatherRow]] = field(default_factory=dict)
+    living_places: frozenset[int] = frozenset()
 
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules, epoch: int, atlas: RegionAtlas | None = None) -> "EnvironmentBook":
@@ -77,6 +79,9 @@ class EnvironmentBook:
             sky=await active_sky(session, epoch),
             stars={row.id: row for row in await session.scalars(select(StarRow))},
             forced=await forced_weather(session, epoch),
+            living_places=frozenset(
+                await session.scalars(select(EntityRow.id).where(EntityRow.entity_type == EntityType.PLACE, EntityRow.status == EntityStatus.CANON))
+            ),
         )
 
     def star_of(self, world: WorldRow) -> StarRow | None:

@@ -53,6 +53,7 @@ from aerona.services.player import (
     native_faith,
     pantheon,
     peoples,
+    places,
     profiles,
     realms,
     relations,
@@ -1338,6 +1339,20 @@ FOUNDATION_ACTIONS = (
     ),
 )
 
+PLACE_ACTIONS = (
+    _sync(Meta("place:create", "Bring forth a place of a chosen kind", G.WORLDS), places.create_place, places.CreatePlace, free, ("S6.2",)),
+    _sync(Meta("place:edit", "Set or hold a place's kind, sacredness or mystery", G.WORLDS), places.edit_place, places.EditPlace, free, ("S6.2",)),
+    _sync(
+        Meta("place:release", "Let a held value of a place follow the world again", G.WORLDS), places.release_place, places.ReleasePlace, free, ("S6.2", "F2.1")
+    ),
+    _sync(Meta("place:secret", "Hide a secret in a place", G.WORLDS), places.hide_secret, places.HideSecret, free, ("S6.2",)),
+    _sync(Meta("place:secret_edit", "Reshape, seal or hold a place's secret", G.WORLDS), places.edit_secret, places.EditSecret, free, ("S6.2",)),
+    _sync(Meta("place:reveal", "Reveal a place's secret or break its seal", G.WORLDS), places.reveal_secret, places.RevealSecret, free, ("S6.2",)),
+    _sync(Meta("place:secret_delete", "Erase a place's secret", G.WORLDS), places.delete_secret, places.SecretTarget, free, ("S6.2",)),
+    _sync(
+        Meta("pilgrimage:clear", "Take a pilgrimage site off the pilgrims' roads", G.COSMOS), places.clear_pilgrimage_site, places.SiteTarget, free, ("S6.2",)
+    ),
+)
 ACTIONS: tuple[ActionSpec, ...] = (
     *FOUNDATION_ACTIONS,
     *WILDS_ACTIONS,
@@ -1375,6 +1390,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *LIFE_CYCLE_ACTIONS,
     *MECHANIC_ACTIONS,
     *ENVIRONMENT_ACTIONS,
+    *PLACE_ACTIONS,
     *ECONOMY_ACTIONS,
     *BODY_ACTIONS,
     *MIND_ACTIONS,

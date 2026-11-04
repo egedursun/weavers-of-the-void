@@ -70,6 +70,7 @@ from aerona.engine.phases import (
     mortals,
     native_faith,
     pantheon,
+    places,
     population,
     prisoners,
     production,
@@ -160,6 +161,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + language_death.PHASES
     + life_seed.PHASES
     + living_stats.PHASES
+    + places.PHASES
     + magic.PHASES
     + market.PHASES
     + mechanics_assignment.PHASES
@@ -231,6 +233,8 @@ SUB_ENGINE_STAGE = stage(
     "travel",
     "exploration",
     "geography",
+    "place_profiles",
+    "place_secrets",
     "resource_mechanics",
     "mechanics_assignment",
     "cosmic_economy",
