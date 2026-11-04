@@ -4,18 +4,21 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.repositories.sons import SonRepository
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import PressureRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import PressureKind
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.son import SonStatus
@@ -23,6 +26,8 @@ from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import CultStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.routes import link_partners
+from aerona.engine.faith.book import FaithBook
+from aerona.engine.faith.zealotry import drifted, record_heresy
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.book import ValueIndex
 from aerona.engine.mind.drives import zeal_drive
@@ -158,16 +163,18 @@ async def schisms(ctx: TickContext) -> None:
     for cult in cults:
         if split >= settings.schism_cap:
             break
-        if not schism_eligible(ctx, cult, threshold(cult)):
+        heretical = await drifted(ctx, cult.id)
+        if not heretical and not schism_eligible(ctx, cult, threshold(cult)):
             continue
-        zealous = stat_or(cult, "zeal", 0) >= settings.schism_zealotry
+        zealous = heretical or stat_or(cult, "zeal", 0) >= settings.schism_zealotry
         if not rng.chance(settings.schism_zealous_chance if zealous else settings.schism_large_chance):
             continue
         old_patron = faith.patron(cult.id)
         candidate = schism_candidate(sons, old_patron, cult.world_id)
         if candidate is None:
             continue
-        await split_cult(ctx, cult, candidate, old_patron)
+        sect = await split_cult(ctx, cult, candidate, old_patron)
+        await record_heresy(ctx, sect, cult.id)
         split += 1
     ctx.count("schisms", split)
 
@@ -243,6 +250,8 @@ class SpreadWorld:
     impiety: Mapping[int, int] = field(default_factory=dict)
     zeal: Mapping[int, float] = field(default_factory=dict)
     roads: Mapping[int, Mapping[int, float]] = field(default_factory=dict)
+    churches: FaithBook | None = None
+    languages: Mapping[int, int] = field(default_factory=dict)
 
 
 def god_kinship(world: SpreadWorld, first: int, second: int) -> float:
@@ -275,14 +284,17 @@ def conversion_sources(rules: Rules, community: EntityRow, world: SpreadWorld, s
         god = world.faith.living_patron_son(cult.id)
         if god is None or god.id == old or cult.world_id != community.world_id or not world.atlas.adjacent(cult.id, community.id):
             continue
+        church = world.churches.churches.get(cult.id) if world.churches is not None else None
+        zealous = rules.doctrine.proselytism_pct / PERCENT if church is not None and church.holds(TenetKind.PROSELYTISM) else 1.0
         sources.append(
             ConversionSource(
                 god.id,
-                preaching_pull(rules, cult, community) * doctrine_fit(rules, world, cult, community) * world.zeal.get(cult.id, 1.0),
+                preaching_pull(rules, cult, community) * doctrine_fit(rules, world, cult, community) * world.zeal.get(cult.id, 1.0) * zealous,
                 f"through the sermons of {cult.name}",
                 cult.id,
             )
         )
+    sources.extend(missions(rules, community, world, old))
     if seeker:
         for neighbour in world.communities:
             god = world.faith.living_patron_son(neighbour.id)
@@ -298,6 +310,40 @@ def conversion_sources(rules: Rules, community: EntityRow, world: SpreadWorld, s
         pull = fraction(rules.trade_routes.missionary_pct) * weight * (1 + fraction(rules.religion.conversion_seeker_bonus_pct) if seeker else 1)
         sources.append(ConversionSource(god.id, pull, f"from missionaries who came with the caravans of {partner.name}", partner.id))
     return sources
+
+
+def missions(rules: Rules, community: EntityRow, world: SpreadWorld, old: int | None) -> list[ConversionSource]:
+    if world.churches is None:
+        return []
+    table = rules.missions
+    rival = world.churches.church_of(community.id) if old is not None else None
+    rival_quality = rival.doctrine.clergy_quality if rival is not None and rival.doctrine is not None else 0
+    found: list[ConversionSource] = []
+    for partner_id in sorted(world.roads.get(community.id, {})):
+        church = world.churches.church_of(partner_id)
+        if church is None or church.god is None or church.god.id == old or church.doctrine is None or not church.holds(TenetKind.PROSELYTISM):
+            continue
+        skill = church.doctrine.clergy_quality / PERCENT * table.skill_pct / PERCENT
+        miracles = (church.doctrine.zeal_parts.get("miracles of the god", 0) > 0) * table.miracle_pct / PERCENT
+        barrier = 1.0 if world.languages.get(partner_id) == world.languages.get(community.id) else table.language_pct / PERCENT
+        pull = fraction(table.base_pct) * doctrine_fit(rules, world, church.cult, community) * (1 + skill + miracles) * barrier
+        pull -= rival_quality / PERCENT * table.rival_clergy_pct / PERCENT * fraction(table.base_pct)
+        if pull > 0:
+            found.append(ConversionSource(church.god.id, pull, f"through the missionaries of {church.cult.name}", church.cult.id))
+    return sorted(found, key=lambda item: -item.pull)[: table.cap]
+
+
+def syncretism_weight(rules: Rules, world: SpreadWorld, community_id: int, god_id: int) -> float:
+    if world.churches is None:
+        return 1.0
+    holder = world.churches.church_of(community_id)
+    newcomer = next(iter(world.churches.by_god.get(god_id, [])), None)
+    for church in (holder, newcomer):
+        if church is not None and church.holds(TenetKind.EXCLUSIVITY):
+            return rules.doctrine.exclusive_syncretism_pct / PERCENT
+    if any(church is not None and church.holds(TenetKind.SYNCRETIC_OPENNESS) for church in (holder, newcomer)):
+        return rules.doctrine.open_syncretism_pct / PERCENT
+    return 1.0
 
 
 def tolerance(ctx: TickContext, laws: LawBook, community_id: int) -> float:
@@ -374,6 +420,14 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.reverences",
 )
 @reads("cult.followers", "cult.influence", "people.population", "settlement.population")
+async def spoken_languages(session: AsyncSession) -> dict[int, int]:
+    statement = select(BondRow.source_node_id, BondRow.target_node_id).where(BondRow.kind == BondKind.SPEAKS, BondRow.state == BondState.ACTIVE)
+    found: dict[int, int] = {}
+    for speaker, language in await session.execute(statement.order_by(BondRow.id)):
+        found.setdefault(speaker, language)
+    return found
+
+
 async def religion_spread(ctx: TickContext) -> None:
     settings = ctx.rules.religion
     session = ctx.session
@@ -392,6 +446,8 @@ async def religion_spread(ctx: TickContext) -> None:
         {row.entity_id: row.value for row in await session.scalars(select(PressureRow).where(PressureRow.pressure == PressureKind.IMPIETY))},
         {cult.id: await zeal_drive(session, ctx.rules, cult.id) for cult in communities if cult.entity_type is EntityType.CULT},
         await link_partners(ctx),
+        await FaithBook.load(session),
+        await spoken_languages(session),
     )
     shares = WorshipShares.count(ctx.rules, communities, faith)
     shares.faith = await faith_shares(session)
@@ -411,7 +467,8 @@ async def religion_spread(ctx: TickContext) -> None:
         chosen = best_source(ctx.rules, conversion_sources(ctx.rules, community, world, seeker), old, seeker, (faith, shares))
         if chosen is None or not rng.probability(min(1.0, chosen.pull * tolerance(ctx, laws, community.id))):
             continue
-        syncretic = old is not None and not seeker and rng.chance(settings.syncretism_pct * god_kinship(world, old, chosen.god_id))
+        weight = syncretism_weight(ctx.rules, world, community.id, chosen.god_id)
+        syncretic = old is not None and not seeker and rng.chance(settings.syncretism_pct * god_kinship(world, old, chosen.god_id) * weight)
         if (syncretisms if syncretic else conversions) >= (settings.syncretism_cap if syncretic else settings.conversion_cap):
             continue
         if not await change_religion(ctx.session, community, chosen.god_id, ctx.epoch, chosen.reason, syncretic=syncretic, faith=faith):

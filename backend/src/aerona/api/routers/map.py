@@ -15,6 +15,7 @@ from aerona.api.schemas.maps import (
     GeographyPreview,
     MapArmy,
     MapFront,
+    MapHoly,
     MapOccupation,
     MapOutbreak,
     MapPoint,
@@ -39,6 +40,7 @@ from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
 from aerona.db.tables.economy import TradeFlowRow, TradeRouteProfileRow, TradeRouteRegionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
+from aerona.db.tables.faith import CultHoldingRow
 from aerona.db.tables.military import ArmyProfileRow, CampaignFrontRow, OccupationRow
 from aerona.db.tables.polity import PolityTerritoryRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
@@ -46,6 +48,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import LandUse
+from aerona.domain.enums.faith import HoldingKind
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.cosmos.maps import MAPPED_STATUSES, map_is_stale, map_request, store_world_map, world_entities
 from aerona.engine.economy.routes import LIVE_STATUSES
@@ -162,6 +165,7 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
             armies=await army_marks(session, world_id, positions),
             occupations=await occupation_marks(session, world_id),
             fronts=await front_lines(session, world_id, positions),
+            holy=await holy_marks(session, world_id, positions),
             notes=[MapNoteRecord.model_validate(row) for row in await map_notes(session, world_id)],
             time=MapTime(current=current, shown=shown, snapshots=await snapshot_epochs(session, world_id)),
         )
@@ -238,6 +242,21 @@ async def front_lines(session: AsyncSession, world_id: int, positions: dict[int,
         )
         for row in await session.scalars(statement)
     ]
+
+
+async def holy_marks(session: AsyncSession, world_id: int, positions: dict[int, tuple[float, float]]) -> list[MapHoly]:
+    statement = (
+        select(CultHoldingRow, EntityRow.name)
+        .join(EntityRow, EntityRow.id == CultHoldingRow.cult_entity_id)
+        .where(EntityRow.world_id == world_id, EntityRow.status == EntityStatus.CANON, CultHoldingRow.kind != HoldingKind.LAND)
+        .order_by(CultHoldingRow.cult_entity_id, CultHoldingRow.holding_entity_id)
+    )
+    found: list[MapHoly] = []
+    for row, name in await session.execute(statement):
+        point = positions.get(row.holding_entity_id)
+        if point is not None:
+            found.append(MapHoly(cult_id=row.cult_entity_id, cult=name, holding_id=row.holding_entity_id, kind=row.kind, x=point[0], y=point[1]))
+    return found
 
 
 async def outbreak_lines(session: AsyncSession, world_id: int, positions: dict[int, tuple[float, float]]) -> list[MapOutbreak]:

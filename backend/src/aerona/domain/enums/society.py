@@ -67,6 +67,7 @@ class NaturalLaw(StrEnum):
     SEA_BAN = "sea_ban"
     ONE_LANGUAGE = "one_language"
     DISASTERS = "disasters"
+    SOULS_REINCARNATE = "souls_reincarnate"
 
 
 class ResourceMechanic(StrEnum):

@@ -43,6 +43,7 @@ from aerona.engine.phases import (
     espionage,
     exploration,
     factions,
+    faith,
     geography,
     goals,
     god_death,
@@ -186,6 +187,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + works.PHASES
     + writing.PHASES
     + epidemics.PHASES
+    + faith.PHASES
     + vendettas.PHASES
     + realms.PHASES
     + settlement_life.PHASES
@@ -239,6 +241,7 @@ SUB_ENGINE_STAGE = stage(
     "polity_cycles",
     "sky",
     "beyond",
+    "soul_cycles",
 )
 RAID_STAGE = stage("monster_raids", "sworn_hunts", "glory_hunts")
 ECONOMY_STAGE = stage(
@@ -257,6 +260,7 @@ ECONOMY_STAGE = stage(
 )
 SOCIETY_STAGE = stage(
     "schisms",
+    "faith_cycles",
     "creature_migration",
     "hero_births",
     "knowledge_diffusion",

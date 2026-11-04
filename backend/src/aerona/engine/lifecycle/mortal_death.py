@@ -16,10 +16,12 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.domain import DEATH_DOMAINS
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.faith import SpiritAlignment
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.models.entity_stats import SpiritStats, TraditionStats
 from aerona.engine.context import TickContext
+from aerona.engine.faith.judgement import profile_for
 from aerona.engine.lifecycle.aging import immortal, raise_lifespan_to_death_age
 from aerona.engine.lifecycle.succession import dynasty_root, pass_rule
 from aerona.engine.mind.memories import inherit_memories, mourn
@@ -239,6 +241,8 @@ async def _leave_spirit(ctx: TickContext, mortal: EntityRow, underworld: EntityR
         ),
     )
     await connect(session, spirit.id, mortal.id, BondKind.DESCENDS_FROM, ctx.epoch, description="their spirit")
+    profile = await profile_for(ctx, spirit, mortal)
+    profile.alignment = SpiritAlignment.VENGEFUL if restless else SpiritAlignment.GUARDIAN
     manner = "as a restless spirit" if restless else "among the ancestors"
     await note(ctx, f"The spirit of {mortal.name} found no rest; it wanders {manner}.", key="mortal.spirit", ids=[mortal.id, spirit.id])
 

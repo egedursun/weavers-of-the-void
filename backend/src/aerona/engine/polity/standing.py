@@ -4,6 +4,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.faith import CultDoctrineRow, CultTenetRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -12,6 +13,7 @@ from aerona.domain.enums.body import LASTING_INJURY_STATES
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.polity import LawKind, RegionalStanding
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import WarStatus
@@ -71,8 +73,15 @@ async def legitimacy(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawB
     if realm.profile.state_religion_id is not None:
         faithful = await bond_exists(ctx.session, ruler.id, realm.profile.state_religion_id, BondKind.WORSHIPS)
         parts["the temples' blessing" if faithful else "the temples' scorn"] = table.sanction if faithful else -table.excommunication
-    if await has_flag(ctx.session, ruler.id, EntityFlag.CHOSEN) or ruler.creator_son_id is not None:
+    church = await ctx.session.get(CultDoctrineRow, realm.profile.state_religion_id) if realm.profile.state_religion_id is not None else None
+    sacred = church is not None and await ctx.session.get(CultTenetRow, (church.cult_entity_id, TenetKind.DIVINE_KINGSHIP)) is not None
+    if await has_flag(ctx.session, ruler.id, EntityFlag.CHOSEN) or ruler.creator_son_id is not None or sacred:
         parts["divine kingship"] = table.divine_kingship
+    if church is not None and ruler.id in church.excommunicated:
+        parts["excommunicated"] = -table.excommunication
+    pacifist = church is not None and await ctx.session.get(CultTenetRow, (church.cult_entity_id, TenetKind.PACIFISM)) is not None
+    if pacifist and (await war_record(ctx, realm))[2]:
+        parts["a pacifist faith at war"] = -ctx.rules.doctrine.pacifist_legitimacy
     parts.update(await fortunes(ctx, book, realm, ruler))
     return parts
 

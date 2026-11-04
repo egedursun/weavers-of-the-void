@@ -150,3 +150,5 @@ class EnginePhasesRules:
     treaty_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: treaty cycles")
     house_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: house cycles")
     vendetta_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: vendetta cycles")
+    faith_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: faith cycles")
+    soul_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: soul cycles")

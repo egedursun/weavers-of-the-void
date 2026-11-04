@@ -28,6 +28,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.quests import abandon_quest, legendary_quests, live_archive, worlds_known
 from aerona.engine.cosmos.routes import sever_route
 from aerona.engine.cosmos.world_types import is_living, is_mirror, is_realm_of_dead
+from aerona.engine.faith.judgement import judge
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.notes import note
@@ -154,6 +155,10 @@ async def descend_soul(ctx: TickContext, dead: EntityRow, region: EntityRow) -> 
         SoulRow(spirit_entity_id=soul.id, mortal_entity_id=dead.id, origin_world_id=dead.world_id, realm_entity_id=region.id, descended_epoch=ctx.epoch)
     )
     await BondRepository(ctx.session).connect(BondDraft(dead.id, region.id, BondKind.SOUL_DESCENDED_TO, ctx.epoch, "the soul's descent"))
+    verdict = await judge(ctx, soul, dead, region)
+    ctx.count("souls_judged")
+    if verdict.stratum is None:
+        ctx.count("souls_wandering")
     return soul
 
 

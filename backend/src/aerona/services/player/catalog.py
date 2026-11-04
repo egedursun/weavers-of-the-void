@@ -28,6 +28,7 @@ from aerona.services.player import (
     economy,
     engine_control,
     environment,
+    faith,
     fate_controls,
     foreign_gods,
     goals,
@@ -1077,6 +1078,18 @@ ECONOMY_ACTIONS = (
     _sync(Meta("captives:settle", "Decide the fate of captives", G.WARFARE), military.settle_captives, military.SettleCaptives, free, ("S5.7",)),
     _sync(Meta("commander:trait", "Give or take a battle trait", G.WARFARE), military.commander_trait, military.CommanderTraitOrder, free, ("S5.1",)),
     _sync(Meta("spy:edit_network", "Edit or roll up a spy network", G.WARFARE), military.edit_network, military.EditNetwork, free, ("S5.10",)),
+    _sync(Meta("cult:doctrine", "Edit a faith's orthodoxy, tithes, clergy and judgement", G.SOCIETY), faith.edit_doctrine, faith.EditDoctrine, free, ("S4.4",)),
+    _sync(Meta("cult:tenet", "Add or remove a tenet", G.SOCIETY), faith.set_tenet, faith.SetTenet, free, ("S4.4",)),
+    _sync(Meta("cult:heresy", "Declare a heresy", G.SOCIETY), faith.declare_heresy, faith.DeclareHeresy, free, ("S4.4",)),
+    _sync(Meta("cult:judge_heresy", "Hunt or suffer a heresy", G.SOCIETY), faith.judge_heresy, faith.JudgeHeresy, free, ("S4.4",)),
+    _sync(Meta("cult:canonise", "Canonise a saint", G.SOCIETY), faith.canonise, faith.Canonise, free, ("S4.4",)),
+    _sync(Meta("soul:judge", "Judge a soul", G.BEYOND), faith.judge_soul, faith.JudgeSoul, free, ("S3.3",)),
+    _sync(Meta("soul:release", "Release a soul", G.BEYOND), faith.release_soul, faith.SpiritTarget, free, ("S3.3",)),
+    _sync(Meta("soul:bind", "Bind a spirit", G.BEYOND), faith.bind_spirit, faith.BindSpirit, free, ("S3.3",)),
+    _sync(Meta("soul:seal", "Seal a soul against rebirth", G.BEYOND), faith.seal_soul, faith.SealSoul, free, ("S3.3",)),
+    _sync(Meta("soul:reincarnate", "Reincarnate a soul", G.BEYOND), faith.reincarnate, faith.Reincarnate, free, ("S3.3",)),
+    _sync(Meta("soul:edit", "Edit a spirit's memory, veneration and temper", G.BEYOND), faith.edit_spirit, faith.EditSpirit, free, ("S3.3",)),
+    _sync(Meta("afterlife:stratum", "Set a stratum of the afterlife", G.BEYOND), faith.set_stratum, faith.SetStratum, free, ("S3.3",)),
 )
 
 ENVIRONMENT_ACTIONS = (

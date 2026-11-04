@@ -12,6 +12,7 @@ from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, Ent
 from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.war import SiegeStatus, WarEnding, WarStatus
 from aerona.engine.context import TickContext
+from aerona.engine.faith.church import holy_peace
 from aerona.engine.military.aims import peace_terms, white_peace
 from aerona.engine.military.captivity import exchange_at_peace
 from aerona.engine.mind.book import values_for
@@ -226,6 +227,7 @@ async def end_war(
         if first_side is not None and second_side is not None:
             await white_peace(ctx, first_side, second_side)
     ctx.count("captives_exchanged", await exchange_at_peace(ctx, war.id))
+    ctx.count("holy_peace", await holy_peace(ctx, first, second))
     if apply_relation:
         delta = relation_effect(ctx.rules, settlement.ending)
         if settlement.victor_id is not None and settlement.loser_id is not None:

@@ -10,6 +10,7 @@ from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import epoch_need, goods_of, holding
+from aerona.engine.faith.book import forbidden_foods
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import headcount
@@ -62,9 +63,12 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
     factor = inflation(ctx, await currency_of(ctx, book, market.id))
     population = headcount(market)
     quotes: dict[CommodityKind, Quote] = {}
+    forbidden = await forbidden_foods(ctx.session, market.id)
     for commodity in COMMODITIES:
         supply = await holding(ctx.session, market.id, commodity)
         demand = round_half_up(epoch_need(ctx.rules, population, commodity) * ctx.rules.markets.demand_epochs_pct / PERCENT)
+        if commodity.value in forbidden:
+            demand = round_half_up(demand * ctx.rules.doctrine.dietary_demand_pct / PERCENT)
         quotes[commodity] = Quote(commodity, price_of(ctx, commodity, supply, demand, factor), supply, demand)
     return quotes
 

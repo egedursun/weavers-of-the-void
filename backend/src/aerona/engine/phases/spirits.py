@@ -6,8 +6,11 @@ from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.faith import SpiritProfileRow
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityType
 from aerona.domain.enums.world import Discovery
 from aerona.engine.context import TickContext
@@ -112,7 +115,10 @@ async def hauntings(ctx: TickContext) -> None:
         unrest = stat(spirit, "unrest") or 0
         if unrest < rules.apocalypse.restless_threshold:
             continue
-        haunted = next((settlement for settlement in settlements if atlas.same_region(spirit.id, settlement.id)), None)
+        avenged = await killers_home(ctx, spirit)
+        haunted = next((settlement for settlement in settlements if settlement.id == avenged), None) or next(
+            (settlement for settlement in settlements if atlas.same_region(spirit.id, settlement.id)), None
+        )
         if haunted is None or not rng.chance(rules.world_engine.spirit_haunt_chance):
             continue
         prosperity = stat(haunted, "prosperity")
@@ -123,6 +129,22 @@ async def hauntings(ctx: TickContext) -> None:
         await note(
             ctx, f"{spirit.name} haunted {haunted.name}; no one goes out into the streets at night.", key="spirits.haunting", ids=[spirit.id, haunted.id]
         )
+
+
+async def killers_home(ctx: TickContext, spirit: EntityRow) -> int | None:
+    profile = await ctx.session.get(SpiritProfileRow, spirit.id)
+    if profile is None or profile.origin_mortal_id is None:
+        return None
+    killer_id = await ctx.session.scalar(
+        select(BondRow.source_node_id).where(BondRow.target_node_id == profile.origin_mortal_id, BondRow.kind == BondKind.KILLED).order_by(BondRow.id).limit(1)
+    )
+    if killer_id is None:
+        return None
+    heir_id = await ctx.session.scalar(
+        select(BondRow.source_node_id).where(BondRow.target_node_id == killer_id, BondRow.kind == BondKind.DESCENDS_FROM).order_by(BondRow.id.desc()).limit(1)
+    )
+    kin = await ctx.session.get(EntityRow, heir_id or killer_id)
+    return kin.location_id if kin is not None else None
 
 
 async def lay_spirit_to_rest(ctx: TickContext, spirit_id: int) -> EntityRow:

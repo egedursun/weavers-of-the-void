@@ -2,11 +2,13 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
 from aerona.engine.environment.ley import LeyWeb
+from aerona.engine.faith.book import FaithBook
 from aerona.engine.gods.interventions import apply_abundance
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
@@ -144,6 +146,7 @@ async def wizards(ctx: TickContext) -> None:
     web = await LeyWeb.load(ctx.session)
     atlas = await RegionAtlas.load(ctx.session)
     laws = await LawBook.load(ctx.session)
+    churches = await FaithBook.load(ctx.session)
     for mortal in await canon(ctx.session, [EntityType.MORTAL]):
         if mortal.status is not EntityStatus.CANON or (stat(mortal, "intellect") or 0) < rules.world_effects.sorcerer_min_intellect:
             continue
@@ -152,11 +155,14 @@ async def wizards(ctx: TickContext) -> None:
         banned = laws.param(mortal.location_id or 0, LawKind.MAGIC_BAN, "severity")
         if banned is not None and rng.chance(int(banned)):
             continue
+        if churches.holds(mortal.location_id or 0, TenetKind.ANTI_MAGIC):
+            continue
+        holy = 2 if churches.holds(mortal.location_id or 0, TenetKind.SANCTIFIED_MAGIC) else 1
         if not await has_flag(ctx.session, mortal.id, EntityFlag.WIZARD):
             await add_flag(ctx.session, mortal.id, EntityFlag.WIZARD, ctx.epoch)
             await note(ctx, f"{mortal.name} deciphered the language of magic; now a wizard.", key="magic.wizard", ids=[mortal.id])
         ley = rules.environment.ley_wizard_pct / PERCENT if web.on_line(atlas.top_region(mortal.id)) else 1
-        if not rng.chance(rules.world_engine.sorcerer_act_chance * ley):
+        if not rng.chance(rules.world_engine.sorcerer_act_chance * ley * holy):
             continue
         home = await living_entity(ctx.session, mortal.location_id)
         enemy = await first_enemy(ctx, home.id) if home is not None else None

@@ -8,13 +8,15 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import ClaimRow, HeirloomRow, HouseMemberRow, HouseProfileRow, OfficeRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import ClaimBasis, HouseTrait, OfficeKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import HouseStats
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
+from aerona.engine.faith.book import faith_tenets
 from aerona.engine.lifecycle.succession import dynasty_root
 from aerona.engine.mind.space import value_distance
 from aerona.engine.notes import note
@@ -140,6 +142,13 @@ async def kin_ids(ctx: TickContext, mortal_id: int) -> tuple[set[int], set[int],
     return up, down, spouses
 
 
+CLERGY = frozenset({MortalRole.PRIEST, MortalRole.SAINT, MortalRole.SEER})
+
+
+async def celibate(ctx: TickContext, mortal: EntityRow) -> bool:
+    return mortal.mortal_role in CLERGY and mortal.location_id is not None and TenetKind.CELIBATE_CLERGY in await faith_tenets(ctx.session, mortal.location_id)
+
+
 async def seed_houses(ctx: TickContext, book: HouseBook, realms: RealmBook) -> int:
     founded = 0
     for realm in realms.realms.values():
@@ -152,7 +161,7 @@ async def seed_houses(ctx: TickContext, book: HouseBook, realms: RealmBook) -> i
         select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.social_class == SocialClass.NOBLE)
     )
     for noble in nobles:
-        if noble.id not in book.house_of:
+        if noble.id not in book.house_of and not await celibate(ctx, noble):
             await found_house(ctx, book, noble, polity_id=realms.member_of.get(noble.location_id or -1))
             founded += 1
     return founded

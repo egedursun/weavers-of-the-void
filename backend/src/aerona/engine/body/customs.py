@@ -10,8 +10,10 @@ from aerona.domain.enums.body import LASTING_INJURY_STATES, OPEN_INJURY_STATES, 
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType, MortalRole
+from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.engine.body.hits import TOTAL_LOSS_KINDS
+from aerona.engine.faith.book import faith_tenets
 from aerona.engine.gods.queries import community_of
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.queries import active_bonds, living_entity
@@ -66,6 +68,11 @@ async def domain_reading(session: AsyncSession, rules: Rules, people: EntityRow)
 
 async def derived_reading(session: AsyncSession, rules: Rules, people: EntityRow) -> tuple[BodyReading, bool]:
     table = rules.body_customs
+    tenets = await faith_tenets(session, people.id)
+    if TenetKind.SACRED_SUFFERING in tenets:
+        return BodyReading.SANCTIFIED_SUFFERING, False
+    if TenetKind.PURITY_OF_BODY in tenets:
+        return BodyReading.PURITY, True
     values = await culture_of(session, people.id)
     if not values:
         return await domain_reading(session, rules, people)

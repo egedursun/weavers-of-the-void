@@ -18,6 +18,19 @@ from aerona.db.tables.economy import (
     WorldMaterialRow,
 )
 from aerona.db.tables.environment import ForcedWeatherRow, LeyLineRow, NotableYearRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.faith import (
+    AfterlifeStratumRow,
+    CultDoctrineRow,
+    CultHoldingRow,
+    CultOfficeRow,
+    CultTenetRow,
+    HeresyRow,
+    PossessionRow,
+    ReincarnationRow,
+    RelicRow,
+    SoulJudgementRow,
+    SpiritProfileRow,
+)
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.military import (
     ArmyMovementRow,
@@ -431,5 +444,40 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (),
         ("espionage.",),
         ("espionage",),
+    ),
+    ComplianceRow(
+        "S4.4",
+        (
+            CultDoctrineRow.__tablename__,
+            CultTenetRow.__tablename__,
+            CultHoldingRow.__tablename__,
+            CultOfficeRow.__tablename__,
+            HeresyRow.__tablename__,
+            RelicRow.__tablename__,
+        ),
+        ("faith_cycles", "religion_spread", "schisms"),
+        ("cult:doctrine", "cult:tenet", "cult:heresy", "cult:judge_heresy", "cult:canonise"),
+        ("DoctrineSheet", "TenetCard", "ZealWhy", "HeresyTree", "CultHoldings", "map-layer-faith"),
+        ("mortal_context",),
+        (),
+        ("faith.",),
+        ("faith_cycles",),
+    ),
+    ComplianceRow(
+        "S3.3",
+        (
+            SpiritProfileRow.__tablename__,
+            AfterlifeStratumRow.__tablename__,
+            SoulJudgementRow.__tablename__,
+            PossessionRow.__tablename__,
+            ReincarnationRow.__tablename__,
+        ),
+        ("beyond", "soul_cycles", "hauntings"),
+        ("soul:judge", "soul:release", "soul:bind", "soul:seal", "soul:reincarnate", "soul:edit", "afterlife:stratum"),
+        ("SoulCard", "DeedsLedger", "AfterlifeRealm", "Stratum"),
+        ("mortal_context",),
+        (),
+        ("afterlife.",),
+        ("d6e2a8c0f4b1",),
     ),
 )

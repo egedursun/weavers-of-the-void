@@ -143,7 +143,7 @@ async def wages(ctx: TickContext, march: March) -> bool:
     realm = await ctx.session.get(PolityProfileRow, polity_id)
     if realm is None:
         return True
-    taxed = await ctx.session.scalar(select(PolityTreasuryRow.id).where(PolityTreasuryRow.polity_entity_id == polity_id).limit(1))
+    taxed = await ctx.session.scalar(select(PolityTreasuryRow.id).where(PolityTreasuryRow.polity_entity_id == polity_id, PolityTreasuryRow.amount > 0).limit(1))
     if taxed is None and realm.war_chest <= 0 and realm.treasury <= 0:
         return True
     paid = min(realm.war_chest, cost)

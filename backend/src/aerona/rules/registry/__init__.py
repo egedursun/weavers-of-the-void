@@ -46,6 +46,16 @@ from aerona.rules.registry.deep_world import DeepWorldRules
 from aerona.rules.registry.demography import CohortsRules, DemographyRules, LabourRules, MobilityRules, PeopleRules
 from aerona.rules.registry.diplomacy import DiplomacyRules
 from aerona.rules.registry.disasters import DisastersRules
+from aerona.rules.registry.doctrine import (
+    AfterlifeRules,
+    DoctrineRules,
+    InquisitionRules,
+    MissionsRules,
+    NecromancyRules,
+    SpiritsRules,
+    TithesRules,
+    ZealRules,
+)
 from aerona.rules.registry.ecology import EcologyRules
 from aerona.rules.registry.economy import EconomyRules
 from aerona.rules.registry.empty_world import EmptyWorldRules
@@ -281,6 +291,14 @@ class Rules:
     terrain_effects: TerrainEffectsRules = field(default_factory=TerrainEffectsRules)
     weather_battle_effects: WeatherBattleEffectsRules = field(default_factory=WeatherBattleEffectsRules)
     tactics: TacticsRules = field(default_factory=TacticsRules)
+    doctrine: DoctrineRules = field(default_factory=DoctrineRules)
+    zeal: ZealRules = field(default_factory=ZealRules)
+    tithes: TithesRules = field(default_factory=TithesRules)
+    missions: MissionsRules = field(default_factory=MissionsRules)
+    inquisition: InquisitionRules = field(default_factory=InquisitionRules)
+    afterlife: AfterlifeRules = field(default_factory=AfterlifeRules)
+    spirits: SpiritsRules = field(default_factory=SpiritsRules)
+    necromancy: NecromancyRules = field(default_factory=NecromancyRules)
     siegecraft: SiegecraftRules = field(default_factory=SiegecraftRules)
     naval: NavalRules = field(default_factory=NavalRules)
     duels: DuelsRules = field(default_factory=DuelsRules)

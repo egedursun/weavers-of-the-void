@@ -4,10 +4,12 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import CaptiveCohortRow, SpyNetworkRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.military import CaptiveFate, SpyCover
 from aerona.domain.enums.mind import ActKind, ValueAxis
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
+from aerona.engine.faith.book import faith_tenets
 from aerona.engine.gods.progress import cap_gained_essence
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.mind.book import values_for
@@ -81,7 +83,8 @@ async def decide(ctx: TickContext, row: CaptiveCohortRow) -> CaptiveFate:
     if values.get(ValueAxis.MERCY, 0) >= table.release_mercy:
         settle_into(ctx, home, row.count)
         return CaptiveFate.RELEASED
-    if values.get(ValueAxis.DEATH, 0) >= table.sacrifice_death and rng.chance(table.sacrifice_chance):
+    sacrificial = values.get(ValueAxis.DEATH, 0) >= table.sacrifice_death or TenetKind.HUMAN_SACRIFICE in await faith_tenets(ctx.session, captor.id)
+    if sacrificial and rng.chance(table.sacrifice_chance):
         await sacrifice(ctx, row, captor)
         return CaptiveFate.SACRIFICED
     if rng.chance(table.labour_pct) or ctx.epoch - row.since_epoch >= ctx.rules.campaigns.captive_defection_epochs:

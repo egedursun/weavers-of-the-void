@@ -110,6 +110,9 @@ class HomeLine(ContextItem):
     command: str = ""
     occupied_by: str = ""
     captives: int = 0
+    tenets: list[str] = Field(default_factory=list)
+    judgement: str = ""
+    zeal: int | None = None
 
 
 class ExpeditionLine(ContextItem):

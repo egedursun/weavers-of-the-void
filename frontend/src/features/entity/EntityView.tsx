@@ -27,6 +27,8 @@ import { RELATION_PAGE_MAX } from './constants'
 import { EntityEconomy } from './economy/EntityEconomy'
 import { ResourceProfile } from './economy/ResourceProfile'
 import { PriceBoard, TradeRouteSection } from './economy/RouteAndMarket'
+import { AfterlifeSection, SoulSection } from './faith/Afterlife'
+import { DoctrineSection } from './faith/Doctrine'
 import { HouseSection, OathsSection, TreatySection } from './realm/HouseTreaty'
 import { RealmSection } from './realm/Realm'
 import { scrollToSection } from './scrollToSection'
@@ -342,6 +344,15 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       )}
       {entity.entity_type === 'mortal' && (
         <OathsSection entityId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'cult' && (
+        <DoctrineSection cultId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'spirit' && (
+        <SoulSection spiritId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'region' && (
+        <AfterlifeSection regionId={entity.id} readOnlyReason={readOnly} />
       )}
       {(entity.entity_type === 'army' ||
         entity.entity_type === 'mortal' ||

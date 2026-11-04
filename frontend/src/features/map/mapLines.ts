@@ -319,6 +319,7 @@ export function drawLines(
     trade?: boolean
     outbreaks?: boolean
     military?: boolean
+    faith?: boolean
     time: number
     animate: boolean
     fade: number
@@ -328,6 +329,7 @@ export function drawLines(
     drawSickLands(context, view, tokens, transform.k, options.fade)
   if (options.military)
     drawArmies(context, view, tokens, transform.k, options.fade)
+  if (options.faith) drawHoly(context, view, tokens, transform.k, options.fade)
   const shapes = visibleShapes(
     view,
     options.roads,
@@ -445,6 +447,31 @@ function drawArmies(
       0,
       Math.PI * 2
     )
+    context.fill()
+  }
+  context.globalAlpha = fade
+}
+
+const HOLY_RADIUS = 3.5
+const HOLY_ALPHA = 0.9
+
+function drawHoly(
+  context: CanvasRenderingContext2D,
+  view: MapView,
+  tokens: ThemeColors,
+  k: number,
+  fade: number
+): void {
+  context.fillStyle = tokens['rarity-epic']
+  context.globalAlpha = HOLY_ALPHA * fade
+  for (const place of view.holy ?? []) {
+    const size = HOLY_RADIUS / k
+    context.beginPath()
+    context.moveTo(place.x, place.y - size)
+    context.lineTo(place.x + size, place.y)
+    context.lineTo(place.x, place.y + size)
+    context.lineTo(place.x - size, place.y)
+    context.closePath()
     context.fill()
   }
   context.globalAlpha = fade

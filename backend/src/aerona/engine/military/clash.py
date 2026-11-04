@@ -9,10 +9,13 @@ from aerona.db.tables.military import BattlePhaseRow, CaptiveCohortRow, Commande
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
+from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.military import CaptiveFate, CommanderTrait, OutcomeClass, Tactic, UnitFamily
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
+from aerona.engine.faith.book import faith_tenets, patron_node
+from aerona.engine.faith.souls import guardians_of
 from aerona.engine.military.battle import BattleResult, Field, Side, make_stacks, resolve
 from aerona.engine.military.units import muster, profile_of, sync
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -54,7 +57,7 @@ async def side_of(
     veteran = max([await skill_level(ctx, row.commander_entity_id, skill) for skill in COMBAT_SKILLS] or [0])
     return Side(
         veteran=table.military_units.veteran_skill_pct / PERCENT * veteran / PERCENT,
-        leadership=round(PERCENT * table.morale.leadership_pct / PERCENT * lead / PERCENT),
+        leadership=round(PERCENT * table.morale.leadership_pct / PERCENT * lead / PERCENT) + await faith_spirit(ctx, community, enemy),
         entity=community,
         army=army,
         profile=profile,
@@ -65,6 +68,16 @@ async def side_of(
         traits=await traits_of(ctx, row.commander_entity_id),
         intel=await intel_on(ctx, community.id, enemy.id),
     )
+
+
+async def faith_spirit(ctx: TickContext, community: EntityRow, enemy: EntityRow) -> int:
+    tenets = await faith_tenets(ctx.session, community.id)
+    lift = 0
+    if TenetKind.HOLY_WAR in tenets and await patron_node(ctx.session, community.id) != await patron_node(ctx.session, enemy.id):
+        lift += ctx.rules.doctrine.holy_war_morale
+    if TenetKind.ANCESTOR_VENERATION in tenets and await guardians_of(ctx, community.id):
+        lift += ctx.rules.spirits.guardian_morale
+    return lift
 
 
 async def clash(

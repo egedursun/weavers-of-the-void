@@ -12,12 +12,14 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.demography import AgeBand, CohortCondition
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for, total
+from aerona.engine.faith.book import faith_tenets
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
@@ -245,6 +247,14 @@ async def ruin_merchants(ctx: TickContext) -> int:
     return fallen
 
 
+async def lay_down_arms(ctx: TickContext, community: EntityRow, rows: dict[CohortKey, CohortRow]) -> int:
+    if TenetKind.PACIFISM not in await faith_tenets(ctx.session, community.id):
+        return 0
+    table = ctx.rules.doctrine
+    share = (1 - table.pacifist_warrior_pct / PERCENT) * table.pacifist_drift_pct / PERCENT
+    return await move_people(ctx, community, rows, source=SocialClass.WARRIOR, target=SocialClass.FARMER, share=share)
+
+
 async def class_mobility(ctx: TickContext, community: EntityRow) -> dict[str, int]:
     rows = await cohorts_of(ctx.session, community.id)
     if not rows:
@@ -257,6 +267,7 @@ async def class_mobility(ctx: TickContext, community: EntityRow) -> dict[str, in
         "enslaved": await settle_captives(ctx, community, rows, lawful),
         "freed": await manumit(ctx, community, rows, lawful),
         "emigrated": await bitter_emigration(ctx, community, rows, society),
+        "laid_down_arms": await lay_down_arms(ctx, community, rows),
     }
     await slavery_costs(ctx, community, rows, culture)
     sync_bound_share(society, rows)

@@ -4671,6 +4671,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tenets/kinds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tenet_kinds_api_tenets_kinds_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/doctrine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["doctrine_api_entities__entity_id__doctrine_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/afterlife": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["realm_of_dead_api_entities__entity_id__afterlife_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/soul": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["soul_card_api_entities__entity_id__soul_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions": {
         parameters: {
             query?: never;
@@ -8831,6 +8895,198 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/cult:doctrine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_cult_doctrine_api_actions_cult_doctrine_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/cult:tenet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_cult_tenet_api_actions_cult_tenet_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/cult:heresy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_cult_heresy_api_actions_cult_heresy_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/cult:judge_heresy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_cult_judge_heresy_api_actions_cult_judge_heresy_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/cult:canonise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_cult_canonise_api_actions_cult_canonise_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/soul:judge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_soul_judge_api_actions_soul_judge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/soul:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_soul_release_api_actions_soul_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/soul:bind": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_soul_bind_api_actions_soul_bind_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/soul:seal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_soul_seal_api_actions_soul_seal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/soul:reincarnate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_soul_reincarnate_api_actions_soul_reincarnate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/soul:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_soul_edit_api_actions_soul_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/afterlife:stratum": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_afterlife_stratum_api_actions_afterlife_stratum_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/body:heal": {
         parameters: {
             query?: never;
@@ -9333,6 +9589,16 @@ export interface components {
             withdrawal_since_epoch: number | null;
         };
         Aesthetic: "austere" | "ornate" | "geometric" | "natural" | "macabre" | "celestial";
+        AfterlifeState: "wandering" | "judged" | "in_realm" | "reborn" | "consumed" | "released";
+        AfterlifeStratumInput: {
+            realm_id: number;
+            kind: components["schemas"]["StratumKind"];
+            name?: string | null;
+            criteria?: {
+                [key: string]: number | string;
+            } | null;
+            remove: boolean;
+        };
         AgeBand: "child" | "adult" | "elder";
         AgentKind: "son" | "mortal";
         AgentRetryEvent: {
@@ -9583,6 +9849,7 @@ export interface components {
             people_id: number;
             son_id?: number | null;
         };
+        BindingKind: "none" | "place" | "item" | "structure" | "beast" | "person";
         BiologyView: {
             maturity_years: number;
             adult_years: number;
@@ -10142,6 +10409,12 @@ export interface components {
             };
             last_kept_epoch: number | null;
         };
+        ClergyOffice: "high_priest" | "priest" | "monk" | "inquisitor";
+        ClergyView: {
+            kind: components["schemas"]["ClergyOffice"];
+            holder: components["schemas"]["NodeRef"] | null;
+            since_epoch: number;
+        };
         ClimateAffinity: "warm" | "wet" | "cold" | "dry" | "any";
         ClimateAgeView: {
             era: components["schemas"]["ClimateEra"];
@@ -10468,6 +10741,26 @@ export interface components {
         };
         CreatorSignKind: "wrath" | "grace" | "silence" | "dream";
         CreatureTrait: "flying" | "venomous" | "soul_eater" | "radiant" | "fissiparous" | "hive_mind" | "stoneskin" | "time_rewinder" | "shapeshifter" | "mind_reader";
+        CultCanoniseInput: {
+            cult_id: number;
+            saint_id: number;
+            item_id?: number | null;
+        };
+        CultDoctrineInput: {
+            cult_id: number;
+            values?: {
+                [key: string]: number | string | boolean | null;
+            };
+            release?: string[];
+        };
+        CultHeresyInput: {
+            heresy_id: number;
+            parent_id: number;
+        };
+        CultJudgeHeresyInput: {
+            heresy_id: number;
+            suppressed: boolean;
+        };
         CultMergeInput: {
             source_id: number;
             into_id: number;
@@ -10482,6 +10775,13 @@ export interface components {
             zeal?: number | null;
             influence?: number | null;
             devotion?: number | null;
+        };
+        CultTenetInput: {
+            cult_id: number;
+            tenet: components["schemas"]["TenetKind"];
+            held: boolean;
+            target?: string | null;
+            son_id?: number | null;
         };
         CultureView: {
             cohesion: number;
@@ -10706,6 +11006,32 @@ export interface components {
             condition: number;
             material: components["schemas"]["BuildMaterial"];
             built_epoch: number;
+        };
+        DoctrineView: {
+            cult: components["schemas"]["NodeRef"] | null;
+            god: components["schemas"]["NodeRef"] | null;
+            judgement: components["schemas"]["JudgementDoctrine"];
+            orthodoxy: number;
+            tithe_rate: number;
+            treasury: number;
+            clergy_count: number;
+            clergy_quality: number;
+            zeal: number;
+            zeal_parts: {
+                [key: string]: number;
+            };
+            fanaticism: components["schemas"]["FanaticismKind"] | null;
+            fanaticism_epoch: number | null;
+            doctrinal_distance: number;
+            excommunicated: components["schemas"]["NodeRef"][];
+            members: components["schemas"]["NodeRef"][];
+            locked: string[];
+            tenets: components["schemas"]["TenetView"][];
+            holdings: components["schemas"]["HoldingView"][];
+            clergy: components["schemas"]["ClergyView"][];
+            heresies: components["schemas"]["HeresyView"][];
+            mother: components["schemas"]["HeresyView"] | null;
+            relics: components["schemas"]["RelicView"][];
         };
         Domain: "sea" | "fire" | "earth" | "sky" | "storm" | "death" | "life" | "dream" | "time" | "light" | "shadow" | "war" | "craft" | "knowledge" | "love" | "trickery" | "hunt" | "plants" | "bone" | "blood" | "sound" | "stone" | "ice" | "madness" | "trade" | "road" | "plague" | "harvest" | "moon" | "sun" | "star" | "lies" | "oath" | "memory" | "hunger" | "glass" | "salt" | "ash" | "border" | "sleep";
         Done: {
@@ -11345,6 +11671,7 @@ export interface components {
             entity_id: number;
             god_id: number;
         };
+        FanaticismKind: "inquisition" | "iconoclasm" | "crusade";
         FateControlsView: {
             last_epoch: number | null;
             fate_debt_epoch: number | null;
@@ -11564,6 +11891,7 @@ export interface components {
             key: components["schemas"]["BodyFunction"];
             level: number;
         };
+        FuneralRite: "burial" | "burning" | "exposure" | "none";
         GenerateRequest: {
             node_id: number;
         };
@@ -11735,6 +12063,14 @@ export interface components {
             name: string;
             since_epoch: number;
         };
+        HeresyView: {
+            heresy: components["schemas"]["NodeRef"] | null;
+            parent: components["schemas"]["NodeRef"] | null;
+            distance: number;
+            declared_epoch: number;
+            suppressed: boolean;
+            tolerated: boolean;
+        };
         HeroApprenticeInput: {
             hero_id: number;
         };
@@ -11785,6 +12121,12 @@ export interface components {
             community_id: number;
             metal: components["schemas"]["MaterialKind"];
             units?: number | null;
+        };
+        HoldingKind: "temple" | "land" | "relic" | "holy_place" | "monastery";
+        HoldingView: {
+            kind: components["schemas"]["HoldingKind"];
+            holding: components["schemas"]["NodeRef"] | null;
+            since_epoch: number;
         };
         HolyDayView: {
             name: string;
@@ -12193,6 +12535,15 @@ export interface components {
             result_entity_id: number | null;
         };
         JourneyStatus: "underway" | "waiting" | "arrived" | "lost" | "recalled" | "stranded";
+        JudgementDoctrine: "deeds" | "faith" | "rite" | "favour" | "none";
+        JudgementView: {
+            epoch: number;
+            doctrine: components["schemas"]["JudgementDoctrine"];
+            stratum: string | null;
+            score: number;
+            rite: components["schemas"]["FuneralRite"];
+            reason: string;
+        };
         Kin: {
             id: number;
             name: string;
@@ -12607,6 +12958,14 @@ export interface components {
             second_region_id: number;
             path: number[];
         };
+        MapHoly: {
+            cult_id: number;
+            cult: string;
+            holding_id: number;
+            kind: components["schemas"]["HoldingKind"];
+            x: number;
+            y: number;
+        };
         MapNoteRecord: {
             id: number;
             world_id: number;
@@ -12713,6 +13072,7 @@ export interface components {
                 [key: string]: components["schemas"]["MapOccupation"];
             };
             fronts?: components["schemas"]["MapFront"][];
+            holy?: components["schemas"]["MapHoly"][];
             notes: components["schemas"]["MapNoteRecord"][];
             time: components["schemas"]["MapTime"];
         };
@@ -13197,7 +13557,7 @@ export interface components {
             id: number;
             name: string;
         };
-        NaturalLaw: "none" | "immortality" | "short_life" | "dead_return" | "magic_price" | "war_ban" | "bounty" | "drought" | "sea_ban" | "one_language" | "disasters";
+        NaturalLaw: "none" | "immortality" | "short_life" | "dead_return" | "magic_price" | "war_ban" | "bounty" | "drought" | "sea_ban" | "one_language" | "disasters" | "souls_reincarnate";
         NaturalLawStats: {
             kind: "natural_law";
         };
@@ -14260,6 +14620,10 @@ export interface components {
         RealmLink: {
             polity_id: number | null;
         };
+        RealmOfDeadView: {
+            realm: components["schemas"]["NodeRef"] | null;
+            strata: components["schemas"]["StratumView"][];
+        };
         RealmView: {
             id: number;
             name: string;
@@ -14435,6 +14799,7 @@ export interface components {
             soldiers: number;
         };
         RegionalStanding: "hegemon" | "great_power" | "minor_power" | "client";
+        ReincarnationGate: "tenet" | "natural_law" | "rite" | "god";
         RelationEntry: {
             other: components["schemas"]["NodeRef"];
             value: number;
@@ -14462,6 +14827,14 @@ export interface components {
             blood_feud_since_epoch: number | null;
             history: components["schemas"]["RelationEventView"][];
             opinions: components["schemas"]["OpinionView"][];
+        };
+        RelicView: {
+            item: components["schemas"]["NodeRef"] | null;
+            saint: components["schemas"]["NodeRef"] | null;
+            shrine: components["schemas"]["NodeRef"] | null;
+            sanctity: number;
+            pilgrims: number;
+            canonised_epoch: number;
         };
         RenamedNode: {
             old_name: string;
@@ -15384,15 +15757,68 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        SoulBindInput: {
+            spirit_id: number;
+            target_id: number;
+            binding: components["schemas"]["BindingKind"];
+        };
+        SoulCard: {
+            spirit: components["schemas"]["NodeRef"] | null;
+            origin: components["schemas"]["NodeRef"] | null;
+            patron_son_id: number | null;
+            state: components["schemas"]["AfterlifeState"];
+            alignment: components["schemas"]["SpiritAlignment"];
+            binding: components["schemas"]["BindingKind"];
+            bound: components["schemas"]["NodeRef"] | null;
+            rite: components["schemas"]["FuneralRite"];
+            sealed: boolean;
+            memory_strength: number;
+            veneration: number;
+            imprint: {
+                [key: string]: number;
+            };
+            traits: string[];
+            deeds: {
+                [key: string]: number;
+            };
+            stratum: components["schemas"]["StratumView"] | null;
+            judgements: components["schemas"]["JudgementView"][];
+            possessing: components["schemas"]["NodeRef"] | null;
+            reborn_as: components["schemas"]["NodeRef"] | null;
+            gate: components["schemas"]["ReincarnationGate"] | null;
+            locked: string[];
+        };
         SoulDescendInput: {
             mortal_id: number;
+        };
+        SoulEditInput: {
+            spirit_id: number;
+            values?: {
+                [key: string]: number | string | boolean | null;
+            };
         };
         SoulHarvestInput: {
             cult_id: number;
             soul_id: number;
         };
+        SoulJudgeInput: {
+            spirit_id: number;
+            stratum_id: number;
+            reason: string;
+        };
         SoulMirrorInput: {
             mortal_id: number;
+        };
+        SoulReincarnateInput: {
+            spirit_id: number;
+            community_id?: number | null;
+        };
+        SoulReleaseInput: {
+            spirit_id: number;
+        };
+        SoulSealInput: {
+            spirit_id: number;
+            sealed: boolean;
         };
         SpeciesAbundanceInput: {
             species_id: number;
@@ -15441,6 +15867,7 @@ export interface components {
         SpeciesTrailInput: {
             species_id: number;
         };
+        SpiritAlignment: "guardian" | "neutral" | "vengeful";
         SpiritRestInput: {
             spirit_id: number;
         };
@@ -15596,6 +16023,17 @@ export interface components {
             virulence: number;
             lethality: number;
         };
+        StratumKind: "paradise" | "plain" | "torment" | "oblivion" | "warrior_hall" | "ancestor_hall";
+        StratumView: {
+            id: number;
+            kind: components["schemas"]["StratumKind"];
+            name: string;
+            criteria: {
+                [key: string]: number | string;
+            };
+            population: number;
+            souls: components["schemas"]["NodeRef"][];
+        };
         StreamHelloEvent: {
             id: number;
             kind: "stream.hello";
@@ -15640,6 +16078,21 @@ export interface components {
         };
         TechnologyEra: "stone" | "bronze" | "iron" | "medieval" | "renaissance" | "steam";
         TemperatureBand: "frozen" | "cold" | "temperate" | "warm" | "hot" | "searing";
+        TenetKind: "pacifism" | "holy_war" | "asceticism" | "sacred_suffering" | "purity_of_body" | "ancestor_veneration" | "human_sacrifice" | "animal_sacrifice" | "celibate_clergy" | "proselytism" | "exclusivity" | "syncretic_openness" | "monastic_learning" | "anti_magic" | "sanctified_magic" | "judgement_by_deeds" | "judgement_by_faith" | "reincarnation" | "martyrdom_glory" | "divine_kingship" | "dietary_law" | "sacred_species" | "pilgrimage_duty" | "souls_rest";
+        TenetKindSpec: {
+            tenet: components["schemas"]["TenetKind"];
+            effect: string;
+            targeted: boolean;
+            opposed: components["schemas"]["TenetKind"][];
+        };
+        TenetView: {
+            tenet: components["schemas"]["TenetKind"];
+            effect: string;
+            target: string | null;
+            target_name: string | null;
+            since_epoch: number;
+            revealed_by_son_id: number | null;
+        };
         TerrainKind: "plain" | "steppe" | "forest" | "jungle" | "marsh" | "hills" | "mountains" | "high_pass" | "desert" | "tundra" | "ice_sheet" | "volcanic" | "coast" | "island" | "river_valley" | "canyon" | "underground" | "crystal_field" | "flesh" | "void_shore" | "ruin_field" | "urban" | "sea";
         TerritoryView: {
             region_id: number;
@@ -25259,6 +25712,112 @@ export interface operations {
             };
         };
     };
+    tenet_kinds_api_tenets_kinds_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenetKindSpec"][];
+                };
+            };
+        };
+    };
+    doctrine_api_entities__entity_id__doctrine_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DoctrineView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    realm_of_dead_api_entities__entity_id__afterlife_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RealmOfDeadView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    soul_card_api_entities__entity_id__soul_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SoulCard"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_actions_api_actions_get: {
         parameters: {
             query?: never;
@@ -33103,6 +33662,378 @@ export interface operations {
             };
         };
     };
+    action_cult_doctrine_api_actions_cult_doctrine_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CultDoctrineInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_cult_tenet_api_actions_cult_tenet_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CultTenetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_cult_heresy_api_actions_cult_heresy_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CultHeresyInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_cult_judge_heresy_api_actions_cult_judge_heresy_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CultJudgeHeresyInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_cult_canonise_api_actions_cult_canonise_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CultCanoniseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_soul_judge_api_actions_soul_judge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SoulJudgeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_soul_release_api_actions_soul_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SoulReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_soul_bind_api_actions_soul_bind_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SoulBindInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_soul_seal_api_actions_soul_seal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SoulSealInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_soul_reincarnate_api_actions_soul_reincarnate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SoulReincarnateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_soul_edit_api_actions_soul_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SoulEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_afterlife_stratum_api_actions_afterlife_stratum_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AfterlifeStratumInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_body_heal_api_actions_body_heal_post: {
         parameters: {
             query?: never;
@@ -33955,6 +34886,7 @@ export const actionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const actionModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActionMode"]> = ["ledgered", "job"];
 export const actorKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActorKind"]> = ["creator", "son", "mortal", "foreign_god", "fate", "engine", "system"];
 export const aestheticValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Aesthetic"]> = ["austere", "ornate", "geometric", "natural", "macabre", "celestial"];
+export const afterlifeStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AfterlifeState"]> = ["wandering", "judged", "in_realm", "reborn", "consumed", "released"];
 export const ageBandValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgeBand"]> = ["child", "adult", "elder"];
 export const agentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentKind"]> = ["son", "mortal"];
 export const agentRetryEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentRetryEvent"]["kind"]> = ["agent.retry"];
@@ -33974,6 +34906,7 @@ export const atmosphereValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const backupTakenEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BackupTakenEvent"]["kind"]> = ["backup.taken"];
 export const batchDeepenLogEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BatchDeepenLogEvent"]["kind"]> = ["batch_deepen.log"];
 export const battleOutcomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BattleOutcome"]> = ["field_victory", "great_victory", "siege_repulsed", "siege_breached", "siege_starvation", "refused"];
+export const bindingKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BindingKind"]> = ["none", "place", "item", "structure", "beast", "person"];
 export const biomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Biome"]> = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 export const blessingKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BlessingKind"]> = ["essence", "hp", "stat", "existence"];
 export const bodyBuildValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyBuild"]> = ["slight", "average", "heavy", "giant"];
@@ -33997,6 +34930,7 @@ export const chronicleKindValues: ReadonlyArray<FlattenedDeepRequired<components
 export const claimBasisValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClaimBasis"]> = ["inheritance", "marriage", "conquest", "divine", "fabricated"];
 export const claudeAuthValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClaudeAuth"]> = ["token", "login"];
 export const clauseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClauseKind"]> = ["call_to_arms", "tribute", "cession", "hostage", "marriage", "trade_rights", "tolls_waived", "religious_freedom", "demilitarised", "champion", "extradition", "wergild", "non_aggression"];
+export const clergyOfficeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClergyOffice"]> = ["high_priest", "priest", "monk", "inquisitor"];
 export const climateAffinityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClimateAffinity"]> = ["warm", "wet", "cold", "dry", "any"];
 export const climateEraValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClimateEra"]> = ["temperate", "drought", "rain", "ice_age", "scorching"];
 export const coastKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CoastKind"]> = ["none", "cliff", "beach", "harbour_site", "reef"];
@@ -34061,6 +34995,7 @@ export const existenceModeValues: ReadonlyArray<FlattenedDeepRequired<components
 export const exposureValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Exposure"]> = ["none", "context", "tool"];
 export const factionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FactionKind"]> = ["guild", "council", "brotherhood"];
 export const factionStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FactionStats"]["kind"]> = ["faction"];
+export const fanaticismKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FanaticismKind"]> = ["inquisition", "iconoclasm", "crusade"];
 export const fateFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FateFinishedEvent"]["kind"]> = ["fate.finished"];
 export const fateModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FateMode"]> = ["auto", "off"];
 export const fateStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FateStartedEvent"]["kind"]> = ["fate.started"];
@@ -34070,6 +35005,7 @@ export const feedCategoryValues: ReadonlyArray<FlattenedDeepRequired<components>
 export const foreignGodDeepenedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodDeepenedEvent"]["kind"]> = ["foreign_god.deepened"];
 export const foreignGodPowerEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodPowerEffect"]> = ["shield", "caller", "thief", "destroyer", "fertile", "reviving", "deathless", "sharp_tongued"];
 export const foreignGodStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodStatus"]> = ["awake", "asleep", "defeated", "dead"];
+export const funeralRiteValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FuneralRite"]> = ["burial", "burning", "exposure", "none"];
 export const genesisFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisFinishedEvent"]["kind"]> = ["genesis.finished"];
 export const genesisTemplateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisTemplate"]> = ["dark_fantasy", "mythic_age", "cosmic_horror", "fairy_tale", "star_myth", "sand_and_ash", "primordial_dawn", "crowns_and_knives", "drowned_world", "long_winter", "after_the_fall", "sky_islands", "age_of_engines"];
 export const governmentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GovernmentKind"]> = ["chiefdom", "monarchy", "theocracy", "oligarchy", "republic", "tribal_confederation", "empire", "hive_council", "god_kingdom", "occupation"];
@@ -34077,6 +35013,7 @@ export const gravityValues: ReadonlyArray<FlattenedDeepRequired<components>["sch
 export const harmCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HarmCause"]> = ["battle", "duel", "punishment", "torture", "accident", "monster", "disaster", "curse", "magic_backlash", "god", "poison", "quest", "escape", "sacrifice", "age", "player"];
 export const heightClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HeightClass"]> = ["short", "average", "tall", "giant"];
 export const heroQuestKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HeroQuestKind"]> = ["hunt", "thread", "relic", "knowledge", "vengeance"];
+export const holdingKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HoldingKind"]> = ["temple", "land", "relic", "holy_place", "monastery"];
 export const horizonStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HorizonStatus"]> = ["pending", "processing", "born", "wasted"];
 export const horrorEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HorrorEventKind"]> = ["stars_align", "eye_in_the_sky", "wave_of_silence", "reverse_rain", "visit_of_the_void", "the_dimming", "whispers_from_beyond"];
 export const houseStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HouseStats"]["kind"]> = ["house"];
@@ -34109,6 +35046,7 @@ export const jobStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["s
 export const journeyEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JourneyEventKind"]> = ["pirates", "void_storm", "creature", "lost_way", "discovery", "sacrifice", "memory_loss", "dream_not_returned", "sail_snapped", "bridge_collapsed", "swallowed", "stowaway", "other"];
 export const journeyIntentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JourneyIntent"]> = ["colony", "trade", "exploration", "conquest", "pilgrimage"];
 export const journeyStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JourneyStatus"]> = ["underway", "waiting", "arrived", "lost", "recalled", "stranded"];
+export const judgementDoctrineValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JudgementDoctrine"]> = ["deeds", "faith", "rite", "favour", "none"];
 export const knowledgeBranchValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["KnowledgeBranch"]> = ["agriculture", "metallurgy", "seafaring", "writing", "architecture", "medicine", "magic", "warfare", "astronomy", "trade", "sky_navigation", "shipbuilding", "gate_lore", "pathfinding", "void_living", "immortality", "biomancy", "forbidden"];
 export const knowledgeStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["KnowledgeStats"]["kind"]> = ["knowledge"];
 export const landKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LandKind"]> = ["region", "place"];
@@ -34153,7 +35091,7 @@ export const mortalTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequi
 export const mortalTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalTurnStartedEvent"]["kind"]> = ["mortal.turn_started"];
 export const mortalsStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalsStartedEvent"]["kind"]> = ["mortals.started"];
 export const motifOverrideModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MotifOverrideMode"]> = ["pinned", "allowed"];
-export const naturalLawValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalLaw"]> = ["none", "immortality", "short_life", "dead_return", "magic_price", "war_ban", "bounty", "drought", "sea_ban", "one_language", "disasters"];
+export const naturalLawValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalLaw"]> = ["none", "immortality", "short_life", "dead_return", "magic_price", "war_ban", "bounty", "drought", "sea_ban", "one_language", "disasters", "souls_reincarnate"];
 export const naturalLawStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalLawStats"]["kind"]> = ["natural_law"];
 export const needKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NeedKind"]> = ["sustenance", "safety", "belonging", "status", "purpose", "faith", "pleasure"];
 export const networkRepairedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NetworkRepairedEvent"]["kind"]> = ["network.repaired"];
@@ -34188,6 +35126,7 @@ export const rarityValues: ReadonlyArray<FlattenedDeepRequired<components>["sche
 export const recordEndValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RecordEnd"]> = ["repeal", "abandon", "forget", "disband", "lose", "assimilate"];
 export const regionStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RegionStats"]["kind"]> = ["region"];
 export const regionalStandingValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RegionalStanding"]> = ["hegemon", "great_power", "minor_power", "client"];
+export const reincarnationGateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ReincarnationGate"]> = ["tenet", "natural_law", "rite", "god"];
 export const relationLineKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RelationLineKind"]> = ["trade", "hostility", "rule", "hunt"];
 export const reputationLabelValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ReputationLabel"]> = ["forgotten", "hated", "respected", "feared", "loved", "distant", "acknowledged"];
 export const resourceMechanicValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ResourceMechanic"]> = ["decaying", "addictive", "sentient", "depletion_price", "fixed", "sacred"];
@@ -34229,6 +35168,7 @@ export const sonTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired
 export const sonTurnQueuedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnQueuedEvent"]["kind"]> = ["son.turn_queued"];
 export const sonTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnStartedEvent"]["kind"]> = ["son.turn_started"];
 export const speciesStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpeciesStats"]["kind"]> = ["species"];
+export const spiritAlignmentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpiritAlignment"]> = ["guardian", "neutral", "vengeful"];
 export const spiritStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpiritStats"]["kind"]> = ["spirit"];
 export const spokenIntentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpokenIntent"]> = ["friendship", "alliance", "love", "threat", "mockery", "warning", "bargain"];
 export const spreadPathValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpreadPath"]> = ["origin", "route", "army", "journey", "siege", "loosed", "mutation"];
@@ -34238,6 +35178,7 @@ export const stanceValues: ReadonlyArray<FlattenedDeepRequired<components>["sche
 export const starTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StarType"]> = ["yellow_dwarf", "red_giant", "blue_giant", "binary", "white_dwarf", "dead_star", "black_sun", "broken_star", "pulsar", "star_remnant", "reborn_star", "blue_star", "blue_white_star", "white_star", "yellow_white_star", "orange_dwarf", "red_dwarf", "brown_dwarf", "yellow_giant", "red_supergiant", "blue_supergiant", "hypergiant", "wolf_rayet", "protostar", "carbon_star", "neutron_star", "magnetar", "black_hole", "variable_star", "trinary", "chained_star", "watching_star"];
 export const starvationStageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StarvationStage"]> = ["none", "rationing", "famine", "taboo_broken"];
 export const statValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Stat"]> = ["strength", "endurance", "agility", "wisdom", "cunning", "will", "creativity", "charisma", "might"];
+export const stratumKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StratumKind"]> = ["paradise", "plain", "torment", "oblivion", "warrior_hall", "ancestor_hall"];
 export const streamHelloEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StreamHelloEvent"]["kind"]> = ["stream.hello"];
 export const structureStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StructureStats"]["kind"]> = ["structure"];
 export const subsystemValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Subsystem"]> = ["core", "body", "mind", "social", "household", "demography", "economy", "polity", "law", "intrigue", "communication", "war", "faith", "magic", "knowledge", "culture", "language", "ecology", "environment", "gods", "cosmos"];
@@ -34248,6 +35189,7 @@ export const tacticValues: ReadonlyArray<FlattenedDeepRequired<components>["sche
 export const targetKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TargetKind"]> = ["entity", "foreign_god"];
 export const technologyEraValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TechnologyEra"]> = ["stone", "bronze", "iron", "medieval", "renaissance", "steam"];
 export const temperatureBandValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TemperatureBand"]> = ["frozen", "cold", "temperate", "warm", "hot", "searing"];
+export const tenetKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TenetKind"]> = ["pacifism", "holy_war", "asceticism", "sacred_suffering", "purity_of_body", "ancestor_veneration", "human_sacrifice", "animal_sacrifice", "celibate_clergy", "proselytism", "exclusivity", "syncretic_openness", "monastic_learning", "anti_magic", "sanctified_magic", "judgement_by_deeds", "judgement_by_faith", "reincarnation", "martyrdom_glory", "divine_kingship", "dietary_law", "sacred_species", "pilgrimage_duty", "souls_rest"];
 export const terrainKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TerrainKind"]> = ["plain", "steppe", "forest", "jungle", "marsh", "hills", "mountains", "high_pass", "desert", "tundra", "ice_sheet", "volcanic", "coast", "island", "river_valley", "canyon", "underground", "crystal_field", "flesh", "void_shore", "ruin_field", "urban", "sea"];
 export const threadStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ThreadStatus"]> = ["open", "closed"];
 export const toolBlockValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ToolBlock"]> = ["rarity", "actor_type", "civilization_tier", "world_state", "unwired"];

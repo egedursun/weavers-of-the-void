@@ -1,22 +1,27 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.faith import CultDoctrineRow
 from aerona.db.tables.military import CaptiveCohortRow, CommanderTraitRow, OccupationRow, WarAimRow
 from aerona.db.tables.polity import HouseMemberRow, OathRow, OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import SOCIETY_TYPES
 from aerona.domain.enums.military import CaptiveFate
 from aerona.domain.enums.polity import OathStatus
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.body.customs import people_of
+from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.gods.queries import community_of
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.stats import stat
 from aerona.prompts.contexts.mortal import HomeLine
 
 
@@ -63,7 +68,11 @@ async def home_for(session: AsyncSession, me: EntityRow) -> HomeLine | None:
         for row in await session.scalars(select(OathRow).where(OathRow.swearer_entity_id == me.id, OathRow.status == OathStatus.SWORN))
     ]
     wars, command, occupied, captives = await war_lines(session, me, home, region)
+    tenets, judgement, zeal = await faith_lines(session, home)
     return HomeLine(
+        tenets=tenets,
+        judgement=judgement,
+        zeal=zeal,
         wars=wars,
         command=command,
         occupied_by=occupied,
@@ -104,3 +113,16 @@ async def war_lines(session: AsyncSession, me: EntityRow, home: EntityRow, regio
     holding = select(func.coalesce(func.sum(CaptiveCohortRow.count), 0)).where(CaptiveCohortRow.captor_entity_id == home.id)
     held = await session.scalar(holding.where(CaptiveCohortRow.fate == CaptiveFate.HELD))
     return wars, command, occupier.name if occupier is not None else "", int(held or 0)
+
+
+async def faith_lines(session: AsyncSession, home: EntityRow) -> tuple[list[str], str, int | None]:
+    tenets = sorted(words(tenet.value) for tenet in await faith_tenets(session, home.id))
+    god_id = await patron_node(session, home.id)
+    if god_id is None:
+        return tenets, "", None
+    worshippers = select(BondRow.source_node_id).where(BondRow.target_node_id == god_id, BondRow.kind == BondKind.WORSHIPS)
+    doctrines = select(CultDoctrineRow).where(CultDoctrineRow.cult_entity_id.in_(worshippers))
+    doctrine = await session.scalar(doctrines.order_by(CultDoctrineRow.cult_entity_id).limit(1))
+    cult = await session.get(EntityRow, doctrine.cult_entity_id) if doctrine is not None else None
+    zeal = stat(cult, "zeal") if cult is not None else None
+    return tenets, words(doctrine.judgement.value) if doctrine is not None else "", zeal
