@@ -538,6 +538,7 @@ async def honour_slayer(ctx: TickContext, beast: EntityRow, slayer: EntityRow) -
 
 
 async def fall(ctx: TickContext, beast: EntityRow, row: BeastProfileRow) -> str:
+    row.locked = []
     slayer = await slayer_of(ctx, beast.id)
     for profile, _ in await tribute_clauses(ctx, beast.id):
         await end_treaty(ctx, profile, TreatyStatus.FULFILLED, f"{beast.name} is dead")

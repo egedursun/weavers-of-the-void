@@ -23,6 +23,7 @@ class SonToolId(StrEnum):
     CREATE_RESOURCE = "create_resource"
     FOUND_SETTLEMENT = "found_settlement"
     CREATE_SPECIES = "create_species"
+    RAISE_BEAST = "raise_beast"
     CREATE_PEOPLE = "create_people"
     CREATE_MORTAL = "create_mortal"
     FORGE_ITEM = "forge_item"

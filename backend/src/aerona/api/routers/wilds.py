@@ -17,7 +17,7 @@ from aerona.api.schemas.wilds import (
     SpeciesCard,
     SpeciesRangeMap,
     TotemView,
-    TributeView,
+    BeastTributeView,
     UseKindView,
     WebLink,
     WebNode,
@@ -283,7 +283,7 @@ async def beast_card(entity_id: Id, services: ServicesDep) -> BeastCard:
             hp=stat(beast, "hp") or 0,
             treasures=listed(refs, treasures),
             tributes=[
-                TributeView(
+                BeastTributeView(
                     town=ref(refs, item.obligor_node_id),
                     treaty=ref(refs, item.treaty_entity_id),
                     commodity=CommodityKind(str(item.params.get("commodity", CommodityKind.LUXURIES.value))),

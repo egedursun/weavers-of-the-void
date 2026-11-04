@@ -67,6 +67,15 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "migratory": "True if its herds move between lands with the seasons",
         "products": "What it yields beyond meat, hide and bone, if anything: {{ yield_products | join(', ') }}; silk and venom feed crafts, dragonbone feeds forges",
     },
+    EntityType.BEAST: {
+        "species_id": "The kind it is the greatest of (species id), if any; it takes that kind's body, yields and lifespan",
+        "size_class": "How big it stands: {{ size_classes | join(', ') }}; huge and colossal beasts take more in their raids and can carry a rider",
+        "temper": "Its mood when it wakes in the world: {{ beast_tempers | join(', ') }}; a sleeping beast waits, a hungry one raids",
+        "endurance": "0-100: how far it ranges on its raids and how much harm it shrugs off",
+        "perception": "0-100: how easily disturbance wakes it and how little thieves take from its hoard",
+        "willpower": "0-100: how hard it is to tame and how seldom it rests after a hunt",
+        "intelligence": "0-100: at {{ rules.mortal_agents.creature_min_intelligence }} or more it speaks, bargains and acts by itself",
+    },
     EntityType.VESSEL: {
         "target_world_id": "If the gate, bridge or ship connects to another world, that world's id: a route is opened",
         "vessel_kind": "What it is: {{ vessel_kinds | join(', ') }}; a gate, ship, mount or bridge opens the matching kind of road",

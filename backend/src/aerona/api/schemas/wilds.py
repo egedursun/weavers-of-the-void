@@ -71,7 +71,7 @@ class SpeciesRangeMap(ApiModel):
     cells: list[RangeCell]
 
 
-class TributeView(ApiModel):
+class BeastTributeView(ApiModel):
     town: NodeRef | None
     treaty: NodeRef | None
     commodity: CommodityKind
@@ -172,7 +172,7 @@ class BeastCard(ApiModel):
     body_plan: str | None
     hp: int
     treasures: list[NodeRef] = Field(default_factory=list)
-    tributes: list[TributeView] = Field(default_factory=list)
+    tributes: list[BeastTributeView] = Field(default_factory=list)
     reach: int = 0
     harm_taken_pct: int = 100
     wake_pct: int = 0

@@ -122,6 +122,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   claim_resource: Flag,
   found_settlement: Building2,
   create_species: Bird,
+  raise_beast: PawPrint,
   create_people: Users,
   create_mortal: UserPlus,
   forge_item: Hammer,

@@ -17,7 +17,7 @@ from aerona.constants.tool_inputs import (
     TITLE_MAX,
 )
 from aerona.domain.enums.body import BodyPlan
-from aerona.domain.enums.ecology import Diet, SizeClass, Sociality, YieldProduct
+from aerona.domain.enums.ecology import BeastTemper, Diet, SizeClass, Sociality, YieldProduct
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType, LegendCategory
 from aerona.domain.enums.material import MaterialKind
@@ -76,6 +76,15 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
             "nocturnal": (bool | None, None),
             "migratory": (bool | None, None),
             "products": (list[YieldProduct] | None, None),
+        },
+        EntityType.BEAST: {
+            "species_id": (int | None, None),
+            "size_class": (SizeClass | None, None),
+            "temper": (BeastTemper | None, None),
+            "endurance": (Annotated[int, Field(ge=0, le=100)] | None, None),
+            "perception": (Annotated[int, Field(ge=0, le=100)] | None, None),
+            "willpower": (Annotated[int, Field(ge=0, le=100)] | None, None),
+            "intelligence": (Annotated[int, Field(ge=0, le=100)] | None, None),
         },
         EntityType.VESSEL: {"target_world_id": (int | None, None), "vessel_kind": (VehicleKind | None, None)},
         EntityType.LANGUAGE: {"words": (Annotated[list[WordInput], Field(min_length=1)], ...)},

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.constants.schema import KEY_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
+from aerona.db.profile_guard import register_profile_table
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.ecology import BeastTemper, Diet, DomesticationStage, RangeTrend, SizeClass, Sociality, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind
@@ -166,3 +167,8 @@ class BeastProfileRow(Base):
     woke_epoch: Mapped[int | None]
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+register_profile_table(SpeciesRangeRow.__tablename__, "species_entity_id")
+register_profile_table(HerdRow.__tablename__, "community_entity_id")
+register_profile_table(SpeciesHostRow.__tablename__, "species_entity_id")
