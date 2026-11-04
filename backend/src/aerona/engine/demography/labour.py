@@ -278,6 +278,7 @@ async def allocate(ctx: TickContext, community: EntityRow, region: RegionEnviron
                 plan.workers[target] += round_half_up(workers)
                 boost = rules.labour.slave_output_pct / PERCENT if bound and target in BOUND_JOBS else 1.0
                 output[target] = output.get(target, 0.0) + workers * mood * boost
+    customary = dict(plan.workers)
     for job, count in sorted(plan.workers.items(), key=lambda item: item[0].value):
         if count:
             plan.note(job, LabourReason.CLASS, count)
@@ -296,7 +297,8 @@ async def allocate(ctx: TickContext, community: EntityRow, region: RegionEnviron
         labour = found.get(job)
         workers = labour.workers if labour is not None and labour.held else max(0, plan.workers.get(job, 0))
         planned = output.get(job, 0.0)
-        pct = clamp_int(PERCENT * sick * (planned / workers if workers and planned else 1.0), 0, 1000)
+        base = customary.get(job, 0)
+        pct = clamp_int(PERCENT * sick * (planned / base if base and planned else 1.0), 0, 1000)
         if labour is None:
             if workers <= 0:
                 continue

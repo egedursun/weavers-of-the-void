@@ -14,7 +14,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import DriftCause
 from aerona.engine.context import TickContext
 from aerona.engine.demography.control import move_cohort
-from aerona.engine.demography.events import enslaved, ennobled, freed, ruined
+from aerona.engine.demography.events import ennobled, enslaved, freed, ruined
 from aerona.engine.demography.wealth import WEALTH_LOCK
 from aerona.engine.notes import note
 from aerona.engine.primitives.queries import living_entity
@@ -57,9 +57,7 @@ async def hold_need(ctx: TickContext, community_id: int, social_class: SocialCla
     return row
 
 
-async def edit_standing(
-    ctx: TickContext, community_id: int, social_class: SocialClass, values: Mapping[str, int], *, release: list[str]
-) -> ClassStandingRow:
+async def edit_standing(ctx: TickContext, community_id: int, social_class: SocialClass, values: Mapping[str, int], *, release: list[str]) -> ClassStandingRow:
     entity = await community(ctx, community_id)
     row = await ctx.session.get(ClassStandingRow, (entity.id, social_class))
     if row is None:
@@ -106,7 +104,9 @@ async def set_corvee(ctx: TickContext, community_id: int, share_pct: int, polity
     row.share_pct = checked("corvee share", share_pct, (0, PERCENT))
     row.polity_entity_id = polity_id
     await ctx.session.flush()
-    await note(ctx, f"A corvee was laid on {entity.name}: {row.share_pct}% of its farmhands must labour on the great works.", key="labour.corvee", ids=[entity.id])
+    await note(
+        ctx, f"A corvee was laid on {entity.name}: {row.share_pct}% of its farmhands must labour on the great works.", key="labour.corvee", ids=[entity.id]
+    )
     return row
 
 
@@ -128,7 +128,7 @@ async def edit_loyalty(ctx: TickContext, polity_id: int, member_id: int, values:
     return row
 
 
-async def impose_drift(ctx: TickContext, community_id: int, cause: DriftCause, axis: ValueAxis, amount: int, epochs: int) -> DriftImpositionRow:
+async def impose_drift(ctx: TickContext, community_id: int, cause: DriftCause, axis: ValueAxis, *, amount: int, epochs: int) -> DriftImpositionRow:
     entity = await community(ctx, community_id)
     row = DriftImpositionRow(
         community_entity_id=entity.id,
@@ -143,7 +143,9 @@ async def impose_drift(ctx: TickContext, community_id: int, cause: DriftCause, a
     return row
 
 
-async def edit_drift(ctx: TickContext, imposition_id: int, *, amount: int | None, epochs: int | None, cause: DriftCause | None, axis: ValueAxis | None) -> DriftImpositionRow:
+async def edit_drift(
+    ctx: TickContext, imposition_id: int, *, amount: int | None, epochs: int | None, cause: DriftCause | None, axis: ValueAxis | None
+) -> DriftImpositionRow:
     row = await ctx.session.get(DriftImpositionRow, imposition_id)
     if row is None:
         raise NotFoundError("No such pressure on that people.")

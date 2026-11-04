@@ -120,7 +120,7 @@ async def test_phase_creates_societies_and_moves_stocks(realm: Realm) -> None:
 
 async def test_famine_strikes_empty_granaries(realm: Realm) -> None:
     town = await settlement(realm, "Gaunt", population=4000)
-    rules = tuned(society={"famine_food": 1000, "famine_rate_pct": 1000})
+    rules = tuned(society={"famine_food": 1000, "famine_rate_pct": 1000}, consumption={"cold_death_pct": 0})
     ctx = context(realm.session, rules)
     await society_economy(ctx)
     assert stat(town, "population") == 4000 * rules.society.famine_population_kept_pct // 100

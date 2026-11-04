@@ -1036,13 +1036,25 @@ ECONOMY_ACTIONS = (
     _sync(Meta("hoard:inject", "Pour a hoard of treasure into a market", G.SOCIETY), economy.inject_hoard, economy.InjectHoard, free, ("S6.4",)),
     _sync(Meta("people:edit", "Edit a people's biology, culture and customs", G.SOCIETY), peoples.edit_people, peoples.EditPeople, free, ("S4.1",)),
     _sync(Meta("cohort:move", "Move people from one class to another", G.SOCIETY), peoples.move_cohort, peoples.MoveCohort, free, ("F12", "S4.9")),
-    _sync(Meta("needs:hold", "Hold or release how well a class's need is met", G.SOCIETY), society_depth.hold_need, society_depth.HoldNeed, free, ("F3", "S4.1")),
     _sync(
-        Meta("class:standing", "Set a class's wealth, food and needs", G.SOCIETY), society_depth.edit_standing, society_depth.EditStanding, free, ("S4.1", "S4.9")
+        Meta("needs:hold", "Hold or release how well a class's need is met", G.SOCIETY), society_depth.hold_need, society_depth.HoldNeed, free, ("F3", "S4.1")
+    ),
+    _sync(
+        Meta("class:standing", "Set a class's wealth, food and needs", G.SOCIETY),
+        society_depth.edit_standing,
+        society_depth.EditStanding,
+        free,
+        ("S4.1", "S4.9"),
     ),
     _sync(Meta("labour:set", "Hold or release the workers of a trade", G.SOCIETY), society_depth.set_labour, society_depth.SetLabour, free, ("S4.1", "S4.9")),
     _sync(Meta("labour:corvee", "Impose or lift a corvee", G.SOCIETY), society_depth.set_corvee, society_depth.SetCorvee, free, ("S4.9",)),
-    _sync(Meta("loyalty:edit", "Set a member's grievances, benefits and loyalty", G.SOCIETY), society_depth.edit_loyalty, society_depth.EditLoyalty, free, ("S4.1",)),
+    _sync(
+        Meta("loyalty:edit", "Set a member's grievances, benefits and loyalty", G.SOCIETY),
+        society_depth.edit_loyalty,
+        society_depth.EditLoyalty,
+        free,
+        ("S4.1",),
+    ),
     _sync(Meta("drift:impose", "Press an experience on a people's values", G.SOCIETY), society_depth.impose_drift, society_depth.ImposeDrift, free, ("S4.1",)),
     _sync(Meta("drift:edit", "Change a pressure on a people's values", G.SOCIETY), society_depth.edit_drift, society_depth.EditDrift, free, ("S4.1",)),
     _sync(Meta("drift:cancel", "Lift a pressure on a people's values", G.SOCIETY), society_depth.cancel_drift, society_depth.DriftTarget, free, ("S4.1",)),

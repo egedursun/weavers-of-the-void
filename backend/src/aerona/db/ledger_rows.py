@@ -61,6 +61,17 @@ WHITELISTED_TABLES = frozenset(
         "modifiers",
         "incidents",
         "incident_participants",
+        "community_societies",
+        "community_cohorts",
+        "community_labour",
+        "community_needs",
+        "class_standing",
+        "corvee_levies",
+        "polity_loyalty",
+        "drift_impositions",
+        "mobility_events",
+        "house_profiles",
+        "house_members",
     }
 )
 PERMANENT_BIRTH_TABLES = frozenset({"sons", "worlds"})

@@ -47,9 +47,9 @@ async def names_of(session: AsyncSession, ids: set[int]) -> dict[int, str]:
 async def loyalty_views(session: AsyncSession, rules: Rules, entity_id: int) -> list[LoyaltyView]:
     members = {row.polity_entity_id: row for row in await session.scalars(select(PolityMemberRow).where(PolityMemberRow.member_entity_id == entity_id))}
     rows = {row.polity_entity_id: row for row in await session.scalars(select(PolityLoyaltyRow).where(PolityLoyaltyRow.member_entity_id == entity_id))}
-    names = await names_of(session, set(members) | set(rows))
+    names = await names_of(session, set(rows))
     views: list[LoyaltyView] = []
-    for polity_id in sorted(set(members) | set(rows)):
+    for polity_id in sorted(rows):
         row = rows.get(polity_id)
         member = members.get(polity_id)
         parts = []

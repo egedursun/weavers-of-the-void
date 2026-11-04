@@ -42,7 +42,7 @@ async def test_society_depth_shows_needs_wealth_labour_and_drift(api: ApiWorld) 
         await goods_of(session, ctx.epoch).add(town.id, CommodityKind.GRAIN, 5000, GoodsFlow.SEED)
         await society_economy(ctx)
         await set_corvee(ctx, town.id, 25, None)
-        await impose_drift(ctx, town.id, DriftCause.FAMINE, ValueAxis.KINSHIP, 5, 2)
+        await impose_drift(ctx, town.id, DriftCause.FAMINE, ValueAxis.KINSHIP, amount=5, epochs=2)
         town_id = town.id
     body = (await api.http.get(f"/api/entities/{town_id}/society-depth")).json()
     assert body["entity_id"] == town_id

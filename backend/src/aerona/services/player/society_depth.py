@@ -99,7 +99,9 @@ async def hold_need(scope: PlayerScope, command: HoldNeed) -> Effect:
 
 @player_action("class:standing", ActionKind.EDIT_RECORD)
 async def edit_standing(scope: PlayerScope, command: EditStanding) -> Effect:
-    row = await control.edit_standing(await scope.context("class_standing"), command.community_id, command.social_class, command.values, release=command.release)
+    row = await control.edit_standing(
+        await scope.context("class_standing"), command.community_id, command.social_class, command.values, release=command.release
+    )
     return Effect(
         f"The {words(command.social_class.value)}s hold {row.wealth} wealth, are fed {row.fed_pct}% and have {row.needs_met_pct}% of their needs.",
         command.community_id,
@@ -131,7 +133,9 @@ async def edit_loyalty(scope: PlayerScope, command: EditLoyalty) -> Effect:
 
 @player_action("drift:impose", ActionKind.EDIT_RECORD)
 async def impose_drift(scope: PlayerScope, command: ImposeDrift) -> Effect:
-    row = await control.impose_drift(await scope.context("drift_impose"), command.community_id, command.cause, command.axis, command.amount, command.epochs)
+    row = await control.impose_drift(
+        await scope.context("drift_impose"), command.community_id, command.cause, command.axis, amount=command.amount, epochs=command.epochs
+    )
     return Effect(
         f"For {row.epochs_left} epochs, {words(command.cause.value)} will push their {words(command.axis.value)} by {row.amount}.",
         command.community_id,

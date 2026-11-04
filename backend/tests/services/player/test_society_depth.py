@@ -1,5 +1,5 @@
 import pytest
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -159,3 +159,24 @@ async def test_mobility_levers_record_events(scope: PlayerScope, session: AsyncS
     events = [row.event for row in await session.scalars(select(MobilityEventRow).order_by(MobilityEventRow.id))]
     assert events == [MobilityEvent.ENNOBLED, MobilityEvent.RUINED, MobilityEvent.ENSLAVED, MobilityEvent.FREED]
     assert all(row.by_hand for row in await session.scalars(select(MobilityEventRow)))
+
+
+async def test_undo_reverts_society_depth_levers(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
+    town = await town_of(session, world)
+    held = await society_depth.edit_standing(scope, society_depth.EditStanding(community_id=town, social_class=SocialClass.MERCHANT, values={"wealth": 4000}))
+    assert await undo(session, held.ledger_entry_id, world.cosmos.epoch) == []
+    session.expire_all()
+    assert await session.get(ClassStandingRow, (town, SocialClass.MERCHANT)) is None
+    job = await society_depth.set_labour(scope, society_depth.SetLabour(community_id=town, job=Job.TRADE, workers=90))
+    assert await undo(session, job.ledger_entry_id, world.cosmos.epoch) == []
+    session.expire_all()
+    assert await session.get(LabourRow, (town, Job.TRADE)) is None
+    corvee = await society_depth.set_corvee(scope, society_depth.SetCorvee(community_id=town, share_pct=50))
+    assert await undo(session, corvee.ledger_entry_id, world.cosmos.epoch) == []
+    session.expire_all()
+    assert await session.get(CorveeRow, town) is None
+    chained = await society_depth.enslave(scope, society_depth.Enslave(community_id=town, count=40, source=SocialClass.FARMER))
+    assert await session.scalar(select(func.count()).select_from(MobilityEventRow)) == 1
+    assert await undo(session, chained.ledger_entry_id, world.cosmos.epoch) == []
+    session.expire_all()
+    assert await session.scalar(select(func.count()).select_from(MobilityEventRow)) == 0

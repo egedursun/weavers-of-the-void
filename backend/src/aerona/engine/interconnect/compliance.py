@@ -24,15 +24,6 @@ from aerona.db.tables.culture import (
     TraditionProfileRow,
 )
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleBiologyRow, PeopleCultureRow
-from aerona.db.tables.society_depth import (
-    ClassStandingRow,
-    CommunityNeedRow,
-    CorveeRow,
-    DriftCauseRow,
-    LabourReasonRow,
-    MobilityEventRow,
-    PolityLoyaltyRow,
-)
 from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, EndemicDiseaseRow, ImmunityRow, OutbreakRow, QuarantineRow
 from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesHostRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow, SpeciesYieldRow
 from aerona.db.tables.economy import (
@@ -98,6 +89,15 @@ from aerona.db.tables.polity import (
     VassalageRow,
 )
 from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
+from aerona.db.tables.society_depth import (
+    ClassStandingRow,
+    CommunityNeedRow,
+    CorveeRow,
+    DriftCauseRow,
+    LabourReasonRow,
+    MobilityEventRow,
+    PolityLoyaltyRow,
+)
 from aerona.db.tables.warfare import SiegeRow, WarSideRow
 
 
@@ -664,7 +664,13 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
     ),
     ComplianceRow(
         "S4.1",
-        (CommunityNeedRow.__tablename__, ClassStandingRow.__tablename__, LabourReasonRow.__tablename__, DriftCauseRow.__tablename__, PolityLoyaltyRow.__tablename__),
+        (
+            CommunityNeedRow.__tablename__,
+            ClassStandingRow.__tablename__,
+            LabourReasonRow.__tablename__,
+            DriftCauseRow.__tablename__,
+            PolityLoyaltyRow.__tablename__,
+        ),
         ("society_economy", "mind_needs", "labour_allocation", "mind_values", "polity_cycles", "markets"),
         ("needs:hold", "class:standing", "labour:set", "drift:impose", "drift:edit", "drift:cancel", "loyalty:edit"),
         ("NeedsBasket", "LabourReasons", "CultureDrift", "LoyaltyBreakdown"),

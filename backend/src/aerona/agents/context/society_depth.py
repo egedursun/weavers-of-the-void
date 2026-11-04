@@ -62,7 +62,11 @@ async def loyalty_line(session: AsyncSession, home: EntityRow) -> str:
 
 async def labour_lines(session: AsyncSession, home: EntityRow) -> list[str]:
     rows = list(await session.scalars(select(LabourRow).where(LabourRow.community_entity_id == home.id, LabourRow.workers > 0)))
-    lines = [f"{row.workers} at {words(row.job.value)}{' (held)' if row.held else ''}" for row in sorted(rows, key=lambda item: -item.workers) if row.job is not Job.IDLE]
+    lines = [
+        f"{row.workers} at {words(row.job.value)}{' (held)' if row.held else ''}"
+        for row in sorted(rows, key=lambda item: -item.workers)
+        if row.job is not Job.IDLE
+    ]
     corvee = await session.get(CorveeRow, home.id)
     if corvee is not None:
         lines.append(f"a corvee takes {corvee.share_pct}% of the farmhands for great works")

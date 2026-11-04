@@ -50,6 +50,7 @@ import { COMMODITY, type CommodityKind } from '../economy/labels'
 import { BAND, named } from '../environment/labels'
 import { PRESSURE_ICONS, VALUE_ICONS } from '../mind/labels'
 import { MindPicker } from '../mind/parts'
+import { LabourDepth } from './LabourDepth'
 import { useDemography } from './api'
 import {
   AESTHETIC_SPEC,
@@ -1004,6 +1005,7 @@ export function LabourSection({ communityId }: { communityId: number }) {
               <JobTile key={row.job} row={row} />
             ))}
         </div>
+        <LabourDepth communityId={communityId} />
       </div>
     </Section>
   )

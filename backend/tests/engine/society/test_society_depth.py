@@ -386,7 +386,7 @@ async def test_backfill_fills_wealth_and_needs_once(realm: Realm) -> None:
 async def test_impositions_feed_the_drift_and_staples_come_from_culture(realm: Realm) -> None:
     folk = await people(realm, "Plainsfolk")
     ctx = context(realm.session)
-    row = await impose_drift(ctx, folk.id, DriftCause.WAR_LOST, ValueAxis.MARTIAL, 10, 2)
+    row = await impose_drift(ctx, folk.id, DriftCause.WAR_LOST, ValueAxis.MARTIAL, amount=10, epochs=2)
     found = await impositions_of(realm.session, folk.id)
     assert [item.id for item in found] == [row.id]
     await spend_impositions(realm.session, found)
