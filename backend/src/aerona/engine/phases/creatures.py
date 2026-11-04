@@ -8,7 +8,9 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
@@ -20,8 +22,6 @@ from aerona.engine.cosmos.fauna import (
     BESTOWED,
     DANGER_KEY,
     SPECIES_STAT_KEYS,
-    STRENGTH_KEY,
-    assign_traits,
     common_child,
     species_danger,
     traits_of,
@@ -29,7 +29,8 @@ from aerona.engine.cosmos.fauna import (
 )
 from aerona.engine.cosmos.resources import set_mechanics, travel_resource
 from aerona.engine.cosmos.sanity import sanity_of, shift_sanity
-from aerona.engine.ecology.foodweb import broken_links, diet_allows, form_link, regions_of
+from aerona.engine.ecology.foodweb import derive_links
+from aerona.engine.ecology.profiles import assign_traits
 from aerona.engine.ecology.ranges import adapt_subspecies
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
@@ -339,50 +340,16 @@ async def megafauna(ctx: TickContext) -> int:
     return trails
 
 
-async def _prey_for(
-    ctx: TickContext, hunter: EntityRow, species: list[EntityRow], atlas: RegionAtlas, *, megafauna_ids: set[int], ranges: dict[int, dict[int, int]]
-) -> EntityRow | None:
-    margin = ctx.rules.creatures.predation_danger_margin
-    hunter_danger = species_danger(ctx.rules, hunter)
-    candidates = [
-        prey
-        for prey in species
-        if prey.id != hunter.id
-        and prey.world_id == hunter.world_id
-        and prey.id not in megafauna_ids
-        and (atlas.same_region(hunter.id, prey.id) or (hunter.location_id is not None and hunter.location_id == prey.location_id))
-        and hunter_danger >= species_danger(ctx.rules, prey) + margin
-        and stat_or(hunter, STRENGTH_KEY, 0) >= stat_or(prey, STRENGTH_KEY, 0)
-    ]
-    for prey in sorted(candidates, key=lambda prey: (species_danger(ctx.rules, prey), prey.id)):
-        if await diet_allows(ctx, hunter, prey, ranges):
-            return prey
-    return None
-
-
 async def predator_bonds(ctx: TickContext) -> int:
-    creatures = ctx.rules.creatures
     species = await _species(ctx)
-    ids = {item.id for item in species}
-    hunting = {bond.source_node_id for bond in await active_bonds(ctx.session, [BondKind.HUNTS]) if bond.target_node_id in ids}
-    atlas = await RegionAtlas.load(ctx.session)
-    megafauna_ids = await flags_by_entity(ctx.session, EntityFlag.MEGAFAUNA)
-    rng = ctx.rng("predation")
-    ranges = await regions_of(ctx)
-    ctx.count("hunting_links_broken", await broken_links(ctx, species, ranges))
-    formed = 0
-    for hunter in species:
-        if formed >= creatures.predation_link_cap:
-            break
-        if hunter.id in hunting:
-            continue
-        prey = await _prey_for(ctx, hunter, species, atlas, megafauna_ids=megafauna_ids, ranges=ranges)
-        if prey is None or not rng.chance(creatures.predation_link_chance):
-            continue
-        await form_link(ctx, hunter, prey)
-        await note(ctx, f"{hunter.name} began hunting the herds of {prey.name}.", key="creatures.predation", ids=[hunter.id, prey.id])
-        formed += 1
-    return formed
+    change = await derive_links(ctx, species)
+    ctx.count("hunting_links_broken", change.broken)
+    names = {item.id: item.name for item in species}
+    for hunter_id, prey_ids in sorted(change.formed.items()):
+        prey = [names[item] for item in prey_ids if item in names]
+        listed = prey[0] if len(prey) == 1 else f"{', '.join(prey[:-1])} and {prey[-1]}"
+        await note(ctx, f"{names[hunter_id]} began hunting {listed}.", key="creatures.predation", ids=[hunter_id, *prey_ids])
+    return sum(len(items) for items in change.formed.values())
 
 
 async def _hunt_pairs(ctx: TickContext) -> list[tuple[BondRow, EntityRow, EntityRow]]:
@@ -465,7 +432,11 @@ async def invasive_pressure(ctx: TickContext) -> None:
     "table.holder_levels",
     "table.name_registry",
     "table.nodes",
+    "table.bodies",
+    "table.region_environment",
+    "table.species_profiles",
     "table.species_ranges",
+    "table.species_yields",
     "table.world_maps",
 )
 @writes(
@@ -474,6 +445,7 @@ async def invasive_pressure(ctx: TickContext) -> None:
     "region.danger",
     "region.fertility",
     "species.danger",
+    "species.intelligence",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
@@ -484,6 +456,9 @@ async def invasive_pressure(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
+    "table.species_profiles",
+    "table.species_uses",
+    "table.species_yields",
 )
 async def creature_phase(ctx: TickContext) -> None:
     for species in await _species(ctx):
@@ -575,30 +550,58 @@ async def creature_rebellion(ctx: TickContext) -> int:
     return risen
 
 
+def isolated(atlas: RegionAtlas, region_id: int, lands: set[int]) -> bool:
+    return not set(atlas.neighbour_regions(region_id)) & (lands - {region_id})
+
+
+def unlike(rules: Rules, home: RegionEnvironmentRow | None, land: RegionEnvironmentRow | None) -> bool:
+    if home is None or land is None:
+        return False
+    return land.dominant_terrain is not home.dominant_terrain or abs(land.temperature - home.temperature) >= rules.habitat.subspecies_gap
+
+
+async def drifting_range(ctx: TickContext, atlas: RegionAtlas, species: EntityRow) -> SpeciesRangeRow | None:
+    rows = list(
+        await ctx.session.scalars(
+            select(SpeciesRangeRow)
+            .where(SpeciesRangeRow.species_entity_id == species.id, SpeciesRangeRow.abundance > 0)
+            .order_by(SpeciesRangeRow.region_entity_id)
+        )
+    )
+    if len(rows) < 2:
+        return None
+    home = max(rows, key=lambda row: (row.abundance, -row.region_entity_id))
+    home_land = await ctx.session.get(RegionEnvironmentRow, home.region_entity_id)
+    lands = {row.region_entity_id for row in rows}
+    old = ctx.epoch - ctx.rules.creatures.speciation_min_epochs
+    for row in sorted(rows, key=lambda item: (item.since_epoch, item.region_entity_id)):
+        if row is home or row.since_epoch > old or not isolated(atlas, row.region_entity_id, lands):
+            continue
+        if unlike(ctx.rules, home_land, await ctx.session.get(RegionEnvironmentRow, row.region_entity_id)):
+            return row
+    return None
+
+
 async def speciation(ctx: TickContext) -> int:
     creatures = ctx.rules.creatures
     rng = ctx.rng("speciation")
+    atlas = await RegionAtlas.load(ctx.session)
     born = 0
     for species in await _species(ctx):
         if born >= creatures.speciation_cap:
             break
-        homes = [
-            bond
-            for bond in await active_bonds(ctx.session, [BondKind.LIVES_IN], sources=[species.id])
-            if bond.epoch <= ctx.epoch - creatures.speciation_min_epochs
-        ]
-        if not homes or not rng.chance(ctx.rules.creatures.speciation_chance):
+        row = await drifting_range(ctx, atlas, species)
+        if row is None or not rng.chance(creatures.speciation_chance):
             continue
-        bond = min(homes, key=lambda item: (item.epoch, item.id))
-        home = await ctx.session.get(EntityRow, bond.target_node_id)
-        if home is None or home.status is not EntityStatus.CANON:
+        region = await ctx.session.get(EntityRow, row.region_entity_id)
+        if region is None or region.status is not EntityStatus.CANON or region.entity_type is not EntityType.REGION:
             continue
-        await _branch_subspecies(ctx, species, home, bond)
+        await _branch_subspecies(ctx, species, region)
         born += 1
     return born
 
 
-async def _branch_subspecies(ctx: TickContext, species: EntityRow, home: EntityRow, bond: BondRow) -> EntityRow:
+async def _branch_subspecies(ctx: TickContext, species: EntityRow, home: EntityRow) -> EntityRow:
     deviation = ctx.rules.creatures.speciation_stat_deviation
     rng = ctx.rng("subspecies")
     stats = species.stats
@@ -625,9 +628,10 @@ async def _branch_subspecies(ctx: TickContext, species: EntityRow, home: EntityR
         ),
     )
     bonds = BondRepository(ctx.session)
-    await adapt_subspecies(ctx, species, child, home.id)
     await bonds.connect(BondDraft(child.id, species.id, BondKind.DESCENDS_FROM, ctx.epoch, "evolution"))
-    await bonds.deactivate(bond, ctx.epoch, "speciation")
+    await adapt_subspecies(ctx, species, child, home.id)
+    for bond in await active_bonds(ctx.session, [BondKind.LIVES_IN], sources=[species.id], targets=[home.id]):
+        await bonds.deactivate(bond, ctx.epoch, "speciation")
     await note(
         ctx, f"{species.name} diverged into a new subspecies in the lands of {home.name}.", key="creatures.speciation", ids=[species.id, child.id, home.id]
     )
@@ -711,6 +715,10 @@ async def spare_prey(session: AsyncSession, species_id: int, epoch: int) -> int:
     bonds = BondRepository(session)
     for bond in await bonds.incoming(species_id, BondKind.HUNTS):
         await bonds.deactivate(bond, epoch, "spared by the creator")
+        hunter = await session.get(SpeciesProfileRow, bond.source_node_id)
+        if hunter is not None:
+            hunter.barred_prey = sorted({*hunter.barred_prey, species_id})
+            hunter.pinned_prey = [prey for prey in hunter.pinned_prey if prey != species_id]
         closed += 1
     return closed
 
@@ -766,6 +774,11 @@ async def creature_rebellion_phase(ctx: TickContext) -> None:
     "table.epoch_year_cursors",
     "table.name_registry",
     "table.nodes",
+    "table.region_environment",
+    "table.species_profiles",
+    "table.species_ranges",
+    "table.species_yields",
+    "table.world_maps",
 )
 @writes(
     "table.bonds",
@@ -777,6 +790,10 @@ async def creature_rebellion_phase(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
+    "table.species_profiles",
+    "table.species_ranges",
+    "table.species_uses",
+    "table.species_yields",
 )
 async def speciation_phase(ctx: TickContext) -> None:
     await speciation(ctx)

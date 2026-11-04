@@ -1,9 +1,10 @@
 from sqlalchemy import JSON, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from aerona.constants.schema import KEY_MAX_LENGTH
+from aerona.constants.schema import KEY_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
+from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.ecology import BeastTemper, Diet, DomesticationStage, RangeTrend, SizeClass, Sociality, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
@@ -27,7 +28,7 @@ class SpeciesProfileRow(Base):
     )
 
     species_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
-    body_plan: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH), default="quadruped")
+    body_plan: Mapped[BodyPlan] = mapped_column(enum_type(BodyPlan, "body_plan"), default=BodyPlan.QUADRUPED)
     size_class: Mapped[SizeClass] = mapped_column(enum_type(SizeClass, "size_class"), default=SizeClass.MEDIUM)
     lifespan_years: Mapped[int] = mapped_column(default=10)
     maturity_years: Mapped[int] = mapped_column(default=1)
@@ -55,6 +56,8 @@ class SpeciesProfileRow(Base):
     sacred_to_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     stage_epoch: Mapped[int] = mapped_column(default=0)
     updated_epoch: Mapped[int] = mapped_column(default=0)
+    pinned_prey: Mapped[list[int]] = mapped_column(JSON, default=list)
+    barred_prey: Mapped[list[int]] = mapped_column(JSON, default=list)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
@@ -81,6 +84,7 @@ class SpeciesYieldRow(Base):
     product: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH), primary_key=True)
     commodity: Mapped[CommodityKind | None] = mapped_column(enum_type(CommodityKind, "commodity"))
     material: Mapped[MaterialKind | None] = mapped_column(enum_type(MaterialKind, "material"))
+    world_material_id: Mapped[int | None] = mapped_column(ForeignKey("world_materials.id", ondelete="SET NULL"))
     rate: Mapped[int] = mapped_column(default=1)
 
 
@@ -91,12 +95,33 @@ class SpeciesUseRow(Base):
     use: Mapped[SpeciesUse] = mapped_column(enum_type(SpeciesUse, "use"), primary_key=True)
 
 
+class SpeciesUseKindRow(Base):
+    __tablename__ = "species_use_kinds"
+    __table_args__ = (between("output_pct", 0, 1000),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
+    base_use: Mapped[SpeciesUse] = mapped_column(enum_type(SpeciesUse, "base_use"))
+    output_pct: Mapped[int] = mapped_column(default=100)
+    description: Mapped[str | None] = mapped_column(String(SHORT_TEXT_MAX_LENGTH))
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class SpeciesCustomUseRow(Base):
+    __tablename__ = "species_custom_uses"
+    __table_args__ = (Index("ix_species_custom_uses_kind", "kind_id"),)
+
+    species_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    kind_id: Mapped[int] = mapped_column(ForeignKey("species_use_kinds.id", ondelete="CASCADE"), primary_key=True)
+
+
 class SpeciesHostRow(Base):
     __tablename__ = "species_hosts"
 
     species_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     disease_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     immune: Mapped[bool] = mapped_column(default=False)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class HerdRow(Base):

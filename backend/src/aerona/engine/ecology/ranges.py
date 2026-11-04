@@ -72,8 +72,22 @@ async def load_wilds(ctx: TickContext, species: list[EntityRow], invasive: set[i
     return wilds
 
 
+async def holy_to_gods(ctx: TickContext, wilds: Wilds) -> None:
+    worshipped: dict[int, set[int]] = defaultdict(set)
+    for keeper, god in await ctx.session.execute(
+        select(BondRow.source_node_id, BondRow.target_node_id).where(BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE)
+    ):
+        region = wilds.atlas.top_region(keeper)
+        if region is not None:
+            worshipped[god].add(region)
+    for species_id, profile in wilds.profiles.items():
+        if profile.sacred_to_node_id is not None:
+            wilds.sacred[species_id] |= worshipped.get(profile.sacred_to_node_id, set())
+
+
 async def sacred_and_sick(ctx: TickContext, wilds: Wilds) -> None:
     atlas = wilds.atlas
+    await holy_to_gods(ctx, wilds)
     for church in (await FaithBook.load(ctx.session)).churches.values():
         held = church.tenets.get(TenetKind.SACRED_SPECIES)
         if held is not None and held.target is not None and held.target.isdigit():
@@ -270,12 +284,22 @@ def settle(row: SpeciesRangeRow, delta: float, epoch: int) -> None:
     row.updated_epoch = epoch
 
 
-def overall(rules: Rules, rows: list[SpeciesRangeRow]) -> int:
-    living = sorted((row.abundance for row in rows if row.abundance > 0), reverse=True)
-    if not living:
-        return 0
-    established = sum(1 for value in living[1:] if value >= rules.ecology.critical)
-    return clamp_int(living[0] + established * rules.habitat.range_bonus, 0, PERCENT)
+def size_weights(atlas: RegionAtlas, regions: dict[int, EntityRow]) -> dict[int, float]:
+    sizes: dict[int, int] = {}
+    by_world: dict[int | None, list[int]] = defaultdict(list)
+    for region_id, region in regions.items():
+        record = atlas.record(region_id)
+        if record is not None and record.size > 0 and not atlas.is_water(region_id):
+            sizes[region_id] = record.size
+            by_world[region.world_id].append(record.size)
+    means = {world: sum(values) / len(values) for world, values in by_world.items() if values}
+    return {region_id: size / means[regions[region_id].world_id] for region_id, size in sizes.items()}
+
+
+def overall(rules: Rules, rows: list[SpeciesRangeRow], weights: dict[int, float]) -> int:
+    weight = rules.habitat.range_weight_pct / PERCENT
+    total = sum(row.abundance * weights.get(row.region_entity_id, 1.0) * weight for row in rows if row.abundance > 0)
+    return clamp_int(round_half_up(total), 0, PERCENT)
 
 
 async def seed(ctx: TickContext, wilds: Wilds, species: list[EntityRow], initial: dict[int, int]) -> int:
@@ -375,6 +399,8 @@ async def migrate(ctx: TickContext, wilds: Wilds, species: list[EntityRow]) -> i
             )
             ctx.session.add(target)
             wilds.ranges[item.id][end] = target
+        if "abundance" in target.locked:
+            continue
         share = round_half_up(source.abundance * table.migration_pct / PERCENT)
         source.abundance -= share
         target.abundance = clamp_int(target.abundance + share, 0, PERCENT)
@@ -393,7 +419,9 @@ async def harvest_hunt(ctx: TickContext, wilds: Wilds, species_id: int, region: 
         for item in products:
             amount = round_half_up(share * item.rate)
             if amount > 0 and item.commodity is not None:
-                taken += await ledger.add(community.id, item.commodity, amount, GoodsFlow.EXTRACTION, material=item.material)
+                taken += await ledger.add(
+                    community.id, item.commodity, amount, GoodsFlow.EXTRACTION, material=item.material, world_material_id=item.world_material_id
+                )
     return taken
 
 
@@ -411,8 +439,6 @@ TERRAIN_WORDS = {
     "island": "island",
     "volcanic": "ash",
 }
-COLD = 0
-HOT = 25
 
 
 async def adapt_subspecies(ctx: TickContext, parent: EntityRow, child: EntityRow, region_id: int) -> str:
@@ -426,7 +452,9 @@ async def adapt_subspecies(ctx: TickContext, parent: EntityRow, child: EntityRow
         middle = (source.temperature_min + source.temperature_max) / 2
         shift = drift if land.temperature > middle else -drift
         row.temperature_min, row.temperature_max = source.temperature_min + shift, source.temperature_max + shift
-        index = SIZE_ORDER.index(source.size_class) + (1 if land.temperature <= COLD else -1 if land.temperature >= HOT else 0)
+        table = ctx.rules.habitat
+        swing = 1 if land.temperature <= table.subspecies_cold else -1 if land.temperature >= table.subspecies_hot else 0
+        index = SIZE_ORDER.index(source.size_class) + swing
         row.size_class = SIZE_ORDER[max(0, min(len(SIZE_ORDER) - 1, index))]
         row.habitat = {**source.habitat, land.dominant_terrain.value: PERCENT}
     child.subtype = f"{word} subspecies"

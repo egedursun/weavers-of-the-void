@@ -1145,6 +1145,17 @@ WILDS_ACTIONS = (
     _sync(Meta("beast:bind", "Bind or loose a beast", G.CREATURES), wilds.bind, wilds.Bind, free, ("S3.3a",)),
     _sync(Meta("beast:lair", "Shift a beast's lair", G.CREATURES), wilds.shift_lair, wilds.Lair, free, ("S3.3a",)),
     _sync(Meta("beast:spawn", "Raise a named beast from a kind", G.CREATURES), wilds.spawn, wilds.Spawn, free, ("S3.3a",)),
+    _sync(Meta("species:create", "Create a new kind with a chosen nature", G.CREATURES), wilds.create_species, wilds.CreateSpecies, free, ("S3.2",)),
+    _sync(Meta("species:prey", "Set what a kind hunts", G.CREATURES), wilds.set_prey, wilds.Prey, free, ("S3.2",)),
+    _sync(Meta("species:custom_use", "Keep a kind in a way of your own", G.CREATURES), wilds.set_custom_use, wilds.CustomUse, free, ("S3.2",)),
+    _sync(Meta("use_kind:create", "Devise a new way of keeping beasts", G.CREATURES), wilds.create_use_kind, wilds.NewUseKind, free, ("S3.2",)),
+    _sync(Meta("use_kind:edit", "Reshape a way of keeping beasts", G.CREATURES), wilds.edit_use_kind, wilds.EditUseKind, free, ("S3.2",)),
+    _sync(Meta("use_kind:drop", "Forget a way of keeping beasts", G.CREATURES), wilds.drop_use_kind, wilds.UseKindTarget, free, ("S3.2",)),
+    _sync(Meta("herd:drop", "Scatter a community's herd", G.CREATURES), wilds.drop_herd, wilds.HerdTarget, free, ("S3.2",)),
+    _sync(Meta("people:totem", "Set or clear a people's totem kind", G.CREATURES), wilds.set_totem, wilds.Totem, free, ("S3.2",)),
+    _sync(Meta("beast:create", "Call forth a new named beast", G.CREATURES), wilds.create_beast, wilds.CreateBeast, free, ("S3.3a",)),
+    _sync(Meta("beast:slay", "Slay a named beast", G.CREATURES), wilds.slay, wilds.Slay, free, ("S3.3a",)),
+    _sync(Meta("beast:treasure", "Lay an item in a beast's hoard or take it out", G.CREATURES), wilds.move_treasure, wilds.Treasure, free, ("S3.3a",)),
 )
 
 ENVIRONMENT_ACTIONS = (

@@ -39,9 +39,11 @@ from aerona.db.tables.disease import (
 from aerona.db.tables.ecology import (
     BeastProfileRow,
     HerdRow,
+    SpeciesCustomUseRow,
     SpeciesHostRow,
     SpeciesProfileRow,
     SpeciesRangeRow,
+    SpeciesUseKindRow,
     SpeciesUseRow,
     SpeciesYieldRow,
 )
@@ -351,9 +353,11 @@ __all__ = [
     "SoulJudgementRow",
     "SoulRow",
     "SpeakerCohortRow",
+    "SpeciesCustomUseRow",
     "SpeciesHostRow",
     "SpeciesProfileRow",
     "SpeciesRangeRow",
+    "SpeciesUseKindRow",
     "SpeciesUseRow",
     "SpeciesYieldRow",
     "SpiritProfileRow",

@@ -29,6 +29,7 @@ from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.models.phonology import Phonology
 from aerona.engine.body.book import ensure_species_body
+from aerona.engine.ecology.profiles import SpeciesSpec, profile_of
 from aerona.engine.gods.progress import power_ceiling
 from aerona.engine.gods.rewards import RewardDraft, creation_gains, creation_value, fade_pct, record_reward
 from aerona.engine.phases.exploration import land_measure
@@ -252,6 +253,18 @@ def _traits(call: SonCall, args: CreationInput) -> list[CreatureTrait]:
     return list(dict.fromkeys(traits))[: call.rules.son_tools.creature_max_traits]
 
 
+def species_spec(args: CreationInput) -> SpeciesSpec:
+    return SpeciesSpec(
+        body_plan=args.option("body_plan"),
+        size_class=args.option("size_class"),
+        diet=args.option("diet"),
+        sociality=args.option("sociality"),
+        nocturnal=args.option("nocturnal"),
+        migratory=args.option("migratory"),
+        products=tuple(dict.fromkeys(args.option("products") or [])),
+    )
+
+
 async def _insert(call: SonCall, plan: CreationPlan) -> EntityRow:
     args = plan.args
     entity_type = plan.spec.type
@@ -410,6 +423,7 @@ async def create_entity(call: SonCall, args: CreationInput, entity_type: EntityT
     call.target(created.id)
     if entity_type is EntityType.SPECIES:
         await ensure_species_body(call.session, created, args.option("body_plan"))
+        await profile_of(call.tick, created, species_spec(args))
     await _bonds(call, plan, created)
     effect_notes = await apply_effects(call, created, plan.effects)
     if plan.effects is not None:

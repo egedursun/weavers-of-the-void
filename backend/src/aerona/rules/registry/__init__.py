@@ -199,7 +199,16 @@ from aerona.rules.registry.travel import TravelRules
 from aerona.rules.registry.travel_methods import TravelMethodsRules
 from aerona.rules.registry.ui import UiRules
 from aerona.rules.registry.weather import WeatherRules
-from aerona.rules.registry.wilds import BeastsRules, DomesticationRules, ExtinctionRules, FoodWebRules, HabitatRules, PestsRules, TotemsRules
+from aerona.rules.registry.wilds import (
+    BeastsRules,
+    DomesticationRules,
+    ExtinctionRules,
+    FoodWebRules,
+    HabitatRules,
+    PestsRules,
+    SpeciesNatureRules,
+    TotemsRules,
+)
 from aerona.rules.registry.wonders import WondersRules
 from aerona.rules.registry.world_balance import WorldBalanceRules
 from aerona.rules.registry.world_birth import WorldBirthRules
@@ -251,6 +260,7 @@ class Rules:
     extinction: ExtinctionRules = field(default_factory=ExtinctionRules)
     totems: TotemsRules = field(default_factory=TotemsRules)
     beasts: BeastsRules = field(default_factory=BeastsRules)
+    species_nature: SpeciesNatureRules = field(default_factory=SpeciesNatureRules)
     geography: GeographyRules = field(default_factory=GeographyRules)
     life_cycles: LifeCyclesRules = field(default_factory=LifeCyclesRules)
     remembrance: RemembranceRules = field(default_factory=RemembranceRules)

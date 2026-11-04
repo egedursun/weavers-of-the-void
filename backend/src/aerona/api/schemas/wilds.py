@@ -1,6 +1,9 @@
+from pydantic import Field
+
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
-from aerona.domain.enums.ecology import BeastTemper, Diet, DomesticationStage, RangeTrend, SizeClass, Sociality, SpeciesUse
+from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.ecology import BeastTemper, Diet, DomesticationStage, FoodLink, RangeTrend, SizeClass, Sociality, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import CreatureTrait
@@ -20,12 +23,60 @@ class YieldView(ApiModel):
     product: str
     commodity: CommodityKind | None
     material: MaterialKind | None
+    world_material_id: int | None = None
+    world_material: str | None = None
     rate: int
 
 
 class HostView(ApiModel):
     disease: NodeRef | None
     immune: bool
+    locked: list[str] = Field(default_factory=list)
+
+
+class CustomUseView(ApiModel):
+    kind_id: int
+    name: str
+    base_use: SpeciesUse
+    output_pct: int
+
+
+class UseKindView(ApiModel):
+    id: int
+    name: str
+    base_use: SpeciesUse
+    output_pct: int
+    description: str | None
+    locked: list[str]
+    species: list[NodeRef]
+
+
+class TotemView(ApiModel):
+    people_id: int
+    species: NodeRef | None
+    tradition: NodeRef | None
+
+
+class RangeCell(ApiModel):
+    region: NodeRef
+    abundance: int
+    trend: RangeTrend
+    fit: int
+
+
+class SpeciesRangeMap(ApiModel):
+    species_id: int
+    world_id: int | None
+    peak: int
+    cells: list[RangeCell]
+
+
+class TributeView(ApiModel):
+    town: NodeRef | None
+    treaty: NodeRef | None
+    commodity: CommodityKind
+    units: int
+    last_kept_epoch: int | None
 
 
 class HerdView(ApiModel):
@@ -40,7 +91,7 @@ class HerdView(ApiModel):
 
 class SpeciesCard(ApiModel):
     species_id: int
-    body_plan: str
+    body_plan: BodyPlan
     size_class: SizeClass
     lifespan_years: int
     maturity_years: int
@@ -76,6 +127,12 @@ class SpeciesCard(ApiModel):
     hunted_by: list[NodeRef]
     descendants: list[NodeRef]
     beasts: list[NodeRef]
+    pinned_prey: list[NodeRef] = Field(default_factory=list)
+    barred_prey: list[NodeRef] = Field(default_factory=list)
+    custom_uses: list[CustomUseView] = Field(default_factory=list)
+    totem_of: list[NodeRef] = Field(default_factory=list)
+    abundance: int = 0
+    stage_epoch: int = 0
     locked: list[str]
 
 
@@ -114,6 +171,14 @@ class BeastCard(ApiModel):
     injuries: list[BeastWound]
     body_plan: str | None
     hp: int
+    treasures: list[NodeRef] = Field(default_factory=list)
+    tributes: list[TributeView] = Field(default_factory=list)
+    reach: int = 0
+    harm_taken_pct: int = 100
+    wake_pct: int = 0
+    tame_pct: int = 0
+    rest_pct: int = 0
+    rideable: bool = False
     locked: list[str]
 
 
@@ -127,6 +192,7 @@ class WebNode(ApiModel):
 class WebLink(ApiModel):
     hunter_id: int
     prey_id: int
+    kind: FoodLink = FoodLink.DERIVED
 
 
 class FoodWeb(ApiModel):
