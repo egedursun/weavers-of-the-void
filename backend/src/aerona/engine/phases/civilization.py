@@ -29,6 +29,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import RouteBook, method_label, world_name
 from aerona.engine.cosmos.tiers import TierScene, may, planned_tiers, tier_lock, tier_of
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.mortal.kin import fosterers_of, parents_of
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.polity.accords import Clause, sign
@@ -475,7 +476,7 @@ async def spontaneous_barter(ctx: TickContext) -> None:
 
 
 async def adopt(ctx: TickContext, adopter: EntityRow, child: EntityRow) -> str:
-    await BondRepository(ctx.session).connect(BondDraft(child.id, adopter.id, BondKind.DESCENDS_FROM, ctx.epoch, "adopted: left alone, taken in"))
+    await BondRepository(ctx.session).connect(BondDraft(child.id, adopter.id, BondKind.FOSTERED_BY, ctx.epoch, "adopted: left alone, taken in"))
     await change_relation(ctx, adopter.id, child.id, ctx.rules.civilization.adoption_relation, MemoryKind.GOODWILL, note="adoption")
     text = f"{adopter.name} adopted the orphaned {child.name}."
     await ctx.chronicle(ChronicleKind.LINEAGE, text, template_key="civilization.adoption", entity_ids=[adopter.id, child.id])
@@ -483,8 +484,8 @@ async def adopt(ctx: TickContext, adopter: EntityRow, child: EntityRow) -> str:
 
 
 async def _orphan(ctx: TickContext, child: EntityRow) -> bool:
-    for bond in await active_bonds(ctx.session, [BondKind.DESCENDS_FROM], sources=[child.id]):
-        parent = await ctx.session.get(EntityRow, bond.target_node_id)
+    for parent_id in [*await parents_of(ctx.session, child.id), *await fosterers_of(ctx.session, child.id)]:
+        parent = await ctx.session.get(EntityRow, parent_id)
         if parent is not None and parent.entity_type is EntityType.MORTAL and parent.status is EntityStatus.CANON:
             return False
     return True
@@ -512,7 +513,11 @@ async def _adoption_candidate(ctx: TickContext) -> tuple[EntityRow, EntityRow] |
             near = adopter.location_id == child.location_id and adopter.location_id is not None
             if not near and atlas.distance(adopter.id, child.id) > civ.adoption_distance:
                 continue
-            if await bonds.exists_between(adopter.id, child.id, BondKind.DESCENDS_FROM) or await bonds.exists_between(adopter.id, child.id, BondKind.ENEMY):
+            if (
+                await bonds.exists_between(adopter.id, child.id, BondKind.PARENT_OF)
+                or await bonds.exists_between(adopter.id, child.id, BondKind.FOSTERED_BY)
+                or await bonds.exists_between(adopter.id, child.id, BondKind.ENEMY)
+            ):
                 continue
             return adopter, child
     return None

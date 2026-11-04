@@ -1,4 +1,5 @@
 from aerona.db.tables.factions import FactionActionRow, FactionGoalRow, FactionMembershipRow, FactionProfileRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import (
     ClaimRow,
     HeirloomRow,
@@ -6,7 +7,6 @@ from aerona.db.tables.polity import (
     HouseProfileRow,
     LawJurisdictionRow,
     LawProfileRow,
-    MortalReputeRow,
     OathRow,
     OfficeHistoryRow,
     OfficeRow,
@@ -235,7 +235,7 @@ REALM_MECHANICS = (
         backfill="none: office powers default from the office kind",
         templates=("polity.coup", "polity.usurper_accepted", "polity.works", "polity.debt_default", "polity.tier_rose", "polity.tier_fell"),
         fields=("powers", "title", "embassy", "honour", "infamy", "lender", "loans", "tier_strain", "province", "coinage"),
-        tables=(MortalReputeRow.__tablename__,),
+        tables=(MortalProfileRow.__tablename__,),
         targets=("polity", "mortal", "army", "faction", *COMMUNITIES),
         couplings=(
             Coupling(Subsystem.WAR, "the marshal drills the realm's armies", EdgeKind.MODIFIER, "government.marshal_cohesion"),
@@ -267,7 +267,7 @@ REALM_MECHANICS = (
     Mechanic(
         key="factions",
         spec_item="S4.3",
-        title="Factions: sixteen kinds pursuing typed goals by lobbying, bribery, petitions, strikes, riots, coups, assassination, smuggling, raids and war funding",
+        title="Factions: sixteen kinds pursuing typed goals by lobbying, bribes, petitions, strikes, riots, coups, murder, smuggling, raids and war funding",
         subsystem=Subsystem.SOCIAL,
         phases=("factions",),
         surface=Surface(drawer="section-faction"),

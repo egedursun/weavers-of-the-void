@@ -14,7 +14,6 @@ from aerona.api.schemas.realms import (
     LawKindSpec,
     LawParamSpec,
     LawView,
-    RealmLoanView,
     MemberView,
     NamedNode,
     OathsView,
@@ -22,6 +21,7 @@ from aerona.api.schemas.realms import (
     OfficeView,
     PartyView,
     RealmLink,
+    RealmLoanView,
     RealmView,
     ReputeView,
     SentenceView,
@@ -40,12 +40,12 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import (
     ClaimRow,
     HeirloomRow,
     HouseMemberRow,
     HouseProfileRow,
-    MortalReputeRow,
     OathRow,
     OfficeRow,
     PolityMemberRow,
@@ -170,7 +170,7 @@ async def realm(services: ServicesDep, polity_id: int = Path(ge=1)) -> RealmView
                 select(SentenceRow).where(SentenceRow.settlement_entity_id.in_(list(found.members) or [-1])).order_by(SentenceRow.epoch, SentenceRow.id)
             )
         )
-        repute = await session.get(MortalReputeRow, found.ruler_id) if found.ruler_id is not None else None
+        repute = await session.get(MortalProfileRow, found.ruler_id) if found.ruler_id is not None else None
         ids |= {*(row.lender_entity_id for row in loans), *balance, *(row.mortal_entity_id for row in sentences)}
         ids |= {office.target_entity_id for office in found.offices if office.target_entity_id}
         names = await names_of(session, ids)
@@ -200,7 +200,7 @@ async def realm(services: ServicesDep, polity_id: int = Path(ge=1)) -> RealmView
             ],
             vassal_terms=[vassal_view(row, names) for row in vassals],
             overlord_terms=vassal_view(overlord, names) if overlord is not None else None,
-            ruler_repute=ReputeView(mortal_id=repute.mortal_entity_id, honour=repute.honour, infamy=repute.infamy, locked=list(repute.locked))
+            ruler_repute=ReputeView(mortal_id=repute.entity_id, honour=repute.honour, infamy=repute.infamy, locked=list(repute.locked))
             if repute is not None
             else None,
             sentences=[
@@ -313,11 +313,9 @@ async def house(services: ServicesDep, house_id: int = Path(ge=1)) -> HouseView:
         mortals = {row.id: row for row in await session.scalars(select(EntityRow).where(EntityRow.id.in_(ids)))} if ids else {}
         parents: dict[int, list[int]] = {}
         for bond in await session.scalars(
-            select(BondRow).where(
-                BondRow.kind == BondKind.DESCENDS_FROM, BondRow.source_node_id.in_(ids), BondRow.state.in_([BondState.ACTIVE, BondState.PAST])
-            )
+            select(BondRow).where(BondRow.kind == BondKind.PARENT_OF, BondRow.target_node_id.in_(ids), BondRow.state.in_([BondState.ACTIVE, BondState.PAST]))
         ):
-            parents.setdefault(bond.source_node_id, []).append(bond.target_node_id)
+            parents.setdefault(bond.target_node_id, []).append(bond.source_node_id)
         wounds: dict[int, int] = {}
         for bearer in await session.scalars(
             select(InjuryRow.bearer_node_id).where(InjuryRow.bearer_node_id.in_(ids), InjuryRow.state.in_(list(LASTING_INJURY_STATES)))

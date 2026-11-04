@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from aerona.catalog.laws import LAW_PARAMS, PENALTY_CRUELTY, PENALTY_HARM
+from aerona.catalog.laws import PENALTY_CRUELTY
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -8,22 +8,20 @@ from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import ClaimRow, PolityMemberRow, SentenceRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
-from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import ROBBER_KINDS, FactionKind
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.polity import CrimeKind, LawKind
+from aerona.domain.enums.mortal import CrimeKind, PunishmentKind
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarStatus
-from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import patron_node
-from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.mortal.justice import MUTILATIONS, code_punishment, sentence
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.repute import shift_infamy
-from aerona.engine.primitives.queries import add_flag
 from aerona.engine.settlement.book import Town, ledger
 
 RECENT_EPOCHS = 2
@@ -119,8 +117,7 @@ async def offenders(ctx: TickContext, town_id: int, laws: LawBook) -> dict[Crime
     return found
 
 
-async def sentence(ctx: TickContext, town: Town, laws: LawBook, *, ruler_id: int | None) -> SentenceRow | None:
-    table = ctx.rules.crime
+async def judge_town(ctx: TickContext, town: Town, laws: LawBook, *, judge: EntityRow | None) -> SentenceRow | None:
     found = {kind: rows for kind, rows in (await offenders(ctx, town.entity.id, laws)).items() if rows}
     if not found:
         return None
@@ -128,27 +125,21 @@ async def sentence(ctx: TickContext, town: Town, laws: LawBook, *, ruler_id: int
     crime = rng.pick(sorted(found, key=lambda kind: list(CrimeKind).index(kind)))
     culprit = rng.pick(found[crime])
     row = laws.in_force(town.entity.id, LawKind.PENAL_CODE)
-    default = LAW_PARAMS[LawKind.PENAL_CODE][crime.value].default
-    penalty = str(row.params.get(crime.value, default) if row is not None else default)
+    punishment = await code_punishment(ctx, town.entity.id, crime)
     record = SentenceRow(
         mortal_entity_id=culprit.id,
         settlement_entity_id=town.entity.id,
         law_entity_id=row.law_entity_id if row is not None else None,
         crime=crime,
-        penalty=penalty,
+        penalty=punishment.value,
         epoch=ctx.epoch,
     )
     ctx.session.add(record)
-    if penalty == "exile":
-        culprit.location_id = None
-        await add_flag(ctx.session, culprit.id, EntityFlag.EXILE, ctx.epoch)
-    elif penalty in {"fine", "wergild"}:
-        ledger(ctx, town, TreasuryEntry.TAX, ctx.rules.legislation.fine_amount, f"{crime.value} {penalty}")
-    else:
-        hp = PENALTY_HARM.get(penalty, table.punishment_hp)
-        if hp > 0:
-            await apply_hits(ctx, culprit, Harm(hp, HarmCause.PUNISHMENT, f"punished for {crime.value} in {town.entity.name}"))
-    if ruler_id is not None and PENALTY_CRUELTY.get(penalty, 0) >= CRUEL:
-        await shift_infamy(ctx, ruler_id, ctx.rules.legislation.penal_infamy * PENALTY_CRUELTY.get(penalty, 0) // PERCENT)
+    if punishment is PunishmentKind.FINE:
+        ledger(ctx, town, TreasuryEntry.TAX, ctx.rules.legislation.fine_amount, f"{crime.value} fine")
+    cruelty = PENALTY_CRUELTY.get(punishment.value, 0)
+    if judge is not None and punishment not in MUTILATIONS and cruelty >= CRUEL:
+        await shift_infamy(ctx, judge.id, ctx.rules.legislation.penal_infamy * cruelty // PERCENT)
+    await sentence(ctx, culprit, crime, punishment, judge=judge)
     ctx.count(f"sentence.{crime.value}")
     return record

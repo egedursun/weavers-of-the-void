@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from sqlalchemy import select
 
 from aerona.catalog.lore import TRADITIONS
@@ -8,6 +10,7 @@ from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.faith import SpiritProfileRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
@@ -16,11 +19,13 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.faith import SpiritAlignment
 from aerona.domain.enums.mind import MemoryKind, ValueAxis, ValueHolder
+from aerona.domain.enums.region import DangerSource
 from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.domain.models.entity_stats import TraditionStats
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import holding
+from aerona.engine.environment.dangers import ease_danger
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.research import has_technique
@@ -58,6 +63,13 @@ WORDS = (
 FIT = 50
 HUNGRY = 0
 MATURITY = 16
+
+
+@dataclass(frozen=True)
+class Keeping:
+    weight: float = 1.0
+    relief: float = 0.0
+    in_season: bool | None = None
 
 
 def kind_of(tradition: EntityRow) -> TraditionKind:
@@ -142,9 +154,9 @@ async def push_values(ctx: TickContext, community: EntityRow, values: dict[Value
     await write_values(ctx.session, ValueHolder.CULTURE, community.id, stored)
 
 
-async def feast(ctx: TickContext, community: EntityRow, row: TraditionProfileRow, share: float) -> bool:
+async def feast(ctx: TickContext, community: EntityRow, row: TraditionProfileRow, share: float, relief: float = 0.0) -> bool:
     society = await ctx.session.get(CommunitySocietyRow, community.id)
-    food = row.cost.get("food", 0)
+    food = round_half_up(row.cost.get("food", 0) * max(0.0, 1 - relief))
     if food and society is not None and society.stock_food <= HUNGRY:
         await cohere(ctx, community, -ctx.rules.traditions.skipped_cohesion)
         return False
@@ -190,10 +202,9 @@ async def placate(ctx: TickContext, community: EntityRow) -> int:
 
 async def welcome(ctx: TickContext, community: EntityRow, atlas: RegionAtlas) -> bool:
     region_id = atlas.top_region(community.id)
-    region = await ctx.session.get(EntityRow, region_id) if region_id is not None else None
-    if region is None:
+    if region_id is None:
         return False
-    shift_stat(region, "danger", -ctx.rules.traditions.hospitality_danger)
+    await ease_danger(ctx.session, ctx.rules, region_id, DangerSource.BANDITS, ctx.rules.traditions.hospitality_danger)
     return True
 
 
@@ -226,20 +237,30 @@ async def gladden(ctx: TickContext, community: EntityRow) -> None:
         setattr(society, key, clamp_int(getattr(society, key) + step, 0, PERCENT))
 
 
-async def celebrate(ctx: TickContext, tradition: EntityRow, community: EntityRow, atlas: RegionAtlas) -> str | None:
+async def rest(ctx: TickContext, community: EntityRow, share: float) -> None:
+    table = ctx.rules.seasonal
+    town = await ctx.session.get(SettlementProfileRow, community.id)
+    if town is not None and "unrest" not in town.locked:
+        town.unrest = clamp_int(town.unrest - round_half_up(table.siesta_unrest * share), 0, PERCENT)
+    society = await ctx.session.get(CommunitySocietyRow, community.id)
+    if society is not None:
+        for social_class in SocialClass:
+            key = f"satisfaction_{social_class.value}"
+            setattr(society, key, clamp_int(getattr(society, key) + round_half_up(table.siesta_satisfaction * share), 0, PERCENT))
+    shift_stat(community, "prosperity", -round_half_up(table.siesta_prosperity * share), 0)
+
+
+async def keep_vigil(ctx: TickContext, community: EntityRow, share: float) -> None:
+    table = ctx.rules.seasonal
+    town = await ctx.session.get(SettlementProfileRow, community.id)
+    if town is not None and "crime" not in town.locked:
+        town.crime = clamp_int(town.crime - round_half_up(table.vigil_crime * share), 0, PERCENT)
+    await push_values(ctx, community, {ValueAxis.PIETY: table.vigil_piety}, share)
+    await placate(ctx, community)
+
+
+async def observe(ctx: TickContext, kind: TraditionKind, tradition: EntityRow, community: EntityRow, atlas: RegionAtlas, *, share: float) -> None:
     table = ctx.rules.traditions
-    row = await profile_of(ctx, tradition)
-    part = await participate(ctx, tradition, community)
-    counted = 1 + ctx.rules.technique_effects.calendar_pct / PERCENT if await has_technique(ctx.session, community.id, Technique.CALENDAR) else 1.0
-    share = min(1.0, part.participation / PERCENT * counted)
-    if not await feast(ctx, community, row, share):
-        part.skipped += 1
-        return "skipped"
-    part.last_celebrated_epoch = ctx.epoch
-    spec = TRADITIONS[row.kind]
-    if spec.values:
-        await push_values(ctx, community, spec.values, share)
-    kind = row.kind
     if kind in {K.FESTIVAL, K.COMING_OF_AGE, K.MOURNING, K.HARVEST_RITE, K.INITIATION}:
         await cohere(ctx, community, round_half_up(table.festival_cohesion * share))
     if kind is K.FESTIVAL:
@@ -260,7 +281,28 @@ async def celebrate(ctx: TickContext, tradition: EntityRow, community: EntityRow
         await push_values(ctx, community, {ValueAxis.MARTIAL: table.war_dance_martial}, share)
     if kind in {K.OFFERING, K.PILGRIMAGE, K.FAST}:
         await push_values(ctx, community, {ValueAxis.PIETY: table.piety}, share)
-    return kind.value
+    if kind is K.SIESTA:
+        await rest(ctx, community, share)
+    if kind is K.NIGHT_VIGIL:
+        await keep_vigil(ctx, community, share)
+
+
+async def celebrate(ctx: TickContext, tradition: EntityRow, community: EntityRow, atlas: RegionAtlas, keeping: Keeping | None = None) -> str | None:
+    row = await profile_of(ctx, tradition)
+    part = await participate(ctx, tradition, community)
+    keeping = keeping or Keeping()
+    counted = 1 + ctx.rules.technique_effects.calendar_pct / PERCENT if await has_technique(ctx.session, community.id, Technique.CALENDAR) else 1.0
+    share = min(1.0, part.participation / PERCENT * counted) * keeping.weight
+    row.in_season = keeping.in_season
+    if not await feast(ctx, community, row, share, keeping.relief):
+        part.skipped += 1
+        return "skipped"
+    part.last_celebrated_epoch = ctx.epoch
+    spec = TRADITIONS[row.kind]
+    if spec.values:
+        await push_values(ctx, community, spec.values, share)
+    await observe(ctx, row.kind, tradition, community, atlas, share=share)
+    return row.kind.value
 
 
 async def taboos(ctx: TickContext, community_id: int) -> set[str]:

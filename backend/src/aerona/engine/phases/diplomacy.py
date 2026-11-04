@@ -4,13 +4,14 @@ from sqlalchemy import and_, or_, select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
-from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import ClauseKind, LawKind, PartyRole, RegionalStanding, TreatyKind, TreatyStatus
 from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.engine.body.cohorts import war_appetite
@@ -18,6 +19,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.routes import blockade_pressure
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import betrayal_drive, closeness, war_drive
+from aerona.engine.mortal.kinship import marry
 from aerona.engine.phase import Phase
 from aerona.engine.phases.afterlife import cosmic_court
 from aerona.engine.polity.accords import Clause, end_treaty, sign, treaty_between
@@ -166,7 +168,6 @@ async def _exhaustion_peaces(ctx: TickContext, candidates: list[tuple[int, int, 
 
 async def form_alliance(ctx: TickContext, first: EntityRow, second: EntityRow, sides: SideIndex, marriage: bool) -> tuple[EntityRow, EntityRow] | None:
     rules = ctx.rules.diplomacy
-    bonds = BondRepository(ctx.session)
     spouses: tuple[EntityRow, EntityRow] | None = None
     if marriage:
         first_heir = next(iter(_marriageable(ctx, sides, first.id)), None)
@@ -176,15 +177,15 @@ async def form_alliance(ctx: TickContext, first: EntityRow, second: EntityRow, s
     clauses = [Clause(ClauseKind.CALL_TO_ARMS, first.id, second.id), Clause(ClauseKind.CALL_TO_ARMS, second.id, first.id)]
     if spouses is not None:
         clauses.append(Clause(ClauseKind.MARRIAGE, first.id, second.id, {"first_id": spouses[0].id, "second_id": spouses[1].id}))
-    await sign(
+    treaty = await sign(
         ctx,
         TreatyKind.MARRIAGE_PACT if marriage else TreatyKind.ALLIANCE_DEFENSIVE,
         [(first.id, PartyRole.SIGNATORY), (second.id, PartyRole.SIGNATORY)],
         clauses=clauses,
         until=ctx.epoch + (ctx.rules.treaties.marriage_treaty_epochs if marriage else ctx.rules.treaties.alliance_epochs),
     )
-    if marriage and spouses is not None and not await bonds.exists_between(spouses[0].id, spouses[1].id, BondKind.LOVES):
-        await bonds.connect(BondDraft(spouses[0].id, spouses[1].id, BondKind.LOVES, ctx.epoch, "marriage alliance"))
+    if marriage and spouses is not None:
+        await marry(ctx.session, spouses[0], spouses[1], ctx.epoch, kind=MarriageKind.POLITICAL, treaty_id=treaty.id, description="marriage alliance")
     if marriage:
         await change_relation(ctx, first.id, second.id, rules.marriage_relation, MemoryKind.MARRIED_INTO, note="marriage")
     ctx.count("alliances")
@@ -469,7 +470,7 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.incident_participants",
     "table.incidents",
     "table.memories",
-    "table.mortal_repute",
+    "table.mortal_profiles",
     "table.name_registry",
     "table.oaths",
     "table.treaty_breaches",
@@ -479,6 +480,7 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.war_sides",
     "table.wars",
 )
+@writes("table.memories", "table.sons")
 async def diplomacy(ctx: TickContext) -> None:
     ctx.count("alliances_lapsed", await alliance_lifetimes(ctx))
     counters = DiplomacyCounters()

@@ -122,14 +122,6 @@ class LawKind(StrEnum):
     CUSTOM = "custom"
 
 
-class CrimeKind(StrEnum):
-    THEFT = "theft"
-    MURDER = "murder"
-    TREASON = "treason"
-    BLASPHEMY = "blasphemy"
-    DESERTION = "desertion"
-
-
 class LegitimacyBasis(StrEnum):
     CUSTOM = "custom"
     DECREE = "decree"

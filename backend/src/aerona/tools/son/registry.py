@@ -12,7 +12,27 @@ from aerona.rules.registry import Rules
 from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.ports import ToolPorts
 from aerona.tools.framework.spec import ToolSpec
-from aerona.tools.son import bloodline, cosmos, death, influence, intervention, kin, knowledge, language, memory, prayer, read, resources, treaties, war
+from aerona.tools.son import (
+    bloodline,
+    cosmos,
+    death,
+    faith,
+    influence,
+    intervention,
+    kin,
+    knowledge,
+    land,
+    language,
+    memory,
+    mortals,
+    places,
+    prayer,
+    read,
+    regions,
+    resources,
+    treaties,
+    war,
+)
 from aerona.tools.son.availability import SonWorldState, condition_holds, star_lines
 from aerona.tools.son.creation import creation_specs, example_cost
 from aerona.tools.son.creation_rules import cheap_creation
@@ -23,6 +43,7 @@ FAMILIES: tuple[Callable[[], list[SonSpec]], ...] = (
     memory.specs,
     language.specs,
     kin.specs,
+    mortals.specs,
     prayer.specs,
     creation_specs,
     resources.specs,
@@ -33,7 +54,11 @@ FAMILIES: tuple[Callable[[], list[SonSpec]], ...] = (
     treaties.specs,
     bloodline.specs,
     death.specs,
+    faith.specs,
     cosmos.specs,
+    places.specs,
+    land.specs,
+    regions.specs,
 )
 PORT_TAGS: dict[str, Callable[[ToolPorts], bool]] = {
     "views": lambda ports: ports.views is not None,

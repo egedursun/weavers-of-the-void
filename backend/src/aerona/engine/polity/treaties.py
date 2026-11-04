@@ -15,11 +15,13 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind, TreatyStatus
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import TributeStatus, WarCause, WarSide, WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.mind.drives import greed_drive
+from aerona.engine.mortal.kinship import marry
 from aerona.engine.polity.accords import (
     DEFAULT_CLAUSES,
     Clause,
@@ -38,7 +40,7 @@ from aerona.engine.polity.oaths import break_oath
 from aerona.engine.polity.repute import shift_honour, shift_infamy
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
-from aerona.engine.primitives.queries import active_bonds, connect, living_entity
+from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.society import move_stock
 from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.primitives.strength import MilitaryStrength
@@ -258,10 +260,18 @@ async def keep_clause(ctx: TickContext, profile: TreatyProfileRow, clause: Treat
                 await breach(ctx, profile, clause.obligor_node_id, clause=clause, reason="it marched soldiers into the demilitarised land")
                 return False
     elif clause.kind is ClauseKind.MARRIAGE and "first_id" in clause.params and "second_id" in clause.params:
-        first, second = int(clause.params["first_id"]), int(clause.params["second_id"])
-        alive = await living_entity(ctx.session, first) is not None and await living_entity(ctx.session, second) is not None
-        if alive and not await active_bonds(ctx.session, [BondKind.LOVES], sources=[first], targets=[second]):
-            await connect(ctx.session, first, second, BondKind.LOVES, ctx.epoch, description="marriage by treaty")
+        first_spouse = await living_entity(ctx.session, int(clause.params["first_id"]))
+        second_spouse = await living_entity(ctx.session, int(clause.params["second_id"]))
+        if first_spouse is not None and second_spouse is not None and first_spouse.entity_type is second_spouse.entity_type is EntityType.MORTAL:
+            await marry(
+                ctx.session,
+                first_spouse,
+                second_spouse,
+                ctx.epoch,
+                kind=MarriageKind.POLITICAL,
+                treaty_id=profile.treaty_entity_id,
+                description="marriage by treaty",
+            )
     elif clause.kind is ClauseKind.EXTRADITION and clause.beneficiary_node_id is not None and clause.obligor_node_id is not None:
         fugitives = await ctx.session.scalars(
             select(EntityRow).where(
@@ -278,6 +288,8 @@ async def keep_clause(ctx: TickContext, profile: TreatyProfileRow, clause: Treat
 
 async def pay_tribute(ctx: TickContext, profile: TreatyProfileRow, clause: TreatyClauseRow) -> bool:
     table = ctx.rules.treaties
+    if clause.params.get("hoard"):
+        return True
     payer = await living_entity(ctx.session, clause.obligor_node_id) if clause.obligor_node_id is not None else None
     receiver = await living_entity(ctx.session, clause.beneficiary_node_id) if clause.beneficiary_node_id is not None else None
     if payer is None or receiver is None:

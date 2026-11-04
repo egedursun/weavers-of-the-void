@@ -24,7 +24,9 @@ from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarCause, WarSide, WarStatus
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.causes import succession_incident
 from aerona.engine.mind.book import traits_of
+from aerona.engine.mortal.kin import children_of, siblings_of
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook, sex_of
 from aerona.engine.polity.formation import set_ruler
@@ -230,26 +232,20 @@ async def purge(ctx: TickContext, realm: Realm) -> int:
 
 
 async def kin(ctx: TickContext, ruler: EntityRow) -> tuple[list[EntityRow], list[EntityRow], list[EntityRow]]:
-    bonds = await ctx.session.scalars(
-        select(BondRow).where(BondRow.kind == BondKind.DESCENDS_FROM, BondRow.state == BondState.ACTIVE, BondRow.target_node_id == ruler.id)
-    )
-    children = [
-        child for bond in bonds if (child := await living_entity(ctx.session, bond.source_node_id)) is not None and child.entity_type is EntityType.MORTAL
-    ]
+    children = [child for child_id in await children_of(ctx.session, ruler.id) if (child := await living_mortal(ctx, child_id)) is not None]
     grandchildren: list[EntityRow] = []
     for child in children:
-        for bond in await active_bonds(ctx.session, [BondKind.DESCENDS_FROM], targets=[child.id]):
-            found = await living_entity(ctx.session, bond.source_node_id)
-            if found is not None and found.entity_type is EntityType.MORTAL:
+        for grandchild_id in await children_of(ctx.session, child.id):
+            found = await living_mortal(ctx, grandchild_id)
+            if found is not None:
                 grandchildren.append(found)
-    parents = [bond.target_node_id for bond in await active_bonds(ctx.session, [BondKind.DESCENDS_FROM], sources=[ruler.id])]
-    siblings: list[EntityRow] = []
-    for parent in parents:
-        for bond in await active_bonds(ctx.session, [BondKind.DESCENDS_FROM], targets=[parent]):
-            found = await living_entity(ctx.session, bond.source_node_id)
-            if found is not None and found.entity_type is EntityType.MORTAL and found.id != ruler.id and found not in siblings:
-                siblings.append(found)
+    siblings = [sibling for sibling_id in await siblings_of(ctx.session, ruler.id) if (sibling := await living_mortal(ctx, sibling_id)) is not None]
     return children, grandchildren, siblings
+
+
+async def living_mortal(ctx: TickContext, node_id: int) -> EntityRow | None:
+    found = await living_entity(ctx.session, node_id)
+    return found if found is not None and found.entity_type is EntityType.MORTAL else None
 
 
 def gender_rank(rule: GenderRule, mortal: EntityRow) -> int | None:
@@ -553,6 +549,7 @@ async def press_claims(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
             key="polity.succession_war",
             ids=[claimant.id, realm.entity.id, host.id],
             kind=ChronicleKind.CIVILIZATION,
+            cause_incident_id=await succession_incident(ctx.session, realm.entity.id, [realm.ruler_id]),
         )
     return wars
 

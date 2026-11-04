@@ -1,10 +1,12 @@
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 
-from sqlalchemy import ColumnElement, case, exists, false, func, select, true
+from sqlalchemy import ColumnElement, case, exists, false, func, or_, select, true
 
 from aerona.catalog.chronicle import chronicle_notification, is_visible
+from aerona.catalog.incident_roles import positional_role
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.core.random import SeededRandom
@@ -51,6 +53,18 @@ class LastIncident:
 
 
 LAST_INCIDENT: ContextVar[LastIncident | None] = ContextVar("last_incident", default=None)
+CAUSE_SCOPE: ContextVar[int | None] = ContextVar("cause_scope", default=None)
+
+
+@contextmanager
+def caused_by(incident_id: int | None) -> Iterator[None]:
+    token = CAUSE_SCOPE.set(incident_id if incident_id is not None else CAUSE_SCOPE.get())
+    try:
+        yield
+    finally:
+        CAUSE_SCOPE.reset(token)
+
+
 KIND_WEIGHTS: dict[ChronicleKind, int] = {
     ChronicleKind.WAR: 50,
     ChronicleKind.DEATH: 40,
@@ -123,7 +137,8 @@ class ChronicleRepository(Repository):
         linked = [entity_id for entity_id in entity_ids if entity_id in existing]
         self.session.add_all(ChronicleEntityRow(chronicle_id=row.id, entity_id=entity_id, position=position) for position, entity_id in enumerate(linked))
         involved = [*linked, *([draft.son_id] if draft.son_id is not None else [])]
-        cause = draft.cause_incident_id if draft.cause_incident_id is not None else await self.cause_of(involved, draft.epoch)
+        scoped = CAUSE_SCOPE.get()
+        cause = draft.cause_incident_id if draft.cause_incident_id is not None else scoped if scoped is not None else await self.cause_of(involved, draft.epoch)
         magnitude = draft.magnitude or min(PERCENT, KIND_WEIGHTS.get(draft.kind, DEFAULT_WEIGHT) + PARTICIPANT_WEIGHT * len(involved))
         incident = IncidentRow(
             kind=draft.template_key or draft.kind.value,
@@ -137,7 +152,12 @@ class ChronicleRepository(Repository):
         )
         await self.insert(incident)
         participants = [
-            IncidentParticipantRow(incident_id=incident.id, node_id=entity_id, role=draft.roles.get(entity_id, IncidentRole.SUBJECT), position=position)
+            IncidentParticipantRow(
+                incident_id=incident.id,
+                node_id=entity_id,
+                role=draft.roles.get(entity_id) or positional_role(draft.template_key, entity_ids.index(entity_id)) or IncidentRole.SUBJECT,
+                position=position,
+            )
             for position, entity_id in enumerate(linked)
         ]
         if draft.son_id is not None and draft.son_id not in linked:
@@ -160,6 +180,25 @@ class ChronicleRepository(Repository):
             .limit(1)
         )
         found: int | None = await self.session.scalar(statement)
+        return found
+
+    async def prior_incident(self, node_ids: Sequence[int], kinds: Sequence[str] = (), *, before_epoch: int | None = None, shared: bool = False) -> int | None:
+        wanted = list(dict.fromkeys(node_ids))
+        if not wanted:
+            return None
+        statement = (
+            select(IncidentRow.id)
+            .join(IncidentParticipantRow, IncidentParticipantRow.incident_id == IncidentRow.id)
+            .where(IncidentParticipantRow.node_id.in_(wanted), IncidentParticipantRow.role.not_in(QUIET_ROLES))
+        )
+        if kinds:
+            statement = statement.where(or_(*(IncidentRow.kind.startswith(kind) for kind in kinds)))
+        if before_epoch is not None:
+            statement = statement.where(IncidentRow.epoch <= before_epoch)
+        statement = statement.group_by(IncidentRow.id)
+        if shared and len(wanted) > 1:
+            statement = statement.having(func.count(func.distinct(IncidentParticipantRow.node_id)) >= len(wanted))
+        found: int | None = await self.session.scalar(statement.order_by(IncidentRow.id.desc()).limit(1))
         return found
 
     async def witness(self, incident_id: int, node_ids: Sequence[int]) -> None:

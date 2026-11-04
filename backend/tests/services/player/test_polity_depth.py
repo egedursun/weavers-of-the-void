@@ -4,11 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.factions import FactionGoalRow, FactionMembershipRow, FactionProfileRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import (
     ClaimRow,
     HouseProfileRow,
     LawProfileRow,
-    MortalReputeRow,
     OathRow,
     OfficeRow,
     TreatyBreachRow,
@@ -139,7 +139,7 @@ async def test_a_seized_throne_marks_the_usurper_with_infamy(scope: PlayerScope,
     found = next(item for item in book.realms.values() if item.profile.core_entity_id == core)
     ctx = await scope.context("test_coup")
     assert await seize_throne(ctx, found, usurper, "a test of arms")
-    repute = await session.get(MortalReputeRow, usurper.id)
+    repute = await session.get(MortalProfileRow, usurper.id)
     assert found.ruler_id == usurper.id and "usurper" in found.profile.legitimacy_parts and repute is not None and repute.infamy > 0
 
 
@@ -169,7 +169,7 @@ async def test_a_house_can_be_reshaped_and_an_oath_released_with_honour(scope: P
     oath = await session.scalar(select(OathRow).where(OathRow.swearer_entity_id == lord.id))
     assert oath is not None
     await realms.release_oath(scope, realms.OathTarget(oath_id=oath.id))
-    repute = await session.get(MortalReputeRow, lord.id)
+    repute = await session.get(MortalProfileRow, lord.id)
     assert oath.status is OathStatus.KEPT and repute is not None and repute.honour > 50
 
 

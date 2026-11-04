@@ -3,6 +3,7 @@ import {
   ArrowDown,
   ArrowUp,
   Brain,
+  DoorClosed,
   Flame,
   Ghost,
   Link2,
@@ -12,7 +13,7 @@ import {
   Scale,
   Skull,
   Sparkles,
-  Trash2,
+  Unlink,
   Users,
 } from 'lucide-react'
 import { api } from '@/api/client'
@@ -48,6 +49,14 @@ import {
   RefLink,
   Tag,
 } from '../realm/parts'
+import {
+  PossessionCard,
+  RaiseSoul,
+  RealmGods,
+  SoulLedger,
+  SoulSeal,
+} from './Souls'
+import { StratumEditor } from './Strata'
 import { type SoulCard, type Stratum, useAfterlife, useSoul } from './api'
 import {
   ALIGNMENTS,
@@ -58,7 +67,7 @@ import {
   RITES,
   SOUL_STATES,
   STRATA,
-  criterion,
+  criteriaText,
 } from './labels'
 
 const PERCENT = 100
@@ -150,11 +159,11 @@ function SoulLevers({
         })
       ),
   })
-  const seal = useGodAction({
+  const loose = useGodAction({
     run: () =>
       unwrap(
-        api.POST('/api/actions/soul:seal', {
-          body: { spirit_id: id, sealed: !soul.sealed },
+        api.POST('/api/actions/soul:bind', {
+          body: { spirit_id: id, target_id: 0, binding: 'none' },
         })
       ),
   })
@@ -192,7 +201,7 @@ function SoulLevers({
     judge.isPending,
     release.isPending,
     bind.isPending,
-    seal.isPending,
+    loose.isPending,
     reborn.isPending,
     edit.isPending
   )
@@ -244,16 +253,6 @@ function SoulLevers({
             >
               <Save />
               Save the soul
-            </Button>
-            <Button
-              size='sm'
-              variant='outline'
-              disabled={busy !== null}
-              disabledReason={busy ?? undefined}
-              onClick={() => seal.mutate(undefined)}
-            >
-              <Lock />
-              {soul.sealed ? 'Break the seal' : 'Seal against rebirth'}
             </Button>
             <Button
               size='sm'
@@ -333,6 +332,18 @@ function SoulLevers({
               <Link2 />
               Bind
             </Button>
+            {soul.binding !== 'none' && (
+              <Button
+                size='sm'
+                variant='ghost'
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() => loose.mutate(undefined)}
+              >
+                <Unlink />
+                Loose it
+              </Button>
+            )}
           </div>
         </LeverGroup>
         <LeverGroup title='Send it back'>
@@ -410,13 +421,27 @@ function SoulBody({
           />
         )}
         {soul.gate && <Tag spec={named(GATES, soul.gate)} />}
+        {soul.patron_name && (
+          <Tag
+            spec={{ label: 'Patron', icon: Sparkles, tone: 'gold' }}
+            text={`Of ${soul.patron_name}`}
+          />
+        )}
         {soul.traits.map((trait) => (
           <Badge key={trait} size='sm' variant='outline'>
             {sentence(trait)}
           </Badge>
         ))}
       </Hero>
-      <div className='grid min-w-0 grid-cols-1 gap-3 @xs/soul:grid-cols-2'>
+      <div className='grid min-w-0 grid-cols-1 gap-3 @xs/soul:grid-cols-3'>
+        <KpiTile
+          label='Unrest'
+          value={soul.unrest}
+          icon={Skull}
+          tone={soul.unrest >= 60 ? 'danger' : 'muted'}
+          meter={{ value: soul.unrest, max: PERCENT, label: 'Unrest' }}
+          hint='Restless souls haunt, and the vengeful possess'
+        />
         <KpiTile
           label='Memory of the living'
           value={soul.memory_strength}
@@ -438,21 +463,23 @@ function SoulBody({
           hint={`${goodBand(soul.veneration, VENERATION_WORDS).label}; offerings from the peoples who honour it`}
         />
       </div>
-      {(soul.bound || soul.possessing || soul.reborn_as) && (
+      <SoulSeal
+        key={`${soul.sealed}.${soul.seal_strength}`}
+        soul={soul}
+        blocked={blocked}
+      />
+      <PossessionCard
+        key={`${soul.possession?.host?.id ?? 0}.${soul.possession?.stress ?? 0}`}
+        soul={soul}
+        blocked={blocked}
+      />
+      {(soul.bound || soul.reborn_as) && (
         <Panel title='Ties to the living' icon={Link2} tone='verdigris'>
           <div className='flex min-w-0 flex-col gap-2'>
             {soul.bound && (
               <div className='flex min-w-0 items-center gap-2'>
                 <Tag spec={named(BINDINGS, soul.binding)} text='Bound to' />
                 <RefLink node={soul.bound} />
-              </div>
-            )}
-            {soul.possessing && (
-              <div className='flex min-w-0 items-center gap-2'>
-                <Tag
-                  spec={{ label: 'Possessing', icon: Ghost, tone: 'danger' }}
-                />
-                <RefLink node={soul.possessing} />
               </div>
             )}
             {soul.reborn_as && (
@@ -552,6 +579,19 @@ function SoulBody({
           </Timeline>
         </Panel>
       )}
+      <SoulLedger
+        key={JSON.stringify([
+          soul.deeds,
+          soul.imprint,
+          soul.traits,
+          soul.rite,
+          soul.state,
+          soul.patron_son_id,
+          soul.locked,
+        ])}
+        soul={soul}
+        blocked={blocked}
+      />
       <SoulLevers
         soul={soul}
         strata={realm.data?.strata ?? []}
@@ -598,25 +638,7 @@ function StratumRung({
   last: boolean
   blocked: string | null
 }) {
-  const [name, setName] = useState(stratum.name)
-  const save = useGodAction({
-    run: () =>
-      unwrap(
-        api.POST('/api/actions/afterlife:stratum', {
-          body: { realm_id: realmId, kind: stratum.kind, name, remove: false },
-        })
-      ),
-  })
-  const remove = useGodAction({
-    run: () =>
-      unwrap(
-        api.POST('/api/actions/afterlife:stratum', {
-          body: { realm_id: realmId, kind: stratum.kind, remove: true },
-        })
-      ),
-  })
   const souls = useShowMore(stratum.souls, SOULS_SHOWN)
-  const busy = busyOf(blocked, save.isPending, remove.isPending)
   const spec = named(STRATA, stratum.kind)
   return (
     <TimelineItem
@@ -630,9 +652,26 @@ function StratumRung({
       <div data-surface='Stratum' className='flex min-w-0 flex-col gap-2'>
         <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
           <Tag spec={spec} />
-          {Object.entries(stratum.criteria).map(([key, value]) => (
-            <Badge key={key} size='sm' variant='outline'>
-              {criterion(key, value)}
+          {stratum.closed && (
+            <Tag
+              spec={{ label: 'Gates closed', icon: DoorClosed, tone: 'muted' }}
+            />
+          )}
+          {stratum.son_name && (
+            <Tag
+              spec={{ label: 'Ruler', icon: Sparkles, tone: 'gold' }}
+              text={`Only for ${stratum.son_name}`}
+            />
+          )}
+          {stratum.cult && (
+            <Tag
+              spec={{ label: 'Church', icon: Users, tone: 'info' }}
+              text={`Claimed by ${stratum.cult.name}`}
+            />
+          )}
+          {criteriaText(stratum.criteria).map((line) => (
+            <Badge key={line} size='sm' variant='outline'>
+              {line}
             </Badge>
           ))}
         </div>
@@ -663,41 +702,18 @@ function StratumRung({
           </div>
         )}
         <ShowMore state={souls} noun={['soul', 'souls']} />
-        <AdjustPanel
-          trigger='Edit'
-          title='Rename or unmake'
-          note='Unmaking a stratum sends its souls to be judged again.'
-        >
-          <div className='flex min-w-0 flex-wrap items-end gap-2'>
-            <div className='flex min-w-48 flex-1 flex-col gap-1'>
-              <Label>Name</Label>
-              <Input
-                value={name}
-                aria-label='Name'
-                onChange={(event) => setName(event.target.value)}
-              />
-            </div>
-            <Button
-              size='sm'
-              disabled={busy !== null}
-              disabledReason={busy ?? undefined}
-              onClick={() => save.mutate(undefined)}
-            >
-              <Save />
-              Rename
-            </Button>
-            <Button
-              size='sm'
-              variant='outline'
-              disabled={busy !== null}
-              disabledReason={busy ?? undefined}
-              onClick={() => remove.mutate(undefined)}
-            >
-              <Trash2 />
-              Unmake
-            </Button>
-          </div>
-        </AdjustPanel>
+        <StratumEditor
+          key={JSON.stringify([
+            stratum.name,
+            stratum.criteria,
+            stratum.son_id,
+            stratum.cult?.id,
+            stratum.closed,
+          ])}
+          realmId={realmId}
+          stratum={stratum}
+          blocked={blocked}
+        />
       </div>
     </TimelineItem>
   )
@@ -714,6 +730,7 @@ export function AfterlifeSection({
   const { reason } = useGodGate()
   const blocked = readOnlyReason ?? reason()
   const [kind, setKind] = useState<string>('paradise')
+  const [name, setName] = useState('')
   const add = useGodAction({
     run: () =>
       unwrap(
@@ -721,6 +738,8 @@ export function AfterlifeSection({
           body: {
             realm_id: regionId,
             kind: kind as Stratum['kind'],
+            name: name || null,
+            clear_links: false,
             remove: false,
           },
         })
@@ -766,6 +785,7 @@ export function AfterlifeSection({
                 hint='From the heavens down to the depths'
               />
             </div>
+            <RealmGods gods={view.data?.gods ?? []} />
             <div
               data-surface='AfterlifeRealm'
               className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'
@@ -803,7 +823,7 @@ export function AfterlifeSection({
           <AdjustPanel
             trigger='Make a stratum'
             title='Make a new stratum'
-            note='Each kind of stratum takes the souls its doctrine sends.'
+            note='Raise a stratum of any kind, with your own name; shape who it takes once it stands.'
           >
             <ChoiceGrid
               label='Kind'
@@ -812,6 +832,15 @@ export function AfterlifeSection({
               blocked={busy}
               onPick={setKind}
             />
+            <div className='flex min-w-0 flex-col gap-1'>
+              <Label>Its name</Label>
+              <Input
+                value={name}
+                aria-label='Its name'
+                placeholder='Named after its kind'
+                onChange={(event) => setName(event.target.value)}
+              />
+            </div>
             <div>
               <Button
                 size='sm'
@@ -824,6 +853,7 @@ export function AfterlifeSection({
               </Button>
             </div>
           </AdjustPanel>
+          <RaiseSoul regionId={regionId} blocked={blocked} />
         </div>
       </div>
     </Section>

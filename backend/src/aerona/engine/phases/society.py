@@ -178,7 +178,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.incident_participants",
     "table.incidents",
     "table.memories",
-    "table.mortal_repute",
+    "table.mortal_profiles",
     "table.name_registry",
     "table.oaths",
     "table.war_aims",

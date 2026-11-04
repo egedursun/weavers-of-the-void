@@ -6,14 +6,17 @@ from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
-from aerona.engine.faith.book import Church, FaithBook
+from aerona.engine.faith.backfill import backfill_faith
+from aerona.engine.faith.book import Church, FaithBook, FaithLine
 from aerona.engine.faith.doctrine import ensure_doctrines, staff
-from aerona.engine.faith.souls import consume, fear_of_torment, possess, possessions, profiles, reincarnate, soul_eaters, tend
-from aerona.engine.faith.works import canonise, pilgrim_plague, pilgrimage, sacred_beasts, saints, spend, survey_holdings, tithe
+from aerona.engine.faith.exorcism import possessions
+from aerona.engine.faith.souls import fear_of_torment, gnaw, possess, profiles, realm_essence, reincarnate, soul_eaters, tend
+from aerona.engine.faith.works import canonise, devotion, pilgrim_plague, pilgrimage, sacred_beasts, saints, spend, survey_holdings, tithe
 from aerona.engine.faith.zeal import stir
 from aerona.engine.faith.zealotry import drift, fanaticism, investiture, suppress
 from aerona.engine.gods.progress import cap_gained_essence
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.mind.memories import remember
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -21,7 +24,7 @@ from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.stats import set_stats
+from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, set_stats
 
 BLOOD_GODS = frozenset({Domain.BLOOD, Domain.DEATH, Domain.BONE, Domain.HUNGER, Domain.WAR})
 THOUSAND = 1000
@@ -36,6 +39,33 @@ def feed_god(ctx: TickContext, church: Church, amount: int) -> None:
     cap_gained_essence(ctx.rules, god, before)
 
 
+async def human_sacrifice(ctx: TickContext, church: Church, book: FaithBook) -> int:
+    table = ctx.rules.doctrine
+    given = 0
+    for member in church.members:
+        people = headcount(member)
+        victims = min(people, table.sacrifice_cohort)
+        if victims <= 0:
+            continue
+        with flowing(FlowCategory.DEATH):
+            put_stat(ctx.rules, member, headcount_key(member), people - victims)
+        given += victims
+    feed_god(ctx, church, table.sacrifice_essence)
+    appalled = [community for community in book.communities.values() if community.world_id == church.cult.world_id and community not in church.members]
+    for other in appalled:
+        await remember(
+            ctx.session,
+            ctx.rules,
+            holder_id=other.id,
+            subject_id=church.cult.id,
+            kind=MemoryKind.ILL_WILL,
+            magnitude=-table.sacrifice_infamy,
+            epoch=ctx.epoch,
+            note="human sacrifice",
+        )
+    return given
+
+
 async def sacrifices(ctx: TickContext, church: Church, book: FaithBook) -> int:
     table = ctx.rules.doctrine
     offered = 0
@@ -46,45 +76,36 @@ async def sacrifices(ctx: TickContext, church: Church, book: FaithBook) -> int:
         if offered:
             feed_god(ctx, church, table.sacrifice_essence // 2 or 1)
     if church.holds(TenetKind.HUMAN_SACRIFICE) and church.members:
-        feed_god(ctx, church, table.sacrifice_essence)
-        appalled = [community for community in book.communities.values() if community.world_id == church.cult.world_id and community not in church.members]
-        for other in appalled[:5]:
-            await remember(
-                ctx.session,
-                ctx.rules,
-                holder_id=other.id,
-                subject_id=church.cult.id,
-                kind=MemoryKind.ILL_WILL,
-                magnitude=-table.sacrifice_infamy,
-                epoch=ctx.epoch,
-                note="human sacrifice",
-            )
-        offered += 1
+        offered += await human_sacrifice(ctx, church, book)
     return offered
 
 
-async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws: LawBook, atlas: RegionAtlas, knowledge: KnowledgeMap) -> list[str]:
-    lines: list[str] = []
+async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws: LawBook, atlas: RegionAtlas, knowledge: KnowledgeMap) -> list[FaithLine]:
+    lines: list[FaithLine] = []
+    cult = church.cult.id
     ctx.count("clergy_appointed", await staff(ctx, church))
     ctx.count("holdings_added", await survey_holdings(ctx, church))
-    ctx.count("tithes", tithe(ctx, church))
+    ctx.count("tithes", await tithe(ctx, church, laws))
+    ctx.count("devotion", await devotion(ctx, church, book.faith.patron(cult)))
     built = await spend(ctx, church, knowledge)
     if built in {"temple", "monastery"}:
-        lines.append(f"{church.cult.name} raised a {built} from its tithes.")
+        lines.append(FaithLine(f"{church.cult.name} raised a {built} from its tithes.", f"faith.{built}", (cult,)))
     if built:
         ctx.count(f"spent_{built}")
     pilgrims, _ = await pilgrimage(ctx, church)
     ctx.count("pilgrims", pilgrims)
     for saint in await saints(ctx, church):
-        await canonise(ctx, church, saint)
-        lines.append(f"{church.cult.name} named {saint.name} a saint; pilgrims come to the bones.")
+        relic = await canonise(ctx, church, saint)
+        text = f"{church.cult.name} named {saint.name} a saint; pilgrims come to the bones."
+        lines.append(FaithLine(text, "faith.saint", (cult, saint.id, relic.item_entity_id)))
         ctx.count("saints")
     zeal = await stir(ctx, church, book, laws=laws, atlas=atlas)
     if pilgrims >= THOUSAND and church.doctrine is not None:
         gain = pilgrims // THOUSAND * ctx.rules.zeal.pilgrimage_per_1000
         church.doctrine.zeal_parts = {**church.doctrine.zeal_parts, "pilgrims": gain}
-        zeal = clamp_int(zeal + gain, 0, PERCENT)
-        set_stats(church.cult, zeal=zeal)
+        if "zeal" not in church.doctrine.locked:
+            zeal = clamp_int(zeal + gain, 0, PERCENT)
+            set_stats(church.cult, zeal=zeal)
     fanatic = await fanaticism(ctx, church, book, atlas)
     if fanatic is not None:
         lines.append(fanatic)
@@ -102,7 +123,10 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
 
 
 @reads(
+    "cult.devotion",
     "cult.followers",
+    "spirit.unrest",
+    "table.applied_fixups",
     "cult.influence",
     "cult.zeal",
     "people.population",
@@ -133,69 +157,123 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     "table.memories",
     "table.name_registry",
     "table.nodes",
+    "table.offices",
     "table.outbreaks",
     "table.place_environment",
+    "table.place_profiles",
     "table.polity_members",
+    "table.polity_profiles",
     "table.relics",
     "table.reverences",
     "table.skills",
+    "table.sky_events",
+    "table.species_ranges",
+    "table.spirit_profiles",
+    "table.traits",
+    "table.souls",
+    "table.tradition_profiles",
     "table.world_maps",
 )
 @writes(
+    "cult.devotion",
+    "table.afterlife_strata",
+    "table.applied_fixups",
+    "table.soul_judgements",
+    "table.spirit_profiles",
+    "table.tradition_profiles",
     "cult.influence",
     "cult.zeal",
+    "people.population",
+    "settlement.population",
     "settlement.prosperity",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.community_societies",
     "table.community_stocks",
     "table.cult_doctrines",
     "table.cult_holdings",
     "table.cult_offices",
     "table.cult_tenets",
+    "table.culture_values",
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
+    "table.item_profiles",
+    "table.memories",
     "table.name_registry",
+    "table.polity_profiles",
+    "table.pressures",
     "table.relics",
+    "table.sons",
 )
 async def faith_cycles(ctx: TickContext) -> None:
     book = await FaithBook.load(ctx.session)
     ctx.count("doctrines_founded", await ensure_doctrines(ctx, book))
+    ctx.count("faith_backfilled", await backfill_faith(ctx, book))
     laws = await LawBook.load(ctx.session)
     atlas = await RegionAtlas.load(ctx.session)
     knowledge = await KnowledgeMap.load(ctx.session)
     for church in book.churches.values():
         for line in await church_year(ctx, church, book, laws=laws, atlas=atlas, knowledge=knowledge):
-            await note(ctx, line, key="faith.year", ids=[church.cult.id], kind=ChronicleKind.WORSHIP)
+            await note(ctx, line.text, key=line.key, ids=list(line.ids), kind=ChronicleKind.WORSHIP)
 
 
 @reads(
+    "mortal.sanity",
+    "settlement.piety",
     "spirit.unrest",
+    "table.afterlife_strata",
     "table.bonds",
     "table.castings",
+    "table.conditions",
+    "table.cult_doctrines",
     "table.cult_tenets",
     "table.culture_values",
     "table.entity_traits",
+    "table.house_members",
+    "table.house_profiles",
     "table.memories",
+    "table.personality_values",
     "table.possessions",
+    "table.rite_effects",
+    "table.rite_profiles",
+    "table.sons",
     "table.spirit_profiles",
     "table.world_maps",
 )
-@writes("spirit.unrest", "table.conditions", "table.entities", "table.possessions", "table.reincarnations", "table.spirit_profiles")
+@writes(
+    "mortal.sanity",
+    "spirit.unrest",
+    "table.afterlife_strata",
+    "table.bonds",
+    "table.castings",
+    "table.conditions",
+    "table.entities",
+    "table.house_members",
+    "table.house_profiles",
+    "table.personality_values",
+    "table.possessions",
+    "table.reincarnations",
+    "table.rite_effects",
+    "table.rite_profiles",
+    "table.sons",
+    "table.spirit_profiles",
+)
 async def soul_cycles(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     eaten_here = await soul_eaters(ctx, atlas)
     for profile, spirit in await profiles(ctx):
         ctx.count(f"spirits_{await tend(ctx, profile, spirit)}")
         region = atlas.top_region(spirit.id)
-        if region in eaten_here and ctx.rng(f"eaten.{spirit.id}.{ctx.epoch}").chance(ctx.rules.necromancy.soul_eater_chance):
-            await consume(ctx, profile, spirit)
-            ctx.count("souls_eaten")
-            continue
+        fate = await gnaw(ctx, profile, spirit, eaten_here.get(region, [])) if region is not None else None
+        if fate is not None:
+            ctx.count(f"souls_{fate}")
+            if fate == "eaten":
+                continue
         child = await reincarnate(ctx, profile, spirit)
         if child is not None:
             ctx.count("reborn")
@@ -208,6 +286,7 @@ async def soul_cycles(ctx: TickContext) -> None:
     held, exorcised = await possessions(ctx)
     ctx.count("possessed", held)
     ctx.count("exorcised", exorcised)
+    ctx.count("realm_essence", await realm_essence(ctx))
 
 
 FAITH_PHASES = (Phase("faith_cycles", faith_cycles),)

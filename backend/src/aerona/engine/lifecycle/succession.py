@@ -97,7 +97,7 @@ async def _spawn_heir(ctx: TickContext, dead: EntityRow, primary: EntityRow | No
             flags=flags,
         ),
     )
-    await connect(ctx.session, heir.id, dead.id, BondKind.DESCENDS_FROM, ctx.epoch)
+    await connect(ctx.session, dead.id, heir.id, BondKind.PARENT_OF, ctx.epoch, description="named heir")
     language = await spoken_language(ctx.session, dead.id) or (await spoken_language(ctx.session, primary.id) if primary is not None else None)
     if language is not None:
         await connect(ctx.session, heir.id, language.id, BondKind.SPEAKS, ctx.epoch)

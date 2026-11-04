@@ -15,6 +15,7 @@ from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import HERO_ROLES, SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.war import HeroQuestKind, HeroQuestStatus
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.body.book import factor
@@ -176,7 +177,7 @@ async def _quest_failed(ctx: TickContext, hero: EntityRow, quest: HeroQuestRow) 
     if rng.chance(settings.quest_death_chance):
         await close_quest(ctx, quest, HeroQuestStatus.DIED)
         await fatal_injury(ctx, hero, Harm(settings.quest_epoch_hp_loss, HarmCause.QUEST, f"died on the road {quest.description}"))
-        await death_path(ctx, hero, f"died on the road {quest.description}")
+        await death_path(ctx, hero, f"died on the road {quest.description}", manner=DeathCause.HARDSHIP)
         text, key = f"{hero.name} gave their life on the road {quest.description}.", "heroes.quest_death"
     elif ctx.epoch - quest.started_epoch >= settings.quest_abandon_epochs:
         await close_quest(ctx, quest, HeroQuestStatus.ABANDONED)

@@ -39,9 +39,11 @@ from aerona.db.tables.disease import (
 from aerona.db.tables.ecology import (
     BeastProfileRow,
     HerdRow,
+    SpeciesCustomUseRow,
     SpeciesHostRow,
     SpeciesProfileRow,
     SpeciesRangeRow,
+    SpeciesUseKindRow,
     SpeciesUseRow,
     SpeciesYieldRow,
 )
@@ -72,7 +74,7 @@ from aerona.db.tables.entities import (
     LanguageProfileRow,
     NetworkReviewRow,
 )
-from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, StructureLeyRow, WorldSeasonRow
 from aerona.db.tables.epochs import (
     DeferredStepRow,
     EpochEnginePhaseRow,
@@ -98,6 +100,7 @@ from aerona.db.tables.faith import (
     SpiritProfileRow,
 )
 from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow, GodConflictRow, OuterBargainRow
+from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.job import JobRow
 from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
@@ -140,8 +143,10 @@ from aerona.db.tables.mind import (
     SkillRow,
     TraitRow,
 )
+from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.db.tables.motifs import MotifOverrideRow
 from aerona.db.tables.node import NameRegistryRow, NodeRow
+from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.db.tables.polity import (
     ClaimRow,
     HeirloomRow,
@@ -149,7 +154,6 @@ from aerona.db.tables.polity import (
     HouseProfileRow,
     LawJurisdictionRow,
     LawProfileRow,
-    MortalReputeRow,
     OathRow,
     OfficeHistoryRow,
     OfficeRow,
@@ -164,6 +168,7 @@ from aerona.db.tables.polity import (
     TreatyProfileRow,
     VassalageRow,
 )
+from aerona.db.tables.region import PolityMapKnowledgeRow, RegionDangerRow, RegionHazardRow, RegionMemoryRow
 from aerona.db.tables.routes import HorizonIntuitionRow, JourneyRow, RouteRow
 from aerona.db.tables.rule_override import RuleOverrideRow
 from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
@@ -249,6 +254,9 @@ __all__ = [
     "EpochStepRow",
     "EpochWorldNarrativeRow",
     "EpochYearCursorRow",
+    "EventCasualtyRow",
+    "EventFootprintRow",
+    "EventProfileRow",
     "FactionActionRow",
     "FactionGoalRow",
     "FactionMembershipRow",
@@ -299,11 +307,13 @@ __all__ = [
     "MapNoteRow",
     "MapSnapshotRow",
     "MarketPriceRow",
+    "MarriageRow",
     "MemoryRow",
     "MessageRow",
     "MindRow",
     "ModifierRow",
-    "MortalReputeRow",
+    "MortalEquipmentRow",
+    "MortalProfileRow",
     "MotifOverrideRow",
     "NameRegistryRow",
     "NeedRow",
@@ -322,6 +332,9 @@ __all__ = [
     "PeopleCultureRow",
     "PersonalityValueRow",
     "PlaceEnvironmentRow",
+    "PlaceProfileRow",
+    "PlaceSecretRow",
+    "PolityMapKnowledgeRow",
     "PolityMemberRow",
     "PolityProfileRow",
     "PolityTerritoryRow",
@@ -332,7 +345,11 @@ __all__ = [
     "ProphecyConditionRow",
     "ProsthesisRow",
     "QuarantineRow",
+    "RegionDangerRow",
     "RegionEnvironmentRow",
+    "RegionGeomorphRow",
+    "RegionHazardRow",
+    "RegionMemoryRow",
     "ReincarnationRow",
     "RelicRow",
     "ResourceMechanicRow",
@@ -342,6 +359,7 @@ __all__ = [
     "ReverenceRow",
     "RiteEffectRow",
     "RiteProfileRow",
+    "RiverShiftRow",
     "RouteRow",
     "RuleOverrideRow",
     "ScenarioRow",
@@ -360,14 +378,17 @@ __all__ = [
     "SoulJudgementRow",
     "SoulRow",
     "SpeakerCohortRow",
+    "SpeciesCustomUseRow",
     "SpeciesHostRow",
     "SpeciesProfileRow",
     "SpeciesRangeRow",
+    "SpeciesUseKindRow",
     "SpeciesUseRow",
     "SpeciesYieldRow",
     "SpiritProfileRow",
     "SpyNetworkRow",
     "StarRow",
+    "StructureLeyRow",
     "ThreadLinkRow",
     "ThreadRow",
     "TradeFlowRow",

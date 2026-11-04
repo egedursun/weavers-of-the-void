@@ -7,6 +7,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.course import camp_disease, carry_by_armies, carry_by_journeys, fade_immunity, mutate, run_course, settle_endemic
 from aerona.engine.disease.emergence import ensure_profile
+from aerona.engine.disease.seasons import season_disease
 from aerona.engine.disease.stigma import build_hospitals, expel_sick
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
@@ -30,20 +31,26 @@ async def ensure_profiles(ctx: TickContext) -> int:
     "people.population",
     "settlement.population",
     "table.armies",
+    "table.calendars",
     "table.community_cohorts",
     "table.disease_cures",
     "table.disease_profiles",
     "table.endemic_diseases",
+    "table.forced_weather",
     "table.holder_levels",
     "table.holder_techniques",
     "table.immunities",
     "table.journeys",
     "table.outbreaks",
+    "table.place_environment",
     "table.quarantines",
     "table.region_environment",
     "table.settlement_profiles",
     "table.sieges",
+    "table.sky_events",
     "table.world_maps",
+    "table.world_seasons",
+    "table.worlds",
 )
 @writes(
     "army.size",
@@ -60,6 +67,7 @@ async def ensure_profiles(ctx: TickContext) -> int:
 async def epidemics(ctx: TickContext) -> None:
     await ensure_profiles(ctx)
     book = await DiseaseBook.load(ctx.session, ctx.rules, ctx.epoch)
+    ctx.count("seasoned_regions", await season_disease(ctx, book))
     await run_course(ctx, book)
     fade_immunity(ctx, book)
     await settle_endemic(ctx, book)

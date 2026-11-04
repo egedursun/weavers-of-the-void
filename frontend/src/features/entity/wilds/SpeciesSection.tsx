@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import {
   ArrowRight,
+  Ban,
   Biohazard,
   Check,
   Compass,
@@ -15,6 +17,7 @@ import {
   Moon,
   Mountain,
   Package,
+  Pin,
   Plus,
   ShieldAlert,
   Sparkles,
@@ -54,15 +57,25 @@ import {
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
+import { speciesRangeSearch } from '@/features/map/speciesRange'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useSons } from '@/features/pantheon/api'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { PLANS } from '../body/labels'
+import { useWorldMaterials } from '../economy/api'
 import { COMMODITY } from '../economy/labels'
 import { TERRAIN } from '../environment/labels'
 import { PERCENT, busyOf } from '../lore/model'
 import { MindPicker } from '../mind/parts'
+import {
+  CustomUseBadges,
+  FoodLinkControls,
+  HerdDrop,
+  HostControls,
+  KeepingControls,
+  WorldMaterialBadge,
+} from './WildControls'
 import { type SpeciesCard, useSpecies, useSpeciesEdit } from './api'
 import {
   BADGE_OF,
@@ -199,7 +212,21 @@ function Hero({ card }: { card: SpeciesCard }) {
             <stage.icon />
             {stage.label}
           </Badge>
+          <Badge size='sm' variant='default'>
+            <LIFE_ICONS.herd />
+            {`${card.abundance} strong in all its lands`}
+          </Badge>
         </div>
+        {card.totem_of.length > 0 && (
+          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+            <Muted as='span' variant='caption'>
+              Totem of
+            </Muted>
+            {card.totem_of.map((people) => (
+              <Name key={people.id} item={people} />
+            ))}
+          </div>
+        )}
         {(card.sacred_to || card.domesticated_from) && (
           <div className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1'>
             {card.sacred_to && (
@@ -519,6 +546,22 @@ function FoodChain({ card }: { card: SpeciesCard }) {
           items={card.hunted_by}
           empty='No kind preys on it.'
         />
+        {(card.pinned_prey.length > 0 || card.barred_prey.length > 0) && (
+          <div className='flex min-w-0 flex-wrap items-center gap-1.5 @md/card:col-span-2'>
+            {card.pinned_prey.map((item) => (
+              <Badge key={`pin-${item.id}`} variant='default'>
+                <Pin />
+                {`Always hunts ${item.name}`}
+              </Badge>
+            ))}
+            {card.barred_prey.map((item) => (
+              <Badge key={`bar-${item.id}`} variant='destructive'>
+                <Ban />
+                {`Never hunts ${item.name}`}
+              </Badge>
+            ))}
+          </div>
+        )}
         <Kin
           title='Gave rise to'
           icon={GitBranch}
@@ -545,7 +588,10 @@ function UsesAndYields({ card }: { card: SpeciesCard }) {
       hint={`Kept for ${card.uses.length} of ${speciesUseValues.length} uses; yields are per head each epoch`}
       wide
     >
-      <div className='flex min-w-0 flex-wrap gap-1.5'>
+      <div
+        data-surface='SpeciesUses'
+        className='flex min-w-0 flex-wrap gap-1.5'
+      >
         {speciesUseValues.map((use) => {
           const spec = named(USE, use)
           const held = card.uses.includes(use)
@@ -562,41 +608,51 @@ function UsesAndYields({ card }: { card: SpeciesCard }) {
           )
         })}
       </div>
+      <CustomUseBadges card={card} />
       {card.yields.length === 0 ? (
         <Muted>Nothing worth taking from it.</Muted>
       ) : (
-        <TileGrid>
-          {card.yields.map((row) => {
-            const goods = row.commodity ? COMMODITY[row.commodity] : null
-            return (
-              <Tile
-                key={row.product}
-                spec={{
-                  label: titled(row.product),
-                  icon: goods?.icon ?? Package,
-                  tone: 'gold',
-                }}
-                caption={[
-                  goods?.label,
-                  row.material && plain(MATERIAL, row.material) !== goods?.label
-                    ? plain(MATERIAL, row.material)
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-                aside={
-                  <Badge size='sm' variant='default'>{`×${row.rate}`}</Badge>
-                }
-              />
-            )
-          })}
-        </TileGrid>
+        <div data-surface='SpeciesYields' className='min-w-0'>
+          <TileGrid>
+            {card.yields.map((row) => {
+              const goods = row.commodity ? COMMODITY[row.commodity] : null
+              return (
+                <Tile
+                  key={row.product}
+                  spec={{
+                    label: titled(row.product),
+                    icon: goods?.icon ?? Package,
+                    tone: 'gold',
+                  }}
+                  caption={[
+                    goods?.label,
+                    row.material &&
+                    plain(MATERIAL, row.material) !== goods?.label
+                      ? plain(MATERIAL, row.material)
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                  aside={
+                    <span className='flex items-center gap-1'>
+                      <WorldMaterialBadge name={row.world_material} />
+                      <Badge
+                        size='sm'
+                        variant='default'
+                      >{`×${row.rate}`}</Badge>
+                    </span>
+                  }
+                />
+              )
+            })}
+          </TileGrid>
+        </div>
       )}
     </Card>
   )
 }
 
-function Taming({ card }: { card: SpeciesCard }) {
+function Taming({ id, card, blocked }: Blocked) {
   const heads = card.herds.reduce((sum, row) => sum + row.head, 0)
   return (
     <Card
@@ -650,6 +706,14 @@ function Taming({ card }: { card: SpeciesCard }) {
                     </Badge>
                   </div>
                 </div>
+                {row.community && (
+                  <HerdDrop
+                    communityId={row.community.id}
+                    speciesId={id}
+                    name={row.community.name}
+                    blocked={blocked}
+                  />
+                )}
               </li>
             )
           })}
@@ -706,6 +770,25 @@ function RangeCard({ row }: { row: Range }) {
   )
 }
 
+function RangeLink({ card }: { card: SpeciesCard }) {
+  const navigate = useNavigate()
+  return (
+    <Button
+      size='sm'
+      variant='outline'
+      onClick={() =>
+        void navigate({
+          to: '/map',
+          search: speciesRangeSearch(card.world_id ?? null, card.species_id),
+        })
+      }
+    >
+      <MapPinned />
+      Show its range on the map
+    </Button>
+  )
+}
+
 function Ranges({ card }: { card: SpeciesCard }) {
   return (
     <Card
@@ -719,6 +802,7 @@ function Ranges({ card }: { card: SpeciesCard }) {
         </Badge>
       }
     >
+      {card.ranges.length > 0 && <RangeLink card={card} />}
       {card.ranges.length === 0 ? (
         <EmptyState
           icon={MapPinned}
@@ -1048,14 +1132,28 @@ function YieldControls({ id, card, blocked }: Blocked) {
   const [product, setProduct] = useState('')
   const [commodity, setCommodity] = useState('')
   const [material, setMaterial] = useState('')
+  const [stuff, setStuff] = useState('')
   const [rate, setRate] = useState('1')
+  const materials = useWorldMaterials(card.world_id ?? null)
+  const crafted = Object.fromEntries(
+    (materials.data?.materials ?? [])
+      .filter((row) => row.world_material_id !== null)
+      .map((row) => [String(row.world_material_id), row.label])
+  )
   const set = useGodAction<{
     product: string
     commodity: string | null
     material: string | null
+    stuff?: number | null
     rate: number
   }>({
-    run: ({ product: name, commodity: kind, material: matter, rate: amount }) =>
+    run: ({
+      product: name,
+      commodity: kind,
+      material: matter,
+      stuff: own,
+      rate: amount,
+    }) =>
       unwrap(
         api.POST('/api/actions/species:yield', {
           body: {
@@ -1063,6 +1161,7 @@ function YieldControls({ id, card, blocked }: Blocked) {
             product: name,
             commodity: (kind || null) as 'grain' | null,
             material: (matter || null) as 'hide' | null,
+            world_material_id: own ?? null,
             rate: amount,
           },
         })
@@ -1115,6 +1214,7 @@ function YieldControls({ id, card, blocked }: Blocked) {
                   product: row.product,
                   commodity: row.commodity ?? null,
                   material: row.material ?? null,
+                  stuff: row.world_material_id ?? null,
                   rate: next,
                 })
               }
@@ -1154,6 +1254,16 @@ function YieldControls({ id, card, blocked }: Blocked) {
             placeholder='None'
             onPick={setMaterial}
           />
+          {Object.keys(crafted).length > 0 && (
+            <MindPicker
+              label='A material of this world'
+              value={stuff}
+              table={crafted}
+              blocked={busy}
+              placeholder='None'
+              onPick={setStuff}
+            />
+          )}
           <NumberField
             label='Per head'
             value={rate}
@@ -1182,6 +1292,7 @@ function YieldControls({ id, card, blocked }: Blocked) {
               product,
               commodity,
               material: material || null,
+              stuff: stuff ? Number(stuff) : null,
               rate: amount,
             })
           }
@@ -1406,11 +1517,23 @@ function SpeciesControls({ id, card, blocked }: Blocked) {
           </TabsTrigger>
           <TabsTrigger value='yields'>
             <Wheat />
-            Yields and uses
+            Yields
           </TabsTrigger>
           <TabsTrigger value='taming'>
             <Dna />
             Taming
+          </TabsTrigger>
+          <TabsTrigger value='links'>
+            <Crosshair />
+            Hunting
+          </TabsTrigger>
+          <TabsTrigger value='sickness'>
+            <Biohazard />
+            Sickness
+          </TabsTrigger>
+          <TabsTrigger value='keeping'>
+            <Sparkles />
+            Keeping
           </TabsTrigger>
         </TabsList>
         <TabsContent value='nature'>
@@ -1424,6 +1547,15 @@ function SpeciesControls({ id, card, blocked }: Blocked) {
         </TabsContent>
         <TabsContent value='taming'>
           <TamingControls id={id} card={card} blocked={blocked} />
+        </TabsContent>
+        <TabsContent value='links'>
+          <FoodLinkControls id={id} card={card} blocked={blocked} />
+        </TabsContent>
+        <TabsContent value='sickness'>
+          <HostControls id={id} card={card} blocked={blocked} />
+        </TabsContent>
+        <TabsContent value='keeping'>
+          <KeepingControls id={id} card={card} blocked={blocked} />
         </TabsContent>
       </Tabs>
     </AdjustPanel>
@@ -1442,7 +1574,7 @@ function Body({ id, card, blocked }: Blocked) {
         <Temperament card={card} />
         <LifeCycle card={card} />
         <Climate card={card} />
-        <Taming card={card} />
+        <Taming id={id} card={card} blocked={blocked} />
         <Traits card={card} />
         <FoodChain card={card} />
         <UsesAndYields card={card} />

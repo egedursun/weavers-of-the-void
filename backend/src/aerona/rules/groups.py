@@ -35,6 +35,7 @@ class RuleGroup(StrEnum):
     GENESIS_WIZARD = "Genesis wizard"
     GOALS_AND_ACHIEVEMENTS = "Goals and achievements"
     GOD_AND_SON_COSTS = "God and son costs"
+    HARSHNESS = "Harshness"
     HEROES_AND_MORTALS = "Heroes and mortals"
     HOUSES = "Houses, claims and oaths"
     IMAGE_GENERATION = "Image generation"

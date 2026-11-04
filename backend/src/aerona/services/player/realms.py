@@ -474,7 +474,7 @@ async def revoke_claim(scope: PlayerScope, command: ClaimTarget) -> Effect:
 @player_action("mortal:repute", ActionKind.EDIT_RECORD)
 async def edit_repute(scope: PlayerScope, command: EditRepute) -> Effect:
     row = await control.edit_repute(
-        await scope.context("mortal_repute"), command.mortal_id, honour=command.honour, infamy=command.infamy, release=command.release
+        await scope.context("mortal_profile"), command.mortal_id, honour=command.honour, infamy=command.infamy, release=command.release
     )
     return Effect(f"Honour {row.honour}, infamy {row.infamy}.", command.mortal_id)
 

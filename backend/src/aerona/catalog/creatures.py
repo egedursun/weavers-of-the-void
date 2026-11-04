@@ -102,6 +102,10 @@ CREATURE_TRAITS: dict[CreatureTrait, CreatureTraitSpec] = {
             C.PLAGUE_BEARER, "Plague-bearing", "Carries sickness wherever it ranges.", lambda rules: rules.creature_traits.plague_bearer_war_bonus
         ),
         CreatureTraitSpec(C.SACRED_ANIMAL, "Sacred", "Held holy: the faithful will not hunt it.", lambda rules: rules.creature_traits.sacred_animal_war_bonus),
+        CreatureTraitSpec(C.HORNED, "Horned", "Gores with horns; losing them blunts its charge.", lambda rules: rules.creature_traits.horned_war_bonus),
+        CreatureTraitSpec(
+            C.TAILED, "Tailed", "Balances and lashes with a tail; losing it unsteadies it.", lambda rules: rules.creature_traits.tailed_war_bonus
+        ),
     )
 }
 

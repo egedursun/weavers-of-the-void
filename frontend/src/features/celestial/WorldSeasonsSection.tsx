@@ -51,6 +51,7 @@ import {
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { SeasonCalendarPanel } from './SeasonCalendarPanel'
 
 type WorldSeasons = components['schemas']['WorldSeasonsView']
 type Season = components['schemas']['SeasonView']
@@ -724,6 +725,7 @@ export function WorldSeasonsSection({ worldId }: { worldId: number }) {
             <Label variant='overline'>Calendars</Label>
             <Calendars data={data} blocked={blocked} />
           </div>
+          <SeasonCalendarPanel data={data} />
           <div className='flex min-w-0 flex-col gap-2'>
             <Label variant='overline'>Years remembered</Label>
             {data.notable_years.length === 0 ? (

@@ -8,6 +8,7 @@ from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import (
     ClaimRow,
     HeirloomRow,
@@ -15,7 +16,6 @@ from aerona.db.tables.polity import (
     HouseProfileRow,
     LawJurisdictionRow,
     LawProfileRow,
-    MortalReputeRow,
     OathRow,
     OfficeRow,
     PolityMemberRow,
@@ -801,11 +801,11 @@ async def revoke_claim(ctx: TickContext, claim_id: int) -> ClaimRow:
     return row
 
 
-async def edit_repute(ctx: TickContext, mortal_id: int, *, honour: int | None, infamy: int | None, release: Sequence[str]) -> MortalReputeRow:
+async def edit_repute(ctx: TickContext, mortal_id: int, *, honour: int | None, infamy: int | None, release: Sequence[str]) -> MortalProfileRow:
     mortal = await ctx.session.get(EntityRow, mortal_id)
     if mortal is None or mortal.entity_type is not EntityType.MORTAL:
         raise NotFoundError("No such mortal.")
-    row = await repute_of(ctx.session, mortal_id)
+    row = await repute_of(ctx.session, mortal_id, ctx.epoch)
     if honour is not None:
         row.honour = counted("honour", honour, cap=PERCENT)
         row.locked = lock(row.locked, "honour")

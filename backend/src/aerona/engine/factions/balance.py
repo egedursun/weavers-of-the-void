@@ -9,6 +9,7 @@ from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.mind import ValueAxis
 from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
+from aerona.engine.faith.church import clergy_sway
 from aerona.engine.polity.book import Realm
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import stat
@@ -26,6 +27,9 @@ async def power_balance(ctx: TickContext, realm: Realm) -> dict[int, int]:
             weight += stat(faction, "sway") or 0
         if weight > 0 and not profile.outlawed:
             shares[faction.id] += weight
+    clergy = await clergy_sway(ctx.session, ctx.rules, realm.entity.id)
+    if clergy > 0 and realm.profile.state_religion_id is not None:
+        shares[realm.profile.state_religion_id] += clergy
     return dict(shares)
 
 

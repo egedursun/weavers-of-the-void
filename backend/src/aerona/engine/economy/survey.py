@@ -7,7 +7,7 @@ from aerona.catalog.production import EXTRACTION
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
-from aerona.db.tables.economy import CurrencyRow, NodeMaterialRow, ResourceProfileRow, WorkshopRow
+from aerona.db.tables.economy import CurrencyRow, NodeMaterialRow, ResourceProfileRow, WorkshopRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow
@@ -25,7 +25,8 @@ from aerona.engine.economy.materials import set_node_material
 from aerona.engine.economy.resources import default_material, ensure_profile
 from aerona.engine.economy.routes import found_route, load_routes
 from aerona.engine.economy.stocks import goods_of, lots_of
-from aerona.engine.phases.environment import works_by_region
+from aerona.engine.environment.control import world_seam_id
+from aerona.engine.environment.works import works_by_region
 from aerona.engine.primitives.queries import active_bonds
 
 BACKFILL_FIXUP = "economy.w4_backfill"
@@ -238,6 +239,29 @@ def _item_material(book: EconomyBook, item: EntityRow) -> MaterialKind:
     return MaterialKind.WOOD if level == 0 else MaterialKind.BRONZE
 
 
+async def hide_world_seam(ctx: TickContext, place: EntityRow, world_material_id: int, depth: int) -> bool:
+    material = await ctx.session.get(WorldMaterialRow, world_material_id)
+    if material is None:
+        return False
+    label = material.name or (material.base_kind.value.replace("_", " ") if material.base_kind is not None else "strange stone")
+    stony = material.base_kind in (MaterialKind.STONE, MaterialKind.CLAY)
+    await open_deposit(
+        ctx,
+        Deposit(
+            name=f"Hidden {label.title()} Seam of {place.name}",
+            body=f"A rich seam of {label} lies under {place.name}, unknown to anyone who lives there.",
+            place=place,
+            commodity=C.STONE if stony else C.ORE,
+            material=material.base_kind,
+            world_material_id=material.id,
+            richness=depth,
+            quality=depth,
+            revealed=False,
+        ),
+    )
+    return True
+
+
 async def hide_seams(ctx: TickContext, book: EconomyBook) -> int:
     hidden = 0
     worked = {book.ground.atlas.top_region(resource.id) for resource in book.resources()}
@@ -247,6 +271,11 @@ async def hide_seams(ctx: TickContext, book: EconomyBook) -> int:
         if place is None or region.entity_id in worked or not region.mineral_layers:
             continue
         name, depth = max(region.mineral_layers.items(), key=lambda item: (item[1], item[0]))
+        world_id = world_seam_id(name)
+        if world_id is not None:
+            if depth >= HIDDEN_SEAM_FLOOR and rng.chance(ctx.rules.extraction.hidden_share_pct) and await hide_world_seam(ctx, place, world_id, depth):
+                hidden += 1
+            continue
         if depth < HIDDEN_SEAM_FLOOR or MaterialKind(name) not in MINERAL_KINDS or not rng.chance(ctx.rules.extraction.hidden_share_pct):
             continue
         await open_deposit(

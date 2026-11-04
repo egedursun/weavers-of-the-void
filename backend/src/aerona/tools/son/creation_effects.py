@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from aerona.catalog.entity_types import ENTITY_TYPES
+from aerona.catalog.tenets import OPPOSED
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import WorldRow
@@ -9,15 +10,21 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.polity import LawProfileRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.entity import AGENT_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.faith import FuneralRite, TenetKind
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.polity import LegitimacyBasis
 from aerona.domain.enums.travel import TravelMethod, VehicleKind
 from aerona.engine.cosmos.routes import RouteSpec, method_label, open_route
 from aerona.engine.cosmos.vessels import set_vessel_kind
 from aerona.engine.economy.resources import set_resource_yield
+from aerona.engine.environment.places import write_kind
 from aerona.engine.factions.book import new_profile
+from aerona.engine.faith.book import FaithBook
+from aerona.engine.faith.doctrine import found_doctrine
 from aerona.engine.gods.queries import worshippers_of
+from aerona.engine.lore.traditions import profile_of as tradition_profile
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.polity.laws import attach_profile
 from aerona.engine.primitives.mechanics import assign_mechanics
@@ -163,20 +170,31 @@ async def _vessel_route(call: SonCall, args: CreationInput, created: EntityRow) 
     return result(SonResult.ROUTE_OPENED, id=route.id, world=target.name, method=method_label(method))
 
 
-async def finish_extras(call: SonCall, args: CreationInput, created: EntityRow) -> list[str]:
+async def teach_cult(call: SonCall, args: CreationInput, created: EntityRow) -> list[str]:
+    await call.session.flush()
+    church = (await FaithBook.load(call.session)).churches.get(created.id)
+    if church is None or church.doctrine is not None:
+        return []
+    seeded: list[TenetKind] = []
+    for tenet in args.option("tenets") or []:
+        if tenet not in seeded and not any(frozenset({tenet, other}) in OPPOSED for other in seeded):
+            seeded.append(tenet)
+    doctrine = await found_doctrine(call.tick, church, seeded=tuple(seeded[: call.rules.doctrine.tenets_max]), judgement=args.option("judgement"))
+    path = args.option("rebirth_path")
+    if path is not None:
+        doctrine.rebirth_path = path
+    await call.session.flush()
+    return [result(SonResult.CULT_TAUGHT, tenets=", ".join(sorted(tenet.value.replace("_", " ") for tenet in church.tenets)) or "none")]
+
+
+async def keep_rite(call: SonCall, created: EntityRow, rite: FuneralRite) -> None:
+    profile = await tradition_profile(call.tick, created)
+    profile.kind, profile.funeral_rite = TraditionKind.FUNERAL_RITE, rite
+    profile.locked = [*profile.locked, "funeral_rite"] if "funeral_rite" not in profile.locked else profile.locked
+
+
+async def polity_extras(call: SonCall, args: CreationInput, created: EntityRow) -> list[str]:
     notes: list[str] = []
-    if created.entity_type is EntityType.VESSEL:
-        route = await _vessel_route(call, args, created)
-        if route is not None:
-            notes.append(route)
-    words = args.option("words")
-    if created.entity_type is EntityType.LANGUAGE and words:
-        await add_words(call.session, created, words[: call.rules.son_tools.coin_word_max_words], actor=(ActorKind.SON, call.son.id), epoch=call.epoch)
-    commodity = args.option("commodity")
-    if created.entity_type is EntityType.RESOURCE and commodity is not None:
-        await set_resource_yield(call.session, call.rules, created.id, commodity, args.option("material"))
-    if created.entity_type in MECHANIC_TYPES:
-        await assign_mechanics(call.session, call.rules, created, resource_choice=args.option("mechanics") or (), law_choice=args.option("mechanic"))
     faction_kind = args.option("faction_kind")
     if created.entity_type is EntityType.FACTION and faction_kind is not None and await call.session.get(FactionProfileRow, created.id) is None:
         new_profile(call.tick, created, faction_kind)
@@ -190,6 +208,32 @@ async def finish_extras(call: SonCall, args: CreationInput, created: EntityRow) 
         except ValidationFailedError:
             await attach_profile(call.session, created, law_kind, {}, holder=holder, epoch=call.epoch, by_id=None, basis=LegitimacyBasis.DIVINE)
             notes.append(f"Its terms were set to the custom of {law_kind.value.replace('_', ' ')}.")
+    return notes
+
+
+async def finish_extras(call: SonCall, args: CreationInput, created: EntityRow) -> list[str]:
+    notes: list[str] = []
+    if created.entity_type is EntityType.VESSEL:
+        route = await _vessel_route(call, args, created)
+        if route is not None:
+            notes.append(route)
+    words = args.option("words")
+    if created.entity_type is EntityType.LANGUAGE and words:
+        await add_words(call.session, created, words[: call.rules.son_tools.coin_word_max_words], actor=(ActorKind.SON, call.son.id), epoch=call.epoch)
+    place_kind = args.option("place_kind")
+    if created.entity_type is EntityType.PLACE and place_kind is not None:
+        await write_kind(call.session, call.rules, created.id, place_kind)
+    commodity = args.option("commodity")
+    if created.entity_type is EntityType.RESOURCE and commodity is not None:
+        await set_resource_yield(call.session, call.rules, created.id, commodity, args.option("material"))
+    if created.entity_type in MECHANIC_TYPES:
+        await assign_mechanics(call.session, call.rules, created, resource_choice=args.option("mechanics") or (), law_choice=args.option("mechanic"))
+    if created.entity_type is EntityType.CULT:
+        notes.extend(await teach_cult(call, args, created))
+    rite = args.option("funeral_rite")
+    if created.entity_type is EntityType.TRADITION and rite is not None:
+        await keep_rite(call, created, rite)
+    notes.extend(await polity_extras(call, args, created))
     learners = args.option("learner_ids") or []
     if created.entity_type is EntityType.KNOWLEDGE:
         for learner_id in learners[: call.rules.son_tools.knowledge_first_learners]:

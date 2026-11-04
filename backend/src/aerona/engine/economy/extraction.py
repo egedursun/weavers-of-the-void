@@ -23,7 +23,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.ecology.domestication import draught
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of, lots_of
-from aerona.engine.environment.years import sampled_years
+from aerona.engine.environment.years import world_years
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -287,7 +287,7 @@ async def roll_hazards(
     if hazard is HazardKind.CAVE_IN and region is not None and region.rainfall >= ctx.rules.mining_hazards.flood_rainfall:
         hazard = HazardKind.FLOODED_SHAFT
     chance = hazard_chance(ctx.rules, hazard, profile.extraction_difficulty, book.skill(community.id, SkillKind.ENGINEERING))
-    for year in sampled_years(ctx.environment, resource.world_id or 0):
+    for year in world_years(ctx.environment, resource.world_id or 0, "mining"):
         if ctx.rng(f"hazard.{resource.id}.{community.id}.{year.year}").chance(chance):
             await strike_hazard(ctx, book, resource, profile, community, workers=workers, hazard=hazard)
             return hazard
@@ -349,8 +349,10 @@ async def extract(ctx: TickContext, book: EconomyBook, resource: EntityRow, prof
             )
             region = book.ground.region_of(resource.id)
             if region is not None:
-                region.mined = clamp_int(region.mined + ctx.rules.extraction.byproduct_scar, 0, PERCENT)
-                region.erosion = clamp_int(region.erosion + ctx.rules.extraction.byproduct_scar, 0, PERCENT)
+                if "mined" not in region.locked:
+                    region.mined = clamp_int(region.mined + ctx.rules.extraction.byproduct_scar, 0, PERCENT)
+                if "erosion" not in region.locked:
+                    region.erosion = clamp_int(region.erosion + ctx.rules.extraction.byproduct_scar, 0, PERCENT)
         await _pay_owner(ctx, owner, output * material_value(profile) // PERCENT)
         ctx.session.add(
             ProductionRunRow(

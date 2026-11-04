@@ -24,7 +24,7 @@ from aerona.engine.lore.research import techniques_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_base_stats, stat
 from aerona.rules.registry import Rules
 
 ARMOUR_BY_METAL = (ArmourType.HIDE, ArmourType.PADDED, ArmourType.MAIL, ArmourType.SCALE, ArmourType.PLATE)
@@ -228,7 +228,9 @@ def sync(army: EntityRow, rows: Sequence[ArmyUnitRow], rules: Rules) -> None:
         return
     morale = round_half_up(sum(row.morale * row.count for row in rows) / max(1, total))
     experience = round_half_up(sum(row.experience * row.count for row in rows) / max(1, total))
-    set_stats(army, size=clamp_int(total, 0, rules.limits.army_soldier_cap), morale=clamp_int(morale, 0, PERCENT), experience=clamp_int(experience, 0, PERCENT))
+    set_base_stats(
+        army, size=clamp_int(total, 0, rules.limits.army_soldier_cap), morale=clamp_int(morale, 0, PERCENT), experience=clamp_int(experience, 0, PERCENT)
+    )
 
 
 def take(rows: Sequence[ArmyUnitRow], losses: int) -> int:

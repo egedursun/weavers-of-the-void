@@ -6,10 +6,12 @@ from aerona.db.tables.economy import CurrencyRow, MarketPriceRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
+from aerona.domain.enums.environment import WeatherEffect
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import epoch_need, goods_of, holding
+from aerona.engine.environment.years import world_years
 from aerona.engine.factions.book import monopoly_factor
 from aerona.engine.faith.book import forbidden_foods
 from aerona.engine.lore.traditions import resent_taboo, taboos
@@ -25,6 +27,13 @@ class Quote:
     price: int
     supply: int
     demand: int
+    swing: int = 0
+
+
+@dataclass(frozen=True)
+class Swing:
+    factor: float = 1.0
+    spread: int = 0
 
 
 @dataclass
@@ -62,11 +71,38 @@ def price_of(ctx: TickContext, commodity: CommodityKind, supply: int, demand: in
     return round_half_up(min(high, max(low, base * pressure * factor)))
 
 
+def year_growth(ctx: TickContext, book: EconomyBook, market: EntityRow) -> list[int]:
+    years = world_years(ctx.environment, market.world_id or 0, "markets")
+    ground = book.ground.region_of(market.id)
+    if ground is None:
+        return [0 for _ in years]
+    season = book.ground.growing_season(ground.world_id)
+    return [
+        book.ground.weather(ctx.environment.world_seed, ctx.epoch, ground, season, f"market.{market.id}.{year.year}").effect(WeatherEffect.GROWTH)
+        for year in years
+    ]
+
+
+def swing_of(ctx: TickContext, market: EntityRow, commodity: CommodityKind, growth: list[int]) -> Swing:
+    table = ctx.rules.seasonal
+    if not growth:
+        return Swing()
+    food = COMMODITIES[commodity].aggregate is Commodity.FOOD
+    rng = ctx.rng(f"swing.{market.id}.{commodity.value}")
+    low, high = table.swing_floor_pct / PERCENT, table.swing_cap_pct / PERCENT
+    factors = [
+        max(low, min(high, 1 - grown / PERCENT * table.food_swing_pct / PERCENT if food else 1 + rng.uniform(-1.0, 1.0) * table.goods_swing_pct / PERCENT))
+        for grown in growth
+    ]
+    return Swing(sum(factors) / len(factors), round_half_up((max(factors) - min(factors)) * PERCENT))
+
+
 async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -> dict[CommodityKind, Quote]:
     factor = inflation(ctx, await currency_of(ctx, book, market.id))
     population = headcount(market)
     quotes: dict[CommodityKind, Quote] = {}
     forbidden = await forbidden_foods(ctx.session, market.id) | await taboos(ctx, market.id)
+    growth = year_growth(ctx, book, market)
     for commodity in COMMODITIES:
         supply = await holding(ctx.session, market.id, commodity)
         demand = round_half_up(epoch_need(ctx.rules, population, commodity) * ctx.rules.markets.demand_epochs_pct / PERCENT)
@@ -74,8 +110,9 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
             demand = round_half_up(demand * ctx.rules.doctrine.dietary_demand_pct / PERCENT)
         if commodity is CommodityKind.LUXURIES:
             demand = round_half_up(demand * await luxury_factor(ctx.session, ctx.rules, market.id, book.societies.get(market.id)))
-        factor_here = factor * await monopoly_factor(ctx.session, market.id, commodity, ctx.rules.factions.monopoly_price_pct)
-        quotes[commodity] = Quote(commodity, price_of(ctx, commodity, supply, demand, factor_here), supply, demand)
+        monopoly = await monopoly_factor(ctx.session, market.id, commodity, ctx.rules.factions.monopoly_price_pct)
+        swing = swing_of(ctx, market, commodity, growth)
+        quotes[commodity] = Quote(commodity, price_of(ctx, commodity, supply, demand, factor * swing.factor * monopoly), supply, demand, swing.spread)
     ctx.count("taboo_resentment", await resent_taboo(ctx, market.id))
     return quotes
 
@@ -86,11 +123,17 @@ async def store_quotes(ctx: TickContext, market: EntityRow, quotes: dict[Commodi
         if row is None:
             ctx.session.add(
                 MarketPriceRow(
-                    market_entity_id=market.id, commodity=quote.commodity, epoch=ctx.epoch, price=quote.price, supply=quote.supply, demand=quote.demand
+                    market_entity_id=market.id,
+                    commodity=quote.commodity,
+                    epoch=ctx.epoch,
+                    price=quote.price,
+                    supply=quote.supply,
+                    demand=quote.demand,
+                    swing=quote.swing,
                 )
             )
         else:
-            row.price, row.supply, row.demand = quote.price, quote.supply, quote.demand
+            row.price, row.supply, row.demand, row.swing = quote.price, quote.supply, quote.demand, quote.swing
 
 
 def aggregate_prices(quotes: dict[CommodityKind, Quote]) -> dict[Commodity, int]:

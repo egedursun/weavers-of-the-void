@@ -18,8 +18,8 @@ from aerona.engine.context import TickContext
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.gods.progress import cap_gained_essence
 from aerona.engine.mind.memories import remember
+from aerona.engine.mortal.standing import add_honour
 from aerona.engine.notes import note
-from aerona.engine.polity.repute import shift_honour
 from aerona.engine.primitives.queries import add_flag, living_entity
 from aerona.engine.services.community_relations import change_relation
 
@@ -86,9 +86,7 @@ async def wrath(ctx: TickContext, witness: SonRow, swearer: EntityRow) -> None:
 async def keep(ctx: TickContext, oath: OathRow, *, fulfilled: bool) -> None:
     oath.status = OathStatus.FULFILLED if fulfilled else OathStatus.KEPT
     oath.ended_epoch = ctx.epoch
-    swearer = await ctx.session.get(EntityRow, oath.swearer_entity_id)
-    if swearer is not None and swearer.entity_type is EntityType.MORTAL:
-        await shift_honour(ctx, swearer.id, ctx.rules.oaths.honour_kept)
+    await add_honour(ctx.session, oath.swearer_entity_id, ctx.rules.standing.honour_kept_oath, ctx.epoch)
     if oath.recipient_node_id is not None:
         await remember(
             ctx.session,
@@ -122,7 +120,7 @@ async def break_oath(ctx: TickContext, oath: OathRow, reason: str) -> None:
         return
     swearer.importance = max(0, (swearer.importance or 0) - table.honour_loss)
     if swearer.entity_type is EntityType.MORTAL:
-        await shift_honour(ctx, swearer.id, -table.honour_broken)
+        await add_honour(ctx.session, swearer.id, -ctx.rules.standing.honour_broken_oath, ctx.epoch)
     await add_flag(ctx.session, swearer.id, EntityFlag.OATHBREAKER, ctx.epoch)
     if oath.recipient_node_id is not None:
         await remember(

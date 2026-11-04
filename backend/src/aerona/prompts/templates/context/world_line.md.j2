@@ -1,4 +1,7 @@
 YOUR CURRENT WORLD: world#{{ id }} {{ name }} — {{ type_label }}{% if star_name %}, orbiting {{ star_name }}{% if star_type %} ({{ star_type }}){% endif %}{% endif %}; gravity {{ gravity }}, atmosphere {{ atmosphere }}, time ×{{ "%g" | format(time_factor) }}{% if leak > 0 %}; LEAK {{ leak }}/100 (something is seeping in from outside){% endif %}.
+{% if golden_age_epochs is not none %}
+GOLDEN AGE: since age {{ golden_age_since }} ({{ golden_age_epochs }} ages); prosperity grows by {{ golden_age_gain }} each age{% if golden_age_soft %}, but long ease has made its peoples soft: their warriors and walls are wearing thin{% endif %}.
+{% endif %}
 {% if cosmology %}
 THIS WORLD'S COSMOLOGY: {{ cosmology }}
 {% endif %}

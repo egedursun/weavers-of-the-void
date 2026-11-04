@@ -6,6 +6,12 @@ import {
 import { type MapView } from './api'
 import { type CellKey } from './mapEdges'
 import { type LayerMode } from './mapModel'
+import {
+  type RangeShade,
+  rangeAlpha,
+  rangeBand,
+  rangeLabel,
+} from './speciesRange'
 
 export const SERIES_TOKENS: readonly ThemeColorName[] = [
   'chart-2',
@@ -65,11 +71,16 @@ const ALPHA: Record<LayerMode, number> = {
   soil: 0.45,
   climate: 0.4,
   land_use: 0.42,
+  rainfall: 0.42,
+  danger: 0.45,
+  scars: 0.45,
+  sacred: 0.45,
   ley: 0.5,
   population: 0.45,
   followers: 0.45,
   soldiers: 0.45,
   wildlife: 0.45,
+  species_range: 0.3,
 }
 
 export const STOCK_BANDS = [
@@ -85,6 +96,41 @@ const BAND_LABEL: Record<string, string> = {
   sparse: 'Few wild herds',
   teeming: 'Many wild herds',
   wild: 'A land of beasts',
+}
+
+export const RAIN_BANDS = [
+  { key: 'arid', below: 20 },
+  { key: 'dry', below: 40 },
+  { key: 'moderate', below: 60 },
+  { key: 'wet', below: 80 },
+  { key: 'drenched', below: Number.POSITIVE_INFINITY },
+] as const
+
+const HOLY_FROM = 40
+
+const DANGER_LABEL: Record<string, string> = {
+  beasts: 'Beasts',
+  bandits: 'Bandits',
+  monsters: 'Monsters',
+  phenomena: 'Strange phenomena',
+  disease: 'Disease',
+  avalanche: 'Avalanches',
+  quicksand: 'Quicksand',
+  volcanic: 'Volcanic ground',
+}
+
+const LAND_LABEL: Record<string, string> = {
+  arid: 'Arid',
+  dry: 'Dry',
+  moderate: 'Moderate rain',
+  wet: 'Wet',
+  drenched: 'Drenched',
+  holy: 'Holy ground that draws pilgrims',
+  hallowed: 'Hallowed ground',
+}
+
+export function rainBand(value: number): string {
+  return RAIN_BANDS.find((band) => value < band.below)?.key ?? 'drenched'
 }
 
 export const WILD_BANDS = [
@@ -165,6 +211,29 @@ function regionKey(
               : ground.land_use
       return { key: `${mode}:${value}`, alpha }
     }
+    case 'rainfall':
+    case 'danger':
+    case 'scars':
+    case 'sacred': {
+      const ground = view.ground[String(regionId)] ?? view.ground[String(topId)]
+      if (!ground) return null
+      if (mode === 'rainfall')
+        return { key: `rainfall:${rainBand(ground.rainfall ?? 0)}`, alpha }
+      if (mode === 'danger')
+        return ground.danger_source
+          ? { key: `danger:${ground.danger_source}`, alpha }
+          : null
+      if (mode === 'scars')
+        return ground.scar && (ground.scar_depth ?? 0) > 0
+          ? { key: `scars:${ground.scar}`, alpha }
+          : null
+      const sacred = ground.sacredness ?? 0
+      if (sacred <= 0) return null
+      return {
+        key: `sacred:${sacred >= HOLY_FROM ? 'holy' : 'hallowed'}`,
+        alpha,
+      }
+    }
     case 'population':
     case 'followers':
     case 'soldiers': {
@@ -222,6 +291,10 @@ function labelFor(
   if (kind === 'language') return names.languages.get(id) ?? `Language ${id}`
   if (kind === 'ley')
     return raw === 'nexus' ? 'Nexus of ley lines' : 'On a ley line'
+  if (kind === 'danger') return DANGER_LABEL[raw] ?? words(raw)
+  if (kind === 'rainfall' || kind === 'sacred')
+    return LAND_LABEL[raw] ?? words(raw)
+  if (kind === 'scars') return words(raw)
   if (
     kind === 'population' ||
     kind === 'followers' ||
@@ -236,6 +309,7 @@ function labelFor(
     kind === 'land_use'
   )
     return words(raw)
+  if (kind === 'range') return rangeLabel(raw)
   if (kind === 'realm') {
     const held = Object.values(view.realms ?? {}).find(
       (item) => item.polity_id === id
@@ -271,11 +345,23 @@ function neighbourTokens(view: MapView): Map<string, ThemeColorName> {
   )
 }
 
+const RANGE_TOKEN: ThemeColorName = 'success'
+
+function rangeTint(
+  range: RangeShade | null,
+  regionId: number
+): RegionTint | null {
+  if (!range) return null
+  const band = rangeBand(range.cells.get(regionId) ?? 0, range.peak)
+  return band ? { key: `range:${band}`, alpha: rangeAlpha(band) } : null
+}
+
 export function buildLayerPalette(
   view: MapView,
   mode: LayerMode,
   names: PaletteNames,
-  tokens: ThemeColors
+  tokens: ThemeColors,
+  range: RangeShade | null = null
 ): LayerPalette {
   const tints = new Map<number, RegionTint>()
   const counts = new Map<string, number>()
@@ -288,7 +374,10 @@ export function buildLayerPalette(
   )
   if (mode !== 'terrain') {
     for (const region of view.geometry.regions) {
-      const tint = regionKey(view, mode, region.id, region.top_level_id)
+      const tint =
+        mode === 'species_range'
+          ? rangeTint(range, region.id)
+          : regionKey(view, mode, region.id, region.top_level_id)
       if (!tint) continue
       tints.set(region.id, tint)
       counts.set(tint.key, (counts.get(tint.key) ?? 0) + 1)
@@ -309,6 +398,7 @@ export function buildLayerPalette(
   const categories = sorted.map(([key, count]): LayerCategory => {
     let token: ThemeColorName
     if (key === CREATOR_KEY) token = CREATOR_TOKEN
+    else if (key.startsWith('range:')) token = RANGE_TOKEN
     else if (regionTokens) token = regionTokens.get(key) ?? SERIES_TOKENS[0]
     else if (series < SERIES_TOKENS.length) token = SERIES_TOKENS[series++]
     else token = EXTRA_TOKENS[extra++ % EXTRA_TOKENS.length]
@@ -352,10 +442,11 @@ export function useLayerPalette(
   view: MapView | undefined,
   mode: LayerMode,
   names: PaletteNames,
-  tokens: ThemeColors
+  tokens: ThemeColors,
+  range: RangeShade | null = null
 ): LayerPalette | null {
   return useMemo(
-    () => (view ? buildLayerPalette(view, mode, names, tokens) : null),
-    [view, mode, names, tokens]
+    () => (view ? buildLayerPalette(view, mode, names, tokens, range) : null),
+    [view, mode, names, tokens, range]
   )
 }

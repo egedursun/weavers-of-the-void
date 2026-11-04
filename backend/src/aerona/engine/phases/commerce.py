@@ -1,12 +1,14 @@
+from aerona.domain.enums.region import DangerHarm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.markets import MarketTally, apply_aggregate_prices, market_nodes, quote_market, raise_district, store_quotes
 from aerona.engine.economy.money import MoneyTally, collect, lend
 from aerona.engine.economy.routes import RouteTally, carry, contacts, controllers, enemies_of, found_route, load_routes, set_tolls, upkeep
 from aerona.engine.economy.stocks import sync_aggregates
+from aerona.engine.environment.dangers import weighted_dangers
+from aerona.engine.environment.works import works_by_region
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
-from aerona.engine.phases.environment import works_by_region
 
 
 @reads(
@@ -84,6 +86,7 @@ async def markets(ctx: TickContext) -> None:
     "table.community_societies",
     "table.community_stocks",
     "table.cult_tenets",
+    "table.districts",
     "table.faction_profiles",
     "table.forced_weather",
     "table.holder_levels",
@@ -92,9 +95,11 @@ async def markets(ctx: TickContext) -> None:
     "table.market_prices",
     "table.place_environment",
     "table.polity_members",
+    "table.region_dangers",
     "table.region_environment",
     "table.resource_profiles",
     "table.resource_workers",
+    "table.settlement_infrastructure",
     "table.skills",
     "table.sky_events",
     "table.trade_route_profiles",
@@ -140,6 +145,7 @@ async def markets(ctx: TickContext) -> None:
 )
 async def trade_flow(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
+    book.merchant_danger = await weighted_dangers(ctx.session, ctx.rules, DangerHarm.MERCHANTS)
     tally = RouteTally()
     works = await works_by_region(ctx, book.ground)
     nodes = market_nodes(book)

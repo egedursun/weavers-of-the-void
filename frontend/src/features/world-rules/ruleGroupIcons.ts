@@ -53,6 +53,7 @@ export const RULE_GROUP_ICON: Record<string, LucideIcon> = {
   'Agents and model': Bot,
   Cosmos: Orbit,
   'War and diplomacy': Swords,
+  Harshness: Skull,
   'Heroes and mortals': Users,
   Intervention: Hand,
   Creatures: Bug,

@@ -5,7 +5,7 @@ from sqlalchemy import delete, func, select
 
 from aerona.cartography.biomes import Biome
 from aerona.cartography.model import RegionRecord
-from aerona.catalog.place_terrain import place_profile
+from aerona.catalog.place_terrain import height_of, kind_spec
 from aerona.catalog.weather import WEATHER
 from aerona.constants.cartography import BIOME_COUNT
 from aerona.constants.units import PERCENT
@@ -13,20 +13,27 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.happenings import RegionGeomorphRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.environment import CoastKind, LandUse, NotableYearKind, RiverClass, ScarKind, SoilKind, WeatherEffect, WeatherKind
+from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.world import ClimateEra, Discovery
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.star_types import star_heat
+from aerona.engine.environment.battles import backfill_battle_ground
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.environment.geomorph import course_of, desert_rainfall, desert_terrain, shapes_by_region
 from aerona.engine.environment.ley import LeyWeb, candidate_lines, cut_by_land, pair
+from aerona.engine.environment.ley_works import backfill_attunement, empower_works
 from aerona.engine.environment.notable import backfill_notable_years
+from aerona.engine.environment.place_backfill import ensure_profiles
+from aerona.engine.environment.places import place_kind_of
 from aerona.engine.environment.profile import (
     Geography,
     Ground,
@@ -50,8 +57,10 @@ from aerona.engine.environment.profile import (
     terrain_of,
 )
 from aerona.engine.environment.seasons import season_drafts, tidal_strength, world_calendar
-from aerona.engine.environment.years import SampledYear, grant_sub_steps, sampled_years
+from aerona.engine.environment.works import backfill_typed_works, works_by_region
+from aerona.engine.environment.years import SampledYear, world_years
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lore.calendar_rites import backfill_holy_days, hallow_holy_days
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.capacity import LAND_COMMUNITY_TYPES, CapacityModel, RegionKey, RegionLoad
 from aerona.engine.primitives.distance import RegionAtlas
@@ -61,7 +70,7 @@ from aerona.engine.primitives.naming import Namer
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, canon, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
-from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.primitives.stats import base_stat, set_base_stats, stat, stat_or
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
 
@@ -149,6 +158,7 @@ class RegionContext:
             chokepoints=self.chokepoints,
             star_heat=star_heat(rules, self.star),
             works=self.works,
+            cleared=env.cleared,
         )
 
 
@@ -157,7 +167,7 @@ def factor_of(rules: Rules, env: RegionEnvironmentRow, works: Works) -> float:
     return climate_factor(rules, temperature=env.temperature, rainfall=env.rainfall, river=env.river_class, scars=env.scars, works=works, mix=mix)
 
 
-def apply_geography(env: RegionEnvironmentRow, geography: Geography, coast: CoastKind) -> None:
+def apply_geography(env: RegionEnvironmentRow, geography: Geography, coast: CoastKind, course: RiverClass | None = None) -> None:
     locked = set(env.locked)
     values = {
         "biome_mix": geography.biome_mix,
@@ -167,7 +177,7 @@ def apply_geography(env: RegionEnvironmentRow, geography: Geography, coast: Coas
         "moisture": geography.moisture,
         "base_forest": geography.base_forest,
         "base_wetland": geography.base_wetland,
-        "river_class": geography.river_class,
+        "river_class": course or geography.river_class,
         "coast_kind": coast,
     }
     for key, value in values.items():
@@ -175,14 +185,18 @@ def apply_geography(env: RegionEnvironmentRow, geography: Geography, coast: Coas
             setattr(env, key, value)
 
 
-def refresh_climate(rules: Rules, env: RegionEnvironmentRow, around: Surroundings, axial_tilt: int, tides: int = 0) -> None:
+def refresh_climate(
+    rules: Rules, env: RegionEnvironmentRow, around: Surroundings, axial_tilt: int, tides: int = 0, *, shape: RegionGeomorphRow | None = None
+) -> None:
     locked = set(env.locked)
     geography = geography_of(env)
     if "temperature" not in locked:
         env.temperature = temperature_of(rules, geography, around)
     if "rainfall" not in locked:
         env.rainfall = rainfall_of(rules, geography, around)
-    env.temperature_band = band_of(rules, env.temperature)
+    desert_rainfall(rules, env, shape)
+    if "temperature_band" not in locked:
+        env.temperature_band = band_of(rules, env.temperature)
     if "seasonality" not in locked:
         env.seasonality = seasonality_of(rules, env.latitude, axial_tilt)
     if "wetland" not in locked:
@@ -192,6 +206,7 @@ def refresh_climate(rules: Rules, env: RegionEnvironmentRow, around: Surrounding
     if "dominant_terrain" not in locked:
         reading = TerrainReading(geography, around, env.temperature, env.rainfall, env.wetland, env.built)
         env.dominant_terrain = terrain_of(rules, reading)
+    desert_terrain(env, shape)
     held = {key.removeprefix("passability."): env.passability.get(key.removeprefix("passability.")) for key in locked if key.startswith("passability.")}
     ground = Ground(
         roughness=env.roughness,
@@ -263,8 +278,8 @@ def new_region_environment(ctx: TickContext, region: EntityRow, geography: Geogr
     return env
 
 
-def new_place_environment(rules: Rules, place: EntityRow, region_id: int | None, factor: float) -> PlaceEnvironmentRow:
-    profile = place_profile(place.subtype)
+def new_place_environment(rules: Rules, place: EntityRow, region_id: int | None, factor: float, kind: PlaceKind) -> PlaceEnvironmentRow:
+    profile = kind_spec(kind)
     fertility = stat(place, "fertility")
     soil = soil_for(fertility, factor) if fertility is not None else rules.environment.ideal_rainfall
     return PlaceEnvironmentRow(
@@ -273,7 +288,7 @@ def new_place_environment(rules: Rules, place: EntityRow, region_id: int | None,
         terrain=profile.terrain,
         cover=profile.cover,
         water_source=profile.water,
-        height_advantage=clamp_int(profile.height(rules), 0, PERCENT),
+        height_advantage=clamp_int(height_of(rules, profile.height), 0, PERCENT),
         chokepoint=profile.chokepoint,
         soil_fertility=soil,
         derived_fertility=fertility,
@@ -297,8 +312,10 @@ async def ensure_world_calendar(ctx: TickContext, world: WorldRow, moons: int) -
         world.day_length_hours = calendar.day_length_hours if world.day_length_hours is None else world.day_length_hours
         world.season_count = calendar.season_count if world.season_count is None else world.season_count
         created = True
-    world.moon_count = moons
-    world.tidal_strength = tidal_strength(rules, moons)
+    if "moon_count" not in world.calendar_locked:
+        world.moon_count = moons
+    if "tidal_strength" not in world.calendar_locked:
+        world.tidal_strength = tidal_strength(rules, world.moon_count or 0)
     existing = await ctx.session.scalar(select(func.count()).select_from(WorldSeasonRow).where(WorldSeasonRow.world_id == world.id))
     if not existing:
         await write_seasons(ctx, world)
@@ -307,9 +324,16 @@ async def ensure_world_calendar(ctx: TickContext, world: WorldRow, moons: int) -
 
 
 async def write_seasons(ctx: TickContext, world: WorldRow) -> list[WorldSeasonRow]:
-    await ctx.session.execute(delete(WorldSeasonRow).where(WorldSeasonRow.world_id == world.id))
+    count = world.season_count or 1
+    held = {
+        row.position: row
+        for row in await ctx.session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == world.id, WorldSeasonRow.edited.is_(True)))
+        if row.position < count
+    }
+    await ctx.session.execute(delete(WorldSeasonRow).where(WorldSeasonRow.world_id == world.id, WorldSeasonRow.id.not_in([row.id for row in held.values()])))
     rows = [
-        WorldSeasonRow(
+        held.get(draft.position)
+        or WorldSeasonRow(
             world_id=world.id,
             position=draft.position,
             name=draft.name,
@@ -320,36 +344,11 @@ async def write_seasons(ctx: TickContext, world: WorldRow) -> list[WorldSeasonRo
             campaign=draft.campaign,
             edited=False,
         )
-        for draft in season_drafts(ctx.rules, world.world_type, world.season_count or 1, world.axial_tilt or 0)
+        for draft in season_drafts(ctx.rules, world.world_type, count, world.axial_tilt or 0)
     ]
-    ctx.session.add_all(rows)
+    ctx.session.add_all([row for row in rows if row.id is None])
     await ctx.session.flush()
     return rows
-
-
-BRIDGE_SUBTYPE = "bridge"
-HARBOUR_SUBTYPE = "harbour"
-
-
-async def works_by_region(ctx: TickContext, book: EnvironmentBook) -> dict[int, Works]:
-    knowledge = await KnowledgeMap.load(ctx.session)
-    tallies: dict[int, Counter[str]] = {}
-    for entity in await canon(ctx.session, [EntityType.STRUCTURE, EntityType.SETTLEMENT]):
-        region_id = book.atlas.top_region(entity.id)
-        if region_id is None:
-            continue
-        tally = tallies.setdefault(region_id, Counter())
-        subtype = (entity.subtype or "").lower()
-        if entity.entity_type is EntityType.STRUCTURE:
-            tally["bridges"] += BRIDGE_SUBTYPE in subtype
-            tally["harbours"] += HARBOUR_SUBTYPE in subtype
-            continue
-        tally["roads"] += knowledge.knows(entity.id, KnowledgeBranch.ARCHITECTURE)
-        tally["irrigation"] += knowledge.level(entity.id, KnowledgeBranch.AGRICULTURE) >= ctx.rules.environment.irrigation_agriculture_level
-    return {
-        region_id: Works(roads=tally["roads"], bridges=tally["bridges"], harbours=tally["harbours"], irrigation=tally["irrigation"])
-        for region_id, tally in tallies.items()
-    }
 
 
 async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list[EntityRow]) -> dict[int, RegionContext]:
@@ -380,6 +379,30 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
     return contexts
 
 
+async def survey_places(ctx: TickContext, book: EnvironmentBook, contexts: dict[int, RegionContext]) -> int:
+    kinds = await ensure_profiles(ctx, book)
+    placed = 0
+    for place in await canon(ctx.session, [EntityType.PLACE]):
+        if place.id in book.places:
+            continue
+        region_id = book.atlas.top_region(place.id)
+        env = book.regions.get(region_id) if region_id is not None else None
+        context = contexts.get(region_id) if region_id is not None else None
+        factor = factor_of(ctx.rules, env, context.works if context is not None else Works()) if env is not None else 1.0
+        kind = kinds.get(place.id) or await place_kind_of(ctx.session, place.id)
+        row = new_place_environment(ctx.rules, place, region_id, factor, kind)
+        ctx.session.add(row)
+        book.places[place.id] = row
+        placed += 1
+    await ctx.session.flush()
+    return placed
+
+
+async def run_backfills(ctx: TickContext) -> None:
+    ctx.count("typed_works_backfilled", await backfill_typed_works(ctx))
+    ctx.count("battles_grounded", await backfill_battle_ground(ctx))
+
+
 @reads(
     "event.severity",
     "people.population",
@@ -389,18 +412,36 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
     "region.magic",
     "settlement.population",
     "table.applied_fixups",
+    "table.battles",
+    "table.beast_profiles",
     "table.calendars",
+    "table.districts",
     "table.entity_flags",
     "table.forced_weather",
     "table.holder_levels",
+    "table.holder_techniques",
     "table.notable_years",
     "table.place_environment",
+    "table.place_profiles",
     "table.region_environment",
+    "table.region_geomorphology",
+    "table.settlement_infrastructure",
     "table.sky_events",
     "table.world_maps",
     "table.world_seasons",
 )
-@writes("table.applied_fixups", "table.notable_years", "table.place_environment", "table.region_environment", "table.world_seasons", "table.worlds")
+@writes(
+    "table.applied_fixups",
+    "table.battles",
+    "table.districts",
+    "table.notable_years",
+    "table.place_environment",
+    "table.place_profiles",
+    "table.region_environment",
+    "table.settlement_infrastructure",
+    "table.world_seasons",
+    "table.worlds",
+)
 async def environment_survey(ctx: TickContext) -> None:
     ctx.count("notable_years_backfilled", await backfill_notable_years(ctx))
     moons = await moons_by_world(ctx)
@@ -412,6 +453,7 @@ async def environment_survey(ctx: TickContext) -> None:
     book = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch)
     regions = await canon(ctx.session, [EntityType.REGION])
     contexts = await region_contexts(ctx, book, regions)
+    shapes = await shapes_by_region(ctx.session)
     created = synced = 0
     fresh: list[RegionEnvironmentRow] = []
     for region in regions:
@@ -430,7 +472,7 @@ async def environment_survey(ctx: TickContext) -> None:
             fresh.append(env)
             created += 1
         elif mapped is not None:
-            apply_geography(env, mapped, coast)
+            apply_geography(env, mapped, coast, course_of(shapes, region.id))
             if not env.surveyed:
                 env.mineral_layers = mineral_layers(
                     ctx.rules, ctx.environment.rng(f"minerals.{region.id}"), mapped, context.world.world_type, env.dominant_terrain
@@ -439,23 +481,12 @@ async def environment_survey(ctx: TickContext) -> None:
             synced += 1
     await ctx.session.flush()
     await settle_new_ground(ctx, fresh)
-    placed = 0
-    for place in await canon(ctx.session, [EntityType.PLACE]):
-        if place.id in book.places:
-            continue
-        region_id = book.atlas.top_region(place.id)
-        env = book.regions.get(region_id) if region_id is not None else None
-        context = contexts.get(region_id) if region_id is not None else None
-        factor = factor_of(ctx.rules, env, context.works if context is not None else Works()) if env is not None else 1.0
-        row = new_place_environment(ctx.rules, place, region_id, factor)
-        ctx.session.add(row)
-        book.places[place.id] = row
-        placed += 1
-    await ctx.session.flush()
+    placed = await survey_places(ctx, book, contexts)
     ctx.count("worlds_given_seasons", calendars)
     ctx.count("regions_surveyed", created)
     ctx.count("regions_resynced", synced)
     ctx.count("places_surveyed", placed)
+    await run_backfills(ctx)
 
 
 def decay_scars(rules: Rules, env: RegionEnvironmentRow) -> None:
@@ -470,7 +501,11 @@ def decay_scars(rules: Rules, env: RegionEnvironmentRow) -> None:
         ScarKind.BLIGHTED: settings.blighted_decay,
         ScarKind.LEAK_WOUND: settings.leak_wound_decay,
     }
-    kept = {key: depth - decay[ScarKind(key)] for key, depth in env.scars.items() if depth - decay[ScarKind(key)] > 0}
+    kept = {
+        key: depth if f"scar.{key}" in env.locked else depth - decay[ScarKind(key)]
+        for key, depth in env.scars.items()
+        if f"scar.{key}" in env.locked or depth - decay[ScarKind(key)] > 0
+    }
     if kept != env.scars:
         env.scars = kept
 
@@ -482,6 +517,8 @@ def fold_external(env_fertility: int | None, current: int | None, soil: int) -> 
 
 
 def recover_soil(rules: Rules, env: RegionEnvironmentRow) -> None:
+    if "soil_fertility" in env.locked:
+        return
     settings = rules.climate_effects
     gap = env.soil_base - env.soil_fertility
     divisor = settings.fertility_recovery_divisor if gap > 0 else settings.fertility_decline_divisor
@@ -515,11 +552,14 @@ async def sanitation_by_region(ctx: TickContext, book: EnvironmentBook, communit
     "region.magic",
     "settlement.population",
     "table.calendars",
+    "table.districts",
     "table.entity_flags",
     "table.forced_weather",
     "table.holder_levels",
     "table.place_environment",
     "table.region_environment",
+    "table.region_geomorphology",
+    "table.settlement_infrastructure",
     "table.settlement_profiles",
     "table.sky_events",
     "table.world_maps",
@@ -535,6 +575,7 @@ async def environment_derive(ctx: TickContext) -> None:
     communities = await canon(ctx.session, LAND_COMMUNITY_TYPES)
     loads = capacity.build_loads(communities)
     sanitation = await sanitation_by_region(ctx, book, communities)
+    shapes = await shapes_by_region(ctx.session)
     derived = 0
     for region in regions:
         env = book.regions.get(region.id)
@@ -545,7 +586,7 @@ async def environment_derive(ctx: TickContext) -> None:
         if "magic_density" not in env.locked:
             env.magic_density = clamp_int(stat_or(region, "magic", env.magic_density), 0, PERCENT)
         around = context.surroundings(rules, env)
-        refresh_climate(rules, env, around, context.world.axial_tilt or 0, context.world.tidal_strength or 0)
+        refresh_climate(rules, env, around, context.world.axial_tilt or 0, context.world.tidal_strength or 0, shape=shapes.get(region.id))
         load = loads.get(("region", region.id))
         density = 0
         if load is not None and load.communities:
@@ -561,12 +602,13 @@ async def environment_derive(ctx: TickContext) -> None:
                 sanitation_pct=sanitation.get(region.id, 0),
                 scars=env.scars,
             )
-        current = stat(region, "fertility")
-        env.soil_fertility = fold_external(env.derived_fertility, current, env.soil_fertility)
+        current = base_stat(region, "fertility")
+        if "soil_fertility" not in env.locked:
+            env.soil_fertility = fold_external(env.derived_fertility, current, env.soil_fertility)
         recover_soil(rules, env)
         if current is not None or not region.is_water:
-            set_stats(region, fertility=fertility_from(env.soil_fertility, factor_of(rules, env, context.works)))
-            env.derived_fertility = stat(region, "fertility")
+            set_base_stats(region, fertility=fertility_from(env.soil_fertility, factor_of(rules, env, context.works)))
+            env.derived_fertility = base_stat(region, "fertility")
             derived += 1
     for place_env in book.places.values():
         place = await ctx.session.get(EntityRow, place_env.entity_id)
@@ -574,9 +616,9 @@ async def environment_derive(ctx: TickContext) -> None:
         context = contexts.get(place_env.region_entity_id) if place_env.region_entity_id is not None else None
         if place is None or env is None or context is None or stat(place, "fertility") is None:
             continue
-        place_env.soil_fertility = fold_external(place_env.derived_fertility, stat(place, "fertility"), place_env.soil_fertility)
-        set_stats(place, fertility=fertility_from(place_env.soil_fertility, factor_of(rules, env, context.works)))
-        place_env.derived_fertility = stat(place, "fertility")
+        place_env.soil_fertility = fold_external(place_env.derived_fertility, base_stat(place, "fertility"), place_env.soil_fertility)
+        set_base_stats(place, fertility=fertility_from(place_env.soil_fertility, factor_of(rules, env, context.works)))
+        place_env.derived_fertility = base_stat(place, "fertility")
     await ctx.session.flush()
     ctx.count("regions_derived", derived)
 
@@ -596,11 +638,16 @@ def work_land(rules: Rules, env: RegionEnvironmentRow, capacity: CapacityModel, 
     occupancy = load.population / ceiling * PERCENT
     farming = load.agriculture / load.population
     settled = sum(stat_or(item, "population", 0) for item in load.communities if item.entity_type is EntityType.SETTLEMENT)
-    env.farmed = drift(env.farmed, land_target(occupancy * farming * settings.farm_target_pct / PERCENT), divisor)
-    env.grazed = drift(env.grazed, land_target(occupancy * (1 - farming) * settings.graze_target_pct / PERCENT), divisor)
-    env.built = drift(env.built, land_target(settled / settings.built_population_per_pct), divisor)
+    locked = set(env.locked)
+    if "farmed" not in locked:
+        env.farmed = drift(env.farmed, land_target(occupancy * farming * settings.farm_target_pct / PERCENT), divisor)
+    if "grazed" not in locked:
+        env.grazed = drift(env.grazed, land_target(occupancy * (1 - farming) * settings.graze_target_pct / PERCENT), divisor)
+    if "built" not in locked:
+        env.built = drift(env.built, land_target(settled / settings.built_population_per_pct), divisor)
     cleared = env.farmed + env.built * settings.cleared_built_pct / PERCENT + env.grazed * settings.cleared_grazed_pct / PERCENT
-    env.cleared = drift(env.cleared, land_target(cleared), divisor)
+    if "cleared" not in locked:
+        env.cleared = drift(env.cleared, land_target(cleared), divisor)
 
 
 async def settle_new_ground(ctx: TickContext, created: list[RegionEnvironmentRow]) -> None:
@@ -685,18 +732,23 @@ async def land_use(ctx: TickContext) -> None:
         load = loads.get(("region", region_id))
         if load is None or load.population <= 0:
             for key in LandUse:
-                setattr(env, key.value, max(0, getattr(env, key.value) - settings.rewild_rate))
+                if key.value not in env.locked:
+                    setattr(env, key.value, max(0, getattr(env, key.value) - settings.rewild_rate))
             rewilded += 1
         else:
             work_land(rules, env, capacity, load, settings.drift_divisor)
             worked += 1
-        env.erosion = (
-            clamp_int(env.cleared * env.roughness / PERCENT * settings.erosion_pct / PERCENT, 0, PERCENT) if env.roughness >= settings.erosion_roughness else 0
-        )
+        if "erosion" not in env.locked:
+            env.erosion = (
+                clamp_int(env.cleared * env.roughness / PERCENT * settings.erosion_pct / PERCENT, 0, PERCENT)
+                if env.roughness >= settings.erosion_roughness
+                else 0
+            )
         loss = env.erosion * settings.erosion_soil_pct / PERCENT
         if env.farmed > settings.overfarm_threshold:
             loss += (env.farmed - settings.overfarm_threshold) * settings.overfarm_soil_pct / PERCENT
-        env.soil_fertility = clamp_int(env.soil_fertility - loss, 0, PERCENT)
+        if "soil_fertility" not in env.locked:
+            env.soil_fertility = clamp_int(env.soil_fertility - loss, 0, PERCENT)
         await note_land(ctx, env, before)
     await ctx.session.flush()
     ctx.count("regions_worked", worked)
@@ -885,7 +937,8 @@ async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason)
     )
     if year.weather is WeatherKind.ASH_FALL and env.soil is not SoilKind.VOLCANIC and "soil" not in env.locked:
         env.soil = SoilKind.ASH
-        env.soil_base = natural_soil(ctx.rules, SoilKind.ASH, env.moisture)
+        if "soil_base" not in env.locked:
+            env.soil_base = natural_soil(ctx.rules, SoilKind.ASH, env.moisture)
     return 1
 
 
@@ -924,8 +977,7 @@ async def harvest(ctx: TickContext) -> None:
         regions = [env for env in book.regions.values() if env.world_id == world.id and ("region", env.entity_id) in loads]
         if not regions:
             continue
-        years = sampled_years(ctx.environment, world.id)
-        years = years[: grant_sub_steps(ctx.environment, len(years))] or years[:1]
+        years = world_years(ctx.environment, world.id, "harvest")
         season = HarvestSeason(book, loads, knowledge, planned, book.growing_season(world.id), years)
         for env in regions:
             notable += await region_harvest(ctx, world, season, env)
@@ -936,6 +988,7 @@ async def harvest(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.applied_fixups",
     "table.bonds",
     "table.calendars",
     "table.epoch_year_cursors",
@@ -943,6 +996,7 @@ async def harvest(ctx: TickContext) -> None:
     "table.language_profiles",
     "table.lexemes",
     "table.name_registry",
+    "table.nodes",
     "table.notable_years",
     "table.place_environment",
     "table.region_environment",
@@ -951,13 +1005,19 @@ async def harvest(ctx: TickContext) -> None:
     "table.world_seasons",
 )
 @writes(
+    "table.applied_fixups",
+    "table.bonds",
     "table.calendars",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",
+    "table.name_registry",
+    "table.nodes",
+    "table.tradition_profiles",
 )
 async def calendars(ctx: TickContext) -> None:
     rules = ctx.rules
@@ -965,6 +1025,7 @@ async def calendars(ctx: TickContext) -> None:
     book = await EnvironmentBook.load(ctx.session, rules, ctx.epoch)
     records = [record for record in await canon(ctx.session, [EntityType.KNOWLEDGE]) if record.knowledge_branch is KnowledgeBranch.ASTRONOMY]
     adopted = commemorated = 0
+    hallowed = await backfill_holy_days(ctx)
     rng = ctx.rng("adopt")
     for record in records:
         knowers = [bond.source_node_id for bond in await active_bonds(ctx.session, [BondKind.KNOWS], targets=[record.id])]
@@ -977,8 +1038,10 @@ async def calendars(ctx: TickContext) -> None:
             adopted += 1
         regions = {region for knower in knowers if (region := book.atlas.top_region(knower)) is not None}
         commemorated += await commemorate_hard_years(ctx, calendar, regions)
+        hallowed += await hallow_holy_days(ctx, calendar)
     ctx.count("calendars_adopted", adopted)
     ctx.count("holy_days_added", commemorated)
+    ctx.count("holy_day_traditions", hallowed)
     await ctx.session.flush()
 
 
@@ -1122,46 +1185,21 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
     return crowned
 
 
-LEY_WORK_KINDS = frozenset({EngineKind.TEMPLE, EngineKind.OBSERVATORY})
-LEY_WORK_SUBTYPES = ("gate", "tower", "temple", "observatory", "shrine")
-
-
-def ley_work(work: EntityRow) -> bool:
-    subtype = (work.subtype or "").lower()
-    return work.engine_kind in LEY_WORK_KINDS or any(word in subtype for word in LEY_WORK_SUBTYPES)
-
-
-async def empower_works(ctx: TickContext, web: LeyWeb) -> int:
-    settings = ctx.rules.environment
-    atlas = await RegionAtlas.load(ctx.session)
-    nexus = {place.entity_id for place in await ctx.session.scalars(select(PlaceEnvironmentRow).where(PlaceEnvironmentRow.nexus.is_(True)))}
-    degree = web.degree()
-    empowered = 0
-    for work in await canon(ctx.session, [EntityType.STRUCTURE]):
-        region_id = atlas.top_region(work.id)
-        if region_id is None or not degree[region_id] or not ley_work(work):
-            continue
-        gain = settings.ley_function_gain * (settings.nexus_function_mult if work.location_id in nexus else 1)
-        current = stat_or(work, "function", settings.ley_function_base)
-        if current >= settings.ley_function_cap:
-            continue
-        set_stats(work, function=clamp_int(current + gain, 0, settings.ley_function_cap))
-        empowered += 1
-    return empowered
-
-
 @reads(
     "place.mystery",
     "region.magic",
     "structure.function",
+    "table.applied_fixups",
     "table.epoch_year_cursors",
     "table.ley_lines",
     "table.place_environment",
     "table.region_environment",
+    "table.structure_ley",
     "table.world_maps",
 )
 @writes(
     "structure.function",
+    "table.applied_fixups",
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
@@ -1171,6 +1209,7 @@ async def empower_works(ctx: TickContext, web: LeyWeb) -> int:
     "table.ley_lines",
     "table.place_environment",
     "table.region_environment",
+    "table.structure_ley",
 )
 async def ley_lines(ctx: TickContext) -> None:
     web = await LeyWeb.load(ctx.session)
@@ -1179,6 +1218,7 @@ async def ley_lines(ctx: TickContext) -> None:
     formed = await weave_lines(ctx, web, regions, grounds)
     await ctx.session.flush()
     crowned = await crown_nexus(ctx, web, grounds)
+    ctx.count("works_attuned_backfilled", await backfill_attunement(ctx))
     empowered = await empower_works(ctx, web)
     await ctx.session.flush()
     ctx.count("ley_lines_formed", formed)

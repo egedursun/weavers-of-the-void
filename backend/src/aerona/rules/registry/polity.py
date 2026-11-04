@@ -88,6 +88,12 @@ class LegitimacyRules:
     infamy_pct: int = rule(30, 0, 100, P, "Legitimacy lost to the ruler's infamy at its worst")
     usurper_fade_epochs: int = rule(5, 1, 100, P, "Epochs after which a usurper's mark fades")
     usurper_infamy: int = rule(20, 0, 100, P, "Infamy a usurper gains")
+    presence_pct: int = rule(20, 0, 100, P, "Legitimacy a ruler loses at no presence at all (%)")
+    martial_melee_pct: int = rule(15, 0, 100, P, "Legitimacy a ruler of a warlike people loses at no strength of arms (%)")
+    martial_value: int = rule(30, -100, 100, P, "How warlike a people must be before it judges its ruler by strength of arms")
+    acts_pct: int = rule(25, 0, 200, P, "How much the realm's judgement of the ruler's deeds moves legitimacy (%)")
+    acts_cap: int = rule(20, 0, 100, P, "Most legitimacy the ruler's deeds can win or lose")
+    relic_legitimacy: int = rule(8, 0, 100, P, "Legitimacy from holding an heirloom relic of the line, such as a legendary prosthesis")
 
 
 @dataclass(frozen=True)
@@ -210,8 +216,6 @@ class OathsRules:
     honour_loss: int = rule(20, 0, 100, H, "Importance an oathbreaker loses")
     wrath_relation: int = rule(15, 0, 100, H, "Relation the witnessing god's faithful lose with the oathbreaker")
     breach_relation: int = rule(25, 0, 100, H, "Relation the betrayed party loses with the oathbreaker")
-    honour_kept: int = rule(3, 0, 100, H, "Honour a mortal gains for an oath kept or fulfilled")
-    honour_broken: int = rule(20, 0, 100, H, "Honour a mortal loses for an oath broken")
     wrath_curse_chance: int = rule(40, 0, 100, H, "The witnessing god curses an oathbreaker (%)")
     wrath_essence: int = rule(2, 0, 1000, H, "Essence a god takes in wrath from a broken oath sworn before it")
     celibacy_chance: int = rule(30, 0, 100, H, "A priest of a celibate faith swears celibacy in an epoch (%)")

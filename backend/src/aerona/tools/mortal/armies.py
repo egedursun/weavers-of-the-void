@@ -8,7 +8,7 @@ from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.body import Capacity
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
@@ -26,7 +26,11 @@ from aerona.tools.mortal.support import MortalCreation, craft_of, create_record,
 
 PERCENT = 100
 HALF = 50
-KIN_BONDS = (BondKind.PROTECTS, BondKind.DESCENDS_FROM, BondKind.COMPANION)
+KIN_BONDS = (
+    BondKind.PROTECTS,
+    BondKind.COMPANION,
+    *KIN_BOND_KINDS,
+)
 
 
 async def my_army(call: MortalCall) -> tuple[EntityRow, ArmyRow] | None:

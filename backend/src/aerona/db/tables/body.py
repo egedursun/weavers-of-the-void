@@ -1,12 +1,12 @@
-from sqlalchemy import JSON, ForeignKey, Index, String
+from sqlalchemy import JSON, ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
-from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.constants.units import PERCENT
 from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.body import (
     BodyBuild,
+    BodyPart,
     BodyPlan,
     BodyReading,
     ConditionKind,
@@ -24,6 +24,7 @@ SEVERITY_MIN = 1
 SEVERITY_MAX = 5
 
 CAPACITY_COLUMNS = ("melee", "missile", "command", "craft", "scholarship", "presence", "mobility", "fertility")
+FUNCTION_COLUMNS = ("vital", "cognition", "hearing", "sight", "venom", "horn", "tail")
 ARMOUR_COLUMNS = ("armour_head", "armour_torso", "armour_limbs")
 
 
@@ -31,7 +32,7 @@ class BodyRow(Base):
     __tablename__ = "bodies"
     __table_args__ = (
         *(at_least(column, 0) for column in CAPACITY_COLUMNS),
-        *(between(column, PERCENT_MIN, PERCENT_MAX) for column in (*ARMOUR_COLUMNS, "pain")),
+        *(between(column, PERCENT_MIN, PERCENT_MAX) for column in (*ARMOUR_COLUMNS, *FUNCTION_COLUMNS, "pain")),
         at_least("fingers", 0),
         at_least("hp_max", 0),
         at_least("patients_healed", 0),
@@ -58,6 +59,13 @@ class BodyRow(Base):
     armour_head: Mapped[int] = mapped_column(default=0)
     armour_torso: Mapped[int] = mapped_column(default=0)
     armour_limbs: Mapped[int] = mapped_column(default=0)
+    vital: Mapped[int] = mapped_column(default=PERCENT)
+    cognition: Mapped[int] = mapped_column(default=PERCENT)
+    hearing: Mapped[int] = mapped_column(default=PERCENT)
+    sight: Mapped[int] = mapped_column(default=PERCENT)
+    venom: Mapped[int] = mapped_column(default=0)
+    horn: Mapped[int] = mapped_column(default=0)
+    tail: Mapped[int] = mapped_column(default=0)
     patients_healed: Mapped[int] = mapped_column(default=0)
     patients_lost: Mapped[int] = mapped_column(default=0)
     updated_epoch: Mapped[int] = mapped_column(default=0)
@@ -79,7 +87,7 @@ class InjuryRow(CreatedAtMixin, Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     bearer_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
     world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="SET NULL"))
-    part: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
+    part: Mapped[BodyPart] = mapped_column(enum_type(BodyPart, "part"))
     kind: Mapped[InjuryKind] = mapped_column(enum_type(InjuryKind, "kind"))
     damage_type: Mapped[DamageType] = mapped_column(enum_type(DamageType, "damage_type"))
     severity: Mapped[int]
@@ -110,7 +118,7 @@ class ConditionRow(CreatedAtMixin, Base):
     bearer_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
     kind: Mapped[ConditionKind] = mapped_column(enum_type(ConditionKind, "kind"))
     severity: Mapped[int]
-    part: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    part: Mapped[BodyPart | None] = mapped_column(enum_type(BodyPart, "part"))
     source: Mapped[HarmCause] = mapped_column(enum_type(HarmCause, "source"))
     source_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     since_epoch: Mapped[int]
@@ -131,7 +139,7 @@ class ProsthesisRow(CreatedAtMixin, Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     bearer_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
     injury_id: Mapped[int] = mapped_column(ForeignKey("injuries.id", ondelete="CASCADE"), unique=True)
-    part: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
+    part: Mapped[BodyPart] = mapped_column(enum_type(BodyPart, "part"))
     material: Mapped[MaterialKind] = mapped_column(enum_type(MaterialKind, "material"))
     quality: Mapped[int]
     restored_pct: Mapped[int]

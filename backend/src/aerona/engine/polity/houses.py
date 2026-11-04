@@ -9,7 +9,8 @@ from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow
-from aerona.db.tables.polity import ClaimRow, HeirloomRow, HouseMemberRow, HouseProfileRow, MortalReputeRow, OfficeRow, SentenceRow
+from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.polity import ClaimRow, HeirloomRow, HouseMemberRow, HouseProfileRow, OfficeRow, SentenceRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.bond import BondKind, BondState
@@ -18,6 +19,7 @@ from aerona.domain.enums.demography import MarriageCustom
 from aerona.domain.enums.entity import HERO_ROLES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import MemoryKind, TraitKind, ValueAxis
+from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import ClaimBasis, GenderRule, HouseTrait, LawKind, OathKind, OfficeKind, OfficePower
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.son import SonStatus
@@ -30,6 +32,8 @@ from aerona.engine.lifecycle.succession import dynasty_root
 from aerona.engine.mind.book import traits_of
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.space import value_distance
+from aerona.engine.mortal.kin import children_of, parents_of, spouses_of
+from aerona.engine.mortal.kinship import marry
 from aerona.engine.notes import note
 from aerona.engine.phases.heroes import active_quest, start_quest
 from aerona.engine.phases.society_support.quests import QuestOption
@@ -39,7 +43,7 @@ from aerona.engine.polity.laws import law_param
 from aerona.engine.polity.oaths import break_oath, oaths_of
 from aerona.engine.polity.offices import best_skill, whole
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import active_bonds, add_flag, connect, has_flag, living_entity
+from aerona.engine.primitives.queries import add_flag, connect, has_flag, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.rules.registry import Rules
@@ -178,10 +182,9 @@ async def values_of(ctx: TickContext, mortal: EntityRow) -> dict[ValueAxis, int]
 
 
 async def kin_ids(ctx: TickContext, mortal_id: int) -> tuple[set[int], set[int], set[int]]:
-    up = {bond.target_node_id for bond in await active_bonds(ctx.session, [BondKind.DESCENDS_FROM], sources=[mortal_id])}
-    down = {bond.source_node_id for bond in await active_bonds(ctx.session, [BondKind.DESCENDS_FROM], targets=[mortal_id])}
-    spouses = {bond.other_end(mortal_id) for bond in await active_bonds(ctx.session, [BondKind.LOVES], sources=[mortal_id])}
-    spouses |= {bond.other_end(mortal_id) for bond in await active_bonds(ctx.session, [BondKind.LOVES], targets=[mortal_id])}
+    up = set(await parents_of(ctx.session, mortal_id))
+    down = set(await children_of(ctx.session, mortal_id))
+    spouses = set(await spouses_of(ctx.session, mortal_id))
     return up, down, spouses
 
 
@@ -384,7 +387,7 @@ async def deeds(ctx: TickContext, realms: RealmBook, profile: HouseProfileRow, a
         )
         gain -= int(executed or 0) * table.prestige_execution
     for mortal in alive:
-        repute = await ctx.session.get(MortalReputeRow, mortal.id)
+        repute = await ctx.session.get(MortalProfileRow, mortal.id)
         if repute is not None and repute.infamy:
             gain -= round_half_up(repute.infamy / PERCENT * table.prestige_infamy)
     return gain
@@ -737,7 +740,7 @@ async def arrange_marriages(ctx: TickContext, book: HouseBook, realms: RealmBook
         if best is None:
             continue
         spouse = best[1]
-        await connect(ctx.session, mortal.id, spouse.id, BondKind.LOVES, ctx.epoch, description="arranged marriage")
+        await marry(ctx.session, mortal, spouse, ctx.epoch, kind=MarriageKind.POLITICAL, description="arranged marriage")
         await marriage_claims(ctx, mortal, spouse)
         await dowry(ctx, book, house_id, spouse)
         await break_celibacy(ctx, mortal, spouse)
@@ -809,7 +812,11 @@ async def dynasty_backfill(ctx: TickContext, book: HouseBook) -> int:
         frontier = set(book.members.get(house_id, set()))
         seen = set(frontier)
         for _ in range(ANCESTOR_DEPTH):
-            parents = {bond.target_node_id for bond in await active_bonds(ctx.session, [BondKind.DESCENDS_FROM], sources=list(frontier))} if frontier else set()
+            parents = set(
+                await ctx.session.scalars(
+                    select(BondRow.source_node_id).where(BondRow.kind == BondKind.PARENT_OF, BondRow.target_node_id.in_(list(frontier) or [-1]))
+                )
+            )
             closed = set(
                 await ctx.session.scalars(
                     select(BondRow.target_node_id).where(BondRow.kind == BondKind.DESCENDS_FROM, BondRow.source_node_id.in_(list(frontier) or [-1]))
