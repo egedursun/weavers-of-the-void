@@ -12,6 +12,7 @@ from aerona.services.player import catalog, foundations, society
 from aerona.services.player.scope import PlayerScope
 from tests.engine.warfare.factories import society as give_society
 from tests.services.player.factories import PlayerWorld, make_entity, make_son
+from tests.services.player.test_undo import _undo as undo
 
 FOUNDATION_ACTIONS = (
     "war:incite",
@@ -92,3 +93,25 @@ async def test_a_god_can_be_cut_loose_from_their_own_creation(scope: PlayerScope
     assert son.anchor_entity_id is None
     with pytest.raises(ValidationFailedError):
         await foundations.clear_anchor(scope, foundations.SonTarget(son_id=son.id))
+
+
+async def test_blame_and_a_golden_age_date_are_undoable(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
+    son = await make_son(session, "Strife", world.world.id)
+    first = await make_entity(session, "Red Folk", EntityType.PEOPLE, world_id=world.world.id, location_id=world.region.id)
+    second = await make_entity(session, "Blue Folk", EntityType.PEOPLE, world_id=world.world.id, location_id=world.region.id)
+    await give_society(session, first.id)
+    war = await open_war(await scope.context("test"), first, second)
+    epoch = await scope.epoch()
+    blamed = await foundations.set_incitement(scope, foundations.WarIncitement(war_id=war.id, son_id=son.id, hold=True))
+    assert await undo(session, blamed.ledger_entry_id, epoch) == []
+    await session.refresh(war)
+    assert war.incited_by_son_id is None
+    assert not await is_held(session, war.event_entity_id, INCITEMENT_KEY, epoch)
+    await society.golden_age(scope, society.WorldTarget(world_id=world.world.id))
+    row = await session.get(CommunitySocietyRow, first.id)
+    assert row is not None
+    began = row.golden_age_since_epoch
+    dated = await foundations.set_golden_age_date(scope, foundations.GoldenAgeDate(world_id=world.world.id, since_epoch=0))
+    assert await undo(session, dated.ledger_entry_id, epoch) == []
+    await session.refresh(row)
+    assert row.golden_age_since_epoch == began
