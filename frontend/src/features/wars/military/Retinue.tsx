@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button'
 import {
   EmptyState,
   EntityLink,
-  IconStat,
+  MiniStat,
   Medallion,
   StatBar,
 } from '@/components/domain'
@@ -106,25 +106,25 @@ function ContractCard({
         <Held locked={row.locked} />
       </div>
       <div className='grid min-w-0 grid-cols-2 gap-2 @lg/mil:grid-cols-4'>
-        <IconStat
+        <MiniStat
           icon={Users}
           label='Soldiers'
           value={Number(row.values.soldiers ?? 0)}
           tone='info'
         />
-        <IconStat
+        <MiniStat
           icon={Coins}
           label='Pay a season'
           value={Number(row.values.pay_per_season ?? 0)}
           tone='gold'
         />
-        <IconStat
+        <MiniStat
           icon={CalendarClock}
           label='Seasons left'
           value={Number(row.values.seasons_left ?? 0)}
           tone='muted'
         />
-        <IconStat
+        <MiniStat
           icon={Banknote}
           label='Unpaid'
           value={Number(row.values.unpaid_seasons ?? 0)}

@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.constants.units import PERCENT
 from aerona.constants.warfare import ARMY_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
@@ -7,6 +8,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyOfficerRow, WarAimRow
+from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, CaptiveRow, SiegeRow, WarRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityType
@@ -23,13 +25,25 @@ from aerona.engine.military.units import muster, profile_of
 from aerona.engine.military.vessels import SeaTally, repair
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.levies import levy, levy_category
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.primitives.stats import headcount_value
 from aerona.engine.services.war import require_ongoing_war, take_captive
 from aerona.engine.services.war_resolution import WarSettlement, end_war
 
 ARMY_SUBTYPE = "standing army"
+
+
+async def class_levy_cap(ctx: TickContext, community: EntityRow) -> int | None:
+    society = await ctx.session.get(CommunitySocietyRow, community.id)
+    people = headcount_value(community)
+    if society is None or people is None:
+        return None
+    table = ctx.rules.levies
+    commoners = society.share_farmer + society.share_artisan + society.share_merchant + society.share_serf_or_slave
+    share = society.share_warrior * table.warrior_first_pct + society.share_noble * table.noble_first_pct + commoners * table.commoner_pct
+    return max(1, round_half_up(people * share / PERCENT / PERCENT))
 
 
 async def raise_standing_army(
@@ -39,7 +53,9 @@ async def raise_standing_army(
     if community is None or community.entity_type not in COMMUNITY_TYPES:
         raise ValidationFailedError("Only a living community can raise an army.")
     war = (await require_ongoing_war(ctx.session, war_id)).war if war_id is not None else None
-    soldiers = levy(ctx.rules, community, clamp_int(size, 1, ctx.rules.limits.army_soldier_cap))
+    cap = await class_levy_cap(ctx, community)
+    wanted = clamp_int(size, 1, ctx.rules.limits.army_soldier_cap)
+    soldiers = levy(ctx.rules, community, min(wanted, cap) if cap is not None else wanted)
     if soldiers <= 0:
         raise ConflictError(f"{community.name} has no one left to levy.")
     from_engine = ctx.rules.campaigns

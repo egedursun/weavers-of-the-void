@@ -179,8 +179,16 @@ async def seek_relief(ctx: TickContext, siege: SiegeRow, besieged: EntityRow, at
     if army is None:
         return None
     if "relief_army_id" not in siege.locked:
+        if siege.relief_army_id != army.id:
+            hearten(ctx, besieged)
         siege.relief_army_id = army.id
     return army
+
+
+def hearten(ctx: TickContext, besieged: EntityRow) -> None:
+    key = next((key for key in ("morale", "stability") if stat(besieged, key) is not None), None)
+    if key is not None:
+        shift_stat(besieged, key, ctx.rules.siege_depth.relief_morale)
 
 
 async def relief_arrived(ctx: TickContext, siege: SiegeRow, besieged: EntityRow, besiegers: EntityRow, atlas: RegionAtlas) -> bool:

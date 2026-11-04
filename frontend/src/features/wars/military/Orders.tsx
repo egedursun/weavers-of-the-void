@@ -15,7 +15,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
-import { IconStat, StatBar } from '@/components/domain'
+import { MiniStat, StatBar } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { EntityPicker, Held, RecordButtons, TextField } from './controls'
@@ -97,14 +97,14 @@ export function WarLedger({
         <Held locked={row.locked} />
       </div>
       <div className='grid min-w-0 grid-cols-2 gap-2'>
-        <IconStat
+        <MiniStat
           icon={Scale}
           label='Score'
           value={Number(row.values.score ?? 0)}
           tone='gold'
           hint='Above zero favours the attackers'
         />
-        <IconStat
+        <MiniStat
           icon={Flame}
           label='Violence'
           value={Number(row.values.violence ?? 0)}

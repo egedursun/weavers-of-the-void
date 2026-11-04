@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Castle, Flag, Map as MapIcon, Swords, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { EmptyState, EpochSlider, IconStat } from '@/components/domain'
+import { EmptyState, EpochSlider, MiniStat } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { type MapView, useWorldMap } from '@/features/map/api'
 import { buildTerrain, drawTexture } from '@/features/map/terrainLayer'
@@ -26,7 +26,9 @@ const SIDE_STROKE = [
 const SIDE_SWATCH = ['bg-destructive', 'bg-info', 'bg-warning', 'bg-success']
 const CANVAS_WIDTH = 960
 const PAD = 0.18
-const MIN_SPAN = 0.22
+const MIN_SPAN = 0.14
+const LABEL_GAP_X = 70
+const LABEL_GAP_Y = 16
 const UNIT_DIVISOR = 320
 
 type Point = { x: number; y: number }
@@ -266,7 +268,23 @@ export function WarMap({ room }: { room: WarRoom }) {
   )
   const labelled = [...names.entries()]
     .map(([id, name]) => ({ id, name, spot: at(id) }))
-    .filter((entry) => entry.spot !== undefined)
+    .filter(
+      (entry): entry is { id: number; name: string; spot: Point } =>
+        entry.spot !== undefined
+    )
+    .sort((first, second) => first.spot.x - second.spot.x)
+    .reduce<{ id: number; name: string; spot: Point; below: boolean }[]>(
+      (placed, entry) => {
+        const crowded = placed.some(
+          (other) =>
+            !other.below &&
+            Math.abs(other.spot.x - entry.spot.x) < unit * LABEL_GAP_X &&
+            Math.abs(other.spot.y - entry.spot.y) < unit * LABEL_GAP_Y
+        )
+        return [...placed, { ...entry, below: crowded }]
+      },
+      []
+    )
   return (
     <Panel
       title='War map'
@@ -345,15 +363,19 @@ export function WarMap({ room }: { room: WarRoom }) {
             {labelled.map((entry) => (
               <g key={`label.${entry.id}`}>
                 <circle
-                  cx={entry.spot!.x}
-                  cy={entry.spot!.y}
+                  cx={entry.spot.x}
+                  cy={entry.spot.y}
                   r={unit * 3}
                   className='fill-background stroke-foreground'
                   strokeWidth={unit}
                 />
                 <text
-                  x={entry.spot!.x}
-                  y={entry.spot!.y - unit * 7}
+                  x={entry.spot.x}
+                  y={
+                    entry.below
+                      ? entry.spot.y + unit * 36
+                      : entry.spot.y - unit * 7
+                  }
                   textAnchor='middle'
                   className='fill-foreground stroke-background'
                   strokeWidth={unit * 2.5}
@@ -451,25 +473,25 @@ export function WarMap({ room }: { room: WarRoom }) {
             onChange={setPicked}
           />
           <div className='grid min-w-0 grid-cols-2 gap-2'>
-            <IconStat
+            <MiniStat
               icon={Flag}
               label='Fronts'
               value={fronts.length}
               tone='danger'
             />
-            <IconStat
+            <MiniStat
               icon={Swords}
               label='Battles'
               value={battles.length}
               tone='warning'
             />
-            <IconStat
+            <MiniStat
               icon={Castle}
               label='Sieges'
               value={sieges.length}
               tone='gold'
             />
-            <IconStat
+            <MiniStat
               icon={Users}
               label='Armies'
               value={room.armies.length}

@@ -18,7 +18,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
-import { EntityLink, IconStat, Section, StatBar } from '@/components/domain'
+import { EntityLink, MiniStat, Section, StatBar } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -312,21 +312,21 @@ export function VesselCard({
         tone='verdigris'
       />
       <div className='grid min-w-0 grid-cols-2 gap-2 @lg/mil:grid-cols-4'>
-        <IconStat icon={Users} label='Crew' value={vessel.crew} tone='info' />
-        <IconStat
+        <MiniStat icon={Users} label='Crew' value={vessel.crew} tone='info' />
+        <MiniStat
           icon={Package}
           label='Cargo'
           value={vessel.cargo_capacity}
           tone='gold'
         />
-        <IconStat
+        <MiniStat
           icon={Crown}
           label='Renown'
           value={vessel.renown}
           tone='warning'
           hint={vessel.legend ? 'Sung of in a legend' : undefined}
         />
-        <IconStat
+        <MiniStat
           icon={Sparkles}
           label='Strangeness'
           value={vessel.strangeness}
@@ -469,21 +469,21 @@ export function LayDownVessel({
       </FieldGrid>
       {spec && (
         <div className='grid min-w-0 grid-cols-2 gap-2 @lg/mil:grid-cols-5'>
-          <IconStat icon={Gauge} label='Speed' value={spec.speed} tone='info' />
-          <IconStat
+          <MiniStat icon={Gauge} label='Speed' value={spec.speed} tone='info' />
+          <MiniStat
             icon={Package}
             label='Cargo'
             value={spec.cargo}
             tone='gold'
           />
-          <IconStat icon={Users} label='Crew' value={spec.crew} tone='muted' />
-          <IconStat
+          <MiniStat icon={Users} label='Crew' value={spec.crew} tone='muted' />
+          <MiniStat
             icon={Waves}
             label='Seaworthy'
             value={spec.seaworthiness}
             tone='verdigris'
           />
-          <IconStat
+          <MiniStat
             icon={Anchor}
             label='Arms'
             value={spec.slots}

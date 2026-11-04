@@ -46,6 +46,13 @@ async def named_ransom(ctx: TickContext, captive: EntityRow) -> int:
 
 
 async def pay_from_treasury(ctx: TickContext, payer: EntityRow, amount: int, *, captive: EntityRow | None = None) -> int:
+    paid = await draw_ransom(ctx, payer, amount, captive=captive)
+    if paid > 0 and stat(payer, "prosperity") is not None:
+        shift_stat(payer, "prosperity", -ctx.rules.campaigns.ransom_cost)
+    return paid
+
+
+async def draw_ransom(ctx: TickContext, payer: EntityRow, amount: int, *, captive: EntityRow | None = None) -> int:
     if captive is not None:
         house = await house_of(ctx, captive.id)
         if house is not None and house.wealth >= amount:

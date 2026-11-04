@@ -21,6 +21,7 @@ from aerona.engine.environment.perils import danger_toll, navigate
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import has_technique
 from aerona.engine.military.campaign import (
+    babel,
     carry,
     choose_stance,
     class_desertion,
@@ -230,6 +231,7 @@ def desert(rules: Rules, march: March, rows: list[ArmyUnitRow], soldiers: int) -
 
 
 async def desert_by_class(ctx: TickContext, march: March, rows: list[ArmyUnitRow]) -> int:
+    await babel(ctx, march.profile, rows)
     leaving = await class_desertion(ctx, march.owner, march.profile, rows)
     if leaving <= 0:
         return 0

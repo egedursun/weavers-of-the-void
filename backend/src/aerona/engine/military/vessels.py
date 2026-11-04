@@ -22,6 +22,7 @@ from aerona.domain.enums.travel import TravelMethod, VehicleKind
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.military.rule_tables import hull_values
 from aerona.engine.mind.book import skill_level
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -56,7 +57,7 @@ def hull_spec(hull: HullClass) -> HullSpec:
 
 
 def hull_value(rules: Rules, hull: HullClass, key: str) -> int:
-    return int(getattr(rules.seafaring, f"{hull.value}_{key}"))
+    return hull_values(rules.seafaring)[(hull.value, key)]
 
 
 def fresh_profile(
@@ -70,7 +71,7 @@ def fresh_profile(
         condition=PERCENT,
         armament=[item.value for item in spec.armament],
         seaworthiness=hull_value(rules, hull, "seaworthiness"),
-        cargo_capacity=hull_value(rules, hull, "cargo"),
+        cargo_capacity=min(hull_value(rules, hull, "cargo"), spec.crew * rules.seafaring.crew_per_cargo),
         crew=spec.crew,
         seamanship=0,
         home_port_entity_id=home_port,
