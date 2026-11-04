@@ -181,7 +181,7 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
         blade = await weapon_of(ctx.session, wielder)
         if blade is not None:
             harm = replace(harm, edge=blade.edge, heft=blade.weight)
-        held = best_weapon(await held_profiles(ctx.session, wielder))
+        held = best_weapon(await held_profiles(ctx.session, wielder), ctx.rules.item_wear.broken)
         if held is not None:
             harm = replace(
                 harm,

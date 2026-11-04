@@ -14,7 +14,6 @@ from aerona.db.tables.culture import (
     IdeologyTenetRow,
     ItemProfileRow,
     LegendProfileRow,
-    ProphecyConditionRow,
     RiteProfileRow,
     TraditionProfileRow,
 )
@@ -29,15 +28,17 @@ from aerona.domain.enums.culture import (
     LegendArchetype,
     MagicSchool,
     MagicSource,
+    ProphecyConsequence,
     ProphecyPredicate,
-    ProphecyState,
     TraditionKind,
 )
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.world import SkyEventKind
 from aerona.domain.models.entity_stats import EntityStats
 from aerona.engine.context import TickContext
 from aerona.engine.lore.language import standing_of
+from aerona.engine.lore.prophecy import Foretelling, typed_condition
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
@@ -148,24 +149,38 @@ async def seed_rite(ctx: TickContext, entity: EntityRow, values: Values) -> Base
     return row
 
 
+def optional_id(values: Values, key: str) -> int | None:
+    raw = values.pop(key, None)
+    if raw is None or raw == "":
+        return None
+    if isinstance(raw, bool) or not isinstance(raw, int | str) or not str(raw).isdigit():
+        raise ValidationFailedError(f"{key.replace('_', ' ').capitalize()} is an id.")
+    return int(raw)
+
+
+def optional_kind[E](values: Values, key: str, kind: Callable[[str], E]) -> E | None:
+    raw = values.pop(key, None)
+    if raw is None or raw == "":
+        return None
+    try:
+        return kind(str(raw))
+    except ValueError as error:
+        raise ValidationFailedError(f"{raw} is not a known {key.replace('_', ' ')}.") from error
+
+
 async def seed_prophecy(ctx: TickContext, entity: EntityRow, values: Values) -> Base:
-    predicate = take(values, "predicate", ProphecyPredicate)
-    args = values.pop("args", None) or {}
-    if not isinstance(args, dict):
-        raise ValidationFailedError("The terms of a prophecy are a table of values.")
-    limit = ctx.rules.deep_life.prophecy_forget_epochs
-    row = ProphecyConditionRow(
-        prophecy_entity_id=entity.id,
-        predicate=predicate,
-        args=args,
-        deadline_epoch=ctx.epoch + limit if limit > 0 else None,
-        audience=[],
-        pressure=PERCENT // 5,
-        state=ProphecyState.PENDING,
-        locked=[],
+    told = Foretelling(
+        predicate=take(values, "predicate", ProphecyPredicate),
+        subject_id=optional_id(values, "subject_id"),
+        second_id=optional_id(values, "second_id"),
+        archetype=optional_kind(values, "archetype", LegendArchetype),
+        sky_kind=optional_kind(values, "sky_kind", SkyEventKind),
+        event_kind=optional_kind(values, "event_kind", EngineKind),
+        within_epochs=optional_id(values, "within_epochs"),
+        consequence=optional_kind(values, "consequence", ProphecyConsequence),
+        consequence_id=optional_id(values, "consequence_id"),
     )
-    ctx.session.add(row)
-    return row
+    return await typed_condition(ctx, entity, told)
 
 
 async def seed_item(ctx: TickContext, entity: EntityRow, values: Values) -> Base:

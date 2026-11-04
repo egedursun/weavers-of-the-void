@@ -249,7 +249,7 @@ async def armour_of(session: AsyncSession, rules: Rules, bearer: Bearer, communi
         if SHIELD_TAG in tags:
             limbs = max(limbs, min(table.coverage_cap, protection * table.shield_limbs_pct // PERCENT))
             torso = max(torso, min(table.coverage_cap, protection * table.shield_torso_pct // PERCENT))
-    guard = guard_of(await held_profiles(session, bearer.id)) * table.armour_torso_pct // PERCENT
+    guard = guard_of(await held_profiles(session, bearer.id), rules.item_wear.broken) * table.armour_torso_pct // PERCENT
     return Armour(head, min(table.coverage_cap, max(torso, guard)), limbs)
 
 

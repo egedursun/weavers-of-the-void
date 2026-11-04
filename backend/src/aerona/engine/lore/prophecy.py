@@ -1,16 +1,19 @@
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow
-from aerona.db.tables.culture import ProphecyConditionRow
+from aerona.db.tables.culture import LegendProfileRow, ProphecyConditionRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
-from aerona.db.tables.polity import ClaimRow, HouseMemberRow, OfficeRow
+from aerona.db.tables.polity import ClaimRow, HouseMemberRow, HouseProfileRow, OfficeRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.culture import LegendArchetype, ProphecyPredicate, ProphecyState
+from aerona.domain.enums.culture import LegendArchetype, ProphecyConsequence, ProphecyPredicate, ProphecyState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, ValueAxis, ValueHolder
 from aerona.domain.enums.polity import OfficeKind
@@ -24,26 +27,69 @@ from aerona.engine.gods.progress import grant_progress
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.legends import resonance
 from aerona.engine.mind.book import stored_values, write_values
+from aerona.engine.mind.memories import remember
+from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, shift_stat, stat
 from aerona.engine.services.community_relations import change_relation
 
 P = ProphecyPredicate
+Args = dict[str, int | str]
+DEFAULT_OMEN = EngineKind.WAR
 
 
-def arg(args: dict[str, int | str], key: str) -> int | None:
+@dataclass(frozen=True)
+class Foretelling:
+    predicate: ProphecyPredicate
+    subject_id: int | None = None
+    second_id: int | None = None
+    archetype: LegendArchetype | None = None
+    sky_kind: SkyEventKind | None = None
+    event_kind: EngineKind | None = None
+    within_epochs: int | None = None
+    consequence: ProphecyConsequence | None = None
+    consequence_id: int | None = None
+
+
+def arg(args: Args, key: str) -> int | None:
     value = args.get(key)
     return int(value) if isinstance(value, int) or (isinstance(value, str) and value.isdigit()) else None
 
 
-async def dies(ctx: TickContext, args: dict[str, int | str], since: int) -> bool:
+def args_of(told: Foretelling) -> Args:
+    found: Args = {}
+    subject = told.subject_id
+    if told.predicate is P.DIES and subject is not None:
+        found["entity"] = subject
+    elif told.predicate is P.FALLS and subject is not None:
+        found["settlement"] = subject
+    elif told.predicate is P.BORN_IN and subject is not None:
+        found["house"] = subject
+    elif told.predicate is P.SKY_EVENT:
+        found["kind"] = (told.sky_kind or SkyEventKind.ECLIPSE).value
+    elif told.predicate is P.WAR_BETWEEN and subject is not None and told.second_id is not None:
+        found["first"], found["second"] = subject, told.second_id
+    elif told.predicate is P.RULER_OF and subject is not None:
+        found["polity"] = subject
+        if told.archetype is not None:
+            found["archetype"] = told.archetype.value
+    elif told.predicate is P.WITHIN_EPOCHS:
+        found["event"] = (told.event_kind or DEFAULT_OMEN).value
+        if subject is not None:
+            found["place"] = subject
+    if told.within_epochs is not None:
+        found["epochs"] = max(1, told.within_epochs)
+    return found
+
+
+async def dies(ctx: TickContext, args: Args, since: int) -> bool:
     target = await ctx.session.get(EntityRow, arg(args, "entity") or 0)
     return target is not None and target.status is not EntityStatus.CANON and (target.end_epoch or 0) >= since
 
 
-async def falls(ctx: TickContext, args: dict[str, int | str], since: int) -> bool:
+async def falls(ctx: TickContext, args: Args, since: int) -> bool:
     target_id = arg(args, "settlement") or 0
     target = await ctx.session.get(EntityRow, target_id)
     if target is None or target.status is not EntityStatus.CANON:
@@ -56,7 +102,7 @@ async def falls(ctx: TickContext, args: dict[str, int | str], since: int) -> boo
     return conquered is not None
 
 
-async def born_in(ctx: TickContext, args: dict[str, int | str], since: int) -> bool:
+async def born_in(ctx: TickContext, args: Args, since: int) -> bool:
     house = arg(args, "house") or 0
     statement = (
         select(HouseMemberRow.mortal_entity_id)
@@ -67,12 +113,12 @@ async def born_in(ctx: TickContext, args: dict[str, int | str], since: int) -> b
     return await ctx.session.scalar(statement) is not None
 
 
-async def sky_event(ctx: TickContext, args: dict[str, int | str], since: int) -> bool:
+async def sky_event(ctx: TickContext, args: Args, since: int) -> bool:
     kind = args.get("kind")
     return await ctx.session.scalar(select(SkyEventRow.id).where(SkyEventRow.kind == kind, SkyEventRow.epoch > since).limit(1)) is not None
 
 
-async def war_between(ctx: TickContext, args: dict[str, int | str], since: int) -> bool:
+async def war_between(ctx: TickContext, args: Args, since: int) -> bool:
     first, second = arg(args, "first") or 0, arg(args, "second") or 0
     wars = select(WarSideRow.war_id).where(WarSideRow.entity_id == first)
     found = await ctx.session.scalar(
@@ -84,28 +130,59 @@ async def war_between(ctx: TickContext, args: dict[str, int | str], since: int) 
     return found is not None
 
 
-async def ruler_of(ctx: TickContext, args: dict[str, int | str], since: int) -> bool:
+async def fits_archetype(ctx: TickContext, ruler_id: int, archetype: LegendArchetype) -> bool:
+    if archetype is LegendArchetype.CHOSEN_ONE and await ctx.session.get(EntityFlagRow, (ruler_id, EntityFlag.CHOSEN)) is not None:
+        return True
+    houses = select(HouseMemberRow.house_entity_id).where(HouseMemberRow.mortal_entity_id == ruler_id)
+    found = await ctx.session.scalar(
+        select(LegendProfileRow.legend_entity_id)
+        .where(
+            LegendProfileRow.archetype == archetype,
+            (LegendProfileRow.subject_node_id == ruler_id) | LegendProfileRow.subject_node_id.in_(houses),
+        )
+        .limit(1)
+    )
+    return found is not None
+
+
+async def ruler_of(ctx: TickContext, args: Args, since: int) -> bool:
     polity = arg(args, "polity") or 0
     ruler = await ctx.session.scalar(select(OfficeRow).where(OfficeRow.polity_entity_id == polity, OfficeRow.kind == OfficeKind.RULER).limit(1))
     if ruler is None or ruler.holder_entity_id is None or ruler.since_epoch < since:
         return False
     house = arg(args, "house")
-    if house is not None:
-        member = await ctx.session.get(HouseMemberRow, (house, ruler.holder_entity_id))
-        return member is not None
+    if house is not None and await ctx.session.get(HouseMemberRow, (house, ruler.holder_entity_id)) is None:
+        return False
+    archetype = args.get("archetype")
+    if isinstance(archetype, str) and archetype in {item.value for item in LegendArchetype}:
+        return await fits_archetype(ctx, ruler.holder_entity_id, LegendArchetype(archetype))
     if args.get("chosen"):
         return await ctx.session.get(EntityFlagRow, (ruler.holder_entity_id, EntityFlag.CHOSEN)) is not None
     return True
 
 
-async def vague(ctx: TickContext, args: dict[str, int | str], since: int) -> bool:
-    return False
+async def within_epochs(ctx: TickContext, args: Args, since: int) -> bool:
+    event = args.get("event")
+    kind = EngineKind(event) if isinstance(event, str) and event in {item.value for item in EngineKind} else DEFAULT_OMEN
+    statement = select(EntityRow.id).where(EntityRow.entity_type == EntityType.EVENT, EntityRow.engine_kind == kind, EntityRow.birth_epoch >= since)
+    place = arg(args, "place")
+    if place is not None:
+        statement = statement.where(EntityRow.location_id == place)
+    return await ctx.session.scalar(statement.limit(1)) is not None
 
 
-CHECKS = {P.DIES: dies, P.FALLS: falls, P.BORN_IN: born_in, P.SKY_EVENT: sky_event, P.WAR_BETWEEN: war_between, P.RULER_OF: ruler_of, P.WITHIN_EPOCHS: vague}
+CHECKS: dict[ProphecyPredicate, Callable[[TickContext, Args, int], Awaitable[bool]]] = {
+    P.DIES: dies,
+    P.FALLS: falls,
+    P.BORN_IN: born_in,
+    P.SKY_EVENT: sky_event,
+    P.WAR_BETWEEN: war_between,
+    P.RULER_OF: ruler_of,
+    P.WITHIN_EPOCHS: within_epochs,
+}
 
 
-async def met(ctx: TickContext, predicate: ProphecyPredicate, args: dict[str, int | str], since: int) -> bool:
+async def met(ctx: TickContext, predicate: ProphecyPredicate, args: Args, since: int) -> bool:
     return await CHECKS[predicate](ctx, args, since)
 
 
@@ -118,7 +195,6 @@ RESONANT = {
     P.WAR_BETWEEN: frozenset({LegendArchetype.BETRAYAL, LegendArchetype.MONSTER}),
     P.WITHIN_EPOCHS: frozenset({LegendArchetype.FLOOD}),
 }
-RULING_WORDS = ("king", "queen", "throne", "crown", "rule", "reign")
 
 
 async def subjects(ctx: TickContext, prophecy: EntityRow) -> list[EntityRow]:
@@ -142,7 +218,7 @@ async def claimed_polity(ctx: TickContext, house_id: int) -> int | None:
     return await ctx.session.scalar(select(ClaimRow.polity_entity_id).where(ClaimRow.house_entity_id == house_id, ClaimRow.ended_epoch.is_(None)).limit(1))
 
 
-async def ruling_condition(ctx: TickContext, by_type: dict[EntityType, list[EntityRow]]) -> tuple[ProphecyPredicate, dict[str, int | str]] | None:
+async def ruling_condition(ctx: TickContext, by_type: dict[EntityType, list[EntityRow]]) -> tuple[ProphecyPredicate, Args] | None:
     if EntityType.HOUSE in by_type:
         house = by_type[EntityType.HOUSE][0]
         polity = await claimed_polity(ctx, house.id)
@@ -152,8 +228,7 @@ async def ruling_condition(ctx: TickContext, by_type: dict[EntityType, list[Enti
     return None
 
 
-async def derive(ctx: TickContext, prophecy: EntityRow, targets: list[EntityRow]) -> tuple[ProphecyPredicate, dict[str, int | str]]:
-    text = f"{prophecy.name} {prophecy.description or ''}".lower()
+async def derive(ctx: TickContext, prophecy: EntityRow, targets: list[EntityRow]) -> tuple[ProphecyPredicate, Args]:
     by_type: dict[EntityType, list[EntityRow]] = {}
     for target in targets:
         by_type.setdefault(target.entity_type, []).append(target)
@@ -167,9 +242,17 @@ async def derive(ctx: TickContext, prophecy: EntityRow, targets: list[EntityRow]
         return P.WAR_BETWEEN, {"first": communities[0].id, "second": communities[1].id}
     if EntityType.SETTLEMENT in by_type:
         return P.FALLS, {"settlement": by_type[EntityType.SETTLEMENT][0].id}
-    if EntityType.MORTAL in by_type and not any(word in text for word in RULING_WORDS):
+    if EntityType.MORTAL in by_type:
         return P.DIES, {"entity": by_type[EntityType.MORTAL][0].id}
-    return P.WITHIN_EPOCHS, {}
+    return P.WITHIN_EPOCHS, {"event": DEFAULT_OMEN.value}
+
+
+def deadline_for(ctx: TickContext, prophecy: EntityRow, args: Args) -> int | None:
+    epochs = arg(args, "epochs")
+    if epochs is not None:
+        return prophecy.birth_epoch + epochs
+    limit = ctx.rules.deep_life.prophecy_forget_epochs
+    return prophecy.birth_epoch + limit if limit > 0 else None
 
 
 async def condition_of(ctx: TickContext, prophecy: EntityRow) -> ProphecyConditionRow:
@@ -177,21 +260,32 @@ async def condition_of(ctx: TickContext, prophecy: EntityRow) -> ProphecyConditi
     if row is not None:
         return row
     predicate, args = await derive(ctx, prophecy, await subjects(ctx, prophecy))
-    limit = ctx.rules.deep_life.prophecy_forget_epochs
-    audience = await audience_of(ctx, prophecy.id)
+    clean = {key: value for key, value in args.items() if value is not None}
     row = ProphecyConditionRow(
         prophecy_entity_id=prophecy.id,
         predicate=predicate,
-        args={key: value for key, value in args.items() if value is not None},
-        deadline_epoch=prophecy.birth_epoch + limit if limit > 0 else None,
+        args=clean,
+        deadline_epoch=deadline_for(ctx, prophecy, clean),
         consequence_kind=None,
         seer_entity_id=prophecy.maker_entity_id,
-        audience=audience,
+        audience=await audience_of(ctx, prophecy.id),
         pressure=PERCENT // 5,
         state=ProphecyState.PENDING,
         locked=[],
     )
     ctx.session.add(row)
+    return row
+
+
+async def typed_condition(ctx: TickContext, prophecy: EntityRow, told: Foretelling) -> ProphecyConditionRow:
+    row = await condition_of(ctx, prophecy)
+    args = args_of(told)
+    row.predicate, row.args = told.predicate, args
+    row.deadline_epoch = deadline_for(ctx, prophecy, args)
+    row.consequence_kind = told.consequence
+    consequence = await ctx.session.get(EntityRow, told.consequence_id) if told.consequence_id is not None else None
+    row.consequence_entity_id = consequence.id if consequence is not None else None
+    await ctx.session.flush()
     return row
 
 
@@ -215,10 +309,123 @@ async def reward_fulfilment(ctx: TickContext, prophecy: EntityRow, *, misread: b
         await grant_progress(ctx, son, xp=fate.prophecy_xp * factor, fame=fate.prophecy_renown * factor)
 
 
-async def fulfil(ctx: TickContext, prophecy: EntityRow, row: ProphecyConditionRow) -> None:
+async def omen(ctx: TickContext, row: ProphecyConditionRow, target: EntityRow | None) -> str | None:
+    for member in row.audience:
+        values = await stored_values(ctx.session, ValueHolder.CULTURE, member)
+        if values:
+            values[ValueAxis.SUPERSTITION] = values.get(ValueAxis.SUPERSTITION, 0) + ctx.rules.prophecy.omen_superstition
+            await write_values(ctx.session, ValueHolder.CULTURE, member, values)
+    return "the people grow more fearful of signs" if row.audience else None
+
+
+async def rule(ctx: TickContext, row: ProphecyConditionRow, target: EntityRow | None) -> str | None:
+    if target is None:
+        return None
+    gain = ctx.rules.prophecy.consequence_claim
+    for claim in list(await ctx.session.scalars(select(ClaimRow).where(ClaimRow.claimant_entity_id == target.id, ClaimRow.ended_epoch.is_(None)))):
+        claim.strength = clamp_int(claim.strength + gain, 0, PERCENT)
+    target.importance = (target.importance or 0) + gain
+    return f"{target.name} is hailed as the one foretold to rule"
+
+
+async def fall(ctx: TickContext, row: ProphecyConditionRow, target: EntityRow | None) -> str | None:
+    if target is None or stat(target, "defense") is None:
+        return None
+    shift_stat(target, "defense", -ctx.rules.prophecy.consequence_unrest)
+    return f"{target.name} braces for the fall it was promised"
+
+
+async def death(ctx: TickContext, row: ProphecyConditionRow, target: EntityRow | None) -> str | None:
+    if target is None or target.entity_type is not EntityType.MORTAL:
+        return None
+    await apply_hits(ctx, target, Harm(damage=ctx.rules.prophecy.consequence_harm, cause=HarmCause.CURSE, death_cause="died as was foretold"))
+    return f"doom closes on {target.name}"
+
+
+async def war(ctx: TickContext, row: ProphecyConditionRow, target: EntityRow | None) -> str | None:
+    if target is None or not row.audience:
+        return None
+    for member in row.audience:
+        await change_relation(ctx, member, target.id, -ctx.rules.prophecy.consequence_unrest, MemoryKind.ILL_WILL, note="foretold enemies")
+    return f"its hearers turn against {target.name}"
+
+
+async def birth(ctx: TickContext, row: ProphecyConditionRow, target: EntityRow | None) -> str | None:
+    if target is None:
+        return None
+    house_id = await ctx.session.scalar(select(HouseMemberRow.house_entity_id).where(HouseMemberRow.mortal_entity_id == target.id).limit(1))
+    house = await ctx.session.get(HouseProfileRow, house_id if house_id is not None else target.id)
+    if house is None:
+        return None
+    house.prestige = clamp_int(house.prestige + ctx.rules.prophecy.consequence_claim, 0, PERCENT)
+    return "a house rises on the strength of a foretold birth"
+
+
+OUTCOMES: dict[ProphecyConsequence, Callable[[TickContext, ProphecyConditionRow, EntityRow | None], Awaitable[str | None]]] = {
+    ProphecyConsequence.OMEN: omen,
+    ProphecyConsequence.RULE: rule,
+    ProphecyConsequence.FALL: fall,
+    ProphecyConsequence.DEATH: death,
+    ProphecyConsequence.WAR: war,
+    ProphecyConsequence.BIRTH: birth,
+}
+
+
+async def consequences(ctx: TickContext, row: ProphecyConditionRow) -> str | None:
+    if row.consequence_kind is None:
+        return None
+    return await OUTCOMES[row.consequence_kind](ctx, row, await living_entity(ctx.session, row.consequence_entity_id))
+
+
+async def fulfil(ctx: TickContext, prophecy: EntityRow, row: ProphecyConditionRow) -> str | None:
     row.state, row.resolved_epoch = ProphecyState.FULFILLED, ctx.epoch
     await retire(ctx.session, prophecy, ctx.epoch, f"Epoch {ctx.epoch}: what was foretold came to pass.", status=EntityStatus.FULFILLED)
     await reward_fulfilment(ctx, prophecy, misread=False)
+    return await consequences(ctx, row)
+
+
+async def cult_of(ctx: TickContext, seer: EntityRow) -> EntityRow | None:
+    if seer.entity_type is EntityType.CULT:
+        return seer
+    cult_id = await ctx.session.scalar(
+        select(BondRow.target_node_id)
+        .join(EntityRow, EntityRow.id == BondRow.target_node_id)
+        .where(
+            BondRow.source_node_id == seer.id, BondRow.kind == BondKind.MEMBER_OF, BondRow.state == BondState.ACTIVE, EntityRow.entity_type == EntityType.CULT
+        )
+        .limit(1)
+    )
+    return await living_entity(ctx.session, cult_id)
+
+
+async def scorn(ctx: TickContext, holder: int, subject: int, size: int, why: str, *, kind: MemoryKind = MemoryKind.ILL_WILL) -> None:
+    await remember(ctx.session, ctx.rules, holder_id=holder, subject_id=subject, kind=kind, magnitude=size, epoch=ctx.epoch, note=why)
+
+
+async def mock_seer(ctx: TickContext, row: ProphecyConditionRow) -> bool:
+    seer = await living_entity(ctx.session, row.seer_entity_id)
+    if seer is None:
+        return False
+    table = ctx.rules.prophecy
+    if seer.entity_type is EntityType.MORTAL:
+        if stat(seer, "charisma") is not None:
+            shift_stat(seer, "charisma", -ctx.rules.fate.seer_wrong_charisma_loss)
+        seer.importance = max(0, (seer.importance or 0) - table.failure_importance)
+        for member in row.audience:
+            await remember(
+                ctx.session,
+                ctx.rules,
+                holder_id=member,
+                subject_id=seer.id,
+                kind=MemoryKind.ILL_WILL,
+                magnitude=-table.failure_importance,
+                epoch=ctx.epoch,
+                note="a false seer",
+            )
+    cult = await cult_of(ctx, seer)
+    if cult is not None:
+        shift_stat(cult, "zeal", -table.failure_zeal)
+    return True
 
 
 async def fail(ctx: TickContext, row: ProphecyConditionRow) -> int:
@@ -231,6 +438,7 @@ async def fail(ctx: TickContext, row: ProphecyConditionRow) -> int:
         values[ValueAxis.SUPERSTITION] = values.get(ValueAxis.SUPERSTITION, 0) - ctx.rules.prophecy.failure_rationalism
         await write_values(ctx.session, ValueHolder.CULTURE, member, values)
         doubted += 1
+    await mock_seer(ctx, row)
     return doubted
 
 
@@ -255,6 +463,20 @@ async def threatened_ruler(ctx: TickContext, row: ProphecyConditionRow) -> str |
         return None
     harm = Harm(damage=ctx.rules.backlash.injury_hp * 2, cause=HarmCause.PUNISHMENT, death_cause="slain to cheat a prophecy", killer_id=ruler.id)
     await apply_hits(ctx, child, harm)
+    kin = list(await ctx.session.scalars(select(HouseMemberRow.mortal_entity_id).where(HouseMemberRow.house_entity_id == house)))
+    for keeper in [house, *kin]:
+        if keeper != child.id:
+            await remember(
+                ctx.session,
+                ctx.rules,
+                holder_id=keeper,
+                subject_id=ruler.id,
+                kind=MemoryKind.HARMED_ME,
+                magnitude=-ctx.rules.prophecy.infanticide_grudge,
+                epoch=ctx.epoch,
+                note=f"moved against {child.name}",
+            )
+    await note(ctx, f"{ruler.name} moved against {child.name}, the child a prophecy named.", key="lore.infanticide", ids=[ruler.id, child.id, house])
     return f"{ruler.name} moved against {child.name}, the child the prophecy named"
 
 
@@ -292,6 +514,5 @@ async def resolve(ctx: TickContext, prophecy: EntityRow) -> tuple[ProphecyState,
     if row.state is not ProphecyState.PENDING:
         return row.state, None
     if await met(ctx, row.predicate, row.args, prophecy.birth_epoch):
-        await fulfil(ctx, prophecy, row)
-        return ProphecyState.FULFILLED, None
+        return ProphecyState.FULFILLED, await fulfil(ctx, prophecy, row)
     return ProphecyState.PENDING, await press(ctx, prophecy, row)

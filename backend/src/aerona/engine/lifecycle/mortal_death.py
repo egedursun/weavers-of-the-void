@@ -26,7 +26,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.faith.judgement import profile_for
 from aerona.engine.lifecycle.aging import immortal, raise_lifespan_to_death_age
 from aerona.engine.lifecycle.succession import dynasty_root, pass_rule
-from aerona.engine.lore.items import record
+from aerona.engine.lore.history import record
 from aerona.engine.mind.memories import inherit_memories, mourn
 from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of

@@ -1,7 +1,8 @@
 from pydantic import Field
 
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.culture import CustomCatalog, IdeologyTenet, MagicSchool, RiteEffectKind, SpeakerKind, Technique
+from aerona.domain.enums.body import DamageType
+from aerona.domain.enums.culture import CustomCatalog, IdeologyTenet, MagicSchool, RiteEffectKind, SpeakerKind, SummonForm, Technique
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.lore import control, kinds
@@ -98,6 +99,30 @@ class RiteEffect(Command):
     effect: RiteEffectKind
     magnitude: int
     detail: str | None = None
+    damage_type: DamageType | None = None
+    summon_form: SummonForm | None = None
+    custom_kind_id: int | None = None
+
+
+class TeachRite(Command):
+    rite_id: int
+    holder_id: int
+    taught: bool = True
+
+
+class ForbidRite(Command):
+    rite_id: int
+    authority_id: int
+    forbidden: bool = True
+
+
+class RiteTarget(Command):
+    rite_id: int
+
+
+class RiteRequirements(Command):
+    rite_id: int
+    requirements: dict[str, int | str | bool] = Field(default_factory=dict)
 
 
 class CastRite(Command):
@@ -183,7 +208,8 @@ async def devise_rite(scope: PlayerScope, command: DeviseRite) -> Effect:
 
 @player_action("rite:effect", ActionKind.EDIT_RECORD)
 async def set_rite_effect(scope: PlayerScope, command: RiteEffect) -> Effect:
-    row = await control.set_rite_effect(await scope.context("rite_effect"), command.rite_id, command.effect, command.magnitude, command.detail)
+    shape = control.EffectShape(command.detail, command.damage_type, command.summon_form, command.custom_kind_id)
+    row = await control.set_rite_effect(await scope.context("rite_effect"), command.rite_id, command.effect, command.magnitude, shape)
     label = command.effect.value.replace("_", " ")
     return Effect(f"The rite works {label} at {row.magnitude}." if row is not None else f"The rite no longer works {label}.", command.rite_id)
 
@@ -247,3 +273,27 @@ async def edit_kind(scope: PlayerScope, command: EditKind) -> Effect:
 async def delete_kind(scope: PlayerScope, command: KindTarget) -> Effect:
     row = await kinds.delete_kind(await scope.context("kind_delete"), command.kind_id)
     return Effect(f"{row.name} is no more.", None)
+
+
+@player_action("rite:teach", ActionKind.EDIT_RECORD)
+async def teach_rite(scope: PlayerScope, command: TeachRite) -> Effect:
+    taught = await control.teach_rite(await scope.context("rite_teach"), command.rite_id, command.holder_id, taught=command.taught)
+    return Effect("The rite is taught." if taught else "The rite is forgotten.", command.rite_id)
+
+
+@player_action("rite:forbid", ActionKind.EDIT_RECORD)
+async def forbid_rite(scope: PlayerScope, command: ForbidRite) -> Effect:
+    held = await control.forbid_rite(await scope.context("rite_forbid"), command.rite_id, command.authority_id, forbidden=command.forbidden)
+    return Effect(f"The rite is forbidden in {len(held)} places." if held else "The rite is free again.", command.rite_id)
+
+
+@player_action("rite:dispel", ActionKind.OTHER)
+async def dispel_rite(scope: PlayerScope, command: RiteTarget) -> Effect:
+    casting = await control.dispel_rite(await scope.context("rite_dispel"), command.rite_id)
+    return Effect(f"Undone: {casting.effect}", command.rite_id)
+
+
+@player_action("rite:requirements", ActionKind.EDIT_RECORD)
+async def set_rite_requirements(scope: PlayerScope, command: RiteRequirements) -> Effect:
+    row = await control.set_requirements(await scope.context("rite_requirements"), command.rite_id, command.requirements)
+    return Effect(f"The rite now asks {len(row.requirements)} things of its caster.", command.rite_id)

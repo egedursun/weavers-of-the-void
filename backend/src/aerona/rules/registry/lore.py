@@ -16,6 +16,9 @@ class InterpretersRules:
     army_cohesion_pct: int = rule(15, 0, 100, R, "Cohesion lost by an army of many tongues (%)")
     assimilation_pct: int = rule(50, 0, 100, R, "Assimilation left between peoples who share no words (%)")
     shared_lexicon_pct: int = rule(60, 0, 100, R, "Weight of a shared lexicon in intelligibility (%)")
+    phonology_pct: int = rule(20, 0, 100, R, "Intelligibility a shared sound system adds to tongues that already share words")
+    misread_grievance: int = rule(10, 0, 100, R, "Ill will a misread treaty clause breeds, counted as a breach")
+    remeasure_epochs: int = rule(5, 0, 100, R, "Epochs between new measures of how well two tongues understand each other (0 never)")
 
 
 @dataclass(frozen=True)
@@ -28,6 +31,8 @@ class PrestigeRules:
     conquered_pct: int = rule(50, 0, 200, R, "Weight of the conquered people's literature against the conquerors' prestige (%)")
     standardisation_gain: int = rule(4, 0, 100, R, "Standardisation a school of grammar adds each epoch")
     drift: int = rule(5, 0, 100, R, "Most prestige a language gains or loses in an epoch")
+    standard_literacy_pct: int = rule(50, 0, 300, R, "Literacy growth a fully standardised tongue adds (%)")
+    standard_distortion_pct: int = rule(50, 0, 100, R, "Legend distortion a fully standardised written tongue holds back (%)")
 
 
 @dataclass(frozen=True)
@@ -52,6 +57,13 @@ class BeliefRules:
     haunted_avoidance: int = rule(30, 0, 100, R, "Credence at which settlers shun a haunted land")
     manifestation_credence: int = rule(70, 0, 100, R, "Credence a legend needs to take shape in the world")
     resonance_certainty: int = rule(10, 0, 100, R, "Certainty a prophecy gains from a legend of its kind")
+    credence_base: int = rule(30, 0, 100, R, "Credence a legend starts with before its spread is counted")
+    spread_credence_pct: int = rule(50, 0, 200, R, "Credence a legend draws from how widely it has spread (%)")
+    category_credence: int = rule(10, 0, 100, R, "Credence a legend of a known kind (creature, spirit, treasure, relic) gains")
+    bard_skill: int = rule(40, 0, 100, R, "Oratory or lore at which a mortal tells legends as a bard")
+    bards_per_legend: int = rule(3, 0, 50, R, "Most bards counted among a legend's tellers")
+    credence_per_bard: int = rule(1, 0, 100, R, "Credence each bard who tells a legend adds")
+    return_king_usurper: int = rule(8, 0, 100, R, "Legitimacy a usurper of the foretold line draws from a believed return-of-the-king tale")
 
 
 @dataclass(frozen=True)
@@ -74,6 +86,26 @@ class TraditionsRules:
     offering_cost: int = rule(1, 0, 100, C, "Goods an offering burns")
     piety: int = rule(2, 0, 100, C, "Piety a holy rite pushes")
     cap: int = rule(40, 0, 1000, C, "Most traditions celebrated in an epoch")
+    harvest_blessing: int = rule(2, 0, 100, C, "Harvest a harvest rite blesses the land with (%)")
+    value_push: int = rule(1, 0, 100, C, "Values a tradition of a new kind pushes each epoch")
+    scar_harm: int = rule(4, 0, 100, C, "Harm a ritual scar deals the youth who takes it")
+    season_growth: int = rule(60, 0, 100, C, "Growth of a season in which sowing and harvest feasts fall")
+    dead_growth: int = rule(20, 0, 100, C, "Growth at or below which a season is the dead of winter")
+    season_campaign: int = rule(60, 0, 100, C, "Campaign suitability of the season in which war feasts fall")
+    calendar_slot_pct: int = rule(30, 0, 300, C, "Strength an effect gains when its feast falls in its season (%)")
+    calendar_misfit_pct: int = rule(50, 0, 100, C, "Strength left to a feast whose season never comes (%)")
+    sync_cohesion: int = rule(1, 0, 100, C, "Cohesion each other keeper of the same calendar feast adds")
+    sync_max: int = rule(5, 0, 100, C, "Most fellow keepers counted for a synchronised feast")
+    commemoration_keepers: int = rule(3, 0, 50, C, "Most communities of a land that keep the memory of a notable year")
+    taboo_importance: int = rule(5, 0, 100, C, "Renown a mortal loses for breaking a taboo")
+    guest_killing_infamy: int = rule(40, 0, 100, C, "Ill will the keepers of hospitality hold for a guest-killer")
+    ritual_presence_pct: int = rule(5, 0, 100, C, "Presence each ritual scar lends among those who keep the rite (%)")
+    ritual_presence_cap: int = rule(15, 0, 100, C, "Most presence ritual scars can lend (%)")
+    adoption_fit: int = rule(70, 0, 100, C, "Value distance above which a people refuses a tradition offered by contact")
+    syncretism_rigidity: int = rule(40, 0, 100, C, "Rigidity at which a feast survives conversion and is absorbed by the new faith")
+    rigid_threshold: int = rule(20, 0, 100, C, "Rigidity below which a tradition bends to laws and creeds without unrest")
+    rigidity_pct: int = rule(100, 0, 300, C, "Weight of rigidity in the unrest a tradition stirs against what defies it (%)")
+    creed_resistance: int = rule(3, 0, 100, C, "Adherence a creed loses where a rigid tradition it defies is kept")
 
 
 @dataclass(frozen=True)
@@ -128,6 +160,14 @@ class RitesRules:
     scry_intel: int = rule(10, 0, 100, H, "Intelligence a scrying rite yields per power")
     weather_power: int = rule(4, 1, 10, H, "Power a weather rite needs")
     desperate_mercy: int = rule(-20, -100, 100, H, "Mercy below which a desperate caster turns to blood and void")
+    wizard_skill: int = rule(30, 0, 100, H, "Spellcraft a mortal needs before the world counts them a wizard")
+    spellcraft_xp: int = rule(4, 0, 100, H, "Spellcraft a learned mortal who knows magic gains from study each epoch")
+    hp_per_captive: int = rule(8, 1, 1000, H, "Harm a blood rite would cost that one captive's blood pays instead")
+    regrow_power: int = rule(7, 1, 10, H, "Power at which a healing rite makes lost limbs whole")
+    undead_per_dead: int = rule(10, 0, 1000, H, "Soldiers of the risen dead each battle death yields")
+    undead_per_power: int = rule(40, 0, 10000, H, "Most risen dead a raising rite yields per point of its strength")
+    army_chance: int = rule(30, 0, 100, H, "War mages work a battle rite against their army's target in an epoch (%)")
+    dark_infamy: int = rule(10, 0, 100, H, "Standing a caster loses for working blood or void magic")
     cap: int = rule(12, 0, 1000, H, "Most castings in an epoch")
 
 
@@ -137,6 +177,8 @@ class BacklashRules:
     phenomenon_power: int = rule(7, 1, 10, H, "Power at which a failed rite tears the world")
     injury_hp: int = rule(15, 0, 1000, H, "Harm a backlash deals its caster")
     leak_gain: int = rule(2, 0, 100, H, "Leak a void backlash adds to the world")
+    phenomenon_epochs: int = rule(5, 1, 100, H, "Epochs an eternal storm torn by a failed rite lasts")
+    phenomenon_danger: int = rule(15, 0, 100, H, "Danger an eternal storm adds to its region")
 
 
 @dataclass(frozen=True)
@@ -145,6 +187,13 @@ class ProphecyRules:
     claim_strength: int = rule(15, 0, 100, R, "Claim strength a prophecy lends the one it names")
     paranoia_chance: int = rule(10, 0, 100, R, "A ruler threatened by a prophecy moves against its child (%)")
     failure_rationalism: int = rule(3, 0, 100, R, "Superstition a failed prophecy costs its audience")
+    failure_importance: int = rule(5, 0, 100, R, "Standing a seer loses, and ill will its hearers bear, when the prophecy fails")
+    failure_zeal: int = rule(5, 0, 100, R, "Zeal the seer's cult loses when the prophecy fails")
+    omen_superstition: int = rule(3, 0, 100, R, "Superstition a fulfilled omen adds to those who heard it")
+    consequence_claim: int = rule(15, 0, 100, R, "Claim strength or standing the one foretold to rule or be born gains when it comes true")
+    consequence_unrest: int = rule(10, 0, 100, R, "Defence lost by a city foretold to fall, and ill will toward a foretold enemy, when it comes true")
+    consequence_harm: int = rule(30, 0, 1000, R, "Harm doom deals the one foretold to die when the sign is met")
+    infanticide_grudge: int = rule(30, 0, 100, R, "Grief a house holds for the ruler who moved against its foretold child")
 
 
 @dataclass(frozen=True)
@@ -229,6 +278,10 @@ class ArtRules:
     humiliation: int = rule(5, 0, 100, C, "Ill will a conquered people hold for a statue of their conqueror")
     iconoclasm_chance: int = rule(20, 0, 100, C, "An iconoclast faith smashes an image in its lands (%)")
     sack_chance: int = rule(30, 0, 100, C, "A sacking army breaks an image of the vanquished (%)")
+    canon_pct: int = rule(50, 0, 300, C, "Weight a classic gains in pressing its message and being copied (%)")
+    translated_pct: int = rule(50, 0, 100, C, "Share of a work's pressure felt by the speakers of a tongue it was translated into (%)")
+    bilingual_share: int = rule(20, 0, 100, C, "Share of a people speaking a second tongue before its scribes can translate into it")
+    performer_skill: int = rule(30, 0, 100, C, "Oratory or lore a mortal needs to keep a performed work alive")
 
 
 @dataclass(frozen=True)

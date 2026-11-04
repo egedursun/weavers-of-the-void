@@ -215,6 +215,12 @@ def upgrade() -> None:
         batch_op.create_index("ix_rumours_carrier", ["carrier_entity_id"], unique=False)
         batch_op.create_index("ix_rumours_epoch", ["epoch"], unique=False)
 
+    with op.batch_alter_table("artwork_profiles", schema=None) as batch_op:
+        batch_op.add_column(sa.Column("canon", sa.Boolean(), nullable=False, server_default=sa.false()))
+
+    with op.batch_alter_table("rite_profiles", schema=None) as batch_op:
+        batch_op.add_column(sa.Column("forbidden_by", sa.JSON(), nullable=False, server_default=sa.text("'[]'")))
+
     with op.batch_alter_table("item_profiles", schema=None) as batch_op:
         batch_op.add_column(sa.Column("custom_class_id", sa.Integer(), nullable=True))
         batch_op.add_column(sa.Column("secondary_materials", sa.JSON(), nullable=False, server_default=sa.text("'[]'")))
@@ -350,6 +356,12 @@ def downgrade() -> None:
     with op.batch_alter_table("legend_profiles", schema=None) as batch_op:
         batch_op.drop_constraint(batch_op.f("fk_legend_profiles_custom_archetype_id_custom_kinds"), type_="foreignkey")
         batch_op.drop_column("custom_archetype_id")
+
+    with op.batch_alter_table("artwork_profiles", schema=None) as batch_op:
+        batch_op.drop_column("canon")
+
+    with op.batch_alter_table("rite_profiles", schema=None) as batch_op:
+        batch_op.drop_column("forbidden_by")
 
     with op.batch_alter_table("item_profiles", schema=None) as batch_op:
         batch_op.drop_constraint(batch_op.f("fk_item_profiles_custom_class_id_custom_kinds"), type_="foreignkey")

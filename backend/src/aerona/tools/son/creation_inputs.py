@@ -17,11 +17,14 @@ from aerona.constants.tool_inputs import (
     TITLE_MAX,
 )
 from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.culture import ArtMedium, CalendarSlot, ItemClass, LegendArchetype, ProphecyConsequence, ProphecyPredicate, TraditionKind
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.entity import EntityType, LegendCategory
+from aerona.domain.enums.entity import EngineKind, EntityType, LegendCategory
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic
 from aerona.domain.enums.travel import VehicleKind
+from aerona.domain.enums.world import SkyEventKind
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.shared_inputs import LinkInput, WordInput
 
@@ -71,7 +74,30 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
         EntityType.LANGUAGE: {"words": (Annotated[list[WordInput], Field(min_length=1)], ...)},
         EntityType.MORTAL: {"title": (Annotated[str, Field(max_length=TITLE_MAX)] | None, None)},
         EntityType.EVENT: {"effects": (list[EventEffectInput] | None, None)},
-        EntityType.LEGEND: {"legend_category": (LegendCategory | None, None)},
+        EntityType.LEGEND: {"legend_category": (LegendCategory | None, None), "archetype": (LegendArchetype, ...)},
+        EntityType.TRADITION: {
+            "tradition_kind": (TraditionKind, ...),
+            "calendar_slot": (CalendarSlot | None, None),
+            "taboo_target": (CommodityKind | None, None),
+            "taboo_act": (ActKind | None, None),
+        },
+        EntityType.ITEM: {
+            "item_class": (ItemClass, ...),
+            "material": (MaterialKind | None, None),
+            "secondary_materials": (list[MaterialKind] | None, None),
+        },
+        EntityType.ARTWORK: {"medium": (ArtMedium, ...), "subject_id": (int | None, None)},
+        EntityType.PROPHECY: {
+            "predicate": (ProphecyPredicate, ...),
+            "subject_id": (int | None, None),
+            "second_id": (int | None, None),
+            "archetype": (LegendArchetype | None, None),
+            "sky_kind": (SkyEventKind | None, None),
+            "event_kind": (EngineKind | None, None),
+            "within_epochs": (int | None, None),
+            "consequence": (ProphecyConsequence | None, None),
+            "consequence_id": (int | None, None),
+        },
         EntityType.RESOURCE: {
             "commodity": (CommodityKind | None, None),
             "material": (MaterialKind | None, None),

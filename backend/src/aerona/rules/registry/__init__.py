@@ -183,6 +183,7 @@ from aerona.rules.registry.rarity_gates import RarityGatesRules
 from aerona.rules.registry.record_schema import RecordSchemaRules
 from aerona.rules.registry.religion import ReligionRules
 from aerona.rules.registry.rumours import RumoursRules
+from aerona.rules.registry.items import EnchantmentsRules, ItemPowersRules
 from aerona.rules.registry.remembrance import RemembranceRules
 from aerona.rules.registry.reputation import ReputationRules
 from aerona.rules.registry.server import ServerRules
@@ -343,6 +344,8 @@ class Rules:
     regalia: RegaliaRules = field(default_factory=RegaliaRules)
     relics: RelicsRules = field(default_factory=RelicsRules)
     rumours: RumoursRules = field(default_factory=RumoursRules)
+    item_powers: ItemPowersRules = field(default_factory=ItemPowersRules)
+    enchantments: EnchantmentsRules = field(default_factory=EnchantmentsRules)
     art: ArtRules = field(default_factory=ArtRules)
     propaganda: PropagandaRules = field(default_factory=PropagandaRules)
     doctrine: DoctrineRules = field(default_factory=DoctrineRules)

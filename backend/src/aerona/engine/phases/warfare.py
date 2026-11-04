@@ -39,7 +39,9 @@ from aerona.engine.environment.book import EnvironmentBook, add_scar, region_env
 from aerona.engine.environment.years import grant_sub_steps
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.lore.arms import wear_in_duel
 from aerona.engine.lore.rites import warded
+from aerona.engine.lore.taboos import dead_season, forbidden, winter_rest
 from aerona.engine.military.aims import REGION_AIMS, advance, set_aims
 from aerona.engine.military.battle import BattleResult, Field
 from aerona.engine.military.clash import captives_taken, cautious, clash, earn_traits, log_phases
@@ -528,6 +530,8 @@ async def duel(
     result = bout(ctx.rules, ctx.rng(f"duel.{first.id}.{second.id}.{ctx.epoch}"), await fighter(ctx, first), await fighter(ctx, second), context)
     await duelled(ctx, first)
     await duelled(ctx, second)
+    await wear_in_duel(ctx, first.id, result.exchanges)
+    await wear_in_duel(ctx, second.id, result.exchanges)
     winner, loser = result.winner.entity, result.loser.entity
     await judged(ctx, winner.id, loser.id, ActKind.DUELLING, note=label)
     style = await strike_style(ctx.session, ctx.rules, winner, loser)
@@ -567,8 +571,9 @@ async def _heroics(ctx: TickContext, theatre: Theatre, report: BattleReport) -> 
     winners, losers = theatre.sides.heroes_of(report.winner.id), theatre.sides.heroes_of(report.loser.id)
     if winners and losers and ctx.rng("duel_roll").chance(ctx.rules.campaigns.duel_chance):
         first, second = ctx.rng("duelists").pick(winners), ctx.rng("duelists").pick(losers)
-        report.hero_texts.append(await duel(ctx, theatre, first, second, war=report.war, anchor_id=anchor))
-        report.ids.extend((first.id, second.id))
+        if not await forbidden(ctx, first.id, ActKind.DUELLING):
+            report.hero_texts.append(await duel(ctx, theatre, first, second, war=report.war, anchor_id=anchor))
+            report.ids.extend((first.id, second.id))
     candidates = [hero for hero in theatre.sides.heroes_of(report.loser.id) if hero.status is EntityStatus.CANON]
     if candidates and ctx.rng("capture").chance(ctx.rules.campaigns.capture_chance):
         prisoner = ctx.rng("captive").pick(candidates)
@@ -1066,6 +1071,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     base = epoch_start_year(ctx.epoch, years)
     fought = 0
     lost = 0
+    winter_shamed = False
     for index in range(seasons):
         year = base + min(years - 1, first_year + (start + index) // count)
         ground = theatre.battleground(ctx, war, defender, slot=f"war.{war.id}.{index}", season_index=start + index, year=year)
@@ -1079,6 +1085,11 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
                 break
             continue
         storm = step is not None and step.assault
+        if ground.season is not None and dead_season(ctx, ground.season.growth):
+            resting, winter_shamed = await winter_rest(ctx, attacker.id, defender.id, shamed=winter_shamed)
+            if resting and not storm:
+                ctx.count("winter_taboo_rest")
+                continue
         suitability = ground.season.campaign if ground.season is not None else PERCENT
         if not contact or fought >= cap or not (storm or rng.chance(settings.season_engagement_pct * suitability / PERCENT)):
             continue

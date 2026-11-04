@@ -44,6 +44,7 @@ from aerona.services.player import (
     life_cycles,
     living_stats,
     lore,
+    made_things,
     market,
     mechanics,
     memory,
@@ -1143,6 +1144,10 @@ LORE_ACTIONS = (
     _sync(Meta("rite:devise", "Let a mortal devise a rite", G.BEYOND), lore.devise_rite, lore.DeviseRite, free, ("S8.6",)),
     _sync(Meta("rite:effect", "Set what a rite does", G.BEYOND), lore.set_rite_effect, lore.RiteEffect, free, ("S8.6",)),
     _sync(Meta("rite:cast", "Work a rite now", G.BEYOND), lore.cast_rite, lore.CastRite, free, ("S8.6",)),
+    _sync(Meta("rite:teach", "Teach a rite to a mortal, people or cult, or make them forget it", G.BEYOND), lore.teach_rite, lore.TeachRite, free, ("S8.6",)),
+    _sync(Meta("rite:forbid", "Forbid a rite in a realm, cult or people, or lift the ban", G.BEYOND), lore.forbid_rite, lore.ForbidRite, free, ("S8.6",)),
+    _sync(Meta("rite:dispel", "Undo the last working of a rite", G.BEYOND), lore.dispel_rite, lore.RiteTarget, free, ("S8.6",)),
+    _sync(Meta("rite:requirements", "Set what a rite asks of its caster", G.BEYOND), lore.set_rite_requirements, lore.RiteRequirements, free, ("S8.6",)),
     _sync(Meta("prophecy:resolve", "Fulfil or fail a prophecy", G.MEMORY), lore.resolve_prophecy, lore.ResolveProphecy, free, ("S8.7",)),
     _sync(Meta("item:enchant", "Set an enchantment on an item", G.BEYOND), lore.set_enchantment, lore.Enchantment, free, ("S7.1", "S8.6")),
     _sync(
@@ -1390,10 +1395,21 @@ RUMOUR_ACTIONS = (
     _sync(Meta("rumour:edit", "Set how true a rumour runs, or let it fade", G.MEMORY), rumours.edit_rumour, rumours.EditRumour, free, ("F11",)),
     _sync(Meta("rumour:suppress", "Silence a rumour", G.MEMORY), rumours.suppress_rumour, rumours.SuppressRumour, free, ("F11",)),
 )
+MADE_ACTIONS = (
+    _sync(Meta("item:transfer", "Give an item into new hands", G.BEYOND), made_things.transfer_item, made_things.TransferItem, free, ("S7.1",)),
+    _sync(Meta("item:deed", "Write a deed into an item's story", G.BEYOND), made_things.add_deed, made_things.AddDeed, free, ("S7.1",)),
+    _sync(Meta("item:deed_remove", "Strike a deed from an item's story", G.BEYOND), made_things.remove_deed, made_things.DeedTarget, free, ("S7.1",)),
+    _sync(
+        Meta("item:content", "Write knowledge into a book or scrape it out", G.BEYOND), made_things.set_content, made_things.BookContent, free, ("S7.1", "S8.4")
+    ),
+    _sync(Meta("art:commission", "Commission an artwork", G.SOCIETY), made_things.commission_artwork, made_things.CommissionArtwork, free, ("S7.4",)),
+    _sync(Meta("art:canonise", "Set an artwork among the classics, or strike it out", G.SOCIETY), made_things.canonise, made_things.Canonise, free, ("S7.4",)),
+)
 ACTIONS: tuple[ActionSpec, ...] = (
     *WILDS_ACTIONS,
     *LORE_ACTIONS,
     *RUMOUR_ACTIONS,
+    *MADE_ACTIONS,
     *CREATOR_ACTIONS,
     *SON_ACTIONS,
     *GOD_POWER_ACTIONS,

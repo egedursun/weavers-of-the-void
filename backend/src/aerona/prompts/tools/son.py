@@ -1,5 +1,8 @@
 from aerona.catalog.entity_types import ENTITY_TYPES
+from aerona.domain.enums.culture import ArtMedium, CalendarSlot, ItemClass, LegendArchetype, ProphecyConsequence, ProphecyPredicate, TraditionKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.world import SkyEventKind
 from aerona.prompts.tools.ids import SonToolId
 from aerona.prompts.tools.shared import IMAGE_PROMPT_FIELD, LINK_FIELDS, WORD_FIELDS
 from aerona.prompts.tools.text import ToolText
@@ -42,6 +45,15 @@ CREATION_FIELDS: dict[str, str] = {
 
 WORSHIPPED_SON_FIELD = {"worshipped_son_id": "Whom they worship (son id){% if entity.type == 'cult' %}; you if empty{% endif %}. Faith flows this way."}
 
+ARCHETYPES = ", ".join(item.value for item in LegendArchetype)
+TRADITION_KINDS = ", ".join(item.value for item in TraditionKind)
+CALENDAR_SLOTS = ", ".join(item.value for item in CalendarSlot)
+ITEM_CLASSES = ", ".join(item.value for item in ItemClass)
+ART_MEDIA = ", ".join(item.value for item in ArtMedium)
+PREDICATES = ", ".join(item.value for item in ProphecyPredicate)
+CONSEQUENCES = ", ".join(item.value for item in ProphecyConsequence)
+SKY_KINDS = ", ".join(item.value for item in SkyEventKind)
+TABOO_ACTS = ", ".join(item.value for item in ActKind)
 LEGEND_CATEGORY_FIELD = "What the legend would become if belief ever made it walk the world: {{ legend_categories | join(', ') }}; creature for a beast or monster, spirit for a ghost or soul, resource for a sacred spring or vein, relic for a weapon or treasure"
 COMMODITY_FIELD = "What its people draw from it: {{ commodities | join(', ') }}; ore feeds forges and coin, grain, livestock and fish feed mouths, timber feeds fuel and ships; empty if none"
 MATERIAL_FIELD = "What it is made of or yields, if a material: {{ materials | join(', ') }}; it sets hardness, edge, weight, holiness and taint"
@@ -65,7 +77,36 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "target_world_id": "If the gate, bridge or ship connects to another world, that world's id: a route is opened",
         "vessel_kind": "What it is: {{ vessel_kinds | join(', ') }}; a gate, ship, mount or bridge opens the matching kind of road",
     },
-    EntityType.LEGEND: {"legend_category": LEGEND_CATEGORY_FIELD},
+    EntityType.LEGEND: {
+        "legend_category": LEGEND_CATEGORY_FIELD,
+        "archetype": "The kind of tale it is, which sets the lesson it presses on its tellers: " + ARCHETYPES,
+    },
+    EntityType.TRADITION: {
+        "tradition_kind": "What kind of custom it is; this decides what keeping it costs and brings: " + TRADITION_KINDS,
+        "calendar_slot": "When it is kept, if at a set time: " + CALENDAR_SLOTS + "; a feast in its season is stronger",
+        "taboo_target": "For a taboo: the good its keepers will not touch",
+        "taboo_act": "For a taboo: the deed its keepers will not do (" + TABOO_ACTS + "); breakers are held in infamy",
+    },
+    EntityType.ITEM: {
+        "item_class": "What kind of thing it is; this decides how it is used and what it does in the world: " + ITEM_CLASSES,
+        "material": MATERIAL_FIELD,
+        "secondary_materials": "Other materials worked into it (inlays, bindings, hilts): {{ materials | join(', ') }}",
+    },
+    EntityType.ARTWORK: {
+        "medium": "What kind of work it is; performed works live only while someone can perform them: " + ART_MEDIA,
+        "subject_id": "Whom or what it portrays, if anyone (an entity id); a portrayed mortal is remembered, a portrayed god gains fame",
+    },
+    EntityType.PROPHECY: {
+        "predicate": "What exactly must happen for it to come true, checked by the world itself: " + PREDICATES,
+        "subject_id": "The one the foretelling names: who dies (dies), what falls (falls), the house (born_in), the realm (ruler_of), the first side (war_between)",
+        "second_id": "For war_between: the second side",
+        "archetype": "For ruler_of: the kind of legend the coming ruler must fit (" + ARCHETYPES + ")",
+        "sky_kind": "For sky_event: the sign in the sky (" + SKY_KINDS + ")",
+        "event_kind": "For within_epochs: the kind of happening foretold (a war, a plague, a flood...)",
+        "within_epochs": "In how many ages it must come true; if it does not, the seer is mocked",
+        "consequence": "What it means when it comes true: " + CONSEQUENCES,
+        "consequence_id": "Whom the consequence touches (the one who will rule, the city that will fall)",
+    },
     EntityType.RESOURCE: {
         "commodity": COMMODITY_FIELD,
         "material": MATERIAL_FIELD,

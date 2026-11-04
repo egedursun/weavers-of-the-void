@@ -3,6 +3,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.models.entity_stats import EventStats
@@ -10,7 +11,8 @@ from aerona.engine.context import TickContext
 from aerona.engine.environment.ley import LeyWeb
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.lore.rites import cast, choose
+from aerona.engine.lore.rites import cast, choose, spellcraft
+from aerona.engine.mind.skills import practise_any
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.polity.book import RealmBook
@@ -131,6 +133,7 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
 )
 @writes(
     "settlement.prosperity",
+    "table.skills",
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
@@ -150,9 +153,11 @@ async def wizards(ctx: TickContext) -> None:
     realms = await RealmBook.load(ctx.session)
     worked = 0
     for mortal in await canon(ctx.session, [EntityType.MORTAL]):
-        if mortal.status is not EntityStatus.CANON or (stat(mortal, "intellect") or 0) < rules.world_effects.sorcerer_min_intellect:
+        if mortal.status is not EntityStatus.CANON or not knowledge.knows(mortal.id, KnowledgeBranch.MAGIC):
             continue
-        if not knowledge.knows(mortal.id, KnowledgeBranch.MAGIC):
+        if (stat(mortal, "intellect") or 0) >= rules.world_effects.sorcerer_min_intellect:
+            await practise_any(ctx.session, rules, mortal.id, (SkillKind.SPELLCRAFT,), rules.rites.spellcraft_xp, epoch=ctx.epoch)
+        if await spellcraft(ctx.session, mortal.id) < rules.rites.wizard_skill:
             continue
         banned = laws.param(mortal.location_id or 0, LawKind.MAGIC_BAN, "severity")
         if banned is not None and rng.chance(int(banned)):

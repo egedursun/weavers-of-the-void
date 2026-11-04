@@ -2,35 +2,30 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.culture import LanguageStandingRow, LegendProfileRow, SpeakerCohortRow, TraditionParticipationRow
+from aerona.db.tables.culture import IdeologyAdherentRow, IdeologyTenetRow, LanguageStandingRow, SpeakerCohortRow, TraditionParticipationRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
-from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
-from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import WritingSystem
-from aerona.domain.enums.culture import CurseKind, ItemDeed, ProphecyState, SpeakerKind, TraditionKind
+from aerona.domain.enums.culture import IdeologyTenet, ProphecyState, SpeakerKind, TraditionKind
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.polity import LawKind
-from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
-from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.lifecycle.wounds import apply_hits
-from aerona.engine.lore import art, ideology, items, legends, prophecy, research, rites, traditions
-from aerona.engine.lore.language import SACRED_STAT, learn_second, prestige_parts, speakers, standing_of, tongues_of
-from aerona.engine.mind.book import stored_values, write_values
+from aerona.engine.lore import ideology, legends, prophecy, research, rites, traditions
+from aerona.engine.lore.backfill import backfill_typed_kinds
+from aerona.engine.lore.language import SACRED_STAT, derive_registers, learn_second, prestige_parts, remeasure, speakers, standing_of, tongues_of
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
+from aerona.engine.phases.made_things import artwork_cycles, item_cycles
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import active_bonds, canon, close, living_entity, spoken_language
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.queries import canon, spoken_language
+from aerona.engine.primitives.stats import stat
 
 K = TraditionKind
 DEFIED_BY = {
@@ -105,12 +100,33 @@ async def conquered_tongues(ctx: TickContext) -> int:
             own = await spoken_language(ctx.session, member)
             if own is None or own.id == ruling.id:
                 continue
-            pull = ruling_prestige - (await prestige_of(ctx, own)) * table.conquered_pct / PERCENT
-            gain = round_half_up(table.second_language_gain * max(0.0, pull) / PERCENT)
+            weight = (await prestige_of(ctx, own)) * table.conquered_pct / PERCENT
+            gain = round_half_up(table.second_language_gain * max(0.0, ruling_prestige - weight) / PERCENT)
             if gain > 0:
                 await learn_second(ctx, member, ruling.id, gain)
                 learned += 1
+            back = round_half_up(table.second_language_gain * max(0.0, weight - ruling_prestige) / PERCENT)
+            if back > 0 and seat is not None:
+                await learn_second(ctx, seat, own.id, back)
+                ctx.count("conquerors_converted")
+                learned += 1
     return learned
+
+
+async def courts_and_liturgies(ctx: TickContext) -> tuple[dict[int, int | None], dict[int, int | None]]:
+    courts: dict[int, int | None] = {}
+    for realm in (await RealmBook.load(ctx.session)).realms.values():
+        seat = realm.profile.capital_entity_id or realm.profile.core_entity_id
+        tongue = await spoken_language(ctx.session, seat) if seat is not None else None
+        courts[realm.profile.polity_entity_id] = tongue.id if tongue is not None else None
+    liturgies: dict[int, int | None] = {}
+    for culture in list(await ctx.session.scalars(select(PeopleCultureRow).where(PeopleCultureRow.liturgical_language_id.is_not(None)))):
+        liturgies[culture.people_entity_id] = culture.liturgical_language_id
+    for cult in await canon(ctx.session, [EntityType.CULT]):
+        home = await ctx.session.get(PeopleCultureRow, cult.location_id) if cult.location_id is not None else None
+        spoken = await spoken_language(ctx.session, cult.location_id) if cult.location_id is not None else None
+        liturgies[cult.id] = home.liturgical_language_id if home is not None and home.liturgical_language_id else (spoken.id if spoken else None)
+    return courts, liturgies
 
 
 async def cohort(ctx: TickContext, community_id: int, language_id: int, kind: SpeakerKind, share: int) -> None:
@@ -118,7 +134,8 @@ async def cohort(ctx: TickContext, community_id: int, language_id: int, kind: Sp
     if row is None:
         row = SpeakerCohortRow(community_entity_id=community_id, language_entity_id=language_id, kind=kind, share=0, since_epoch=ctx.epoch)
         ctx.session.add(row)
-    row.share = clamp_int(share, 0, PERCENT)
+    if "share" not in (row.locked or []):
+        row.share = clamp_int(share, 0, PERCENT)
 
 
 async def cohorts(ctx: TickContext) -> int:
@@ -166,9 +183,13 @@ async def scribes(ctx: TickContext) -> tuple[int, int]:
     "table.bonds",
     "table.community_societies",
     "table.community_society",
+    "table.entities",
+    "table.language_intelligibility",
     "table.language_profiles",
+    "table.language_registers",
     "table.language_standing",
     "table.language_standings",
+    "table.lexemes",
     "table.offices",
     "table.people_culture",
     "table.polity_members",
@@ -178,7 +199,15 @@ async def scribes(ctx: TickContext) -> tuple[int, int]:
     "table.vassalages",
     "table.world_maps",
 )
-@writes("table.community_society", "table.language_standing", "table.language_standings", "table.settlement_profiles", "table.speaker_cohorts")
+@writes(
+    "table.community_society",
+    "table.language_intelligibility",
+    "table.language_registers",
+    "table.language_standing",
+    "table.language_standings",
+    "table.settlement_profiles",
+    "table.speaker_cohorts",
+)
 async def language_cycles(ctx: TickContext) -> None:
     liturgical = set(await ctx.session.scalars(select(PeopleCultureRow.liturgical_language_id).where(PeopleCultureRow.liturgical_language_id.is_not(None))))
     standings = [
@@ -188,35 +217,49 @@ async def language_cycles(ctx: TickContext) -> None:
     if franca is not None:
         ctx.count("lingua_franca_learners", await trade_tongue(ctx, franca.language_entity_id))
     ctx.count("conquered_learners", await conquered_tongues(ctx))
+    courts, liturgies = await courts_and_liturgies(ctx)
+    ctx.count("registers_shifted", await derive_registers(ctx, courts, liturgies, franca.language_entity_id if franca is not None else None))
+    ctx.count("intelligibility_measured", await remeasure(ctx))
     ctx.count("tongue_cohorts", await cohorts(ctx))
     pleased, strained = await scribes(ctx)
     ctx.count("scribes_pleased", pleased)
     ctx.count("alphabet_strain", strained)
 
 
-async def confirmed(ctx: TickContext, legend: EntityRow, row: LegendProfileRow) -> bool:
-    words = next((found for found, archetype in legends.WORD_ARCHETYPES if archetype is row.archetype), ())
-    if not words or legend.location_id is None:
-        return False
-    events = await ctx.session.scalars(
-        select(EntityRow.name).where(EntityRow.entity_type == EntityType.EVENT, EntityRow.birth_epoch == ctx.epoch, EntityRow.location_id == legend.location_id)
-    )
-    return any(word in name.lower() for name in events for word in words)
-
-
 @reads(
     "legend.spread",
+    "table.applied_fixups",
+    "table.artwork_profiles",
     "table.bonds",
+    "table.claims",
+    "table.culture_values",
+    "table.custom_kinds",
+    "table.entities",
+    "table.house_members",
+    "table.house_profiles",
+    "table.incident_participants",
+    "table.incidents",
+    "table.language_standing",
+    "table.legend_profiles",
+    "table.people_culture",
+    "table.skills",
+    "table.tradition_effects",
+    "table.tradition_profiles",
+    "table.value_profiles",
+)
+@writes(
+    "table.applied_fixups",
     "table.claims",
     "table.culture_values",
     "table.house_profiles",
     "table.legend_profiles",
-    "table.people_culture",
+    "table.tradition_effects",
+    "table.tradition_profiles",
     "table.value_profiles",
 )
-@writes("table.claims", "table.culture_values", "table.house_profiles", "table.legend_profiles", "table.value_profiles")
 async def legend_cycles(ctx: TickContext) -> None:
     table = ctx.rules.belief
+    ctx.count("typed_kinds_backfilled", await backfill_typed_kinds(ctx))
     for legend in await canon(ctx.session, [EntityType.LEGEND]):
         row = await legends.profile_of(ctx, legend)
         if await legends.tell(ctx, legend, row):
@@ -224,7 +267,7 @@ async def legend_cycles(ctx: TickContext) -> None:
             await note(
                 ctx, f"In the retelling, {legend.name} became a tale of {row.archetype.value.replace('_', ' ')}.", key="lore.legend_drift", ids=[legend.id]
             )
-        if "credence" not in row.locked and await confirmed(ctx, legend, row):
+        if "credence" not in row.locked and await legends.confirmed(ctx, legend, row):
             row.credence = clamp_int(row.credence + table.confirmation, 0, PERCENT)
             ctx.count("legends_confirmed")
         ctx.count("legend_morals", await legends.press_morals(ctx, row))
@@ -234,53 +277,130 @@ async def legend_cycles(ctx: TickContext) -> None:
             await note(ctx, f"Because {legend.name} is believed, {outcome}.", key="lore.legend_consequence", ids=[legend.id])
 
 
-async def defied(ctx: TickContext, laws: LawBook, kind: TraditionKind, community: EntityRow) -> bool:
+CREED_DEFIES = {
+    IdeologyTenet.RATIONALISM: frozenset({K.OFFERING, K.PILGRIMAGE, K.ANCESTOR_FEAST, K.FAST}),
+    IdeologyTenet.ANTI_GOD: frozenset({K.OFFERING, K.PILGRIMAGE, K.FUNERAL_RITE}),
+    IdeologyTenet.EGALITARIANISM: frozenset({K.DUEL_CUSTOM, K.SCAR_RITE}),
+    IdeologyTenet.ASCETICISM: frozenset({K.FESTIVAL, K.ANCESTOR_FEAST}),
+    IdeologyTenet.COSMOPOLITANISM: frozenset({K.TABOO, K.HOSPITALITY_LAW}),
+    IdeologyTenet.CREATORISM: frozenset({K.ANCESTOR_FEAST, K.OFFERING}),
+    IdeologyTenet.RESTRAINT: frozenset({K.WAR_DANCE, K.DUEL_CUSTOM}),
+}
+
+
+def resistance(ctx: TickContext, tradition: EntityRow) -> int:
+    table = ctx.rules.traditions
+    rigidity = stat(tradition, "rigidity") or 0
+    if rigidity < table.rigid_threshold:
+        return 0
+    return round_half_up(table.conflict_unrest * (1 + rigidity * table.rigidity_pct / (PERCENT * PERCENT)))
+
+
+async def stir(ctx: TickContext, community: EntityRow, step: int) -> bool:
+    town = await ctx.session.get(SettlementProfileRow, community.id)
+    if town is None or "unrest" in town.locked or step <= 0:
+        return False
+    town.unrest = clamp_int(town.unrest + step, 0, PERCENT)
+    return True
+
+
+async def defied(ctx: TickContext, laws: LawBook, tradition: EntityRow, kind: TraditionKind, community: EntityRow) -> bool:
     law = DEFIED_BY.get(kind)
     if law is None or laws.in_force(community.id, law) is None:
         return False
-    town = await ctx.session.get(SettlementProfileRow, community.id)
-    if town is None or "unrest" in town.locked:
-        return False
-    town.unrest = clamp_int(town.unrest + ctx.rules.traditions.conflict_unrest, 0, PERCENT)
-    return True
+    return await stir(ctx, community, resistance(ctx, tradition))
+
+
+async def resisted_creeds(ctx: TickContext, tradition: EntityRow, kind: TraditionKind, community: EntityRow) -> int:
+    step = resistance(ctx, tradition)
+    if not step:
+        return 0
+    held = await ctx.session.scalars(select(IdeologyAdherentRow).where(IdeologyAdherentRow.adherent_entity_id == community.id))
+    struck = 0
+    for adherent in list(held):
+        tenets = set(await ctx.session.scalars(select(IdeologyTenetRow.tenet).where(IdeologyTenetRow.ideology_entity_id == adherent.ideology_entity_id)))
+        if not any(kind in CREED_DEFIES.get(tenet, frozenset()) for tenet in tenets):
+            continue
+        adherent.strength = clamp_int(adherent.strength - ctx.rules.traditions.creed_resistance, 0, PERCENT)
+        await stir(ctx, community, step)
+        struck += 1
+    return struck
+
+
+async def commemorations(ctx: TickContext, atlas: RegionAtlas) -> None:
+    fresh = await ctx.session.scalars(
+        select(EntityRow).where(EntityRow.entity_type == EntityType.EVENT, EntityRow.birth_epoch == ctx.epoch).order_by(EntityRow.id)
+    )
+    for event in list(fresh):
+        founded = await traditions.commemorate(ctx, event)
+        if founded is not None:
+            ctx.count("commemorations")
+            await note(ctx, f"{founded.name} began, so that {event.name} is not forgotten.", key="lore.commemoration", ids=[founded.id, event.id])
+    for founded in await traditions.remember_years(ctx, atlas):
+        ctx.count("commemorations_of_years")
+        await note(ctx, f"{founded.name} began, so that the year is not forgotten.", key="lore.commemoration_year", ids=[founded.id])
+    for founded in await traditions.remember_miracles(ctx):
+        ctx.count("commemorations_of_miracles")
+        await note(ctx, f"{founded.name} began, so that the wonder is not forgotten.", key="lore.commemoration_miracle", ids=[founded.id])
 
 
 @reads(
     "event.severity",
     "people.population",
     "settlement.population",
+    "table.applied_fixups",
     "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
     "table.community_societies",
     "table.community_stocks",
     "table.culture_values",
+    "table.custom_kinds",
+    "table.entities",
     "table.goods_flows",
     "table.holder_techniques",
+    "table.ideology_adherents",
+    "table.ideology_tenets",
+    "table.incident_participants",
+    "table.incidents",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.laws",
+    "table.notable_years",
     "table.people_culture",
     "table.polity_members",
     "table.region_environment",
+    "table.sky_events",
+    "table.spirit_profiles",
+    "table.tradition_effects",
     "table.tradition_participation",
     "table.tradition_profiles",
     "table.traditions",
     "table.value_profiles",
     "table.world_maps",
+    "table.world_seasons",
 )
 @writes(
+    "table.applied_fixups",
     "table.community_societies",
     "table.community_stocks",
     "table.culture_values",
     "table.goods_flows",
+    "table.ideology_adherents",
+    "table.injuries",
+    "table.legend_profiles",
     "table.people_culture",
     "table.region_environment",
     "table.settlement_profiles",
+    "table.spirit_profiles",
+    "table.tradition_effects",
     "table.tradition_participation",
     "table.tradition_profiles",
     "table.value_profiles",
 )
 async def tradition_cycles(ctx: TickContext) -> None:
     table = ctx.rules.traditions
+    ctx.count("typed_kinds_backfilled", await backfill_typed_kinds(ctx))
     atlas = await RegionAtlas.load(ctx.session)
     laws = await LawBook.load(ctx.session)
     held = 0
@@ -293,16 +413,10 @@ async def tradition_cycles(ctx: TickContext) -> None:
             done = await traditions.celebrate(ctx, tradition, community, atlas)
             held += 1
             ctx.count(f"tradition_{done or 'none'}")
-            if await defied(ctx, laws, kind, community):
+            if await defied(ctx, laws, tradition, kind, community):
                 ctx.count("tradition_defiance")
-    fresh = await ctx.session.scalars(
-        select(EntityRow).where(EntityRow.entity_type == EntityType.EVENT, EntityRow.birth_epoch == ctx.epoch).order_by(EntityRow.id)
-    )
-    for event in list(fresh):
-        founded = await traditions.commemorate(ctx, event)
-        if founded is not None:
-            ctx.count("commemorations")
-            await note(ctx, f"{founded.name} began, so that {event.name} is not forgotten.", key="lore.commemoration", ids=[founded.id, event.id])
+            ctx.count("creeds_resisted", await resisted_creeds(ctx, tradition, kind, community))
+    await commemorations(ctx, atlas)
     skipped = await ctx.session.scalars(select(TraditionParticipationRow).where(TraditionParticipationRow.skipped > 0))
     ctx.count("traditions_skipped", len(list(skipped)))
 
@@ -387,22 +501,60 @@ async def ideology_cycles(ctx: TickContext) -> None:
 
 @reads(
     "rite.power",
+    "table.applied_fixups",
+    "table.army_profiles",
+    "table.army_units",
+    "table.bonds",
+    "table.captive_cohorts",
     "table.castings",
+    "table.custom_kinds",
     "table.entity_flags",
+    "table.holder_techniques",
     "table.laws",
+    "table.ley_lines",
     "table.offices",
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
     "table.rite_effects",
     "table.rite_profiles",
+    "table.skills",
+    "table.sky_events",
+    "table.species_ranges",
     "table.vassalages",
+    "table.war_sides",
     "table.world_maps",
+    "table.world_seasons",
 )
-@writes("rite.castings", "table.castings", "table.entities", "table.item_enchantments", "table.rite_profiles")
+@writes(
+    "rite.castings",
+    "table.applied_fixups",
+    "table.army_units",
+    "table.beast_profiles",
+    "table.bonds",
+    "table.captive_cohorts",
+    "table.castings",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.forced_weather",
+    "table.incident_participants",
+    "table.incidents",
+    "table.injuries",
+    "table.item_enchantments",
+    "table.memories",
+    "table.modifiers",
+    "table.rite_effects",
+    "table.rite_profiles",
+    "table.skills",
+    "table.spirit_profiles",
+)
 async def rite_cycles(ctx: TickContext) -> None:
+    ctx.count("rites_profiled", await rites.backfill(ctx))
     realms = await RealmBook.load(ctx.session)
     ctx.count("cult_rites", await rites.cult_rites(ctx, realms))
+    ctx.count("war_mage_rites", await rites.war_mages(ctx, realms))
     ctx.count("enchantments", await rites.enchantments(ctx))
     ctx.count("rites_branded", await rites.heresies(ctx))
 
@@ -414,125 +566,11 @@ async def prophecy_cycles(ctx: TickContext) -> None:
         state, pressed = await prophecy.resolve(ctx, seen)
         if state is ProphecyState.FULFILLED:
             ctx.count("prophecies_fulfilled")
-            await note(ctx, f"{seen.name} came true.", key="lore.prophecy_fulfilled", ids=[seen.id])
+            tail = f" {pressed[0].upper()}{pressed[1:]}." if pressed else ""
+            await note(ctx, f"{seen.name} came true.{tail}", key="lore.prophecy_fulfilled", ids=[seen.id])
         elif pressed:
             ctx.count("prophecies_pressing")
             await note(ctx, f"Under the weight of {seen.name}, {pressed}.", key="lore.prophecy_pressure", ids=[seen.id])
-
-
-async def afflict(ctx: TickContext, item: EntityRow) -> str | None:
-    row = await items.profile_of(ctx, item)
-    if row.curse is CurseKind.NONE:
-        return None
-    owner_id = await items.owner_of(ctx, item.id)
-    bearer = await living_entity(ctx.session, owner_id)
-    if bearer is None:
-        return None
-    table = ctx.rules.item_curses
-    strength = stat(item, "curse") or PERCENT // 2
-    mortal = bearer if bearer.entity_type is EntityType.MORTAL else None
-    if row.curse is CurseKind.WASTING and mortal is not None:
-        harm = Harm(
-            damage=strength * table.wasting_pct / PERCENT,
-            cause=HarmCause.CURSE,
-            death_cause=f"wasted away under the curse of {item.name}",
-            source_node_id=item.id,
-        )
-        await apply_hits(ctx, mortal, harm)
-    elif row.curse is CurseKind.MADNESS and mortal is not None:
-        shift_sanity(ctx.rules, mortal, -strength * table.madness_pct / PERCENT)
-    elif row.curse is CurseKind.BLOODTHIRST:
-        holder = ValueHolder.PERSONAL if mortal is not None else ValueHolder.CULTURE
-        values = await stored_values(ctx.session, holder, bearer.id)
-        values[ValueAxis.MARTIAL] = values.get(ValueAxis.MARTIAL, 0) + round_half_up(strength * table.bloodthirst_pct / PERCENT)
-        values[ValueAxis.MERCY] = values.get(ValueAxis.MERCY, 0) - round_half_up(strength * table.bloodthirst_pct / PERCENT)
-        await write_values(ctx.session, holder, bearer.id, values)
-    elif row.curse is CurseKind.MISFORTUNE:
-        home = await living_entity(ctx.session, bearer.location_id) if mortal is not None else bearer
-        if home is not None and stat(home, "prosperity") is not None:
-            shift_stat(home, "prosperity", -round_half_up(strength * table.misfortune_pct / PERCENT))
-    elif row.curse is CurseKind.BETRAYAL and ctx.rng(f"curse.betray.{item.id}.{ctx.epoch}").chance(strength * table.betrayal_pct / PERCENT):
-        for bond in await active_bonds(ctx.session, [BondKind.OWNS], sources=[bearer.id], targets=[item.id]):
-            await close(ctx.session, bond, ctx.epoch, "the cursed thing slipped away")
-        items.record(ctx, item.id, ItemDeed.LOST, bearer.id, f"slipped from the hand of {bearer.name}")
-    else:
-        return None
-    return row.curse.value
-
-
-@reads(
-    "item.curse",
-    "item.damage",
-    "item.might",
-    "item.protection",
-    "mortal.age",
-    "mortal.agility",
-    "mortal.charisma",
-    "mortal.hp",
-    "mortal.intellect",
-    "mortal.lifespan",
-    "mortal.strength",
-    "table.bodies",
-    "table.body_customs",
-    "table.bonds",
-    "table.conditions",
-    "table.cult_tenets",
-    "table.culture_values",
-    "table.entity_flags",
-    "table.entity_tags",
-    "table.holder_levels",
-    "table.injuries",
-    "table.item_history",
-    "table.item_profiles",
-    "table.memories",
-    "table.minds",
-    "table.node_materials",
-    "table.nodes",
-    "table.personality_values",
-    "table.prostheses",
-    "table.region_environment",
-    "table.relics",
-    "table.skills",
-    "table.traits",
-    "table.world_maps",
-)
-@writes(
-    "cult.zeal",
-    "mortal.hp",
-    "table.bodies",
-    "table.body_customs",
-    "table.conditions",
-    "table.entities",
-    "table.injuries",
-    "table.item_history",
-    "table.item_profiles",
-    "table.memories",
-    "table.personality_values",
-    "table.relics",
-)
-async def item_cycles(ctx: TickContext) -> None:
-    atlas = await RegionAtlas.load(ctx.session)
-    for item in await items.living_items(ctx):
-        for key, value in (await items.item_year(ctx, atlas, item)).items():
-            ctx.count(f"items_{key}", value)
-        cursed = await afflict(ctx, item)
-        if cursed:
-            ctx.count(f"curse_{cursed}")
-    for key, value in (await items.relic_year(ctx, atlas)).items():
-        ctx.count(f"relics_{key}", value)
-
-
-@reads("artwork.influence", "artwork.renown", "table.artwork_profiles", "table.offices", "table.polity_profiles")
-@writes("table.artwork_profiles", "table.entities", "table.polity_profiles", "table.value_profiles")
-async def artwork_cycles(ctx: TickContext) -> None:
-    for work in await art.living_artworks(ctx):
-        for key, value in (await art.art_year(ctx, work)).items():
-            ctx.count(f"art_{key}", value)
-    for realm in list(await ctx.session.scalars(select(PolityProfileRow).order_by(PolityProfileRow.polity_entity_id))):
-        raised = await art.commission(ctx, realm)
-        if raised is not None:
-            ctx.count("propaganda_works")
-            await note(ctx, f"{raised.name} was raised to praise the ruler.", key="lore.propaganda", ids=[raised.id, realm.polity_entity_id])
 
 
 LANGUAGE_PHASES = (Phase("language_cycles", language_cycles),)

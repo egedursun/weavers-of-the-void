@@ -10,6 +10,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.military import DuelContext
 from aerona.domain.enums.war import WarEnding, WarSide, WarStatus
 from aerona.engine.context import TickContext
+from aerona.engine.lore.arms import wear_in_duel
 from aerona.engine.military.duels import bout, fighter
 from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
@@ -80,6 +81,8 @@ async def champions(ctx: TickContext) -> int:
         if first is None or second is None:
             continue
         result = bout(ctx.rules, ctx.rng(f"champions.{war.id}"), await fighter(ctx, first), await fighter(ctx, second), DuelContext.CHAMPION)
+        await wear_in_duel(ctx, first.id, result.exchanges)
+        await wear_in_duel(ctx, second.id, result.exchanges)
         hero = result.winner.entity
         victor, loser = (attacker, defender) if hero.id == first.id else (defender, attacker)
         if result.killed:

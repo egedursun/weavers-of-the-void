@@ -6,6 +6,7 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.entity import AGENT_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.travel import TravelMethod, VehicleKind
@@ -13,6 +14,7 @@ from aerona.engine.cosmos.routes import RouteSpec, method_label, open_route
 from aerona.engine.cosmos.vessels import set_vessel_kind
 from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.gods.queries import worshippers_of
+from aerona.engine.lore import art, items, legends, prophecy, traditions
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.mechanics import assign_mechanics
 from aerona.engine.primitives.stats import set_stats
@@ -157,8 +159,52 @@ async def _vessel_route(call: SonCall, args: CreationInput, created: EntityRow) 
     return result(SonResult.ROUTE_OPENED, id=route.id, world=target.name, method=method_label(method))
 
 
+async def seed_lore_kinds(call: SonCall, args: CreationInput, created: EntityRow) -> None:
+    if created.entity_type is EntityType.LEGEND:
+        await legends.profile_of(call.tick, created, args.option("archetype"))
+    if created.entity_type is EntityType.TRADITION:
+        row = await traditions.profile_of(call.tick, created, args.option("tradition_kind") or TraditionKind.FESTIVAL)
+        row.calendar_slot = args.option("calendar_slot")
+        taboo_target, taboo_act = args.option("taboo_target"), args.option("taboo_act")
+        if taboo_target is not None:
+            row.taboo_target = taboo_target.value
+        row.taboo_act = taboo_act
+
+
+async def seed_made_kinds(call: SonCall, args: CreationInput, created: EntityRow) -> None:
+    if created.entity_type is EntityType.ITEM:
+        row = await items.profile_of(call.tick, created, args.option("item_class"))
+        material = args.option("material")
+        if material is not None:
+            row.material = material.value
+        row.secondary_materials = [item.value for item in args.option("secondary_materials") or []]
+    if created.entity_type is EntityType.ARTWORK:
+        work = await art.profile_of(call.tick, created, args.option("medium"))
+        subject = args.option("subject_id")
+        if subject is not None and await call.session.get(EntityRow, subject) is not None:
+            work.subject_node_id = subject
+    if created.entity_type is EntityType.PROPHECY:
+        await prophecy.typed_condition(
+            call.tick,
+            created,
+            prophecy.Foretelling(
+                predicate=args.option("predicate"),
+                subject_id=args.option("subject_id"),
+                second_id=args.option("second_id"),
+                archetype=args.option("archetype"),
+                sky_kind=args.option("sky_kind"),
+                event_kind=args.option("event_kind"),
+                within_epochs=args.option("within_epochs"),
+                consequence=args.option("consequence"),
+                consequence_id=args.option("consequence_id"),
+            ),
+        )
+
+
 async def finish_extras(call: SonCall, args: CreationInput, created: EntityRow) -> list[str]:
     notes: list[str] = []
+    await seed_lore_kinds(call, args, created)
+    await seed_made_kinds(call, args, created)
     if created.entity_type is EntityType.VESSEL:
         route = await _vessel_route(call, args, created)
         if route is not None:

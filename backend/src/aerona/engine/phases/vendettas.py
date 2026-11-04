@@ -7,15 +7,16 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.military import DuelContext, FeudAction
-from aerona.domain.enums.mind import MemoryKind, ValueAxis
+from aerona.domain.enums.mind import ActKind, MemoryKind, TraitKind, ValueAxis
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.lore.taboos import forbidden
 from aerona.engine.lore.traditions import keeps
-from aerona.engine.mind.book import values_for
+from aerona.engine.mind.book import traits_of, values_for
 from aerona.engine.mind.opinion import mortal_rulers
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -168,9 +169,12 @@ async def honour_duels(ctx: TickContext) -> int:
         if holder.status is not EntityStatus.CANON:
             continue
         customary = holder.location_id is not None and await keeps(ctx, holder.location_id, TraditionKind.DUEL_CUSTOM)
-        if not customary and (await values_for(ctx.session, holder.id)).get(ValueAxis.HONOUR, 0) <= 0:
+        wrathful = TraitKind.WRATHFUL in await traits_of(ctx.session, holder.id)
+        if not customary and not wrathful and (await values_for(ctx.session, holder.id)).get(ValueAxis.HONOUR, 0) <= 0:
             continue
         if stat(holder, "hp") == 0 or holder.location_id != subject.location_id:
+            continue
+        if await forbidden(ctx, holder.id, ActKind.DUELLING):
             continue
         theatre = theatre or await Theatre.load(ctx)
         text = await duel(ctx, theatre, holder, subject, war=None, anchor_id=None, context=DuelContext.HONOUR)

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
+from aerona.db.profile_guard import register_profile_table
 from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.culture import (
     ArtMedium,
@@ -56,6 +57,7 @@ class LanguageIntelligibilityRow(Base):
     second_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     value: Mapped[int] = mapped_column(default=0)
     epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class SpeakerCohortRow(Base):
@@ -67,6 +69,7 @@ class SpeakerCohortRow(Base):
     kind: Mapped[SpeakerKind] = mapped_column(enum_type(SpeakerKind, "kind"), primary_key=True)
     share: Mapped[int] = mapped_column(default=0)
     since_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class LanguageRegisterRow(Base):
@@ -134,6 +137,7 @@ class TraditionParticipationRow(Base):
     since_epoch: Mapped[int] = mapped_column(default=0)
     last_celebrated_epoch: Mapped[int | None]
     skipped: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class HolderLevelRow(Base):
@@ -248,6 +252,7 @@ class RiteProfileRow(Base):
     holy: Mapped[bool] = mapped_column(default=False)
     heretical: Mapped[bool] = mapped_column(default=False)
     inventor_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    forbidden_by: Mapped[list[int]] = mapped_column(JSON, default=list)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
@@ -374,6 +379,7 @@ class ArtworkProfileRow(Base):
     language_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     translations: Mapped[list[int]] = mapped_column(JSON, default=list)
     propaganda: Mapped[bool] = mapped_column(default=False)
+    canon: Mapped[bool] = mapped_column(default=False)
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
@@ -402,3 +408,9 @@ class RumourRow(Base):
     legend_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     planted: Mapped[bool] = mapped_column(default=False)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+register_profile_table(LanguageIntelligibilityRow.__tablename__, "first_entity_id")
+register_profile_table(SpeakerCohortRow.__tablename__, "community_entity_id")
+register_profile_table(LanguageRegisterRow.__tablename__, "holder_entity_id")
+register_profile_table(TraditionParticipationRow.__tablename__, "community_entity_id")
