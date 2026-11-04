@@ -78,7 +78,7 @@ export function Gallery({
               </Badge>
             )}
             {manage && (
-              <div className='absolute right-2 bottom-2 flex gap-1'>
+              <div className='absolute right-2 bottom-2 flex gap-1 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-within:opacity-100'>
                 {!image.is_cover && (
                   <Button
                     variant='secondary'
@@ -93,8 +93,9 @@ export function Gallery({
                   </Button>
                 )}
                 <Button
-                  variant='destructive'
+                  variant='secondary'
                   size='icon-sm'
+                  className='hover:bg-destructive hover:text-destructive-foreground'
                   aria-label='Delete this image'
                   title='Delete this image'
                   disabled={blocked !== null}

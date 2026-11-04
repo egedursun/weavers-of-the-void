@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.profile_guard import restore_held
 from aerona.db.tables.interconnect import ModifierRow
 from aerona.db.write_guard import WRITE_GUARD
 from aerona.domain.enums.modifier import ModifierSource
@@ -124,6 +125,9 @@ async def run_guarded(phase: Phase, ctx: TickContext, *, only: int | None = None
     index = await ModifierIndex.load(ctx.session, ctx.epoch)
     with guarded(state), live_modifiers(index, ctx.epoch, ctx.rules):
         await phase.run(ctx)
+        for row in list(ctx.session.dirty):
+            restore_held(row)
+        await ctx.session.flush()
     if state.moved:
         for hook in AFTER_PHASE:
             await hook(ctx, state.moved)

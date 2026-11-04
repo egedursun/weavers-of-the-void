@@ -1,0 +1,127 @@
+from dataclasses import dataclass
+from typing import Any
+
+from sqlalchemy import event
+from sqlalchemy.orm import Mapper, Session, UOWTransaction, object_mapper
+from sqlalchemy.orm.base import instance_state
+from sqlalchemy.orm.attributes import get_history, set_committed_value
+
+from aerona.db.base import Base
+from aerona.db.write_guard import WRITE_GUARD, write_blocked
+
+ENTITY_TABLE = "entities"
+LOCK_COLUMN = "locked"
+KEY_SEPARATOR = "."
+EXPLICIT_NODE_COLUMNS: dict[str, str] = {}
+UNGUARDED_TABLES: set[str] = set()
+
+
+@dataclass(frozen=True)
+class ProfileShape:
+    table: str
+    node_column: str
+    columns: tuple[str, ...]
+    lockable: bool
+
+
+SHAPES: dict[str, ProfileShape | None] = {}
+
+
+def profile_key(table: str, column: str) -> str:
+    return f"{table}{KEY_SEPARATOR}{column}"
+
+
+def split_profile_key(key: str) -> tuple[str, str] | None:
+    table, separator, column = key.partition(KEY_SEPARATOR)
+    return (table, column) if separator and table and column else None
+
+
+def register_profile_table(table: str, node_column: str) -> None:
+    EXPLICIT_NODE_COLUMNS[table] = node_column
+    SHAPES.pop(table, None)
+
+
+def exempt_profile_table(table: str) -> None:
+    UNGUARDED_TABLES.add(table)
+    SHAPES.pop(table, None)
+
+
+def table_name(mapper: Mapper[Any]) -> str:
+    return str(getattr(mapper.class_, "__tablename__", ""))
+
+
+def _auto_node_column(mapper: Mapper[Any]) -> str | None:
+    keys = list(mapper.primary_key)
+    if len(keys) != 1:
+        return None
+    column = keys[0]
+    if any(foreign.column.table.name == ENTITY_TABLE for foreign in column.foreign_keys):
+        return mapper.get_property_by_column(column).key
+    return None
+
+
+def _shape(mapper: Mapper[Any]) -> ProfileShape | None:
+    table = table_name(mapper)
+    if table in SHAPES:
+        return SHAPES[table]
+    shape: ProfileShape | None = None
+    if table not in UNGUARDED_TABLES:
+        node_column = EXPLICIT_NODE_COLUMNS.get(table) or _auto_node_column(mapper)
+        if node_column is not None:
+            columns = tuple(attribute.key for attribute in mapper.column_attrs if attribute.key not in {node_column, LOCK_COLUMN})
+            shape = ProfileShape(table, node_column, columns, LOCK_COLUMN in mapper.column_attrs)
+    SHAPES[table] = shape
+    return shape
+
+
+def shape_of_table(table: str) -> ProfileShape | None:
+    for mapper in Base.registry.mappers:
+        if table_name(mapper) == table:
+            return _shape(mapper)
+    return None
+
+
+def profile_mapper(table: str) -> Mapper[Any] | None:
+    return next((mapper for mapper in Base.registry.mappers if table_name(mapper) == table), None)
+
+
+def held_columns(row: object) -> frozenset[str]:
+    value = getattr(row, LOCK_COLUMN, None)
+    return frozenset(item for item in value if isinstance(item, str)) if isinstance(value, list | tuple | set | frozenset) else frozenset()
+
+
+def profile_held(row: object, column: str) -> bool:
+    shape = _shape(object_mapper(row))
+    if shape is None:
+        return False
+    if column in held_columns(row):
+        return True
+    return write_blocked(int(getattr(row, shape.node_column)), profile_key(shape.table, column))
+
+
+def restore_held(row: object) -> list[str]:
+    state = instance_state(row)
+    shape = _shape(state.mapper)
+    if shape is None or state.pending:
+        return []
+    node_id = getattr(row, shape.node_column)
+    if node_id is None:
+        return []
+    held = held_columns(row)
+    restored: list[str] = []
+    for column in shape.columns:
+        history = get_history(row, column)
+        if not history.deleted or not history.has_changes():
+            continue
+        if column in held or write_blocked(int(node_id), profile_key(shape.table, column)):
+            set_committed_value(row, column, history.deleted[0])
+            restored.append(column)
+    return restored
+
+
+@event.listens_for(Session, "before_flush")
+def _hold_profile_columns(session: Session, flush_context: UOWTransaction, instances: object) -> None:
+    if WRITE_GUARD.get() is None:
+        return
+    for row in list(session.dirty):
+        restore_held(row)
