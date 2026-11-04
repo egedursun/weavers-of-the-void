@@ -290,3 +290,14 @@ class TreatyBreachRow(Base):
     epoch: Mapped[int]
     incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
     note: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+
+
+class MortalReputeRow(Base):
+    __tablename__ = "mortal_repute"
+    __table_args__ = (between("honour", PERCENT_MIN, PERCENT_MAX), between("infamy", PERCENT_MIN, PERCENT_MAX))
+
+    mortal_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    honour: Mapped[int] = mapped_column(default=50)
+    infamy: Mapped[int] = mapped_column(default=0)
+    updated_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
