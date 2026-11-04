@@ -21,6 +21,7 @@ import {
   Medallion,
   Section,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
@@ -159,7 +160,7 @@ export function AnchorageSection({
       description='What holds this god in being, the works raised in their name and the wars they set off.'
       icon={Anchor}
     >
-      {view.isPending && <Muted>Reading the anchor…</Muted>}
+      {view.isPending && <LoadingBlock label='Reading the anchor' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

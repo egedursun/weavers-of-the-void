@@ -42,6 +42,7 @@ import {
   MiniStat,
   Section,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -1304,7 +1305,7 @@ export function EntityEconomy({
       description='What the stores hold, what the workshops made this epoch and where a missing good stopped the chain.'
       icon={Factory}
     >
-      {view.isPending && <Muted>Loading the stores…</Muted>}
+      {view.isPending && <LoadingBlock label='Loading the stores' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

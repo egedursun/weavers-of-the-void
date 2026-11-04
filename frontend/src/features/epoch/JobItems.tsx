@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EntityLink, PagedList } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { humanize } from '@/features/entity/actions/schema'
 import { NodeAvatar } from '@/features/images/NodeAvatar'
 import { type Job } from './api'
 import {
@@ -63,7 +64,7 @@ function ItemRow({ item }: { item: JobItem }) {
             item.other_name && (
               <>
                 <Muted as='span' variant='caption'>
-                  {item.note ? `${item.note.replaceAll('_', ' ')} →` : '→'}
+                  {item.note ? `${humanize(item.note)} →` : '→'}
                 </Muted>
                 <NodeName
                   kind={item.other_kind}

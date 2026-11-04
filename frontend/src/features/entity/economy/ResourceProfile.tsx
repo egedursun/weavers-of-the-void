@@ -32,6 +32,7 @@ import {
   Medallion,
   Section,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { LineChart } from '@/components/domain/LineChart'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
@@ -833,7 +834,7 @@ export function ResourceProfile({
       description='How much is left, who works it, how hard and dangerous it is, and what each epoch took out.'
       icon={Pickaxe}
     >
-      {view.isPending && <Muted>Loading the reserve…</Muted>}
+      {view.isPending && <LoadingBlock label='Loading the reserve' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

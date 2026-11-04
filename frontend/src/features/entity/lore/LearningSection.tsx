@@ -30,6 +30,7 @@ import {
   Medallion,
   Section,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { tierNumeral } from '@/features/languages/languageIcons'
@@ -585,7 +586,7 @@ export function LearningSection({
       description='Levels of knowledge, the techniques they open, and the books that keep them.'
       icon={GraduationCap}
     >
-      {view.isPending && <Muted>Reading what they know…</Muted>}
+      {view.isPending && <LoadingBlock label='Reading what they know' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

@@ -21,6 +21,7 @@ import {
   MiniStat,
   Section,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { GoodChip, PartHeader } from './EntityEconomy'
@@ -259,7 +260,7 @@ export function PolityProduction({ polityId }: { polityId: number }) {
       description="Every member's workshops and production gathered into one chain: what the realm makes, where it is starved, and who makes it."
       icon={Factory}
     >
-      {view.isPending && <Muted>Gathering the realm's work…</Muted>}
+      {view.isPending && <LoadingBlock label='Gathering the realm’s work' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

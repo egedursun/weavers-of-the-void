@@ -26,6 +26,7 @@ import {
 } from '@/components/domain'
 import { PageControls } from '@/components/domain/PageControls'
 import { Muted, Text } from '@/components/typography'
+import { humanize } from '@/features/entity/actions/schema'
 import { NodeAvatar } from '@/features/images/NodeAvatar'
 import {
   WAR_PAGE_SIZE,
@@ -388,7 +389,7 @@ export function CaptivesList({ communityId }: { communityId: number | null }) {
                 size='sm'
                 variant={item.status === 'held' ? 'warning' : 'outline'}
               >
-                {item.status.replaceAll('_', ' ')}
+                {humanize(item.status)}
               </Badge>
               <EpochBadge from={item.taken_epoch} to={item.released_epoch} />
               {item.home && (
@@ -442,7 +443,7 @@ export function TributesList({ communityId }: { communityId: number | null }) {
                 size='sm'
                 variant={item.status === 'active' ? 'warning' : 'outline'}
               >
-                {item.status.replaceAll('_', ' ')}
+                {humanize(item.status)}
               </Badge>
               <EpochBadge from={item.since_epoch} to={item.ended_epoch} />
             </div>

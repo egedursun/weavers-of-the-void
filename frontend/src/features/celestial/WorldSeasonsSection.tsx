@@ -33,7 +33,6 @@ import {
 } from '@/components/ui/select'
 import {
   ChangeChip,
-  EmptyState,
   KpiTile,
   Medallion,
   MiniStat,
@@ -42,6 +41,7 @@ import {
   Timeline,
   TimelineItem,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import {
@@ -697,11 +697,7 @@ export function WorldSeasonsSection({ worldId }: { worldId: number }) {
       icon={CalendarDays}
     >
       {!data ? (
-        <EmptyState
-          icon={CalendarDays}
-          title='Reading the sky'
-          description='The seasons of this world are being gathered.'
-        />
+        <LoadingBlock label='Reading the sky' />
       ) : (
         <div className='@container/year flex min-w-0 flex-col gap-4'>
           <ClimateAge

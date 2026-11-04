@@ -13,7 +13,13 @@ import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { EmptyState, EntityLink, Medallion, Section } from '@/components/domain'
+import {
+  EmptyState,
+  EntityLink,
+  Medallion,
+  Section,
+  LoadingBlock,
+} from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -59,7 +65,7 @@ export function DedicationSection({
       description='The god this work was raised for. A dedicated work brings its god fame and existence, and can anchor them.'
       icon={Church}
     >
-      {view.isPending && <Muted>Reading the dedication…</Muted>}
+      {view.isPending && <LoadingBlock label='Reading the dedication' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

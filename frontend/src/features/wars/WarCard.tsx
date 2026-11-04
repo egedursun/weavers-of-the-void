@@ -129,7 +129,7 @@ export function WarCard({
             </Badge>
             {war.ending && (
               <Badge size='sm' variant='info'>
-                {`Ended in ${war.ending.replaceAll('_', ' ')}`}
+                {`Ended in ${humanize(war.ending)}`}
               </Badge>
             )}
             <Badge size='sm' variant='outline'>

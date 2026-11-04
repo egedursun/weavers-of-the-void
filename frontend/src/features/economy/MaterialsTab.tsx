@@ -25,6 +25,7 @@ import {
   IconStat,
   Medallion,
   PagedList,
+  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import {
@@ -762,7 +763,7 @@ export function DepositForge({
 export function MaterialsBrowser({ worldId }: { worldId: number }) {
   const view = useWorldMaterials(worldId)
   const [family, setFamily] = useState<string>(ALL)
-  if (!view.data) return <Muted>Loading the materials…</Muted>
+  if (!view.data) return <LoadingBlock label='Loading the materials' />
   const materials = view.data.materials
   const shown =
     family === ALL

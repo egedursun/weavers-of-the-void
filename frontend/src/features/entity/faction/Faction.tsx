@@ -48,6 +48,7 @@ import {
   Section,
   StatBar,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -898,7 +899,7 @@ export function FactionSection({
       description='What it is, what it wants, who leads it and what it has done.'
       icon={Flag}
     >
-      {view.isPending && <Muted>Reading the faction…</Muted>}
+      {view.isPending && <LoadingBlock label='Reading the faction' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

@@ -25,6 +25,7 @@ import {
   Timeline,
   TimelineItem,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -438,7 +439,7 @@ export function LandShapeSection({
       icon={LAND_ICON}
       tone='warning'
     >
-      {view.isPending && <Muted>Reading the land…</Muted>}
+      {view.isPending && <LoadingBlock label='Reading the land' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

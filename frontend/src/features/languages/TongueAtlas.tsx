@@ -20,6 +20,7 @@ import {
   Medallion,
   MiniStat,
   Section,
+  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { RegisterList } from '@/features/entity/lore/RegisterParts'
@@ -302,7 +303,7 @@ export function TongueAtlas({ worldId }: { worldId: number | null }) {
         description='Which tongue the powerful, the learned and the holy speak.'
         icon={Crown}
       >
-        {view.isPending && <Muted>Weighing the tongues…</Muted>}
+        {view.isPending && <LoadingBlock label='Weighing the tongues' />}
         {view.isError && (
           <EmptyState
             icon={TriangleAlert}

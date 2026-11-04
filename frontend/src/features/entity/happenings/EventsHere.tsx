@@ -25,6 +25,7 @@ import {
   Section,
   ShowMore,
   useShowMore,
+  LoadingBlock,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
@@ -328,7 +329,7 @@ export function EventsHereSection({
       icon={EVENT_ICON}
       tone='warning'
     >
-      {view.isPending && <Muted>Reading what happened here…</Muted>}
+      {view.isPending && <LoadingBlock label='Reading what happened here' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

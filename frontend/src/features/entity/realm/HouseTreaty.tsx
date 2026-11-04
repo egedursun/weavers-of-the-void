@@ -42,6 +42,7 @@ import {
   Timeline,
   TimelineItem,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -264,7 +265,7 @@ export function HouseSection({
       description='Its blood, its heads, its claims and its treasures.'
       icon={Shield}
     >
-      {view.isPending && <Muted>Reading the line…</Muted>}
+      {view.isPending && <LoadingBlock label='Reading the line' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}
@@ -596,7 +597,7 @@ export function TreatySection({
       description='Who is bound, by what, until when, and every breach.'
       icon={Handshake}
     >
-      {view.isPending && <Muted>Reading the treaty…</Muted>}
+      {view.isPending && <LoadingBlock label='Reading the treaty' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

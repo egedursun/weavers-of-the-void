@@ -18,8 +18,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label as FieldLabel } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { EmptyState, KpiTile, Section } from '@/components/domain'
-import { Muted, Text } from '@/components/typography'
+import { EmptyState, KpiTile, Section, LoadingBlock } from '@/components/domain'
+import { Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { Adjust } from '@/features/wars/military/parts'
@@ -144,7 +144,7 @@ export function GoldenAgeSection({ worldId }: { worldId: number }) {
       description='Peace and plenty that deepen with every age, until ease makes the peoples soft.'
       icon={Sun}
     >
-      {view.isPending && <Muted>Reading the age…</Muted>}
+      {view.isPending && <LoadingBlock label='Reading the age' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

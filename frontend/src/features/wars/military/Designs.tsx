@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { EmptyState, Medallion, StatBar, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { humanize } from '@/features/entity/actions/schema'
 import { useUnitKinds } from './api'
 import { Held, RecordButtons, TextField } from './controls'
 import { SOCIAL_CLASS, type RecordRow, nameOf, useRecords } from './depth'
@@ -219,7 +220,7 @@ function DesignCard({
             {String(row.values.name)}
           </Text>
           <Muted as='span' variant='caption' truncate>
-            {`${kind.replaceAll('_', ' ')} reforged · since epoch ${String(row.values.created_epoch)}`}
+            {`${humanize(kind)} reforged · since epoch ${String(row.values.created_epoch)}`}
           </Muted>
         </div>
         <Held locked={row.locked} />

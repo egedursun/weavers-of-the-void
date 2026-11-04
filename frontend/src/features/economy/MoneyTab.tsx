@@ -34,6 +34,7 @@ import {
   Medallion,
   MiniStat,
   PagedList,
+  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import {
@@ -452,7 +453,7 @@ export function CurrencyCards({ worldId }: { worldId: number | null }) {
         {(close) => <CoinForge worldId={worldId} onDone={close} />}
       </Opener>
       {!view.data ? (
-        <Muted>Loading the coins…</Muted>
+        <LoadingBlock label='Loading the coins' />
       ) : view.data.length === 0 ? (
         <EmptyState
           icon={Coins}
@@ -1101,7 +1102,7 @@ export function DebtLaws() {
         {(close) => <DebtLawForge onDone={close} />}
       </Opener>
       {!view.data ? (
-        <Muted>Loading the laws…</Muted>
+        <LoadingBlock label='Loading the laws' />
       ) : view.data.length === 0 ? (
         <EmptyState
           icon={Gavel}
@@ -1132,7 +1133,7 @@ export function DebtsLedger() {
       ),
   })
   const busy = useBusy(null, writeOff.isPending)
-  if (!view.data) return <Muted>Loading the ledger…</Muted>
+  if (!view.data) return <LoadingBlock label='Loading the ledger' />
   const { loans, debts } = view.data
   return (
     <div data-surface='DebtsLedger' className='flex min-w-0 flex-col gap-6'>

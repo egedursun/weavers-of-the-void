@@ -43,6 +43,7 @@ import {
   StatBar,
   ValueRadar,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -571,7 +572,7 @@ export function DemographySection({
       description='Who lives here by age, sex, class and condition; how each class fares; and the pressures on them.'
       icon={Users}
     >
-      {view.isPending && <Muted>Counting the people…</Muted>}
+      {view.isPending && <LoadingBlock label='Counting the people' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

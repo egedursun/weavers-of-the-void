@@ -16,6 +16,7 @@ import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted, Text } from '@/components/typography'
 import { type EntityContext } from '@/features/entity/actions/context'
 import { optionsFor } from '@/features/entity/actions/pickers'
+import { humanize } from '@/features/entity/actions/schema'
 import { usePickerData } from '@/features/entity/actions/usePickerData'
 import { MEMORY_ICONS, named } from '@/features/entity/mind/labels'
 import { OpinionBreakdown } from '@/features/entity/sections/MemoriesSection'
@@ -72,7 +73,7 @@ function RelationRow({ entry, selfId, readOnlyReason }: RowProps) {
         <Badge
           size='sm'
           variant={tone(entry)}
-        >{`${entry.label.replaceAll('_', ' ')} ${signed(entry.value)}`}</Badge>
+        >{`${humanize(entry.label)} ${signed(entry.value)}`}</Badge>
         {entry.blood_feud_since_epoch !== null && (
           <Badge
             size='sm'
@@ -170,7 +171,7 @@ function PairStanding({
         <Badge
           size='sm'
           variant={tone(data)}
-        >{`${data.label.replaceAll('_', ' ')} ${signed(data.value)}`}</Badge>
+        >{`${humanize(data.label)} ${signed(data.value)}`}</Badge>
         {data.blood_feud_since_epoch !== null && (
           <Badge
             size='sm'

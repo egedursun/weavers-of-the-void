@@ -55,6 +55,7 @@ import {
   Section,
   StatBar,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
@@ -1618,7 +1619,7 @@ export function SpeciesSection({
       icon={ECOLOGY_ICON}
       tone='success'
     >
-      {view.isPending && <Muted>Reading the kind…</Muted>}
+      {view.isPending && <LoadingBlock label='Reading the kind' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

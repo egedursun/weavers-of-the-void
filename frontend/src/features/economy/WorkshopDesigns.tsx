@@ -16,7 +16,12 @@ import type { components } from '@/api/generated/schema'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { AttributeTile, EmptyState, Medallion } from '@/components/domain'
+import {
+  AttributeTile,
+  EmptyState,
+  Medallion,
+  LoadingBlock,
+} from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import {
   AdjustPanel,
@@ -391,7 +396,7 @@ export function WorkshopDesigns({ worldId }: { worldId: number }) {
         {(close) => <DesignForge worldId={worldId} onDone={close} />}
       </Opener>
       {!view.data ? (
-        <Muted>Loading the designs…</Muted>
+        <LoadingBlock label='Loading the designs' />
       ) : view.data.length === 0 ? (
         <EmptyState
           icon={PencilRuler}

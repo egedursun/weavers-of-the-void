@@ -6,7 +6,13 @@ import { formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { EmptyState, IconStat, Medallion, Paged } from '@/components/domain'
+import {
+  EmptyState,
+  IconStat,
+  Medallion,
+  Paged,
+  LoadingBlock,
+} from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import {
@@ -152,7 +158,7 @@ export function PriceHolds({
           ) : undefined
         }
       />
-      {view.isPending && <Muted>Loading the premiums…</Muted>}
+      {view.isPending && <LoadingBlock label='Loading the premiums' />}
       {view.data && rows.length === 0 && (
         <EmptyState
           icon={Package}

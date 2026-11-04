@@ -17,8 +17,10 @@ import {
   MiniStat,
   StatBar,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { humanize } from '@/features/entity/actions/schema'
 import { EntityPicker, Held, RecordButtons, TextField } from './controls'
 import { FEUD_PARTY, FEUD_STATUS, type Feud, nameOf, useFeuds } from './depth'
 import { PERCENT, busyOf, cardGrid } from './labels'
@@ -92,7 +94,7 @@ function FeudCard({
         {feud.last_action && (
           <Plain
             icon={Swords}
-          >{`Last: ${feud.last_action.replaceAll('_', ' ')}${feud.last_epoch !== null ? `, epoch ${feud.last_epoch}` : ''}`}</Plain>
+          >{`Last: ${humanize(feud.last_action)}${feud.last_epoch !== null ? `, epoch ${feud.last_epoch}` : ''}`}</Plain>
         )}
       </div>
       {feud.cause && <Muted variant='caption'>{feud.cause}</Muted>}
@@ -275,7 +277,7 @@ export function Vendettas({
         hint='Feuds burn hotter with honour and grief, cool with marriages, shared enemies, mediation and the generations'
       >
         {query.isPending ? (
-          <Muted variant='caption'>Counting the old grudges…</Muted>
+          <LoadingBlock label='Counting the old grudges' />
         ) : feuds.length === 0 ? (
           <EmptyState
             icon={Flame}

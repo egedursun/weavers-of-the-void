@@ -29,6 +29,7 @@ import {
   Section,
   StatBar,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -403,7 +404,7 @@ export function NeedsSection({
       description='What each class wants and gets of every good, and what each missing good does to them.'
       icon={ShoppingBasket}
     >
-      {view.isPending && <Muted>Weighing the stores…</Muted>}
+      {view.isPending && <LoadingBlock label='Weighing the stores' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

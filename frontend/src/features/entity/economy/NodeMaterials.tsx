@@ -12,6 +12,7 @@ import {
   Medallion,
   Section,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -281,7 +282,7 @@ export function NodeMaterials({
       description='The material of each part sets its worth, its wear, how it cuts and guards, and how holy weapons fare against what it faces.'
       icon={Gem}
     >
-      {view.isPending && <Muted>Reading its materials…</Muted>}
+      {view.isPending && <LoadingBlock label='Reading its materials' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

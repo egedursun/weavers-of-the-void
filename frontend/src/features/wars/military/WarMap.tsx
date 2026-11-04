@@ -2,7 +2,12 @@ import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Castle, Flag, Map as MapIcon, Swords, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { EmptyState, EpochSlider, MiniStat } from '@/components/domain'
+import {
+  EmptyState,
+  EpochSlider,
+  LoadingBlock,
+  MiniStat,
+} from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { type MapView, useWorldMap } from '@/features/map/api'
 import { buildTerrain, drawTexture } from '@/features/map/terrainLayer'
@@ -381,13 +386,15 @@ export function WarMap({ room }: { room: WarRoom }) {
   if (!view || !located || !box) {
     return (
       <Panel title='War map' icon={MapIcon} tone='verdigris' actions={header}>
-        <EmptyState
-          icon={MapIcon}
-          title={
-            map.isLoading ? 'Unrolling the map' : 'No map of this world yet'
-          }
-          description='Fronts, marches and sieges are drawn on the world map once it is surveyed.'
-        />
+        {map.isLoading ? (
+          <LoadingBlock label='Unrolling the map' />
+        ) : (
+          <EmptyState
+            icon={MapIcon}
+            title='No map of this world yet'
+            description='Fronts, marches and sieges are drawn on the world map once it is surveyed.'
+          />
+        )}
       </Panel>
     )
   }

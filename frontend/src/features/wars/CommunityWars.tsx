@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntityLink, Section, Paged } from '@/components/domain'
 import { Label, Text } from '@/components/typography'
+import { humanize } from '@/features/entity/actions/schema'
 import { WarsPanel } from './WarsPanel'
 import { CaptivesList, TributesList } from './WarsTables'
 import { useCommunityHeroes, useCommunityWars } from './api'
@@ -24,7 +25,7 @@ function Heroes({ entityId }: { entityId: number }) {
             </EntityLink>
             {hero.role && (
               <Badge size='sm' variant='outline'>
-                {hero.role.replaceAll('_', ' ')}
+                {humanize(hero.role)}
               </Badge>
             )}
           </li>

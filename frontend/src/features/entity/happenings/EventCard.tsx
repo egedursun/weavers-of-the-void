@@ -31,6 +31,7 @@ import {
   StatBar,
   useShowMore,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
@@ -643,7 +644,7 @@ export function EventSection({
       icon={spec.icon}
       tone={spec.tone}
     >
-      {view.isPending && <Muted>Reading the event…</Muted>}
+      {view.isPending && <LoadingBlock label='Reading the event' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

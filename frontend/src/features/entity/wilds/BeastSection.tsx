@@ -45,6 +45,7 @@ import {
   Timeline,
   TimelineItem,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
@@ -631,7 +632,7 @@ export function BeastSection({
       icon={BEAST_ICON}
       tone='danger'
     >
-      {view.isPending && <Muted>Reading the beast…</Muted>}
+      {view.isPending && <LoadingBlock label='Reading the beast' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

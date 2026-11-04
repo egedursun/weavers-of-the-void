@@ -37,6 +37,7 @@ import {
   Medallion,
   PageHeader,
   PagedList,
+  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Stat } from '@/components/typography'
 import { useCosmos, useWorldState } from '@/features/entity/api/queries'
@@ -179,7 +180,7 @@ function RouteCard({ route }: { route: TradeRoute }) {
 
 function RoutesList({ routes }: { routes: TradeRoute[] | undefined }) {
   const [status, setStatus] = useState<string>(ALL)
-  if (!routes) return <Muted>Loading the routes…</Muted>
+  if (!routes) return <LoadingBlock label='Loading the routes' />
   if (routes.length === 0)
     return (
       <div className='flex min-w-0 flex-col gap-4'>
@@ -250,7 +251,7 @@ function RoutesList({ routes }: { routes: TradeRoute[] | undefined }) {
 function MarketsList({ worldId }: { worldId: number }) {
   const markets = useMarkets(worldId)
   const [chosen, setChosen] = useState<string>('')
-  if (!markets.data) return <Muted>Loading the markets…</Muted>
+  if (!markets.data) return <LoadingBlock label='Loading the markets' />
   if (markets.data.length === 0)
     return (
       <EmptyState
@@ -456,7 +457,7 @@ export function EconomyLedger({
         <TabsContent value='markets'>
           {tab === 'markets' &&
             (worldId === null ? (
-              <Muted>Loading the markets…</Muted>
+              <LoadingBlock label='Loading the markets' />
             ) : (
               <MarketsList key={worldId} worldId={worldId} />
             ))}
@@ -464,7 +465,7 @@ export function EconomyLedger({
         <TabsContent value='materials'>
           {tab === 'materials' &&
             (worldId === null ? (
-              <Muted>Loading the materials…</Muted>
+              <LoadingBlock label='Loading the materials' />
             ) : (
               <MaterialsBrowser key={worldId} worldId={worldId} />
             ))}
@@ -472,7 +473,7 @@ export function EconomyLedger({
         <TabsContent value='workshops'>
           {tab === 'workshops' &&
             (worldId === null ? (
-              <Muted>Loading the designs…</Muted>
+              <LoadingBlock label='Loading the designs' />
             ) : (
               <WorkshopDesigns key={worldId} worldId={worldId} />
             ))}

@@ -44,6 +44,7 @@ import {
   Section,
   StatBar,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
@@ -629,7 +630,7 @@ export function SettlementStructures({
       items: found.get(group) ?? [],
     }))
   }, [data])
-  if (view.isPending) return <Muted>Counting the works…</Muted>
+  if (view.isPending) return <LoadingBlock label='Counting the works' />
   if (view.isError || !data)
     return (
       <EmptyState

@@ -50,6 +50,7 @@ import {
   TimelineItem,
   useShowMore,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -1393,7 +1394,7 @@ export function RealmSection({
       description='The realm, its rulers, laws, lands and fortunes.'
       icon={Landmark}
     >
-      {view.isPending && <Muted>Reading the realm…</Muted>}
+      {view.isPending && <LoadingBlock label='Reading the realm' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

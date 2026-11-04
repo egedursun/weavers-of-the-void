@@ -40,6 +40,7 @@ import {
   ShowMore,
   useShowMore,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -1229,7 +1230,7 @@ export function DoctrineSection({
       description='Tenets, zeal, clergy, holdings, heresies and saints.'
       icon={ScrollText}
     >
-      {view.isPending && <Muted>Reading the doctrine…</Muted>}
+      {view.isPending && <LoadingBlock label='Reading the doctrine' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

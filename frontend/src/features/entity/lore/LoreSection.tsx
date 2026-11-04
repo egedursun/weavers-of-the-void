@@ -1,6 +1,5 @@
 import { BadgeCheck, TriangleAlert } from 'lucide-react'
-import { EmptyState, Section } from '@/components/domain'
-import { Muted } from '@/components/typography'
+import { EmptyState, Section, LoadingBlock } from '@/components/domain'
 import { useGodGate } from '@/features/pantheon/gate'
 import { type LoreCard as LoreCardData, useLore } from './api'
 import { LORE_KIND, type LoreKind } from './model'
@@ -66,7 +65,7 @@ export function LoreSection({
       tone={spec.tone}
     >
       <div className='@container/lore flex min-w-0 flex-col gap-4'>
-        {view.isPending && <Muted>Reading the record…</Muted>}
+        {view.isPending && <LoadingBlock label='Reading the record' />}
         {view.isError && (
           <EmptyState
             icon={TriangleAlert}

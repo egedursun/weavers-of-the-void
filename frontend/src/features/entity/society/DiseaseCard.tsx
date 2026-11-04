@@ -51,6 +51,7 @@ import {
   TimelineItem,
   type TimelineTone,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
@@ -767,7 +768,7 @@ export function DiseaseSection({
       icon={Biohazard}
       tone='danger'
     >
-      {view.isPending && <Muted>Reading the sickness…</Muted>}
+      {view.isPending && <LoadingBlock label='Reading the sickness' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

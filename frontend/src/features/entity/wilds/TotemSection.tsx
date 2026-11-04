@@ -2,7 +2,12 @@ import { useState } from 'react'
 import { PawPrint, Sparkles, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { EmptyState, Medallion, Section } from '@/components/domain'
+import {
+  EmptyState,
+  Medallion,
+  Section,
+  LoadingBlock,
+} from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -37,7 +42,7 @@ export function TotemSection({
     >
       <div data-surface='TotemCard' className='flex min-w-0 flex-col gap-3'>
         {view.isPending ? (
-          <Muted>Reading the people’s emblem…</Muted>
+          <LoadingBlock label='Reading the people’s emblem' />
         ) : totem ? (
           <div className='flex min-w-0 flex-wrap items-center gap-3 rounded-lg border bg-background p-3'>
             <Medallion icon={PawPrint} tone='success' />

@@ -41,6 +41,7 @@ import {
   Timeline,
   TimelineItem,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { LineChart } from '@/components/domain/LineChart'
 import { Muted, Stat, Text } from '@/components/typography'
@@ -435,7 +436,7 @@ export function TradeRouteSection({
       description='Where it runs, what it carries, who takes a toll and for which treasury, and what it lost to bandits, beasts, weather and the sea.'
       icon={Route}
     >
-      {view.isPending && <Muted>Loading the route…</Muted>}
+      {view.isPending && <LoadingBlock label='Loading the route' />}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}

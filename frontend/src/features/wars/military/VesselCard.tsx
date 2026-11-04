@@ -25,8 +25,10 @@ import {
   Section,
   StatBar,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { humanize } from '@/features/entity/actions/schema'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { EntityPicker, Held, RecordButtons, TextField } from './controls'
@@ -310,7 +312,7 @@ export function VesselCard({
         </Adjust>
       </Panel>
     )
-  if (!vessel) return <Muted variant='caption'>Reading the ship's log…</Muted>
+  if (!vessel) return <LoadingBlock label='Reading the ship’s log' />
   const status = nameOf(VESSEL_STATUS, vessel.status)
   const busy = busyOf(blocked, refit.isPending, repair.isPending)
   return (
@@ -399,12 +401,12 @@ export function VesselCard({
         )}
         {vessel.hull_material && (
           <Muted variant='caption'>
-            Hull of {vessel.hull_material.replaceAll('_', ' ')}
+            Hull of {humanize(vessel.hull_material)}
           </Muted>
         )}
         {vessel.fabric_material && (
           <Muted variant='caption'>
-            Sails of {vessel.fabric_material.replaceAll('_', ' ')}
+            Sails of {humanize(vessel.fabric_material)}
           </Muted>
         )}
       </div>

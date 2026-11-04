@@ -35,6 +35,7 @@ import {
   type TimelineTone,
   useShowMore,
   Paged,
+  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -624,7 +625,7 @@ export function SoulSection({
       description='Deeds, judgement, rest and return.'
       icon={Ghost}
     >
-      {soul.isPending && <Muted>Reading the soul…</Muted>}
+      {soul.isPending && <LoadingBlock label='Reading the soul' />}
       {soul.data && <SoulBody soul={soul.data} blocked={blocked} />}
     </Section>
   )
