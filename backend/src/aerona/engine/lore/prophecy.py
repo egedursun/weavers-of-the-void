@@ -184,7 +184,7 @@ async def condition_of(ctx: TickContext, prophecy: EntityRow) -> ProphecyConditi
         predicate=predicate,
         args={key: value for key, value in args.items() if value is not None},
         deadline_epoch=prophecy.birth_epoch + limit if limit > 0 else None,
-        consequence={},
+        consequence_kind=None,
         seer_entity_id=prophecy.maker_entity_id,
         audience=audience,
         pressure=PERCENT // 5,

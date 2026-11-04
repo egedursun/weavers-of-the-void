@@ -51,6 +51,10 @@ class BondKind(StrEnum):
     TRUCE = "truce"
     OWES = "owes"
     TREATED_BY = "treated_by"
+    TELLS = "tells"
+    FIXED_IN = "fixed_in"
+    ADHERENT_OF = "adherent_of"
+    PRACTISES = "practises"
 
 
 class BondCategory(StrEnum):
@@ -94,6 +98,7 @@ class BondRole(StrEnum):
     FULFILLED_PROPHECY = "fulfilled_prophecy"
 
 
+DERIVED_BOND_KINDS = frozenset({BondKind.TELLS, BondKind.FIXED_IN, BondKind.ADHERENT_OF, BondKind.PRACTISES})
 VISIBLE_BOND_STATES = frozenset({BondState.ACTIVE, BondState.PAST})
 ROLE_BOND_KINDS = frozenset({BondKind.PARTY_TO, BondKind.RELATED})
 SYMMETRIC_BOND_KINDS = frozenset({BondKind.ENEMY, BondKind.ALLY, BondKind.TRADES_WITH, BondKind.TRUCE, BondKind.COMPANION, BondKind.RIVAL})

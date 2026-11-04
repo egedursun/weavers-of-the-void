@@ -222,6 +222,8 @@ class ItemDeed(StrEnum):
     BROKEN = "broken"
     REPAIRED = "repaired"
     ENCHANTED = "enchanted"
+    GIVEN = "given"
+    CAPTURED = "captured"
 
 
 class ArtMedium(StrEnum):
@@ -237,6 +239,67 @@ class ArtMedium(StrEnum):
     MUSIC = "music"
     CARVING = "carving"
     ARCHITECTURE_ORNAMENT = "architecture_ornament"
+
+
+class LanguageRegister(StrEnum):
+    COURT = "court"
+    COMMON = "common"
+    LITURGICAL = "liturgical"
+    TRADE = "trade"
+
+
+class CalendarSlot(StrEnum):
+    SOWING = "sowing"
+    HARVEST = "harvest"
+    MIDWINTER = "midwinter"
+    CAMPAIGN = "campaign"
+    HOLY_DAY = "holy_day"
+
+
+class TraditionEffectKind(StrEnum):
+    COHESION = "cohesion"
+    SATISFACTION = "satisfaction"
+    PIETY = "piety"
+    VALUE = "value"
+    FERTILITY = "fertility"
+    MARTIAL = "martial"
+    PLACATION = "placation"
+    HARVEST = "harvest"
+    SAFETY = "safety"
+    FOOD_SAVED = "food_saved"
+
+
+class RumourChannel(StrEnum):
+    WITNESS = "witness"
+    ROUTE = "route"
+    PILGRIMAGE = "pilgrimage"
+    JOURNEY = "journey"
+    SPY = "spy"
+    PLANTED = "planted"
+
+
+class ProphecyConsequence(StrEnum):
+    RULE = "rule"
+    FALL = "fall"
+    DEATH = "death"
+    WAR = "war"
+    BIRTH = "birth"
+    OMEN = "omen"
+
+
+class SummonForm(StrEnum):
+    SPIRIT = "spirit"
+    BEAST = "beast"
+    UNDEAD = "undead"
+
+
+class CustomCatalog(StrEnum):
+    TECHNIQUE = "technique"
+    TENET = "tenet"
+    TRADITION_KIND = "tradition_kind"
+    ARCHETYPE = "archetype"
+    ITEM_CLASS = "item_class"
+    RITE_EFFECT = "rite_effect"
 
 
 PERFORMED_MEDIA = frozenset({ArtMedium.SONG, ArtMedium.EPIC_POEM, ArtMedium.PLAY, ArtMedium.DANCE, ArtMedium.MUSIC})
