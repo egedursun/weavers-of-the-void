@@ -61,6 +61,11 @@ WHITELISTED_TABLES = frozenset(
         "modifiers",
         "incidents",
         "incident_participants",
+        "settlement_profiles",
+        "settlement_infrastructure",
+        "settlement_treasury",
+        "districts",
+        "district_designs",
     }
 )
 PERMANENT_BIRTH_TABLES = frozenset({"sons", "worlds"})

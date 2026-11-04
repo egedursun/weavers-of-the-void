@@ -40,9 +40,12 @@ async def test_a_district_design_is_created_built_reworked_and_undone(scope: Pla
     assert built is not None and built.kind is DistrictKind.MARKET
     edit = await urban.edit_district(scope, urban.EditDistrict(district_id=built.id, condition=55))
     assert built.locked == ["condition"]
+    assert await _undo(session, edit.ledger_entry_id, world.cosmos.epoch) == []
+    await session.refresh(built)
+    assert built.condition == 100 and built.locked == []
+    await urban.edit_district(scope, urban.EditDistrict(district_id=built.id, condition=60))
     await urban.edit_district(scope, urban.EditDistrict(district_id=built.id, release=["condition"]))
     assert built.locked == []
-    assert await _undo(session, edit.ledger_entry_id, world.cosmos.epoch) == []
     await urban.edit_design(scope, urban.EditDesign(design_id=design.id, values={"order": 4}, name="Sky Bazaar"))
     assert design.name == "Sky Bazaar" and design.order == 4
     await urban.delete_design(scope, urban.DesignTarget(design_id=design.id))
