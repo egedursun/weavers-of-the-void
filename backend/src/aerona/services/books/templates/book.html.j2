@@ -70,7 +70,7 @@
 {{ epic(book.creator.epic) }}
 {{ god_depth(book.creator.depth) }}
 {% if book.creator_beliefs %}<h3 class="bm2">Through the peoples' eyes</h3>{% for belief in book.creator_beliefs %}<div class="quote"><span class="label">{{ book.names.get(belief.people_entity_id, "?") }} call {{ book.creator.name }} “{{ belief.local_name or book.creator.name }}”</span>{{ belief.account }}{% if belief.misconception %}<cite>Misconception: {{ belief.misconception }}</cite>{% endif %}</div>{% endfor %}{% endif %}
-{% if book.creator_hand %}<h3 class="bm2" id="creator-hand">The Creator's hand</h3>{% for hand in book.creator_hand %}<h5>Epoch {{ hand.epoch }}</h5><ul class="timeline">{% for deed in hand.deeds %}<li>{{ deed.text }}{% if deed.undone %} <span class="meta">(undone)</span>{% endif %}{% if deed.unledgered %} <span class="meta">(of its own accord)</span>{% endif %}</li>{% endfor %}</ul>{% endfor %}{% endif %}
+{% if book.creator_hand %}<h3 class="bm2" id="creator-hand">The Creator's hand</h3>{% for hand in book.creator_hand %}<h5>Epoch {{ hand.epoch }}</h5><ul class="timeline">{% for deed in hand.deeds %}<li>{{ deed.text | keys }}{% if deed.undone %} <span class="meta">(undone)</span>{% endif %}{% if deed.unledgered %} <span class="meta">(of its own accord)</span>{% endif %}</li>{% endfor %}</ul>{% endfor %}{% endif %}
 </section>
 {% endif %}
 
@@ -241,7 +241,7 @@
 {% if book.ledger %}
 <section class="chapter" id="ledger">
 {{ chapter_head("ledger", numeral("ledger"), "Fate's Ledger", "Every hand laid upon the world") }}
-<ul class="timeline">{% for entry in book.ledger %}<li><span class="when">Epoch {{ entry.epoch }}</span>{{ entry.actor_name }} · {{ entry.tool | replace("_", " ") | replace(":", " ") }}{% if entry.undone %} <span class="meta">undone</span>{% endif %}{% if entry.input_summary %} <span class="meta small">— {{ entry.input_summary }}</span>{% endif %}</li>{% endfor %}</ul>
+<ul class="timeline">{% for entry in book.ledger %}<li><span class="when">Epoch {{ entry.epoch }}</span>{{ entry.actor_name }} · {{ entry.tool | replace("_", " ") | replace(":", " ") }}{% if entry.undone %} <span class="meta">undone</span>{% endif %}{% if entry.input_summary %} <span class="meta small">— {{ entry.input_summary | plain }}</span>{% endif %}</li>{% endfor %}</ul>
 </section>
 {% endif %}
 

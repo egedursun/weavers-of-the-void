@@ -17,7 +17,7 @@ class RunPhase(Command):
 
 def summarize(counters: dict[str, int]) -> str:
     ranked = sorted(counters.items(), key=lambda item: (-item[1], item[0]))[:COUNTERS_SHOWN]
-    return ", ".join(f"{name} {value}" for name, value in ranked)
+    return ", ".join(f"{name.replace('_', ' ')} {value}" for name, value in ranked)
 
 
 @player_action("engine:run_phase", ActionKind.OTHER)
@@ -33,5 +33,5 @@ async def run_phase(scope: PlayerScope, command: RunPhase) -> Effect:
     detail = summarize(counters)
     seed = "with the epoch's own seed" if command.replay else "now"
     seed += " on its one target" if command.target_node_id is not None else ""
-    message = f"The {phase.name} step ran {seed}" + (f": {detail}." if detail else " and found nothing to change.")
+    message = f"The {phase.name.replace('_', ' ')} step ran {seed}" + (f": {detail}." if detail else " and found nothing to change.")
     return Effect(message, values={"changes": sum(counters.values()), "stream": ctx.phase, "world_seed": ctx.environment.world_seed})

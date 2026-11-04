@@ -182,6 +182,16 @@ def table_cell(value: object) -> str:
     return " ".join(str(value or "").split()).replace(PIPE, ESCAPED_PIPE)
 
 
+def plain_text(text: str) -> str:
+    cleaned = re.sub(r'[{}\[\]"]', "", text)
+    cleaned = re.sub(r"\b[a-z0-9]+(?:[_.][a-z0-9]+)+\b", lambda match: re.sub(r"[_.]", " ", match.group(0)), cleaned)
+    return re.sub(r"\s+([,.;:])", r"\1", cleaned).strip()
+
+
+def key_words(text: str) -> str:
+    return re.sub(r"\b[a-z0-9]+(?:_[a-z0-9]+)+\b", lambda match: match.group(0).replace("_", " "), text)
+
+
 def heading(level: int) -> str:
     return "#" * max(1, min(6, level))
 
@@ -195,6 +205,8 @@ def _html_environment() -> Environment:
         lstrip_blocks=True,
     )
     environment.filters["paragraphs"] = paragraphs
+    environment.filters["plain"] = plain_text
+    environment.filters["keys"] = key_words
     return environment
 
 
@@ -203,6 +215,8 @@ def _markdown_environment() -> Environment:
     environment.filters["cell"] = table_cell
     environment.filters["prose"] = prose
     environment.filters["heading"] = heading
+    environment.filters["plain"] = plain_text
+    environment.filters["keys"] = key_words
     environment.globals["guide_markdown"] = guide_markdown
     return environment
 

@@ -297,7 +297,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 **Epoch {{ hand.epoch }}**
 
 {% for deed in hand.deeds %}
-- {{ deed.text }}{% if deed.undone %} *(undone)*{% endif %}{% if deed.unledgered %} *(of its own accord)*{% endif %}
+- {{ deed.text | keys }}{% if deed.undone %} *(undone)*{% endif %}{% if deed.unledgered %} *(of its own accord)*{% endif %}
 
 {% endfor %}
 
@@ -708,7 +708,7 @@ Score **{{ book.scores[-1].total }}** · Achievements **{{ book.achievements | l
 ## Fate's Ledger
 
 {% for entry in book.ledger %}
-- **Epoch {{ entry.epoch }}.** {{ entry.actor_name }} · {{ entry.tool | replace("_", " ") | replace(":", " ") }}{% if entry.undone %} *(undone)*{% endif %}{% if entry.input_summary %} — {{ entry.input_summary }}{% endif %}
+- **Epoch {{ entry.epoch }}.** {{ entry.actor_name }} · {{ entry.tool | replace("_", " ") | replace(":", " ") }}{% if entry.undone %} *(undone)*{% endif %}{% if entry.input_summary %} — {{ entry.input_summary | plain }}{% endif %}
 
 {% endfor %}
 {% endif %}
