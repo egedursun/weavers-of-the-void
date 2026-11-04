@@ -1,7 +1,7 @@
 from collections.abc import Awaitable, Callable
 from typing import Annotated
 
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, Path, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,6 +11,8 @@ from aerona.api.schemas.lore import (
     ArtworkCard,
     BranchSpec,
     CastingView,
+    CustomKinds,
+    CustomKindView,
     DeedView,
     EnchantmentView,
     GateNeed,
@@ -63,7 +65,9 @@ from aerona.db.tables.culture import (
 )
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.culture import CustomCatalog
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.engine.lore.kinds import kinds_in
 from aerona.engine.lore.research import gate_open
 
 router = APIRouter(tags=["lore"])
@@ -435,4 +439,24 @@ async def tongues(world_id: Id, services: ServicesDep) -> TongueAtlas:
                 if item.id in refs
             ],
             matrix=matrix,
+        )
+
+
+@router.get("/custom-kinds", response_model=CustomKinds)
+async def custom_kinds(services: ServicesDep, catalog: Annotated[CustomCatalog, Query()], world_id: Annotated[int | None, Query(ge=1)] = None) -> CustomKinds:
+    async with reader(services) as session:
+        return CustomKinds(
+            kinds=[
+                CustomKindView(
+                    id=row.id,
+                    catalog=row.catalog,
+                    base=row.base,
+                    name=row.name,
+                    description=row.description,
+                    params=row.params,
+                    world_id=row.world_id,
+                    created_epoch=row.created_epoch,
+                )
+                for row in await kinds_in(session, catalog, world_id)
+            ]
         )

@@ -35,6 +35,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.lore import art, ideology, items, legends, prophecy, rites, traditions
+from aerona.engine.lore.creation import open_lore
 from aerona.engine.lore.language import standing_of
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.control import lock
@@ -155,6 +156,30 @@ async def edit_profile(ctx: TickContext, entity_id: int, values: Values, *, rele
         row.locked = [item for item in row.locked if item not in release]
     await ctx.session.flush()
     return row
+
+
+async def create_lore(
+    ctx: TickContext,
+    entity_type: EntityType,
+    *,
+    name: str,
+    description: str,
+    world_id: int | None,
+    location_id: int | None,
+    power: int,
+    values: Values,
+) -> EntityRow:
+    entity, row, rest = await open_lore(
+        ctx, entity_type, name=name, description=description, world_id=world_id, location_id=location_id, power=power, values=values
+    )
+    if row is not None:
+        limits = bounds(row)
+        for key, value in rest.items():
+            setattr(row, key, coerce(row, key, value, limits))
+    elif rest:
+        raise ValidationFailedError(f"{next(iter(rest)).replace('_', ' ').capitalize()} cannot be set here.")
+    await ctx.session.flush()
+    return entity
 
 
 def share(value: int, label: str) -> int:

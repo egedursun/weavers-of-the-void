@@ -1,9 +1,10 @@
 from pydantic import Field
 
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.culture import IdeologyTenet, MagicSchool, RiteEffectKind, SpeakerKind, Technique
+from aerona.domain.enums.culture import CustomCatalog, IdeologyTenet, MagicSchool, RiteEffectKind, SpeakerKind, Technique
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.society import KnowledgeBranch
-from aerona.engine.lore import control
+from aerona.engine.lore import control, kinds
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 
@@ -11,6 +12,37 @@ class EditLore(Command):
     entity_id: int
     values: dict[str, int | str | bool | dict[str, int | str] | list[int] | None] = Field(default_factory=dict)
     release: list[str] = Field(default_factory=list)
+
+
+LoreValue = int | str | bool | dict[str, int | str] | list[int] | list[str] | None
+
+
+class CreateLore(Command):
+    entity_type: EntityType
+    name: str
+    description: str = ""
+    world_id: int | None = None
+    location_id: int | None = None
+    power: int = 3
+    values: dict[str, LoreValue] = Field(default_factory=dict)
+
+
+class CreateKind(Command):
+    catalog: CustomCatalog
+    base: str
+    name: str
+    description: str = ""
+    params: dict[str, int | str | list[str] | dict[str, int] | None] = Field(default_factory=dict)
+    world_id: int | None = None
+
+
+class EditKind(Command):
+    kind_id: int
+    values: dict[str, int | str | dict[str, int | str | list[str] | dict[str, int] | None] | None] = Field(default_factory=dict)
+
+
+class KindTarget(Command):
+    kind_id: int
 
 
 class Intelligibility(Command):
@@ -179,3 +211,39 @@ async def set_enchantment(scope: PlayerScope, command: Enchantment) -> Effect:
 async def set_participation(scope: PlayerScope, command: Participation) -> Effect:
     row = await control.set_participation(await scope.context("tradition_participation"), command.tradition_id, command.community_id, command.participation)
     return Effect(f"{row.participation}% keep it.", command.tradition_id)
+
+
+@player_action("lore:create", ActionKind.OTHER)
+async def create_lore(scope: PlayerScope, command: CreateLore) -> Effect:
+    entity = await control.create_lore(
+        await scope.context("lore_create"),
+        command.entity_type,
+        name=command.name,
+        description=command.description,
+        world_id=command.world_id,
+        location_id=command.location_id,
+        power=command.power,
+        values=command.values,
+    )
+    return Effect(f"{entity.name} enters the world.", entity.id, created_ids=(entity.id,))
+
+
+@player_action("kind:create", ActionKind.EDIT_RECORD)
+async def create_kind(scope: PlayerScope, command: CreateKind) -> Effect:
+    ctx = await scope.context("kind_create")
+    row = await kinds.create_kind(
+        ctx, command.catalog, command.base, command.name, description=command.description, params=command.params, world_id=command.world_id
+    )
+    return Effect(f"A new {command.catalog.value.replace('_', ' ')} is named: {row.name}.", None)
+
+
+@player_action("kind:edit", ActionKind.EDIT_RECORD)
+async def edit_kind(scope: PlayerScope, command: EditKind) -> Effect:
+    row = await kinds.edit_kind(await scope.context("kind_edit"), command.kind_id, command.values)
+    return Effect(f"{row.name} is reshaped.", None)
+
+
+@player_action("kind:delete", ActionKind.EDIT_RECORD)
+async def delete_kind(scope: PlayerScope, command: KindTarget) -> Effect:
+    row = await kinds.delete_kind(await scope.context("kind_delete"), command.kind_id)
+    return Effect(f"{row.name} is no more.", None)

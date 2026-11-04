@@ -4,6 +4,7 @@ from aerona.domain.enums.culture import (
     ArtMedium,
     BacklashKind,
     CurseKind,
+    CustomCatalog,
     IdeologyTenet,
     ItemClass,
     ItemDeed,
@@ -260,3 +261,18 @@ class TongueRank(ApiModel):
 class TongueAtlas(ApiModel):
     ranking: list[TongueRank]
     matrix: list[list[int]]
+
+
+class CustomKindView(ApiModel):
+    id: int
+    catalog: CustomCatalog
+    base: str
+    name: str
+    description: str
+    params: dict[str, int | str | list[str] | dict[str, int]]
+    world_id: int | None
+    created_epoch: int
+
+
+class CustomKinds(ApiModel):
+    kinds: list[CustomKindView]

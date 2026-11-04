@@ -1124,6 +1124,34 @@ LORE_ACTIONS = (
     _sync(
         Meta("tradition:participation", "Set how fully a community keeps a tradition", G.SOCIETY), lore.set_participation, lore.Participation, free, ("S8.3",)
     ),
+    _sync(
+        Meta("lore:create", "Make a new language, legend, tradition, creed, rite, prophecy, item, artwork or knowledge", G.LANGUAGES),
+        lore.create_lore,
+        lore.CreateLore,
+        free,
+        ("S8.1", "S8.2", "S8.3", "S8.4", "S8.5", "S8.6", "S8.7", "S7.1", "S7.4"),
+    ),
+    _sync(
+        Meta("kind:create", "Name a new kind of technique, tenet, tradition, tale, item or working", G.LANGUAGES),
+        lore.create_kind,
+        lore.CreateKind,
+        free,
+        ("S8.2", "S8.3", "S8.4", "S8.5", "S8.6", "S7.1"),
+    ),
+    _sync(
+        Meta("kind:edit", "Reshape a kind of your own making", G.LANGUAGES),
+        lore.edit_kind,
+        lore.EditKind,
+        free,
+        ("S8.2", "S8.3", "S8.4", "S8.5", "S8.6", "S7.1"),
+    ),
+    _sync(
+        Meta("kind:delete", "Unmake a kind of your own making", G.LANGUAGES),
+        lore.delete_kind,
+        lore.KindTarget,
+        free,
+        ("S8.2", "S8.3", "S8.4", "S8.5", "S8.6", "S7.1"),
+    ),
 )
 
 

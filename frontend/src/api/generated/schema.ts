@@ -4799,6 +4799,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/custom-kinds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["custom_kinds_api_custom_kinds_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/entities/{entity_id}/ecology": {
         parameters: {
             query?: never;
@@ -5337,6 +5353,70 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["action_tradition_participation_api_actions_tradition_participation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/lore:create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_lore_create_api_actions_lore_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/kind:create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_kind_create_api_actions_kind_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/kind:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_kind_edit_api_actions_kind_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/kind:delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_kind_delete_api_actions_kind_delete_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10679,7 +10759,7 @@ export interface components {
             wholeness_required: boolean;
             updated_epoch: number;
         };
-        BondKind: "inside" | "lives_in" | "worships" | "enemy" | "ally" | "descends_from" | "protects" | "rules" | "owns" | "beat" | "killed" | "cursed" | "blessed" | "source_of" | "tells_of" | "destroyed" | "loves" | "fears" | "hunts" | "trades_with" | "prophesies" | "caused" | "celebrates" | "forbids" | "speaks" | "produced" | "built" | "migrated_to" | "discovered" | "soul_descended_to" | "party_to" | "member_of" | "knows" | "pays_tribute" | "related" | "holds_captive" | "spy_network" | "pursues" | "companion" | "rival" | "apprentice_of" | "commands" | "part_of" | "passenger_of" | "captain_of" | "tamed" | "truce" | "owes" | "treated_by";
+        BondKind: "inside" | "lives_in" | "worships" | "enemy" | "ally" | "descends_from" | "protects" | "rules" | "owns" | "beat" | "killed" | "cursed" | "blessed" | "source_of" | "tells_of" | "destroyed" | "loves" | "fears" | "hunts" | "trades_with" | "prophesies" | "caused" | "celebrates" | "forbids" | "speaks" | "produced" | "built" | "migrated_to" | "discovered" | "soul_descended_to" | "party_to" | "member_of" | "knows" | "pays_tribute" | "related" | "holds_captive" | "spy_network" | "pursues" | "companion" | "rival" | "apprentice_of" | "commands" | "part_of" | "passenger_of" | "captain_of" | "tamed" | "truce" | "owes" | "treated_by" | "tells" | "fixed_in" | "adherent_of" | "practises";
         BondKindInfo: {
             key: string;
             label: string;
@@ -11545,6 +11625,24 @@ export interface components {
             users: number[];
         };
         CurseKind: "none" | "bloodthirst" | "misfortune" | "wasting" | "madness" | "betrayal";
+        CustomCatalog: "technique" | "tenet" | "tradition_kind" | "archetype" | "item_class" | "rite_effect";
+        CustomKindView: {
+            id: number;
+            catalog: components["schemas"]["CustomCatalog"];
+            base: string;
+            name: string;
+            description: string;
+            params: {
+                [key: string]: number | string | string[] | {
+                    [key: string]: number;
+                };
+            };
+            world_id: number | null;
+            created_epoch: number;
+        };
+        CustomKinds: {
+            kinds: components["schemas"]["CustomKindView"][];
+        };
         DamageType: "cut" | "pierce" | "blunt" | "fire" | "cold" | "venom" | "magic" | "void" | "holy";
         Danger: {
             id: number | null;
@@ -13197,7 +13295,7 @@ export interface components {
             locked: string[];
         };
         ItemClass: "blade" | "longblade" | "axe" | "spear" | "polearm" | "mace" | "bow" | "crossbow" | "sling" | "throwing" | "staff" | "armour" | "shield" | "helmet" | "crown" | "sceptre" | "seal" | "ring" | "standard" | "holy_relic" | "idol" | "prayer_book" | "book" | "scroll" | "map" | "astrolabe" | "tool" | "instrument" | "mirror" | "vessel_object" | "prosthesis" | "key" | "jewel" | "currency";
-        ItemDeed: "made" | "owned" | "kill" | "battle" | "coronation" | "lost" | "theft" | "burial" | "broken" | "repaired" | "enchanted";
+        ItemDeed: "made" | "owned" | "kill" | "battle" | "coronation" | "lost" | "theft" | "burial" | "broken" | "repaired" | "enchanted" | "given" | "captured";
         ItemEnchantInput: {
             item_id: number;
             effect: components["schemas"]["RiteEffectKind"];
@@ -13365,6 +13463,31 @@ export interface components {
         KinView: {
             language: components["schemas"]["NodeRef"] | null;
             value: number;
+        };
+        KindCreateInput: {
+            catalog: components["schemas"]["CustomCatalog"];
+            base: string;
+            name: string;
+            description: string;
+            params?: {
+                [key: string]: number | string | string[] | {
+                    [key: string]: number;
+                } | null;
+            };
+            world_id?: number | null;
+        };
+        KindDeleteInput: {
+            kind_id: number;
+        };
+        KindEditInput: {
+            kind_id: number;
+            values?: {
+                [key: string]: number | string | {
+                    [key: string]: number | string | string[] | {
+                        [key: string]: number;
+                    } | null;
+                } | null;
+            };
         };
         KnowledgeBranch: "agriculture" | "metallurgy" | "seafaring" | "writing" | "architecture" | "medicine" | "magic" | "warfare" | "astronomy" | "trade" | "sky_navigation" | "shipbuilding" | "gate_lore" | "pathfinding" | "void_living" | "immortality" | "biomancy" | "forbidden";
         KnowledgeInsight: {
@@ -13791,6 +13914,19 @@ export interface components {
             prophecy?: components["schemas"]["ProphecyCard"] | null;
             item?: components["schemas"]["ItemCard"] | null;
             artwork?: components["schemas"]["ArtworkCard"] | null;
+        };
+        LoreCreateInput: {
+            entity_type: components["schemas"]["EntityType"];
+            name: string;
+            description: string;
+            world_id?: number | null;
+            location_id?: number | null;
+            power: number;
+            values?: {
+                [key: string]: number | string | boolean | {
+                    [key: string]: number | string;
+                } | number[] | string[] | null;
+            };
         };
         LoreEditInput: {
             entity_id: number;
@@ -27110,6 +27246,36 @@ export interface operations {
             };
         };
     };
+    custom_kinds_api_custom_kinds_get: {
+        parameters: {
+            query: {
+                catalog: components["schemas"]["CustomCatalog"];
+                world_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomKinds"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     species_card_api_entities__entity_id__ecology_get: {
         parameters: {
             query?: never;
@@ -28123,6 +28289,130 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["TraditionParticipationInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_lore_create_api_actions_lore_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoreCreateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_kind_create_api_actions_kind_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KindCreateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_kind_edit_api_actions_kind_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KindEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_kind_delete_api_actions_kind_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KindDeleteInput"];
             };
         };
         responses: {
@@ -37225,7 +37515,7 @@ export const bodyFunctionValues: ReadonlyArray<FlattenedDeepRequired<components>
 export const bodyPlanValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyPlan"]> = ["humanoid", "quadruped", "avian", "serpentine", "insectoid", "aquatic", "amorphous", "arboreal", "incorporeal", "colossal", "construct", "divine_manifest"];
 export const bodyReadingValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyReading"]> = ["neutral", "martial_honour", "purity", "sanctified_suffering"];
 export const bodyRegionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyRegion"]> = ["head", "torso", "arms", "legs", "wings", "tail"];
-export const bondKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BondKind"]> = ["inside", "lives_in", "worships", "enemy", "ally", "descends_from", "protects", "rules", "owns", "beat", "killed", "cursed", "blessed", "source_of", "tells_of", "destroyed", "loves", "fears", "hunts", "trades_with", "prophesies", "caused", "celebrates", "forbids", "speaks", "produced", "built", "migrated_to", "discovered", "soul_descended_to", "party_to", "member_of", "knows", "pays_tribute", "related", "holds_captive", "spy_network", "pursues", "companion", "rival", "apprentice_of", "commands", "part_of", "passenger_of", "captain_of", "tamed", "truce", "owes", "treated_by"];
+export const bondKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BondKind"]> = ["inside", "lives_in", "worships", "enemy", "ally", "descends_from", "protects", "rules", "owns", "beat", "killed", "cursed", "blessed", "source_of", "tells_of", "destroyed", "loves", "fears", "hunts", "trades_with", "prophesies", "caused", "celebrates", "forbids", "speaks", "produced", "built", "migrated_to", "discovered", "soul_descended_to", "party_to", "member_of", "knows", "pays_tribute", "related", "holds_captive", "spy_network", "pursues", "companion", "rival", "apprentice_of", "commands", "part_of", "passenger_of", "captain_of", "tamed", "truce", "owes", "treated_by", "tells", "fixed_in", "adherent_of", "practises"];
 export const bondRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BondRole"]> = ["side", "victor", "loser", "commander", "dueled", "spirit_binding", "homeland", "mentioned_in_fate", "fulfilled_prophecy"];
 export const bondStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BondState"]> = ["active", "past", "hidden_rejected", "hidden_closed"];
 export const borderKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BorderKind"]> = ["coast", "region", "sub_region"];
@@ -37266,6 +37556,7 @@ export const creatureTraitValues: ReadonlyArray<FlattenedDeepRequired<components
 export const cultStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CultStats"]["kind"]> = ["cult"];
 export const cureSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CureSource"]> = ["knowledge", "granted"];
 export const curseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CurseKind"]> = ["none", "bloodthirst", "misfortune", "wasting", "madness", "betrayal"];
+export const customCatalogValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CustomCatalog"]> = ["technique", "tenet", "tradition_kind", "archetype", "item_class", "rite_effect"];
 export const damageTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DamageType"]> = ["cut", "pierce", "blunt", "fire", "cold", "venom", "magic", "void", "holy"];
 export const debtStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DebtStatus"]> = ["open", "overdue", "repaid", "forgiven"];
 export const decisionRuleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DecisionRule"]> = ["autocratic", "council", "assembly", "divine"];
@@ -37350,7 +37641,7 @@ export const injuryStateValues: ReadonlyArray<FlattenedDeepRequired<components>[
 export const integrityTaskValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IntegrityTask"]> = ["dead_bonds", "checkpoint"];
 export const interventionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["InterventionKind"]> = ["miracle", "disaster", "teach_knowledge", "curse"];
 export const itemClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ItemClass"]> = ["blade", "longblade", "axe", "spear", "polearm", "mace", "bow", "crossbow", "sling", "throwing", "staff", "armour", "shield", "helmet", "crown", "sceptre", "seal", "ring", "standard", "holy_relic", "idol", "prayer_book", "book", "scroll", "map", "astrolabe", "tool", "instrument", "mirror", "vessel_object", "prosthesis", "key", "jewel", "currency"];
-export const itemDeedValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ItemDeed"]> = ["made", "owned", "kill", "battle", "coronation", "lost", "theft", "burial", "broken", "repaired", "enchanted"];
+export const itemDeedValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ItemDeed"]> = ["made", "owned", "kill", "battle", "coronation", "lost", "theft", "burial", "broken", "repaired", "enchanted", "given", "captured"];
 export const itemStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ItemStats"]["kind"]> = ["item"];
 export const jobValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Job"]> = ["farming", "herding", "fishing", "mining", "crafting", "trade", "soldiering", "clergy", "scholarship", "building", "idle"];
 export const jobCancelledEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JobCancelledEvent"]["kind"]> = ["job.cancelled"];

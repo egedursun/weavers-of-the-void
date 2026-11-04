@@ -463,6 +463,8 @@ export const DEEDS: Record<Schemas['ItemDeed'], LoreNamed> = {
   broken: { label: 'Was broken', icon: Unlink, tone: 'danger' },
   repaired: { label: 'Was mended', icon: Wrench, tone: 'success' },
   enchanted: { label: 'Was enchanted', icon: Sparkles, tone: 'verdigris' },
+  given: { label: 'Was given away', icon: Gift, tone: 'info' },
+  captured: { label: 'Was captured', icon: Flag, tone: 'danger' },
 }
 
 export const MEDIUMS: Record<Schemas['ArtMedium'], LoreNamed> = {
