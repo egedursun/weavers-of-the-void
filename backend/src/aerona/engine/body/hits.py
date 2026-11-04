@@ -30,6 +30,7 @@ class Harm:
     severity: int | None = None
     edge: int | None = None
     heft: int | None = None
+    venom_pct: int | None = None
 
 
 @dataclass(frozen=True)
@@ -94,6 +95,7 @@ def cause_mix(rules: InjuryRules, cause: HarmCause) -> dict[DamageType, int]:
         HarmCause.SACRIFICE: {DamageType.CUT: rules.sacrifice_cut, DamageType.MAGIC: rules.sacrifice_magic},
         HarmCause.AGE: {DamageType.BLUNT: rules.age_blunt},
         HarmCause.PLAYER: {DamageType.CUT: rules.player_cut, DamageType.BLUNT: rules.player_blunt, DamageType.PIERCE: rules.player_pierce},
+        HarmCause.EXPOSURE: {DamageType.COLD: rules.exposure_cold, DamageType.FIRE: rules.exposure_heat},
     }
     return {kind: weight for kind, weight in mixes[cause].items() if weight > 0}
 
@@ -240,6 +242,14 @@ def edged_mix(mix: dict[DamageType, int], edge: int | None, heft: int | None) ->
     return shaped
 
 
+def venom_mix(mix: dict[DamageType, int], venom_pct: int | None) -> dict[DamageType, int]:
+    if venom_pct is None or DamageType.VENOM not in mix:
+        return mix
+    shaped = dict(mix)
+    shaped[DamageType.VENOM] = round(shaped[DamageType.VENOM] * max(0, venom_pct) / PERCENT)
+    return {kind: weight for kind, weight in shaped.items() if weight > 0}
+
+
 def hits_for(rules: Rules, anatomy: Anatomy, harm: Harm, armour: Armour, rng: SeededRandom) -> list[Hit]:
     table = rules.injury
     if harm.damage <= 0:
@@ -247,7 +257,7 @@ def hits_for(rules: Rules, anatomy: Anatomy, harm: Harm, armour: Armour, rng: Se
     count = 1 if harm.part else max(1, min(table.max_hits, math.ceil(harm.damage / max(1, table.hit_size))))
     magnitude = harm.damage / count
     hits: list[Hit] = []
-    mix = edged_mix(cause_mix(table, harm.cause), harm.edge, harm.heft)
+    mix = venom_mix(edged_mix(cause_mix(table, harm.cause), harm.edge, harm.heft), harm.venom_pct)
     for _ in range(count):
         damage_type = harm.damage_type or weighted(rng, {key: float(value) for key, value in mix.items()}) or DamageType.BLUNT
         if harm_resisted(anatomy, damage_type):

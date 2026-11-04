@@ -87,7 +87,11 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "mechanics": "The resource's strange rules, at most {{ rules.mechanics.resource_max }} (if left empty they are read from its name and text; sacred makes it yours): {{ resource_mechanics }}",
     },
     EntityType.LANGUAGE: {**WORD_FIELDS, "words": "The language's first words (at most {{ rules.son_tools.coin_word_max_words }}); matching the naming rule"},
-    EntityType.MORTAL: {"title": 'Their nickname or title ("Salt Seer", "Ash Mouth"); do not bury it in the name, write it here'},
+    EntityType.MORTAL: {
+        "title": 'Their nickname or title ("Salt Seer", "Ash Mouth"); do not bury it in the name, write it here',
+        "sex": "female, male or other",
+        "traits": "Up to five typed traits of temper, such as brave, cruel, scholarly or zealous",
+    },
     EntityType.EVENT: {
         "effects": "How the event is reflected on the stats of affected entities (at most {{ rules.son_tools.event_max_effects }}; e.g. war lowers population). The same stat of the same entity counts once; touching a sibling's creation angers its maker",
         "effects.entity_id": "The affected entity",
@@ -131,6 +135,26 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You choose one of your own creations as the anchor of your existence. While your anchor lives your existence stays firm; if it is destroyed you begin to fade. "
         "Free, {{ rules.son_tools.anchor_per_epoch }} per age.",
         {"entity_id": "Your own canonical creation", "reason": "Why this creation holds your existence"},
+    ),
+    T.BIND_MORTALS: ToolText(
+        "You bind two living mortals by your will: promise them to each other, wed them, give the first to the second as a ward, or make them sworn kin. "
+        "Costs {{ rules.costs.influence }} essence and one action.",
+        {
+            "first_id": "The first mortal",
+            "second_id": "The second mortal (the fosterer when you foster)",
+            "binding": "betroth, wed, foster or swear_kin",
+            "reason": "Why you bind them",
+        },
+    ),
+    T.TOUCH_MORTAL: ToolText(
+        "You touch one living mortal: ease or burden their mind, grant renown or shame, heal their body, or strengthen one ability. "
+        "Costs {{ rules.costs.influence }} essence and one action.",
+        {
+            "mortal_id": "The mortal you touch",
+            "touch": "ease_mind, burden_mind, grant_renown, shame, heal_body or strengthen",
+            "ability": "When you strengthen: endurance, willpower, perception, wisdom, creativity or beauty",
+            "reason": "Why you touch them",
+        },
     ),
     T.COIN_WORDS: ToolText(
         "You add words to a language's dictionary: meaning, word class and origin (from which event, from which words it was born). Languages grow this way and new names "

@@ -68,6 +68,7 @@ from aerona.db.tables.military import (
     WarAimRow,
 )
 from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, PersonalityValueRow, PressureRow, SkillRow
+from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.db.tables.polity import (
     ClaimRow,
     HeirloomRow,
@@ -89,6 +90,7 @@ from aerona.db.tables.polity import (
     VassalageRow,
 )
 from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
+from aerona.db.tables.society import CommunityRelationRow
 from aerona.db.tables.warfare import SiegeRow, WarSideRow
 
 
@@ -649,5 +651,42 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (),
         ("afterlife.",),
         ("d6e2a8c0f4b1",),
+    ),
+    ComplianceRow(
+        "S3.1",
+        (MortalProfileRow.__tablename__, MortalEquipmentRow.__tablename__, MarriageRow.__tablename__),
+        ("mortal_survey", "mortal_life_course", "mortal_kin", "mortal_standing", "mortal_minds", "couple_births", "mortal_aging"),
+        (
+            "mortal:set",
+            "mortal:release",
+            "mortal:ability",
+            "mortal:ability_release",
+            "mortal:sex",
+            "kin:betroth",
+            "kin:marry",
+            "kin:end_marriage",
+            "kin:bond",
+            "kin:unbond",
+            "mortal:equip",
+            "mortal:equip_release",
+            "mortal:sentence",
+            "mortal:pardon",
+        ),
+        ("LifeSection", "KinSection", "EquipmentSection", "StressCard"),
+        ("entity_detail", "mortal_context"),
+        ("bind_mortals", "touch_mortal"),
+        ("life.", "kin.", "births.", "stress.", "career.", "justice.", "standing."),
+        ("mortal.typed_kin", "mortal.death_causes", "mortal_survey"),
+    ),
+    ComplianceRow(
+        "S4.10",
+        (CommunityRelationRow.__tablename__,),
+        ("ethnic_relations", "mind_opinion"),
+        ("mind:memory", "mind:memory_edit"),
+        ("CommunityRelations",),
+        ("entity_detail",),
+        (),
+        ("relations.ethnic_strife",),
+        ("mind.relation_history",),
     ),
 )

@@ -83,6 +83,8 @@ def capacities(rules: Rules, stats: BearerStats, state: BodyState) -> dict[Capac
     pain = pain_of(table, state.open_severity) / PERCENT
     hurt = 1 - pain * table.pain_weight_pct / PERCENT
     stride = max(levels[F.LOCOMOTION], levels[F.FLIGHT])
+    horn = levels[F.HORN] if state.anatomy.with_function(F.HORN) else 1.0
+    tail = levels[F.TAIL] if state.anatomy.with_function(F.TAIL) else 1.0
     reading = max(levels[F.SIGHT], table.reader_restore_pct / PERCENT) if state.reader else levels[F.SIGHT]
     values: dict[Capacity, float] = {
         C.MELEE: stats.strength
@@ -90,6 +92,7 @@ def capacities(rules: Rules, stats: BearerStats, state: BodyState) -> dict[Capac
         * blend(stride, table.melee_locomotion)
         * blend(levels[F.VITAL], table.melee_vital)
         * blend(levels[F.SIGHT], table.melee_sight)
+        * blend(horn, table.melee_horn)
         * hurt,
         C.MISSILE: stats.agility
         * blend(levels[F.SIGHT], table.missile_sight)
@@ -112,12 +115,14 @@ def capacities(rules: Rules, stats: BearerStats, state: BodyState) -> dict[Capac
         C.PRESENCE: stats.charisma
         * blend(levels[F.PRESENCE], table.presence_face)
         * blend(levels[F.SPEECH], table.presence_speech)
+        * blend(horn, table.presence_horn)
         * state.presence_pct
         / PERCENT,
         C.MOBILITY: stats.endurance
         * blend(stride, table.mobility_locomotion)
         * blend(levels[F.BREATH], table.mobility_breath)
         * blend(levels[F.VITAL], table.mobility_vital)
+        * blend(tail, table.mobility_tail)
         * hurt,
         C.FERTILITY: PERCENT
         * blend(levels[F.REPRODUCTION], table.fertility_reproduction)
@@ -128,6 +133,18 @@ def capacities(rules: Rules, stats: BearerStats, state: BodyState) -> dict[Capac
         for capacity, penalty in condition_penalty(table, kind).items():
             values[capacity] *= 1 - penalty * severity / table.condition_full_severity / PERCENT
     return {capacity: max(0, round(value)) for capacity, value in values.items()}
+
+
+FUNCTION_LEVELS = (F.VITAL, F.COGNITION, F.HEARING, F.SIGHT, F.VENOM, F.HORN, F.TAIL)
+
+
+def function_percents(rules: Rules, state: BodyState) -> dict[BodyFunction, int]:
+    levels = function_levels(rules.capacities, state.anatomy, state.wounds, state.fingers, rules.injury.venom_paralysis_at)
+    return {function: max(0, min(PERCENT, round(levels[function] * PERCENT))) for function in FUNCTION_LEVELS}
+
+
+def perception_factor(rules: CapacityRules, hearing: int, sight: int) -> float:
+    return blend(hearing / PERCENT, rules.perception_hearing) * blend(sight / PERCENT, rules.perception_sight)
 
 
 def healthy(rules: Rules, stats: BearerStats, anatomy: Anatomy, fingers: int) -> dict[Capacity, int]:

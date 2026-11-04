@@ -8,11 +8,13 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import BattlePhaseRow, CaptiveCohortRow, CommanderTraitRow, SpyNetworkRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.warfare import ArmyRow
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.military import CaptiveFate, CommanderTrait, OutcomeClass, Tactic, UnitFamily
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import SocialClass
+from aerona.engine.body.book import perception_of
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.beasts import beast_dread, mounted_edge
 from aerona.engine.faith.book import faith_tenets, patron_node
@@ -72,7 +74,15 @@ async def side_of(
         skill=await skill_level(ctx, row.commander_entity_id, SkillKind.TACTICS),
         traits=await traits_of(ctx, row.commander_entity_id),
         intel=await intel_on(ctx, community.id, enemy.id),
+        watch=await watchfulness(ctx, row.commander_entity_id),
     )
+
+
+async def watchfulness(ctx: TickContext, commander_id: int | None) -> float:
+    commander = await ctx.session.get(EntityRow, commander_id) if commander_id is not None else None
+    if commander is None or commander.entity_type is not EntityType.MORTAL:
+        return 0.0
+    return await perception_of(ctx.session, ctx.rules, commander) * ctx.rules.capacities.scouting_perception_pct / PERCENT
 
 
 async def babel(ctx: TickContext, community: EntityRow) -> int:

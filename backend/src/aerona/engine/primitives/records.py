@@ -58,6 +58,10 @@ SOURCE_STATE_KINDS = frozenset(
         BondKind.RIVAL,
         BondKind.APPRENTICE_OF,
         BondKind.MEMBER_OF,
+        BondKind.SPOUSE_OF,
+        BondKind.BETROTHED_TO,
+        BondKind.CONCUBINE_OF,
+        BondKind.SWORN_KIN,
     }
 )
 TARGET_STATE_KINDS = frozenset(
@@ -85,6 +89,10 @@ TARGET_STATE_KINDS = frozenset(
         BondKind.RIVAL,
         BondKind.APPRENTICE_OF,
         BondKind.MEMBER_OF,
+        BondKind.SPOUSE_OF,
+        BondKind.BETROTHED_TO,
+        BondKind.CONCUBINE_OF,
+        BondKind.SWORN_KIN,
     }
 )
 INHERITED_KINDS = frozenset({BondKind.OWNS, BondKind.RULES})
@@ -253,6 +261,10 @@ async def retire(
 
 
 async def heir_of(session: AsyncSession, dead: EntityRow) -> EntityRow | None:
+    for bond in reversed(await active_bonds(session, [BondKind.PARENT_OF], sources=[dead.id])):
+        candidate = await living_entity(session, bond.target_node_id)
+        if candidate is not None and candidate.entity_type in HEIR_TYPES:
+            return candidate
     for bond in reversed(await active_bonds(session, [BondKind.DESCENDS_FROM], targets=[dead.id])):
         candidate = await living_entity(session, bond.source_node_id)
         if candidate is not None and candidate.entity_type in HEIR_TYPES:

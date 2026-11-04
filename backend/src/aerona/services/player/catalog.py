@@ -49,6 +49,7 @@ from aerona.services.player import (
     messages,
     military,
     mind,
+    mortals,
     native_faith,
     pantheon,
     peoples,
@@ -1010,6 +1011,30 @@ MIND_ACTIONS = (
     _sync(Meta("mind:memory_remove", "Erase a memory", G.ENTITIES), mind.forget_memory, mind.MemoryTarget, free, ("F7",)),
     _sync(Meta("mind:need", "Set and hold a mortal's need", G.ENTITIES), mind.set_need, mind.SetNeed, free, ("F8",)),
     _sync(Meta("mind:pressure", "Set and hold a pressure on a community", G.SOCIETY), mind.set_pressure, mind.SetPressure, free, ("F8",)),
+    _sync(Meta("mind:skill_edit", "Change a skill's subject, practice and peak", G.ENTITIES), mind.edit_skill, mind.EditSkill, free, ("F6",)),
+    _sync(Meta("body:condition_edit", "Change how heavy a condition lies", G.ENTITIES), body.edit_condition, body.EditCondition, free, ("F4.5",)),
+    _sync(Meta("body:prosthesis_edit", "Change a prosthesis's make and quality", G.ENTITIES), body.edit_prosthesis, body.EditProsthesis, free, ("F4.5",)),
+    _sync(Meta("body:injury_hold", "Hold a wound as it is or let it heal again", G.ENTITIES), body.hold_injuries, body.HoldInjuries, free, ("F4.4",)),
+    _sync(Meta("mortal:set", "Set and hold a mortal's life, standing or loyalty", G.ENTITIES), mortals.set_mortal, mortals.SetMortal, free, ("S3.1",)),
+    _sync(
+        Meta("mortal:release", "Let a held mortal value follow their life again", G.ENTITIES), mortals.release_mortal, mortals.ReleaseMortal, free, ("S3.1",)
+    ),
+    _sync(Meta("mortal:ability", "Set and hold a mortal's ability", G.ENTITIES), mortals.set_ability, mortals.SetAbility, free, ("S3.1",)),
+    _sync(
+        Meta("mortal:ability_release", "Let a held ability change with age again", G.ENTITIES), mortals.release_ability, mortals.ReleaseAbility, free, ("S3.1",)
+    ),
+    _sync(Meta("mortal:sex", "Set a mortal's sex", G.ENTITIES), mortals.set_sex, mortals.SetSex, free, ("S3.1",)),
+    _sync(Meta("kin:betroth", "Promise two mortals to each other", G.ENTITIES), mortals.set_betrothal, mortals.PairCommand, free, ("S3.1",)),
+    _sync(Meta("kin:marry", "Wed two mortals, by choice or by force", G.ENTITIES), mortals.force_marriage, mortals.ForceMarriage, free, ("S3.1",)),
+    _sync(Meta("kin:end_marriage", "End a marriage", G.ENTITIES), mortals.end_marriage_action, mortals.EndMarriage, free, ("S3.1",)),
+    _sync(Meta("kin:edit_marriage", "Change a marriage's kind, treaty or start", G.ENTITIES), mortals.edit_marriage, mortals.EditMarriage, free, ("S3.1",)),
+    _sync(Meta("kin:delete_marriage", "Strike a marriage from the record", G.ENTITIES), mortals.delete_marriage, mortals.MarriageTarget, free, ("S3.1",)),
+    _sync(Meta("kin:bond", "Bind two mortals as kin", G.ENTITIES), mortals.add_kin_bond, mortals.KinBond, free, ("S3.1",)),
+    _sync(Meta("kin:unbond", "Undo a kin bond", G.ENTITIES), mortals.remove_kin_bond, mortals.KinBondTarget, free, ("S3.1",)),
+    _sync(Meta("mortal:equip", "Set and hold what a mortal carries in a slot", G.ENTITIES), mortals.equip, mortals.Equip, free, ("S3.1",)),
+    _sync(Meta("mortal:equip_release", "Let a mortal choose their own gear again", G.ENTITIES), mortals.release_slot, mortals.ReleaseSlot, free, ("S3.1",)),
+    _sync(Meta("mortal:sentence", "Sentence a mortal under the law", G.ENTITIES), mortals.sentence_mortal, mortals.Sentence, free, ("S3.1",)),
+    _sync(Meta("mortal:pardon", "Pardon a sentenced mortal", G.ENTITIES), mortals.pardon, mortals.Pardon, free, ("S3.1",)),
 )
 
 ECONOMY_ACTIONS = (

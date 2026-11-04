@@ -12,12 +12,14 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.disease import ClimateAffinity, OutbreakStatus, SpreadPath
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.environment import TemperatureBand
+from aerona.domain.enums.mortal import HarshnessScale
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.emergence import COLD_BANDS, DRY, WARM_BANDS, WET, new_disease
 from aerona.engine.gods.progress import cap_gained_essence
+from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect
@@ -87,7 +89,7 @@ def lethality_factor(book: DiseaseBook, disease_id: int, communities: list[Entit
         weight += people * factor
         total += people
     blended = weight / total if total else 1.0
-    return max(FACTOR_FLOOR, min(FACTOR_CEILING, base * blended))
+    return max(FACTOR_FLOOR, min(FACTOR_CEILING, base * blended * harshness(book.rules, HarshnessScale.DISEASE_DEATH)))
 
 
 def spread_factor(book: DiseaseBook, disease_id: int, target: EntityRow, ground: RegionEnvironmentRow | None, *, source_region: int | None) -> float:

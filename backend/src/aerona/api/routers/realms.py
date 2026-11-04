@@ -228,11 +228,9 @@ async def house(services: ServicesDep, house_id: int = Path(ge=1)) -> HouseView:
         mortals = {row.id: row for row in await session.scalars(select(EntityRow).where(EntityRow.id.in_(ids)))} if ids else {}
         parents: dict[int, list[int]] = {}
         for bond in await session.scalars(
-            select(BondRow).where(
-                BondRow.kind == BondKind.DESCENDS_FROM, BondRow.source_node_id.in_(ids), BondRow.state.in_([BondState.ACTIVE, BondState.PAST])
-            )
+            select(BondRow).where(BondRow.kind == BondKind.PARENT_OF, BondRow.target_node_id.in_(ids), BondRow.state.in_([BondState.ACTIVE, BondState.PAST]))
         ):
-            parents.setdefault(bond.source_node_id, []).append(bond.target_node_id)
+            parents.setdefault(bond.target_node_id, []).append(bond.source_node_id)
         wounds: dict[int, int] = {}
         for bearer in await session.scalars(
             select(InjuryRow.bearer_node_id).where(InjuryRow.bearer_node_id.in_(ids), InjuryRow.state.in_(list(LASTING_INJURY_STATES)))

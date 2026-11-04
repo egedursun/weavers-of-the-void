@@ -14,12 +14,14 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ItemClass, Technique
 from aerona.domain.enums.environment import MovementMode
 from aerona.domain.enums.military import Stance
+from aerona.domain.enums.mortal import HarshnessScale
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import has_technique
 from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.levies import demobilise
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_stats, stat
@@ -208,7 +210,7 @@ async def campaign_season(ctx: TickContext, atlas: RegionAtlas, ground: Environm
     size = stat(march.army, "size") or 0
     if profile.supply_days <= 0:
         log.starving = True
-        dead += round_half_up(size * attrition.starvation_pct / PERCENT)
+        dead += round_half_up(size * attrition.starvation_pct / PERCENT * harshness(ctx.rules, HarshnessScale.FAMINE_DEATH))
         dishearten(rows, round_half_up(ctx.rules.morale.base * ctx.rules.morale.supply_pct / PERCENT))
     log.unpaid = not await wages(ctx, march)
     if log.unpaid:

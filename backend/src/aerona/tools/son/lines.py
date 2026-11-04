@@ -3,6 +3,8 @@ from aerona.catalog.god_lines import Line
 LEVEL_UP = Line("tools.son.level_up", "{son} grew stronger and rose to rank {level}.")
 POWER_AWOKE = Line("tools.son.power_awoke", "A new power awoke within {son}: {power}.")
 ANCHOR = Line("tools.son.anchor", "{son} bound their existence to {entity}: {reason}")
+BIND_MORTALS = Line("tools.son.bind_mortals", "{son} bound {first} and {second} ({binding}): {reason}")
+TOUCH_MORTAL = Line("tools.son.touch_mortal", "The touch of {son} fell on {mortal} ({touch}): {reason}")
 WORDS = Line("tools.son.words", "{son} whispered new words into the {language} tongue: {words}.")
 MESSAGE = Line("tools.son.message", '{son} {phrase} to {sibling}: "{message}"')
 COVENANT = Line("tools.son.covenant", '{son} and {sibling} swore a covenant: "{terms}"')

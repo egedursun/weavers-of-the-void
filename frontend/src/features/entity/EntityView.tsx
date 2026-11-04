@@ -32,6 +32,11 @@ import { DoctrineSection } from './faith/Doctrine'
 import { LearningSection } from './lore/LearningSection'
 import { LoreSection } from './lore/LoreSection'
 import { isLoreKind } from './lore/model'
+import {
+  EquipmentSection,
+  KinSection,
+  LifeSection,
+} from './mortal/MortalSections'
 import { HouseSection, OathsSection, TreatySection } from './realm/HouseTreaty'
 import { RealmSection } from './realm/Realm'
 import { scrollToSection } from './scrollToSection'
@@ -126,6 +131,9 @@ const SECTION_LINKS = [
   { id: 'section-body', label: 'Body' },
   { id: 'section-body-customs', label: 'Wounds and bodies' },
   { id: 'section-maimed', label: 'The maimed' },
+  { id: 'section-life', label: 'Life' },
+  { id: 'section-kin', label: 'Kin' },
+  { id: 'section-gear', label: 'Gear' },
   { id: 'section-mind', label: 'Mind' },
   { id: 'section-skills', label: 'Skills' },
   { id: 'section-memories', label: 'Memories' },
@@ -239,6 +247,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
     present.delete('section-memories')
   }
   if (entity.entity_type !== 'mortal') present.delete('section-skills')
+  if (entity.entity_type !== 'mortal') present.delete('section-life')
+  if (entity.entity_type !== 'mortal') present.delete('section-kin')
+  if (entity.entity_type !== 'mortal') present.delete('section-gear')
   const acts = entity.status === 'canon' && agentTypeOf(entity.entity_type)
   if (!acts) present.delete('section-opportunities')
   if (!isCommunity(ctx.type)) {
@@ -422,6 +433,15 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         <PeopleBodyCustoms peopleId={entity.id} />
       )}
       {maimedHome && <CommunityMaimed communityId={entity.id} />}
+      {entity.entity_type === 'mortal' && (
+        <LifeSection mortalId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'mortal' && (
+        <KinSection mortalId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'mortal' && (
+        <EquipmentSection mortalId={entity.id} readOnlyReason={readOnly} />
+      )}
       {minded && <MindSection nodeId={entity.id} />}
       {entity.entity_type === 'mortal' && <SkillsSection nodeId={entity.id} />}
       {minded && <MemoriesSection nodeId={entity.id} />}

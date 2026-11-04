@@ -125,6 +125,8 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   raise_beast: PawPrint,
   create_people: Users,
   create_mortal: UserPlus,
+  bind_mortals: HeartHandshake,
+  touch_mortal: HandHeart,
   forge_item: Hammer,
   produce_item: Package,
   build_structure: Castle,

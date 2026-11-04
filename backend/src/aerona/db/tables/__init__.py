@@ -141,6 +141,7 @@ from aerona.db.tables.mind import (
     SkillRow,
     TraitRow,
 )
+from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.db.tables.motifs import MotifOverrideRow
 from aerona.db.tables.node import NameRegistryRow, NodeRow
 from aerona.db.tables.polity import (
@@ -294,10 +295,13 @@ __all__ = [
     "MapNoteRow",
     "MapSnapshotRow",
     "MarketPriceRow",
+    "MarriageRow",
     "MemoryRow",
     "MessageRow",
     "MindRow",
     "ModifierRow",
+    "MortalEquipmentRow",
+    "MortalProfileRow",
     "MotifOverrideRow",
     "NameRegistryRow",
     "NeedRow",

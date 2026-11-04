@@ -110,6 +110,8 @@ class CreatureTrait(StrEnum):
     CROP_PEST = "crop_pest"
     PLAGUE_BEARER = "plague_bearer"
     SACRED_ANIMAL = "sacred_animal"
+    HORNED = "horned"
+    TAILED = "tailed"
 
 
 class CommunityRelationLabel(StrEnum):

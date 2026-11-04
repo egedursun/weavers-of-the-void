@@ -137,7 +137,7 @@ async def killers_home(ctx: TickContext, spirit: EntityRow) -> int | None:
     if killer_id is None:
         return None
     heir_id = await ctx.session.scalar(
-        select(BondRow.source_node_id).where(BondRow.target_node_id == killer_id, BondRow.kind == BondKind.DESCENDS_FROM).order_by(BondRow.id.desc()).limit(1)
+        select(BondRow.target_node_id).where(BondRow.source_node_id == killer_id, BondRow.kind == BondKind.PARENT_OF).order_by(BondRow.id.desc()).limit(1)
     )
     kin = await ctx.session.get(EntityRow, heir_id or killer_id)
     return kin.location_id if kin is not None else None

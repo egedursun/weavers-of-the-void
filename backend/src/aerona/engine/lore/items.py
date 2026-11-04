@@ -2,7 +2,7 @@ from sqlalchemy import func, select
 
 from aerona.catalog.lore import ITEM_CLASSES, ITEM_WORDS, KNOWLEDGE_ITEMS, REGALIA, WEAPONS
 from aerona.constants.units import PERCENT
-from aerona.db.tables.body import ConditionRow
+from aerona.db.tables.body import BodyRow, ConditionRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ItemHistoryRow, ItemProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -278,7 +278,8 @@ async def craft(ctx: TickContext, item: EntityRow, community_id: int | None, mat
     table = ctx.rules.crafting
     row = await profile_of(ctx, item)
     found = await smith_of(ctx, community_id)
-    skill = found[1] if found is not None else 0
+    hands = await ctx.session.get(BodyRow, found[0].id) if found is not None else None
+    skill = found[1] * (hands.craft if hands is not None else PERCENT) / PERCENT if found is not None else 0
     rest = max(0, PERCENT - table.skill_pct - table.material_pct) / PERCENT
     if "quality" not in row.locked:
         row.quality = clamp_int(

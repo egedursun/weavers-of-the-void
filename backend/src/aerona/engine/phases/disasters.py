@@ -21,6 +21,7 @@ from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import EventStats
@@ -138,7 +139,7 @@ async def _strike_mortal(ctx: TickContext, mortal: EntityRow, disaster: Disaster
     if rng.chance(death_chances[disaster] * scale * medicine):
         if disaster is not Disaster.PLAGUE:
             await fatal_injury(ctx, mortal, replace(harm, death_cause=phrase))
-        return await death_path(ctx, mortal, phrase)
+        return await death_path(ctx, mortal, phrase, manner=DeathCause.DISASTER)
     if not rng.chance(effects.disaster_injury_chance):
         return False
     wounding = await apply_hits(ctx, mortal, harm)

@@ -25,14 +25,18 @@ from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, ThreadLinkRole, ThreadStatus
 from aerona.domain.enums.entity import AGENT_TYPES, LIVING_CREATION_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.mind import TraitKind, TraitSource
+from aerona.domain.enums.mortal import MortalSex
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
+from aerona.domain.models.entity_stats import MortalStats
 from aerona.domain.models.phonology import Phonology
 from aerona.engine.body.book import ensure_species_body
 from aerona.engine.ecology.beasts import profile_beast
 from aerona.engine.ecology.profiles import SpeciesSpec, profile_of
 from aerona.engine.gods.progress import power_ceiling
 from aerona.engine.gods.rewards import RewardDraft, creation_gains, creation_value, fade_pct, record_reward
+from aerona.engine.mind.book import add_trait
 from aerona.engine.phases.exploration import land_measure
 from aerona.engine.phases.knowledge_levels import empty_branch_hint, empty_branches, same_branch
 from aerona.engine.primitives.distance import RegionAtlas
@@ -436,6 +440,14 @@ def _foreign_sounds(name: str, phonology: Phonology | None) -> str | None:
     return result(SonResult.FOREIGN_SOUNDS, sounds=", ".join(missing)) if missing else None
 
 
+async def _mortal_nature(call: SonCall, args: CreationInput, created: EntityRow) -> None:
+    sex = args.option("sex")
+    if sex is not None and isinstance(created.stats, MortalStats):
+        created.stats = created.stats.model_copy(update={"sex": MortalSex(sex).value})
+    for trait in args.option("traits") or []:
+        await add_trait(call.session, created.id, TraitKind(trait), TraitSource.BIRTH, call.epoch)
+
+
 async def create_entity(call: SonCall, args: CreationInput, entity_type: EntityType) -> str:
     plan = await _prepare(call, args, entity_type)
     created = await _insert(call, plan)
@@ -445,6 +457,8 @@ async def create_entity(call: SonCall, args: CreationInput, entity_type: EntityT
         await profile_of(call.tick, created, species_spec(args))
     if entity_type is EntityType.BEAST:
         await shape_beast(call, args, created)
+    if entity_type is EntityType.MORTAL:
+        await _mortal_nature(call, args, created)
     await _bonds(call, plan, created)
     effect_notes = await apply_effects(call, created, plan.effects)
     if plan.effects is not None:

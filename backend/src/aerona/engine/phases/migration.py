@@ -27,6 +27,7 @@ from aerona.engine.primitives.queries import canon, connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.society import stock
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat
+from aerona.engine.services.community_relations import relation
 from aerona.language.generator import NameKind
 
 MIGRANT_SUBTYPE = "migrant settlement"
@@ -54,7 +55,9 @@ async def kin_pull(ctx: TickContext, atlas: RegionAtlas, origin: EntityRow | Non
     if not settled:
         return 1.0
     nearest = max([await closeness(ctx.session, origin.id, entity_id) for entity_id in settled])
-    return 1 + (nearest - 1) * ctx.rules.culture_drift.migration_kinship_pct / PERCENT
+    warmest = max([await relation(ctx.session, ctx.rules, origin.id, entity_id) for entity_id in settled])
+    welcome = max(0.0, 1 + warmest / PERCENT * ctx.rules.culture_drift.migration_opinion_pct / PERCENT)
+    return (1 + (nearest - 1) * ctx.rules.culture_drift.migration_kinship_pct / PERCENT) * welcome
 
 
 async def town_pull(ctx: TickContext, atlas: RegionAtlas, region_id: int) -> float:

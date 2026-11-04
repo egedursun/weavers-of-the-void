@@ -87,6 +87,7 @@ from aerona.rules.registry.god_actions import GodActionsRules
 from aerona.rules.registry.god_hand import GodHandRules
 from aerona.rules.registry.god_power import GodPowerRules
 from aerona.rules.registry.guide import GuideRules
+from aerona.rules.registry.harshness import HarshnessRules
 from aerona.rules.registry.heroes import HeroesRules
 from aerona.rules.registry.image_gen import ImageGenRules
 from aerona.rules.registry.intervention_costs import InterventionCostsRules
@@ -155,7 +156,10 @@ from aerona.rules.registry.mind import (
 )
 from aerona.rules.registry.model import ModelRules
 from aerona.rules.registry.modifiers import IncidentRules, ModifiersRules
+from aerona.rules.registry.mortal_acts import ActsRules, EthnicRules, LoyaltyRules
 from aerona.rules.registry.mortal_agents import MortalAgentsRules
+from aerona.rules.registry.mortal_life import AgingRules, EducationRules, FertilityRules, KinshipRules
+from aerona.rules.registry.mortal_standing import EquipmentRules, PunishmentRules, StandingRules
 from aerona.rules.registry.mortal_tools import MortalToolsRules
 from aerona.rules.registry.naming import NamingRules
 from aerona.rules.registry.narrative import NarrativeRules
@@ -192,6 +196,7 @@ from aerona.rules.registry.society import SocietyRules
 from aerona.rules.registry.son_relations import SonRelationsRules
 from aerona.rules.registry.son_tools import SonToolsRules
 from aerona.rules.registry.star_types import StarTypeRules
+from aerona.rules.registry.stress import StressRules
 from aerona.rules.registry.summoning import SummoningRules
 from aerona.rules.registry.time import TimeRules
 from aerona.rules.registry.trade import TradeRules
@@ -251,6 +256,18 @@ class Rules:
     memory: MemoryRules = field(default_factory=MemoryRules)
     opinion: OpinionRules = field(default_factory=OpinionRules)
     needs: NeedsRules = field(default_factory=NeedsRules)
+    harshness: HarshnessRules = field(default_factory=HarshnessRules)
+    aging: AgingRules = field(default_factory=AgingRules)
+    fertility: FertilityRules = field(default_factory=FertilityRules)
+    education: EducationRules = field(default_factory=EducationRules)
+    kinship: KinshipRules = field(default_factory=KinshipRules)
+    stress: StressRules = field(default_factory=StressRules)
+    standing: StandingRules = field(default_factory=StandingRules)
+    punishment: PunishmentRules = field(default_factory=PunishmentRules)
+    equipment: EquipmentRules = field(default_factory=EquipmentRules)
+    loyalty: LoyaltyRules = field(default_factory=LoyaltyRules)
+    acts: ActsRules = field(default_factory=ActsRules)
+    ethnic: EthnicRules = field(default_factory=EthnicRules)
     casualties: CasualtiesRules = field(default_factory=CasualtiesRules)
     ecology: EcologyRules = field(default_factory=EcologyRules)
     habitat: HabitatRules = field(default_factory=HabitatRules)

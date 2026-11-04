@@ -172,8 +172,9 @@ async def curse_newborns(ctx: TickContext) -> None:
     if not cursed:
         return
     statement = select(BondRow.source_node_id).where(BondRow.kind == BondKind.DESCENDS_FROM, BondRow.target_node_id.in_(cursed)).order_by(BondRow.id)
+    typed = select(BondRow.target_node_id).where(BondRow.kind == BondKind.PARENT_OF, BondRow.source_node_id.in_(cursed)).order_by(BondRow.id)
     newborns: list[EntityRow] = []
-    for child_id in dict.fromkeys(await ctx.session.scalars(statement)):
+    for child_id in dict.fromkeys([*await ctx.session.scalars(statement), *await ctx.session.scalars(typed)]):
         child = await ctx.session.get(EntityRow, child_id)
         if child is not None and child.status is EntityStatus.CANON and child.id not in flagged:
             newborns.append(child)
