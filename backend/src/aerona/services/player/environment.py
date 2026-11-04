@@ -34,12 +34,14 @@ class SetScar(Command):
     region_id: int
     kind: ScarKind
     depth: int = Field(ge=0, le=100)
+    lock: bool = False
 
 
 class SetMineral(Command):
     region_id: int
     material: MaterialKind
     richness: int = Field(ge=0, le=100)
+    lock: bool = False
 
 
 class SetPlaceEnvironment(Command):
@@ -116,9 +118,10 @@ async def unlock_region_environment(scope: PlayerScope, command: UnlockRegionEnv
 async def set_region_scar(scope: PlayerScope, command: SetScar) -> Effect:
     region = await _entity(scope, command.region_id)
     ground = await control.region_ground(scope.session, region.id)
-    control.set_scar(ground, command.kind, command.depth)
+    control.set_scar(ground, command.kind, command.depth, lock=command.lock)
     label = command.kind.value.replace("_", " ")
-    message = f"{region.name} bears {label} of depth {command.depth}." if command.depth else f"The {label} of {region.name} is healed."
+    message = f"{region.name} bears {label} of depth {command.depth}" if command.depth else f"The {label} of {region.name} is healed"
+    message += ", held against time." if command.lock and command.depth else "."
     return Effect(message, target_node_id=region.id)
 
 
@@ -126,7 +129,7 @@ async def set_region_scar(scope: PlayerScope, command: SetScar) -> Effect:
 async def set_region_mineral(scope: PlayerScope, command: SetMineral) -> Effect:
     region = await _entity(scope, command.region_id)
     ground = await control.region_ground(scope.session, region.id)
-    control.set_mineral(ground, command.material.value, command.richness)
+    control.set_mineral(ground, command.material.value, command.richness, lock=command.lock)
     material = command.material.value.replace("_", " ")
     message = f"{region.name} holds {material} of richness {command.richness}." if command.richness else f"{region.name} holds no {material}."
     return Effect(message, target_node_id=region.id)

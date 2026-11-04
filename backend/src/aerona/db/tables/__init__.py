@@ -161,6 +161,7 @@ from aerona.db.tables.polity import (
     TreatyProfileRow,
     VassalageRow,
 )
+from aerona.db.tables.region import PolityMapKnowledgeRow, RegionDangerRow, RegionHazardRow, RegionMemoryRow
 from aerona.db.tables.routes import HorizonIntuitionRow, JourneyRow, RouteRow
 from aerona.db.tables.rule_override import RuleOverrideRow
 from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
@@ -314,6 +315,7 @@ __all__ = [
     "PeopleCultureRow",
     "PersonalityValueRow",
     "PlaceEnvironmentRow",
+    "PolityMapKnowledgeRow",
     "PolityMemberRow",
     "PolityProfileRow",
     "PolityTerritoryRow",
@@ -324,7 +326,10 @@ __all__ = [
     "ProphecyConditionRow",
     "ProsthesisRow",
     "QuarantineRow",
+    "RegionDangerRow",
     "RegionEnvironmentRow",
+    "RegionHazardRow",
+    "RegionMemoryRow",
     "ReincarnationRow",
     "RelicRow",
     "ResourceMechanicRow",

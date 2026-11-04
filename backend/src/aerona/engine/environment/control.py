@@ -60,6 +60,7 @@ REGION_NUMBERS = frozenset(
         "erosion",
         "seasonality",
         "harvest_pct",
+        "sacredness",
     }
 )
 LOCKABLE = frozenset(
@@ -82,8 +83,20 @@ LOCKABLE = frozenset(
         "seasonality",
         "magic_density",
         "harvest_pct",
+        "soil",
+        "soil_fertility",
+        "soil_base",
+        "cleared",
+        "farmed",
+        "grazed",
+        "mined",
+        "built",
+        "erosion",
+        "sacredness",
     }
 )
+SCAR_PREFIX = "scar."
+SEAM_PREFIX = "seam."
 PLACE_ENUMS: dict[str, type[StrEnum]] = {"terrain": TerrainKind, "cover": PlaceCover, "water_source": WaterSource}
 PLACE_NUMBERS = frozenset({"height_advantage", "soil_fertility"})
 PASSABILITY_PREFIX = "passability."
@@ -169,22 +182,37 @@ def set_place_field(ground: PlaceEnvironmentRow, field: str, value: int | str | 
     setattr(ground, field, coerce(field, value, PLACE_ENUMS, PLACE_NUMBERS))
 
 
-def set_scar(ground: RegionEnvironmentRow, kind: ScarKind, depth: int) -> None:
+def held(ground: RegionEnvironmentRow, field: str) -> bool:
+    return field in ground.locked
+
+
+def hold(ground: RegionEnvironmentRow, field: str, lock: bool) -> None:
+    locked = set(ground.locked)
+    if lock:
+        locked.add(field)
+    else:
+        locked.discard(field)
+    ground.locked = sorted(locked)
+
+
+def set_scar(ground: RegionEnvironmentRow, kind: ScarKind, depth: int, *, lock: bool = False) -> None:
     scars = dict(ground.scars)
     if depth <= 0:
         scars.pop(kind.value, None)
     else:
         scars[kind.value] = clamp_int(depth, 0, PERCENT)
     ground.scars = scars
+    hold(ground, f"{SCAR_PREFIX}{kind.value}", lock and depth > 0)
 
 
-def set_mineral(ground: RegionEnvironmentRow, material: str, richness: int) -> None:
+def set_mineral(ground: RegionEnvironmentRow, material: str, richness: int, *, lock: bool = False) -> None:
     layers = dict(ground.mineral_layers)
     if richness <= 0:
         layers.pop(material, None)
     else:
         layers[material] = clamp_int(richness, 0, PERCENT)
     ground.mineral_layers = layers
+    hold(ground, f"{SEAM_PREFIX}{material}", lock and richness > 0)
 
 
 async def world_seasons(session: AsyncSession, world_id: int) -> list[WorldSeasonRow]:

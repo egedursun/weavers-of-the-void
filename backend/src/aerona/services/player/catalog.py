@@ -53,6 +53,7 @@ from aerona.services.player import (
     pantheon,
     peoples,
     realms,
+    regions,
     relations,
     settings,
     settlements,
@@ -1147,6 +1148,26 @@ WILDS_ACTIONS = (
     _sync(Meta("beast:spawn", "Raise a named beast from a kind", G.CREATURES), wilds.spawn, wilds.Spawn, free, ("S3.3a",)),
 )
 
+REGION_ACTIONS = (
+    _sync(Meta("region:danger_create", "Set a danger of any kind upon a region", G.WORLDS), regions.create_danger, regions.CreateDanger, free, ("S6.1",)),
+    _sync(Meta("region:danger_edit", "Change or hold the strength of a region's danger", G.WORLDS), regions.edit_danger, regions.EditDanger, free, ("S6.1",)),
+    _sync(Meta("region:danger_release", "Let a held danger follow the land again", G.WORLDS), regions.release_danger, regions.DangerTarget, free, ("S6.1",)),
+    _sync(Meta("region:danger_delete", "Drive a danger out of a region", G.WORLDS), regions.delete_danger, regions.DangerTarget, free, ("S6.1",)),
+    _sync(Meta("region:sanctify", "Sanctify a region and set its sacredness", G.WORLDS), regions.sanctify, regions.Sanctify, free, ("S6.1",)),
+    _sync(Meta("region:memory_add", "Write an event into a region's memory", G.WORLDS), regions.add_memory, regions.AddMemory, free, ("S6.1",)),
+    _sync(Meta("region:memory_edit", "Reshape or hold a region's memory", G.WORLDS), regions.edit_memory, regions.EditMemory, free, ("S6.1",)),
+    _sync(Meta("region:memory_delete", "Make a region forget an event", G.WORLDS), regions.delete_memory, regions.MemoryTarget, free, ("S6.1",)),
+    _sync(Meta("region:knowledge_set", "Reveal or hide a region on a realm's maps", G.WORLDS), regions.set_knowledge, regions.SetKnowledge, free, ("S6.1",)),
+    _sync(
+        Meta("region:knowledge_release", "Let a realm's map of a region follow its explorers again", G.WORLDS),
+        regions.release_knowledge,
+        regions.KnowledgeTarget,
+        free,
+        ("S6.1",),
+    ),
+    _sync(Meta("region:river_redirect", "Turn a river into a neighbouring region", G.WORLDS), regions.redirect_river, regions.RedirectRiver, free, ("S6.1",)),
+)
+
 ENVIRONMENT_ACTIONS = (
     _sync(
         Meta("ley:sever", "Cut a ley line for some epochs", G.WORLDS),
@@ -1334,6 +1355,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *LIFE_CYCLE_ACTIONS,
     *MECHANIC_ACTIONS,
     *ENVIRONMENT_ACTIONS,
+    *REGION_ACTIONS,
     *ECONOMY_ACTIONS,
     *BODY_ACTIONS,
     *MIND_ACTIONS,
