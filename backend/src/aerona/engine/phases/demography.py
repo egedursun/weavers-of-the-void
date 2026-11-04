@@ -1,19 +1,38 @@
+from enum import StrEnum
+
+from aerona.catalog.peoples import FUNERAL_DEEDS
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.engine.context import TickContext
+from aerona.engine.demography.biology import profiles_of
 from aerona.engine.demography.cohorts import rebalance_classes, reconcile, seed
 from aerona.engine.demography.labour import allocate
+from aerona.engine.demography.martial import BattleTally, backfill_records, earliest_tally, record_battles
 from aerona.engine.demography.mobility import class_mobility, desertion, ennoble_heroes, ruin_merchants
-from aerona.engine.demography.peoples import culture_for, ensure_profiles, refresh_culture
+from aerona.engine.demography.peoples import (
+    biology_for,
+    culture_for,
+    ensure_profiles,
+    homeland_diseases,
+    kin_of,
+    member_lifespan,
+    refresh_biology,
+    refresh_culture,
+)
 from aerona.engine.demography.promotion import doze, promote, sync_veterans
+from aerona.engine.demography.rites import rite_tradition
+from aerona.engine.demography.urban import urban_drift
 from aerona.engine.disease.emergence import WET
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.capacity import LAND_COMMUNITY_TYPES
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.queries import canon
+from aerona.engine.primitives.queries import active_bonds, canon
 from aerona.engine.primitives.stats import stat
 
 COLD = frozenset({TemperatureBand.FROZEN, TemperatureBand.COLD})
@@ -65,9 +84,12 @@ async def cohort_upkeep(ctx: TickContext) -> None:
 @reads(
     "people.population",
     "settlement.population",
+    "table.bonds",
     "table.community_cohorts",
     "table.community_labour",
     "table.community_societies",
+    "table.people_biology",
+    "table.people_culture",
     "table.region_environment",
     "table.world_maps",
 )
@@ -112,25 +134,95 @@ async def society_mobility(ctx: TickContext) -> None:
     await ctx.session.flush()
 
 
+def words(value: StrEnum) -> str:
+    return value.value.replace("_", " ")
+
+
+async def homeland_regions(ctx: TickContext, atlas: RegionAtlas, people: EntityRow) -> list[int]:
+    homes = [bond.target_node_id for bond in await active_bonds(ctx.session, [BondKind.LIVES_IN], sources=[people.id])]
+    found = {atlas.top_region(people.id), *(atlas.top_region(home) for home in homes)}
+    return sorted(region for region in found if region is not None)
+
+
+async def refresh_people(ctx: TickContext, atlas: RegionAtlas, tally: BattleTally, people: EntityRow) -> None:
+    ground = await region_of(ctx, atlas, people)
+    biology, culture = await ensure_profiles(ctx.session, ctx.rules, people, ground)
+    diseases = await homeland_diseases(ctx.session, await homeland_regions(ctx, atlas, people))
+    fresh = biology_for(ctx.rules, people, await member_lifespan(ctx.session, people), ground, kin=await kin_of(ctx.session, people), immunities=diseases)
+    refresh_biology(ctx.rules, biology, fresh, ground)
+    victor = await record_battles(ctx.session, tally, culture, ctx.epoch)
+    style = culture.martial_style
+    refresh_culture(ctx.rules, culture, await culture_for(ctx.session, ctx.rules, people, ground), victor)
+    if culture.martial_style is not style:
+        learned = ", learned from those who beat them" if culture.martial_style is victor else ""
+        text = f"The {people.name} gave up fighting as {words(style)} and took up the way of {words(culture.martial_style)}{learned}."
+        await note(ctx, text, key="peoples.martial_style", ids=[people.id], kind=ChronicleKind.WAR)
+    tradition = await rite_tradition(ctx.session, ctx.rules, people, culture, ctx.epoch)
+    if tradition is not None:
+        ctx.count("funeral_rites")
+        text = f"The {people.name} now {FUNERAL_DEEDS[culture.funeral_rite]}; {tradition.name} began."
+        await note(ctx, text, key="peoples.funeral_rite", ids=[people.id, tradition.id], kind=ChronicleKind.LINEAGE)
+
+
 @reads(
     "people.population",
+    "settlement.population",
+    "table.applied_fixups",
+    "table.battles",
+    "table.bodies",
     "table.bonds",
+    "table.community_cohorts",
+    "table.community_societies",
+    "table.cult_doctrines",
     "table.culture_values",
+    "table.endemic_diseases",
+    "table.entity_traits",
+    "table.epoch_year_cursors",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.incidents",
     "table.language_profiles",
+    "table.language_standing",
+    "table.name_registry",
+    "table.nodes",
     "table.people_biology",
     "table.people_culture",
     "table.region_environment",
+    "table.speaker_cohorts",
+    "table.species_profiles",
     "table.world_maps",
 )
-@writes("people.population", "table.entities", "table.people_biology", "table.people_culture")
+@writes(
+    "people.population",
+    "table.applied_fixups",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_cohorts",
+    "table.community_societies",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+    "table.people_biology",
+    "table.people_culture",
+    "table.tradition_profiles",
+)
 async def people_cycles(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
+    ctx.count("profiles_backfilled", await backfill_records(ctx.session))
+    tally = await BattleTally.load(ctx.session, await earliest_tally(ctx.session), ctx.epoch)
     for people in await canon(ctx.session, [EntityType.PEOPLE]):
-        ground = await region_of(ctx, atlas, people)
-        _, culture = await ensure_profiles(ctx.session, ctx.rules, people, ground)
-        refresh_culture(culture, await culture_for(ctx.session, ctx.rules, people, ground))
+        await refresh_people(ctx, atlas, tally, people)
+    await ctx.session.flush()
+    moved = 0
+    for community in await canon(ctx.session, LAND_COMMUNITY_TYPES):
+        if (stat(community, "population") or 0) <= 0:
+            continue
+        _, culture = await profiles_of(ctx.session, community)
+        moved += abs(await urban_drift(ctx, community, culture))
+    ctx.count("urban_drift", moved)
     await ctx.session.flush()
 
 

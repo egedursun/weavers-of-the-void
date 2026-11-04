@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.peoples import FAITH_RITES
 from aerona.catalog.tenets import STRATUM_NAMES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import InjuryRow
@@ -19,6 +20,7 @@ from aerona.domain.enums.faith import AfterlifeState, FuneralRite, JudgementDoct
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
+from aerona.engine.demography.rites import rite_of
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.mind.book import traits_of, values_for
 from aerona.engine.polity.laws import law_param
@@ -55,10 +57,11 @@ async def ledger(ctx: TickContext, mortal: EntityRow) -> dict[str, int]:
     }
 
 
-FUNERAL_WORDS = ((("burn", "pyre", "fire", "ash"), FuneralRite.BURNING), (("sky", "tower", "vulture", "expos", "wind"), FuneralRite.EXPOSURE))
-
-
 async def funeral_custom(ctx: TickContext, community_id: int) -> FuneralRite | None:
+    community = await ctx.session.get(EntityRow, community_id)
+    custom = await rite_of(ctx.session, community) if community is not None else None
+    if custom is not None:
+        return FAITH_RITES[custom]
     kept = select(BondRow.target_node_id).where(BondRow.source_node_id == community_id, BondRow.kind == BondKind.CELEBRATES, BondRow.state == BondState.ACTIVE)
     rites = select(TraditionProfileRow.tradition_entity_id).where(
         TraditionProfileRow.tradition_entity_id.in_(kept), TraditionProfileRow.kind == TraditionKind.FUNERAL_RITE
@@ -66,10 +69,7 @@ async def funeral_custom(ctx: TickContext, community_id: int) -> FuneralRite | N
     tradition = await ctx.session.scalar(
         select(EntityRow).where(EntityRow.id.in_(rites), EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id).limit(1)
     )
-    if tradition is None:
-        return None
-    text = f"{tradition.name} {tradition.subtype or ''}".lower()
-    return next((rite for words, rite in FUNERAL_WORDS if any(word in text for word in words)), FuneralRite.BURIAL)
+    return FuneralRite.BURIAL if tradition is not None else None
 
 
 async def rite_for(ctx: TickContext, mortal: EntityRow) -> FuneralRite:

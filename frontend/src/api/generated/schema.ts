@@ -8735,6 +8735,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/people:found": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_people_found_api_actions_people_found_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/cohort:move": {
         parameters: {
             query?: never;
@@ -10542,7 +10558,13 @@ export interface components {
             fertility_pct: number;
             acclimatised: components["schemas"]["TemperatureBand"];
             staple: components["schemas"]["CommodityKind"];
-            traits: string[];
+            traits: components["schemas"]["NaturalTrait"][];
+            immunities: components["schemas"]["LinkedRecord"][];
+            body_plan: components["schemas"]["BodyPlan"];
+            size_class: components["schemas"]["SizeClass"];
+            diet: components["schemas"]["FolkDiet"];
+            edible: components["schemas"]["CommodityKind"][];
+            effects: components["schemas"]["KinEffectsView"];
             locked: string[];
         };
         Biome: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
@@ -11507,7 +11529,13 @@ export interface components {
             endogamous: boolean;
             inheritance: components["schemas"]["InheritanceCustom"];
             slavery_lawful: boolean;
-            staples: string[];
+            staples: components["schemas"]["CommodityKind"][];
+            liturgical_language: components["schemas"]["LinkedRecord"] | null;
+            trade_language: components["schemas"]["LinkedRecord"] | null;
+            funeral_rite: components["schemas"]["FuneralCustom"];
+            funeral_tradition: components["schemas"]["LinkedRecord"] | null;
+            martial_record: components["schemas"]["MartialRecordView"][];
+            martial_net: number;
             locked: string[];
         };
         CureSource: "knowledge" | "granted";
@@ -12474,6 +12502,7 @@ export interface components {
             flow: string;
             quantity: number;
         };
+        FolkDiet: "omnivore" | "herbivore" | "carnivore" | "piscivore" | "scavenger" | "sanguivore" | "lithovore" | "essence_feeder" | "phototroph";
         FolkView: {
             people_id: number;
             people_name: string;
@@ -12625,6 +12654,7 @@ export interface components {
             key: components["schemas"]["BodyFunction"];
             level: number;
         };
+        FuneralCustom: "burial" | "cremation" | "sky_burial" | "sea_burial" | "entombment" | "ancestor_shrine" | "endocannibalism" | "reanimation" | "soul_binding";
         FuneralRite: "burial" | "burning" | "exposure" | "none";
         GateNeed: {
             branch: components["schemas"]["KnowledgeBranch"];
@@ -13362,6 +13392,16 @@ export interface components {
             name: string;
             value: number;
         };
+        KinEffectsView: {
+            food_pct: number;
+            room_pct: number;
+            strength_pct: number;
+            disease_pct: number;
+            fleet_pct: number;
+            mount: string;
+            hunger_pct: number;
+            work: components["schemas"]["WorkFactor"][];
+        };
         KinView: {
             language: components["schemas"]["NodeRef"] | null;
             value: number;
@@ -13731,6 +13771,10 @@ export interface components {
             label: string;
             kinds: string[];
         };
+        LinkedRecord: {
+            id: number;
+            name: string;
+        };
         LlmCall: {
             id: number;
             epoch: number | null;
@@ -14036,6 +14080,11 @@ export interface components {
             bond_id: number;
         };
         MarriageCustom: "monogamy" | "polygyny" | "polyandry" | "group";
+        MartialRecordView: {
+            style: components["schemas"]["MartialStyle"];
+            wins: number;
+            losses: number;
+        };
         MartialStyle: "shieldwall" | "horse_archer" | "skirmisher" | "chariot" | "phalanx" | "berserker" | "naval_raider" | "siege_engineer" | "war_magic" | "beast_war";
         MaterialEditInput: {
             world_id: number;
@@ -14474,6 +14523,7 @@ export interface components {
         NaturalLawStats: {
             kind: "natural_law";
         };
+        NaturalTrait: "dark_sight" | "cold_blooded" | "winged" | "amphibious" | "thick_hide" | "keen_senses" | "venomous" | "regenerating" | "burrowing" | "hive_minded";
         NeedKind: "sustenance" | "safety" | "belonging" | "status" | "purpose" | "faith" | "pleasure";
         NeedView: {
             need: components["schemas"]["NeedKind"];
@@ -14962,9 +15012,19 @@ export interface components {
         PeopleEditInput: {
             people_id: number;
             values?: {
-                [key: string]: number | string | boolean;
+                [key: string]: number | string | boolean | number[] | string[] | null;
             };
             release?: string[];
+        };
+        PeopleFoundInput: {
+            name: string;
+            region_id: number;
+            population: number;
+            species_id?: number | null;
+            language_id?: number | null;
+            values?: {
+                [key: string]: number | string | boolean | number[] | string[] | null;
+            };
         };
         PeopleLine: {
             id: number;
@@ -17815,6 +17875,10 @@ export interface components {
             example?: string | null;
         };
         WordKind: "noun" | "verb" | "adjective" | "affix" | "title" | "place_name" | "proper_name" | "number" | "interjection";
+        WorkFactor: {
+            job: components["schemas"]["Job"];
+            pct: number;
+        };
         WorkerView: {
             community_id: number;
             community_name: string;
@@ -34491,6 +34555,37 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["PeopleEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_people_found_api_actions_people_found_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeopleFoundInput"];
             };
         };
         responses: {

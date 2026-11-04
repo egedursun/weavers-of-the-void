@@ -22,13 +22,13 @@ from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import LegendStats, TradeRouteStats
 from aerona.engine.context import TickContext
+from aerona.engine.demography.tongues import trade_barrier
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.credit import sell_on_credit
 from aerona.engine.economy.markets import Quote
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.environment.profile import Works
 from aerona.engine.interconnect.flows import FlowCategory, flowing
-from aerona.engine.lore.language import barrier
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -192,7 +192,7 @@ def capacity_of(ctx: TickContext, book: EconomyBook, route: Route, works: dict[i
 
 async def spoken_capacity(ctx: TickContext, book: EconomyBook, route: Route, works: dict[int, Works]) -> int:
     first, second = route.ends
-    capacity = capacity_of(ctx, book, route, works) * await barrier(ctx.session, ctx.rules, first, second, ctx.epoch)
+    capacity = capacity_of(ctx, book, route, works) * await trade_barrier(ctx.session, ctx.rules, first, second, ctx.epoch)
     if route.profile.mode is TradeMode.SEA:
         table = ctx.rules.technique_effects
         held = book.techniques.get(first, set()) | book.techniques.get(second, set())

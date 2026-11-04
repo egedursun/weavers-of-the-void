@@ -15,6 +15,7 @@ from aerona.domain.enums.entity import AGENT_TYPES, COMMUNITY_TYPES, EntityStatu
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.engine.context import TickContext
+from aerona.engine.demography.tongues import tongue_link
 from aerona.engine.economy.routes import link_weight, trade_links
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.research import books_of, has_technique, masters
@@ -110,7 +111,10 @@ async def _spread_language(ctx: TickContext, source: EntityRow, target: EntityRo
     "table.epoch_year_cursors",
     "table.holder_techniques",
     "table.nodes",
+    "table.people_biology",
+    "table.people_culture",
     "table.skills",
+    "table.speaker_cohorts",
     "table.trade_flows",
     "table.trade_route_profiles",
     "table.trade_route_regions",
@@ -143,8 +147,9 @@ async def knowledge_diffusion(ctx: TickContext) -> None:
         first, second = entities.get(first_id), entities.get(second_id)
         if first is None or second is None:
             continue
-        await _diffuse_direction(ctx, first, second, holdings, spread, cap=cap, weight=weight)
-        await _diffuse_direction(ctx, second, first, holdings, spread, cap=cap, weight=weight)
+        linked = weight * await tongue_link(session, ctx.rules, first_id, second_id)
+        await _diffuse_direction(ctx, first, second, holdings, spread, cap=cap, weight=linked)
+        await _diffuse_direction(ctx, second, first, holdings, spread, cap=cap, weight=linked)
         await _spread_language(ctx, first, second, laws)
     ctx.count("knowledge_spread", spread[0])
 

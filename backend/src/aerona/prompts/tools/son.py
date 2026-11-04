@@ -242,6 +242,22 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "image_prompt": 'English photoreal prompt of the disaster striking. {% include "shared/image_prompt_rules.md.j2" %}',
         },
     ),
+    T.SHAPE_FOLK: ToolText(
+        "You set the customs of a people that worships you: its way of war, taste in beauty, funeral rite, marriage, inheritance, whether it marries "
+        "only its own, or what it eats. The people holds to what you set until the Creator releases it. Cost: {{ rules.customs.son_shape_essence }} "
+        "essence for each custom; {{ rules.customs.son_shape_ap }} action.",
+        {
+            "people_id": "The people that worships you",
+            "martial_style": "Way of war (shieldwall, horse_archer, skirmisher, chariot, phalanx, berserker, naval_raider, siege_engineer, war_magic, beast_war)",
+            "aesthetic": "Taste in beauty (austere, ornate, geometric, natural, macabre, celestial)",
+            "funeral_rite": "How the dead are handled (burial, cremation, sky_burial, sea_burial, entombment, ancestor_shrine, endocannibalism, reanimation, soul_binding)",
+            "marriage": "Marriage custom (monogamy, polygyny, polyandry, group)",
+            "inheritance": "Inheritance (gavelkind, primogeniture, ultimogeniture, matrilineal, elective, by_merit)",
+            "endogamous": "True if they may marry only their own people",
+            "diet": "What they eat (omnivore, herbivore, carnivore, piscivore, scavenger, sanguivore, lithovore, essence_feeder, phototroph)",
+            "reason": "Why you give them these ways",
+        },
+    ),
     T.TEACH_KNOWLEDGE: ToolText(
         "You teach an existing knowledge to a community or mortal; the knowledge spreads from them to their partners. If unclaimed it starts worshipping you. Cost: "
         "{{ rules.intervention_costs.teach_knowledge | share_of(rules.son_tools.intervention_cost_pct) }} essence; 1 action.",

@@ -57,6 +57,7 @@ class SuccessionRule(StrEnum):
     MATRILINEAL = "matrilineal"
     BY_COMBAT = "by_combat"
     DIVINE_CHOICE = "divine_choice"
+    ULTIMOGENITURE = "ultimogeniture"
 
 
 class GenderRule(StrEnum):

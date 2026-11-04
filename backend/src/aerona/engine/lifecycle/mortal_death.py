@@ -23,6 +23,9 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.models.entity_stats import SpiritStats, TraditionStats
 from aerona.engine.context import TickContext
+from aerona.engine.demography.kinship import heirs_by_custom, inheritance_of
+from aerona.engine.demography.rites import mourning_factor, rite_of, spirit_factor
+from aerona.engine.demography.rites import restless as restless_by_rite
 from aerona.engine.faith.judgement import profile_for
 from aerona.engine.lifecycle.aging import immortal, raise_lifespan_to_death_age
 from aerona.engine.lifecycle.succession import dynasty_root, pass_rule
@@ -148,28 +151,31 @@ async def _bequeath(ctx: TickContext, mortal: EntityRow) -> None:
     items = await active_bonds(session, [BondKind.OWNS], sources=[mortal.id])
     if not items:
         return
-    receiver: EntityRow | None = None
-    for bond in reversed(await active_bonds(session, [BondKind.DESCENDS_FROM], targets=[mortal.id])):
-        receiver = await living_entity(session, bond.source_node_id)
-        if receiver is not None:
-            break
-    if receiver is None:
+    children = [
+        child
+        for child in [await living_entity(session, bond.source_node_id) for bond in await active_bonds(session, [BondKind.DESCENDS_FROM], targets=[mortal.id])]
+        if child is not None and child.entity_type is EntityType.MORTAL
+    ]
+    heirs = heirs_by_custom(await inheritance_of(session, mortal), children)
+    if not heirs:
         place = await living_entity(session, mortal.location_id)
-        receiver = place if place is not None and place.entity_type in COMMUNITY_TYPES else None
-    for bond in items:
+        heirs = [place] if place is not None and place.entity_type in COMMUNITY_TYPES else []
+    receiver = heirs[0] if heirs else None
+    for index, bond in enumerate(items):
         await close(session, bond, ctx.epoch, "inheritance")
-        if receiver is not None:
-            await connect(session, receiver.id, bond.target_node_id, BondKind.OWNS, ctx.epoch, description=f"inherited from {mortal.name}")
+        if heirs:
+            taker = heirs[index % len(heirs)]
+            await connect(session, taker.id, bond.target_node_id, BondKind.OWNS, ctx.epoch, description=f"inherited from {mortal.name}")
             if await session.get(ItemProfileRow, bond.target_node_id) is not None:
-                record(ctx, bond.target_node_id, ItemDeed.OWNED, receiver.id, f"an heirloom of {mortal.name}")
+                record(ctx, bond.target_node_id, ItemDeed.OWNED, taker.id, f"an heirloom of {mortal.name}")
     item_ids = [bond.target_node_id for bond in items]
     if receiver is None:
         for item_id in item_ids:
             if await session.get(ItemProfileRow, item_id) is not None:
                 record(ctx, item_id, ItemDeed.BURIAL, mortal.id, f"laid in the grave of {mortal.name}")
     if receiver is not None:
-        text = f"{len(items)} items of {mortal.name} passed to {receiver.name}."
-        ids = [mortal.id, *item_ids, receiver.id]
+        text = f"{len(items)} items of {mortal.name} passed to {', '.join(heir.name for heir in heirs)}."
+        ids = [mortal.id, *item_ids, *(heir.id for heir in heirs)]
     else:
         text = f"{len(items)} items of {mortal.name} were left ownerless; they wait in the grave or on the battlefield."
         ids = [mortal.id, *item_ids]
@@ -215,7 +221,8 @@ async def _leave_spirit(ctx: TickContext, mortal: EntityRow, underworld: EntityR
     effects = ctx.rules.world_effects
     rng = ctx.rng(seed_of("spirit", mortal.id))
     place_id = underworld.id if underworld is not None else mortal.location_id
-    if not rng.chance(ctx.rules.world_engine.famous_spirit_chance):
+    rite = await rite_of(session, mortal)
+    if not rng.chance(min(PERCENT, ctx.rules.world_engine.famous_spirit_chance * spirit_factor(ctx.rules, rite))):
         return
     if await _spirits_at(session, place_id) >= ctx.rules.deep_world.spirits_per_place_cap:
         return
@@ -225,7 +232,7 @@ async def _leave_spirit(ctx: TickContext, mortal: EntityRow, underworld: EntityR
         return
     murdered = bool(await active_bonds(session, [BondKind.KILLED], targets=[mortal.id]))
     base = effects.spirit_unrest_murdered if murdered else effects.spirit_unrest_natural
-    restless = base > effects.spirit_restless_threshold
+    restless = restless_by_rite(ctx.rules, rite, base, effects.spirit_restless_threshold)
     strength = stat(mortal, "strength")
     origin = f"refused to descend to {underworld.name} or returned from there" if underworld is not None else "returned from the world"
     spirit = await open_record(
@@ -263,7 +270,7 @@ async def _start_mourning(ctx: TickContext, mortal: EntityRow) -> None:
     if place is None:
         return
     rng = ctx.rng(seed_of("mourning", mortal.id))
-    if not rng.chance(ctx.rules.world_engine.mourning_tradition_chance):
+    if not rng.chance(min(PERCENT, ctx.rules.world_engine.mourning_tradition_chance * mourning_factor(ctx.rules, await rite_of(session, mortal)))):
         return
     if await _born_this_epoch(session, EntityType.TRADITION, (MOURNING_SUBTYPE,), ctx.epoch) >= scaled_cap(
         effects.afterdeath_cap, effects.afterdeath_cap_community_divisor, await count_communities(session)

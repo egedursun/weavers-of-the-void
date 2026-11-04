@@ -70,3 +70,40 @@ class InheritanceCustom(StrEnum):
     MATRILINEAL = "matrilineal"
     ELECTIVE = "elective"
     BY_MERIT = "by_merit"
+
+
+class FolkDiet(StrEnum):
+    OMNIVORE = "omnivore"
+    HERBIVORE = "herbivore"
+    CARNIVORE = "carnivore"
+    PISCIVORE = "piscivore"
+    SCAVENGER = "scavenger"
+    SANGUIVORE = "sanguivore"
+    LITHOVORE = "lithovore"
+    ESSENCE_FEEDER = "essence_feeder"
+    PHOTOTROPH = "phototroph"
+
+
+class NaturalTrait(StrEnum):
+    DARK_SIGHT = "dark_sight"
+    COLD_BLOODED = "cold_blooded"
+    WINGED = "winged"
+    AMPHIBIOUS = "amphibious"
+    THICK_HIDE = "thick_hide"
+    KEEN_SENSES = "keen_senses"
+    VENOMOUS = "venomous"
+    REGENERATING = "regenerating"
+    BURROWING = "burrowing"
+    HIVE_MINDED = "hive_minded"
+
+
+class FuneralCustom(StrEnum):
+    BURIAL = "burial"
+    CREMATION = "cremation"
+    SKY_BURIAL = "sky_burial"
+    SEA_BURIAL = "sea_burial"
+    ENTOMBMENT = "entombment"
+    ANCESTOR_SHRINE = "ancestor_shrine"
+    ENDOCANNIBALISM = "endocannibalism"
+    REANIMATION = "reanimation"
+    SOUL_BINDING = "soul_binding"

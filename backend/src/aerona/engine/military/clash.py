@@ -14,6 +14,7 @@ from aerona.domain.enums.military import CaptiveFate, CommanderTrait, OutcomeCla
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
+from aerona.engine.demography.biology import battle_edge, profiles_of
 from aerona.engine.ecology.beasts import beast_dread
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import guardians_of
@@ -52,7 +53,16 @@ async def intel_on(ctx: TickContext, owner_id: int, target_id: int) -> int:
 
 
 async def side_of(
-    ctx: TickContext, community: EntityRow, army: EntityRow, row: ArmyRow, *, edge: float, defending: bool, enemy: EntityRow, knowledge: KnowledgeMap
+    ctx: TickContext,
+    community: EntityRow,
+    army: EntityRow,
+    row: ArmyRow,
+    *,
+    edge: float,
+    defending: bool,
+    enemy: EntityRow,
+    knowledge: KnowledgeMap,
+    ground: Field,
 ) -> Side:
     stacks = make_stacks(await muster(ctx, army, community, knowledge))
     profile = await profile_of(ctx, army, community)
@@ -60,6 +70,8 @@ async def side_of(
     lead = await skill_level(ctx, row.commander_entity_id, SkillKind.LEADERSHIP)
     veteran = max([await skill_level(ctx, row.commander_entity_id, skill) for skill in COMBAT_SKILLS] or [0])
     spirit = await faith_spirit(ctx, community, enemy) - await babel(ctx, community) - await beast_dread(ctx, enemy.id)
+    biology, culture = await profiles_of(ctx.session, community)
+    kin = battle_edge(ctx.rules, biology, culture, terrain=ground.terrain, weather=ground.weather, night=ground.night, river=ground.river, defending=defending)
     return Side(
         veteran=table.military_units.veteran_skill_pct / PERCENT * veteran / PERCENT,
         leadership=round(PERCENT * table.morale.leadership_pct / PERCENT * lead / PERCENT) + spirit,
@@ -67,7 +79,7 @@ async def side_of(
         army=army,
         profile=profile,
         stacks=stacks,
-        edge=edge,
+        edge=edge * kin,
         defending=defending,
         skill=await skill_level(ctx, row.commander_entity_id, SkillKind.TACTICS),
         traits=await traits_of(ctx, row.commander_entity_id),
@@ -109,8 +121,8 @@ async def clash(
     knowledge = await KnowledgeMap.load(ctx.session)
     mean = max(1e-6, (powers[0] + powers[1]) / 2)
     edges = [max(EDGE_FLOOR, min(EDGE_CEILING, sqrt(max(0.0, power) / mean))) for power in powers]
-    first = await side_of(ctx, attacker, *armies[attacker.id], edge=edges[0], defending=False, enemy=defender, knowledge=knowledge)
-    second = await side_of(ctx, defender, *armies[defender.id], edge=edges[1], defending=True, enemy=attacker, knowledge=knowledge)
+    first = await side_of(ctx, attacker, *armies[attacker.id], edge=edges[0], defending=False, enemy=defender, knowledge=knowledge, ground=ground)
+    second = await side_of(ctx, defender, *armies[defender.id], edge=edges[1], defending=True, enemy=attacker, knowledge=knowledge, ground=ground)
     result = resolve(ctx.rules, ctx.rng(f"battle.{war_id}.{sequence}"), first, second, ground)
     for side in (first, second):
         sync(side.army, [stack.row for stack in side.stacks], ctx.rules)

@@ -387,9 +387,13 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.name_registry",
     "table.node_materials",
     "table.nodes",
+    "table.people_biology",
+    "table.people_culture",
+    "table.personality_values",
     "table.prostheses",
     "table.routes",
     "table.skills",
+    "table.spirit_profiles",
     "table.traits",
     "table.wars",
     "table.world_maps",
@@ -412,6 +416,7 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.memories",
     "table.name_registry",
     "table.sons",
+    "table.spirit_profiles",
 )
 async def war_casualties(ctx: TickContext) -> None:
     clashes = await clashes_of(ctx)

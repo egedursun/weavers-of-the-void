@@ -350,6 +350,8 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.minds",
     "table.name_registry",
     "table.nodes",
+    "table.people_biology",
+    "table.people_culture",
     "table.personality_values",
     "table.polity_members",
     "table.prostheses",

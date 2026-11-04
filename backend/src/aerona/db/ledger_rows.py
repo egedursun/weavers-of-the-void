@@ -61,6 +61,9 @@ WHITELISTED_TABLES = frozenset(
         "modifiers",
         "incidents",
         "incident_participants",
+        "people_biology",
+        "people_culture",
+        "tradition_profiles",
     }
 )
 PERMANENT_BIRTH_TABLES = frozenset({"sons", "worlds"})

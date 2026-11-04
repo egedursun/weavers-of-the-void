@@ -19,8 +19,11 @@ from aerona.api.schemas.depth_society import (
     HistoryPoint,
     ImmunityView,
     InfrastructureView,
+    KinEffectsView,
     LabourFlowView,
     LabourView,
+    LinkedRecord,
+    MartialRecordView,
     NeighbourCulture,
     OutbreakMapView,
     OutbreakView,
@@ -31,25 +34,44 @@ from aerona.api.schemas.depth_society import (
     StrainView,
     TreasuryLine,
     ValuePoint,
+    WorkFactor,
 )
+from aerona.catalog.peoples import KIN
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, EndemicDiseaseRow, ImmunityRow, OutbreakRow, QuarantineRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
 from aerona.db.tables.society import CommunitySocietyRow
-from aerona.domain.enums.demography import Job
+from aerona.domain.enums.demography import Job, MartialStyle
 from aerona.domain.enums.disease import DiseaseTarget
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis
-from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.engine.body.customs import culture_of, people_of
+from aerona.engine.demography.biology import (
+    battle_edge,
+    edible,
+    food_need,
+    footprint,
+    hunger_level,
+    immunity_factor,
+    job_factors,
+    mount_fit,
+    natures,
+    record_of,
+    scaled,
+)
 from aerona.engine.demography.labour import AGE_WORK, CONDITION_WORK, jobs_for, mobilisation
 from aerona.engine.demography.mobility import inequality
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.knowledge import known_levels
+from aerona.engine.primitives.society import supply_index
 from aerona.engine.primitives.stats import stat
 from aerona.engine.settlement.book import Town
 from aerona.engine.settlement.life import housing_of, slots_of
@@ -140,38 +162,82 @@ async def demography(services: ServicesDep, entity_id: int = Path(ge=1)) -> Demo
             flows=flows,
             pressures=pressures,
             classes=classes,
-            biology=BiologyView(
-                maturity_years=biology.maturity_years,
-                adult_years=biology.adult_years,
-                elder_years=biology.elder_years,
-                fertility_pct=biology.fertility_pct,
-                acclimatised=biology.acclimatised,
-                staple=biology.staple,
-                traits=list(biology.traits),
-                locked=list(biology.locked),
-            )
-            if biology is not None
-            else None,
-            culture=CultureView(
-                cohesion=culture.cohesion,
-                literacy=culture.literacy,
-                urbanisation=culture.urbanisation,
-                aesthetic=culture.aesthetic,
-                martial_style=culture.martial_style,
-                marriage=culture.marriage,
-                endogamous=culture.endogamous,
-                inheritance=culture.inheritance,
-                slavery_lawful=culture.slavery_lawful,
-                staples=list(culture.staples),
-                locked=list(culture.locked),
-            )
-            if culture is not None
-            else None,
+            biology=await biology_view(session, rules, entity, biology, culture) if biology is not None else None,
+            culture=await culture_view(session, culture) if culture is not None else None,
             values=values_list(values),
             neighbours=await neighbours_of(session, people) if people is not None else [],
             inequality=inequality(society) if society is not None else 0,
             mobilisation_pct=round(await mobilisation(session, rules, entity, harvest_share=0.0) * PERCENT),
         )
+
+
+async def linked_record(session: AsyncSession, entity_id: int | None) -> LinkedRecord | None:
+    found = await session.get(EntityRow, entity_id) if entity_id is not None else None
+    return LinkedRecord(id=found.id, name=found.name) if found is not None else None
+
+
+async def biology_view(session: AsyncSession, rules: Rules, community: EntityRow, biology: PeopleBiologyRow, culture: PeopleCultureRow | None) -> BiologyView:
+    atlas = await RegionAtlas.load(session)
+    region = atlas.top_region(community.id)
+    ground = await session.get(RegionEnvironmentRow, region) if region is not None else None
+    magic = (await known_levels(session, [community.id])).get(community.id, {}).get(KnowledgeBranch.MAGIC, 0)
+    hunger = hunger_level(rules, biology, ground, await supply_index(session, community.id, Commodity.FOOD), magic)
+    neutral = battle_edge(rules, biology, None, terrain=None, weather=None, night=False, river=False, defending=False)
+    fleet = scaled(KIN[biology.body_plan].naval_pct / PERCENT, rules.biology.naval_pct)
+    immunities = [found for found in [await linked_record(session, item) for item in biology.immunities] if found is not None]
+    return BiologyView(
+        maturity_years=biology.maturity_years,
+        adult_years=biology.adult_years,
+        elder_years=biology.elder_years,
+        fertility_pct=biology.fertility_pct,
+        acclimatised=biology.acclimatised,
+        staple=biology.staple,
+        traits=sorted(natures(biology), key=lambda item: item.value),
+        immunities=immunities,
+        body_plan=biology.body_plan,
+        size_class=biology.size_class,
+        diet=biology.diet,
+        edible=sorted(edible(biology.diet), key=lambda item: item.value),
+        effects=KinEffectsView(
+            food_pct=round(food_need(rules, biology) * PERCENT),
+            room_pct=round(footprint(rules, biology) * PERCENT),
+            strength_pct=round(neutral * PERCENT),
+            disease_pct=round(immunity_factor(rules, biology, culture, 0) * PERCENT),
+            fleet_pct=round(fleet * PERCENT),
+            mount=mount_fit(biology).value,
+            hunger_pct=round(hunger * PERCENT),
+            work=[WorkFactor(job=job, pct=round(value * PERCENT)) for job, value in sorted(job_factors(rules, biology).items())],
+        ),
+        locked=list(biology.locked),
+    )
+
+
+async def culture_view(session: AsyncSession, culture: PeopleCultureRow) -> CultureView:
+    record = [
+        MartialRecordView(style=MartialStyle(style), wins=int(entry[0]), losses=int(entry[1]) if len(entry) > 1 else 0)
+        for style, entry in sorted((culture.martial_record or {}).items())
+        if style in MartialStyle._value2member_map_ and entry
+    ]
+    wins, losses = record_of(culture, culture.martial_style.value)
+    return CultureView(
+        cohesion=culture.cohesion,
+        literacy=culture.literacy,
+        urbanisation=culture.urbanisation,
+        aesthetic=culture.aesthetic,
+        martial_style=culture.martial_style,
+        marriage=culture.marriage,
+        endogamous=culture.endogamous,
+        inheritance=culture.inheritance,
+        slavery_lawful=culture.slavery_lawful,
+        staples=[CommodityKind(item) for item in culture.staples if item in CommodityKind._value2member_map_],
+        liturgical_language=await linked_record(session, culture.liturgical_language_id),
+        trade_language=await linked_record(session, culture.trade_language_id),
+        funeral_rite=culture.funeral_rite,
+        funeral_tradition=await linked_record(session, culture.funeral_rite_id),
+        martial_record=record,
+        martial_net=wins - losses,
+        locked=list(culture.locked),
+    )
 
 
 def outbreak_views(rows: list[OutbreakRow], names: dict[int, str], sources: dict[int, int]) -> list[OutbreakView]:
