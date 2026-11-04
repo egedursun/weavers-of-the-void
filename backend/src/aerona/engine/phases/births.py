@@ -25,6 +25,7 @@ from aerona.engine.mind.space import value_distance
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.settlements import resettle_ruin
+from aerona.engine.polity.houses import bloodline_fertility
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
@@ -758,6 +759,8 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
     "table.bodies",
     "table.bonds",
     "table.epoch_year_cursors",
+    "table.house_members",
+    "table.house_profiles",
     "table.language_profiles",
     "table.lexemes",
     "table.name_registry",
@@ -795,6 +798,7 @@ async def couples_bear_children(ctx: TickContext) -> None:
         fertile = await factor(ctx.session, first.id, Capacity.FERTILITY) * await factor(ctx.session, second.id, Capacity.FERTILITY)
         for parent in (first, second):
             fertile *= scaled_by(await effect_of(ctx.session, parent.id, TraitEffect.FERTILITY, rules.traits.effect_scale_pct))
+        fertile *= await bloodline_fertility(ctx.session, rules, first.id, second.id)
         if not rng.chance(rules.world_engine.birth_chance * fertile):
             continue
         await bear_child(ctx, first, second, namer)

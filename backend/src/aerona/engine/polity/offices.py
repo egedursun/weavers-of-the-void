@@ -29,7 +29,7 @@ from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook, sex_of
 from aerona.engine.polity.formation import set_ruler
 from aerona.engine.polity.laws import LawBook
-from aerona.engine.polity.oaths import swear
+from aerona.engine.polity.oaths import break_on, swear
 from aerona.engine.polity.repute import shift_infamy
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, bond_exists, close, connect, has_flag, living_entity
@@ -140,6 +140,8 @@ async def appoint(ctx: TickContext, realm: Realm, office: OfficeRow, holder: Ent
     office.since_epoch = ctx.epoch
     if holder is not None and ctx.rules.oaths.fealty_on_office and realm.ruler_id is not None and holder.id != realm.ruler_id:
         await swear(ctx, holder, OathKind.FEALTY, recipient_id=realm.ruler_id, note_text=f"as {office.kind.value.replace('_', ' ')} of {realm.entity.name}")
+    if holder is not None and ctx.rules.oaths.silence_on_office and OfficePower.SPY in powers_of(office):
+        await swear(ctx, holder, OathKind.SILENCE, recipient_id=realm.entity.id, note_text="the secrets of the realm")
 
 
 def province_seats(book: RealmBook, realm: Realm) -> list[int]:
@@ -637,6 +639,8 @@ async def seize_throne(ctx: TickContext, realm: Realm, usurper: EntityRow, reaso
         await connect(ctx.session, usurper.id, core, BondKind.RULES, ctx.epoch, description="seized")
     set_ruler(ctx, realm, usurper.id, reason, usurped=True)
     realm.profile.legitimacy_parts = {**realm.profile.legitimacy_parts, "usurper": ctx.epoch}
+    if ruler is not None:
+        await break_on(ctx, [usurper.id], OathKind.FEALTY, "the oath-sworn seized the throne", recipient_id=ruler.id)
     await shift_infamy(ctx, usurper.id, ctx.rules.legitimacy.usurper_infamy)
     ids = [usurper.id, realm.entity.id, *([ruler.id] if ruler is not None else []), *([backer_id] if backer_id is not None else [])]
     fallen = f" from {ruler.name}" if ruler is not None else ""

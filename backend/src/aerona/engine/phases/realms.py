@@ -6,10 +6,10 @@ from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.formation import refresh_realms
 from aerona.engine.polity.governance import agenda, collect, conquest_conflict, cult_laws, enforce, law_effects, proposals, repeal_discord
-from aerona.engine.polity.houses import HouseBook, arrange_marriages, gather_kin, seed_houses, tend
+from aerona.engine.polity.houses import HouseBook, arrange_marriages, conquest_claims, dynasty_backfill, fabricate_claims, gather_kin, seed_houses, tend
 from aerona.engine.polity.law_effects import realm_coinage
 from aerona.engine.polity.laws import LawBook, backfill_kinds, ensure_profile
-from aerona.engine.polity.oaths import lapse, pledges
+from aerona.engine.polity.oaths import lapse, pledges, vows
 from aerona.engine.polity.offices import coups, name_heir, office_effects, press_claims, purge, regency, staff, succession_line
 from aerona.engine.polity.pacts import outer_pacts
 from aerona.engine.polity.standing import administration, legitimacy, overreach, rank, realm_tier, secede, settle, stability
@@ -110,6 +110,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.designated_heirs",
     "table.districts",
     "table.entities",
+    "table.entity_flags",
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
@@ -129,6 +130,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.polity_treasury",
     "table.settlement_profiles",
     "table.settlement_treasury",
+    "table.sons",
     "table.war_aims",
     "table.war_sides",
     "table.wars",
@@ -183,22 +185,37 @@ async def polity_cycles(ctx: TickContext) -> None:
 
 @reads(
     "mortal.age",
+    "mortal.lifespan",
+    "mortal.strength",
+    "settlement.prosperity",
+    "table.applied_fixups",
     "table.bonds",
     "table.claims",
     "table.culture_values",
+    "table.entity_flags",
     "table.epoch_year_cursors",
     "table.heirlooms",
+    "table.hero_quests",
     "table.house_members",
     "table.house_profiles",
     "table.injuries",
+    "table.law_jurisdictions",
+    "table.law_profiles",
+    "table.memories",
+    "table.mortal_repute",
     "table.name_registry",
     "table.nodes",
     "table.offices",
+    "table.people_culture",
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
+    "table.sentences",
+    "table.sons",
     "table.speaker_cohorts",
+    "table.traits",
     "table.vassalages",
+    "table.wars",
     "table.world_maps",
 )
 @writes(
@@ -213,12 +230,16 @@ async def polity_cycles(ctx: TickContext) -> None:
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.heirlooms",
+    "table.hero_quests",
     "table.house_members",
     "table.house_profiles",
     "table.incident_participants",
     "table.incidents",
+    "table.memories",
+    "table.mortal_repute",
     "table.name_registry",
     "table.oaths",
+    "table.sons",
     "table.treaty_breaches",
     "table.treaty_clauses",
     "table.treaty_parties",
@@ -228,6 +249,9 @@ async def house_cycles(ctx: TickContext) -> None:
     realms = await RealmBook.load(ctx.session)
     book = await HouseBook.load(ctx)
     ctx.count("houses_founded", await seed_houses(ctx, book, realms))
+    ctx.count("dynasty_ancestors", await dynasty_backfill(ctx, book))
+    ctx.count("conquest_claims", await conquest_claims(ctx, realms))
+    ctx.count("fabricated_claims", await fabricate_claims(ctx, realms))
     ctx.count("kin_joined", await gather_kin(ctx, book))
     for key, value in (await tend(ctx, book, realms)).items():
         ctx.count(key, value)
@@ -264,6 +288,8 @@ async def house_cycles(ctx: TickContext) -> None:
     "table.community_relations",
     "table.community_societies",
     "table.community_stocks",
+    "table.cult_tenets",
+    "table.entity_flags",
     "table.foreign_gods",
     "table.language_intelligibility",
     "table.law_jurisdictions",
@@ -304,6 +330,7 @@ async def house_cycles(ctx: TickContext) -> None:
     "table.community_societies",
     "table.community_stocks",
     "table.entities",
+    "table.entity_flags",
     "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
@@ -312,6 +339,7 @@ async def house_cycles(ctx: TickContext) -> None:
     "table.name_registry",
     "table.oaths",
     "table.polity_profiles",
+    "table.sons",
     "table.treaty_breaches",
     "table.treaty_clauses",
     "table.treaty_parties",
@@ -338,6 +366,7 @@ async def treaty_cycles(ctx: TickContext) -> None:
     ctx.count("champions", await champions(ctx))
     rulers = {member: realm.ruler_id for realm in book.realms.values() if realm.ruler_id is not None for member in realm.members}
     ctx.count("pledges", await pledges(ctx, rulers))
+    ctx.count("vows", await vows(ctx))
     kept, broken = await lapse(ctx)
     ctx.count("oaths_kept", kept)
     ctx.count("oaths_broken", broken)

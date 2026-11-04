@@ -15,7 +15,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
-from aerona.domain.enums.polity import LawKind, RegionalStanding
+from aerona.domain.enums.polity import LawKind, OathKind, RegionalStanding
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.body.customs import customs_of, maimed_for_rule, presence_pct
@@ -24,6 +24,7 @@ from aerona.engine.lore.items import regalia_holder
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook
+from aerona.engine.polity.oaths import break_on
 from aerona.engine.polity.repute import repute_of
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -254,6 +255,15 @@ async def overreach(ctx: TickContext, book: RealmBook, realm: Realm, capacity: i
 
 
 async def secede(ctx: TickContext, book: RealmBook, realm: Realm, member: EntityRow) -> None:
+    if realm.ruler_id is not None:
+        sworn = list(
+            await ctx.session.scalars(
+                select(EntityRow.id).where(
+                    EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == member.id
+                )
+            )
+        )
+        await break_on(ctx, sworn, OathKind.FEALTY, f"{member.name} broke away", recipient_id=realm.ruler_id)
     row = realm.members.pop(member.id, None)
     if row is not None:
         await ctx.session.delete(row)

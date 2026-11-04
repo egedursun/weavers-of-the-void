@@ -10,8 +10,8 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityType
-from aerona.domain.enums.polity import RevoltKind
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.polity import OathKind, RevoltKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import FactionStats
@@ -22,6 +22,7 @@ from aerona.engine.mind.drives import unrest
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.community import CommunityBook
+from aerona.engine.polity.oaths import break_on
 from aerona.engine.polity.revolts import REVOLT_AIMS, seed_aims
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
@@ -112,6 +113,14 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
         ),
     )
     target = await uprising_target(ctx.session, settlement)
+    sworn = list(
+        await ctx.session.scalars(
+            select(EntityRow.id).where(
+                EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == settlement.id
+            )
+        )
+    )
+    await break_on(ctx, sworn, OathKind.FEALTY, f"{settlement.name} rose in revolt")
     cause = WarCause.INDEPENDENCE if kind is RevoltKind.SECESSION else WarCause.UPRISING
     if await declare_war(ctx, rebels.id, target.id, f"{kind.value} revolt", cause=cause, world_cap=False):
         await seed_aims(ctx, rebels.id, target.id, REVOLT_AIMS[kind])
@@ -146,12 +155,16 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.holder_levels",
     "table.name_registry",
     "table.nodes",
+    "table.oaths",
     "table.polity_members",
     "table.polity_profiles",
     "table.pressures",
     "table.settlement_profiles",
     "table.traits",
     "table.tributes",
+    "table.war_aims",
+    "table.war_sides",
+    "table.wars",
 )
 @writes(
     "settlement.defense",
@@ -160,10 +173,15 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
+    "table.entity_flags",
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.memories",
+    "table.mortal_repute",
     "table.name_registry",
+    "table.oaths",
+    "table.war_aims",
 )
 async def uprisings(ctx: TickContext) -> None:
     settings = ctx.rules.society
