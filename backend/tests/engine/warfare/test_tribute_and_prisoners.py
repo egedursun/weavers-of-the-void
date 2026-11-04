@@ -73,7 +73,7 @@ async def test_ransom_pays_captor_and_frees_prisoner(session: AsyncSession, worl
     rules = tune(Rules(), campaigns={**NEVER, "ransom_chance": 100})
     row, home, captor, hero = await held(session, world_id, rules)
     await prisoners(make_ctx(session, rules, epoch=6))
-    assert row.status is CaptiveStatus.RANSOMED and row.ransom_paid == rules.campaigns.ransom_cost
+    assert row.status is CaptiveStatus.RANSOMED and row.ransom_paid == rules.captive_depth.named_ransom
     assert not await BondRepository(session).exists_between(captor, hero, BondKind.HOLDS_CAPTIVE)
     assert await relation(session, rules, home, captor) > 0
 

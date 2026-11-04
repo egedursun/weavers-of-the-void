@@ -198,7 +198,6 @@ class HousesRules:
     anchor_per_member: int = rule(1, 0, 100, H, "Existence a god's living bloodline lends it per member each epoch")
     anchor_cap: int = rule(5, 0, 100, H, "Most existence a bloodline lends its god each epoch")
     anchor_loss: int = rule(10, 0, 100, H, "Existence a god loses when its bloodline dies out")
-    ransom_by_house: int = rule(1, 0, 1, H, "A captive's house pays the ransom from its wealth when it can (1 yes)")
     conquest_claim: int = rule(40, 0, 100, H, "Strength of the claim a conqueror's ruler gains on the conquered realm")
     fabricate_chance: int = rule(15, 0, 100, H, "An ambitious ruler with a skilled spymaster forges a claim in an epoch (%)")
     fabricated_claim: int = rule(50, 0, 100, H, "Strength of a forged claim made by a fully skilled spymaster")

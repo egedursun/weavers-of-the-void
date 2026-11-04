@@ -21,10 +21,11 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, 
 from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitKind
 from aerona.domain.enums.polity import GenderRule, LawKind, OathKind, OfficeKind, OfficePower, SuccessionRule, TreatyStatus
 from aerona.domain.enums.society import SocialClass
-from aerona.domain.enums.war import WarCause, WarSide, WarStatus
+from aerona.domain.enums.war import WarSide
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.causes import succession_incident
+from aerona.engine.military.causes import press_claim_war
 from aerona.engine.mind.book import traits_of
 from aerona.engine.mortal.kin import children_of, siblings_of
 from aerona.engine.notes import note
@@ -38,7 +39,7 @@ from aerona.engine.primitives.queries import active_bonds, bond_exists, close, c
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
 from aerona.engine.services.community_relations import change_relation, relation
-from aerona.engine.services.war import declare_war, war_event
+from aerona.engine.services.war import war_event
 from aerona.rules.registry import Rules
 
 S = SkillKind
@@ -531,17 +532,10 @@ async def press_claims(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
         )
         claim.backer_entity_id = host.id
         await connect(ctx.session, claimant.id, host.id, BondKind.MEMBER_OF, ctx.epoch, description="claimant")
-        if not await declare_war(ctx, host.id, core.id, f"{claimant.name} pressed a claim to {realm.entity.name}", cause=WarCause.UPRISING, world_cap=False):
+        war = await press_claim_war(ctx, host.id, core.id, claim_id=claim.id, succession=True, reason=f"{claimant.name} pressed a claim to {realm.entity.name}")
+        if war is None:
             continue
-        war = await ctx.session.scalar(
-            select(WarRow)
-            .join(WarSideRow, WarSideRow.war_id == WarRow.id)
-            .where(WarSideRow.entity_id == host.id, WarRow.status == WarStatus.ONGOING)
-            .order_by(WarRow.id.desc())
-            .limit(1)
-        )
-        if war is not None:
-            ctx.count("houses_took_sides", await house_sides(ctx, realm, war, claimant.id, host.id))
+        ctx.count("houses_took_sides", await house_sides(ctx, realm, war, claimant.id, host.id))
         wars += 1
         await note(
             ctx,

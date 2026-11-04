@@ -21,6 +21,7 @@ class BattleGround:
     weather: Weather | None = None
     year: int | None = None
     night: bool = False
+    urban: bool = False
     site_id: int | None = None
 
     @property
@@ -29,6 +30,8 @@ class BattleGround:
 
     @property
     def terrain(self) -> TerrainKind | None:
+        if self.urban:
+            return TerrainKind.URBAN
         if self.place is not None and self.place.terrain is not None:
             return self.place.terrain
         return self.region.dominant_terrain if self.region is not None else None

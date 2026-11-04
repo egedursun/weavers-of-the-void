@@ -13,6 +13,7 @@ from aerona.domain.enums.world import LoreLanguage
 from aerona.domain.models.genesis import GenesisSettings
 from aerona.domain.models.profiles import TravelResource
 from aerona.rules.registry import Rules
+from aerona.rules.registry.war_depth import RENAMED_RULES
 from aerona.rules.snapshot import apply_overrides
 
 RulesSnapshot = dict[str, dict[str, float]]
@@ -23,7 +24,7 @@ def snapshot_rules(rules: Rules) -> RulesSnapshot:
 
 
 def rules_from_snapshot(snapshot: RulesSnapshot) -> Rules:
-    overrides = {(namespace, key): value for namespace, values in snapshot.items() for key, value in values.items()}
+    overrides = {RENAMED_RULES.get((namespace, key), (namespace, key)): value for namespace, values in snapshot.items() for key, value in values.items()}
     return apply_overrides(Rules(), overrides)
 
 

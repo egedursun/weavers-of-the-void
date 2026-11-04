@@ -82,13 +82,14 @@ async def intelligibility(session: AsyncSession, rules: Rules, first: int | None
     return row.value
 
 
-async def interpreter(session: AsyncSession, rules: Rules, *communities: int) -> bool:
+async def interpreter(session: AsyncSession, rules: Rules, *communities: int, tongues: set[int] | None = None) -> bool:
     mortals = select(EntityRow.id).where(
         EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id.in_(communities)
     )
+    subject = SkillRow.subject_node_id.is_(None) if not tongues else (SkillRow.subject_node_id.is_(None) | SkillRow.subject_node_id.in_(list(tongues)))
     found = await session.scalar(
         select(SkillRow.holder_node_id)
-        .where(SkillRow.skill == SkillKind.LANGUAGES, SkillRow.level >= rules.interpreters.interpreter_skill, SkillRow.holder_node_id.in_(mortals))
+        .where(SkillRow.skill == SkillKind.LANGUAGES, SkillRow.level >= rules.interpreters.interpreter_skill, SkillRow.holder_node_id.in_(mortals), subject)
         .limit(1)
     )
     return found is not None
@@ -111,7 +112,7 @@ async def barrier(session: AsyncSession, rules: Rules, first: int, second: int, 
     best = max([await intelligibility(session, rules, one, other, epoch) for one in ours for other in theirs] or [SAME])
     if best >= SAME:
         return 1.0
-    if await interpreter(session, rules, first, second):
+    if await interpreter(session, rules, first, second, tongues=ours | theirs):
         return 1.0
     floor = rules.interpreters.barrier_floor_pct / PERCENT
     return floor + (1 - floor) * best / PERCENT

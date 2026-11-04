@@ -53,6 +53,7 @@ from aerona.services.player import (
     memory,
     messages,
     military,
+    military_depth,
     mind,
     modifiers,
     mortals,
@@ -69,6 +70,7 @@ from aerona.services.player import (
     society,
     son_tools,
     urban,
+    variants,
     warfare,
     wilds,
     world_edits,
@@ -1032,6 +1034,13 @@ MIND_ACTIONS = (
     _sync(Meta("mind:memory_remove", "Erase a memory", G.ENTITIES), mind.forget_memory, mind.MemoryTarget, free, ("F7",)),
     _sync(Meta("mind:need", "Set and hold a mortal's need", G.ENTITIES), mind.set_need, mind.SetNeed, free, ("F8",)),
     _sync(Meta("mind:pressure", "Set and hold a pressure on a community", G.SOCIETY), mind.set_pressure, mind.SetPressure, free, ("F8",)),
+    _sync(Meta("variant:create", "Forge a new kind of trait, skill or state", G.ENTITIES), variants.create_variant, variants.CreateVariant, free, ("F9",)),
+    _sync(Meta("variant:edit", "Reshape and hold a world-made kind", G.ENTITIES), variants.edit_variant, variants.EditVariant, free, ("F9",)),
+    _sync(
+        Meta("variant:release", "Let a held part of a world-made kind change again", G.ENTITIES), variants.release_variant, variants.VariantField, free, ("F9",)
+    ),
+    _sync(Meta("variant:delete", "Unmake a world-made kind", G.ENTITIES), variants.delete_variant, variants.VariantTarget, free, ("F9",)),
+    _sync(Meta("variant:assign", "Give a skill or condition a made kind", G.ENTITIES), variants.assign_variant, variants.AssignVariant, free, ("F9",)),
     _sync(Meta("mind:skill_edit", "Change a skill's subject, practice and peak", G.ENTITIES), mind.edit_skill, mind.EditSkill, free, ("F6",)),
     _sync(Meta("body:condition_edit", "Change how heavy a condition lies", G.ENTITIES), body.edit_condition, body.EditCondition, free, ("F4.5",)),
     _sync(Meta("body:prosthesis_edit", "Change a prosthesis's make and quality", G.ENTITIES), body.edit_prosthesis, body.EditProsthesis, free, ("F4.5",)),
@@ -1154,6 +1163,67 @@ ECONOMY_ACTIONS = (
     _sync(Meta("captives:settle", "Decide the fate of captives", G.WARFARE), military.settle_captives, military.SettleCaptives, free, ("S5.7",)),
     _sync(Meta("commander:trait", "Give or take a battle trait", G.WARFARE), military.commander_trait, military.CommanderTraitOrder, free, ("S5.1",)),
     _sync(Meta("spy:edit_network", "Edit or roll up a spy network", G.WARFARE), military.edit_network, military.EditNetwork, free, ("S5.10",)),
+    _sync(
+        Meta("military:create", "Create a military record: unit design, stack, officer, contract, siege, aim, captives, spy network or agent, feud", G.WARFARE),
+        military_depth.create,
+        military_depth.RecordCreate,
+        free,
+        ("S5.1", "S5.4", "S5.7", "S5.9", "S5.10"),
+    ),
+    _sync(
+        Meta("military:edit", "Edit and hold any value of a military record", G.WARFARE),
+        military_depth.edit,
+        military_depth.RecordEdit,
+        free,
+        ("S5.1", "S5.4", "S5.7", "S5.8", "S5.9", "S5.10", "S7.3"),
+    ),
+    _sync(
+        Meta("military:release", "Release held values of a military record", G.WARFARE),
+        military_depth.release,
+        military_depth.RecordRelease,
+        free,
+        ("S5.1", "S5.4", "S5.7", "S5.8", "S5.9", "S5.10", "S7.3"),
+    ),
+    _sync(
+        Meta("military:delete", "Strike out a military record", G.WARFARE),
+        military_depth.delete,
+        military_depth.RecordDelete,
+        free,
+        ("S5.1", "S5.4", "S5.7", "S5.8", "S5.9", "S5.10"),
+    ),
+    _sync(
+        Meta("army:raise", "Raise an army for a community, in war or in peace", G.WARFARE), military_depth.raise_army, military_depth.RaiseArmy, free, ("S5.1",)
+    ),
+    _sync(
+        Meta("army:assign", "Set an army's commander and the community it serves", G.WARFARE),
+        military_depth.assign,
+        military_depth.ArmyCommand,
+        free,
+        ("S5.1",),
+    ),
+    _sync(Meta("war:battle_at", "Force a battle at a chosen region", G.WARFARE), military_depth.battle_at, military_depth.BattleAt, free, ("S5.2", "S5.3")),
+    _sync(Meta("siege:start", "Lay siege to a settlement with an army", G.WARFARE), military_depth.siege_start, military_depth.SiegeStart, free, ("S5.4",)),
+    _sync(Meta("war:declare", "Declare a war with a cause and its aims", G.WARFARE), military_depth.declare, military_depth.DeclareWar, free, ("S5.8",)),
+    _sync(Meta("war:peace", "Make peace with chosen terms and clauses", G.WARFARE), military_depth.peace, military_depth.PeaceBuild, free, ("S5.8",)),
+    _sync(
+        Meta("vessel:create", "Lay down a new vessel to a hull design", G.WARFARE), military_depth.vessel_create, military_depth.VesselOrder, free, ("S7.3",)
+    ),
+    _sync(
+        Meta("vessel:refit", "Refit a vessel to another hull, arms and materials", G.WARFARE),
+        military_depth.vessel_refit,
+        military_depth.VesselRefit,
+        free,
+        ("S7.3",),
+    ),
+    _sync(Meta("vessel:repair", "Repair a vessel at its home shipyard", G.WARFARE), military_depth.vessel_repair, military_depth.VesselTarget, free, ("S7.3",)),
+    _sync(Meta("captive:take", "Take a named mortal captive", G.WARFARE), military_depth.captive_take, military_depth.CaptiveTake, free, ("S5.7",)),
+    _sync(
+        Meta("war:ordeal", "Order an ordeal: an honour duel, a trial by combat or a duel of gods' champions", G.WARFARE),
+        military_depth.ordeal,
+        military_depth.Ordeal,
+        free,
+        ("S5.6",),
+    ),
     _sync(Meta("cult:doctrine", "Edit a faith's orthodoxy, tithes, clergy and judgement", G.SOCIETY), faith.edit_doctrine, faith.EditDoctrine, free, ("S4.4",)),
     _sync(
         Meta("cult:reset_doctrine", "Unwrite a faith's doctrine and let it be taught anew", G.SOCIETY), faith.reset_doctrine, faith.CultTarget, free, ("S4.4",)

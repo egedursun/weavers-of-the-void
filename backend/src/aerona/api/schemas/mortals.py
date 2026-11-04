@@ -1,6 +1,7 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.mind import KindFamily, Profession
 from aerona.domain.enums.mortal import (
     Ability,
     CareerPath,
@@ -64,6 +65,7 @@ class MortalProfileView(ApiModel):
     loyalty_community: int
     loyalty_god: int
     career: CareerPath | None
+    profession: Profession | None
     last_break: StressBreak | None
     last_break_epoch: int | None
     cause_of_death: DeathCause | None
@@ -74,6 +76,17 @@ class MortalProfileView(ApiModel):
     kin: list[KinLink]
     equipment: list[SlotView]
     stress_threshold: int
+
+
+class VariantView(ApiModel):
+    id: int
+    family: KindFamily
+    base: str
+    name: str
+    description: str | None
+    strength_pct: int
+    learning_pct: int
+    held: list[str]
 
 
 class TreePerson(ApiModel):

@@ -30,8 +30,10 @@ from aerona.engine.demography.labour import fighting_age, mobilisation
 from aerona.engine.economy.equipment import equip_army
 from aerona.engine.gods.incitement import held_incitement
 from aerona.engine.interconnect.flows import flowing
+from aerona.engine.military.units import muster, resize
 from aerona.engine.mind.hooks import freed, taken_captive
 from aerona.engine.polity.accords import Clause, sign
+from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.levies import levy, levy_category
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -469,6 +471,7 @@ async def raise_army(ctx: TickContext, strength: MilitaryStrength, sides: SideIn
         raised_epoch=ctx.epoch,
     )
     ctx.session.add(row)
+    await muster(ctx, army, community, await KnowledgeMap.load(ctx.session))
     bonds = BondRepository(ctx.session)
     await bonds.connect(BondDraft(army.id, community.id, BondKind.PROTECTS, ctx.epoch, "serves"))
     await bonds.connect(BondDraft(army.id, event.id, BondKind.PART_OF, ctx.epoch, "army", war_id=war.id))
@@ -489,7 +492,7 @@ async def mobilize_watch(ctx: TickContext, strength: MilitaryStrength, community
         row.war_id = war.id
         await EntityRepository(ctx.session).remove_flag(army.id, EntityFlag.ON_WATCH)
         size = clamp_int(soldier_count(ctx.rules, strength, community), ctx.rules.campaigns.army_min_soldiers, ctx.rules.limits.army_soldier_cap)
-        set_stats(army, size=max(stat(army, "size") or 0, size))
+        await resize(ctx.session, ctx.rules, army, max(stat(army, "size") or 0, size))
         event = await war_event(ctx.session, war)
         await BondRepository(ctx.session).connect(BondDraft(army.id, event.id, BondKind.PART_OF, ctx.epoch, "army", war_id=war.id))
         await ctx.session.flush()

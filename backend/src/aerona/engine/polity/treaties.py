@@ -159,7 +159,7 @@ async def call_guarantors(ctx: TickContext, profile: TreatyProfileRow, breaker: 
         guarantor = await living_entity(ctx.session, party.party_node_id)
         if guarantor is None or not ctx.rng(f"guarantor.{profile.treaty_entity_id}.{guarantor.id}").chance(ctx.rules.treaties.guarantor_chance):
             continue
-        if await declare_war(ctx, guarantor.id, breaker.id, f"{guarantor.name} stood by its guarantee"):
+        if await declare_war(ctx, guarantor.id, breaker.id, f"{guarantor.name} stood by its guarantee", cause=WarCause.PUNITIVE):
             joined += 1
     return joined
 
@@ -389,7 +389,7 @@ async def guard(ctx: TickContext, profile: TreatyProfileRow) -> int:
                 if attacker is None or guarantor == attacker or guarantor in wards:
                     continue
                 willing = ctx.rng(f"guard.{profile.treaty_entity_id}.{guarantor}.{war.id}").chance(ctx.rules.treaties.guarantor_chance)
-                if willing and await declare_war(ctx, guarantor, attacker, "it stood by the land it guaranteed"):
+                if willing and await declare_war(ctx, guarantor, attacker, "it stood by the land it guaranteed", cause=WarCause.PUNITIVE):
                     joined += 1
     return joined
 

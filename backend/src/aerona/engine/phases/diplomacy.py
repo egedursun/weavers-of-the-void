@@ -480,6 +480,7 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.war_sides",
     "table.wars",
 )
+@reads("table.feuds")
 @writes("table.memories", "table.sons")
 async def diplomacy(ctx: TickContext) -> None:
     ctx.count("alliances_lapsed", await alliance_lifetimes(ctx))

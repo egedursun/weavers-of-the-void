@@ -1,0 +1,197 @@
+import { Flag, Skull, Swords } from 'lucide-react'
+import { formatInteger } from '@/lib/format'
+import { Badge } from '@/components/ui/badge'
+import { EntityLink, MiniStat, StatBar } from '@/components/domain'
+import { Label, Muted, Text } from '@/components/typography'
+import {
+  FATE_OF,
+  MAGIC_PART,
+  MORALE_PART,
+  nameOf,
+  useBattleDepth,
+} from './depth'
+import { Tag } from './parts'
+
+function Signed({ value }: { value: number }) {
+  return (
+    <Text
+      as='span'
+      variant='caption'
+      className={value < 0 ? 'text-destructive' : 'text-success'}
+    >
+      {value > 0 ? `+${value}` : value}
+    </Text>
+  )
+}
+
+export function BattleDepthPanel({
+  battleId,
+  sides,
+}: {
+  battleId: number
+  sides: Record<string, string>
+}) {
+  const query = useBattleDepth(battleId)
+  const depth = query.data
+  if (!depth) return null
+  const magic = Object.entries(depth.magic).filter(([, value]) => value > 0)
+  const factors = Object.entries(depth.tactic_factors).filter(
+    ([key]) => !key.endsWith('_flank')
+  )
+  const flanks = Object.entries(depth.tactic_factors).filter(
+    ([key, value]) => key.endsWith('_flank') && value > 0
+  )
+  return (
+    <div data-surface='BattleDepth' className='flex min-w-0 flex-col gap-3'>
+      {factors.length > 0 && (
+        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+          <Label>Tactic counters</Label>
+          {factors.map(([side, value]) => (
+            <Badge
+              key={side}
+              size='sm'
+              variant={
+                value >= 1.05
+                  ? 'success'
+                  : value <= 0.95
+                    ? 'destructive'
+                    : 'secondary'
+              }
+            >
+              {side === 'attacker' ? 'Attackers' : 'Defenders'} ×
+              {value.toFixed(2)}
+            </Badge>
+          ))}
+          {flanks.map(([key]) => (
+            <Badge key={key} size='sm' variant='warning'>
+              <Flag aria-hidden='true' />
+              {key.startsWith('attacker') ? 'Attackers' : 'Defenders'} turned
+              the flank
+            </Badge>
+          ))}
+        </div>
+      )}
+      {magic.length > 0 && (
+        <div className='flex min-w-0 flex-wrap gap-1.5'>
+          {magic.map(([key, value]) => (
+            <Tag
+              key={key}
+              item={{
+                ...nameOf(MAGIC_PART, key),
+                label: `${nameOf(MAGIC_PART, key).label}: ${value}`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+      {Object.keys(depth.morale).length > 0 && (
+        <div className='grid min-w-0 grid-cols-1 gap-2 @lg/mil:grid-cols-2'>
+          {Object.entries(depth.morale).map(([side, parts]) => (
+            <div
+              key={side}
+              className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-background p-2.5'
+            >
+              <Label variant='overline'>
+                {sides[side] ?? 'A side'}: morale
+              </Label>
+              <div className='flex min-w-0 flex-wrap gap-1.5'>
+                {Object.entries(parts)
+                  .filter(([, value]) => value !== 0)
+                  .map(([key, value]) => {
+                    const item = nameOf(MORALE_PART, key)
+                    const Icon = item.icon
+                    return (
+                      <Badge key={key} size='sm' variant='secondary'>
+                        <Icon aria-hidden='true' />
+                        {item.label}
+                        {key === 'willpower' ? (
+                          <Text as='span' variant='caption'>
+                            {value}
+                          </Text>
+                        ) : (
+                          <Signed value={value} />
+                        )}
+                      </Badge>
+                    )
+                  })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {depth.stacks.length > 0 && (
+        <div className='flex min-w-0 flex-col gap-1.5'>
+          <Label>Losses by stack</Label>
+          <div className='grid min-w-0 grid-cols-1 gap-1.5 @lg/mil:grid-cols-2'>
+            {depth.stacks.map((stack, index) => (
+              <div
+                key={`${stack.kind}.${index}`}
+                className='flex min-w-0 flex-col gap-1 rounded-md border p-2'
+              >
+                <div className='flex min-w-0 items-center gap-1.5'>
+                  <Swords
+                    aria-hidden='true'
+                    className='size-icon-xs shrink-0 text-muted-foreground'
+                  />
+                  <Text as='span' truncate>
+                    {stack.label}
+                  </Text>
+                  <Muted as='span' variant='caption' truncate>
+                    {stack.side?.name}
+                  </Muted>
+                  {stack.routed && (
+                    <Badge size='sm' variant='destructive'>
+                      Routed
+                    </Badge>
+                  )}
+                </div>
+                <StatBar
+                  label={`Lost of ${formatInteger(stack.start)}`}
+                  value={stack.lost}
+                  max={Math.max(1, stack.start)}
+                  tone='destructive'
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {depth.casualties.length > 0 && (
+        <div className='flex min-w-0 flex-col gap-1.5'>
+          <Label>Named casualties</Label>
+          <ul className='flex min-w-0 flex-col gap-1'>
+            {depth.casualties.map((casualty, index) => {
+              const fate = nameOf(FATE_OF, casualty.fate)
+              return (
+                <li
+                  key={`${casualty.mortal?.id}.${index}`}
+                  className='flex min-w-0 flex-wrap items-center gap-1.5'
+                >
+                  <Tag item={fate} />
+                  {casualty.mortal && (
+                    <EntityLink kind='entity' id={String(casualty.mortal.id)}>
+                      {casualty.mortal.name}
+                    </EntityLink>
+                  )}
+                  {casualty.harm > 0 && (
+                    <MiniStat
+                      icon={Skull}
+                      label='Harm'
+                      value={casualty.harm}
+                      tone='danger'
+                    />
+                  )}
+                  {casualty.note && (
+                    <Muted as='span' variant='caption' truncate>
+                      {casualty.note}
+                    </Muted>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}

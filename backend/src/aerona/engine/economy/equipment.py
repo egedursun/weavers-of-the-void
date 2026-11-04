@@ -24,8 +24,9 @@ from aerona.engine.economy.materials import (
 )
 from aerona.engine.economy.stocks import goods_of, holding, lots_of
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.military.units import resize
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import stat
 
 THOUSAND = 1000
 
@@ -87,7 +88,7 @@ async def suffer_heat(ctx: TickContext, army: EntityRow, temperature: int) -> in
     if lost <= 0:
         return 0
     with flowing(FlowCategory.CASUALTY):
-        set_stats(army, size=max(0, size - lost))
+        await resize(ctx.session, ctx.rules, army, max(0, size - lost))
     return lost
 
 

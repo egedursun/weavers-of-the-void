@@ -10,6 +10,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.military import DuelContext
 from aerona.domain.enums.war import WarEnding, WarSide, WarStatus
 from aerona.engine.context import TickContext
+from aerona.engine.military.alliance import betrayed_call
 from aerona.engine.military.duels import bout, fighter
 from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
@@ -51,6 +52,7 @@ async def join_wars(ctx: TickContext, book: RealmBook) -> int:
                 if ally is None or ally.status is not EntityStatus.CANON or ally.entity_type not in {EntityType.PEOPLE, EntityType.SETTLEMENT}:
                     continue
                 if ally_id in called and not await answer_call(ctx, ally_id, row.entity_id):
+                    await betrayed_call(ctx, ally_id, row.entity_id)
                     continue
                 ctx.session.add(WarSideRow(war_id=war.id, entity_id=ally_id, side=row.side, joined_epoch=ctx.epoch))
                 present.add(ally_id)

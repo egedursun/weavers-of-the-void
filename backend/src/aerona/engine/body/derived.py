@@ -1,4 +1,3 @@
-from collections import defaultdict
 from collections.abc import Sequence
 
 from sqlalchemy import select
@@ -7,11 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.mind import TraitRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
-from aerona.engine.body.book import STAT_CAPACITY, temperament_factor
+from aerona.engine.body.book import STAT_CAPACITY, held_temperament, temperament_factor
 from aerona.engine.primitives.derivation import Origin, shaped_draft
 from aerona.engine.primitives.modifiers import ModifierDraft
 from aerona.rules.registry import Rules
@@ -39,10 +36,7 @@ async def body_drafts(session: AsyncSession, rules: Rules, epoch: int, node_ids:
             origin = Origin(ModifierSource.INJURY, INJURY_REASON, epoch, group=f"injury.{key}")
             if value < PERCENT and (draft := shaped_draft(mortal, key, ModifierOp.MULTIPLY, value / PERCENT, origin)) is not None:
                 drafts.append(draft)
-    held: dict[int, list[TraitKind]] = defaultdict(list)
-    for row in await session.scalars(select(TraitRow).where(TraitRow.node_id.in_(list(mortals))).order_by(TraitRow.node_id, TraitRow.trait)):
-        held[row.node_id].append(row.trait)
-    for node_id, traits in held.items():
+    for node_id, traits in (await held_temperament(session, mortals)).items():
         for key, capacity in STAT_CAPACITY.items():
             origin = Origin(ModifierSource.TRAIT, TRAIT_REASON, epoch, group=f"trait.{key}")
             if (draft := shaped_draft(mortals[node_id], key, ModifierOp.MULTIPLY, temperament_factor(rules, traits, capacity), origin)) is not None:

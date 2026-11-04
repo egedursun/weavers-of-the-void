@@ -910,14 +910,3 @@ async def fabricate_claims(ctx: TickContext, realms: RealmBook) -> int:
         )
         made += 1
     return made
-
-
-async def house_ransom(session: AsyncSession, rules: Rules, captive_id: int, cost: int) -> bool:
-    if not rules.houses.ransom_by_house:
-        return False
-    house_id = await session.scalar(select(HouseMemberRow.house_entity_id).where(HouseMemberRow.mortal_entity_id == captive_id).limit(1))
-    profile = await session.get(HouseProfileRow, house_id) if house_id is not None else None
-    if profile is None or profile.extinct_epoch is not None or profile.wealth < cost:
-        return False
-    profile.wealth -= cost
-    return True

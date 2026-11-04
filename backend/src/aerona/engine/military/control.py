@@ -20,6 +20,10 @@ from aerona.engine.polity.control import lock
 from aerona.engine.polity.treaties import allies_called
 from aerona.engine.polity.wars import comrades
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.strength import MilitaryStrength
+from aerona.engine.services.sides import SideIndex
+from aerona.engine.services.war import army_or_raise
+from aerona.engine.services.war_geography import Neighbourhood
 from aerona.engine.services.war_resolution import WarSettlement, end_war
 
 Values = Mapping[str, int | str | bool | None]
@@ -236,8 +240,16 @@ async def call_allies(ctx: TickContext, war_id: int, side_id: int) -> int:
         ctx.session.add(WarSideRow(war_id=war.id, entity_id=ally_id, side=row.side, joined_epoch=ctx.epoch))
         present.add(ally_id)
         joined += 1
+        await ctx.session.flush()
+        strength, sides = await war_books(ctx)
+        await army_or_raise(ctx, strength, sides, ally, war)
     await ctx.session.flush()
     return joined
+
+
+async def war_books(ctx: TickContext) -> tuple[MilitaryStrength, SideIndex]:
+    neighbourhood = await Neighbourhood.load(ctx.session, ctx.rules)
+    return await MilitaryStrength.load(ctx.session, ctx.rules), await SideIndex.load(ctx.session, neighbourhood)
 
 
 async def set_weariness(ctx: TickContext, war_id: int, side_id: int, weariness: int) -> WarSideRow:
