@@ -13,6 +13,7 @@ from aerona.engine.economy.stocks import epoch_need, goods_of, holding
 from aerona.engine.faith.book import forbidden_foods
 from aerona.engine.lore.traditions import resent_taboo, taboos
 from aerona.engine.notes import note
+from aerona.engine.polity.law_effects import luxury_factor
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import headcount
 
@@ -70,6 +71,8 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
         demand = round_half_up(epoch_need(ctx.rules, population, commodity) * ctx.rules.markets.demand_epochs_pct / PERCENT)
         if commodity.value in forbidden:
             demand = round_half_up(demand * ctx.rules.doctrine.dietary_demand_pct / PERCENT)
+        if commodity is CommodityKind.LUXURIES:
+            demand = round_half_up(demand * await luxury_factor(ctx.session, ctx.rules, market.id, book.societies.get(market.id)))
         quotes[commodity] = Quote(commodity, price_of(ctx, commodity, supply, demand, factor), supply, demand)
     ctx.count("taboo_resentment", await resent_taboo(ctx, market.id))
     return quotes

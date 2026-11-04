@@ -5,15 +5,17 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.polity import ClaimRow, HouseMemberRow, LawProfileRow, OathRow, OfficeRow, TreatyProfileRow
+from aerona.db.tables.polity import ClaimRow, HouseMemberRow, LawJurisdictionRow, LawProfileRow, OathRow, OfficeRow, TreatyProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.polity import (
+    LAW_AREAS,
     ClaimBasis,
     ClauseKind,
     DecisionRule,
     GovernmentKind,
     LawKind,
+    LegitimacyBasis,
     OathKind,
     OfficeKind,
     PartyRole,
@@ -26,12 +28,13 @@ from aerona.engine.lifecycle.succession import pass_rule
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.formation import refresh_realms
 from aerona.engine.polity.houses import HouseBook, extinguish, found_house, join
-from aerona.engine.polity.laws import edit_law, enact, repeal
+from aerona.engine.polity.laws import edit_law, enact, ensure_profile, jurisdiction_of, repeal, validate
 from aerona.engine.polity.oaths import break_oath, swear
 from aerona.engine.polity.offices import appoint
 from aerona.engine.polity.treaties import Clause, breach, end_treaty, sign
 from aerona.engine.primitives.queries import active_bonds, add_flag, close, connect, living_entity, remove_flag
 
+LAW_LOCKS = ("repeal", "params", "enforcement", "basis")
 PROFILE_NUMBERS = ("legitimacy", "stability", "war_weariness")
 PROFILE_POSITIVE = ("treasury", "debt", "war_chest")
 PROFILE_CHOICES = {"government": GovernmentKind, "decision_rule": DecisionRule, "standing": RegionalStanding}
@@ -158,11 +161,41 @@ async def grant_independence(ctx: TickContext, polity_id: int) -> None:
     await ctx.session.flush()
 
 
-async def enact_law(ctx: TickContext, holder_id: int, kind: LawKind, params: Mapping[str, int | str | bool]) -> EntityRow:
+async def enact_law(
+    ctx: TickContext,
+    holder_id: int,
+    kind: LawKind,
+    params: Mapping[str, int | str | bool],
+    *,
+    name: str | None = None,
+    enforcement: int | None = None,
+    basis: LegitimacyBasis | None = None,
+    hold: Sequence[str] = (),
+) -> EntityRow:
     holder = await living_entity(ctx.session, holder_id)
     if holder is None or holder.entity_type not in {EntityType.POLITY, EntityType.SETTLEMENT, EntityType.PEOPLE, EntityType.CULT}:
         raise NotFoundError("No realm, settlement or cult to lay down the law.")
-    return await enact(ctx, holder, kind, params)
+    law = await enact(ctx, holder, kind, params, basis=basis or LegitimacyBasis.DECREE, name=name.strip()[:120] if name and name.strip() else None)
+    profile = await ctx.session.get(LawProfileRow, law.id)
+    if profile is not None:
+        if enforcement is not None:
+            profile.enforcement = enforcement
+        profile.locked = sorted({*profile.locked, *(key for key in hold if key in LAW_LOCKS)})
+    await ctx.session.flush()
+    return law
+
+
+async def protect_law(ctx: TickContext, law_id: int, *, hold: Sequence[str], release: Sequence[str]) -> LawProfileRow:
+    law = await ctx.session.get(EntityRow, law_id)
+    if law is None or law.entity_type is not EntityType.LAW:
+        raise NotFoundError("No such law.")
+    unknown = [key for key in [*hold, *release] if key not in LAW_LOCKS]
+    if unknown:
+        raise ValidationFailedError(f"A law can only be held on {', '.join(LAW_LOCKS)}.")
+    profile = await ensure_profile(ctx.session, law, ctx.epoch)
+    profile.locked = sorted({*profile.locked, *hold} - set(release))
+    await ctx.session.flush()
+    return profile
 
 
 async def repeal_law(ctx: TickContext, law_id: int) -> EntityRow:
@@ -173,10 +206,60 @@ async def repeal_law(ctx: TickContext, law_id: int) -> EntityRow:
     return law
 
 
-async def change_law(ctx: TickContext, law_id: int, params: Mapping[str, int | str | bool], *, enforcement: int | None) -> LawProfileRow:
+async def change_law(
+    ctx: TickContext,
+    law_id: int,
+    params: Mapping[str, int | str | bool],
+    *,
+    enforcement: int | None,
+    basis: LegitimacyBasis | None = None,
+    name: str | None = None,
+    holder_ids: Sequence[int] | None = None,
+    release: Sequence[str] = (),
+    kind: LawKind | None = None,
+    conflict: int | None = None,
+) -> LawProfileRow:
+    if kind is not None:
+        current = await ctx.session.get(LawProfileRow, law_id)
+        if current is not None and current.kind is not kind:
+            current.kind = kind
+            current.area = LAW_AREAS[kind]
+            current.params = validate(kind, params)
+            params = {}
     profile = await edit_law(ctx, law_id, params, enforcement=enforcement)
-    profile.locked = lock(profile.locked, "params")
+    if conflict is not None:
+        if not 0 <= conflict <= PERCENT:
+            raise ValidationFailedError(f"Conflict runs from 0 to {PERCENT}.")
+        profile.conflict = conflict
+    if params:
+        profile.locked = lock(profile.locked, "params")
+    if basis is not None:
+        profile.legitimacy_basis = basis
+        profile.locked = lock(profile.locked, "basis")
+    law = await ctx.session.get(EntityRow, law_id)
+    if law is not None and name is not None and name.strip():
+        law.name = name.strip()[:120]
+    if holder_ids is not None:
+        await rehome_law(ctx, law_id, holder_ids)
+    profile.locked = [key for key in profile.locked if key not in set(release)]
+    await ctx.session.flush()
     return profile
+
+
+async def rehome_law(ctx: TickContext, law_id: int, holder_ids: Sequence[int]) -> None:
+    if not holder_ids:
+        raise ValidationFailedError("A law must hold somewhere.")
+    holders = []
+    for holder_id in holder_ids:
+        holder = await living_entity(ctx.session, holder_id)
+        if holder is None or holder.entity_type not in {EntityType.POLITY, EntityType.SETTLEMENT, EntityType.PEOPLE, EntityType.CULT}:
+            raise NotFoundError("Laws hold over realms, settlements, peoples and cults.")
+        holders.append(holder)
+    for row in await ctx.session.scalars(select(LawJurisdictionRow).where(LawJurisdictionRow.law_entity_id == law_id)):
+        await ctx.session.delete(row)
+    await ctx.session.flush()
+    for holder in holders:
+        ctx.session.add(LawJurisdictionRow(law_entity_id=law_id, node_entity_id=holder.id, jurisdiction=jurisdiction_of(holder)))
 
 
 async def found_house_by_hand(ctx: TickContext, mortal_id: int) -> EntityRow:

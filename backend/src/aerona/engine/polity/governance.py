@@ -9,6 +9,8 @@ from aerona.db.tables.body import MaimedCohortRow
 from aerona.db.tables.culture import IdeologyTenetRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.disease import OutbreakRow, QuarantineRow
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.faith import CultTenetRow
 from aerona.db.tables.mind import PersonalityValueRow
 from aerona.db.tables.polity import LawProfileRow, PolityTreasuryRow
 from aerona.db.tables.settlement import SettlementProfileRow, SettlementTreasuryRow
@@ -18,6 +20,8 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import InheritanceCustom, MarriageCustom
 from aerona.domain.enums.disease import OutbreakStatus
+from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import TraitKind, ValueAxis
 from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, TreasuryEntry
@@ -28,7 +32,8 @@ from aerona.engine.lore.research import lacks
 from aerona.engine.mind.book import traits_of
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
-from aerona.engine.polity.laws import LawBook, discord, enact, repeal, settle_justice
+from aerona.engine.polity.law_effects import jubilee, levy_terms, standing_soldiers, tenure_and_serfdom
+from aerona.engine.polity.laws import LawBook, discord, enact, repeal, settle_justice, validate
 from aerona.engine.polity.standing import war_record
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -41,6 +46,27 @@ CREED_SCALE = 10
 LEAN = 25
 BASELINE_LAWS = frozenset({LawKind.SUCCESSION_RULE, LawKind.SLAVERY, LawKind.RELIGIOUS_TOLERANCE, LawKind.TAX_RATE, LawKind.PENAL_CODE})
 COUNCIL_KINDS = 5
+T = TenetKind
+CHURCH_LAWS: dict[TenetKind, tuple[LawKind, dict[str, int | str | bool]]] = {
+    T.ANTI_MAGIC: (LawKind.MAGIC_BAN, {"severity": 70}),
+    T.SANCTIFIED_MAGIC: (LawKind.LICENSED_MAGIC, {"fee": 10}),
+    T.EXCLUSIVITY: (LawKind.RELIGIOUS_TOLERANCE, {"level": "persecution"}),
+    T.SYNCRETIC_OPENNESS: (LawKind.RELIGIOUS_TOLERANCE, {"level": "free"}),
+    T.PROSELYTISM: (LawKind.TITHE, {"rate": 10, "enforced": True}),
+    T.ANCESTOR_VENERATION: (LawKind.BURIAL_LAW, {"rite": "burial"}),
+    T.HOLY_WAR: (LawKind.LEVY_LAW, {"share": 20, "duration": 2}),
+    T.PURITY_OF_BODY: (LawKind.SANITATION, {"works": 20}),
+    T.SACRED_SUFFERING: (LawKind.PENAL_CODE, {"blasphemy": "flogging"}),
+}
+CULT_LAWS: dict[TenetKind, tuple[LawKind, dict[str, int | str | bool]]] = {
+    T.ANCESTOR_VENERATION: (LawKind.BURIAL_LAW, {"rite": "burial"}),
+    T.ANTI_MAGIC: (LawKind.MAGIC_BAN, {"severity": 60}),
+    T.CELIBATE_CLERGY: (LawKind.MARRIAGE_LAW, {"custom": "monogamy", "endogamy": False}),
+    T.EXCLUSIVITY: (LawKind.MARRIAGE_LAW, {"custom": "monogamy", "endogamy": True}),
+    T.SANCTIFIED_MAGIC: (LawKind.RITE_RESTRICTIONS, {"level": 20}),
+    T.ASCETICISM: (LawKind.SUMPTUARY, {"noble_luxury": 30, "merchant_luxury": 10}),
+    T.PROSELYTISM: (LawKind.TITHE, {"rate": 5, "enforced": False}),
+}
 INHERITANCE_RULES = {
     InheritanceCustom.PRIMOGENITURE: "primogeniture",
     InheritanceCustom.GAVELKIND: "seniority",
@@ -174,6 +200,129 @@ async def agenda(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawBook)
     taken.extend(await taxes(ctx, realm, laws, values))
     taken.extend(await temples(ctx, realm, values))
     return taken
+
+
+async def consider(
+    ctx: TickContext,
+    realm: Realm,
+    laws: LawBook,
+    kind: LawKind,
+    params: dict[str, int | str | bool],
+    *,
+    sponsor_id: int | None,
+    sway: int,
+) -> EntityRow | None:
+    table = ctx.rules.legislation
+    polity = realm.entity
+    merged = validate(kind, params)
+    values = await will(ctx, realm)
+    gap = discord(kind, merged, values)
+    bar = table.proposal_threshold + sway * table.sponsor_weight_pct / PERCENT
+    sponsor = await living_entity(ctx.session, sponsor_id) if sponsor_id is not None else None
+    who = sponsor.name if sponsor is not None else "the crisis"
+    if gap > bar:
+        await note(
+            ctx,
+            f"{polity.name} would not hear {who}: the {kind.value.replace('_', ' ')} it urged was set aside.",
+            key="polity.law_rejected",
+            ids=[polity.id, *([sponsor.id] if sponsor is not None else [])],
+            kind=ChronicleKind.CIVILIZATION,
+        )
+        return None
+    current = next(
+        (laws.profiles[law_id] for law_id in laws.by_node.get(polity.id, []) if law_id in laws.profiles and laws.profiles[law_id].kind is kind),
+        None,
+    )
+    if current is not None:
+        if "params" in current.locked or current.params == merged:
+            return None
+        current.params = merged
+        current.enacted_by_entity_id = sponsor_id if sponsor_id is not None else current.enacted_by_entity_id
+        law = laws.laws.get(current.law_entity_id)
+        if law is not None:
+            await note(
+                ctx, f"{polity.name} rewrote {law.name}, urged on by {who}.", key="polity.law_amended", ids=[polity.id, law.id], kind=ChronicleKind.CIVILIZATION
+            )
+        return law
+    basis = (
+        LegitimacyBasis.DIVINE
+        if sponsor is not None and sponsor.entity_type is EntityType.CULT
+        else LegitimacyBasis.COUNCIL
+        if sponsor
+        else LegitimacyBasis.DECREE
+    )
+    law = await enact(ctx, polity, kind, merged, by_id=sponsor_id if sponsor_id is not None else realm.ruler_id, basis=basis)
+    laws.laws[law.id] = law
+    profile = await ctx.session.get(LawProfileRow, law.id)
+    if profile is not None:
+        laws.profiles[law.id] = profile
+        laws.by_node[polity.id].append(law.id)
+    await note(ctx, f"{polity.name} laid down {law.name}, as {who} urged.", key="polity.law_proposed", ids=[polity.id, law.id], kind=ChronicleKind.CIVILIZATION)
+    return law
+
+
+async def crises(ctx: TickContext, realm: Realm, laws: LawBook) -> list[tuple[LawKind, dict[str, int | str | bool]]]:
+    table = ctx.rules.legislation
+    polity = realm.entity.id
+    found: list[tuple[LawKind, dict[str, int | str | bool]]] = []
+    crime = []
+    for member_id in realm.members:
+        town = await ctx.session.get(SettlementProfileRow, member_id)
+        if town is not None:
+            crime.append(town.crime)
+    if crime and sum(crime) / len(crime) >= table.crisis_crime:
+        found.append((LawKind.PENAL_CODE, {"theft": "hand", "murder": "death", "desertion": "death"}))
+    if realm.profile.debt >= table.crisis_debt and laws.in_force(polity, LawKind.DEBT_LAW) is None:
+        found.append((LawKind.DEBT_LAW, {"remedy": "jubilee"}))
+    if await plagued(ctx, realm) and laws.in_force(polity, LawKind.BURIAL_LAW) is None:
+        found.append((LawKind.BURIAL_LAW, {"rite": "burning"}))
+    return found
+
+
+async def proposals(ctx: TickContext, realm: Realm, laws: LawBook) -> list[str]:
+    table = ctx.rules.legislation
+    taken: list[str] = []
+    for kind, params in await crises(ctx, realm, laws):
+        if await consider(ctx, realm, laws, kind, params, sponsor_id=None, sway=0) is not None:
+            taken.append(f"crisis {kind.value}")
+    church_id = realm.profile.state_religion_id
+    church = await living_entity(ctx.session, church_id) if church_id is not None else None
+    if church is None or not ctx.rng(f"church_law.{realm.entity.id}.{ctx.epoch}").chance(table.cult_proposal_chance):
+        return taken
+    tenets = set(await ctx.session.scalars(select(CultTenetRow.tenet).where(CultTenetRow.cult_entity_id == church.id)))
+    for tenet, (kind, params) in CHURCH_LAWS.items():
+        if tenet in tenets and laws.in_force(realm.entity.id, kind) is None:
+            sway = stat(church, "influence") or 0
+            if await consider(ctx, realm, laws, kind, dict(params), sponsor_id=church.id, sway=sway) is not None:
+                taken.append(f"church {kind.value}")
+            break
+    return taken
+
+
+async def cult_laws(ctx: TickContext, laws: LawBook) -> int:
+    table = ctx.rules.legislation
+    made = 0
+    for cult in await ctx.session.scalars(
+        select(EntityRow).where(EntityRow.entity_type == EntityType.CULT, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+    ):
+        if not ctx.rng(f"cult_law.{cult.id}.{ctx.epoch}").chance(table.cult_law_chance):
+            continue
+        tenets = set(await ctx.session.scalars(select(CultTenetRow.tenet).where(CultTenetRow.cult_entity_id == cult.id)))
+        held = {laws.profiles[law_id].kind for law_id in laws.by_node.get(cult.id, []) if law_id in laws.profiles}
+        for tenet, (kind, params) in CULT_LAWS.items():
+            if tenet in tenets and kind not in held:
+                law = await enact(ctx, cult, kind, dict(params), by_id=cult.id, basis=LegitimacyBasis.DIVINE)
+                laws.laws[law.id] = law
+                profile = await ctx.session.get(LawProfileRow, law.id)
+                if profile is not None:
+                    laws.profiles[law.id] = profile
+                    laws.by_node[cult.id].append(law.id)
+                await note(
+                    ctx, f"{cult.name} laid {law.name} upon its faithful.", key="polity.cult_law", ids=[cult.id, law.id], kind=ChronicleKind.CIVILIZATION
+                )
+                made += 1
+                break
+    return made
 
 
 async def taxes(ctx: TickContext, realm: Realm, laws: LawBook, values: dict[ValueAxis, int]) -> list[str]:
@@ -352,6 +501,13 @@ async def law_effects(ctx: TickContext, book: RealmBook, realm: Realm, laws: Law
     quarantine = laws.in_force(polity, LawKind.QUARANTINE)
     for member_id in realm.members:
         await member_effects(ctx, member_id, laws, polity)
+        await tenure_and_serfdom(ctx, member_id, laws)
+    ctx.count("jubilee_debts", await jubilee(ctx, realm, laws))
+    ctx.count("levies_home", await levy_terms(ctx, realm, laws))
+    soldiers = await standing_soldiers(ctx, realm)
+    cost = round_half_up(soldiers * ctx.rules.legislation.standing_upkeep_per_100 / PERCENT)
+    if cost:
+        spend(ctx, realm, -cost, TreasuryEntry.GARRISON, "the standing army")
     known = not await lacks(ctx.session, realm.profile.core_entity_id, Technique.QUARANTINE)
     if quarantine is not None and bool(quarantine.params.get("automatic", True)) and known:
         for outbreak in await ctx.session.scalars(

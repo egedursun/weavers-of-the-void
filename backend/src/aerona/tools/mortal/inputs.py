@@ -21,6 +21,7 @@ from aerona.constants.tool_inputs import (
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import LegendCategory
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import KnowledgeBranch, ResourceMechanic
 from aerona.domain.enums.travel import JourneyIntent
 from aerona.tools.framework.inputs import ToolInput
@@ -105,6 +106,8 @@ class CultureInput(ToolInput):
     related_ids: list[int] | None = None
     image_prompt: ImagePrompt | None = None
     legend_category: LegendCategory | None = None
+    law_kind: LawKind | None = None
+    law_params: dict[str, int | str | bool] | None = None
 
 
 class DiscoverInput(ToolInput):

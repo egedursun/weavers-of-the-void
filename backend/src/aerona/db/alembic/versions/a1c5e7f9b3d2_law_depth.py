@@ -20,7 +20,29 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["mortal_entity_id"], ["entities.id"], name=op.f("fk_mortal_repute_mortal_entity_id_entities"), ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("mortal_entity_id", name=op.f("pk_mortal_repute")),
     )
+    op.create_table(
+        "sentences",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("mortal_entity_id", sa.Integer(), nullable=False),
+        sa.Column("settlement_entity_id", sa.Integer(), nullable=True),
+        sa.Column("law_entity_id", sa.Integer(), nullable=True),
+        sa.Column(
+            "crime",
+            sa.Enum("theft", "murder", "treason", "blasphemy", "desertion", name="crime", native_enum=False, create_constraint=True, length=40),
+            nullable=False,
+        ),
+        sa.Column("penalty", sa.String(length=120), nullable=False),
+        sa.Column("epoch", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(["law_entity_id"], ["entities.id"], name=op.f("fk_sentences_law_entity_id_entities"), ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(["mortal_entity_id"], ["entities.id"], name=op.f("fk_sentences_mortal_entity_id_entities"), ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["settlement_entity_id"], ["entities.id"], name=op.f("fk_sentences_settlement_entity_id_entities"), ondelete="SET NULL"),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_sentences")),
+    )
+    with op.batch_alter_table("sentences", schema=None) as batch_op:
+        batch_op.create_index("ix_sentences_settlement", ["settlement_entity_id", "epoch"], unique=False)
+        batch_op.create_index("ix_sentences_mortal", ["mortal_entity_id"], unique=False)
 
 
 def downgrade() -> None:
+    op.drop_table("sentences")
     op.drop_table("mortal_repute")

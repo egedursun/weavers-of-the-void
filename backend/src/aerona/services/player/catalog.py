@@ -1056,6 +1056,7 @@ ECONOMY_ACTIONS = (
     _sync(Meta("law:enact", "Lay down a law", G.SOCIETY), realms.enact_law, realms.EnactLaw, free, ("S4.5",)),
     _sync(Meta("law:repeal", "Repeal a law", G.SOCIETY), realms.repeal_law, realms.LawTarget, free, ("S4.5",)),
     _sync(Meta("law:edit", "Rewrite a law", G.SOCIETY), realms.edit_law, realms.EditLaw, free, ("S4.5",)),
+    _sync(Meta("law:protect", "Hold a law against repeal or change, or release it", G.SOCIETY), realms.protect_law, realms.ProtectLaw, free, ("S4.5",)),
     _sync(Meta("house:found", "Found a house", G.SOCIETY), realms.found_house, realms.FoundHouse, free, ("S4.7",)),
     _sync(Meta("house:merge", "Merge two houses", G.SOCIETY), realms.merge_house, realms.MergeHouse, free, ("S4.7",)),
     _sync(Meta("house:extinguish", "Extinguish a house", G.SOCIETY), realms.extinguish_house, realms.HouseTarget, free, ("S4.7",)),

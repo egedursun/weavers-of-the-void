@@ -250,6 +250,7 @@ class MortalResult(StrEnum):
     CLAIMED = "{{ name }} is now yours.{% if angered %} {{ angered }} will not forget it.{% endif %}"
     LANGUAGE_LIMIT = "You already founded a language this age."
     CULTURE_LIMIT = "You already created a culture this age; move on to another action."
+    LAW_TERMS_INVALID = "That law cannot be written so: {reason} Choose a law kind and only the terms it has."
     SEIZE_REPELLED = "The seizure was repelled ({{ mine }} against {{ theirs }}); {{ name }} is still held by {{ owners }}."
     CLAIM_ACTIONS = "Claiming costs {{ cost }} action(s){% if seizing %} because the resource has an owner (a seizure){% endif %}; you do not have enough left."
     SETTLE_NEAR = "You can only settle in your own or a neighbouring region."

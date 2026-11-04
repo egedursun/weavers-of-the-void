@@ -8,6 +8,7 @@ from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.polity import (
     ClaimBasis,
     ClauseKind,
+    CrimeKind,
     DecisionRule,
     GovernmentKind,
     HouseTrait,
@@ -301,3 +302,16 @@ class MortalReputeRow(Base):
     infamy: Mapped[int] = mapped_column(default=0)
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class SentenceRow(Base):
+    __tablename__ = "sentences"
+    __table_args__ = (Index("ix_sentences_settlement", "settlement_entity_id", "epoch"), Index("ix_sentences_mortal", "mortal_entity_id"))
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    mortal_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
+    settlement_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    law_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    crime: Mapped[CrimeKind] = mapped_column(enum_type(CrimeKind, "crime"))
+    penalty: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
+    epoch: Mapped[int]

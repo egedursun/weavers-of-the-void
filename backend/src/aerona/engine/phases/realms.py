@@ -4,9 +4,9 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.formation import refresh_realms
-from aerona.engine.polity.governance import agenda, collect, conquest_conflict, enforce, law_effects, repeal_discord
+from aerona.engine.polity.governance import agenda, collect, conquest_conflict, cult_laws, enforce, law_effects, proposals, repeal_discord
 from aerona.engine.polity.houses import HouseBook, arrange_marriages, gather_kin, seed_houses, tend
-from aerona.engine.polity.laws import LawBook, ensure_profile
+from aerona.engine.polity.laws import LawBook, backfill_kinds, ensure_profile
 from aerona.engine.polity.oaths import lapse, pledges
 from aerona.engine.polity.offices import name_heir, press_claims, purge, regency, staff, succession_line
 from aerona.engine.polity.standing import administration, legitimacy, overreach, rank, realm_tier, secede, settle, stability
@@ -16,6 +16,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 
 
 @reads(
+    "army.size",
     "faction.strength",
     "law.rigidity",
     "mortal.age",
@@ -29,8 +30,11 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "polity.subjects",
     "settlement.population",
     "settlement.prosperity",
+    "table.applied_fixups",
+    "table.armies",
     "table.bonds",
     "table.community_societies",
+    "table.cult_tenets",
     "table.culture_values",
     "table.entity_flags",
     "table.epoch_year_cursors",
@@ -41,6 +45,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.item_profiles",
     "table.law_jurisdictions",
     "table.law_profiles",
+    "table.loans",
     "table.maimed_cohorts",
     "table.name_registry",
     "table.nodes",
@@ -63,13 +68,21 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.world_maps",
 )
 @writes(
+    "army.size",
+    "cult.followers",
     "law.justice",
+    "people.population",
+    "people.prosperity",
     "polity.legitimacy",
     "polity.stability",
     "polity.subjects",
     "polity.territory",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.applied_fixups",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.community_societies",
     "table.designated_heirs",
     "table.entities",
     "table.epoch_year_cursors",
@@ -77,6 +90,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.incidents",
     "table.law_jurisdictions",
     "table.law_profiles",
+    "table.loans",
     "table.name_registry",
     "table.oaths",
     "table.office_history",
@@ -95,11 +109,13 @@ async def polity_cycles(ctx: TickContext) -> None:
     for key, value in (await refresh_realms(ctx, book)).items():
         ctx.count(key, value)
     knowledge = await KnowledgeMap.load(ctx.session)
+    ctx.count("law_kinds_backfilled", await backfill_kinds(ctx.session, ctx.epoch))
     laws = await LawBook.load(ctx.session)
     for law in laws.laws.values():
         if law.id not in laws.profiles:
             laws.profiles[law.id] = await ensure_profile(ctx.session, law, ctx.epoch)
     laws = await LawBook.load(ctx.session)
+    ctx.count("cult_laws", await cult_laws(ctx, laws))
     for realm in list(book.realms.values()):
         newcomers = [member for member in realm.members if before.get(member) not in {None, realm.entity.id}]
         ctx.count("legal_conflicts", await conquest_conflict(ctx, book, realm, laws, newcomers))
@@ -118,6 +134,8 @@ async def polity_cycles(ctx: TickContext) -> None:
         ctx.count("taxed", await collect(ctx, book, realm))
         for decision in await agenda(ctx, book, realm, laws):
             ctx.count(f"decision.{decision.replace(' ', '_')}")
+        for decision in await proposals(ctx, realm, laws):
+            ctx.count(f"proposal.{decision.replace(' ', '_')}")
         ctx.count("repealed", await repeal_discord(ctx, realm, laws))
         await law_effects(ctx, book, realm, laws)
         ctx.count("law_unrest", await enforce(ctx, realm, laws))

@@ -70,6 +70,8 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "subtype": "What exactly it is",
             "description": DESCRIPTION_FIELD,
             "related_ids": "Existing records it tells of (at most {{ " + M + ".culture_max_related }})",
+            "law_kind": "For a law: what it rules (succession_rule, tax_rate, penal_code, levy_law, slavery, tolls, sumptuary...); required for laws",
+            "law_params": "For a law: its terms by name (rate, share, theft, murder, status, level...); only the terms its kind has",
             "image_prompt": 'English photoreal prompt: the ritual being performed or a scene of the legend. {% include "shared/image_prompt_rules.md.j2" %}',
             "legend_category": "Only for a legend: what it would become if belief made it real: {{ legend_categories | join(', ') }}",
         },

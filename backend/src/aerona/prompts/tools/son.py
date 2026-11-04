@@ -66,6 +66,10 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "vessel_kind": "What it is: {{ vessel_kinds | join(', ') }}; a gate, ship, mount or bridge opens the matching kind of road",
     },
     EntityType.LEGEND: {"legend_category": LEGEND_CATEGORY_FIELD},
+    EntityType.LAW: {
+        "law_kind": "What the law rules: succession_rule, inheritance_split, land_tenure, slavery, serfdom, tax_rate, tithe, tolls, debt_law, penal_code, levy_law, conscription, standing_army, veteran_pension, ransom_custom, marriage_law, sumptuary, guild_charter, foreigner_rights, religious_tolerance, worship_ban, blood_feud, quarantine, burial_law, sanitation, magic_ban, licensed_magic, rite_restrictions or custom",
+        "law_params": "The law's terms by name, only those its kind has (e.g. rate, share, duration, theft, murder, treason, status, level, rite, split, tenure, labour_days)",
+    },
     EntityType.RESOURCE: {
         "commodity": COMMODITY_FIELD,
         "material": MATERIAL_FIELD,

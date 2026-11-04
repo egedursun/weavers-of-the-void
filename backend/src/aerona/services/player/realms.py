@@ -1,7 +1,7 @@
 from pydantic import Field
 
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.polity import ClaimBasis, ClauseKind, LawKind, OathKind, OfficeKind, PartyRole, TreatyKind, TreatyStatus
+from aerona.domain.enums.polity import ClaimBasis, ClauseKind, LawKind, LegitimacyBasis, OathKind, OfficeKind, PartyRole, TreatyKind, TreatyStatus
 from aerona.engine.polity import control
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -37,6 +37,10 @@ class EnactLaw(Command):
     holder_id: int
     kind: LawKind
     params: dict[str, int | str | bool] = Field(default_factory=dict)
+    name: str | None = Field(default=None, max_length=120)
+    enforcement: int | None = Field(default=None, ge=0, le=100)
+    basis: LegitimacyBasis | None = None
+    hold: list[str] = Field(default_factory=list)
 
 
 class LawTarget(Command):
@@ -47,6 +51,18 @@ class EditLaw(Command):
     law_id: int
     params: dict[str, int | str | bool] = Field(default_factory=dict)
     enforcement: int | None = Field(default=None, ge=0, le=100)
+    basis: LegitimacyBasis | None = None
+    name: str | None = Field(default=None, max_length=120)
+    holder_ids: list[int] | None = None
+    release: list[str] = Field(default_factory=list)
+    kind: LawKind | None = None
+    conflict: int | None = Field(default=None, ge=0, le=100)
+
+
+class ProtectLaw(Command):
+    law_id: int
+    hold: list[str] = Field(default_factory=list)
+    release: list[str] = Field(default_factory=list)
 
 
 class FoundHouse(Command):
@@ -148,8 +164,24 @@ async def independence(scope: PlayerScope, command: PolityTarget) -> Effect:
 
 @player_action("law:enact", ActionKind.CREATE_ENTITY)
 async def enact_law(scope: PlayerScope, command: EnactLaw) -> Effect:
-    law = await control.enact_law(await scope.context("law_enact"), command.holder_id, command.kind, command.params)
+    law = await control.enact_law(
+        await scope.context("law_enact"),
+        command.holder_id,
+        command.kind,
+        command.params,
+        name=command.name,
+        enforcement=command.enforcement,
+        basis=command.basis,
+        hold=command.hold,
+    )
     return Effect(f"{law.name} is the law.", command.holder_id, created_ids=(law.id,))
+
+
+@player_action("law:protect", ActionKind.EDIT_RECORD)
+async def protect_law(scope: PlayerScope, command: ProtectLaw) -> Effect:
+    profile = await control.protect_law(await scope.context("law_protect"), command.law_id, hold=command.hold, release=command.release)
+    held = ", ".join(profile.locked) or "nothing"
+    return Effect(f"The law now holds fast on: {held}.", command.law_id)
 
 
 @player_action("law:repeal", ActionKind.OTHER)
@@ -160,7 +192,18 @@ async def repeal_law(scope: PlayerScope, command: LawTarget) -> Effect:
 
 @player_action("law:edit", ActionKind.EDIT_RECORD)
 async def edit_law(scope: PlayerScope, command: EditLaw) -> Effect:
-    profile = await control.change_law(await scope.context("law_edit"), command.law_id, command.params, enforcement=command.enforcement)
+    profile = await control.change_law(
+        await scope.context("law_edit"),
+        command.law_id,
+        command.params,
+        enforcement=command.enforcement,
+        basis=command.basis,
+        name=command.name,
+        holder_ids=command.holder_ids,
+        release=command.release,
+        kind=command.kind,
+        conflict=command.conflict,
+    )
     return Effect(f"The law now reads as you set it, enforced at {profile.enforcement}.", command.law_id)
 
 

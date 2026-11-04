@@ -31,6 +31,7 @@ from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.language import barrier
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.notes import note
+from aerona.engine.polity.law_effects import toll_rate
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
@@ -280,7 +281,8 @@ async def set_tolls(ctx: TickContext, book: EconomyBook, route: Route, masters: 
         if master is None or master in (first, second):
             continue
         greed = await greed_drive(ctx.session, ctx.rules, master)
-        rate = clamp_int(table.default_rate_pct + max(0.0, greed - 1) * table.greed_rate_pct, 0, PERCENT)
+        decreed = await toll_rate(ctx.session, master)
+        rate = clamp_int(decreed if decreed is not None else table.default_rate_pct + max(0.0, greed - 1) * table.greed_rate_pct, 0, PERCENT)
         toll = route.tolls.get(region)
         if toll is None:
             toll = TradeRouteTollRow(route_entity_id=route.entity.id, region_entity_id=region, controller_entity_id=master, rate_pct=rate)

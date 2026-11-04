@@ -128,6 +128,8 @@ async def laws(ctx: TickContext) -> int:
             continue
         orphaned = place is not None and place.status is not EntityStatus.CANON
         profile = await ctx.session.get(LawProfileRow, law.id)
+        if profile is not None and "repeal" in profile.locked:
+            continue
         clash = profile.conflict / 100 if profile is not None else (1.0 if place is not None and place.id in conquered else 0.0)
         chance, reason = repeal_chance(ctx.rules, law, orphaned=orphaned, conquered=clash, rebels=place is not None and place.id in rebels)
         if not chance or reason is None or not rng.chance(chance):

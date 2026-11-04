@@ -172,6 +172,7 @@ from aerona.rules.registry.polity import (
     LegitimacyRules,
     OathsRules,
     OverextensionRules,
+    RealmTierRules,
     RevoltsRules,
     SuccessionRules,
     TreatiesRules,
@@ -315,6 +316,7 @@ class Rules:
     houses: HousesRules = field(default_factory=HousesRules)
     oaths: OathsRules = field(default_factory=OathsRules)
     treaties: TreatiesRules = field(default_factory=TreatiesRules)
+    realm_tiers: RealmTierRules = field(default_factory=RealmTierRules)
     military_units: MilitaryUnitsRules = field(default_factory=MilitaryUnitsRules)
     logistics: LogisticsRules = field(default_factory=LogisticsRules)
     attrition: AttritionRules = field(default_factory=AttritionRules)
