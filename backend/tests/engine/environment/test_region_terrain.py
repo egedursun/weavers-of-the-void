@@ -4,6 +4,7 @@ from aerona.db.tables.ecology import HerdRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
 from aerona.db.tables.polity import PolityMemberRow, PolityTerritoryRow
 from aerona.db.tables.region import PolityMapKnowledgeRow, RegionDangerRow, RegionHazardRow, RegionMemoryRow
+from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.warfare import BattleRow, WarRow
 from aerona.domain.enums.ecology import DomesticationStage
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
@@ -71,7 +72,11 @@ async def test_dangers_take_settlers_and_herds(realm: Realm) -> None:
     await surveyed(realm)
     town = await settlement(realm, "Lowmere", population=10000)
     beast = await make(
-        realm.session, "Wolf", EntityType.SPECIES, SpeciesStats(hp=40, strength=40, agility=60, intelligence=10, danger=40, abundance=50), world_id=realm.world.id
+        realm.session,
+        "Wolf",
+        EntityType.SPECIES,
+        SpeciesStats(hp=40, strength=40, agility=60, intelligence=10, danger=40, abundance=50),
+        world_id=realm.world.id,
     )
     realm.session.add(HerdRow(community_entity_id=town.id, species_entity_id=beast.id, head=1000, stage=DomesticationStage.HERDED))
     await region_control.set_danger(realm.session, RULES, realm.region.id, DangerSource.BEASTS, 100, epoch=3, held=True)
@@ -87,9 +92,9 @@ async def test_armies_lose_men_and_fall_into_ambush_and_travellers_pay_the_land(
     rows = list(await realm.session.scalars(select(RegionDangerRow)))
     assert weighted(RULES, rows, DangerHarm.AMBUSH) == RULES.regional_danger.bandits_ambush
     assert await harm_of(realm.session, RULES, realm.region.id, DangerHarm.TRAVELLERS) == RULES.regional_danger.bandits_travellers
-    route = type("Route", (), {"danger": 0})()
-    calm = road_risk(RULES, route, set(), None)  # type: ignore[arg-type]
-    risky = road_risk(RULES, route, set(), None, region_danger=90)  # type: ignore[arg-type]
+    route = RouteRow(danger=0)
+    calm = road_risk(RULES, route, set(), None)
+    risky = road_risk(RULES, route, set(), None, region_danger=90)
     assert risky > calm
 
 
