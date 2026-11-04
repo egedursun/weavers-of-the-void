@@ -38,7 +38,7 @@ def tag(ctx: TickContext, name: str) -> str:
 
 async def born_names(ctx: TickContext, kind: EngineKind) -> set[str]:
     statement = select(EntityRow.name).where(EntityRow.entity_type == EntityType.EVENT, EntityRow.engine_kind == kind, EntityRow.birth_epoch == ctx.epoch)
-    return set(await ctx.session.scalars(statement))
+    return {name.casefold() for name in await ctx.session.scalars(statement)}
 
 
 async def recent_at(ctx: TickContext, kind: EngineKind, location_id: int, epochs: int) -> bool:
@@ -110,7 +110,7 @@ async def festivals(ctx: TickContext, atlas: RegionAtlas) -> int:
         if town is None or town.status is not EntityStatus.CANON or stat_or(town, "population", 0) < table.festival_population:
             continue
         name = tag(ctx, f"the Great Festival of {town.name}")
-        if name in known or made >= table.emergent_cap:
+        if name.casefold() in known or made >= table.emergent_cap:
             continue
         event, _ = await happen(
             ctx,
@@ -145,7 +145,7 @@ async def coronations(ctx: TickContext, atlas: RegionAtlas) -> int:
         if ruler.status is not EntityStatus.CANON or realm.power_level < table.coronation_realm_power:
             continue
         name = tag(ctx, f"the Coronation of {ruler.name}")
-        if name in known or made >= table.emergent_cap:
+        if name.casefold() in known or made >= table.emergent_cap:
             continue
         event, _ = await happen(
             ctx,
@@ -179,7 +179,7 @@ async def weddings(ctx: TickContext, atlas: RegionAtlas) -> int:
         if first is None or second is None or first.entity_type not in COMMUNITY_TYPES or second.entity_type not in COMMUNITY_TYPES:
             continue
         name = tag(ctx, f"the Wedding of {first.name} and {second.name}")
-        if name in known or made >= table.emergent_cap:
+        if name.casefold() in known or made >= table.emergent_cap:
             continue
         event, _ = await happen(
             ctx,
@@ -215,7 +215,7 @@ async def massacres(ctx: TickContext, atlas: RegionAtlas) -> int:
         if loser is None or where is None:
             continue
         name = tag(ctx, f"the Massacre at {where.name}")
-        if name in known or made >= table.emergent_cap:
+        if name.casefold() in known or made >= table.emergent_cap:
             continue
         victor = winner.name if winner is not None else "the victors"
         event, _ = await happen(
@@ -283,7 +283,7 @@ async def schism_councils(ctx: TickContext, atlas: RegionAtlas) -> int:
             continue
         where = await ctx.session.get(EntityRow, parent.location_id) if parent.location_id is not None else None
         name = tag(ctx, f"the Council of {sect.name}")
-        if name in known:
+        if name.casefold() in known:
             continue
         event, _ = await happen(
             ctx,
@@ -319,7 +319,7 @@ async def eclipse_watches(ctx: TickContext, atlas: RegionAtlas) -> int:
         if host is None or made >= table.emergent_cap:
             continue
         name = tag(ctx, f"the Watch of the Dark Sun over {host.name}")
-        if name in known:
+        if name.casefold() in known:
             continue
         event, _ = await happen(
             ctx,

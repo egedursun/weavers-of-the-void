@@ -54,6 +54,7 @@ from aerona.db.tables.faith import (
     SoulJudgementRow,
     SpiritProfileRow,
 )
+from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.military import (
     ArmyMovementRow,
@@ -127,6 +128,28 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("shape_weather", "reorder_seasons", "sever_ley"),
         ("land.", "season.", "tools.son.shape_weather"),
         ("environment_survey",),
+    ),
+    ComplianceRow(
+        "S8.8",
+        (EventProfileRow.__tablename__, EventFootprintRow.__tablename__, EventCasualtyRow.__tablename__),
+        ("event_phases", "natural_disasters"),
+        ("event:create", "event:edit", "event:phase", "event:release", "event:footprint", "event:casualties", "event:end"),
+        ("EventCard", "EventsHere"),
+        ("chronicler_user",),
+        ("send_disaster",),
+        ("event.", "event.phase."),
+        ("event_phases", "events.casualties_backfill"),
+    ),
+    ComplianceRow(
+        "S6.1",
+        (RegionGeomorphRow.__tablename__, RiverShiftRow.__tablename__),
+        ("geomorphology", "natural_disasters"),
+        ("land:stir", "land:river", "land:shape", "land:release", "environment:set"),
+        ("LandShapeSection",),
+        (),
+        ("reshape_land", "send_disaster"),
+        ("land.",),
+        ("geomorphology",),
     ),
     ComplianceRow(
         "F4",
