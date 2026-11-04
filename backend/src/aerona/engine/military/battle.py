@@ -103,6 +103,7 @@ class Side:
     morale_parts: dict[str, int] = field(default_factory=dict)
     wing_bonus: float = 0.0
     flanking: bool = False
+    luck: float = 1.0
     fog: bool = False
     baggage_taken: int = 0
     healed: int = 0
@@ -234,6 +235,7 @@ def modifier(rules: Rules, stack: Stack, side: Side, ground: Field, enemy: Side 
         * vigour
         * terrain_factor(rules, stack, side, ground)
         * weather_factor(rules, stack, weather)
+        * called_fog(rules, stack, side, enemy)
         * arms_factor(rules, stack)
         * height
         * dug
@@ -241,8 +243,21 @@ def modifier(rules: Rules, stack: Stack, side: Side, ground: Field, enemy: Side 
         * side.edge
         * side.tactic_factor
         * side.surprise
+        * side.luck
         * learned
     )
+
+
+def called_fog(rules: Rules, stack: Stack, side: Side, enemy: Side | None) -> float:
+    if enemy is None or not (side.fog or enemy.fog) or stack.spec.family is not F.MISSILE:
+        return 1.0
+    return rules.battle_magic.fog_missile_pct / PERCENT
+
+
+def cast_luck(rules: Rules, streams: Streams, *sides: Side) -> None:
+    table = rules.campaigns
+    for side in sides:
+        side.luck = 1 + streams(f"luck.{side.entity.id}").die(table.battle_die) * table.battle_die_mult / PERCENT
 
 
 def strength(rules: Rules, side: Side, ground: Field) -> float:
@@ -646,6 +661,7 @@ def aftermath(rules: Rules, winner: Side, loser: Side, gap: float) -> tuple[dict
 
 
 def resolve(rules: Rules, streams: Streams, attacker: Side, defender: Side, ground: Field) -> BattleResult:
+    cast_luck(rules, streams, attacker, defender)
     refuser, phases = opening(rules, streams, attacker, defender, ground)
     if refuser is not None:
         holder = defender if refuser is attacker else attacker
@@ -671,6 +687,8 @@ def resolve(rules: Rules, streams: Streams, attacker: Side, defender: Side, grou
         "attacker": round(attacker.tactic_factor, 3),
         "defender": round(defender.tactic_factor, 3),
         "attacker_flank": float(attacker.flanking),
+        "attacker_luck": round(attacker.luck, 3),
+        "defender_luck": round(defender.luck, 3),
         "defender_flank": float(defender.flanking),
     }
     return BattleResult(attacker, defender, winner, loser, False, outcome, gap, phases, wounded, maimed, by_kind, factors)

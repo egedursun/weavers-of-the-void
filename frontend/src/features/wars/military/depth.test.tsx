@@ -6,9 +6,10 @@ import {
   resetApi,
 } from '@/test-utils/fakeApi'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { RecordPanel } from './RecordPanel'
+import { UnitDesigns } from './Designs'
 import { Vendettas } from './Vendettas'
 import { VesselCard } from './VesselCard'
+import { WarMap } from './WarMap'
 
 vi.mock('@/api/client', async () => {
   const { createFakeClient } = await import('@/test-utils/fakeApi')
@@ -54,7 +55,28 @@ const DESIGNS = {
   rows: [
     {
       id: 9,
-      values: { id: 9, name: 'Glass Lancers', melee: 90 },
+      values: {
+        id: 9,
+        name: 'Glass Lancers',
+        base_kind: 'heavy_cavalry',
+        family: 'mounted',
+        melee: 90,
+        missile: 0,
+        defence: 60,
+        speed: 70,
+        mass: 80,
+        cost: 9,
+        upkeep: 3,
+        armour: 'plate',
+        shield: 'small',
+        terror: 30,
+        counters_charge: false,
+        flying: false,
+        social_class: 'noble',
+        owner_entity_id: 3,
+        created_epoch: 5,
+        retired: false,
+      },
       locked: ['melee'],
       refs: {},
     },
@@ -64,21 +86,19 @@ const DESIGNS = {
 describe('military depth surfaces', () => {
   beforeEach(resetApi)
 
-  it('edits and holds a record value from its adjust panel', async () => {
+  it('shows a unit design as a card and holds an edited value', async () => {
     serve()
+    onApi('GET', '/api/units/kinds', [])
     onApi('GET', '/api/military/records/unit_design', DESIGNS)
     onApi('POST', '/api/actions/military:edit', ACCEPTED_ACTION)
     const { screen } = await renderApp(
-      <RecordPanel
-        kind='unit_design'
-        scope={null}
-        title='Unit designs'
-        blocked={null}
-      />
+      <UnitDesigns ownerId={3} blocked={null} />
     )
+    await expect.element(screen.getByText('Glass Lancers')).toBeVisible()
     await expect.element(screen.getByText('1 held')).toBeVisible()
+    await expect.element(screen.getByText('Plate').first()).toBeVisible()
     await screen.getByRole('button', { name: 'Adjust' }).first().click()
-    await screen.getByLabelText('Melee').first().fill('70')
+    await screen.getByRole('spinbutton', { name: 'Hand to hand' }).fill('70')
     await screen.getByRole('button', { name: 'Set and hold' }).click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/military:edit'))
@@ -112,17 +132,14 @@ describe('military depth surfaces', () => {
         locked: [],
       },
     ])
-    onApi('GET', '/api/military/records/feud', {
-      ...DESIGNS,
-      kind: 'feud',
-      label: 'Feud',
-      rows: [],
-    })
     const { screen } = await renderApp(
       <Vendettas entityId={null} blocked={null} />
     )
     await expect.element(screen.getByText('Burning')).toBeVisible()
-    await expect.element(screen.getByText('Remembered grief')).toBeVisible()
+    await expect.element(screen.getByText('the blood of Tam')).toBeVisible()
+    await expect
+      .element(screen.getByRole('button', { name: 'Adjust' }))
+      .toBeVisible()
   })
 
   it('shows a vessel card with hull, arms and repair', async () => {
@@ -163,14 +180,6 @@ describe('military depth surfaces', () => {
       voyages: 3,
       locked: [],
     })
-    onApi('GET', '/api/military/records/vessel', {
-      ...DESIGNS,
-      kind: 'vessel',
-      label: 'Vessel',
-      creatable: false,
-      deletable: false,
-      rows: [],
-    })
     onApi('POST', '/api/actions/vessel:repair', ACCEPTED_ACTION)
     const { screen } = await renderApp(
       <VesselCard vesselId={7} blocked={null} />
@@ -181,5 +190,24 @@ describe('military depth surfaces', () => {
     await expect
       .poll(() => callsTo('POST', '/api/actions/vessel:repair'))
       .toHaveLength(1)
+  })
+
+  it('draws the war on the world map, or says the map is not drawn yet', async () => {
+    serve()
+    const room = {
+      war: { id: 2, world_id: 1, started_epoch: 3, sides: [] },
+      armies: [],
+      fronts: [],
+      battles: [],
+      sieges: [],
+      occupations: [],
+    }
+    const { screen } = await renderApp(
+      <WarMap room={room as unknown as Parameters<typeof WarMap>[0]['room']} />
+    )
+    await expect.element(screen.getByText('War map')).toBeVisible()
+    await expect
+      .element(screen.getByRole('link', { name: 'World map' }))
+      .toBeVisible()
   })
 })

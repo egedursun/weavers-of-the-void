@@ -224,6 +224,7 @@ from aerona.rules.registry.war_depth import (
     LevyRules,
     SeafaringRules,
     SiegeDepthRules,
+    SonMilitaryRules,
     WarFinanceRules,
 )
 from aerona.rules.registry.weather import WeatherRules
@@ -395,6 +396,7 @@ class Rules:
     siege_depth: SiegeDepthRules = field(default_factory=SiegeDepthRules)
     captive_depth: CaptiveDepthRules = field(default_factory=CaptiveDepthRules)
     seafaring: SeafaringRules = field(default_factory=SeafaringRules)
+    son_military: SonMilitaryRules = field(default_factory=SonMilitaryRules)
     interpreters: InterpretersRules = field(default_factory=InterpretersRules)
     prestige: PrestigeRules = field(default_factory=PrestigeRules)
     script: ScriptRules = field(default_factory=ScriptRules)

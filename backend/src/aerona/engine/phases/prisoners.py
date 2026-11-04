@@ -50,9 +50,9 @@ async def home_of(ctx: TickContext, captive: EntityRow, row: CaptiveRow) -> Enti
     return await living_entity(ctx.session, row.home_entity_id)
 
 
-async def pay_ransom(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: EntityRow, home: EntityRow) -> None:
+async def pay_ransom(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: EntityRow, home: EntityRow, *, decreed: bool = False) -> None:
     cost = await pay_from_treasury(ctx, home, await named_ransom(ctx, captive), captive=captive)
-    if cost <= 0:
+    if cost <= 0 and not decreed:
         return
     shift_stat(captor, "wealth", cost)
     add_prosperity(ctx.rules, captor, cost)
@@ -322,7 +322,7 @@ async def order_ransom(ctx: TickContext, captive_row_id: int) -> CaptiveRow:
     home = await home_of(ctx, captive, row)
     if home is None:
         raise ConflictError(f"{captive.name} has no homeland to pay a ransom.")
-    await pay_ransom(ctx, row, captive, captor, home)
+    await pay_ransom(ctx, row, captive, captor, home, decreed=True)
     return row
 
 

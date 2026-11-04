@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
+from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.military import ArmyOfficerRow, ArmyProfileRow, ArmyUnitRow, OccupationRow
@@ -11,6 +12,7 @@ from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.environment import MovementMode, RiverClass, ScarKind, WeatherKind
@@ -85,6 +87,20 @@ def feed_mounts(rules: Rules, profile: ArmyProfileRow, rows: Sequence[ArmyUnitRo
             row.fatigue = clamp_int(row.fatigue + (PERCENT - table.unfed_mount_pct), 0, PERCENT)
             row.condition = clamp_int(row.condition - (PERCENT - table.unfed_mount_pct) // 4, 0, PERCENT)
     return False
+
+
+async def babel(ctx: TickContext, profile: ArmyProfileRow, rows: Sequence[ArmyUnitRow]) -> int:
+    origins = sorted({row.origin_entity_id for row in rows if row.count > 0 and row.origin_entity_id is not None})
+    if len(origins) < 2 or "cohesion" in profile.locked:
+        return 0
+    bonds = BondRepository(ctx.session)
+    tongues: set[int] = set()
+    for origin in origins:
+        tongues.update(bond.target_node_id for bond in await bonds.outgoing(origin, BondKind.SPEAKS))
+    loss = ctx.rules.campaign_depth.babel_cohesion * max(0, len(tongues) - 1)
+    if loss > 0:
+        profile.cohesion = clamp_int(profile.cohesion - loss, 0, PERCENT)
+    return loss
 
 
 async def class_desertion(ctx: TickContext, owner: EntityRow, profile: ArmyProfileRow, rows: Sequence[ArmyUnitRow]) -> int:

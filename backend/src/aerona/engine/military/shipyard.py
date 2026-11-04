@@ -11,6 +11,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import HullClass, VesselArmament, VesselStatus
 from aerona.domain.enums.travel import VehicleKind
 from aerona.engine.economy.materials import set_node_material
+from aerona.engine.military.rule_tables import hull_values
 from aerona.engine.primitives.stats import set_stats
 from aerona.rules.registry import Rules
 
@@ -36,19 +37,19 @@ async def commission(session: AsyncSession, rules: Rules, vessel: EntityRow, ord
     row.kind = VehicleKind.SHIP
     row.hull_class = hull
     row.armament = [item.value for item in (order.armament if order.armament is not None else spec.armament)][: max(spec.slots, 0) or None]
-    row.seaworthiness = int(getattr(rules.seafaring, f"{hull.value}_seaworthiness"))
-    row.cargo_capacity = int(getattr(rules.seafaring, f"{hull.value}_cargo"))
+    values = hull_values(rules.seafaring)
+    row.seaworthiness = values[(hull.value, "seaworthiness")]
     row.crew = order.crew if order.crew is not None else spec.crew
+    row.cargo_capacity = min(values[(hull.value, "cargo")], row.crew * rules.seafaring.crew_per_cargo)
     row.condition = PERCENT
     row.status = VesselStatus.DOCKED
     row.home_port_entity_id = order.home_port_id or vessel.location_id
     row.captain_entity_id = order.captain_id
-    row.hull_material = order.hull_material.value if order.hull_material is not None else None
-    row.fabric_material = order.fabric_material.value if order.fabric_material is not None else None
     row.renown = row.renown or 0
     row.voyages = row.voyages or 0
     row.locked = list(row.locked or [])
-    set_stats(vessel, speed=min(PERCENT, int(getattr(rules.seafaring, f"{hull.value}_speed"))), crew=row.crew, strangeness=spec.strangeness)
+    set_stats(vessel, speed=min(PERCENT, values[(hull.value, "speed")]), crew=row.crew, strangeness=spec.strangeness)
+    await session.flush()
     if order.hull_material is not None:
         await set_node_material(session, vessel.id, MaterialSlot.HULL, order.hull_material)
     if order.fabric_material is not None:

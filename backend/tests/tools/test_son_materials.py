@@ -43,7 +43,7 @@ async def test_a_son_sets_the_material_of_what_it_creates(database: Database) ->
     await ok(
         toolkit,
         "forge_item",
-        {"name": "Sunbrand", "description": DESCRIPTION, "power_level": 1, "links": link, "material": MaterialKind.GOLD.value},
+        {"name": "Sunbrand", "description": DESCRIPTION, "power_level": 1, "links": link, "item_class": "blade", "material": MaterialKind.GOLD.value},
     )
     async with database.read() as session:
         body = await session.get(NodeMaterialRow, (toolkit.created_entity_ids[-1], MaterialSlot.BODY))

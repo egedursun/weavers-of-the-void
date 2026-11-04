@@ -1,14 +1,21 @@
 import { useState } from 'react'
-import { Handshake, ScrollText } from 'lucide-react'
+import {
+  Coins,
+  Crown,
+  Handshake,
+  HeartHandshake,
+  MapPin,
+  ScrollText,
+} from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { EmptyState, EntityLink } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
-import { TERM, depthKeys, nameOf, usePeaceTerms } from './depth'
+import { EntityPicker } from './controls'
+import { TERM, depthKeys, nameOf, termParamText, usePeaceTerms } from './depth'
 import { type Named, busyOf } from './labels'
 import {
   Adjust,
@@ -16,16 +23,49 @@ import {
   FieldGrid,
   Panel,
   Tag,
+  NumberField,
   ToggleField,
 } from './parts'
+import { useNameMap } from './recordHooks'
 
 type TermKind = components['schemas']['PeaceTermKind']
-const PARAM_TERMS: Record<string, string> = {
-  reparations: 'amount',
-  tribute: 'amount',
-  demilitarised: 'region',
-  cession: 'region',
-  marriage: 'first_house',
+type Param = {
+  key: string
+  label: string
+  icon: typeof Coins
+  types?: string[]
+}
+const PARAM_TERMS: Record<string, Param[]> = {
+  reparations: [{ key: 'amount', label: 'Reparations in wealth', icon: Coins }],
+  tribute: [
+    { key: 'amount', label: 'Tribute in wealth', icon: Coins },
+    { key: 'epochs', label: 'Tribute for epochs', icon: Crown },
+  ],
+  demilitarised: [
+    {
+      key: 'region',
+      label: 'Border left unguarded',
+      icon: MapPin,
+      types: ['region'],
+    },
+  ],
+  cession: [
+    { key: 'region', label: 'Land ceded', icon: MapPin, types: ['region'] },
+  ],
+  marriage: [
+    {
+      key: 'first_house',
+      label: 'First house',
+      icon: HeartHandshake,
+      types: ['house'],
+    },
+    {
+      key: 'second_house',
+      label: 'Second house',
+      icon: HeartHandshake,
+      types: ['house'],
+    },
+  ],
 }
 
 export function PeaceTreaty({
@@ -42,7 +82,15 @@ export function PeaceTreaty({
   const [chosen, setChosen] = useState<Record<string, boolean>>({
     captive_release: true,
   })
-  const [params, setParams] = useState<Record<string, string>>({})
+  const [params, setParams] = useState<
+    Record<string, Record<string, number | null>>
+  >({})
+  const names = useNameMap()
+  const setParam = (kind: string, key: string, next: number | null) =>
+    setParams((current) => ({
+      ...current,
+      [kind]: { ...current[kind], [key]: next },
+    }))
   const victors: Record<string, Named> = {
     white: { label: 'No victor: white peace', icon: Handshake, tone: 'muted' },
     ...Object.fromEntries(
@@ -63,10 +111,11 @@ export function PeaceTreaty({
               .filter(([, on]) => on)
               .map(([kind]) => ({
                 kind: kind as TermKind,
-                params:
-                  PARAM_TERMS[kind] && params[kind]
-                    ? { [PARAM_TERMS[kind]]: Number(params[kind]) }
-                    : {},
+                params: Object.fromEntries(
+                  Object.entries(params[kind] ?? {}).filter(
+                    (entry): entry is [string, number] => entry[1] !== null
+                  )
+                ),
               })),
           },
         })
@@ -96,6 +145,11 @@ export function PeaceTreaty({
               className='flex min-w-0 flex-wrap items-center gap-1.5 rounded-md border p-2'
             >
               <Tag item={nameOf(TERM, term.kind)} />
+              {termParamText(term.kind, term.params, names) && (
+                <Text as='span' variant='caption' weight='medium'>
+                  {termParamText(term.kind, term.params, names)}
+                </Text>
+              )}
               {term.beneficiary && (
                 <Text as='span' variant='caption'>
                   for {term.beneficiary.name}
@@ -142,36 +196,48 @@ export function PeaceTreaty({
             />
           ))}
         </FieldGrid>
-        {Object.entries(PARAM_TERMS)
-          .filter(([kind]) => chosen[kind])
-          .map(([kind, key]) => (
-            <label key={kind} className='flex min-w-0 items-center gap-2'>
-              <Text as='span' variant='caption' className='shrink-0'>
-                {nameOf(TERM, kind).label}: {key.replaceAll('_', ' ')}
-              </Text>
-              <Input
-                type='number'
-                inputMode='numeric'
-                value={params[kind] ?? ''}
-                onChange={(event) =>
-                  setParams((current) => ({
-                    ...current,
-                    [kind]: event.target.value,
-                  }))
-                }
-              />
-            </label>
-          ))}
+        {Object.entries(PARAM_TERMS).some(([kind]) => chosen[kind]) && (
+          <FieldGrid>
+            {Object.entries(PARAM_TERMS)
+              .filter(([kind]) => chosen[kind])
+              .flatMap(([kind, fields]) =>
+                fields.map((field) =>
+                  field.types ? (
+                    <EntityPicker
+                      key={`${kind}.${field.key}`}
+                      label={field.label}
+                      icon={field.icon}
+                      types={field.types}
+                      value={params[kind]?.[field.key] ?? null}
+                      onChange={(next) => setParam(kind, field.key, next)}
+                      blocked={blocked}
+                    />
+                  ) : (
+                    <NumberField
+                      key={`${kind}.${field.key}`}
+                      label={field.label}
+                      icon={field.icon}
+                      value={String(params[kind]?.[field.key] ?? '')}
+                      onChange={(next) =>
+                        setParam(
+                          kind,
+                          field.key,
+                          next === ''
+                            ? null
+                            : Math.max(0, Math.round(Number(next) || 0))
+                        )
+                      }
+                    />
+                  )
+                )
+              )}
+          </FieldGrid>
+        )}
         <Button
           size='sm'
           className='self-start'
           disabled={busyOf(blocked, make.isPending) !== null}
-
-          disabledReason={
-            busyOf(blocked, make.isPending) !== null
-              ? (blocked ?? 'Fill in what is needed first')
-              : undefined
-          }
+          disabledReason={busyOf(blocked, make.isPending) ?? undefined}
           onClick={() => make.mutate()}
         >
           <Handshake />

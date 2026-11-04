@@ -218,3 +218,17 @@ class SeafaringRules:
     living_ship_speed: int = rule(70, 0, 500, W, "Speed of a living ship")
     living_ship_cargo: int = rule(150, 0, 100000, W, "Cargo a living ship carries")
     living_ship_seaworthiness: int = rule(75, 0, 100, W, "Storm survival of a living ship")
+
+
+@dataclass(frozen=True)
+class SonMilitaryRules:
+    wage_war_cost: int = rule(15, 0, 500, W, "Essence a son spends to declare a war with a cause and aims")
+    max_aims: int = rule(4, 1, 8, W, "Most aims a son can name when he declares a war")
+    raise_host_cost: int = rule(8, 0, 500, W, "Essence a son spends to call a community to arms")
+    raise_host_max: int = rule(2000, 1, 1000000, W, "Most soldiers a son can call to arms at once")
+    disband_cost: int = rule(2, 0, 500, W, "Essence a son spends to send an army home")
+    siege_cost: int = rule(6, 0, 500, W, "Essence a son spends to set an army against a city")
+    peace_cost: int = rule(5, 0, 500, W, "Essence a son spends to set the terms of a peace")
+    vessel_cost: int = rule(10, 0, 500, W, "Essence a son spends to commission a vessel")
+    design_cost: int = rule(4, 0, 500, W, "Essence a son spends to devise a new kind of soldier")
+    spies_cost: int = rule(6, 0, 500, W, "Essence a son spends to plant a spy network")

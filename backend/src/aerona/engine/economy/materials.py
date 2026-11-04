@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.materials import ALLOYS, MATERIALS, MaterialSpec
 from aerona.constants.units import PERCENT
+from aerona.core.errors import ValidationFailedError
+from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.economy import PROPERTY_COLUMNS, NodeMaterialRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
@@ -253,8 +255,7 @@ async def set_node_material(
     row = await session.get(NodeMaterialRow, (node_id, slot))
     if row is not None and row.held and not force:
         return
-    if slot is MaterialSlot.BODY:
-        await sync_item_material(session, node_id, material, world_material_id)
+    await sync_profile_material(session, node_id, slot, slot_key(material, world_material_id))
     if material is None and world_material_id is None:
         if row is not None:
             await session.delete(row)
@@ -273,10 +274,33 @@ def slot_key(material: MaterialKind | None, world_material_id: int | None) -> st
     return material.value if material is not None else None
 
 
-async def sync_item_material(session: AsyncSession, node_id: int, material: MaterialKind | None, world_material_id: int | None) -> None:
-    item = await session.get(ItemProfileRow, node_id)
-    if item is not None:
-        item.material = slot_key(material, world_material_id)
+def key_parts(key: str | None) -> tuple[MaterialKind | None, int | None]:
+    if not key:
+        return None, None
+    if key.startswith(WORLD_KEY_PREFIX):
+        number = key.removeprefix(WORLD_KEY_PREFIX)
+        if not number.isdigit():
+            raise ValidationFailedError(f"{key} is not a substance of this world.")
+        return None, int(number)
+    try:
+        return MaterialKind(key), None
+    except ValueError as error:
+        raise ValidationFailedError(f"{key} is not a known material.") from error
+
+
+async def sync_profile_material(session: AsyncSession, node_id: int, slot: MaterialSlot, key: str | None) -> None:
+    if slot is MaterialSlot.BODY:
+        item = await session.get(ItemProfileRow, node_id)
+        if item is not None:
+            item.material = key
+        return
+    vessel = await session.get(VesselProfileRow, node_id)
+    if vessel is None:
+        return
+    if slot is MaterialSlot.HULL:
+        vessel.hull_material = key
+    elif slot is MaterialSlot.FABRIC:
+        vessel.fabric_material = key
 
 
 @dataclass(frozen=True)

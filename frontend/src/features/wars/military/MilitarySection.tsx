@@ -32,9 +32,10 @@ import {
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { ArmyOrders } from './ArmyDepth'
 import { ArmyPanel } from './ArmyPanel'
+import { NetworkAgents } from './Intrigue'
 import { MilitaryDepth } from './MilitaryDepth'
-import { ArmyOrders } from './Orders'
 import { CohortCard, OccupationCard } from './WarRoom'
 import {
   type CommanderTrait,
@@ -241,6 +242,13 @@ function NetworkCard({
           </div>
         </Adjust>
       </div>
+      {network.owner && (
+        <NetworkAgents
+          networkId={network.id}
+          ownerId={network.owner.id}
+          blocked={blocked}
+        />
+      )}
     </li>
   )
 }

@@ -37,10 +37,9 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import CustomCatalog, ItemDeed, MagicSchool, ProphecyState, RiteEffectKind, SpeakerKind, SummonForm, Technique
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
-from aerona.engine.economy.materials import WORLD_KEY_PREFIX, set_node_material
+from aerona.engine.economy.materials import key_parts, set_node_material
 from aerona.engine.lore import art, ideology, items, kinds, legends, prophecy, rites, traditions
 from aerona.engine.lore.creation import open_lore
 from aerona.engine.lore.history import record
@@ -154,22 +153,12 @@ async def record_of(ctx: TickContext, entity_id: int) -> EntityRow:
 
 
 async def body_material(ctx: TickContext, entity: EntityRow, key: object) -> None:
-    if key is None:
-        await set_node_material(ctx.session, entity.id, MaterialSlot.BODY, None, force=True)
-        return
-    text = str(key)
-    if text.startswith(WORLD_KEY_PREFIX):
-        number = text.removeprefix(WORLD_KEY_PREFIX)
-        found = await ctx.session.get(WorldMaterialRow, int(number)) if number.isdigit() else None
+    material, world_material_id = key_parts(str(key) if key is not None else None)
+    if world_material_id is not None:
+        found = await ctx.session.get(WorldMaterialRow, world_material_id)
         if found is None or found.world_id != entity.world_id:
-            raise ValidationFailedError(f"{text} is not a substance of this world.")
-        await set_node_material(ctx.session, entity.id, MaterialSlot.BODY, None, found.id, force=True)
-        return
-    try:
-        kind = MaterialKind(text)
-    except ValueError as error:
-        raise ValidationFailedError(f"{text} is not a known material.") from error
-    await set_node_material(ctx.session, entity.id, MaterialSlot.BODY, kind, force=True)
+            raise ValidationFailedError(f"{key} is not a substance of this world.")
+    await set_node_material(ctx.session, entity.id, MaterialSlot.BODY, material, world_material_id, force=True)
 
 
 async def assign(ctx: TickContext, entity: EntityRow, row: Base, key: str, value: object) -> None:

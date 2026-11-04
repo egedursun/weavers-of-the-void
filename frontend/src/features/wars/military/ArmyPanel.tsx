@@ -47,7 +47,9 @@ import {
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { StackArms } from './ArmyDepth'
 import { type ArmyCard, type Stack, soldiersOf, useUnitKinds } from './api'
+import { EntityPicker } from './controls'
 import {
   ARMOUR,
   DOCTRINE,
@@ -127,9 +129,11 @@ function unitOf(stack: { kind: string; family: string }) {
 
 function StackEditor({
   stack,
+  armyId,
   blocked,
 }: {
   stack: Stack
+  armyId: number
   blocked: string | null
 }) {
   const [values, setValues] = useState<Record<StackNumber, string>>(
@@ -236,15 +240,23 @@ function StackEditor({
           Strike it
         </Button>
       </div>
+      <StackArms
+        armyId={armyId}
+        stackId={stack.id}
+        kind={stack.kind}
+        blocked={blocked}
+      />
     </Adjust>
   )
 }
 
 function StackCard({
   stack,
+  armyId,
   blocked,
 }: {
   stack: Stack
+  armyId: number
   blocked: string | null
 }) {
   const { icon, family } = unitOf(stack)
@@ -350,7 +362,7 @@ function StackCard({
         </div>
       </div>
       <div className='mt-auto flex min-w-0 flex-col'>
-        <StackEditor stack={stack} blocked={blocked} />
+        <StackEditor stack={stack} armyId={armyId} blocked={blocked} />
       </div>
     </li>
   )
@@ -442,8 +454,8 @@ function ArmyOrders({
   const [stance, setStance] = useState<string>(army.stance)
   const [doctrine, setDoctrine] = useState(army.doctrine)
   const [forced, setForced] = useState(army.forced_march)
-  const [target, setTarget] = useState(
-    army.target ? String(army.target.id) : ''
+  const [target, setTarget] = useState<number | null>(
+    army.target ? army.target.id : null
   )
   const [numbers, setNumbers] = useState<Record<ProfileNumber, string>>(
     () =>
@@ -470,7 +482,7 @@ function ArmyOrders({
               stance,
               doctrine,
               forced_march: forced,
-              target_id: target ? Math.round(Number(target)) : null,
+              target_id: target,
             },
           },
         })
@@ -509,15 +521,13 @@ function ArmyOrders({
             blocked={busy}
             onPick={setDoctrine}
           />
-          <NumberField
-            label={
-              army.target
-                ? `March on (now ${army.target.name})`
-                : 'March on region #'
-            }
+          <EntityPicker
+            label='March on'
             icon={Target}
+            types={['region']}
             value={target}
             onChange={setTarget}
+            blocked={busy}
           />
           <ToggleField
             item={{ label: 'Forced march', icon: Footprints, tone: 'warning' }}
@@ -789,7 +799,12 @@ export function ArmyPanel({
         ) : (
           <ul className='grid min-w-0 grid-cols-1 gap-3 @xl/mil:grid-cols-2 @6xl/mil:grid-cols-3'>
             {army.stacks.map((stack) => (
-              <StackCard key={stack.id} stack={stack} blocked={blocked} />
+              <StackCard
+                key={stack.id}
+                stack={stack}
+                armyId={army.army?.id ?? 0}
+                blocked={blocked}
+              />
             ))}
           </ul>
         )}
