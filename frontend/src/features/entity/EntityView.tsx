@@ -7,6 +7,7 @@ import { MentionText } from '@/components/domain/MentionText'
 import { Text } from '@/components/typography'
 import { targetsOfRefs } from '@/features/chronicle/linkTargets'
 import { CommunityAddictions } from '@/features/cosmos/EconomyControls'
+import { DedicationSection } from '@/features/foundations/DedicationSection'
 import { Lightbox } from '@/features/images/Lightbox'
 import { useImageGenEvents } from '@/features/images/imageGenState'
 import { CommunityRelations } from '@/features/relations/CommunityRelations'
@@ -106,6 +107,7 @@ const SECTION_LINKS = [
   { id: 'section-house', label: 'House' },
   { id: 'section-treaty', label: 'Terms' },
   { id: 'section-oaths', label: 'Oaths' },
+  { id: 'section-dedication', label: 'Dedication' },
   { id: 'section-economy', label: 'Stores' },
   { id: 'section-market', label: 'Market' },
   { id: 'section-resource-profile', label: 'Reserve' },
@@ -212,6 +214,7 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
   if (entity.entity_type !== 'house') present.delete('section-house')
   if (entity.entity_type !== 'treaty') present.delete('section-treaty')
   if (entity.entity_type !== 'mortal') present.delete('section-oaths')
+  if (entity.entity_type !== 'structure') present.delete('section-dedication')
   if (
     !trading &&
     entity.entity_type !== 'polity' &&
@@ -353,6 +356,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       )}
       {entity.entity_type === 'mortal' && (
         <OathsSection entityId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'structure' && (
+        <DedicationSection structureId={entity.id} readOnlyReason={readOnly} />
       )}
       {entity.entity_type === 'cult' && (
         <DoctrineSection cultId={entity.id} readOnlyReason={readOnly} />

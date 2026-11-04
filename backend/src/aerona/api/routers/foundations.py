@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Path
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader, world_rules
@@ -56,13 +57,19 @@ async def son_anchorage(services: ServicesDep, son_id: int = Path(ge=1)) -> Anch
         anchor = await session.get(EntityRow, son.anchor_entity_id) if son.anchor_entity_id is not None else None
         shrines = await dedicated_structures(session, son.id)
         wars = await incited_wars(session, son.id)
-        refs = await node_refs(session, [*(work.id for work in shrines), *(war.event_entity_id for war in wars)])
+        made = list(
+            await session.scalars(
+                select(EntityRow.id).where(EntityRow.creator_son_id == son.id, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+            )
+        )
+        refs = await node_refs(session, [*(work.id for work in shrines), *(war.event_entity_id for war in wars), *made])
         return AnchorageView(
             son_id=son.id,
             anchor=await node_ref(session, anchor.id) if anchor is not None else None,
             anchor_alive=anchor is not None and anchor.status is EntityStatus.CANON,
             anchor_held=await is_held(session, son.id, ANCHOR_KEY, epoch),
             shrines=[refs[work.id] for work in shrines if work.id in refs],
+            creations=[refs[item] for item in made if item in refs],
             incited=[
                 IncitedWarView(
                     war_id=war.id,

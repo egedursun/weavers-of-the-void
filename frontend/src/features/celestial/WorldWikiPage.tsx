@@ -51,6 +51,7 @@ import {
   SKY_EVENT_LABEL,
   TRAVEL_METHOD_LABEL,
 } from '@/features/cosmos/model/labels'
+import { GoldenAgeSection } from '@/features/foundations/GoldenAgeCard'
 import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverlay'
 import { RecordGallery } from '@/features/pantheon/RecordGallery'
 import { mediaUrl } from '@/features/pantheon/media'
@@ -420,6 +421,7 @@ export function WorldWikiView({ worldId }: { worldId: number }) {
       )}
       <WorldSpecs wiki={data} />
       <WorldSeasonsSection worldId={data.world.id} />
+      <GoldenAgeSection worldId={data.world.id} />
       <CelestialDepthSection
         kind='world'
         id={data.world.id}

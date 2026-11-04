@@ -35,6 +35,7 @@ class AnchorageView(ApiModel):
     anchor_alive: bool
     anchor_held: bool
     shrines: list[NodeRef]
+    creations: list[NodeRef]
     incited: list[IncitedWarView]
 
 

@@ -56,6 +56,7 @@ import {
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { TERRAIN, WEATHER } from '@/features/entity/environment/labels'
 import { CLASS_SPEC } from '@/features/entity/society/labels'
+import { IncitementCard } from '@/features/foundations/IncitementCard'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { ArmyPanel } from './ArmyPanel'
@@ -1403,6 +1404,7 @@ export function WarRoom({ warId }: { warId: number }) {
     >
       <Versus room={data} />
       <RoomStats room={data} />
+      <IncitementCard war={data.war} blocked={blocked} />
       <WarControls room={data} blocked={blocked} />
       {data.fronts.length > 0 && (
         <Panel

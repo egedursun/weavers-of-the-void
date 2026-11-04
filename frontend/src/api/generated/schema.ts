@@ -10429,6 +10429,7 @@ export interface components {
             anchor_alive: boolean;
             anchor_held: boolean;
             shrines: components["schemas"]["NodeRef"][];
+            creations: components["schemas"]["NodeRef"][];
             incited: components["schemas"]["IncitedWarView"][];
         };
         ArchiveMode: "history" | "atlas" | "automatic";
