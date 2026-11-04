@@ -1,5 +1,3 @@
-from pydantic import Field
-
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.faith import (
@@ -28,7 +26,7 @@ class TenetKindSpec(ApiModel):
 
 class TenetView(ApiModel):
     tenet: TenetKind
-    name: str | None = None
+    name: str | None
     effect: str
     target: str | None
     target_name: str | None
@@ -46,7 +44,7 @@ class ClergyView(ApiModel):
     kind: ClergyOffice
     holder: NodeRef | None
     since_epoch: int
-    locked: bool = False
+    locked: bool
 
 
 class HeresyView(ApiModel):
@@ -56,7 +54,7 @@ class HeresyView(ApiModel):
     declared_epoch: int
     suppressed: bool
     tolerated: bool
-    locked: list[str] = Field(default_factory=list)
+    locked: list[str]
 
 
 class RelicView(ApiModel):
@@ -66,8 +64,8 @@ class RelicView(ApiModel):
     sanctity: int
     pilgrims: int
     canonised_epoch: int
-    cult: NodeRef | None = None
-    locked: list[str] = Field(default_factory=list)
+    cult: NodeRef | None
+    locked: list[str]
 
 
 class DoctrineView(ApiModel):
@@ -93,16 +91,16 @@ class DoctrineView(ApiModel):
     heresies: list[HeresyView]
     mother: HeresyView | None
     relics: list[RelicView]
-    rebirth_path: RebirthPath = RebirthPath.PEOPLE
-    liturgical_language: NodeRef | None = None
-    liturgy_reach: int = 100
-    parent_cult: NodeRef | None = None
-    devotion: int = 0
-    state_realm: NodeRef | None = None
-    clergy_sway: int = 0
-    god_king: NodeRef | None = None
-    tithe_base: list[NodeRef] = Field(default_factory=list)
-    realm_population: int = 0
+    rebirth_path: RebirthPath
+    liturgical_language: NodeRef | None
+    liturgy_reach: int
+    parent_cult: NodeRef | None
+    devotion: int
+    state_realm: NodeRef | None
+    clergy_sway: int
+    god_king: NodeRef | None
+    tithe_base: list[NodeRef]
+    realm_population: int
 
 
 class StratumView(ApiModel):
@@ -112,11 +110,11 @@ class StratumView(ApiModel):
     criteria: StratumCriteria
     population: int
     souls: list[NodeRef]
-    realm: NodeRef | None = None
-    closed: bool = False
-    son_id: int | None = None
-    son_name: str | None = None
-    cult: NodeRef | None = None
+    realm: NodeRef | None
+    closed: bool
+    son_id: int | None
+    son_name: str | None
+    cult: NodeRef | None
 
 
 class RealmPopulation(ApiModel):
@@ -128,8 +126,8 @@ class RealmPopulation(ApiModel):
 class RealmOfDeadView(ApiModel):
     realm: NodeRef | None
     strata: list[StratumView]
-    realms: list[NodeRef] = Field(default_factory=list)
-    gods: list[RealmPopulation] = Field(default_factory=list)
+    realms: list[NodeRef]
+    gods: list[RealmPopulation]
 
 
 class PossessionView(ApiModel):
@@ -171,7 +169,7 @@ class SoulCard(ApiModel):
     reborn_as: NodeRef | None
     gate: ReincarnationGate | None
     locked: list[str]
-    seal_strength: int = 0
-    unrest: int = 0
-    possession: PossessionView | None = None
-    patron_name: str | None = None
+    seal_strength: int
+    unrest: int
+    possession: PossessionView | None
+    patron_name: str | None

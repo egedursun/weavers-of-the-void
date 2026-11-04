@@ -4287,6 +4287,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/nodes/{node_id}/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["node_profiles_api_nodes__node_id__profiles_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/worlds/{world_id}/materials": {
         parameters: {
             query?: never;
@@ -4711,6 +4727,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["realm_of_dead_api_entities__entity_id__afterlife_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/possession": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["possession_api_entities__entity_id__possession_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8207,6 +8239,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/profile:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_profile_set_api_actions_profile_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/profile:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_profile_release_api_actions_profile_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/ley:sever": {
         parameters: {
             query?: never;
@@ -9503,6 +9567,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/cult:reset_doctrine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_cult_reset_doctrine_api_actions_cult_reset_doctrine_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/cult:tenet": {
         parameters: {
             query?: never;
@@ -9513,6 +9593,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["action_cult_tenet_api_actions_cult_tenet_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/cult:office": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_cult_office_api_actions_cult_office_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/cult:holding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_cult_holding_api_actions_cult_holding_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9551,6 +9663,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/cult:edit_heresy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_cult_edit_heresy_api_actions_cult_edit_heresy_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/cult:undeclare_heresy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_cult_undeclare_heresy_api_actions_cult_undeclare_heresy_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/cult:canonise": {
         parameters: {
             query?: never;
@@ -9561,6 +9705,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["action_cult_canonise_api_actions_cult_canonise_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/relic:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_relic_edit_api_actions_relic_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/relic:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_relic_remove_api_actions_relic_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/soul:raise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_soul_raise_api_actions_soul_raise_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9657,6 +9849,70 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["action_soul_edit_api_actions_soul_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/soul:reread_deeds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_soul_reread_deeds_api_actions_soul_reread_deeds_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/soul:possess": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_soul_possess_api_actions_soul_possess_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/soul:possession": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_soul_possession_api_actions_soul_possession_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/soul:exorcise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_soul_exorcise_api_actions_soul_exorcise_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10191,10 +10447,13 @@ export interface components {
         AfterlifeStratumInput: {
             realm_id: number;
             kind: components["schemas"]["StratumKind"];
+            stratum_id?: number | null;
             name?: string | null;
-            criteria?: {
-                [key: string]: number | string;
-            } | null;
+            criteria?: components["schemas"]["StratumCriteria"] | null;
+            son_id?: number | null;
+            cult_id?: number | null;
+            closed?: boolean | null;
+            clear_links: boolean;
             remove: boolean;
         };
         AgeBand: "child" | "adult" | "elder";
@@ -11113,6 +11372,7 @@ export interface components {
             kind: components["schemas"]["ClergyOffice"];
             holder: components["schemas"]["NodeRef"] | null;
             since_epoch: number;
+            locked: boolean;
         };
         ClimateAffinity: "warm" | "wet" | "cold" | "dry" | "any";
         ClimateAgeView: {
@@ -11463,13 +11723,26 @@ export interface components {
         CultDoctrineInput: {
             cult_id: number;
             values?: {
-                [key: string]: number | string | boolean | null;
+                [key: string]: unknown;
+            };
+            release?: string[];
+        };
+        CultEditHeresyInput: {
+            heresy_id: number;
+            values?: {
+                [key: string]: unknown;
             };
             release?: string[];
         };
         CultHeresyInput: {
             heresy_id: number;
             parent_id: number;
+        };
+        CultHoldingInput: {
+            cult_id: number;
+            entity_id: number;
+            kind: components["schemas"]["HoldingKind"];
+            remove: boolean;
         };
         CultJudgeHeresyInput: {
             heresy_id: number;
@@ -11478,6 +11751,17 @@ export interface components {
         CultMergeInput: {
             source_id: number;
             into_id: number;
+        };
+        CultOfficeInput: {
+            cult_id: number;
+            kind: components["schemas"]["ClergyOffice"];
+            holder_id?: number | null;
+            locked?: boolean | null;
+            vacate: boolean;
+            remove: boolean;
+        };
+        CultResetDoctrineInput: {
+            cult_id: number;
         };
         CultSchismInput: {
             cult_id: number;
@@ -11496,6 +11780,10 @@ export interface components {
             held: boolean;
             target?: string | null;
             son_id?: number | null;
+            name?: string | null;
+        };
+        CultUndeclareHeresyInput: {
+            heresy_id: number;
         };
         CultureView: {
             cohesion: number;
@@ -11754,6 +12042,16 @@ export interface components {
             heresies: components["schemas"]["HeresyView"][];
             mother: components["schemas"]["HeresyView"] | null;
             relics: components["schemas"]["RelicView"][];
+            rebirth_path: components["schemas"]["RebirthPath"];
+            liturgical_language: components["schemas"]["NodeRef"] | null;
+            liturgy_reach: number;
+            parent_cult: components["schemas"]["NodeRef"] | null;
+            devotion: number;
+            state_realm: components["schemas"]["NodeRef"] | null;
+            clergy_sway: number;
+            god_king: components["schemas"]["NodeRef"] | null;
+            tithe_base: components["schemas"]["NodeRef"][];
+            realm_population: number;
         };
         Domain: "sea" | "fire" | "earth" | "sky" | "storm" | "death" | "life" | "dream" | "time" | "light" | "shadow" | "war" | "craft" | "knowledge" | "love" | "trickery" | "hunt" | "plants" | "bone" | "blood" | "sound" | "stone" | "ice" | "madness" | "trade" | "road" | "plague" | "harvest" | "moon" | "sun" | "star" | "lies" | "oath" | "memory" | "hunger" | "glass" | "salt" | "ash" | "border" | "sleep";
         DomesticationStage: "wild" | "tamed" | "herded" | "domesticated" | "breed";
@@ -12625,7 +12923,7 @@ export interface components {
             key: components["schemas"]["BodyFunction"];
             level: number;
         };
-        FuneralRite: "burial" | "burning" | "exposure" | "none";
+        FuneralRite: "burial" | "burning" | "exposure" | "nameless" | "none";
         GateNeed: {
             branch: components["schemas"]["KnowledgeBranch"];
             level: number;
@@ -12827,6 +13125,7 @@ export interface components {
             declared_epoch: number;
             suppressed: boolean;
             tolerated: boolean;
+            locked: string[];
         };
         HeroApprenticeInput: {
             hero_id: number;
@@ -15126,6 +15425,16 @@ export interface components {
             x: number;
             y: number;
         };
+        PossessionView: {
+            host: components["schemas"]["NodeRef"] | null;
+            spirit: components["schemas"]["NodeRef"] | null;
+            since_epoch: number;
+            stress: number;
+            host_values: {
+                [key: string]: number;
+            };
+            locked: string[];
+        };
         PostCheatsEssenceBody: {
             amount: number;
         };
@@ -15359,6 +15668,32 @@ export interface components {
             commodity: components["schemas"]["CommodityKind"];
             points: components["schemas"]["PricePoint"][];
         };
+        ProfileColumnRecord: {
+            name: string;
+            kind: string;
+            value: number | string | boolean | null;
+            options: string[];
+            nullable: boolean;
+            held: boolean;
+            pinned: boolean;
+        };
+        ProfileReleaseInput: {
+            node_id: number;
+            table: string;
+            column: string;
+        };
+        ProfileSetInput: {
+            node_id: number;
+            table: string;
+            column: string;
+            value: number | string | boolean | null;
+            hold: boolean;
+        };
+        ProfileTableRecord: {
+            table: string;
+            lockable: boolean;
+            columns: components["schemas"]["ProfileColumnRecord"][];
+        };
         PromptArea: "shared" | "context" | "genesis" | "son_turn" | "fate" | "chronicler" | "naming" | "voices" | "deepening" | "image_prompts" | "council" | "translation" | "world_birth" | "network_repair" | "mortal" | "opportunities" | "agent" | "chronicle" | "localisation";
         PromptCatalogue: {
             prompts: components["schemas"]["PromptEntry"][];
@@ -15565,6 +15900,13 @@ export interface components {
         RealmOfDeadView: {
             realm: components["schemas"]["NodeRef"] | null;
             strata: components["schemas"]["StratumView"][];
+            realms: components["schemas"]["NodeRef"][];
+            gods: components["schemas"]["RealmPopulation"][];
+        };
+        RealmPopulation: {
+            son_id: number;
+            name: string;
+            souls: number;
         };
         RealmView: {
             id: number;
@@ -15602,6 +15944,7 @@ export interface components {
             overlord: components["schemas"]["NamedNode"] | null;
             vassals: components["schemas"]["NamedNode"][];
         };
+        RebirthPath: "people" | "house" | "merit";
         RecordEnd: "repeal" | "abandon" | "forget" | "disband" | "lose" | "assimilate";
         RecordEndInput: {
             entity_id: number;
@@ -15777,6 +16120,16 @@ export interface components {
             history: components["schemas"]["RelationEventView"][];
             opinions: components["schemas"]["OpinionView"][];
         };
+        RelicEditInput: {
+            item_id: number;
+            values?: {
+                [key: string]: unknown;
+            };
+            release?: string[];
+        };
+        RelicRemoveInput: {
+            item_id: number;
+        };
         RelicView: {
             item: components["schemas"]["NodeRef"] | null;
             saint: components["schemas"]["NodeRef"] | null;
@@ -15784,6 +16137,8 @@ export interface components {
             sanctity: number;
             pilgrims: number;
             canonised_epoch: number;
+            cult: components["schemas"]["NodeRef"] | null;
+            locked: string[];
         };
         RenamedNode: {
             old_name: string;
@@ -15970,7 +16325,7 @@ export interface components {
             magnitude: number;
             detail?: string | null;
         };
-        RiteEffectKind: "damage" | "heal" | "weather_change" | "curse" | "bless" | "ward" | "scry" | "bind" | "summon" | "raise_dead" | "fertility" | "harvest_blessing";
+        RiteEffectKind: "damage" | "heal" | "weather_change" | "curse" | "bless" | "ward" | "scry" | "bind" | "summon" | "raise_dead" | "fertility" | "harvest_blessing" | "seal_soul" | "unseal_soul" | "exorcise";
         RiteEffectView: {
             effect: components["schemas"]["RiteEffectKind"];
             magnitude: number;
@@ -16699,7 +17054,7 @@ export interface components {
             value: number;
         };
         SonStatus: "active" | "asleep" | "exiled" | "dead";
-        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_father" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "sever_ley" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world";
+        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_father" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "sever_ley" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world" | "reveal_tenet" | "open_rebirth_gate";
         SonToolsView: {
             son_id: number;
             rarity: components["schemas"]["Rarity"];
@@ -16794,6 +17149,10 @@ export interface components {
             reborn_as: components["schemas"]["NodeRef"] | null;
             gate: components["schemas"]["ReincarnationGate"] | null;
             locked: string[];
+            seal_strength: number;
+            unrest: number;
+            possession: components["schemas"]["PossessionView"] | null;
+            patron_name: string | null;
         };
         SoulDescendInput: {
             mortal_id: number;
@@ -16801,8 +17160,12 @@ export interface components {
         SoulEditInput: {
             spirit_id: number;
             values?: {
-                [key: string]: number | string | boolean | null;
+                [key: string]: unknown;
             };
+            release?: string[];
+        };
+        SoulExorciseInput: {
+            host_id: number;
         };
         SoulHarvestInput: {
             cult_id: number;
@@ -16816,6 +17179,22 @@ export interface components {
         SoulMirrorInput: {
             mortal_id: number;
         };
+        SoulPossessInput: {
+            spirit_id: number;
+            host_id: number;
+        };
+        SoulPossessionInput: {
+            host_id: number;
+            values?: {
+                [key: string]: unknown;
+            };
+            release?: string[];
+        };
+        SoulRaiseInput: {
+            mortal_id: number;
+            alignment: components["schemas"]["SpiritAlignment"];
+            place_id?: number | null;
+        };
         SoulReincarnateInput: {
             spirit_id: number;
             community_id?: number | null;
@@ -16823,9 +17202,13 @@ export interface components {
         SoulReleaseInput: {
             spirit_id: number;
         };
+        SoulRereadDeedsInput: {
+            spirit_id: number;
+        };
         SoulSealInput: {
             spirit_id: number;
             sealed: boolean;
+            strength?: number | null;
         };
         SpeakerKind: "native" | "second" | "liturgical";
         SpeakerView: {
@@ -17134,16 +17517,33 @@ export interface components {
             virulence: number;
             lethality: number;
         };
+        StratumCriteria: {
+            priority: number;
+            no_god: boolean;
+            needs_rite: boolean;
+            score_at_least?: number | null;
+            score_below?: number | null;
+            renown_at_least?: number | null;
+            honour_at_least?: number | null;
+            faith_at_least?: number | null;
+            violence_at_least?: number | null;
+            infamy_at_least?: number | null;
+            rites: components["schemas"]["FuneralRite"][];
+            tenets_any: components["schemas"]["TenetKind"][];
+        };
         StratumKind: "paradise" | "plain" | "torment" | "oblivion" | "warrior_hall" | "ancestor_hall";
         StratumView: {
             id: number;
             kind: components["schemas"]["StratumKind"];
             name: string;
-            criteria: {
-                [key: string]: number | string;
-            };
+            criteria: components["schemas"]["StratumCriteria"];
             population: number;
             souls: components["schemas"]["NodeRef"][];
+            realm: components["schemas"]["NodeRef"] | null;
+            closed: boolean;
+            son_id: number | null;
+            son_name: string | null;
+            cult: components["schemas"]["NodeRef"] | null;
         };
         StreamHelloEvent: {
             id: number;
@@ -17222,6 +17622,7 @@ export interface components {
         };
         TenetView: {
             tenet: components["schemas"]["TenetKind"];
+            name: string | null;
             effect: string;
             target: string | null;
             target_name: string | null;
@@ -26242,6 +26643,35 @@ export interface operations {
             };
         };
     };
+    node_profiles_api_nodes__node_id__profiles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileTableRecord"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     world_materials_api_worlds__world_id__materials_get: {
         parameters: {
             query?: never;
@@ -26963,6 +27393,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RealmOfDeadView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    possession_api_entities__entity_id__possession_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PossessionView"] | null;
                 };
             };
             422: {
@@ -33489,6 +33948,68 @@ export interface operations {
             };
         };
     };
+    action_profile_set_api_actions_profile_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_profile_release_api_actions_profile_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_ley_sever_api_actions_ley_sever_post: {
         parameters: {
             query?: never;
@@ -36000,6 +36521,37 @@ export interface operations {
             };
         };
     };
+    action_cult_reset_doctrine_api_actions_cult_reset_doctrine_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CultResetDoctrineInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_cult_tenet_api_actions_cult_tenet_post: {
         parameters: {
             query?: never;
@@ -36010,6 +36562,68 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["CultTenetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_cult_office_api_actions_cult_office_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CultOfficeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_cult_holding_api_actions_cult_holding_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CultHoldingInput"];
             };
         };
         responses: {
@@ -36093,6 +36707,68 @@ export interface operations {
             };
         };
     };
+    action_cult_edit_heresy_api_actions_cult_edit_heresy_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CultEditHeresyInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_cult_undeclare_heresy_api_actions_cult_undeclare_heresy_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CultUndeclareHeresyInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_cult_canonise_api_actions_cult_canonise_post: {
         parameters: {
             query?: never;
@@ -36103,6 +36779,99 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["CultCanoniseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_relic_edit_api_actions_relic_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RelicEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_relic_remove_api_actions_relic_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RelicRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_soul_raise_api_actions_soul_raise_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SoulRaiseInput"];
             };
         };
         responses: {
@@ -36289,6 +37058,130 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["SoulEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_soul_reread_deeds_api_actions_soul_reread_deeds_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SoulRereadDeedsInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_soul_possess_api_actions_soul_possess_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SoulPossessInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_soul_possession_api_actions_soul_possession_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SoulPossessionInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_soul_exorcise_api_actions_soul_exorcise_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SoulExorciseInput"];
             };
         };
         responses: {
@@ -37319,7 +38212,7 @@ export const feedCategoryValues: ReadonlyArray<FlattenedDeepRequired<components>
 export const foreignGodDeepenedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodDeepenedEvent"]["kind"]> = ["foreign_god.deepened"];
 export const foreignGodPowerEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodPowerEffect"]> = ["shield", "caller", "thief", "destroyer", "fertile", "reviving", "deathless", "sharp_tongued"];
 export const foreignGodStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodStatus"]> = ["awake", "asleep", "defeated", "dead"];
-export const funeralRiteValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FuneralRite"]> = ["burial", "burning", "exposure", "none"];
+export const funeralRiteValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FuneralRite"]> = ["burial", "burning", "exposure", "nameless", "none"];
 export const genesisFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisFinishedEvent"]["kind"]> = ["genesis.finished"];
 export const genesisTemplateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisTemplate"]> = ["dark_fantasy", "mythic_age", "cosmic_horror", "fairy_tale", "star_myth", "sand_and_ash", "primordial_dawn", "crowns_and_knives", "drowned_world", "long_winter", "after_the_fall", "sky_islands", "age_of_engines"];
 export const governmentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GovernmentKind"]> = ["chiefdom", "monarchy", "theocracy", "oligarchy", "republic", "tribal_confederation", "empire", "hive_council", "god_kingdom", "occupation"];
@@ -37447,6 +38340,7 @@ export const prophecyStatsKindValues: ReadonlyArray<FlattenedDeepRequired<compon
 export const punishmentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PunishmentKind"]> = ["lightning", "chain", "exile", "suppress", "pardon"];
 export const rangeTrendValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RangeTrend"]> = ["rising", "steady", "falling"];
 export const rarityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Rarity"]> = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
+export const rebirthPathValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RebirthPath"]> = ["people", "house", "merit"];
 export const recordEndValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RecordEnd"]> = ["repeal", "abandon", "forget", "disband", "lose", "assimilate"];
 export const regionStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RegionStats"]["kind"]> = ["region"];
 export const regionalStandingValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RegionalStanding"]> = ["hegemon", "great_power", "minor_power", "client"];
@@ -37455,7 +38349,7 @@ export const relationLineKindValues: ReadonlyArray<FlattenedDeepRequired<compone
 export const reputationLabelValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ReputationLabel"]> = ["forgotten", "hated", "respected", "feared", "loved", "distant", "acknowledged"];
 export const resourceMechanicValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ResourceMechanic"]> = ["decaying", "addictive", "sentient", "depletion_price", "fixed", "sacred"];
 export const resourceStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ResourceStats"]["kind"]> = ["resource"];
-export const riteEffectKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RiteEffectKind"]> = ["damage", "heal", "weather_change", "curse", "bless", "ward", "scry", "bind", "summon", "raise_dead", "fertility", "harvest_blessing"];
+export const riteEffectKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RiteEffectKind"]> = ["damage", "heal", "weather_change", "curse", "bless", "ward", "scry", "bind", "summon", "raise_dead", "fertility", "harvest_blessing", "seal_soul", "unseal_soul", "exorcise"];
 export const riteKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RiteKind"]> = ["prayer", "offering", "blood", "life", "rite"];
 export const riteStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RiteStats"]["kind"]> = ["rite"];
 export const riverClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RiverClass"]> = ["none", "stream", "river", "great_river"];
@@ -37491,7 +38385,7 @@ export const sonDistributedEventKindValues: ReadonlyArray<FlattenedDeepRequired<
 export const sonDistributionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonDistribution"]> = ["auto", "manual"];
 export const sonNewEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonNewEvent"]["kind"]> = ["son.new"];
 export const sonStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonStatus"]> = ["active", "asleep", "exiled", "dead"];
-export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_father", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "sever_ley", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world"];
+export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_father", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "sever_ley", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world", "reveal_tenet", "open_rebirth_gate"];
 export const sonTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnFinishedEvent"]["kind"]> = ["son.turn_finished"];
 export const sonTurnQueuedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnQueuedEvent"]["kind"]> = ["son.turn_queued"];
 export const sonTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnStartedEvent"]["kind"]> = ["son.turn_started"];

@@ -211,6 +211,8 @@ async def set_tenet(
         row = CultTenetRow(cult_entity_id=cult_id, tenet=tenet, since_epoch=ctx.epoch, revealed_by_son_id=son_id)
         ctx.session.add(row)
     row.target = target
+    if son_id is not None:
+        row.revealed_by_son_id = son_id
     if name is not None:
         row.name = name.strip()[:200] or None
     await ctx.session.flush()
@@ -229,7 +231,9 @@ async def revelation_fit(ctx: TickContext, cult_id: int, tenet: TenetKind) -> in
     return clamp_int(PERCENT // 2 + (max(fits) // 2 if fits else 0), 0, PERCENT)
 
 
-async def set_office(ctx: TickContext, cult_id: int, kind: ClergyOffice, *, holder_id: int | None, locked: bool | None, remove: bool) -> CultOfficeRow | None:
+async def set_office(
+    ctx: TickContext, cult_id: int, kind: ClergyOffice, *, holder_id: int | None, locked: bool | None, remove: bool, vacate: bool = False
+) -> CultOfficeRow | None:
     await church(ctx, cult_id)
     row = await ctx.session.scalar(select(CultOfficeRow).where(CultOfficeRow.cult_entity_id == cult_id, CultOfficeRow.kind == kind).limit(1))
     if remove:
@@ -240,7 +244,9 @@ async def set_office(ctx: TickContext, cult_id: int, kind: ClergyOffice, *, hold
     if row is None:
         row = CultOfficeRow(cult_entity_id=cult_id, kind=kind, since_epoch=ctx.epoch, locked=False)
         ctx.session.add(row)
-    if holder_id is not None:
+    if vacate:
+        row.holder_entity_id, row.since_epoch, row.locked = None, ctx.epoch, True
+    elif holder_id is not None:
         holder = await entity_of(ctx, holder_id, {EntityType.MORTAL}, "Only a living mortal can hold a clergy office.")
         row.holder_entity_id, row.since_epoch = holder.id, ctx.epoch
         row.locked = True

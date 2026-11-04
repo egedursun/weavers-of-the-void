@@ -23,6 +23,7 @@ from aerona.api.schemas.faith import (
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
 from aerona.catalog.tenets import OPPOSED, TARGETED, TENET_EFFECTS
+from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
@@ -42,7 +43,7 @@ from aerona.db.tables.faith import (
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faith import AfterlifeState, HoldingKind, JudgementDoctrine, TenetKind
+from aerona.domain.enums.faith import AfterlifeState, HoldingKind, JudgementDoctrine, RebirthPath, TenetKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.models.faith import StratumCriteria
 from aerona.engine.cosmos.world_types import is_realm_of_dead
@@ -117,12 +118,12 @@ async def state_of(session: AsyncSession, church: Church) -> tuple[PolityProfile
 
 async def reach_of(session: AsyncSession, church: Church, doctrine: CultDoctrineRow) -> int:
     if doctrine.liturgical_language_id is None or not church.members:
-        return 100
+        return PERCENT
     speaking = 0
     for member in church.members:
         if doctrine.liturgical_language_id in await spoken_by(session, [member.id]):
             speaking += 1
-    return speaking * 100 // len(church.members)
+    return speaking * PERCENT // len(church.members)
 
 
 @router.get("/entities/{entity_id}/doctrine", response_model=DoctrineView)
@@ -185,7 +186,16 @@ async def doctrine(services: ServicesDep, entity_id: Id) -> DoctrineView:
                 heresies=[],
                 mother=None,
                 relics=[],
+                rebirth_path=RebirthPath.PEOPLE,
+                liturgical_language=None,
+                liturgy_reach=PERCENT,
+                parent_cult=None,
                 devotion=stat(church.cult, "devotion") or 0,
+                state_realm=None,
+                clergy_sway=0,
+                god_king=None,
+                tithe_base=[],
+                realm_population=0,
             )
         lands = {item.holding_entity_id for item in holdings if item.kind is HoldingKind.LAND}
         return DoctrineView(

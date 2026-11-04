@@ -33,6 +33,7 @@ class SetOffice(Command):
     kind: ClergyOffice
     holder_id: int | None = None
     locked: bool | None = None
+    vacate: bool = False
     remove: bool = False
 
 
@@ -169,7 +170,9 @@ async def set_tenet(scope: PlayerScope, command: SetTenet) -> Effect:
 @player_action("cult:office", ActionKind.EDIT_RECORD)
 async def set_office(scope: PlayerScope, command: SetOffice) -> Effect:
     ctx = await scope.context("cult_office")
-    row = await control.set_office(ctx, command.cult_id, command.kind, holder_id=command.holder_id, locked=command.locked, remove=command.remove)
+    row = await control.set_office(
+        ctx, command.cult_id, command.kind, holder_id=command.holder_id, locked=command.locked, remove=command.remove, vacate=command.vacate
+    )
     label = command.kind.value.replace("_", " ")
     return Effect(f"The office of {label} is struck." if row is None else f"The office of {label} is set.", command.cult_id)
 

@@ -63,7 +63,6 @@ async def heretics(ctx: TickContext, church: Church) -> list[EntityRow]:
     sects = [row.heresy_entity_id for row in hunted]
     if not homes or not sects:
         return []
-    seats = select(EntityRow.location_id).where(EntityRow.id.in_(sects), EntityRow.status == EntityStatus.CANON)
     members = select(BondRow.source_node_id).where(BondRow.target_node_id.in_(sects), BondRow.kind == BondKind.MEMBER_OF, BondRow.state == BondState.ACTIVE)
     return list(
         await ctx.session.scalars(
@@ -72,7 +71,7 @@ async def heretics(ctx: TickContext, church: Church) -> list[EntityRow]:
                 EntityRow.entity_type == EntityType.MORTAL,
                 EntityRow.status == EntityStatus.CANON,
                 EntityRow.location_id.in_(homes),
-                EntityRow.id.in_(members) | EntityRow.location_id.in_(seats),
+                EntityRow.id.in_(members),
             )
             .order_by(EntityRow.id)
         )
