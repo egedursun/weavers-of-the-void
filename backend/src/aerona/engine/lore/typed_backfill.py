@@ -10,6 +10,7 @@ from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.engine.context import TickContext
+from aerona.engine.economy.materials import set_node_material
 from aerona.engine.lore import art, items
 
 ITEMS_FIXUP = "lore.typed_items"
@@ -68,7 +69,7 @@ async def backfill_items(ctx: TickContext) -> int:
         row = await items.profile_of(ctx, entity, legacy_class(entity))
         material = legacy_material(entity)
         if row.material is None and material is not None:
-            row.material = material
+            await set_node_material(ctx.session, entity.id, MaterialSlot.BODY, MaterialKind(material))
         typed += 1
     typed += await mend_materials(ctx)
     ctx.session.add(AppliedFixupRow(key=ITEMS_FIXUP, result={"items": typed}))

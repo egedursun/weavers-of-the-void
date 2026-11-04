@@ -4,16 +4,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.agents.context.bond_lines import bond_line_lists
 from aerona.agents.context.entity_line import line_item, line_items
 from aerona.agents.context.scope import Scope
+from aerona.agents.context.society import people_facts
 from aerona.agents.context.wilds import nature_lines
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.economy import NodeMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import ChronicleRow, LexemeRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.modifier import ModifierOp
 from aerona.engine.body.describe import body_lines
+from aerona.engine.economy.materials import MaterialBook
 from aerona.engine.interconnect.catalog import REGISTERED
 from aerona.engine.interconnect.incidents import last_incident, recent_chain
 from aerona.engine.interconnect.registry import Exposure
@@ -24,6 +27,7 @@ from aerona.engine.primitives.stats import base_stat
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import EntityAuthor, EntityDetailContext
 from aerona.prompts.contexts.common import LabelValue, LexiconWord, NamedRecord, WorldItem
+from aerona.tools.framework.economy_lines import economy_block
 from aerona.tools.framework.views import fact_lines, society_lines
 
 STAT_SKIP = frozenset({"kind"})
@@ -81,15 +85,34 @@ async def entity_detail_context(scope: Scope, entity: EntityRow, *, private: boo
         contents=await line_items(session, contents, with_location=False),
         lexicon=lexicon,
         society=await society_lines(session, scope.rules, entity),
-        facts=[*await nature_lines(session, entity), *await fact_lines(session, scope.rules, entity)],
+        facts=[*await nature_lines(session, entity), *await fact_lines(session, scope.rules, entity), *await people_facts(session, entity)],
         body=await body_lines(session, scope.rules, entity, private=private),
         mind=await mind_lines(session, scope.rules, entity, scope.epoch, private=private),
         effects=[
+            *await material_lines(session, entity),
             *await effect_lines(session, entity, scope.epoch),
             *await mechanic_lines(session, entity, scope.epoch, scope.rules.context.mechanic_window_epochs),
         ],
         chain=chain.line if (chain := await recent_chain(session, entity.id, scope.rules.incidents.chain_depth)) is not None else None,
+        economy=await economy_block(session, scope.rules, entity),
     )
+
+
+async def material_lines(session: AsyncSession, entity: EntityRow) -> list[str]:
+    rows = list(await session.scalars(select(NodeMaterialRow).where(NodeMaterialRow.node_id == entity.id).order_by(NodeMaterialRow.slot)))
+    if not rows:
+        return []
+    book = await MaterialBook.load(session)
+    found: list[str] = []
+    for row in rows:
+        props = book.props(entity.world_id, row.material, row.world_material_id)
+        if props is not None:
+            held = ", held by the Creator" if row.held else ""
+            found.append(
+                f"{row.slot.value} of {props.label.lower()}: hardness {props.hardness}, toughness {props.toughness}, "
+                f"sanctity {props.sanctity}, corruption {props.corruption}, rarity {props.rarity}, decay {props.decay}{held}"
+            )
+    return found
 
 
 async def mechanic_lines(session: AsyncSession, entity: EntityRow, epoch: int, window: int) -> list[str]:

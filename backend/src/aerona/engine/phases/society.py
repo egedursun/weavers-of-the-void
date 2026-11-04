@@ -16,6 +16,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
+from aerona.engine.demography.kinship import may_wed
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.drives import unrest
@@ -216,8 +217,23 @@ async def uprisings(ctx: TickContext) -> None:
     ctx.count("uprisings", raised)
 
 
-@reads("mortal.age", "table.bonds", "table.epoch_year_cursors", "table.nodes")
-@writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
+@reads(
+    "mortal.age",
+    "table.bonds",
+    "table.epoch_year_cursors",
+    "table.nodes",
+    "table.people_biology",
+    "table.people_culture",
+)
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
 async def love_and_rivalry(ctx: TickContext) -> None:
     settings = ctx.rules.society
     session = ctx.session
@@ -238,6 +254,8 @@ async def love_and_rivalry(ctx: TickContext) -> None:
                 if not rng.chance(settings.love_rivalry_chance):
                     continue
                 love = rng.chance(settings.love_share_pct)
+                if love and not await may_wed(session, ctx.rules, first, second):
+                    continue
                 await bonds.connect(
                     BondDraft(
                         first.id,

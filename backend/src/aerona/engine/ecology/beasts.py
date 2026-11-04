@@ -13,7 +13,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import CurseKind, ItemClass, ItemDeed
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.ecology import SIZE_ORDER, BeastTemper, SizeClass
-from aerona.domain.enums.economy import CommodityKind, GoodsFlow
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind
@@ -24,6 +24,7 @@ from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
 from aerona.engine.ecology.foodweb import raid_herds
 from aerona.engine.ecology.profiles import profile_of
+from aerona.engine.economy.materials import set_node_material
 from aerona.engine.economy.money import inject_hoard
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.gods.queries import community_of
@@ -446,7 +447,6 @@ async def trophy(ctx: TickContext, beast: EntityRow, slayer: EntityRow, item: Sp
         ItemProfileRow(
             item_entity_id=made.id,
             item_class=TROPHY_CLASSES.get(material, ItemClass.JEWEL),
-            material=material.value,
             quality=clamp_int(PERCENT // 2 + amount, 0, PERCENT),
             condition=PERCENT,
             curse=CurseKind.NONE,
@@ -458,6 +458,7 @@ async def trophy(ctx: TickContext, beast: EntityRow, slayer: EntityRow, item: Sp
             locked=[],
         )
     )
+    await set_node_material(ctx.session, made.id, MaterialSlot.BODY, material, None, force=True)
     await connect(ctx.session, slayer.id, made.id, BondKind.OWNS, ctx.epoch, description=f"slew {beast.name}")
     record(ctx, made.id, ItemDeed.KILL, slayer.id, f"cut from {beast.name} by {slayer.name}")
     return made

@@ -6,6 +6,7 @@ from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.structure import StructureKind
 
 WORDS_FILE = Path(__file__).resolve().parent.parent / "migration" / "legacy" / "backfill_words.json"
 RAW: dict[str, dict[str, list[str]]] = json.loads(WORDS_FILE.read_text(encoding="utf-8"))
@@ -19,3 +20,6 @@ LOCAL_TRAIT_WORDS: MappingProxyType[TraitKind, tuple[str, ...]] = MappingProxyTy
     {TraitKind(key): tuple(words) for key, words in RAW.get("traits", {}).items()}
 )
 LAW_WORDS: MappingProxyType[LawKind, tuple[str, ...]] = MappingProxyType({LawKind(key): tuple(words) for key, words in RAW.get("laws", {}).items()})
+STRUCTURE_WORDS: MappingProxyType[StructureKind, tuple[str, ...]] = MappingProxyType(
+    {StructureKind(key): tuple(words) for key, words in RAW.get("structures", {}).items()}
+)

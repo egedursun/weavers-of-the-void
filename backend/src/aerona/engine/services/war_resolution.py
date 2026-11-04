@@ -3,12 +3,14 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.structures import BOOK_HOUSES
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow, WarRow
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
-from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.war import SiegeStatus, WarEnding, WarStatus
 from aerona.engine.context import TickContext
@@ -129,9 +131,6 @@ async def close_war(ctx: TickContext, war: WarRow, ending: WarEnding, victor_id:
     ctx.count("wars_ended")
 
 
-BOOK_KINDS = frozenset({EngineKind.LIBRARY, EngineKind.SCHOOL})
-
-
 async def _conquer(ctx: TickContext, war: WarRow, victor: EntityRow, loser: EntityRow) -> list[str]:
     event = await war_event(ctx.session, war)
     bonds = BondRepository(ctx.session)
@@ -163,7 +162,8 @@ async def burn_books(ctx: TickContext, victor: EntityRow, loser: EntityRow) -> l
         return []
     keeps = await ctx.session.scalars(
         select(EntityRow)
-        .where(EntityRow.location_id == loser.id, EntityRow.status == EntityStatus.CANON, EntityRow.engine_kind.in_(list(BOOK_KINDS)))
+        .join(StructureProfileRow, StructureProfileRow.structure_entity_id == EntityRow.id)
+        .where(EntityRow.location_id == loser.id, EntityRow.status == EntityStatus.CANON, StructureProfileRow.kind.in_(list(BOOK_HOUSES)))
         .order_by(EntityRow.id)
     )
     notes: list[str] = []

@@ -17,6 +17,7 @@ from aerona.db.tables.culture import (
     RiteProfileRow,
     TraditionProfileRow,
 )
+from aerona.db.tables.economy import NodeMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.culture import (
     PERFORMED_MEDIA,
@@ -32,11 +33,13 @@ from aerona.domain.enums.culture import (
     ProphecyPredicate,
     TraditionKind,
 )
+from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.world import SkyEventKind
 from aerona.domain.models.entity_stats import EntityStats
 from aerona.engine.context import TickContext
+from aerona.engine.economy.materials import slot_key
 from aerona.engine.lore.language import standing_of
 from aerona.engine.lore.prophecy import Foretelling, typed_condition
 from aerona.engine.primitives.numbers import clamp_int
@@ -186,9 +189,11 @@ async def seed_prophecy(ctx: TickContext, entity: EntityRow, values: Values) -> 
 async def seed_item(ctx: TickContext, entity: EntityRow, values: Values) -> Base:
     item_class = take(values, "item_class", ItemClass)
     spec = ITEM_CLASSES[item_class]
+    body = await ctx.session.get(NodeMaterialRow, (entity.id, MaterialSlot.BODY))
     row = ItemProfileRow(
         item_entity_id=entity.id,
         item_class=item_class,
+        material=slot_key(body.material, body.world_material_id) if body is not None else None,
         quality=PERCENT // 2,
         condition=PERCENT,
         damage_type=spec.damage_type,

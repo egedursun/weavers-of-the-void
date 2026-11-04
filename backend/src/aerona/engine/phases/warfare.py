@@ -16,7 +16,7 @@ from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, OccupationRow
 from aerona.db.tables.mind import VALUE_MAX
-from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, SiegeRow, WarRow, WarSideRow
 from aerona.domain.enums.body import Capacity, HarmCause
@@ -37,7 +37,9 @@ from aerona.engine.body.book import effective, strike_style
 from aerona.engine.body.cohorts import return_maimed
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.demography.biology import acclimatised, profiles_of
 from aerona.engine.economy.equipment import march_burden, siege_engines, suffer_heat
+from aerona.engine.economy.loot import loot_temples
 from aerona.engine.environment.battleground import (
     BattleGround,
     attack_factor,
@@ -399,9 +401,13 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.army_profiles",
     "table.army_units",
     "table.battles",
+    "table.beast_profiles",
+    "table.bodies",
     "table.bonds",
     "table.calendars",
     "table.culture_values",
+    "table.entities",
+    "table.entity_flags",
     "table.forced_weather",
     "table.node_materials",
     "table.occupations",
@@ -411,6 +417,7 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.war_sides",
     "table.wars",
     "table.world_maps",
+    "table.world_materials",
     "table.world_seasons",
 )
 @writes("army.size", "table.applied_fixups", "table.army_profiles", "table.army_units", "table.armies", "table.occupations", "table.war_sides")
@@ -702,7 +709,7 @@ async def duel(
     if event is not None and war is not None:
         for hero in (first, second):
             await bonds.connect(BondDraft(event.id, hero.id, BondKind.PARTY_TO, ctx.epoch, "dueled", role=BondRole.DUELED, war_id=war.id))
-    fighters = (await fighter(ctx, first), await fighter(ctx, second))
+    fighters = (await fighter(ctx, first, second), await fighter(ctx, second, first))
     terrain = ground.terrain if ground is not None else None
     weather = ground.weather.kind if ground is not None and ground.weather is not None else None
     for one in fighters:
@@ -956,7 +963,8 @@ async def _powers(
     attacker_power = await battle_power(ctx, theatre, attacker, *armies[attacker.id]) * attack_factor(ctx.rules, ground)
     defender_power = await battle_power(ctx, theatre, defender, *armies[defender.id]) * defend_factor(ctx.rules, ground)
     if besieged is not None:
-        defender_power *= wall_defence(ctx, await open_siege(ctx, war, besieged, attacker)) * await warded(ctx, besieged.id)
+        walls = await ctx.session.get(SettlementInfrastructureRow, besieged.id)
+        defender_power *= wall_defence(ctx, await open_siege(ctx, war, besieged, attacker), walls) * await warded(ctx, besieged.id)
     return attacker_power, defender_power
 
 
@@ -967,6 +975,7 @@ async def _sacked(
     homeward = [March(army, besieged, await profile_of(ctx, army, besieged), None, False) for owner, (army, _) in armies.items() if owner == besieged.id]
     choice = await sack_choice(ctx, siege, attacker, armies[attacker.id][1].commander_entity_id) if siege is not None else SackChoice.SACK
     ctx.count("sack_dead", await sack(ctx, besieged, profile, homeward=homeward, victor=attacker, siege=siege, choice=choice))
+    ctx.count("temple_loot", await loot_temples(ctx, besieged, attacker))
 
 
 async def _spoils(
@@ -1176,9 +1185,14 @@ def _battle_chance(ctx: TickContext, theatre: Theatre, attacker: EntityRow, defe
     return ctx.rules.campaigns.battle_chance_war_ban if banned else ctx.rules.campaigns.battle_chance
 
 
-def _acclimatised(ctx: TickContext, theatre: Theatre, side: EntityRow, ground: BattleGround) -> bool:
+async def _acclimatised(ctx: TickContext, theatre: Theatre, side: EntityRow, ground: BattleGround) -> bool:
+    if ground.region is None:
+        return True
+    biology, _ = await profiles_of(ctx.session, side)
+    if biology is not None:
+        return acclimatised(ctx.rules, biology, ground.region.temperature_band)
     home = theatre.ground.region_of(side.id)
-    if home is None or ground.region is None:
+    if home is None:
         return True
     return abs(home.temperature - ground.region.temperature) <= ctx.rules.weather.acclimatised_within
 
@@ -1192,7 +1206,7 @@ async def _weather_losses(
         army = armies[side.id][0]
         size = stat(army, "size") or 0
         share = season_losses(
-            ctx.rules, ground.weather, ground.region, armour_pct=stat(army, "equipment") or 0, acclimatised=_acclimatised(ctx, theatre, side, ground)
+            ctx.rules, ground.weather, ground.region, armour_pct=stat(army, "equipment") or 0, acclimatised=await _acclimatised(ctx, theatre, side, ground)
         )
         dead = round_half_up(size * share)
         if dead:
@@ -1429,7 +1443,11 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.cosmos",
     "table.cult_tenets",
     "table.culture_values",
+    "table.currencies",
     "table.designated_heirs",
+    "table.districts",
+    "table.disease_profiles",
+    "table.entities",
     "table.entity_flags",
     "table.entity_traits",
     "table.epoch_year_cursors",
@@ -1456,6 +1474,8 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.nodes",
     "table.occupations",
     "table.offices",
+    "table.outbreaks",
+    "table.people_biology",
     "table.people_culture",
     "table.personality_values",
     "table.place_environment",
@@ -1468,6 +1488,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.region_dangers",
     "table.region_environment",
     "table.routes",
+    "table.settlement_infrastructure",
     "table.sieges",
     "table.skills",
     "table.sky_events",
@@ -1515,12 +1536,17 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_relations",
+    "table.districts",
+    "table.community_societies",
+    "table.community_stocks",
+    "table.currencies",
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.event_casualties",
     "table.event_footprints",
     "table.event_profiles",
+    "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
     "table.injuries",

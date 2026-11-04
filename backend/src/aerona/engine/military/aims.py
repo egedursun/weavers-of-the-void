@@ -16,6 +16,7 @@ from aerona.domain.enums.military import PeaceTermKind, WarAimKind
 from aerona.domain.enums.polity import ClauseKind, GovernmentKind, PartyRole, TreatyKind
 from aerona.domain.enums.war import CaptiveStatus, WarCause, WarEnding
 from aerona.engine.context import TickContext
+from aerona.engine.economy.chokepoints import contested_route, route_term
 from aerona.engine.faith.book import patron_node
 from aerona.engine.military.peace import AIM_TERMS, PeaceTerm, conclude, extra_terms, record
 from aerona.engine.polity.accords import Clause, sign
@@ -52,7 +53,7 @@ CAUSE_AIMS: dict[WarCause, tuple[WarAimKind, ...]] = {
     WarCause.BEAST: (A.LOOT, A.REVENGE),
     WarCause.RESOURCE: (A.SEIZE_RESOURCE, A.CONQUER_REGION),
     WarCause.IDEOLOGY: (A.CHANGE_GOVERNMENT, A.LIBERATE),
-    WarCause.TRADE_ROUTE: (A.SEIZE_RESOURCE, A.TRIBUTE),
+    WarCause.TRADE_ROUTE: (A.SEIZE_ROUTE, A.TRIBUTE),
     WarCause.CLAIM: (A.PRESS_CLAIM, A.CONQUER_REGION),
     WarCause.HOLY_WAR: (A.CONVERT, A.DESTROY_CULT),
     WarCause.SUCCESSION: (A.PRESS_CLAIM, A.HUMILIATE),
@@ -105,6 +106,8 @@ async def set_aims(ctx: TickContext, war: WarRow, attacker: EntityRow, defender:
     for side, enemy, kinds in ((attacker, defender, await wanted(ctx, war, attacker, defender)), (defender, attacker, list(DEFENDER_AIMS))):
         for kind in kinds[:count]:
             target = region if kind in REGION_AIMS and side is attacker else enemy.id
+            if kind is A.SEIZE_ROUTE:
+                target = await contested_route(ctx.session, side.id, enemy.id)
             params = await aim_params(ctx, kind, side, enemy, target)
             ctx.session.add(WarAimRow(war_id=war.id, side_entity_id=side.id, kind=kind, target_entity_id=target, params=params, achieved=0, locked=[]))
             made += 1
@@ -298,6 +301,7 @@ TERMS = {
     A.DESTROY_CULT: cult_term,
     A.CONVERT: faith_term,
     A.CHANGE_GOVERNMENT: government_term,
+    A.SEIZE_ROUTE: route_term,
 }
 
 

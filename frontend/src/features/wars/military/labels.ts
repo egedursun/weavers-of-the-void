@@ -62,6 +62,7 @@ import {
   Ship,
   ShipWheel,
   Shovel,
+  Signpost,
   Skull,
   Slash,
   Snowflake,
@@ -139,6 +140,11 @@ export const AIM: Record<string, Named> = {
     label: 'Overthrow the rulers',
     icon: Landmark,
     tone: 'info',
+  },
+  seize_route: {
+    label: 'Seize a trade road',
+    icon: Signpost,
+    tone: 'gold',
   },
 }
 

@@ -94,6 +94,7 @@ from aerona.engine.phases import (
     society_economy,
     sons,
     spirits,
+    structures,
     trade,
     travel,
     tribute,
@@ -206,6 +207,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + vendettas.PHASES
     + realms.PHASES
     + settlement_life.PHASES
+    + structures.PHASES
     + demography.PHASES
     + happenings.PHASES
     + regions.PHASES
@@ -228,6 +230,7 @@ CLEANUP_STAGE = stage(
     "body_survey",
     "mortal_survey",
     "economy_survey",
+    "structure_survey",
     "expire_truces",
     "language_and_faith",
 )
@@ -325,6 +328,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "trade_flow",
     "banking",
     "society_mobility",
+    "structure_upkeep",
     "settlement_life",
     "heroes",
     "spontaneous_births",
@@ -332,6 +336,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "ideology_cycles",
     "engine_works",
     "splendor_growth",
+    "structure_functions",
     "religion_spread",
     "life_seed",
     "writing_systems",

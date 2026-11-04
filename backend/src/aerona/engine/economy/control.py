@@ -1,4 +1,5 @@
 from collections.abc import Mapping
+from dataclasses import dataclass
 
 from sqlalchemy import select
 
@@ -19,9 +20,10 @@ from aerona.db.tables.economy import (
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.economy import CommodityKind, GoodsFlow, LoanStatus, MaterialOrigin, TradeRouteStatus, WorkshopKind
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow, LoanStatus, MaterialFamily, MaterialOrigin, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.extraction import write_reserve
@@ -49,8 +51,41 @@ async def resource(ctx: TickContext, resource_id: int) -> tuple[EntityRow, Resou
     return entity, profile
 
 
+@dataclass(frozen=True)
+class MaterialText:
+    name: str | None = None
+    description: str | None = None
+    family: MaterialFamily | None = None
+    branch: KnowledgeBranch | None = None
+    clear_branch: bool = False
+    hold: bool | None = None
+
+
+PLAIN_TEXT = MaterialText()
+
+
+def apply_text(row: WorldMaterialRow, name: str | None, text: MaterialText) -> None:
+    if name is not None:
+        row.name = name.strip() or None
+    if text.description is not None:
+        row.description = text.description.strip() or None
+    if text.family is not None:
+        row.family = text.family
+    if text.branch is not None or text.clear_branch:
+        row.branch = None if text.clear_branch else text.branch
+    if text.hold is not None:
+        row.held = text.hold
+
+
 async def edit_material(
-    ctx: TickContext, world_id: int, *, material: MaterialKind | None, world_material_id: int | None, values: Mapping[str, int], name: str | None
+    ctx: TickContext,
+    world_id: int,
+    *,
+    material: MaterialKind | None,
+    world_material_id: int | None,
+    values: Mapping[str, int],
+    name: str | None,
+    text: MaterialText = PLAIN_TEXT,
 ) -> WorldMaterialRow:
     unknown = set(values) - set(PROPERTY_COLUMNS) - {"level"}
     if unknown:
@@ -84,21 +119,35 @@ async def edit_material(
         raise ValidationFailedError("Choose a material or a substance to edit.")
     for key, value in values.items():
         setattr(row, key, value)
-    if name is not None:
-        row.name = name.strip() or None
+    apply_text(row, name, text)
     await ctx.session.flush()
     return row
 
 
-async def grant_stock(ctx: TickContext, community_id: int, commodity: CommodityKind, quantity: int, *, material: MaterialKind | None, quality: int) -> int:
+async def grant_stock(
+    ctx: TickContext,
+    community_id: int,
+    commodity: CommodityKind,
+    quantity: int,
+    *,
+    material: MaterialKind | None,
+    quality: int,
+    world_material_id: int | None = None,
+) -> int:
     entity = await community(ctx, community_id)
     ledger = goods_of(ctx.session, ctx.epoch)
+    if world_material_id is not None and await ctx.session.get(WorldMaterialRow, world_material_id) is None:
+        raise NotFoundError("No such substance.")
+    kind = material if world_material_id is None else None
     if quantity >= 0:
-        moved = await ledger.add(entity.id, commodity, quantity, GoodsFlow.PLAYER, material=material, quality=quality)
+        moved = await ledger.add(
+            entity.id, commodity, quantity, GoodsFlow.PLAYER, material=kind, world_material_id=world_material_id, quality=quality, force=True
+        )
     else:
         if await holding(ctx.session, entity.id, commodity, material) <= 0:
             raise ValidationFailedError("There is none of that in the stores to take away.")
-        moved = -await ledger.take_units(entity.id, commodity, -quantity, GoodsFlow.PLAYER)
+        taken = await ledger.take(entity.id, commodity, -quantity, GoodsFlow.PLAYER, material=kind, world_material_id=world_material_id, force=True)
+        moved = -sum(item.quantity for item in taken)
     await sync_aggregates(ctx.session, ctx.rules, entity)
     return moved
 
@@ -114,7 +163,7 @@ async def set_resource(ctx: TickContext, resource_id: int, *, reserve: int | Non
         if key not in ("initial_reserve", "regeneration") and not 0 <= value <= PERCENT:
             raise ValidationFailedError(f"{key.replace('_', ' ').capitalize()} runs from 0 to {PERCENT}.")
         setattr(profile, key, max(0, value))
-    write_reserve(entity, profile, profile.reserve if reserve is None else max(0, reserve))
+    write_reserve(entity, profile, profile.reserve if reserve is None else max(0, reserve), force=True)
     await ctx.session.flush()
     return profile
 
@@ -165,6 +214,7 @@ async def open_route(ctx: TickContext, *, route_id: int | None, first_id: int | 
             raise NotFoundError("No such trade route.")
         profile.status = TradeRouteStatus.OPEN
         profile.closed_by_player = False
+        profile.closed_by_son_id = None
         profile.last_traffic_epoch = ctx.epoch
         entity.status = EntityStatus.CANON
         await ctx.session.flush()
@@ -175,6 +225,16 @@ async def open_route(ctx: TickContext, *, route_id: int | None, first_id: int | 
     first, second = await community(ctx, first_id), await community(ctx, second_id)
     if any(frozenset(route.ends) == frozenset((first.id, second.id)) for route in await load_routes(ctx)):
         raise ValidationFailedError(f"{first.name} and {second.name} are already joined by a route.")
+    closed = next(
+        (
+            route
+            for route in await load_routes(ctx, live_only=False)
+            if route.profile.closed_by_player and frozenset(route.ends) == frozenset((first.id, second.id))
+        ),
+        None,
+    )
+    if closed is not None:
+        return await open_route(ctx, route_id=closed.entity.id, first_id=None, second_id=None)
     path = book.ground.atlas.region_path(book.ground.atlas.top_region(first.id), book.ground.atlas.top_region(second.id))
     if path is None:
         raise ValidationFailedError(f"No way leads from {first.name} to {second.name}.")
@@ -264,11 +324,13 @@ async def forgive(ctx: TickContext, loan_id: int) -> LoanRow:
     return loan
 
 
-async def hoard(ctx: TickContext, community_id: int, metal: MaterialKind, units: int | None) -> int:
+async def hoard(ctx: TickContext, community_id: int, metal: MaterialKind, units: int | None, world_material_id: int | None = None) -> int:
     entity = await community(ctx, community_id)
     amount = units if units is not None else ctx.rules.money.hoard_luxury_units
     if amount <= 0:
         raise ValidationFailedError("A hoard holds at least one load of treasure.")
-    added = await inject_hoard(ctx, entity, amount, metal)
+    if world_material_id is not None and await ctx.session.get(WorldMaterialRow, world_material_id) is None:
+        raise NotFoundError("No such substance.")
+    added = await inject_hoard(ctx, entity, amount, metal, world_material_id)
     await sync_aggregates(ctx.session, ctx.rules, entity)
     return added

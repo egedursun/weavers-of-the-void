@@ -11,6 +11,7 @@ from aerona.db.tables.lifecycle import DesignatedHeirRow
 from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import ClaimRow, HouseMemberRow, HouseProfileRow, OfficeHistoryRow, OfficeRow, TreatyPartyRow, TreatyProfileRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
@@ -20,6 +21,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitKind
 from aerona.domain.enums.polity import GenderRule, LawKind, OathKind, OfficeKind, OfficePower, SuccessionRule, TreatyStatus
+from aerona.domain.enums.settlement import TIER_ORDER
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarSide
 from aerona.domain.models.entity_stats import FactionStats
@@ -40,6 +42,8 @@ from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import war_event
+from aerona.engine.settlement.book import towns
+from aerona.engine.settlement.districts import office_tier
 from aerona.rules.registry import Rules
 
 S = SkillKind
@@ -147,6 +151,10 @@ async def appoint(ctx: TickContext, realm: Realm, office: OfficeRow, holder: Ent
         await swear(ctx, holder, OathKind.SILENCE, recipient_id=realm.entity.id, note_text="the secrets of the realm")
 
 
+def largest_tier(book: RealmBook, region: int, towns: Mapping[int, SettlementProfileRow]) -> int:
+    return max((TIER_ORDER.index(towns[place].size_tier) for place in book.atlas.communities_in(region) if place in towns), default=0)
+
+
 def province_seats(book: RealmBook, realm: Realm) -> list[int]:
     capital_region = book.atlas.top_region(realm.profile.capital_entity_id or -1)
     seats: dict[str, int] = {}
@@ -168,10 +176,18 @@ async def embassy_targets(ctx: TickContext, book: RealmBook, realm: Realm) -> li
     return [realm_id for _, realm_id in sorted(scored, key=lambda item: (-item[0], item[1]))[: ctx.rules.government.embassy_count]]
 
 
-def wanted_offices(book: RealmBook, realm: Realm, embassies: list[int], rules: Rules) -> list[tuple[OfficeKind, int | None, int | None]]:
-    wanted: list[tuple[OfficeKind, int | None, int | None]] = [(kind, None, None) for kind in COUNCIL]
+def wanted_offices(
+    book: RealmBook, realm: Realm, embassies: list[int], rules: Rules, towns: Mapping[int, SettlementProfileRow]
+) -> list[tuple[OfficeKind, int | None, int | None]]:
+    seat = towns.get(realm.profile.capital_entity_id or -1)
+    seat_tier = TIER_ORDER.index(seat.size_tier) if seat is not None else 0
+    wanted: list[tuple[OfficeKind, int | None, int | None]] = [(kind, None, None) for kind in COUNCIL if seat_tier >= office_tier(rules, kind)]
     if realm.profile.tier >= rules.realm_tiers.provinces:
-        wanted.extend((OfficeKind.GOVERNOR, region, None) for region in province_seats(book, realm))
+        wanted.extend(
+            (OfficeKind.GOVERNOR, region, None)
+            for region in province_seats(book, realm)
+            if largest_tier(book, region, towns) >= office_tier(rules, OfficeKind.GOVERNOR)
+        )
     wanted.extend((OfficeKind.AMBASSADOR, None, target) for target in embassies)
     return wanted
 
@@ -184,7 +200,7 @@ async def staff(ctx: TickContext, book: RealmBook, realm: Realm, held: set[int])
         recalled = seat.kind is OfficeKind.AMBASSADOR and seat.target_entity_id not in embassies
         if recalled and seat.holder_entity_id is not None and "offices" not in realm.profile.locked and "holder" not in seat.locked:
             await appoint(ctx, realm, seat, None, by_id=realm.ruler_id, reason="the embassy was recalled")
-    for kind, region, target in wanted_offices(book, realm, embassies, ctx.rules):
+    for kind, region, target in wanted_offices(book, realm, embassies, ctx.rules, await towns(ctx.session)):
         office = next((row for row in realm.offices if row.kind is kind and row.region_entity_id == region and row.target_entity_id == target), None)
         if office is None:
             office = OfficeRow(
@@ -294,6 +310,7 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
         SuccessionRule.MATRILINEAL: [*[item for item in siblings if sex_of(item) == "female"], *grandchildren, *children],
         SuccessionRule.BY_COMBAT: [*children, *siblings, *housemates],
         SuccessionRule.DIVINE_CHOICE: [*children, *housemates, *siblings],
+        SuccessionRule.ULTIMOGENITURE: [*sorted(children, key=lambda item: (stat(item, "age") or 0, item.id)), *grandchildren, *siblings],
     }
     seen: set[int] = set()
     pool: list[EntityRow] = []
@@ -316,8 +333,8 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
     def key(entry: tuple[int, EntityRow]) -> tuple[float, ...]:
         rank, item = entry
         age = stat(item, "age") or 0
-        if rule is SuccessionRule.PRIMOGENITURE:
-            return (order[item.id] >= len(children), rank, -age, item.id)
+        if rule in {SuccessionRule.PRIMOGENITURE, SuccessionRule.ULTIMOGENITURE}:
+            return (order[item.id] >= len(children), rank, age if rule is SuccessionRule.ULTIMOGENITURE else -age, item.id)
         if rule is SuccessionRule.SENIORITY:
             return (rank, -age, item.id)
         if rule is SuccessionRule.ELECTIVE:

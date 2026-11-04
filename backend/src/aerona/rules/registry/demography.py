@@ -22,6 +22,8 @@ class CohortsRules:
     promotion_maimed_min: int = rule(100, 1, 1000000, G, "Maimed in one epoch that count as a mass maiming")
     promotion_famine_dead_min: int = rule(200, 1, 1000000, G, "Famine dead in one epoch that leave orphans worth a name")
     promotion_cap: int = rule(4, 0, 100, G, "Most named mortals raised from cohorts in an epoch")
+    promotion_injury_severity: int = rule(4, 1, 5, G, "Severity of the matching wound a mortal raised from a mass maiming bears")
+    promotion_orphan_intensity: int = rule(70, 0, 100, G, "Weight of the famine memory a mortal raised as a famine orphan carries")
 
 
 @dataclass(frozen=True)
@@ -46,6 +48,10 @@ class LabourRules:
     price_pull_pct: int = rule(30, 0, 100, S, "How strongly dear goods pull workers into the trades that make them (%)")
     idle_outcast_pct: int = rule(70, 0, 100, S, "Share of outcasts who find no work (%)")
     slave_output_pct: int = rule(130, 0, 500, S, "Output of serfs and slaves in mines and fields compared with free workers (%)")
+    workshop_workers_per_level: int = rule(40, 0, 100000, S, "Workers each level of a workshop draws into its trade")
+    resource_workers: int = rule(60, 0, 100000, S, "Workers each worked mine, quarry, fishery or forest draws into its trade")
+    corvee_unrest: int = rule(8, 0, 100, S, "Unrest a corvee of the whole people raises in a settlement each epoch")
+    corvee_satisfaction: int = rule(15, 0, 100, S, "Contentment farmers and serfs lose under a corvee of the whole people")
 
 
 @dataclass(frozen=True)
@@ -78,3 +84,9 @@ class MobilityRules:
     slavery_cohesion_loss: int = rule(4, 0, 100, S, "Cohesion a slave-holding people loses each epoch")
     slavery_opinion_loss: int = rule(5, 0, 100, S, "Relation xenophile neighbours lose with a slave-holding people each epoch")
     slavery_revolt_pct: int = rule(30, 0, 300, S, "Revolt pressure added by the share of the bound (%)")
+    wealth_drift_pct: int = rule(25, 0, 100, S, "Share of the gap to its earned wealth a class closes each epoch (%)")
+    wealth_per_supply_pct: int = rule(50, 0, 1000, S, "Wealth a community counts per point of its food, ore and goods supply gauges (%)")
+    ennobled_memory: int = rule(25, 0, 100, S, "Gratitude an ennobled hero holds toward the people that raised them")
+    enslaved_memory: int = rule(30, 0, 100, S, "Grievance a people holds toward those that enslaved its captured kin")
+    freed_memory: int = rule(20, 0, 100, S, "Gratitude toward those that freed one's kin")
+    ruined_memory: int = rule(30, 0, 100, S, "Grievance a ruined merchant holds toward the guild that failed")

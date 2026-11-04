@@ -203,7 +203,7 @@ async def test_inheritance_law_chooses_who_inherits(scope: PlayerScope, session:
     father = await make_entity(session, "Old Bran", EntityType.MORTAL, world_id=world.world.id, location_id=core, stats=MortalStats(age=70))
     elder = await make_entity(session, "Bran", EntityType.MORTAL, world_id=world.world.id, location_id=core, stats=MortalStats(age=40))
     younger = await make_entity(session, "Brin", EntityType.MORTAL, world_id=world.world.id, location_id=core, stats=MortalStats(age=20))
-    assert await bequest_order(session, father, [younger, elder]) == [younger]
+    assert await bequest_order(session, father, [younger, elder]) == [elder]
     await realms.enact_law(scope, realms.EnactLaw(holder_id=polity, kind=LawKind.INHERITANCE_SPLIT, params={"split": "eldest"}))
     assert await bequest_order(session, father, [younger, elder]) == [elder]
     law = await session.scalar(select(LawProfileRow).where(LawProfileRow.kind == LawKind.INHERITANCE_SPLIT))

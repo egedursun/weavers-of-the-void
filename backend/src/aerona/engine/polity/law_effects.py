@@ -13,6 +13,7 @@ from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
+from aerona.engine.demography.kinship import heirs_by_custom, inheritance_of
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm
 from aerona.engine.polity.laws import LawBook, law_param
@@ -182,11 +183,11 @@ async def toll_rate(session: AsyncSession, master_id: int) -> int | None:
 
 
 async def bequest_order(session: AsyncSession, mortal: EntityRow, heirs: list[EntityRow]) -> list[EntityRow]:
-    if len(heirs) < 2 or mortal.location_id is None:
+    if len(heirs) < 2:
         return heirs
-    split = await law_param(session, mortal.location_id, LawKind.INHERITANCE_SPLIT, "split")
+    split = await law_param(session, mortal.location_id, LawKind.INHERITANCE_SPLIT, "split") if mortal.location_id is not None else None
     if split is None:
-        return heirs[:1]
+        return heirs_by_custom(await inheritance_of(session, mortal), heirs)
     by_age = sorted(heirs, key=lambda heir: (-(stat(heir, "age") or 0), heir.id))
     if split == "youngest":
         return by_age[-1:]

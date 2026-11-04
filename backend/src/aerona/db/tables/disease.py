@@ -68,6 +68,7 @@ class OutbreakRow(Base):
     started_epoch: Mapped[int]
     ended_epoch: Mapped[int | None]
     quarantined: Mapped[bool] = mapped_column(default=False)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
     season_factor: Mapped[int] = mapped_column(default=100)
 
 
@@ -80,6 +81,7 @@ class ImmunityRow(Base):
     age_band: Mapped[AgeBand] = mapped_column(enum_type(AgeBand, "age_band"), primary_key=True)
     immune_pct: Mapped[int] = mapped_column(default=0)
     since_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[bool] = mapped_column(default=False)
 
 
 class EndemicDiseaseRow(Base):
@@ -90,6 +92,7 @@ class EndemicDiseaseRow(Base):
     disease_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     load: Mapped[int]
     since_epoch: Mapped[int]
+    locked: Mapped[bool] = mapped_column(default=False)
 
 
 class DiseaseCureRow(Base):

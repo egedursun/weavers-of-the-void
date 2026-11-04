@@ -13,7 +13,7 @@ from aerona.domain.enums.world import LoreLanguage
 from aerona.domain.models.genesis import GenesisSettings
 from aerona.domain.models.profiles import TravelResource
 from aerona.rules.registry import Rules
-from aerona.rules.registry.war_depth import RENAMED_RULES
+from aerona.rules.renames import canonical_overrides
 from aerona.rules.snapshot import apply_overrides
 
 RulesSnapshot = dict[str, dict[str, float]]
@@ -24,16 +24,16 @@ def snapshot_rules(rules: Rules) -> RulesSnapshot:
 
 
 def rules_from_snapshot(snapshot: RulesSnapshot) -> Rules:
-    overrides = {RENAMED_RULES.get((namespace, key), (namespace, key)): value for namespace, values in snapshot.items() for key, value in values.items()}
+    overrides = canonical_overrides({(namespace, key): value for namespace, values in snapshot.items() for key, value in values.items()})
     return apply_overrides(Rules(), overrides)
 
 
 def snapshot_differences(snapshot: RulesSnapshot, defaults: Rules) -> dict[tuple[str, str], tuple[float, float]]:
     baseline = snapshot_rules(defaults)
+    current = canonical_overrides({(namespace, key): value for namespace, values in snapshot.items() for key, value in values.items()})
     return {
         (namespace, key): (value, baseline[namespace][key])
-        for namespace, values in snapshot.items()
-        for key, value in values.items()
+        for (namespace, key), value in current.items()
         if namespace in baseline and key in baseline[namespace] and baseline[namespace][key] != value
     }
 

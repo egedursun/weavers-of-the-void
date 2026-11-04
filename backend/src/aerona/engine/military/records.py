@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapper, class_mapper
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.cosmic_state import VesselProfileRow
+from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.military import (
     ArmyOfficerRow,
     ArmyProfileRow,
@@ -25,7 +26,9 @@ from aerona.db.tables.military import (
     WarAimRow,
 )
 from aerona.db.tables.warfare import BattleRow, CaptiveRow, SiegeRow, WarRow
+from aerona.domain.enums.economy import MaterialSlot
 from aerona.engine.context import TickContext
+from aerona.engine.economy.materials import key_parts, set_node_material
 from aerona.engine.military.units import stacks_of, sync
 from aerona.engine.polity.control import lock
 from aerona.engine.primitives.queries import living_entity
@@ -242,10 +245,21 @@ async def create_record(ctx: TickContext, key: str, values: Values) -> Any:
     return row
 
 
+async def rig_slots(ctx: TickContext, row: VesselProfileRow, changed: list[str]) -> None:
+    for name, slot in (("hull_material", MaterialSlot.HULL), ("fabric_material", MaterialSlot.FABRIC)):
+        if name in changed:
+            material, world_material_id = key_parts(getattr(row, name))
+            if world_material_id is not None and await ctx.session.get(WorldMaterialRow, world_material_id) is None:
+                raise ValidationFailedError("No such substance in this world.")
+            await set_node_material(ctx.session, row.entity_id, slot, material, world_material_id, force=True)
+
+
 async def edit_record(ctx: TickContext, key: str, record_id: int, values: Values, *, hold: bool = True) -> Any:
     kind = kind_of(key)
     row = await fetch(ctx.session, kind, record_id)
     changed = assign(kind, row, values)
+    if kind.key == "vessel":
+        await rig_slots(ctx, row, changed)
     if hold and hasattr(row, "locked"):
         for name in changed:
             row.locked = lock(list(row.locked or []), name)

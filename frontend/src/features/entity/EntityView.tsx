@@ -27,8 +27,12 @@ import {
 import { type EntityDetail } from './api/types'
 import { RELATION_PAGE_MAX } from './constants'
 import { EntityEconomy } from './economy/EntityEconomy'
+import { NodeMaterials } from './economy/NodeMaterials'
+import { PolityProduction } from './economy/PolityProduction'
 import { ResourceProfile } from './economy/ResourceProfile'
 import { PriceBoard, TradeRouteSection } from './economy/RouteAndMarket'
+import { CommunityRoutes } from './economy/RouteControls'
+import { SentientPacts } from './economy/SentientPact'
 import { FactionSection } from './faction/Faction'
 import { AfterlifeSection, SoulSection } from './faith/Afterlife'
 import { DoctrineSection } from './faith/Doctrine'
@@ -82,15 +86,22 @@ import { SkillsSection } from './sections/SkillsSection'
 import { SocietyEconomy } from './sections/SocietyEconomy'
 import { TagEditor } from './sections/TagEditor'
 import {
+  CultureDriftSection,
+  LoyaltySection,
+  MobilitySection,
+} from './society/CultureLoyalty'
+import {
   DemographySection,
   LabourSection,
   PeopleProfileSection,
 } from './society/Demography'
 import { DiseaseSection } from './society/DiseaseCard'
+import { ClassWealthSection, NeedsSection } from './society/Needs'
 import {
   SettlementPlanSection,
   TreasurySection,
 } from './society/SettlementPlan'
+import { PeopleStructuresSection, StructureSection } from './society/Structures'
 import {
   BeastSection,
   FoodWebSection,
@@ -115,8 +126,15 @@ const SECTION_LINKS = [
   { id: 'section-demography', label: 'Population' },
   { id: 'section-labour', label: 'Work' },
   { id: 'section-people-profile', label: 'Folk' },
+  { id: 'section-needs', label: 'Needs' },
+  { id: 'section-class-wealth', label: 'Wealth' },
+  { id: 'section-culture-drift', label: 'Drift' },
+  { id: 'section-loyalty', label: 'Loyalty' },
+  { id: 'section-mobility', label: 'Rise and fall' },
   { id: 'section-settlement-plan', label: 'City' },
   { id: 'section-treasury', label: 'Treasury' },
+  { id: 'section-structure', label: 'Work' },
+  { id: 'section-people-structures', label: 'Works' },
   { id: 'section-disease', label: 'Sickness' },
   { id: 'section-realm', label: 'Realm' },
   { id: 'section-house', label: 'House' },
@@ -225,12 +243,21 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
     present.delete('section-labour')
     present.delete('section-economy')
     present.delete('section-market')
+    present.delete('section-needs')
+    present.delete('section-class-wealth')
+    present.delete('section-loyalty')
   }
+  if (entity.entity_type !== 'people') present.delete('section-culture-drift')
+  if (!trading && entity.entity_type !== 'mortal')
+    present.delete('section-mobility')
   if (entity.entity_type !== 'people') present.delete('section-people-profile')
   if (entity.entity_type !== 'settlement') {
     present.delete('section-settlement-plan')
     present.delete('section-treasury')
   }
+  if (entity.entity_type !== 'structure') present.delete('section-structure')
+  if (entity.entity_type !== 'people')
+    present.delete('section-people-structures')
   if (entity.entity_type !== 'disease') present.delete('section-disease')
   if (entity.entity_type !== 'house') present.delete('section-house')
   if (entity.entity_type !== 'treaty') present.delete('section-treaty')
@@ -373,6 +400,28 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       {entity.entity_type === 'people' && (
         <PeopleProfileSection peopleId={entity.id} readOnlyReason={readOnly} />
       )}
+      {trading && (
+        <NeedsSection communityId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {trading && (
+        <ClassWealthSection communityId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'people' && (
+        <CultureDriftSection
+          communityId={entity.id}
+          readOnlyReason={readOnly}
+        />
+      )}
+      {trading && (
+        <LoyaltySection communityId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {(trading || entity.entity_type === 'mortal') && (
+        <MobilitySection
+          entityId={entity.id}
+          mortal={entity.entity_type === 'mortal'}
+          readOnlyReason={readOnly}
+        />
+      )}
       {entity.entity_type === 'settlement' && (
         <SettlementPlanSection
           settlementId={entity.id}
@@ -381,6 +430,15 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       )}
       {entity.entity_type === 'settlement' && (
         <TreasurySection settlementId={entity.id} />
+      )}
+      {entity.entity_type === 'structure' && (
+        <StructureSection structureId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'people' && (
+        <PeopleStructuresSection
+          peopleId={entity.id}
+          readOnlyReason={readOnly}
+        />
       )}
       {entity.entity_type === 'disease' && (
         <DiseaseSection diseaseId={entity.id} readOnlyReason={readOnly} />
@@ -460,14 +518,38 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       )}
       {(entity.entity_type === 'people' ||
         entity.entity_type === 'settlement') && (
-        <EntityEconomy communityId={entity.id} readOnlyReason={readOnly} />
+        <EntityEconomy
+          communityId={entity.id}
+          worldId={entity.world_id}
+          readOnlyReason={readOnly}
+        />
       )}
       {(entity.entity_type === 'people' ||
         entity.entity_type === 'settlement') && (
         <PriceBoard marketId={entity.id} />
       )}
+      {(entity.entity_type === 'people' ||
+        entity.entity_type === 'settlement') && (
+        <CommunityRoutes communityId={entity.id} />
+      )}
+      {(entity.entity_type === 'item' ||
+        entity.entity_type === 'structure' ||
+        entity.entity_type === 'vessel' ||
+        entity.entity_type === 'army') && (
+        <NodeMaterials nodeId={entity.id} readOnlyReason={readOnly} />
+      )}
       {entity.entity_type === 'resource' && (
-        <ResourceProfile resourceId={entity.id} readOnlyReason={readOnly} />
+        <ResourceProfile
+          resourceId={entity.id}
+          worldId={entity.world_id}
+          readOnlyReason={readOnly}
+        />
+      )}
+      {entity.entity_type === 'resource' && (
+        <SentientPacts resourceId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'polity' && (
+        <PolityProduction polityId={entity.id} />
       )}
       {entity.entity_type === 'trade_route' && (
         <TradeRouteSection routeId={entity.id} readOnlyReason={readOnly} />

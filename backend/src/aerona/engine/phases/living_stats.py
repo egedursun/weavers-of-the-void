@@ -1,5 +1,3 @@
-import re
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,17 +8,14 @@ from aerona.db.tables.place import PlaceSecretRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityType
 from aerona.domain.enums.place import DiscoveryMode
 from aerona.engine.context import TickContext
 from aerona.engine.environment.secrets import reveal
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
-from aerona.engine.phases.knowledge_levels import known_records, shift_level
 from aerona.engine.phases.society_support.knowledge import teach
-from aerona.engine.phases.works import owner_of
-from aerona.engine.primitives.knowledge import knowledge_level
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, add_flag, canon, flags_by_entity, has_flag, remove_flag
@@ -28,33 +23,6 @@ from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.rules.registry import Rules
 
 PIETY_KEY = "piety"
-PROSPERITY_KEY = "prosperity"
-WEALTH_KEY = "wealth"
-DEFENSE_KEY = "defense"
-KNOWLEDGE_ROLE = "knowledge"
-FUNCTION_BY_KIND = {
-    EngineKind.TEMPLE: PIETY_KEY,
-    EngineKind.WALL: DEFENSE_KEY,
-    EngineKind.LIBRARY: KNOWLEDGE_ROLE,
-    EngineKind.SCHOOL: KNOWLEDGE_ROLE,
-    EngineKind.OBSERVATORY: KNOWLEDGE_ROLE,
-    EngineKind.COSMIC_ARCHIVE: KNOWLEDGE_ROLE,
-}
-FUNCTION_BY_WORD: tuple[tuple[re.Pattern[str], str], ...] = (
-    (re.compile(r"\b(?:temple|shrine|altar|tomb|monastery|monument|statue|sanctuary)\b"), PIETY_KEY),
-    (re.compile(r"\b(?:wall|walls|fortress|fort|tower|keep|citadel|gate|bastion)\b"), DEFENSE_KEY),
-    (re.compile(r"\b(?:library|archive|observatory|school|academy|scriptorium)\b"), KNOWLEDGE_ROLE),
-    (re.compile(r"\b(?:harbour|harbor|port|bridge|road|market|bazaar|caravanserai|inn|pier)\b"), PROSPERITY_KEY),
-    (re.compile(r"\b(?:mine|quarry|workshop|forge|smithy|foundry|loom|mill)\b"), WEALTH_KEY),
-    (re.compile(r"\b(?:well|cistern|canal|dam|aqueduct|granary)\b"), PROSPERITY_KEY),
-)
-
-
-def function_role(work: EntityRow) -> str:
-    if work.engine_kind in FUNCTION_BY_KIND:
-        return FUNCTION_BY_KIND[work.engine_kind]
-    text = f"{work.subtype or ''} {work.name}".casefold()
-    return next((role for pattern, role in FUNCTION_BY_WORD if pattern.search(text)), PROSPERITY_KEY)
 
 
 async def reveal_by_mystery(ctx: TickContext, place: EntityRow, seeker: EntityRow) -> bool:
@@ -110,54 +78,6 @@ async def solve_mysteries(ctx: TickContext) -> int:
     return solved
 
 
-async def deepen_by_work(ctx: TickContext, work: EntityRow, owner: EntityRow, deepened: int) -> bool:
-    table = ctx.rules.record_schema
-    function = stat_or(work, "function", 0)
-    if deepened >= table.function_knowledge_cap or not ctx.rng(f"work_knowledge.{work.id}").chance(function / table.function_knowledge_divisor):
-        return False
-    options = [item for item in await known_records(ctx.session, owner.id) if knowledge_level(ctx.rules, item) < ctx.rules.knowledge.level_cap]
-    if not options:
-        return False
-    chosen = ctx.rng(f"work_pick.{work.id}").pick(options)
-    level = shift_level(ctx.rules, chosen, 1)
-    if level is None:
-        return False
-    text = f"The scribes working at {work.name} deepened the knowledge of {chosen.name} (level {level})."
-    await note(ctx, text, key="living_stats.work_knowledge", ids=[work.id, owner.id, chosen.id], kind=ChronicleKind.KNOWLEDGE)
-    return True
-
-
-async def work_functions(ctx: TickContext) -> int:
-    table = ctx.rules.record_schema
-    deepened = 0
-    held = 0
-    for work in await canon(ctx.session, [EntityType.STRUCTURE]):
-        function = stat_or(work, "function", 0)
-        if function <= 0:
-            continue
-        if stat_or(work, "durability", PERCENT) < table.function_sturdy_threshold:
-            set_stats(work, function=clamp_int(function - table.function_wear, 0, PERCENT))
-            continue
-        owner = await owner_of(ctx, work)
-        if owner is None:
-            continue
-        role = function_role(work)
-        if role == KNOWLEDGE_ROLE:
-            deepened += 1 if await deepen_by_work(ctx, work, owner, deepened) else 0
-            continue
-        key = role if stat(owner, role) is not None else PROSPERITY_KEY if role == WEALTH_KEY and stat(owner, PROSPERITY_KEY) is not None else None
-        if key is None:
-            continue
-        current = stat_or(owner, key, 0)
-        floor = round(function * table.function_floor_pct / PERCENT)
-        if current >= floor:
-            continue
-        set_stats(owner, **{key: clamp_int(current + min(table.function_step, floor - current), 0, PERCENT)})
-        held += 1
-    ctx.count("knowledge_deepened", deepened)
-    return held
-
-
 async def mock_prophecy(ctx: TickContext, prophecy: EntityRow) -> None:
     table = ctx.rules.record_schema
     if await has_flag(ctx.session, prophecy.id, EntityFlag.MOCKED):
@@ -211,14 +131,9 @@ async def _hold_piety(session: AsyncSession, rules: Rules, entity_id: int, floor
 @reads(
     "knowledge.spread",
     "people.piety",
-    "people.prosperity",
     "place.mystery",
     "prophecy.certainty",
-    "settlement.defense",
     "settlement.piety",
-    "settlement.prosperity",
-    "structure.durability",
-    "structure.function",
     "table.bonds",
     "table.entity_flags",
     "table.epoch_year_cursors",
@@ -232,8 +147,6 @@ async def _hold_piety(session: AsyncSession, rules: Rules, entity_id: int, floor
     "people.piety",
     "place.mystery",
     "prophecy.certainty",
-    "settlement.defense",
-    "structure.function",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
@@ -253,7 +166,6 @@ async def _hold_piety(session: AsyncSession, rules: Rules, entity_id: int, floor
 )
 async def living_stats(ctx: TickContext) -> None:
     ctx.count("mysteries", await solve_mysteries(ctx))
-    ctx.count("functions", await work_functions(ctx))
     ctx.count("prophecies_worn", await prophecy_certainty(ctx))
 
 

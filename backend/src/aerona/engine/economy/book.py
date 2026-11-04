@@ -8,7 +8,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.demography import LabourRow
-from aerona.db.tables.economy import ResourceProfileRow, ResourceWorkerRow, WorkshopRow
+from aerona.db.tables.economy import ResourceProfileRow, ResourceWorkerRow, WorkshopDesignRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.mind import SkillRow
@@ -50,7 +50,9 @@ class EconomyBook:
     waived: set[frozenset[int]] = field(default_factory=set)
     blockaded: set[int] = field(default_factory=set)
     techniques: dict[int, set[Technique]] = field(default_factory=dict)
+    designs: dict[int, WorkshopDesignRow] = field(default_factory=dict)
     merchant_danger: dict[int, int] = field(default_factory=dict)
+    robbers: frozenset[int] = frozenset()
 
     @classmethod
     async def load(cls, ctx: TickContext) -> "EconomyBook":
@@ -105,6 +107,7 @@ class EconomyBook:
         book.waived = {frozenset(pair) for parties in signers.values() for pair in combinations(sorted(parties), 2)}
         for known in await session.scalars(select(HolderTechniqueRow)):
             book.techniques.setdefault(known.holder_entity_id, set()).add(known.technique)
+        book.designs = {row.id: row for row in await session.scalars(select(WorkshopDesignRow).order_by(WorkshopDesignRow.id))}
         book.blockaded = set(await session.scalars(select(ArmyProfileRow.blockade_entity_id).where(ArmyProfileRow.blockade_entity_id.is_not(None))))
         return book
 
@@ -148,6 +151,9 @@ class EconomyBook:
 
     def workshop(self, community_id: int, kind: WorkshopKind) -> WorkshopRow | None:
         return self.workshops.get(community_id, {}).get(kind)
+
+    def design_of(self, workshop: WorkshopRow | None) -> WorkshopDesignRow | None:
+        return self.designs.get(workshop.design_id) if workshop is not None and workshop.design_id is not None else None
 
     def resources(self) -> list[EntityRow]:
         return sorted(

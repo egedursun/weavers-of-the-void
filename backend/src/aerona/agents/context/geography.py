@@ -222,7 +222,7 @@ async def geography_lines(scope: Scope, world_id: int | None) -> str:
     nexus = await nexus_names(scope, set(regions))
     book = await EnvironmentBook.load(scope.session, scope.rules, scope.epoch)
     places = await place_lines(scope, set(regions))
-    works = await region_works(scope.session, book.atlas)
+    works = await region_works(scope.session, book.atlas, scope.rules)
     terrain = await terrain_facts(scope, set(regions), grounds)
     lines = [
         RegionGeography(

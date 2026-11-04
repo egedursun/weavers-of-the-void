@@ -52,6 +52,7 @@ from aerona.engine.cosmos.routes import (
     world_name,
 )
 from aerona.engine.ecology.beasts import mount_of
+from aerona.engine.economy.materials import VesselRig, hull_guard, hull_wear, rig_of, wind_guard
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.dangers import harm_of
 from aerona.engine.interconnect.annotations import reads, writes
@@ -386,10 +387,19 @@ async def bridge_collapse(ctx: TickContext) -> int:
 
 
 def road_risk(
-    rules: Rules, route: RouteRow, branches: set[KnowledgeBranch], vehicle: EntityRow | None, world_danger: int = 0, *, wind: int = 0, region_danger: int = 0
+    rules: Rules,
+    route: RouteRow,
+    branches: set[KnowledgeBranch],
+    vehicle: EntityRow | None,
+    world_danger: int = 0,
+    *,
+    wind: int = 0,
+    rig: VesselRig | None = None,
+    region_danger: int = 0,
 ) -> float:
     travel = rules.travel
-    risk = route.danger / PERCENT + world_danger / PERCENT * travel.world_danger_risk_pct / PERCENT + wind / PERCENT * travel.wind_risk_pct / PERCENT
+    sails = wind_guard(rules, rig.fabric) if rig is not None else 1.0
+    risk = route.danger / PERCENT + world_danger / PERCENT * travel.world_danger_risk_pct / PERCENT + wind / PERCENT * travel.wind_risk_pct / PERCENT * sails
     risk += region_danger / PERCENT * rules.regional_danger.traveller_risk_pct / PERCENT
     if KnowledgeBranch.SKY_NAVIGATION in branches:
         risk *= travel.sky_navigation_risk_pct / PERCENT
@@ -397,6 +407,8 @@ def road_risk(
         risk *= travel.void_life_risk_pct / PERCENT
     if vehicle is not None:
         risk *= 1 - stat_or(vehicle, ARMOR_KEY, travel.default_vessel_armor) / travel.armor_risk_divisor
+    if rig is not None:
+        risk *= hull_guard(rules, rig.hull)
     return max(0.0, risk)
 
 
@@ -436,14 +448,14 @@ async def _ghost_ship(ctx: TickContext, journey: JourneyRow, traveller: EntityRo
     return legend
 
 
-def swallow_chance(rules: Rules, kind: JourneyEventKind, vehicle: EntityRow | None) -> float:
+def swallow_chance(rules: Rules, kind: JourneyEventKind, vehicle: EntityRow | None, rig: VesselRig | None = None) -> float:
     travel = rules.travel
     if kind is JourneyEventKind.LOST_WAY:
         return float(travel.lost_chance)
     if kind in SPECIAL_EVENTS:
         return float(travel.special_loss_chance)
     armour = 1 - stat_or(vehicle, ARMOR_KEY, travel.default_vessel_armor) / travel.armor_risk_divisor if vehicle is not None else 1.0
-    return travel.raid_loss_chance * max(0.0, armour)
+    return travel.raid_loss_chance * max(0.0, armour) * (hull_guard(rules, rig.hull) if rig is not None else 1.0)
 
 
 async def _lost_caravan(ctx: TickContext, journey: JourneyRow, traveller: EntityRow, target: str, how: str) -> EntityRow:
@@ -471,12 +483,13 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
     destination = await ctx.session.get(WorldRow, journey.destination_world_id)
     danger = destination.danger if destination is not None else 0
     wind = scene.departure_wind(ctx, journey, traveller)
+    rig = await rig_of(ctx.session, vehicle)
     home = await harm_of(ctx.session, ctx.rules, scene.ground.atlas.top_region(traveller.id), DangerHarm.TRAVELLERS)
-    if not scene.rng.probability(road_risk(ctx.rules, route, scene.knowledge.branches(traveller.id), vehicle, danger, wind=wind, region_danger=home)):
+    if not scene.rng.probability(road_risk(ctx.rules, route, scene.knowledge.branches(traveller.id), vehicle, danger, wind=wind, rig=rig, region_danger=home)):
         return True
     kind = METHOD_EVENTS.get(route.method) or scene.rng.pick(COMMON_EVENTS)
     target = await world_name(ctx.session, journey.destination_world_id)
-    if scene.rng.chance(swallow_chance(ctx.rules, kind, vehicle)):
+    if scene.rng.chance(swallow_chance(ctx.rules, kind, vehicle, rig)):
         how = SWALLOWED_TEXT[kind]
         add_event(journey, ctx.epoch, kind, how, loss=journey.population)
         journey.status = JourneyStatus.LOST
@@ -499,7 +512,12 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
     if kind is JourneyEventKind.MEMORY_LOSS:
         journey.memory_lost = True
     if vehicle is not None and kind in ARMOUR_EVENTS:
-        put_stat(ctx.rules, vehicle, ARMOR_KEY, stat_or(vehicle, ARMOR_KEY, travel.default_vessel_armor) - travel.vessel_armor_loss)
+        put_stat(
+            ctx.rules,
+            vehicle,
+            ARMOR_KEY,
+            stat_or(vehicle, ARMOR_KEY, travel.default_vessel_armor) - hull_wear(ctx.rules, rig.hull if rig else None, travel.vessel_armor_loss),
+        )
     tail = f"; {lost} people were lost" if lost else ""
     await note(ctx, f"On {traveller.name}'s journey to {target} {ROAD_EVENT_TEXT[kind]}{tail}.", key=f"travel.road.{kind.value}", ids=[traveller.id])
     return True
@@ -879,6 +897,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.memories",
     "table.minds",
     "table.name_registry",
+    "table.node_materials",
     "table.nodes",
     "table.personality_values",
     "table.place_environment",
@@ -893,6 +912,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.war_sides",
     "table.wars",
     "table.world_maps",
+    "table.world_materials",
     "table.world_seasons",
 )
 @writes(

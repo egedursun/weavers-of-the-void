@@ -1,4 +1,4 @@
-{% from "shared/macros.md.j2" import entity_line, bond_lines, society_lines %}
+{% from "shared/macros.md.j2" import entity_line, bond_lines, society_lines, economy_block %}
 {{ entity_line(entity) }}
 Created by: {% if author == "world" %}the world's own course (mortals){% elif author == "creator" %}the god himself{% elif author == "son" and author_son %}son#{{ author_son.id }} {{ author_son.name }}{% else %}unknown{% endif %} · Age {{ age }}{% if world %} · world#{{ world.id }} {{ world.name }} (judged by its own dialect){% endif %}{% if domain %} · domain {{ domain }}{% endif %}{% if tags %} · tags: {{ tags | join(", ") }}{% endif %}
 
@@ -31,6 +31,9 @@ Lexicon: {% if lexicon %}{% for word in lexicon %}{{ word.word }} = {{ word.mean
 {% endif %}
 {% if society %}
 {{ society_lines(society) }}
+{% endif %}
+{% if economy %}
+{{ economy_block(economy) | trim }}
 {% endif %}
 {% if body %}
 Body and wounds:

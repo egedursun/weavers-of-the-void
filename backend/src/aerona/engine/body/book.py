@@ -17,7 +17,7 @@ from aerona.db.tables.entities import EntityRow, EntityTagRow, EntityTraitRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import SkillRow, TraitRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.body import OPEN_INJURY_STATES, BodyBuild, BodyFunction, BodyPlan, Capacity, HeightClass, InjuryState, StrikeStyle
+from aerona.domain.enums.body import OPEN_INJURY_STATES, BodyBuild, BodyFunction, BodyPlan, Capacity, ConditionKind, HeightClass, InjuryState, StrikeStyle
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.mind import TraitKind
@@ -278,6 +278,15 @@ async def armour_of(session: AsyncSession, rules: Rules, bearer: Bearer, communi
     return Armour(head, min(table.coverage_cap, max(torso, guard)), limbs)
 
 
+def afflicted_parts(rules: Rules, conditions: list[ConditionRow]) -> tuple[tuple[str, int], ...]:
+    loss = rules.epidemiology.chronic_function_loss_pct
+    return tuple(
+        (row.part, min(PERCENT, row.severity * loss))
+        for row in conditions
+        if row.kind is ConditionKind.CHRONIC_ILLNESS and row.part and row.ended_epoch is None
+    )
+
+
 def factors_of(
     rules: Rules,
     bearer: Bearer,
@@ -301,6 +310,7 @@ def factors_of(
         tuple((row.kind, row.severity * variant_scales.get(row.id, 1.0)) for row in conditions),
         reading.presence_pct,
         reading.reader,
+        afflicted_parts(rules, conditions),
     )
     actual = capacities(rules, stats, state)
     whole = capacities(rules, replace(stats, age=None), BodyState(anatomy, (), FINGER_COUNT, 0))

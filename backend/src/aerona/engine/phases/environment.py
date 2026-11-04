@@ -21,6 +21,7 @@ from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.environment import CoastKind, LandUse, NotableYearKind, RiverClass, ScarKind, SoilKind, WeatherEffect, WeatherKind
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.world import ClimateEra, Discovery
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
@@ -71,6 +72,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, canon, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import base_stat, set_base_stats, stat, stat_or
+from aerona.engine.structures.readers import regions_of
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
 
@@ -765,9 +767,9 @@ class YearHarvest:
 
 
 async def calendar_regions(ctx: TickContext, book: EnvironmentBook) -> set[int]:
+    regions: set[int] = set(await regions_of(ctx.session, [StructureKind.OBSERVATORY], book.atlas))
     if not book.calendars:
-        return set()
-    regions: set[int] = set()
+        return regions
     for bond in await active_bonds(ctx.session, [BondKind.KNOWS], targets=list(book.calendars)):
         region_id = book.atlas.top_region(bond.source_node_id)
         if region_id is not None:
@@ -1195,11 +1197,14 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
     "table.ley_lines",
     "table.place_environment",
     "table.region_environment",
+    "table.structure_designs",
+    "table.structure_profiles",
     "table.structure_ley",
     "table.world_maps",
 )
 @writes(
     "structure.function",
+    "table.structure_profiles",
     "table.applied_fixups",
     "table.chronicle",
     "table.chronicle_entities",

@@ -1,3 +1,6 @@
+from collections.abc import Callable
+
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.diseases import CLIMATE_WORDS, STRAIN_WORDS, VECTOR_FUNCTIONS, VECTOR_NOUNS, VECTOR_STIGMA
@@ -6,7 +9,9 @@ from aerona.core.random import SeededRandom
 from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.interconnect import IncidentRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.disease import ClimateAffinity, DiseaseVector, SpreadPath
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TemperatureBand
@@ -103,8 +108,39 @@ def strain_profile(ctx: TickContext, rng: SeededRandom, parent: DiseaseProfileRo
     )
 
 
+ORIGIN_KEYS = {SpreadPath.LOOSED: "disease.loosed"}
+
+
+async def mark_origin(ctx: TickContext, profile: DiseaseProfileRow, entity: EntityRow, region: EntityRow, *, path: SpreadPath, son_id: int | None) -> None:
+    host = await ctx.session.get(EntityRow, profile.host_species_id) if profile.host_species_id is not None else None
+    carried = f", carried by {host.name}" if host is not None else ""
+    text = f"A new sickness rose in {region.name}: {entity.name}, borne by {profile.vector.value}{carried}."
+    if son_id is not None and path is SpreadPath.LOOSED:
+        text = f"A god loosed a new sickness on {region.name}: {entity.name}, borne by {profile.vector.value}{carried}."
+    write = await ctx.chronicle(
+        ChronicleKind.DISASTER,
+        text,
+        template_key=ORIGIN_KEYS.get(path, "disease.emerged"),
+        entity_ids=[entity.id, region.id, *([host.id] if host is not None else [])],
+        son_id=son_id,
+        feed_category=FeedCategory.DISASTER,
+        world_id=region.world_id,
+        place_entity_id=region.id,
+    )
+    incident = write.incident_id or await ctx.session.scalar(select(IncidentRow.id).where(IncidentRow.chronicle_id == write.row.id))
+    profile.origin_incident_id = incident
+
+
 async def birth_disease(
-    ctx: TickContext, book: DiseaseBook, profile: DiseaseProfileRow, *, region: EntityRow, path: SpreadPath, name: str, son_id: int | None = None
+    ctx: TickContext,
+    book: DiseaseBook,
+    profile: DiseaseProfileRow,
+    *,
+    region: EntityRow,
+    path: SpreadPath,
+    name: str,
+    son_id: int | None = None,
+    quiet: bool = False,
 ) -> EntityRow:
     entity = await create_record(
         ctx,
@@ -129,6 +165,10 @@ async def birth_disease(
     await ctx.session.flush()
     book.diseases[entity.id] = entity
     book.profiles[entity.id] = profile
+    if profile.host_species_id is not None:
+        book.hosts.setdefault(entity.id, set()).add(profile.host_species_id)
+    if not quiet:
+        await mark_origin(ctx, profile, entity, region, path=path, son_id=son_id)
     ctx.count(f"disease.born.{path.value}")
     return entity
 
@@ -142,13 +182,17 @@ async def new_disease(
     host: EntityRow | None = None,
     son_id: int | None = None,
     cursed: bool = False,
+    shape: Callable[[DiseaseProfileRow], None] | None = None,
+    name: str | None = None,
+    quiet: bool = False,
 ) -> EntityRow:
     ground = await ctx.session.get(RegionEnvironmentRow, region.id)
     rng = ctx.rng(f"disease.new.{region.id}.{path.value}.{len(book.diseases)}")
     profile = fresh_profile(ctx, rng, ground, host=host, cursed=cursed)
-    disease = await birth_disease(
-        ctx, book, profile, region=region, path=path, name=name_of(rng, profile.vector, profile.climate_affinity, region), son_id=son_id
-    )
+    if shape is not None:
+        shape(profile)
+    title = name or name_of(rng, profile.vector, profile.climate_affinity, region)
+    disease = await birth_disease(ctx, book, profile, region=region, path=path, name=title, son_id=son_id, quiet=quiet)
     ctx.count("disease_hosts", await link_hosts(ctx, disease, region.id, host))
     return disease
 
@@ -160,7 +204,7 @@ async def new_strain(ctx: TickContext, book: DiseaseBook, parent: EntityRow, reg
     rng = ctx.rng(f"disease.strain.{parent.id}.{ctx.epoch}")
     child = strain_profile(ctx, rng, profile)
     name = f"the {rng.pick(STRAIN_WORDS)} {plain(parent.name)}"
-    return await birth_disease(ctx, book, child, region=region, path=SpreadPath.MUTATION, name=name, son_id=parent.creator_son_id)
+    return await birth_disease(ctx, book, child, region=region, path=SpreadPath.MUTATION, name=name, son_id=parent.creator_son_id, quiet=True)
 
 
 def plain(name: str) -> str:

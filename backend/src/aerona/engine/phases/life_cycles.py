@@ -3,16 +3,19 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.structures import HOLY_HOUSES
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import BattleRow, SiegeRow, TributeRow, WarRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.war import TributeStatus, WarEnding
 from aerona.engine.context import TickContext
+from aerona.engine.economy.loot import loot_temple
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.hooks import desecrated
 from aerona.engine.notes import note
@@ -24,6 +27,8 @@ from aerona.engine.primitives.queries import add_flag, canon, connect, flags_by_
 from aerona.engine.primitives.records import retire, retire_in
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat
 from aerona.engine.services.war import end_tribute
+from aerona.engine.structures.damage import harm, ruin_profile
+from aerona.engine.structures.readers import kind_of
 from aerona.rules.registry import Rules
 
 LEFT_BEHIND_TYPES = frozenset({EntityType.STRUCTURE, EntityType.ITEM})
@@ -174,6 +179,8 @@ async def collapses(ctx: TickContext, history: PopulationHistory) -> int:
 
 async def raze(ctx: TickContext, structure: EntityRow, sentence: str, cause_id: int | None = None, destroyer_id: int | None = None) -> None:
     await add_flag(ctx.session, structure.id, EntityFlag.RAZED, ctx.epoch)
+    holy = await kind_of(ctx.session, structure.id) in HOLY_HOUSES
+    await ruin_profile(ctx.session, structure.id)
     await retire_in(ctx, structure, sentence, EntityStatus.DESTROYED, close_bonds=True)
     bonds = BondRepository(ctx.session)
     if cause_id is not None:
@@ -181,11 +188,8 @@ async def raze(ctx: TickContext, structure: EntityRow, sentence: str, cause_id: 
     if destroyer_id is not None:
         await bonds.connect(BondDraft(destroyer_id, structure.id, BondKind.DESTROYED, ctx.epoch, "looted in conquest"))
         keeper = await living_entity(ctx.session, structure.location_id)
-        if structure.engine_kind in HOLY_KINDS and keeper is not None:
+        if holy and keeper is not None:
             await desecrated(ctx, keeper.id, destroyer_id, note=structure.name)
-
-
-HOLY_KINDS = frozenset({EngineKind.TEMPLE})
 
 
 async def siege_wear(ctx: TickContext) -> int:
@@ -206,10 +210,15 @@ async def siege_wear(ctx: TickContext) -> int:
         for structure in await EntityRepository(ctx.session).contents(besieged_id):
             if structure.entity_type is not EntityType.STRUCTURE or not rng.chance(cycles.siege_damage_chance):
                 continue
-            remaining = (stat(structure, "durability") or 0) - cycles.siege_durability_loss
-            set_stats(structure, durability=max(0, remaining))
-            if remaining > 0:
-                continue
+            profile = await ctx.session.get(StructureProfileRow, structure.id)
+            if profile is not None:
+                if not await harm(ctx, structure, profile, cycles.siege_durability_loss, cause=cause_name, quiet=True):
+                    continue
+            else:
+                remaining = (stat(structure, "durability") or 0) - cycles.siege_durability_loss
+                set_stats(structure, durability=max(0, remaining))
+                if remaining > 0:
+                    continue
             await raze(ctx, structure, f"collapsed during {cause_name}", cause.id if cause is not None else None)
             wonder = "; one of the wonders of the world is now rubble" if structure.id in wonders else ""
             ids = [*([cause.id] if cause is not None else []), structure.id]
@@ -232,6 +241,8 @@ async def conquest_looting(ctx: TickContext) -> int:
         for structure in await EntityRepository(ctx.session).contents(loser.id):
             if structure.id not in wonders or structure.entity_type is not EntityType.STRUCTURE or not rng.chance(cycles.conquest_loot_chance):
                 continue
+            if await kind_of(ctx.session, structure.id) in HOLY_HOUSES:
+                await loot_temple(ctx, structure, victor)
             await raze(ctx, structure, f"looted and razed in the conquest by {victor.name}", war.event_entity_id, victor.id)
             text = f"When {victor.name} conquered {loser.name}, its soldiers looted the wonder {structure.name} and tore it down."
             await note(ctx, text, key="life_cycles.looted", ids=[victor.id, loser.id, structure.id], feed=FeedCategory.WAR)
@@ -271,23 +282,32 @@ async def desolation(ctx: TickContext, atlas: RegionAtlas) -> int:
     "settlement.prosperity",
     "structure.durability",
     "table.bonds",
+    "table.community_societies",
+    "table.community_stocks",
+    "table.currencies",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.map_snapshots",
+    "table.node_materials",
     "table.nodes",
     "table.routes",
     "table.tributes",
     "table.wars",
     "table.world_maps",
+    "table.world_materials",
 )
 @writes(
     "structure.durability",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.community_societies",
+    "table.community_stocks",
+    "table.currencies",
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
 )

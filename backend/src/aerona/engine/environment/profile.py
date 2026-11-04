@@ -181,6 +181,7 @@ class Works:
     bridges: int = 0
     harbours: int = 0
     irrigation: int = 0
+    waystations: int = 0
 
 
 @dataclass(frozen=True)

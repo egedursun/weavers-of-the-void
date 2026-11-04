@@ -37,6 +37,7 @@ from aerona.engine.polity.accords import (
     treaty_between,
 )
 from aerona.engine.polity.book import Realm, RealmBook
+from aerona.engine.polity.loyalty import vassal_loyalty
 from aerona.engine.polity.oaths import break_oath
 from aerona.engine.polity.repute import shift_honour, shift_infamy
 from aerona.engine.primitives.numbers import round_half_up
@@ -469,7 +470,7 @@ async def vassal_rows(ctx: TickContext, book: RealmBook) -> None:
         row.treaty_entity_id = profile.treaty_entity_id
         first, second = roles.get(PartyRole.VASSAL), roles.get(PartyRole.OVERLORD)
         if first is not None and second is not None and "loyalty" not in row.locked:
-            row.loyalty = max(0, min(PERCENT, PERCENT // 2 + await relation(ctx.session, ctx.rules, first, second) // 2))
+            row.loyalty = await vassal_loyalty(ctx, first, second, row.tribute_pct)
 
 
 async def vassal_duties(ctx: TickContext, book: RealmBook) -> dict[str, int]:

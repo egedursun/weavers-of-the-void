@@ -26,6 +26,8 @@ class ExtractionRules:
     deposit_reserve: int = rule(1500, 1, 100000, G, "Reserve of a newly found deposit")
     hidden_share_pct: int = rule(25, 0, 100, G, "Share of rich mineral seams that start hidden when a world is profiled (%)")
     workshop_pct_per_level: int = rule(15, 0, 100, G, "Extra output per level of the mine, lumber camp or fishery that works a resource (%)")
+    species_ground_abundance: int = rule(30, 0, 100, G, "Abundance a wild species needs before its herds, fish or silk are worked as a ground of their own")
+    knowledge_short_pct: int = rule(0, 0, 100, G, "Output kept per level a community falls short of the knowledge a resource needs (%); zero closes the work")
 
 
 @dataclass(frozen=True)

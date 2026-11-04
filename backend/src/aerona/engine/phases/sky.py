@@ -18,6 +18,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory, ThreadLinkRole, ThreadStatus
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityType
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.war import WarEnding
 from aerona.domain.enums.world import Discovery, SkyEventKind
@@ -40,6 +41,7 @@ from aerona.engine.primitives.queries import canon, connect, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.stats import shift_bounded, stat_or
 from aerona.engine.services.war_resolution import settle_peace
+from aerona.engine.structures.readers import strength_at, working
 from aerona.rules.registry import Rules
 
 INHABITANT_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.MORTAL})
@@ -101,12 +103,20 @@ async def sky_clarity(ctx: TickContext, world: WorldRow, slot: str) -> float:
     return ground.clarity(ctx.environment.world_seed, ctx.epoch, world.id, slot)
 
 
+async def omen_bonus(ctx: TickContext, world_id: int) -> int:
+    found = await working(ctx.session, [StructureKind.OBSERVATORY], world_id=world_id)
+    return round(max((item.strength for item in found), default=0.0) * ctx.rules.structure_functions.observatory_omen_certainty)
+
+
 async def _eclipse(ctx: TickContext, world: WorldRow) -> str:
     sky = ctx.rules.sky
     seen = await sky_clarity(ctx, world, "sky.eclipse")
     for entity in await canon(ctx.session, INHABITANT_TYPES, world.id):
         dread = seen * (
             1 - ctx.rules.technique_effects.eclipse_calm_pct / PERCENT if await has_technique(ctx.session, entity.id, Technique.ECLIPSE_PREDICTION) else 1
+        )
+        dread *= (
+            1 - await strength_at(ctx.session, entity.id, [StructureKind.OBSERVATORY]) * ctx.rules.structure_functions.observatory_eclipse_calm_pct / PERCENT
         )
         shift_sanity(ctx.rules, entity, -round(sky.eclipse_sanity_loss * dread))
         shift_bounded(ctx.rules, entity, PIETY_KEY, round(sky.eclipse_piety_gain * dread))
@@ -118,7 +128,7 @@ async def _eclipse(ctx: TickContext, world: WorldRow) -> str:
             name=f"{world.name} Eclipse Prophecy",
             entity_type=EntityType.PROPHECY,
             body=f"When {world.name}'s sky darkened the seers whispered the same words.",
-            stats=ProphecyStats(certainty=clamp_percent(sky.eclipse_certainty_base + rng.die(sky.eclipse_certainty_die))),
+            stats=ProphecyStats(certainty=clamp_percent(sky.eclipse_certainty_base + rng.die(sky.eclipse_certainty_die) + await omen_bonus(ctx, world.id))),
             power=sky.eclipse_prophecy_power,
             world_id=world.id,
             subtype="eclipse prophecy",

@@ -15,10 +15,12 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow, LoanStatus
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.polity import DebtRemedy
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
+from aerona.engine.economy.debt_law import bind_debtor, debt_law_of, jail_debtor
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.notes import note
 from aerona.engine.polity.law_effects import may_coin
@@ -144,7 +146,8 @@ async def mint(ctx: TickContext, book: EconomyBook, issuer: EntityRow, tally: Mo
     units = min(lot.quantity, table.mint_ore_units)
     taken = await goods_of(ctx.session, ctx.epoch).take(issuer.id, CommodityKind.ORE, units, GoodsFlow.INPUT, material=lot.material)
     struck = sum(item.quantity for item in taken) * table.coins_per_unit * PERCENT // max(1, currency.purity)
-    currency.supply += struck
+    if not currency.held:
+        currency.supply += struck
     tally.minted += struck
 
 
@@ -180,7 +183,7 @@ def users_of(book: EconomyBook, currency_id: int) -> list[int]:
 async def debase(ctx: TickContext, book: EconomyBook, currency: CurrencyRow, *, forced: bool = False) -> bool:
     table = ctx.rules.money
     issuer = book.entities.get(currency.issuer_entity_id) or await ctx.session.get(EntityRow, currency.issuer_entity_id)
-    if issuer is None or currency.purity <= 0:
+    if issuer is None or currency.purity <= 0 or (currency.held and not forced):
         return False
     currency.purity = clamp_int(currency.purity - table.debase_step, 0, PERCENT)
     currency.trust = clamp_int(currency.trust - table.debase_trust_loss, 0, PERCENT)
@@ -203,6 +206,8 @@ async def debase(ctx: TickContext, book: EconomyBook, currency: CurrencyRow, *, 
 async def tend_currencies(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> None:
     table = ctx.rules.money
     for currency in (await currencies(ctx)).values():
+        if currency.held:
+            continue
         issuer = book.entities.get(currency.issuer_entity_id)
         if issuer is None:
             currency.trust = clamp_int(currency.trust - table.debase_trust_loss, 0, PERCENT)
@@ -218,12 +223,21 @@ async def _at_war(ctx: TickContext, community_id: int) -> bool:
     return bool(await BondRepository(ctx.session).outgoing(community_id, BondKind.ENEMY))
 
 
-async def inject_hoard(ctx: TickContext, community: EntityRow, units: int, metal: MaterialKind) -> int:
+async def inject_hoard(ctx: TickContext, community: EntityRow, units: int, metal: MaterialKind, world_material_id: int | None = None) -> int:
     table = ctx.rules.money
-    added = await goods_of(ctx.session, ctx.epoch).add(community.id, CommodityKind.LUXURIES, units, GoodsFlow.LOOT, material=metal, quality=70)
+    added = await goods_of(ctx.session, ctx.epoch).add(
+        community.id,
+        CommodityKind.LUXURIES,
+        units,
+        GoodsFlow.LOOT,
+        material=metal if world_material_id is None else None,
+        world_material_id=world_material_id,
+        quality=70,
+        force=True,
+    )
     row = await ctx.session.get(CommunitySocietyRow, community.id)
     currency = await ctx.session.get(CurrencyRow, row.currency_id) if row is not None and row.currency_id is not None else None
-    if currency is not None:
+    if currency is not None and not currency.held:
         currency.supply += round_half_up(units * table.coins_per_unit * table.hoard_supply_pct / PERCENT)
         if currency.metal is metal:
             currency.trust = clamp_int(currency.trust - table.debase_trust_loss // 2, 0, PERCENT)
@@ -298,9 +312,12 @@ def owed(loan: LoanRow) -> int:
 
 async def collect(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> None:
     table = ctx.rules.banking
-    for loan in await ctx.session.scalars(select(LoanRow).where(LoanRow.status == LoanStatus.OPEN).order_by(LoanRow.id)):
+    statement = select(LoanRow).where(LoanRow.status == LoanStatus.OPEN, LoanRow.held.is_(False)).order_by(LoanRow.id)
+    for loan in await ctx.session.scalars(statement):
         borrower = book.entities.get(loan.borrower_entity_id)
         lender = book.entities.get(loan.lender_entity_id)
+        if borrower is not None and borrower.entity_type is EntityType.POLITY:
+            continue
         if borrower is None or lender is None:
             loan.status = LoanStatus.FORGIVEN
             continue
@@ -323,6 +340,21 @@ async def collect(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> Non
 
 async def default(ctx: TickContext, book: EconomyBook, loan: LoanRow, borrower: EntityRow, lender: EntityRow) -> None:
     table = ctx.rules.banking
+    law = await debt_law_of(ctx, borrower, lender)
+    if law is not None and law.remedy is DebtRemedy.JUBILEE:
+        loan.status = LoanStatus.FORGIVEN
+        gain(lender, -table.default_bank_loss)
+        await ctx.chronicle(
+            ChronicleKind.DEBT,
+            f"The jubilee wiped the loan {borrower.name} owed {lender.name}; the bank bore the loss.",
+            template_key="banking.jubilee",
+            entity_ids=[borrower.id, lender.id],
+        )
+        return
+    if law is not None and law.remedy is DebtRemedy.BONDAGE:
+        await bind_debtor(ctx, borrower, lender)
+    elif law is not None and law.remedy is DebtRemedy.PRISON:
+        await jail_debtor(ctx, borrower, lender, f"{max(0, owed(loan))} silver")
     loan.status = LoanStatus.DEFAULTED
     gain(lender, -table.default_bank_loss)
     await change_relation(ctx, lender.id, borrower.id, -table.default_relation_loss, MemoryKind.BETRAYED_ME, note="defaulted on a loan")

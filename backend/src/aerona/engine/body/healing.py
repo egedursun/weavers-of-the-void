@@ -1,5 +1,5 @@
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,6 +28,7 @@ from aerona.domain.enums.body import (
 )
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass, Technique
+from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mortal import DeathCause, HarshnessScale
@@ -38,8 +39,9 @@ from aerona.engine.body.conditions import end_condition, gain_condition
 from aerona.engine.body.hits import MARK_KINDS, PERMANENT_KINDS, TOTAL_LOSS_KINDS
 from aerona.engine.body.state import refresh
 from aerona.engine.context import TickContext
-from aerona.engine.disease.book import hospital_regions
+from aerona.engine.disease.book import hospital_strengths
 from aerona.engine.disease.load import DiseaseLoads
+from aerona.engine.economy.materials import set_node_material
 from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_notable
@@ -167,6 +169,7 @@ class Care:
     metallurgy: int
     artisan: EntityRow | None
     amputation: bool = True
+    hospital: float = 0.0
 
 
 @dataclass
@@ -177,6 +180,7 @@ class HealingWorld:
     healers: dict[int | None, list[Healer]]
     disease: dict[int, int]
     artisans: dict[int | None, list[EntityRow]]
+    hospitals: dict[int, float] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules) -> "HealingWorld":
@@ -185,7 +189,7 @@ class HealingWorld:
         healers: dict[int | None, list[Healer]] = defaultdict(list)
         artisans: dict[int | None, list[EntityRow]] = defaultdict(list)
         trained: dict[int, int] = defaultdict(int)
-        hospitals = await hospital_regions(session, atlas)
+        hospitals = await hospital_strengths(session, atlas)
         for skill_row in await session.scalars(select(SkillRow).where(SkillRow.skill.in_(HEALING_SKILLS), SkillRow.subject_node_id.is_(None))):
             trained[skill_row.holder_node_id] = max(trained[skill_row.holder_node_id], skill_row.level)
         for mortal in await canon(session, [EntityType.MORTAL]):
@@ -198,10 +202,10 @@ class HealingWorld:
             body = await session.get(BodyRow, mortal.id)
             hands = body.craft / PERCENT if body is not None else 1.0
             raw = level * rules.skills.healer_scale_pct / PERCENT
-            ward = rules.epidemiology.hospital_healer_pct / PERCENT if region in hospitals else 1.0
+            ward = 1 + hospitals.get(region, 0.0) * (rules.epidemiology.hospital_healer_pct / PERCENT - 1) if region is not None else 1.0
             healers[region].append(Healer(mortal, clamp_int(raw * hands * ward, 0, PERCENT), region))
         disease = dict((await DiseaseLoads.load(session)).regions)
-        return cls(rules=rules, atlas=atlas, knowledge=knowledge, healers=healers, disease=disease, artisans=artisans)
+        return cls(rules=rules, atlas=atlas, knowledge=knowledge, healers=healers, disease=disease, artisans=artisans, hospitals=hospitals)
 
     def best_healer(self, bearer: EntityRow) -> Healer | None:
         region = self.atlas.top_region(bearer.id)
@@ -235,7 +239,8 @@ class HealingWorld:
         artisan = self.best_artisan(bearer) if notable else None
         home = community.id if community is not None else None
         tier = await known_tier(session, home, tier_of(rules.healing, medicine, magic, biomancy))
-        return Care(tier, healer, disease, metallurgy, artisan, amputation=not await lacks(session, home, Technique.AMPUTATION))
+        ward = self.hospitals.get(region, 0.0) if region is not None else 0.0
+        return Care(tier, healer, disease, metallurgy, artisan, amputation=not await lacks(session, home, Technique.AMPUTATION), hospital=ward)
 
 
 async def _renown(ctx: TickContext, healer: Healer | None, *, healed: bool) -> None:
@@ -281,6 +286,7 @@ async def _fester(ctx: TickContext, bearer: Bearer, body: BodyRow, row: InjuryRo
     vital = part is not None and part.vital
     index = tier_index(care.tier)
     deadly = (table.lethal_infected_vital if vital else table.lethal_infected_limb) * max(0, PERCENT - index * table.lethal_medicine_cut_pct) / PERCENT
+    deadly *= 1 - care.hospital * ctx.rules.structure_functions.hospital_death_cut_pct / PERCENT
     deadly *= harshness(ctx.rules, HarshnessScale.INFECTION)
     if row.infected_epochs >= table.lethal_after_epochs or rng.chance(deadly):
         if index >= tier_index(MedicineTier.SURGERY) and care.amputation and _limb(part) and rng.chance(table.amputation_chance):
@@ -340,6 +346,8 @@ async def _close(ctx: TickContext, bearer: Bearer, row: InjuryRow, care: Care, r
         await gain_condition(ctx, bearer, ConditionKind.WITHERED_LIMB, row.cause_kind, severity=row.severity, part=row.part, source_node_id=row.cause_node_id)
     if lasting and row.kind is InjuryKind.VENOM:
         await gain_condition(ctx, bearer, ConditionKind.CHRONIC_ILLNESS, row.cause_kind, severity=row.severity, source_node_id=row.cause_node_id)
+    if lasting and row.kind is InjuryKind.SICKNESS:
+        await gain_condition(ctx, bearer, ConditionKind.CHRONIC_ILLNESS, row.cause_kind, severity=row.severity, part=row.part, source_node_id=row.cause_node_id)
 
 
 HEALING_KEY = "healing"
@@ -369,6 +377,7 @@ async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending
             chance = infection_base(table, row.kind) * care.disease / table.disease_reference
             chance *= harshness(ctx.rules, HarshnessScale.INFECTION) * (1 + (PERCENT - body.vital) * table.vital_infection_pct / PERCENT / PERCENT)
             chance *= (PERCENT - medicine_cut(table, care.tier)) / PERCENT * (PERCENT - min(table.healer_skill_cap, skill)) / PERCENT
+            chance *= 1 - care.hospital * ctx.rules.structure_functions.hospital_infection_cut_pct / PERCENT
             checks = max(1, ctx.rules.campaigns.seasons_per_war_epoch) if campaign else 1
             if any(rng.chance(chance) for _ in range(checks)):
                 row.state = InjuryState.INFECTED
@@ -547,13 +556,13 @@ async def prosthesis_profile(
         ctx.session.add(row)
     row.item_class = ItemClass.PROSTHESIS
     row.prosthesis_for = part
-    row.material = material.value
     row.quality = quality
     row.value = quality
     row.renown = quality if relic else row.renown or 0
     row.symbol = relic
     row.maker_entity_id = maker.id if maker is not None else row.maker_entity_id
     row.updated_epoch = ctx.epoch
+    await set_node_material(ctx.session, item.id, MaterialSlot.BODY, material, None, force=True)
     await ctx.session.flush()
     return row
 

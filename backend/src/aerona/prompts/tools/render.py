@@ -5,12 +5,13 @@ from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.entity_types import ENTITY_TYPES, EntityTypeSpec
 from aerona.catalog.interventions import DISASTERS, MIRACLES
 from aerona.catalog.stars import STAR_TYPES
+from aerona.catalog.structures import STRUCTURES
 from aerona.catalog.tenets import TENET_EFFECTS
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.culture import ArtMedium, IdeologyTenet, MagicSchool, MagicSource, ProphecyConsequence, ProphecyPredicate, RiteEffectKind
 from aerona.domain.enums.ecology import BeastTemper, Diet, SizeClass, Sociality, YieldProduct
-from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.economy import CommodityKind, MaterialFamily
 from aerona.domain.enums.entity import LIVING_CREATION_TYPES, EntityType, LegendCategory
 from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPath
 from aerona.domain.enums.material import MaterialKind
@@ -78,6 +79,8 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "legend_categories": [category.value for category in LegendCategory],
         "commodities": [commodity.value for commodity in CommodityKind],
         "materials": [material.value for material in MaterialKind],
+        "material_families": [family.value for family in MaterialFamily],
+        "structure_kinds": ", ".join(f"{kind} ({spec.label})" for kind, spec in STRUCTURES.items()),
         "art_media": ", ".join(medium.value for medium in ArtMedium),
         "magic_schools": ", ".join(school.value for school in MagicSchool),
         "magic_sources": ", ".join(source.value for source in MagicSource),

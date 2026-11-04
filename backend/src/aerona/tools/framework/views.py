@@ -23,6 +23,7 @@ from aerona.domain.enums.war import WarStatus
 from aerona.engine.body.describe import body_lines
 from aerona.engine.mind.describe import mind_lines
 from aerona.engine.services.community_relations import cosmos_epoch
+from aerona.engine.structures.describe import structure_facts
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import (
     BondEndpoint,
@@ -32,12 +33,12 @@ from aerona.prompts.contexts.blocks import (
     EntityAuthor,
     EntityDetailContext,
     EntityLineContext,
-    Granary,
     SocietyLines,
     WarLine,
 )
 from aerona.prompts.contexts.common import EntityLineItem, LabelValue, LexiconWord, NamedRecord, WorldItem
 from aerona.rules.registry import Rules
+from aerona.tools.framework.economy_lines import economy_block
 from aerona.tools.framework.validation import label_of
 
 PERCENT = 100
@@ -141,16 +142,6 @@ async def society_lines(session: AsyncSession, rules: Rules, entity: EntityRow) 
         ]
         if society is not None
         else [],
-        granary=Granary(
-            food=society.stock_food,
-            ore=society.stock_ore,
-            goods=society.stock_goods,
-            bread_price=society.price_food,
-            ore_price=society.price_ore,
-            goods_price=society.price_goods,
-        )
-        if society is not None
-        else None,
         relations=[
             CommunityRelationLine(
                 id=other,
@@ -181,6 +172,7 @@ async def fact_lines(session: AsyncSession, rules: Rules, entity: EntityRow) -> 
         subject = names.get(fact.subject_entity_id, "") if fact.subject_entity_id != entity.id else ""
         target = names.get(fact.object_entity_id, "") if fact.object_entity_id is not None else ""
         lines.append(" ".join(part for part in (subject, fact.predicate, fact.object_text or target) if part))
+    lines.extend(await structure_facts(session, entity))
     return lines
 
 
@@ -211,6 +203,7 @@ async def entity_detail(session: AsyncSession, rules: Rules, entity: EntityRow) 
         facts=await fact_lines(session, rules, entity),
         body=await body_lines(session, rules, entity),
         mind=await mind_lines(session, rules, entity, await cosmos_epoch(session)),
+        economy=await economy_block(session, rules, entity),
     )
     return render(PromptId.ENTITY_DETAIL, context)
 

@@ -15,17 +15,17 @@ from tests.tools.factories import DESCRIPTION, Realm, seed_realm, son_toolkit
 from tests.tools.test_son_tools import entity, ok
 
 CASES: dict[str, tuple[EntityType, dict[str, Any]]] = {
-    "create_species": (EntityType.SPECIES, {"name": "Saltdrakes", "body_plan": "serpentine"}),
+    "create_species": (EntityType.SPECIES, {"name": "Saltdrakes", "body_plan": "serpentine", "size_class": "large", "diet": "carnivore"}),
     "create_mortal": (EntityType.MORTAL, {"name": "Orsa Venn", "title": "the Keeper"}),
-    "found_tradition": (EntityType.TRADITION, {"name": "Brine Rite"}),
+    "found_tradition": (EntityType.TRADITION, {"name": "Brine Rite", "tradition_kind": "festival"}),
     "found_cult": (EntityType.CULT, {"name": "Order of the Tide"}),
     "found_faction": (EntityType.FACTION, {"name": "Salt Guild", "faction_kind": "merchant_guild"}),
     "hang_celestial": (EntityType.CELESTIAL, {"name": "Lantern Moon"}),
-    "create_artwork": (EntityType.ARTWORK, {"name": "The Drowned Choir"}),
+    "create_artwork": (EntityType.ARTWORK, {"name": "The Drowned Choir", "medium": "song"}),
     "decree_law": (EntityType.LAW, {"name": "Law of Salt", "law_kind": "tolls"}),
     "summon_spirit": (EntityType.SPIRIT, {"name": "Whisper of Brine"}),
     "inspire_knowledge": (EntityType.KNOWLEDGE, {"name": "Salt Smelting", "branch": "metallurgy"}),
-    "utter_prophecy": (EntityType.PROPHECY, {"name": "The Seventh Tide"}),
+    "utter_prophecy": (EntityType.PROPHECY, {"name": "The Seventh Tide", "predicate": "within_epochs", "event_kind": "war", "within_epochs": 3}),
     "start_event": (EntityType.EVENT, {"name": "The Long Drought"}),
     "create_vessel": (EntityType.VESSEL, {"name": "Saltwing"}),
     "decree_natural_law": (EntityType.NATURAL_LAW, {"name": "Law of Gentle Death", "mechanic": "short_life"}),

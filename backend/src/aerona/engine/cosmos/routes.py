@@ -34,11 +34,13 @@ from aerona.engine.cosmos.resources import cosmic_access
 from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.vessels import owned_vessels
 from aerona.engine.cosmos.world_types import hidden_route_method, mechanics_of, river_reaches
+from aerona.engine.economy.materials import light_fabric, rig_of
 from aerona.engine.gods.economy import spend_cosmic_resource
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.knowledge import knows
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, stat, stat_or
+from aerona.engine.structures.readers import gate_opened
 from aerona.rules.registry import Rules
 
 SPEED_KEY = "speed"
@@ -438,6 +440,8 @@ class JourneySpec:
 async def _gate_sacrifice(ctx: TickContext, spec: JourneySpec, carried: int) -> tuple[int, JourneyEvent | None]:
     if spec.route.method is not TravelMethod.ANCIENT_GATE or await knows(ctx.session, spec.traveller.id, KnowledgeBranch.GATE_LORE):
         return carried, None
+    if await gate_opened(ctx.session, ctx.rules, [spec.route.world_a_id, spec.route.world_b_id]):
+        return carried, None
     costs = ctx.rules.travel_methods
     spec.route.sacrifice_paid_epoch = ctx.epoch
     if carried > 0:
@@ -503,7 +507,8 @@ async def start_journey(ctx: TickContext, spec: JourneySpec) -> JourneyRow:
     )
     if wants_fold:
         folding = await spend_cosmic_resource(ctx, traveller) is not None
-    shortened = 1 if speed >= rules.travel.fast_vessel_speed else 0
+    rig = await rig_of(session, spec.vehicle)
+    shortened = 1 if speed >= rules.travel.fast_vessel_speed or (rig is not None and light_fabric(rules, rig.fabric)) else 0
     fit = vessel_fit(rules, spec.vehicle, route.duration_epochs, carried)
     carried = fit.carried
     remaining = max(1, 1 if folding else route.duration_epochs - shortened + fit.extra_epochs)

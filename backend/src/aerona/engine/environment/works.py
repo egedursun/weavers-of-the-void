@@ -12,13 +12,17 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.profile import Works
 from aerona.engine.lore.research import has_technique
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
+from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import canon
+from aerona.engine.structures.readers import Working, working
+from aerona.rules.registry import Rules
 
 WORKS_FIXUP = "environment.typed_works"
 WORK_MAX = 5
@@ -26,7 +30,38 @@ BRIDGE_WORDS = ("bridge",)
 HARBOUR_WORDS = ("harbour", "harbor", "port", "quay", "dock")
 
 
-async def region_works(session: AsyncSession, atlas: RegionAtlas) -> dict[int, Works]:
+STRUCTURE_WORKS: dict[StructureKind, tuple[str, ...]] = {
+    StructureKind.ROAD: ("roads",),
+    StructureKind.BRIDGE: ("bridges",),
+    StructureKind.HARBOUR: ("harbours",),
+    StructureKind.CANAL: ("harbours", "irrigation"),
+    StructureKind.IRRIGATION: ("irrigation",),
+    StructureKind.DAM: ("irrigation",),
+    StructureKind.CARAVANSERAI: (),
+    StructureKind.MARKET: (),
+}
+
+
+def waystation_capacity(rules: Rules, item: Working) -> int:
+    if item.profile.kind is StructureKind.CARAVANSERAI:
+        return round_half_up(rules.structure_functions.caravanserai_capacity * item.profile.level * item.strength)
+    if item.profile.kind is StructureKind.MARKET:
+        return round_half_up(rules.trade_routes.capacity_per_market * item.strength)
+    return 0
+
+
+async def structure_works(session: AsyncSession, atlas: RegionAtlas, rules: Rules, tallies: dict[int, Counter[str]]) -> None:
+    for item in await working(session, list(STRUCTURE_WORKS)):
+        region_id = atlas.top_region(item.structure.id)
+        if region_id is None:
+            continue
+        tally = tallies.setdefault(region_id, Counter())
+        for key in STRUCTURE_WORKS[item.profile.kind]:
+            tally[key] += max(1, round_half_up(item.profile.level * item.strength))
+        tally["waystations"] += waystation_capacity(rules, item)
+
+
+async def region_works(session: AsyncSession, atlas: RegionAtlas, rules: Rules) -> dict[int, Works]:
     knowledge = await KnowledgeMap.load(session)
     infrastructure = {row.settlement_entity_id: row for row in await session.scalars(select(SettlementInfrastructureRow))}
     harboured = set(await session.scalars(select(DistrictRow.settlement_entity_id).where(DistrictRow.kind == DistrictKind.HARBOUR)))
@@ -38,18 +73,22 @@ async def region_works(session: AsyncSession, atlas: RegionAtlas) -> dict[int, W
         tally = tallies.setdefault(region_id, Counter())
         works = infrastructure.get(entity.id)
         tally["roads"] += knowledge.knows(entity.id, KnowledgeBranch.ARCHITECTURE)
-        tally["harbours"] += entity.id in harboured or (works is not None and works.harbour_capacity > 0)
+        harbours = works.harbour_capacity // rules.districts.harbour_works_capacity if works is not None else 0
+        tally["harbours"] += max(int(entity.id in harboured or (works is not None and works.harbour_capacity > 0)), harbours)
         if works is not None:
             tally["bridges"] += works.bridges
             tally["irrigation"] += works.irrigation
+    await structure_works(session, atlas, rules, tallies)
     return {
-        region_id: Works(roads=tally["roads"], bridges=tally["bridges"], harbours=tally["harbours"], irrigation=tally["irrigation"])
+        region_id: Works(
+            roads=tally["roads"], bridges=tally["bridges"], harbours=tally["harbours"], irrigation=tally["irrigation"], waystations=tally["waystations"]
+        )
         for region_id, tally in tallies.items()
     }
 
 
 async def works_by_region(ctx: TickContext, book: EnvironmentBook) -> dict[int, Works]:
-    return await region_works(ctx.session, book.atlas)
+    return await region_works(ctx.session, book.atlas, ctx.rules)
 
 
 def _named(entity: EntityRow, words: tuple[str, ...]) -> bool:

@@ -23,6 +23,7 @@ from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.body.book import factor
+from aerona.engine.economy.provenance import ensure_materials
 from aerona.engine.gods.queries import community_of
 from aerona.engine.mind.book import best_skill, mind_of
 from aerona.engine.mind.skills import practise_any
@@ -199,6 +200,7 @@ async def create_record(call: MortalCall, creation: MortalCreation) -> EntityRow
         split_title=False,
     )
     created = await EntityRepository(call.session).create(draft)
+    await ensure_materials(call.session, created, rules=call.rules)
     call.remember_creation(created.id)
     call.target(created.id)
     return created

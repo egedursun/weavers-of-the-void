@@ -30,6 +30,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import headcount, set_stats, stat
+from aerona.engine.structures.readers import workshop_output
 from aerona.rules.registry import Rules
 
 THOUSAND = 1000
@@ -65,6 +66,7 @@ class ExtractionTally:
     hazards: int = 0
     sealed: int = 0
     exhausted: int = 0
+    gated: int = 0
 
 
 def extraction_kind(profile: ResourceProfileRow) -> ExtractionKind:
@@ -75,12 +77,17 @@ def abundance_of(profile: ResourceProfileRow) -> int:
     return clamp_int(round_half_up(profile.reserve * PERCENT / max(1, profile.initial_reserve)), 0, PERCENT)
 
 
-def write_reserve(resource: EntityRow, profile: ResourceProfileRow, reserve: int) -> None:
+def write_reserve(resource: EntityRow, profile: ResourceProfileRow, reserve: int, *, force: bool = False) -> None:
+    if profile.held and not force:
+        set_stats(resource, abundance=abundance_of(profile))
+        return
     profile.reserve = clamp_int(reserve, 0, profile.initial_reserve * 4)
     set_stats(resource, abundance=abundance_of(profile))
 
 
 def reconcile(resource: EntityRow, profile: ResourceProfileRow) -> None:
+    if profile.held:
+        return
     current = stat(resource, "abundance")
     if current is not None and current != abundance_of(profile):
         profile.reserve = clamp_int(round_half_up(current * profile.initial_reserve / PERCENT), 0, profile.initial_reserve * 4)
@@ -171,8 +178,20 @@ def craft_factor(ctx: TickContext, book: EconomyBook, community_id: int, resourc
     return 1 + lift
 
 
+def knowledge_gate(rules: Rules, book: EconomyBook, profile: ResourceProfileRow, community_id: int) -> float:
+    if profile.required_branch is None or profile.required_level <= 0:
+        return 1.0
+    short = profile.required_level - book.level(community_id, profile.required_branch)
+    if short <= 0:
+        return 1.0
+    return (rules.extraction.knowledge_short_pct / PERCENT) ** short
+
+
 async def output_of(ctx: TickContext, book: EconomyBook, resource: EntityRow, profile: ResourceProfileRow, community: EntityRow, *, workers: int) -> int:
     table = ctx.rules.extraction
+    gate = knowledge_gate(ctx.rules, book, profile, community.id)
+    if gate <= 0:
+        return 0
     kind = extraction_kind(profile)
     spec = EXTRACTION[kind]
     base = workers * table.output_per_1000_workers / THOUSAND * profile.richness / PERCENT
@@ -182,9 +201,9 @@ async def output_of(ctx: TickContext, book: EconomyBook, resource: EntityRow, pr
     season = 1 + table.season_pct / PERCENT * season_fit(book, resource.world_id, kind)
     difficulty = 1 - profile.extraction_difficulty * table.difficulty_pct / PERCENT / PERCENT
     site = book.workshop(community.id, spec.workshop) if spec.workshop is not None else None
-    works = 1 + (site.level if site is not None else 0) * table.workshop_pct_per_level / PERCENT
+    works = (1 + (site.level if site is not None else 0) * table.workshop_pct_per_level / PERCENT) * await workshop_output(ctx.session, ctx.rules, site)
     raw = base * skill * knowledge * season * difficulty * works * await tools_factor(ctx, community.id, workers) * await labour_factor(ctx, community)
-    raw *= craft_factor(ctx, book, community.id, resource.id, kind)
+    raw *= craft_factor(ctx, book, community.id, resource.id, kind) * gate
     if kind is ExtractionKind.FARMING:
         raw *= await draught(ctx, community.id)
     return max(0, min(profile.reserve, round_half_up(raw)))
@@ -257,7 +276,7 @@ async def strike_hazard(
         row.updated_epoch = ctx.epoch
     hurt = await _hurt_named(ctx, book, community, hazard, resource)
     cavern: EntityRow | None = None
-    if hazard is HazardKind.CAVE_IN:
+    if hazard is HazardKind.CAVE_IN and not profile.held:
         profile.sealed_until_epoch = ctx.epoch + table.seal_epochs
         if ctx.rng(f"cavern.roll.{resource.id}").chance(table.cavern_chance):
             cavern = await _open_cavern(ctx, resource)
@@ -305,6 +324,27 @@ async def _pay_owner(ctx: TickContext, owner: EntityRow, value: int) -> None:
             set_stats(owner, **{key: clamp_int(current + gain, 0, PERCENT)})
 
 
+async def byproduct(ctx: TickContext, book: EconomyBook, resource: EntityRow, profile: ResourceProfileRow, *, community: EntityRow, output: int) -> None:
+    if profile.byproduct_material is None or profile.byproduct_pct <= 0:
+        return
+    extra = round_half_up(output * profile.byproduct_pct / PERCENT)
+    await goods_of(ctx.session, ctx.epoch).add(
+        community.id,
+        CommodityKind.ORE,
+        extra,
+        GoodsFlow.EXTRACTION,
+        material=profile.byproduct_material,
+        quality=profile.quality,
+    )
+    region = book.ground.region_of(resource.id)
+    if region is None:
+        return
+    if "mined" not in region.locked:
+        region.mined = clamp_int(region.mined + ctx.rules.extraction.byproduct_scar, 0, PERCENT)
+    if "erosion" not in region.locked:
+        region.erosion = clamp_int(region.erosion + ctx.rules.extraction.byproduct_scar, 0, PERCENT)
+
+
 async def extract(ctx: TickContext, book: EconomyBook, resource: EntityRow, profile: ResourceProfileRow, tally: ExtractionTally) -> int:
     reconcile(resource, profile)
     if not profile.revealed or (profile.sealed_until_epoch is not None and profile.sealed_until_epoch >= ctx.epoch):
@@ -322,9 +362,14 @@ async def extract(ctx: TickContext, book: EconomyBook, resource: EntityRow, prof
             row = ResourceWorkerRow(resource_entity_id=resource.id, community_entity_id=community.id, workers=0)
             ctx.session.add(row)
             book.workers.setdefault(resource.id, {})[community.id] = row
-        row.workers = workers
+        if row.held:
+            workers = row.workers
+        else:
+            row.workers = workers
         output = await output_of(ctx, book, resource, profile, community, workers=workers)
         if output <= 0:
+            if knowledge_gate(ctx.rules, book, profile, community.id) <= 0:
+                tally.gated += 1
             continue
         write_reserve(resource, profile, profile.reserve - output)
         material = profile.material if profile.world_material_id is None else None
@@ -337,22 +382,7 @@ async def extract(ctx: TickContext, book: EconomyBook, resource: EntityRow, prof
             world_material_id=profile.world_material_id,
             quality=profile.quality,
         )
-        if profile.byproduct_material is not None and profile.byproduct_pct > 0:
-            extra = round_half_up(output * profile.byproduct_pct / PERCENT)
-            await goods_of(ctx.session, ctx.epoch).add(
-                community.id,
-                CommodityKind.ORE,
-                extra,
-                GoodsFlow.EXTRACTION,
-                material=profile.byproduct_material,
-                quality=profile.quality,
-            )
-            region = book.ground.region_of(resource.id)
-            if region is not None:
-                if "mined" not in region.locked:
-                    region.mined = clamp_int(region.mined + ctx.rules.extraction.byproduct_scar, 0, PERCENT)
-                if "erosion" not in region.locked:
-                    region.erosion = clamp_int(region.erosion + ctx.rules.extraction.byproduct_scar, 0, PERCENT)
+        await byproduct(ctx, book, resource, profile, community=community, output=output)
         await _pay_owner(ctx, owner, output * material_value(profile) // PERCENT)
         ctx.session.add(
             ProductionRunRow(
@@ -380,7 +410,7 @@ async def extract(ctx: TickContext, book: EconomyBook, resource: EntityRow, prof
 
 
 def regrow(rules: Rules, resource: EntityRow, profile: ResourceProfileRow) -> int:
-    if profile.regeneration <= 0 or profile.reserve >= profile.initial_reserve:
+    if profile.held or profile.regeneration <= 0 or profile.reserve >= profile.initial_reserve:
         return 0
     gain = min(profile.regeneration, profile.initial_reserve - profile.reserve)
     write_reserve(resource, profile, profile.reserve + gain)

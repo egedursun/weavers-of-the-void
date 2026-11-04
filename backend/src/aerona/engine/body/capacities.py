@@ -32,6 +32,7 @@ class BodyState:
     conditions: tuple[tuple[ConditionKind, float], ...] = ()
     presence_pct: int = PERCENT
     reader: bool = False
+    afflicted: tuple[tuple[str, int], ...] = ()
 
 
 def blend(level: float, weight: int) -> float:
@@ -78,7 +79,7 @@ def age_curve(rules: CapacityRules, age: int | None, lifespan: int | None) -> fl
 
 def capacities(rules: Rules, stats: BearerStats, state: BodyState) -> dict[Capacity, int]:
     table = rules.capacities
-    levels = function_levels(table, state.anatomy, state.wounds, state.fingers, rules.injury.venom_paralysis_at)
+    levels = function_levels(table, state.anatomy, state.wounds, state.fingers, rules.injury.venom_paralysis_at, afflicted=state.afflicted)
     grip = weapon_grasp(table, state.anatomy, state.wounds, state.fingers)
     pain = pain_of(table, state.open_severity) / PERCENT
     hurt = 1 - pain * table.pain_weight_pct / PERCENT

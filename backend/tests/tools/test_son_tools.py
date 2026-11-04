@@ -129,6 +129,7 @@ async def test_creation_tools(database: Database) -> None:
         "forge_item",
         {
             "name": "Brineknife",
+            "item_class": "blade",
             "description": LONG,
             "power_level": 2,
             "links": [{"target_kind": "entity", "target_id": realm.resource_id, "kind": "source_of"}],
@@ -312,7 +313,7 @@ async def test_creation_sets_legend_category_and_commodity(database: Database) -
     await ok(
         toolkit,
         "tell_legend",
-        {"name": "The Salt Wyrm", "description": LONG, "power_level": 1, "links": link, "legend_category": "creature"},
+        {"name": "The Salt Wyrm", "description": LONG, "power_level": 1, "links": link, "legend_category": "creature", "archetype": "monster"},
     )
     legend = await entity(database, toolkit.created_entity_ids[-1])
     assert legend.legend_category is LegendCategory.CREATURE

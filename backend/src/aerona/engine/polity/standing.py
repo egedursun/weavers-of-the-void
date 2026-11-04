@@ -32,6 +32,7 @@ from aerona.engine.mind.memories import strength_of
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook
+from aerona.engine.polity.loyalty import loyalty_autonomy
 from aerona.engine.polity.oaths import break_on
 from aerona.engine.polity.repute import repute_of
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -40,6 +41,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import bond_exists, connect, has_flag
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.services.war import declare_war
+from aerona.engine.structures.readers import palace_legitimacy
 from aerona.rules.registry import Rules
 
 RECENT_EPOCHS = 3
@@ -91,6 +93,8 @@ async def legitimacy(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawB
         parts["the crown of the realm"] = ctx.rules.regalia.legitimacy
     if lost:
         parts["regalia in other hands"] = -ctx.rules.regalia.lost_legitimacy
+    palace = await palace_legitimacy(ctx.session, ctx.rules, [realm.profile.capital_entity_id, *realm.members])
+    parts.update({label: value for label, value in (("a palace worthy of the crown", palace),) if value})
     pacifist = church is not None and await ctx.session.get(CultTenetRow, (church.cult_entity_id, TenetKind.PACIFISM)) is not None
     if pacifist and (await war_record(ctx, realm))[2]:
         parts["a pacifist faith at war"] = -ctx.rules.doctrine.pacifist_legitimacy
@@ -296,6 +300,7 @@ async def overreach(ctx: TickContext, book: RealmBook, realm: Realm, capacity: i
         else:
             row.autonomy = clamp_int(row.autonomy - table.autonomy_decay, 0, PERCENT)
         member = book.entities.get(member_id)
+        row.autonomy = clamp_int(row.autonomy + await loyalty_autonomy(ctx, realm, member), 0, PERCENT)
         if member is not None and row.autonomy >= table.secession_autonomy and ctx.rng(f"secession.{member_id}.{ctx.epoch}").chance(table.secession_chance):
             breaking.append(member)
     return breaking

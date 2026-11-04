@@ -156,6 +156,7 @@ INJURY_PHRASES: dict[InjuryKind, str] = {
     InjuryKind.CURSE_WITHER: "a withering curse",
     InjuryKind.VOID_TOUCH: "the touch of the void",
     InjuryKind.DIVINE_BRAND: "a divine brand",
+    InjuryKind.SICKNESS: "a wasting sickness",
 }
 
 

@@ -5,12 +5,19 @@ from sqlalchemy import func, select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleCultureRow
 from aerona.db.tables.disease import QuarantineRow
-from aerona.db.tables.economy import TradeFlowRow
+from aerona.db.tables.economy import TradeFlowRow, WorkshopRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.mind import CultureValueRow
 from aerona.db.tables.polity import OfficeRow
-from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementTreasuryRow
+from aerona.db.tables.settlement import (
+    ADMIN_MAX,
+    DistrictRow,
+    SettlementHistoryRow,
+    SettlementInfrastructureRow,
+    SettlementProfileRow,
+    SettlementTreasuryRow,
+)
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow
 from aerona.domain.enums.bond import BondKind, BondRole
@@ -18,6 +25,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import AgeBand, Job
 from aerona.domain.enums.disease import SpreadPath
+from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, WeatherEffect
 from aerona.domain.enums.mind import ValueAxis
@@ -29,6 +37,7 @@ from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import cohorts_of
 from aerona.engine.demography.mobility import bound_revolt, inequality_pressure
+from aerona.engine.economy.stocks import aggregate_need
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.years import world_years
 from aerona.engine.factions.book import robber_ids
@@ -50,6 +59,8 @@ from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.society import supply_index
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat
 from aerona.engine.settlement.book import Town, ledger, tier_for
+from aerona.engine.settlement.districts import AdminParts, admin_parts, designs_for, unify_market, wound_district
+from aerona.engine.settlement.storage import design_for, settlement_store, storage_index, store_kind
 from aerona.rules.registry import Rules
 
 FOOD_INDEX = 100
@@ -61,12 +72,12 @@ WORK_LOCKS = {"cistern": "water", "aqueduct": "water", "walls": "walls_level"}
 
 
 def granary_of(rules: Rules, town: Town) -> int:
-    return (town.levels(DistrictKind.FARMLAND) + town.levels(DistrictKind.MARKET)) * rules.urban.granary_per_level
+    return town.effects(rules).food_store
 
 
 def housing_of(rules: Rules, town: Town) -> int:
     table = rules.urban
-    return (town.tier_index() + 1) * table.housing_base + sum(district.level for district in town.districts) * table.housing_per_level
+    return (town.tier_index() + 1) * table.housing_base + town.effects(rules).housing
 
 
 def slots_of(rules: Rules, town: Town) -> int:
@@ -78,13 +89,23 @@ async def labour(ctx: TickContext, town: Town, *jobs: Job) -> int:
     return sum(round_half_up(row.workers * row.output_pct / PERCENT) for row in rows)
 
 
+def keep(holder: SettlementProfileRow | SettlementInfrastructureRow, key: str, value: object) -> bool:
+    if key in holder.locked:
+        return False
+    setattr(holder, key, value)
+    return True
+
+
 async def capacities(ctx: TickContext, town: Town, knowledge: KnowledgeMap) -> None:
     table = ctx.rules.urban
     builders = await labour(ctx, town, Job.BUILDING)
     haulers = await labour(ctx, town, Job.TRADE, Job.BUILDING)
     architecture = knowledge.level(town.entity.id, KnowledgeBranch.ARCHITECTURE)
-    town.profile.construction_capacity = round_half_up(builders * table.builder_capacity * (1 + architecture * table.engineering_capacity_pct / PERCENT))
-    town.profile.hauling_capacity = round_half_up(haulers * table.hauler_capacity * (1 + town.infrastructure.roads * table.road_hauling_pct / PERCENT))
+    keep(
+        town.profile, "construction_capacity", round_half_up(builders * table.builder_capacity * (1 + architecture * table.engineering_capacity_pct / PERCENT))
+    )
+    keep(town.profile, "hauling_capacity", round_half_up(haulers * table.hauler_capacity * (1 + town.infrastructure.roads * table.road_hauling_pct / PERCENT)))
+    town.work_used = 0
 
 
 def logistics_waste(rules: Rules, town: Town) -> float:
@@ -99,17 +120,35 @@ async def invest(ctx: TickContext, town: Town) -> int:
     sold = await ctx.session.scalar(
         select(func.coalesce(func.sum(TradeFlowRow.value), 0)).where(TradeFlowRow.from_entity_id == town.entity.id, TradeFlowRow.epoch == ctx.epoch)
     )
-    profit = round_half_up(int(sold or 0) * ctx.rules.urban.investment_pct / PERCENT)
-    town.profile.investment_pool += profit
+    extra = ctx.rules.districts
+    foreign = town.effects(ctx.rules).investment_pct
+    draw = 1 + (foreign + town.profile.prestige * extra.prestige_investment_pct / PERCENT) / PERCENT
+    profit = round_half_up(int(sold or 0) * ctx.rules.urban.investment_pct / PERCENT * draw)
+    if "investment_pool" not in town.profile.locked:
+        town.profile.investment_pool += profit
     return profit
 
 
-async def collect_taxes(ctx: TickContext, town: Town, literacy: int) -> int:
+async def administer(ctx: TickContext, town: Town, knowledge: KnowledgeMap, literacy: int) -> AdminParts:
+    society = await ctx.session.get(CommunitySocietyRow, town.entity.id)
+    parts = admin_parts(
+        ctx.rules,
+        literacy=literacy,
+        scribe_share=society.share(SocialClass.SCRIBE) if society is not None else 0.0,
+        writing=knowledge.level(town.entity.id, KnowledgeBranch.WRITING),
+        palace_pct=town.effects(ctx.rules).admin_pct,
+    )
+    if "admin_capacity" not in town.profile.locked:
+        town.profile.admin_capacity = clamp_int(parts.total, 0, ADMIN_MAX)
+    return parts
+
+
+async def collect_taxes(ctx: TickContext, town: Town) -> int:
     table = ctx.rules.taxation
     people = stat(town.entity, "population") or 0
     wealth = stat(town.entity, "wealth") or stat(town.entity, "prosperity") or 0
     taxable = people / PERCENT * table.per_capita_output * max(0.1, wealth / PERCENT) * (1 - logistics_waste(ctx.rules, town))
-    admin = (table.admin_base_pct + literacy * table.admin_per_literacy_pct / PERCENT) / PERCENT
+    admin = town.profile.admin_capacity / PERCENT
     rate = town.profile.tax_rate / PERCENT * (ctx.rules.urban.free_city_tax_pct / PERCENT if town.profile.free_city else 1.0)
     income = round_half_up(taxable * rate * town.profile.public_order / PERCENT * admin)
     occupation = await occupation_over(ctx, town.entity.id)
@@ -123,14 +162,15 @@ async def pay_soldiers(ctx: TickContext, town: Town) -> bool:
     table = ctx.rules.urban
     society = await ctx.session.get(CommunitySocietyRow, town.entity.id)
     warriors = society.share(SocialClass.WARRIOR) if society is not None else 0
-    town.profile.militia = round_half_up((stat(town.entity, "population") or 0) * warriors / PERCENT * table.militia_pct / PERCENT)
+    keep(town.profile, "militia", round_half_up((stat(town.entity, "population") or 0) * warriors / PERCENT * table.militia_pct / PERCENT))
     garrison = await ctx.session.scalar(
         select(ArmyRow.entity_id)
         .join(EntityFlagRow, EntityFlagRow.entity_id == ArmyRow.entity_id)
         .where(ArmyRow.owner_entity_id == town.entity.id, ArmyRow.disbanded_epoch.is_(None), EntityFlagRow.flag == EntityFlag.ON_WATCH)
         .limit(1)
     )
-    town.profile.garrison_entity_id = garrison
+    keep(town.profile, "garrison_entity_id", garrison)
+    garrison = town.profile.garrison_entity_id
     standing = await living_entity(ctx.session, garrison) if garrison is not None else None
     soldiers = town.profile.militia + ((stat(standing, "size") or 0) if standing is not None else 0)
     cost = round_half_up(soldiers / PERCENT * table.garrison_cost_per_100)
@@ -143,9 +183,10 @@ async def keep_walls(ctx: TickContext, town: Town) -> None:
     walls = town.infrastructure
     if walls.walls_level <= 0:
         return
-    walls.walls_condition = max(0, walls.walls_condition - table.walls_decay)
-    if walls.walls_condition < PERCENT and -ledger(ctx, town, TreasuryEntry.WALLS, -table.walls_repair_cost, "wall repairs") >= table.walls_repair_cost:
-        walls.walls_condition = PERCENT
+    if "walls_condition" not in walls.locked:
+        walls.walls_condition = max(0, walls.walls_condition - table.walls_decay)
+        if walls.walls_condition < PERCENT and -ledger(ctx, town, TreasuryEntry.WALLS, -table.walls_repair_cost, "wall repairs") >= table.walls_repair_cost:
+            walls.walls_condition = PERCENT
     floor = round_half_up(walls.walls_level * table.walls_per_level * walls.walls_condition / PERCENT)
     if (stat(town.entity, "defense") or 0) < floor:
         set_stats(town.entity, defense=clamp_int(floor, 0, PERCENT))
@@ -226,9 +267,10 @@ def wanted_works(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_wa
 
 def spend(ctx: TickContext, town: Town, cost: int, work: int, label: str) -> bool:
     profile = town.profile
-    if profile.construction_capacity < work or profile.investment_pool + profile.treasury < cost:
+    pool = 0 if "investment_pool" in profile.locked else profile.investment_pool
+    if profile.construction_capacity - town.work_used < work or pool + profile.treasury < cost:
         return False
-    from_pool = min(profile.investment_pool, cost)
+    from_pool = min(pool, cost)
     profile.investment_pool -= from_pool
     if cost - from_pool:
         ledger(ctx, town, TreasuryEntry.BUILDING, -(cost - from_pool), label)
@@ -243,16 +285,26 @@ def spend(ctx: TickContext, town: Town, cost: int, work: int, label: str) -> boo
                 note=label[:120],
             )
         )
-    profile.construction_capacity -= work
+    town.work_used += work
     gain = round_half_up(cost / max(1, ctx.rules.taxation.wealth_per_treasury))
     shift_stat(town.entity, "wealth", gain, ctx.rules.society.default_stat)
     return True
 
 
 async def add_district(
-    ctx: TickContext, town: Town, kind: DistrictKind, *, material: BuildMaterial, son_id: int | None = None, builder_id: int | None = None
+    ctx: TickContext,
+    town: Town,
+    kind: DistrictKind,
+    *,
+    material: BuildMaterial,
+    son_id: int | None = None,
+    builder_id: int | None = None,
+    design_id: int | None = None,
 ) -> DistrictRow:
-    same = next((district for district in town.districts if district.kind is kind and district.level < 5), None)
+    same = next(
+        (item for item in town.districts if item.kind is kind and item.design_id == design_id and item.level < 5 and "level" not in item.locked),
+        None,
+    )
     if same is not None and (kind is not DistrictKind.SLUMS or same.level < 5):
         same.level += 1
         same.condition = PERCENT
@@ -266,9 +318,13 @@ async def add_district(
         built_epoch=ctx.epoch,
         built_by_entity_id=builder_id,
         built_by_son_id=son_id,
+        design_id=design_id,
+        locked=[],
     )
     ctx.session.add(district)
     town.districts.append(district)
+    if design_id is not None and design_id not in town.designs:
+        town.designs.update(await designs_for(ctx.session, [district]))
     return district
 
 
@@ -290,10 +346,10 @@ def improve(rules: Rules, town: Town, kind: str, material: BuildMaterial) -> Non
         infrastructure.sewers = True
     elif kind == "walls":
         infrastructure.walls_level = min(5, infrastructure.walls_level + 1)
-        infrastructure.walls_material = material
-        infrastructure.walls_condition = PERCENT
-        infrastructure.gates = max(1, infrastructure.gates)
-        infrastructure.towers = min(20, infrastructure.towers + 2)
+        keep(infrastructure, "walls_material", material)
+        keep(infrastructure, "walls_condition", PERCENT)
+        keep(infrastructure, "gates", max(1, infrastructure.gates))
+        keep(infrastructure, "towers", min(20, infrastructure.towers + 2))
         shift_stat(town.entity, "defense", rules.urban.walls_per_level, 0)
 
 
@@ -315,7 +371,7 @@ async def build(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_war
         kind, _, detail = want.partition(":")
         if kind == "repair":
             district = next((item for item in town.districts if str(item.id) == detail), None)
-            if district is not None and spend(ctx, town, table.repair_cost, table.district_labour // 4, "repairs"):
+            if district is not None and "condition" not in district.locked and spend(ctx, town, table.repair_cost, table.district_labour // 4, "repairs"):
                 district.condition = PERCENT
                 built += 1
             continue
@@ -334,15 +390,38 @@ async def build(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_war
     people = stat(town.entity, "population") or 0
     if people > housing_of(ctx.rules, town):
         await add_district(ctx, town, DistrictKind.SLUMS, material=BuildMaterial.TIMBER)
-    town.infrastructure.granary_capacity = granary_of(ctx.rules, town)
-    town.infrastructure.harbour_capacity = town.levels(DistrictKind.HARBOUR) * table.harbour_per_level
-    town.infrastructure.warehouse_capacity = (town.levels(DistrictKind.MARKET) + town.levels(DistrictKind.CRAFT_QUARTER)) * table.harbour_per_level
+    await unify_market(ctx, town.entity, town.districts, material)
+    await store_up(ctx, town)
     return built
+
+
+async def store_up(ctx: TickContext, town: Town) -> None:
+    infrastructure = town.infrastructure
+    effects = town.effects(ctx.rules)
+    stores = {
+        row.kind: row
+        for row in await ctx.session.scalars(
+            select(WorkshopRow).where(WorkshopRow.community_entity_id == town.entity.id, WorkshopRow.kind.in_([WorkshopKind.GRANARY, WorkshopKind.WAREHOUSE]))
+        )
+    }
+    if "granary_capacity" not in infrastructure.locked:
+        food = stores.get(store_kind(Commodity.FOOD))
+        infrastructure.granary_capacity = settlement_store(
+            ctx.rules, effects.food_store, food, Commodity.FOOD, design=await design_for(ctx.session, food)
+        ).total
+    if "warehouse_capacity" not in infrastructure.locked:
+        goods = stores.get(store_kind(Commodity.GOODS))
+        infrastructure.warehouse_capacity = settlement_store(
+            ctx.rules, effects.goods_store, goods, Commodity.GOODS, design=await design_for(ctx.session, goods)
+        ).total
+    if "harbour_capacity" not in infrastructure.locked:
+        infrastructure.harbour_capacity = effects.harbour
 
 
 async def wear(ctx: TickContext, town: Town) -> None:
     for district in town.districts:
-        district.condition = max(0, district.condition - ctx.rules.urban.district_wear)
+        if "condition" not in (district.locked or []):
+            district.condition = max(0, district.condition - ctx.rules.urban.district_wear)
 
 
 def outcast_share(society: CommunitySocietyRow | None) -> float:
@@ -367,11 +446,13 @@ async def keep_order(ctx: TickContext, town: Town, *, justice: float, bands: lis
     society = await ctx.session.get(CommunitySocietyRow, town.entity.id)
     garrison = await living_entity(ctx.session, profile.garrison_entity_id) if profile.garrison_entity_id is not None else None
     soldiers = profile.militia + ((stat(garrison, "size") or 0) if garrison is not None else 0)
-    policing = soldiers / PERCENT * table.policing_per_100 + town.levels(DistrictKind.CITADEL) * table.citadel_policing
+    effects = town.effects(ctx.rules)
+    policing = soldiers / PERCENT * table.policing_per_100 + effects.policing
     wealth = stat(town.entity, "wealth") or stat(town.entity, "prosperity") or 0
     if "public_order" not in profile.locked:
         charter = ctx.rules.urban.charter_order if profile.charter_entity_id is not None else 0
-        profile.public_order = clamp_int(table.order_base + soldiers / PERCENT * table.order_per_100 + charter - profile.crime / HALF, 0, PERCENT)
+        seat = effects.order
+        profile.public_order = clamp_int(table.order_base + soldiers / PERCENT * table.order_per_100 + charter + seat - profile.crime / HALF, 0, PERCENT)
     if "crime" not in profile.locked:
         crime = (
             (PERCENT - wealth) * table.poverty_pct / PERCENT
@@ -386,6 +467,13 @@ async def keep_order(ctx: TickContext, town: Town, *, justice: float, bands: lis
     shift_stat(town.entity, "prosperity", -profile.crime * table.prosperity_loss / PERCENT, ctx.rules.society.default_stat)
     for band in bands:
         shift_stat(band, "strength", profile.crime * table.bandit_feed_pct / PERCENT / max(1, len(bands)), ctx.rules.society.default_stat)
+
+
+def hallow(ctx: TickContext, town: Town) -> None:
+    floor = clamp_int(town.effects(ctx.rules).piety_floor, 0, PERCENT)
+    piety = stat(town.entity, "piety")
+    if floor > 0 and piety is not None and piety < floor:
+        set_stats(town.entity, piety=floor)
 
 
 async def punish(ctx: TickContext, town: Town, laws: LawBook) -> bool:
@@ -488,15 +576,13 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
             continue
         gale = 1 + year.wind / PERCENT * table.wind_spread_pct / PERCENT
         district = max(timber, key=lambda item: (item.level, -item.id))
-        district.condition = max(0, district.condition - round_half_up(table.district_loss * gale))
-        if district.condition == 0:
-            district.level -= 1
-            district.condition = PERCENT // HALF
-            if knowledge.level(town.entity.id, KnowledgeBranch.ARCHITECTURE) >= table.stone_level:
-                district.material = BuildMaterial.STONE
-            if district.level <= 0:
-                await ctx.session.delete(district)
-                town.districts.remove(district)
+        level = district.level
+        gone = wound_district(district, round_half_up(table.district_loss * gale))
+        if district.level < level and knowledge.level(town.entity.id, KnowledgeBranch.ARCHITECTURE) >= table.stone_level and "material" not in district.locked:
+            district.material = BuildMaterial.STONE
+        if gone:
+            await ctx.session.delete(district)
+            town.districts.remove(district)
         floor, _ = headcount_bounds(ctx.rules, town.entity)
         before = stat(town.entity, "population") or 0
         dead = min(max(0, before - floor), round_half_up(before * table.death_pct * gale / PERCENT))
@@ -532,7 +618,7 @@ def sanitation(ctx: TickContext, town: Town, knowledge: KnowledgeMap) -> None:
         + water
         + (table.sewers if infrastructure.sewers else 0)
         + knowledge.level(town.entity.id, KnowledgeBranch.MEDICINE) * table.medicine_step
-        - town.levels(DistrictKind.SLUMS) * table.slum_loss
+        + town.effects(ctx.rules).sanitation
         - min(1.0, crowd) * table.crowding_loss
     )
     town.profile.sanitation = clamp_int(value, 0, PERCENT)
@@ -546,24 +632,28 @@ async def endure_siege(ctx: TickContext, town: Town, values: dict[ValueAxis, int
         select(SiegeRow).where(SiegeRow.besieged_entity_id == town.entity.id, SiegeRow.status == SiegeStatus.ONGOING).order_by(SiegeRow.id).limit(1)
     )
     food = await supply_index(ctx.session, town.entity.id, Commodity.FOOD) or 0
-    stored = min(1.0, food / FOOD_INDEX) * (1.0 if town.infrastructure.granary_capacity > 0 else 0.5)
-    profile.siege_supplies = round_half_up(stored * table.siege_food_days)
+    people = stat(town.entity, "population") or 0
+    need = aggregate_need(ctx.rules, people, Commodity.FOOD)
+    in_granary = min(food, storage_index(ctx.rules, town.infrastructure.granary_capacity, need) - ctx.rules.economy.storage_base_index)
+    at_home = min(food - in_granary, ctx.rules.economy.storage_base_index)
+    stored = (in_granary + at_home / HALF) / FOOD_INDEX
+    keep(profile, "siege_supplies", round_half_up(stored * table.siege_food_days))
     water = {
         WaterSupply.NONE: 0,
         WaterSupply.WELL: table.siege_water_days // 3,
         WaterSupply.CISTERN: table.siege_water_days,
         WaterSupply.AQUEDUCT: table.siege_water_days,
     }
-    profile.siege_water = water[town.infrastructure.water]
+    keep(profile, "siege_water", water[town.infrastructure.water])
     if siege is None:
-        profile.siege_disease = 0
-        profile.rationing = profile.siege_supplies < urban.ration_supplies_days and food < FOOD_INDEX // HALF
+        keep(profile, "siege_disease", 0)
+        keep(profile, "rationing", profile.siege_supplies < urban.ration_supplies_days and food < FOOD_INDEX // HALF)
     else:
-        profile.siege_disease = clamp_int(profile.siege_disease + table.siege_disease_step * (1 - profile.sanitation / PERCENT), 0, PERCENT)
-        profile.rationing = profile.siege_supplies < urban.ration_supplies_days or profile.siege_water < urban.ration_supplies_days // HALF
+        keep(profile, "siege_disease", clamp_int(profile.siege_disease + table.siege_disease_step * (1 - profile.sanitation / PERCENT), 0, PERCENT))
+        keep(profile, "rationing", profile.siege_supplies < urban.ration_supplies_days or profile.siege_water < urban.ration_supplies_days // HALF)
         if profile.siege_disease >= SIEGE_DISEASE and ctx.rng(f"siege_disease.{town.entity.id}").chance(profile.siege_disease):
             await strike_plague(ctx, town.entity, profile.siege_disease, path=SpreadPath.SIEGE)
-            profile.siege_disease //= HALF
+            keep(profile, "siege_disease", profile.siege_disease // HALF)
     if profile.rationing and values.get(ValueAxis.MERCY, 0) <= urban.abandon_mercy:
         await abandon_elders(ctx, town)
 
@@ -602,7 +692,7 @@ async def foreigners(ctx: TickContext, town: Town) -> int:
         shares[str(people.id)] = weight
         total += weight
     population = stat(town.entity, "population") or 1
-    town.profile.foreigners = {key: clamp_int(value * PERCENT / max(population, total * 5), 0, PERCENT) for key, value in shares.items()}
+    keep(town.profile, "foreigners", {key: clamp_int(value * PERCENT / max(population, total * 5), 0, PERCENT) for key, value in shares.items()})
     return sum(town.profile.foreigners.values())
 
 
@@ -643,7 +733,8 @@ async def urban_drift(ctx: TickContext, town: Town) -> int:
             rows[axis] = row
         row.value = clamp_int(row.value + step, -PERCENT, PERCENT)
     own = {axis: row.value for axis, row in rows.items()}
-    return clamp_int(value_distance(own, parent) * table.tension_pct / PERCENT, 0, PERCENT) if parent else 0
+    relief = max(0.0, 1 - town.effects(ctx.rules).tension_relief_pct / PERCENT)
+    return clamp_int(value_distance(own, parent) * table.tension_pct / PERCENT * relief, 0, PERCENT) if parent else 0
 
 
 def retier(ctx: TickContext, town: Town) -> SizeTier | None:

@@ -285,6 +285,7 @@ async def barter_and_rivalry(ctx: TickContext) -> None:
     "table.skills",
     "table.sky_events",
     "table.treaty_parties",
+    "table.workshop_designs",
     "table.workshops",
     "table.world_maps",
     "table.world_materials",

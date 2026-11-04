@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.peoples import FAITH_RITES
 from aerona.catalog.tenets import STRATUM_NAMES, STRATUM_PRIORITY
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import InjuryRow
@@ -20,11 +21,13 @@ from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.models.faith import StratumCriteria
 from aerona.engine.context import TickContext
+from aerona.engine.demography.rites import rite_of
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.mind.book import traits_of, values_for
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.structures.readers import rite_keeping
 from aerona.rules.registry import Rules
 from aerona.rules.registry.doctrine import AfterlifeRules
 
@@ -67,6 +70,10 @@ def custom_from_values(table: AfterlifeRules, values: dict[ValueAxis, int]) -> F
 
 
 async def funeral_custom(ctx: TickContext, community_id: int) -> FuneralRite | None:
+    community = await ctx.session.get(EntityRow, community_id)
+    custom = await rite_of(ctx.session, community) if community is not None else None
+    if custom is not None:
+        return FAITH_RITES[custom]
     kept = select(BondRow.target_node_id).where(BondRow.source_node_id == community_id, BondRow.kind == BondKind.CELEBRATES, BondRow.state == BondState.ACTIVE)
     living = select(EntityRow.id).where(EntityRow.id.in_(kept), EntityRow.status == EntityStatus.CANON)
     profile = await ctx.session.scalar(
@@ -85,7 +92,8 @@ async def rite_for(ctx: TickContext, mortal: EntityRow) -> FuneralRite:
     causes = set(await ctx.session.scalars(select(InjuryRow.cause_kind).where(InjuryRow.bearer_node_id == mortal.id)))
     if causes & set(EXECUTIONS) and ctx.rng(f"nameless.{mortal.id}").chance(table.nameless_execution_pct):
         return FuneralRite.NAMELESS
-    chance = table.battle_no_rite_chance if causes & {HarmCause.BATTLE, HarmCause.DUEL} else table.no_rite_chance
+    base = table.battle_no_rite_chance if causes & {HarmCause.BATTLE, HarmCause.DUEL} else table.no_rite_chance
+    chance = base * (1 - await rite_keeping(ctx.session, ctx.rules, mortal.location_id))
     if ctx.rng(f"rite.{mortal.id}").chance(chance):
         return FuneralRite.NONE
     home = mortal.location_id

@@ -47,6 +47,10 @@ class CultureDriftRules:
     notable_value: int = rule(50, 1, 100, G, "Strength a value must reach before the chronicle notes a people's change of heart")
     refugee_kinship_weight: int = rule(15, 0, 100, G, "Shelter weight refugees give a host whose values are close to theirs")
     migration_kinship_pct: int = rule(40, 0, 200, G, "How much migrants prefer lands whose settlers share their values (%)")
+    famine_hunger: int = rule(40, 0, 100, G, "Hunger at which a people counts as living through a famine")
+    famine_kinship: int = rule(5, 0, 50, G, "Clan loyalty a famine raises in a people")
+    ideology_pull_pct: int = rule(30, 0, 100, G, "Pull of the ideologies its scholars hold on a people's values (%)")
+    lost_war_cohesion: int = rule(55, 0, 100, G, "Cohesion at which a conquered people grows more warlike instead of turning to peace")
     migration_opinion_pct: int = rule(60, 0, 200, G, "How much migrants prefer lands whose settlers they think well of, and shun those they hate (%)")
 
 

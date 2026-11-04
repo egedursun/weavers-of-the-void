@@ -4607,6 +4607,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/resources/{resource_id}/pacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["resource_pacts_api_resources__resource_id__pacts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/polities/{polity_id}/production": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["polity_production_api_polities__polity_id__production_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/nodes/{node_id}/materials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["node_materials_api_nodes__node_id__materials_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/markets/{market_id}/holds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["market_holds_api_markets__market_id__holds_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ledger/debt-laws": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["debt_laws_api_ledger_debt_laws_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/worlds/{world_id}/workshop-designs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["workshop_designs_api_worlds__world_id__workshop_designs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/entities/{entity_id}/demography": {
         parameters: {
             query?: never;
@@ -4663,6 +4759,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["settlement_plan_api_entities__entity_id__settlement_plan_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/society-depth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["society_depth_api_entities__entity_id__society_depth_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5311,6 +5423,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/entities/{entity_id}/structures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["host_structures_api_entities__entity_id__structures_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/structure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["one_structure_api_entities__entity_id__structure_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/structure-designs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["designs_api_structure_designs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/worlds/{world_id}/golden-age": {
         parameters: {
             query?: never;
@@ -5369,6 +5529,310 @@ export interface paths {
         get: operations["list_actions_api_actions_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/trade_route:found": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_trade_route_found_api_actions_trade_route_found_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/trade_route:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_trade_route_edit_api_actions_trade_route_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/trade_route:delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_trade_route_delete_api_actions_trade_route_delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/trade_route:toll_stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_trade_route_toll_stop_api_actions_trade_route_toll_stop_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/trade_route:toll_remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_trade_route_toll_remove_api_actions_trade_route_toll_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resource:pact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resource_pact_api_actions_resource_pact_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resource:pact_terms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resource_pact_terms_api_actions_resource_pact_terms_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resource:pact_end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resource_pact_end_api_actions_resource_pact_end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/structure:commission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_structure_commission_api_actions_structure_commission_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/structure:fund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_structure_fund_api_actions_structure_fund_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/structure:finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_structure_finish_api_actions_structure_finish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/structure:abandon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_structure_abandon_api_actions_structure_abandon_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/structure:staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_structure_staff_api_actions_structure_staff_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/structure:damage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_structure_damage_api_actions_structure_damage_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/structure:repair": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_structure_repair_api_actions_structure_repair_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/structure:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_structure_edit_api_actions_structure_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/structure_design:create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_structure_design_create_api_actions_structure_design_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/structure_design:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_structure_design_edit_api_actions_structure_design_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/structure_design:retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_structure_design_retire_api_actions_structure_design_retire_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10959,6 +11423,470 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/material:create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_material_create_api_actions_material_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/material:delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_material_delete_api_actions_material_delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/material:hold": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_material_hold_api_actions_material_hold_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/material:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_material_release_api_actions_material_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/node_material:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_node_material_set_api_actions_node_material_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/node_material:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_node_material_release_api_actions_node_material_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/node_material:clear": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_node_material_clear_api_actions_node_material_clear_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/stock:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_stock_set_api_actions_stock_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/stock:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_stock_release_api_actions_stock_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/workshop:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_workshop_edit_api_actions_workshop_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/workshop:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_workshop_release_api_actions_workshop_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/workshop_design:create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_workshop_design_create_api_actions_workshop_design_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/workshop_design:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_workshop_design_edit_api_actions_workshop_design_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/workshop_design:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_workshop_design_release_api_actions_workshop_design_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/workshop_design:delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_workshop_design_delete_api_actions_workshop_design_delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resource:create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resource_create_api_actions_resource_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resource:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resource_edit_api_actions_resource_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resource:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resource_release_api_actions_resource_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resource:delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resource_delete_api_actions_resource_delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resource:workers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resource_workers_api_actions_resource_workers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/market:hold_price": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_market_hold_price_api_actions_market_hold_price_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/market:release_price": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_market_release_price_api_actions_market_release_price_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/currency:create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_currency_create_api_actions_currency_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/currency:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_currency_release_api_actions_currency_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/currency:delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_currency_delete_api_actions_currency_delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/loan:grant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_loan_grant_api_actions_loan_grant_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/loan:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_loan_edit_api_actions_loan_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/loan:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_loan_release_api_actions_loan_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/loan:delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_loan_delete_api_actions_loan_delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/people:edit": {
         parameters: {
             query?: never;
@@ -10975,6 +11903,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/people:found": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_people_found_api_actions_people_found_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/cohort:move": {
         parameters: {
             query?: never;
@@ -10985,6 +11929,198 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["action_cohort_move_api_actions_cohort_move_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/needs:hold": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_needs_hold_api_actions_needs_hold_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/class:standing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_class_standing_api_actions_class_standing_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/labour:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_labour_set_api_actions_labour_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/labour:corvee": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_labour_corvee_api_actions_labour_corvee_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/loyalty:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_loyalty_edit_api_actions_loyalty_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/drift:impose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_drift_impose_api_actions_drift_impose_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/drift:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_drift_edit_api_actions_drift_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/drift:cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_drift_cancel_api_actions_drift_cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mobility:ennoble": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mobility_ennoble_api_actions_mobility_ennoble_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mobility:ruin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mobility_ruin_api_actions_mobility_ruin_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mobility:enslave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mobility_enslave_api_actions_mobility_enslave_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mobility:manumit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mobility_manumit_api_actions_mobility_manumit_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -11081,6 +12217,102 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["action_outbreak_end_api_actions_outbreak_end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/disease:create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_disease_create_api_actions_disease_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/outbreak:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_outbreak_edit_api_actions_outbreak_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/endemic:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_endemic_set_api_actions_endemic_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/endemic:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_endemic_remove_api_actions_endemic_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/cohort:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_cohort_set_api_actions_cohort_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mortal:dormancy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mortal_dormancy_api_actions_mortal_dormancy_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -11193,6 +12425,70 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["action_settlement_charter_api_actions_settlement_charter_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/settlement:foreigners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_settlement_foreigners_api_actions_settlement_foreigners_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/district:design": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_district_design_api_actions_district_design_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/district:design_edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_district_design_edit_api_actions_district_design_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/district:design_delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_district_design_delete_api_actions_district_design_delete_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -11465,22 +12761,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["action_polity_loan_api_actions_polity_loan_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/actions/loan:edit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["action_loan_edit_api_actions_loan_edit_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -13665,7 +14945,24 @@ export interface components {
             state: boolean;
             since_epoch: number;
         };
+        AdminView: {
+            base: number;
+            literacy: number;
+            scribes: number;
+            writing: number;
+            palace: number;
+            total: number;
+        };
         Aesthetic: "austere" | "ornate" | "geometric" | "natural" | "macabre" | "celestial";
+        AfflictionView: {
+            disease_id: number;
+            disease: string;
+            vector: components["schemas"]["DiseaseVector"];
+            target_functions: components["schemas"]["DiseaseTarget"][];
+            severity: number;
+            status: components["schemas"]["OutbreakStatus"];
+            outbreak_id: number;
+        };
         AfterlifeState: "wandering" | "judged" | "in_realm" | "reborn" | "consumed" | "released";
         AfterlifeStratumInput: {
             realm_id: number;
@@ -13840,6 +15137,11 @@ export interface components {
             values?: {
                 [key: string]: number | string | boolean | null;
             };
+        };
+        ArmyOption: {
+            id: number;
+            name: string;
+            size: number;
         };
         ArmyRaiseInput: {
             community_id: number;
@@ -14149,7 +15451,13 @@ export interface components {
             fertility_pct: number;
             acclimatised: components["schemas"]["TemperatureBand"];
             staple: components["schemas"]["CommodityKind"];
-            traits: string[];
+            traits: components["schemas"]["NaturalTrait"][];
+            immunities: components["schemas"]["LinkedRecord"][];
+            body_plan: components["schemas"]["BodyPlan"];
+            size_class: components["schemas"]["SizeClass"];
+            diet: components["schemas"]["FolkDiet"];
+            edible: components["schemas"]["CommodityKind"][];
+            effects: components["schemas"]["KinEffectsView"];
             locked: string[];
         };
         Biome: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
@@ -14374,6 +15682,8 @@ export interface components {
             note: string | null;
         };
         BuildMaterial: "timber" | "stone";
+        BuildScale: "minor" | "major" | "grand" | "wonder";
+        BuilderKind: "community" | "polity" | "faction" | "cult" | "patron" | "god";
         BulkLogPayload: {
             epoch?: number | null;
             level: string;
@@ -14470,6 +15780,7 @@ export interface components {
             occupancy_pct: number;
             region: components["schemas"]["NodeRef"] | null;
         };
+        CapacityUnit: "none" | "tons" | "volumes" | "garrison" | "beds" | "berths" | "seats" | "cells" | "worshippers" | "pupils" | "stalls" | "hands" | "loads" | "travellers";
         CapacityView: {
             key: components["schemas"]["Capacity"];
             factor: number;
@@ -14801,8 +16112,28 @@ export interface components {
             share: number;
             satisfaction: number;
         };
+        ClassStandingInput: {
+            community_id: number;
+            social_class: components["schemas"]["SocialClass"];
+            values?: {
+                [key: string]: number;
+            };
+            release?: string[];
+        };
+        ClassStandingView: {
+            social_class: components["schemas"]["SocialClass"];
+            share: number;
+            satisfaction: number;
+            fed_pct: number;
+            needs_met_pct: number;
+            luxury_pct: number;
+            wealth: number;
+            per_head: number;
+            income: number;
+            locked: string[];
+        };
         ClaudeAuth: "token" | "login";
-        ClauseKind: "call_to_arms" | "tribute" | "cession" | "hostage" | "marriage" | "trade_rights" | "tolls_waived" | "religious_freedom" | "demilitarised" | "champion" | "extradition" | "wergild" | "non_aggression";
+        ClauseKind: "call_to_arms" | "tribute" | "cession" | "hostage" | "marriage" | "trade_rights" | "tolls_waived" | "religious_freedom" | "demilitarised" | "champion" | "extradition" | "wergild" | "non_aggression" | "route_control" | "resource_demand";
         ClauseView: {
             id: number;
             kind: components["schemas"]["ClauseKind"];
@@ -14845,7 +16176,7 @@ export interface components {
             first_meaning: string;
             second_meaning: string;
         };
-        CohortCondition: "none" | "veteran" | "sick" | "enslaved" | "captive";
+        CohortCondition: "none" | "veteran" | "sick" | "enslaved" | "captive" | "maimed";
         CohortMoveInput: {
             community_id: number;
             count: number;
@@ -14853,6 +16184,15 @@ export interface components {
             target: components["schemas"]["SocialClass"];
             band?: components["schemas"]["AgeBand"] | null;
             condition?: components["schemas"]["CohortCondition"] | null;
+            from_condition?: components["schemas"]["CohortCondition"] | null;
+        };
+        CohortSetInput: {
+            community_id: number;
+            age_band: components["schemas"]["AgeBand"];
+            sex: components["schemas"]["Sex"];
+            social_class: components["schemas"]["SocialClass"];
+            condition: components["schemas"]["CohortCondition"];
+            count: number;
         };
         CohortView: {
             kind: components["schemas"]["MaimedKind"];
@@ -14944,6 +16284,25 @@ export interface components {
             variant_id?: number | null;
             visible: boolean;
         };
+        ConstructionState: "planned" | "building" | "complete" | "damaged" | "ruined";
+        ConstructionStatus: "active" | "finished" | "abandoned";
+        ConstructionView: {
+            id: number;
+            status: components["schemas"]["ConstructionStatus"];
+            cost: number;
+            work: number;
+            percent: number;
+            funds: number;
+            workers: number;
+            materials_pct: number;
+            stalled_epochs: number;
+            stall_limit: number;
+            generations: number;
+            started_epoch: number;
+            finished_epoch: number | null;
+            player: boolean;
+            locked: string[];
+        };
         ContextBlock: {
             kind: components["schemas"]["ContextBlockKind"];
             text: string;
@@ -14961,6 +16320,12 @@ export interface components {
             rows: string[];
         };
         ContextBlockKind: "world-header" | "dialect" | "world-line" | "cosmos" | "pantheon" | "threads" | "world-summary" | "fate-summary" | "geography" | "map" | "languages" | "entity-line" | "entity-detail" | "bond-lines" | "son-memory" | "tired-images" | "recent-events" | "powers" | "sky-calendar" | "mortal" | "chronicler";
+        CorveeView: {
+            share_pct: number;
+            polity_id: number | null;
+            since_epoch: number;
+            by_hand: boolean;
+        };
         CosmicEpoch: {
             epoch: number;
             name: string | null;
@@ -15255,7 +16620,13 @@ export interface components {
             endogamous: boolean;
             inheritance: components["schemas"]["InheritanceCustom"];
             slavery_lawful: boolean;
-            staples: string[];
+            staples: components["schemas"]["CommodityKind"][];
+            liturgical_language: components["schemas"]["LinkedRecord"] | null;
+            trade_language: components["schemas"]["LinkedRecord"] | null;
+            funeral_rite: components["schemas"]["FuneralCustom"];
+            funeral_tradition: components["schemas"]["LinkedRecord"] | null;
+            martial_record: components["schemas"]["MartialRecordView"][];
+            martial_net: number;
             locked: string[];
         };
         CureSource: "knowledge" | "granted";
@@ -15265,7 +16636,18 @@ export interface components {
             source: components["schemas"]["CureSource"];
             since_epoch: number;
         };
+        CurrencyCreateInput: {
+            issuer_id: number;
+            name: string;
+            metal: components["schemas"]["MaterialKind"];
+            purity: number;
+            trust: number;
+            supply: number;
+        };
         CurrencyDebaseInput: {
+            currency_id: number;
+        };
+        CurrencyDeleteInput: {
             currency_id: number;
         };
         CurrencyEditInput: {
@@ -15273,6 +16655,12 @@ export interface components {
             purity?: number | null;
             trust?: number | null;
             supply?: number | null;
+            name?: string | null;
+            metal?: components["schemas"]["MaterialKind"] | null;
+            hold?: boolean | null;
+        };
+        CurrencyReleaseInput: {
+            currency_id: number;
         };
         CurrencyUseInput: {
             community_id: number;
@@ -15291,6 +16679,7 @@ export interface components {
             minted_epoch: number;
             debased_epoch: number | null;
             users: number[];
+            held: boolean;
         };
         CurseKind: "none" | "bloodthirst" | "misfortune" | "wasting" | "madness" | "betrayal";
         CustomCatalog: "technique" | "tenet" | "tradition_kind" | "archetype" | "item_class" | "rite_effect";
@@ -15352,6 +16741,16 @@ export interface components {
             loyal_communities: components["schemas"]["EntitySummary"][];
         };
         DeathCause: "old_age" | "wounds" | "battle" | "duel" | "execution" | "murder" | "monster" | "disease" | "childbirth" | "famine" | "accident" | "disaster" | "exposure" | "curse" | "magic" | "divine" | "poison" | "sacrifice" | "hardship" | "despair" | "unknown";
+        DebtLawView: {
+            law_id: number;
+            name: string;
+            holders: number[];
+            holder_names: string[];
+            remedy: components["schemas"]["DebtRemedy"];
+            jubilee_epochs: number;
+            enforcement: number;
+        };
+        DebtRemedy: "bondage" | "prison" | "jubilee";
         DebtStatus: "open" | "overdue" | "repaid" | "forgiven";
         DebtView: {
             bond_id: number;
@@ -15363,6 +16762,8 @@ export interface components {
             what: string;
             due_epoch: number | null;
             currency_id: number | null;
+            currency_name?: string | null;
+            remedy?: components["schemas"]["DebtRemedy"] | null;
         };
         DecisionRule: "autocratic" | "council" | "assembly" | "divine";
         DecreeKind: "war" | "peace" | "alliance" | "marriage" | "trade";
@@ -15379,6 +16780,12 @@ export interface components {
             note: string;
             id: number;
         };
+        DefenceView: {
+            wall_pct: number;
+            tower_pct: number;
+            batter_pct: number;
+            gate_weakness_pct: number;
+        };
         DefenderAction: "sally" | "repair" | "ration" | "seek_relief";
         DemographyView: {
             entity_id: number;
@@ -15394,10 +16801,34 @@ export interface components {
             neighbours: components["schemas"]["NeighbourCulture"][];
             inequality: number;
             mobilisation_pct: number;
+            afflictions: components["schemas"]["AfflictionView"][];
+            named: components["schemas"]["NamedMortalView"][];
+            held: string[];
         };
         DepositOwnerInput: {
             deposit_id: number;
             owner_id?: number | null;
+        };
+        DesignView: {
+            id: number;
+            world_id: number | null;
+            name: string;
+            description: string | null;
+            base_kind: components["schemas"]["StructureKind"];
+            staff_class: components["schemas"]["SocialClass"] | null;
+            staff_scale: components["schemas"]["StaffScale"] | null;
+            scale: components["schemas"]["BuildScale"] | null;
+            upkeep_commodity: components["schemas"]["CommodityKind"] | null;
+            min_tier: components["schemas"]["SizeTier"] | null;
+            ley: boolean | null;
+            capacity_pct: number;
+            cost_pct: number;
+            upkeep_pct: number;
+            function_pct: number;
+            staff_pct: number;
+            retired: boolean;
+            used_by: number;
+            locked: string[];
         };
         Diet: "herbivore" | "carnivore" | "omnivore" | "scavenger" | "filter" | "photosynthetic" | "mineral" | "soul" | "void";
         Disaster: "earthquake" | "flood" | "plague" | "drought" | "storm" | "eruption" | "volcanic_quake";
@@ -15423,6 +16854,16 @@ export interface components {
             places: number;
             communities: number;
         };
+        DiseaseCreateInput: {
+            region_id: number;
+            name?: string | null;
+            values?: {
+                [key: string]: number | string | string[] | null;
+            };
+            hold: boolean;
+            loose_on?: number | null;
+            severity: number;
+        };
         DiseaseCureInput: {
             disease_id: number;
             community_id: number;
@@ -15431,13 +16872,18 @@ export interface components {
         DiseaseEditInput: {
             disease_id: number;
             values?: {
-                [key: string]: number | string;
+                [key: string]: number | string | string[] | null;
             };
+            release?: string[];
+            hold: boolean;
         };
         DiseaseImmunityInput: {
             community_id: number;
             disease_id: number;
             immune_pct: number;
+            age_band?: components["schemas"]["AgeBand"] | null;
+            hold?: boolean | null;
+            forget: boolean;
         };
         DiseaseLooseInput: {
             target_id: number;
@@ -15478,6 +16924,12 @@ export interface components {
             origin_region_id: number | null;
             emerged_epoch: number;
             locked: string[];
+            origin_incident_id: number | null;
+            origin: components["schemas"]["IncidentRefView"] | null;
+            incidents: components["schemas"]["IncidentRefView"][];
+            hosts: components["schemas"]["aerona__api__schemas__depth_society__HostView"][];
+            unseen_pct: number;
+            sick: number;
             strains: components["schemas"]["StrainView"][];
             outbreaks: components["schemas"]["OutbreakView"][];
             endemic: components["schemas"]["EndemicView"][];
@@ -15498,14 +16950,66 @@ export interface components {
         };
         DistrictBuildInput: {
             settlement_id: number;
-            kind: components["schemas"]["DistrictKind"];
+            kind?: components["schemas"]["DistrictKind"] | null;
             material: components["schemas"]["BuildMaterial"];
+            design_id?: number | null;
+        };
+        DistrictDesignDeleteInput: {
+            design_id: number;
+        };
+        DistrictDesignEditInput: {
+            design_id: number;
+            values?: {
+                [key: string]: number | null;
+            };
+            name?: string | null;
+            description?: string | null;
+            base_kind?: components["schemas"]["DistrictKind"] | null;
+        };
+        DistrictDesignInput: {
+            world_id: number;
+            name: string;
+            base_kind: components["schemas"]["DistrictKind"];
+            description?: string | null;
+            values?: {
+                [key: string]: number;
+            };
+        };
+        DistrictDesignView: {
+            id: number;
+            name: string;
+            description: string | null;
+            base_kind: components["schemas"]["DistrictKind"];
+            parameters: {
+                [key: string]: number | null;
+            };
+            defaults: {
+                [key: string]: number;
+            };
+            created_epoch: number;
         };
         DistrictEditInput: {
             district_id: number;
             level?: number | null;
             condition?: number | null;
             material?: components["schemas"]["BuildMaterial"] | null;
+            kind?: components["schemas"]["DistrictKind"] | null;
+            design_id?: number | null;
+            clear_design: boolean;
+            release?: string[];
+        };
+        DistrictEffectsView: {
+            housing: number;
+            food_store: number;
+            goods_store: number;
+            harbour: number;
+            order: number;
+            sanitation: number;
+            piety_floor: number;
+            admin_pct: number;
+            policing: number;
+            investment_pct: number;
+            tension_relief_pct: number;
         };
         DistrictKind: "farmland" | "market" | "craft_quarter" | "temple_quarter" | "harbour" | "citadel" | "slums" | "palace" | "foreign_quarter" | "necropolis";
         DistrictRazeInput: {
@@ -15518,6 +17022,11 @@ export interface components {
             condition: number;
             material: components["schemas"]["BuildMaterial"];
             built_epoch: number;
+            design_id: number | null;
+            locked: string[];
+            effects: {
+                [key: string]: number;
+            };
         };
         DoctrineView: {
             cult: components["schemas"]["NodeRef"] | null;
@@ -15594,8 +17103,37 @@ export interface components {
             text: string;
             is_read: boolean;
         };
+        DriftCancelInput: {
+            imposition_id: number;
+        };
+        DriftCause: "god" | "ruler" | "neighbours" | "ideology" | "war_fought" | "war_won" | "war_lost" | "plague" | "famine" | "trade" | "conquest";
+        DriftCauseView: {
+            cause: components["schemas"]["DriftCause"];
+            axis: components["schemas"]["ValueAxis"];
+            amount: number;
+            total: number;
+            epoch: number;
+        };
+        DriftEditInput: {
+            imposition_id: number;
+            amount?: number | null;
+            epochs?: number | null;
+            cause?: components["schemas"]["DriftCause"] | null;
+            axis?: components["schemas"]["ValueAxis"] | null;
+        };
+        DriftImposeInput: {
+            community_id: number;
+            cause: components["schemas"]["DriftCause"];
+            axis: components["schemas"]["ValueAxis"];
+            amount: number;
+            epochs: number;
+        };
         DuelContext: "war" | "honour" | "trial" | "champion" | "god";
         EdgeKind: "modifier" | "rule_switch" | "flow" | "trigger";
+        EffectView: {
+            effect: components["schemas"]["ShortfallEffect"];
+            short_pct: number;
+        };
         EffectiveValue: {
             key: string;
             base: number;
@@ -15615,11 +17153,24 @@ export interface components {
             rite: components["schemas"]["NodeRef"] | null;
             since_epoch: number;
         };
+        EndemicRemoveInput: {
+            region_id: number;
+            disease_id: number;
+        };
+        EndemicSetInput: {
+            region_id: number;
+            disease_id: number;
+            load: number;
+            hold?: boolean | null;
+        };
         EndemicView: {
             region_id: number;
             region: string;
             load: number;
             since_epoch: number;
+            locked: boolean;
+            disease_id: number;
+            disease: string;
         };
         EngineFinishedEvent: {
             id: number;
@@ -16525,6 +18076,8 @@ export interface components {
             flow: string;
             quantity: number;
         };
+        FoeNature: "undead" | "cursed" | "void";
+        FolkDiet: "omnivore" | "herbivore" | "carnivore" | "piscivore" | "scavenger" | "sanguivore" | "lithovore" | "essence_feeder" | "phototroph";
         FolkView: {
             people_id: number;
             people_name: string;
@@ -16683,10 +18236,20 @@ export interface components {
             since_epoch: number;
             last_epoch: number;
         };
+        FunctionBreakdownView: {
+            base: number;
+            design_pct: number;
+            condition_pct: number;
+            staff_pct: number;
+            ley_pct: number;
+            effect_pct: number;
+            threshold: number;
+        };
         FunctionView: {
             key: components["schemas"]["BodyFunction"];
             level: number;
         };
+        FuneralCustom: "burial" | "cremation" | "sky_burial" | "sea_burial" | "entombment" | "ancestor_shrine" | "endocannibalism" | "reanimation" | "soul_binding";
         FuneralRite: "burial" | "burning" | "exposure" | "nameless" | "none";
         GateNeed: {
             branch: components["schemas"]["KnowledgeBranch"];
@@ -16971,6 +18534,7 @@ export interface components {
         HoardInjectInput: {
             community_id: number;
             metal: components["schemas"]["MaterialKind"];
+            world_material_id?: number | null;
             units?: number | null;
         };
         HoldKind: "incited_by_son_id" | "golden_age" | "dedicated_son_id" | "anchor_entity_id";
@@ -17007,11 +18571,6 @@ export interface components {
         };
         HorrorSuppressCultInput: {
             cult_id: number;
-        };
-        HostView: {
-            disease: components["schemas"]["NodeRef"] | null;
-            immune: boolean;
-            locked: string[];
         };
         HouseEditInput: {
             house_id: number;
@@ -17219,6 +18778,7 @@ export interface components {
             community: string;
             age_band: components["schemas"]["AgeBand"];
             immune_pct: number;
+            locked: boolean;
         };
         ImportMode: "replace" | "merge" | "discovery";
         ImportResult: {
@@ -17232,6 +18792,14 @@ export interface components {
             archived: boolean;
             reason: string | null;
             last_mention: number;
+        };
+        ImpositionView: {
+            id: number;
+            cause: components["schemas"]["DriftCause"];
+            axis: components["schemas"]["ValueAxis"];
+            amount: number;
+            epochs_left: number;
+            created_epoch: number;
         };
         IncidentAnnotateInput: {
             incident_id: number;
@@ -17291,6 +18859,14 @@ export interface components {
             epoch: number;
             note: string | null;
         };
+        IncidentRefView: {
+            id: number;
+            epoch: number;
+            year: number | null;
+            kind: string;
+            text: string;
+            place_id: number | null;
+        };
         IncidentRole: "subject" | "actor" | "target" | "witness" | "place";
         IncidentRolesInput: {
             incident_id: number;
@@ -17326,7 +18902,7 @@ export interface components {
             locked: string[];
         };
         InheritanceCustom: "gavelkind" | "primogeniture" | "ultimogeniture" | "matrilineal" | "elective" | "by_merit";
-        InjuryKind: "bruise" | "cut" | "deep_cut" | "puncture" | "fracture" | "crush" | "burn" | "frostbite" | "bite" | "venom" | "severed" | "gouged" | "destroyed" | "curse_wither" | "void_touch" | "divine_brand";
+        InjuryKind: "bruise" | "cut" | "deep_cut" | "puncture" | "fracture" | "crush" | "burn" | "frostbite" | "bite" | "venom" | "severed" | "gouged" | "destroyed" | "curse_wither" | "void_touch" | "divine_brand" | "sickness";
         InjuryState: "fresh" | "infected" | "healing" | "healed_scar" | "permanent" | "lethal";
         InjuryView: {
             id: number;
@@ -17604,6 +19180,16 @@ export interface components {
             treaty_id?: number | null;
             start_epoch?: number | null;
         };
+        KinEffectsView: {
+            food_pct: number;
+            room_pct: number;
+            strength_pct: number;
+            disease_pct: number;
+            fleet_pct: number;
+            mount: string;
+            hunger_pct: number;
+            work: components["schemas"]["WorkFactor"][];
+        };
         KinEndMarriageInput: {
             marriage_id: number;
             cause: components["schemas"]["MarriageEnd"];
@@ -17655,6 +19241,19 @@ export interface components {
             };
         };
         KindFamily: "trait" | "skill" | "condition";
+        KindOptionView: {
+            kind: components["schemas"]["StructureKind"];
+            group: components["schemas"]["StructureGroup"];
+            label: string;
+            min_tier: components["schemas"]["SizeTier"];
+            allowed: boolean;
+            scale: components["schemas"]["BuildScale"];
+            cost: number;
+            capacity_unit: components["schemas"]["CapacityUnit"];
+            staff_class: components["schemas"]["SocialClass"] | null;
+            staff_scale: components["schemas"]["StaffScale"];
+            present: number;
+        };
         KnowledgeBranch: "agriculture" | "metallurgy" | "seafaring" | "writing" | "architecture" | "medicine" | "magic" | "warfare" | "astronomy" | "trade" | "sky_navigation" | "shipbuilding" | "gate_lore" | "pathfinding" | "void_living" | "immortality" | "biomancy" | "forbidden";
         KnowledgeInsight: {
             branch: string | null;
@@ -17693,10 +19292,29 @@ export interface components {
             key: string;
             label: string;
         };
+        LabourCorveeInput: {
+            community_id: number;
+            share_pct: number;
+            polity_id?: number | null;
+        };
         LabourFlowView: {
             social_class: components["schemas"]["SocialClass"];
             job: components["schemas"]["Job"];
             workers: number;
+        };
+        LabourReason: "class" | "price" | "structure" | "resource" | "no_structure" | "corvee" | "held";
+        LabourReasonView: {
+            job: components["schemas"]["Job"];
+            reason: components["schemas"]["LabourReason"];
+            workers: number;
+            commodity: components["schemas"]["CommodityKind"] | null;
+            workshop: components["schemas"]["WorkshopKind"] | null;
+            price_pct: number;
+        };
+        LabourSetInput: {
+            community_id: number;
+            job: components["schemas"]["Job"];
+            workers?: number | null;
         };
         LabourView: {
             job: components["schemas"]["Job"];
@@ -18127,6 +19745,10 @@ export interface components {
             label: string;
             kinds: string[];
         };
+        LinkedRecord: {
+            id: number;
+            name: string;
+        };
         LlmCall: {
             id: number;
             epoch: number | null;
@@ -18146,14 +19768,31 @@ export interface components {
         };
         LlmCallKind: "agent" | "structured";
         LlmCallStatus: "ok" | "partial" | "error";
+        LoanDeleteInput: {
+            loan_id: number;
+        };
         LoanEditInput: {
             loan_id: number;
             principal?: number | null;
             interest_pct?: number | null;
             due_epoch?: number | null;
+            repaid?: number | null;
             status?: components["schemas"]["LoanStatus"] | null;
+            hold?: boolean | null;
         };
         LoanForgiveInput: {
+            loan_id: number;
+        };
+        LoanGrantInput: {
+            lender_id: number;
+            borrower_id: number;
+            principal: number;
+            interest_pct: number;
+            term_epochs: number;
+            currency_id?: number | null;
+            purpose: string;
+        };
+        LoanReleaseInput: {
             loan_id: number;
         };
         LoanStatus: "open" | "repaid" | "defaulted" | "forgiven";
@@ -18172,6 +19811,9 @@ export interface components {
             due_epoch: number;
             status: components["schemas"]["LoanStatus"];
             purpose: string;
+            held: boolean;
+            borrower_type?: components["schemas"]["EntityType"] | null;
+            currency_name?: string | null;
         };
         LogEntry: {
             level: string;
@@ -18227,6 +19869,33 @@ export interface components {
             wars: number;
             chronicle: number;
             words: number;
+        };
+        LoyaltyEditInput: {
+            polity_id: number;
+            member_id: number;
+            values?: {
+                [key: string]: number;
+            };
+            release?: string[];
+        };
+        LoyaltyPart: "tribute" | "weariness" | "conquest" | "tax" | "routes" | "victories" | "faith" | "prosperity";
+        LoyaltyPartView: {
+            part: components["schemas"]["LoyaltyPart"];
+            value: number;
+            grievance: boolean;
+        };
+        LoyaltyView: {
+            polity_id: number;
+            polity: string;
+            value_distance: number;
+            distance_penalty: number;
+            grievances: number;
+            benefits: number;
+            satisfaction: number;
+            loyalty: number;
+            autonomy: number;
+            parts: components["schemas"]["LoyaltyPartView"][];
+            locked: string[];
         };
         MagicSchool: "elemental_fire" | "elemental_water" | "earth" | "storm" | "life" | "death" | "mind" | "illusion" | "divination" | "warding" | "binding" | "summoning" | "blood" | "void";
         MagicSource: "ley" | "divine" | "blood" | "soul" | "reagent" | "void";
@@ -18446,6 +20115,20 @@ export interface components {
         MarketFoundInput: {
             region_id: number;
         };
+        MarketHoldPriceInput: {
+            market_id: number;
+            commodity: components["schemas"]["CommodityKind"];
+            price?: number | null;
+            supply?: number | null;
+        };
+        MarketHoldsView: {
+            market_id: number;
+            premiums: components["schemas"]["PremiumView"][];
+        };
+        MarketReleasePriceInput: {
+            market_id: number;
+            commodity: components["schemas"]["CommodityKind"];
+        };
         MarketSummary: {
             id: number;
             name: string;
@@ -18474,7 +20157,30 @@ export interface components {
             cause_end: components["schemas"]["MarriageEnd"] | null;
             forced: boolean;
         };
+        MartialRecordView: {
+            style: components["schemas"]["MartialStyle"];
+            wins: number;
+            losses: number;
+        };
         MartialStyle: "shieldwall" | "horse_archer" | "skirmisher" | "chariot" | "phalanx" | "berserker" | "naval_raider" | "siege_engineer" | "war_magic" | "beast_war";
+        MaterialCreateInput: {
+            world_id: number;
+            name: string;
+            family: components["schemas"]["MaterialFamily"];
+            base_kind?: components["schemas"]["MaterialKind"] | null;
+            values?: {
+                [key: string]: number;
+            };
+            branch?: components["schemas"]["KnowledgeBranch"] | null;
+            level: number;
+            description?: string | null;
+            place_id?: number | null;
+        };
+        MaterialDeleteInput: {
+            world_id: number;
+            material?: components["schemas"]["MaterialKind"] | null;
+            world_material_id?: number | null;
+        };
         MaterialEditInput: {
             world_id: number;
             material?: components["schemas"]["MaterialKind"] | null;
@@ -18483,10 +20189,45 @@ export interface components {
                 [key: string]: number;
             };
             name?: string | null;
+            description?: string | null;
+            family?: components["schemas"]["MaterialFamily"] | null;
+            branch?: components["schemas"]["KnowledgeBranch"] | null;
+            clear_branch: boolean;
+            hold?: boolean | null;
         };
         MaterialFamily: "organic" | "stone" | "metal" | "precious" | "exotic";
+        MaterialHoldInput: {
+            world_id: number;
+            material?: components["schemas"]["MaterialKind"] | null;
+            world_material_id?: number | null;
+        };
         MaterialKind: "wood" | "bone" | "hide" | "leather" | "cloth" | "stone" | "flint" | "obsidian" | "copper" | "tin" | "bronze" | "iron" | "steel" | "silver" | "gold" | "glass" | "crystal" | "ivory" | "chitin" | "dragonbone" | "star_metal" | "void_glass" | "godflesh" | "living_wood" | "salt" | "amber" | "lead" | "skysteel" | "sulfur" | "clay" | "gems";
-        MaterialOrigin: "catalog" | "god_remains" | "dead_star" | "beast" | "leak_crystal" | "research";
+        MaterialOrigin: "catalog" | "god_remains" | "dead_star" | "beast" | "leak_crystal" | "research" | "divine";
+        MaterialReleaseInput: {
+            world_id: number;
+            material?: components["schemas"]["MaterialKind"] | null;
+            world_material_id?: number | null;
+        };
+        MaterialSlot: "body" | "weapons" | "armour" | "hull" | "fabric";
+        MaterialSlotView: {
+            slot: components["schemas"]["MaterialSlot"];
+            material: components["schemas"]["MaterialKind"] | null;
+            world_material_id: number | null;
+            label: string;
+            family: components["schemas"]["MaterialFamily"];
+            held: boolean;
+            hardness: number;
+            toughness: number;
+            weight: number;
+            sanctity: number;
+            corruption: number;
+            rarity: number;
+            base_value: number;
+            decay: number;
+            effects: {
+                [key: string]: number;
+            };
+        };
         MaterialView: {
             kind: components["schemas"]["MaterialKind"] | null;
             world_material_id: number | null;
@@ -18509,6 +20250,10 @@ export interface components {
             gate: components["schemas"]["KnowledgeBranch"] | null;
             description?: string | null;
             deposit_id?: number | null;
+            held: boolean;
+            base_kind?: components["schemas"]["MaterialKind"] | null;
+            price_premium_pct: number;
+            worth_pct: number;
         };
         MaterialsView: {
             world_id: number;
@@ -18552,6 +20297,14 @@ export interface components {
             mechanics: components["schemas"]["MechanicRecord"][];
         };
         MedicineTier: "none" | "herbs" | "surgery" | "prosthetics" | "reattachment";
+        MemberOutputView: {
+            community_id: number;
+            name: string;
+            epoch: number | null;
+            made: number;
+            bottlenecks: number;
+            workshops: number;
+        };
         MemberView: {
             id: number;
             name: string;
@@ -18738,7 +20491,7 @@ export interface components {
             values: components["schemas"]["ValueView"][];
             traits: components["schemas"]["TraitView"][];
             skills: components["schemas"]["SkillView"][];
-            needs: components["schemas"]["NeedView"][];
+            needs: components["schemas"]["aerona__api__schemas__mind__NeedView"][];
             pressures: components["schemas"]["aerona__api__schemas__mind__PressureView"][];
             memories: components["schemas"]["MemoryView"][];
             opinions: components["schemas"]["OpinionView"][];
@@ -18756,6 +20509,37 @@ export interface components {
             pending_names: number;
             past_narratives: number[];
             anything_missing: boolean;
+        };
+        MobilityEnnobleInput: {
+            mortal_id: number;
+        };
+        MobilityEnslaveInput: {
+            community_id: number;
+            count: number;
+            source: components["schemas"]["SocialClass"];
+        };
+        MobilityEvent: "ennobled" | "enslaved" | "freed" | "ruined";
+        MobilityEventView: {
+            id: number;
+            event: components["schemas"]["MobilityEvent"];
+            count: number;
+            mortal_id: number | null;
+            mortal: string;
+            house_id: number | null;
+            house: string;
+            other_id: number | null;
+            other: string;
+            by_hand: boolean;
+            epoch: number;
+        };
+        MobilityManumitInput: {
+            community_id: number;
+            count: number;
+            target: components["schemas"]["SocialClass"];
+        };
+        MobilityRuinInput: {
+            mortal_id: number;
+            bondage: boolean;
         };
         ModelMetrics: {
             model: string;
@@ -18882,6 +20666,11 @@ export interface components {
         MortalChildInput: {
             first_id: number;
             second_id: number;
+        };
+        MortalDormancyInput: {
+            mortal_id: number;
+            dormant?: boolean | null;
+            hold?: boolean | null;
         };
         MortalEquipInput: {
             mortal_id: number;
@@ -19079,6 +20868,13 @@ export interface components {
             numbered_borrowed_names: number;
             god_lookalikes: number;
         };
+        NamedMortalView: {
+            id: number;
+            name: string;
+            dormant: boolean;
+            held: boolean;
+            importance: number;
+        };
         NamedNode: {
             id: number;
             name: string;
@@ -19087,11 +20883,13 @@ export interface components {
         NaturalLawStats: {
             kind: "natural_law";
         };
+        NaturalTrait: "dark_sight" | "cold_blooded" | "winged" | "amphibious" | "thick_hide" | "keen_senses" | "venomous" | "regenerating" | "burrowing" | "hive_minded";
         NeedKind: "sustenance" | "safety" | "belonging" | "status" | "purpose" | "faith" | "pleasure";
-        NeedView: {
-            need: components["schemas"]["NeedKind"];
-            label: string;
-            value: number;
+        NeedsHoldInput: {
+            community_id: number;
+            social_class: components["schemas"]["SocialClass"];
+            commodity: components["schemas"]["CommodityKind"];
+            held_pct?: number | null;
         };
         NeighbourCulture: {
             entity_id: number;
@@ -19153,6 +20951,29 @@ export interface components {
             origin: string;
         };
         NodeKind: "entity" | "son" | "creator" | "foreign_god" | "world" | "star";
+        NodeMaterialClearInput: {
+            node_id: number;
+            slot: components["schemas"]["MaterialSlot"];
+        };
+        NodeMaterialReleaseInput: {
+            node_id: number;
+            slot: components["schemas"]["MaterialSlot"];
+        };
+        NodeMaterialSetInput: {
+            node_id: number;
+            slot: components["schemas"]["MaterialSlot"];
+            material?: components["schemas"]["MaterialKind"] | null;
+            world_material_id?: number | null;
+            hold: boolean;
+        };
+        NodeMaterialsView: {
+            node_id: number;
+            entity_type: components["schemas"]["EntityType"];
+            world_id: number | null;
+            slots: components["schemas"]["MaterialSlotView"][];
+            open_slots: components["schemas"]["MaterialSlot"][];
+            foe_natures: components["schemas"]["FoeNature"][];
+        };
         NodeMechanicsView: {
             node_id: number;
             epoch: number;
@@ -19374,6 +21195,14 @@ export interface components {
             cover: string | null;
             population: number;
         };
+        OutbreakEditInput: {
+            outbreak_id: number;
+            values?: {
+                [key: string]: number | string | boolean;
+            };
+            release?: string[];
+            hold: boolean;
+        };
         OutbreakEndInput: {
             outbreak_id: number;
         };
@@ -19401,6 +21230,8 @@ export interface components {
             ended_epoch: number | null;
             quarantined: boolean;
             event_id: number | null;
+            locked: string[];
+            unseen_pct: number;
         };
         OutcomeClass: "decisive" | "victory" | "pyrrhic" | "stalemate" | "rout" | "massacre" | "refused";
         OuterBargainMode: "force" | "forbid" | "allow";
@@ -19415,6 +21246,22 @@ export interface components {
             epoch: number | null;
             creator: string | null;
             date: string;
+        };
+        PactView: {
+            treaty_id: number;
+            name: string;
+            status: string;
+            owner_id: number | null;
+            owner_name: string;
+            demand: string;
+            commodity: components["schemas"]["CommodityKind"] | null;
+            units: number;
+            cost: number;
+            every: number;
+            paid_epoch: number;
+            signed_epoch: number;
+            until_epoch: number | null;
+            misread: boolean;
         };
         Page_ArmyView_: {
             items: components["schemas"]["ArmyView"][];
@@ -19632,9 +21479,19 @@ export interface components {
         PeopleEditInput: {
             people_id: number;
             values?: {
-                [key: string]: number | string | boolean;
+                [key: string]: number | string | boolean | number[] | string[] | null;
             };
             release?: string[];
+        };
+        PeopleFoundInput: {
+            name: string;
+            region_id: number;
+            population: number;
+            species_id?: number | null;
+            language_id?: number | null;
+            values?: {
+                [key: string]: number | string | boolean | number[] | string[] | null;
+            };
         };
         PeopleLine: {
             id: number;
@@ -19853,6 +21710,23 @@ export interface components {
             mortal_id?: number | null;
             region_id?: number | null;
         };
+        PolityChainStepView: {
+            key: string;
+            label: string;
+            workshop: components["schemas"]["WorkshopKind"] | null;
+            inputs: {
+                [key: string]: number;
+            };
+            output: components["schemas"]["CommodityKind"];
+            output_qty: number;
+            made: number;
+            quality: number;
+            material: components["schemas"]["MaterialKind"] | null;
+            bottleneck: components["schemas"]["CommodityKind"] | null;
+            starved_ids: number[];
+            running_ids: number[];
+            able_ids: number[];
+        };
         PolityDeposeInput: {
             polity_id: number;
         };
@@ -19891,6 +21765,17 @@ export interface components {
             polity_id: number;
             into_id: number;
         };
+        PolityProductionView: {
+            polity_id: number;
+            name: string;
+            epoch: number;
+            members: components["schemas"]["MemberOutputView"][];
+            chain: components["schemas"]["PolityChainStepView"][];
+            stocks: components["schemas"]["PolityStockView"][];
+            workshops: {
+                [key: string]: number;
+            };
+        };
         PolitySplitInput: {
             polity_id: number;
             member_ids: number[];
@@ -19901,6 +21786,11 @@ export interface components {
             stability?: number | null;
             subjects?: number | null;
             territory?: number | null;
+        };
+        PolityStockView: {
+            commodity: components["schemas"]["CommodityKind"];
+            quantity: number;
+            quality: number;
         };
         PolityTerritoryInput: {
             polity_id: number;
@@ -20151,6 +22041,12 @@ export interface components {
             sender: components["schemas"]["NodeRef"] | null;
             sender_cover?: string | null;
         };
+        PremiumView: {
+            commodity: components["schemas"]["CommodityKind"];
+            premium_pct: number;
+            held_price: number | null;
+            held_supply: number | null;
+        };
         PressureKind: "hunger" | "insecurity" | "overcrowding" | "poverty" | "impiety" | "humiliation" | "stagnation";
         PricePoint: {
             epoch: number;
@@ -20164,6 +22060,10 @@ export interface components {
         PriceSeries: {
             commodity: components["schemas"]["CommodityKind"];
             points: components["schemas"]["PricePoint"][];
+        };
+        PriceView: {
+            commodity: components["schemas"]["CommodityKind"];
+            price_pct: number;
         };
         Profession: "soldier" | "rider" | "smith" | "builder" | "weaver" | "healer" | "scholar" | "priest" | "sorcerer" | "merchant" | "diplomat" | "hunter" | "sailor" | "commander";
         ProfileColumnRecord: {
@@ -20924,6 +22824,35 @@ export interface components {
             commodity: components["schemas"]["CommodityKind"];
             material?: components["schemas"]["MaterialKind"] | null;
         };
+        ResourceCreateInput: {
+            place_id: number;
+            name: string;
+            commodity: components["schemas"]["CommodityKind"];
+            material?: components["schemas"]["MaterialKind"] | null;
+            world_material_id?: number | null;
+            reserve: number;
+            richness: number;
+            quality: number;
+            revealed: boolean;
+            required_branch?: components["schemas"]["KnowledgeBranch"] | null;
+            required_level: number;
+        };
+        ResourceDeleteInput: {
+            resource_id: number;
+        };
+        ResourceEditInput: {
+            resource_id: number;
+            required_level?: number | null;
+            byproduct_pct?: number | null;
+            sealed_until_epoch?: number | null;
+            unseal: boolean;
+            required_branch?: components["schemas"]["KnowledgeBranch"] | null;
+            clear_branch: boolean;
+            byproduct_material?: components["schemas"]["MaterialKind"] | null;
+            clear_byproduct: boolean;
+            world_material_id?: number | null;
+            hold?: boolean | null;
+        };
         ResourceInsight: {
             mechanics: string[];
             weighed: boolean;
@@ -20941,6 +22870,23 @@ export interface components {
         ResourceOwnerInput: {
             resource_id: number;
             owner_id?: number | null;
+        };
+        ResourcePactEndInput: {
+            treaty_id: number;
+        };
+        ResourcePactInput: {
+            resource_id: number;
+            owner_id: number;
+            terms?: {
+                [key: string]: number | string | null;
+            };
+            epochs?: number | null;
+        };
+        ResourcePactTermsInput: {
+            treaty_id: number;
+            terms?: {
+                [key: string]: number | string | null;
+            };
         };
         ResourceProfileView: {
             resource_id: number;
@@ -20961,10 +22907,15 @@ export interface components {
             revealed: boolean;
             sealed_until_epoch: number | null;
             last_output: number;
+            held: boolean;
+            knowledge_gated?: number[];
             workers: components["schemas"]["WorkerView"][];
             runs: components["schemas"]["RunView"][];
             params: components["schemas"]["MechanicParamView"][];
             owners: number[];
+        };
+        ResourceReleaseInput: {
+            resource_id: number;
         };
         ResourceRevealInput: {
             resource_id: number;
@@ -20982,6 +22933,12 @@ export interface components {
             abundance?: number | null;
             value?: number | null;
             might?: number | null;
+        };
+        ResourceWorkersInput: {
+            resource_id: number;
+            community_id: number;
+            workers?: number | null;
+            hold: boolean;
         };
         RestoreRequest: {
             file: string;
@@ -21121,6 +23078,12 @@ export interface components {
             route_id: number;
             danger: number;
         };
+        RouteDangerView: {
+            bandits: number;
+            beasts: number;
+            weather: number;
+            sea: number;
+        };
         RouteFlowView: {
             epoch: number;
             commodity: components["schemas"]["CommodityKind"];
@@ -21141,6 +23104,14 @@ export interface components {
             danger: number;
             active: boolean;
             known: boolean;
+        };
+        RouteLossView: {
+            epoch: number;
+            commodity: components["schemas"]["CommodityKind"];
+            cause: components["schemas"]["TradeLoss"];
+            units: number;
+            culprit_id: number | null;
+            culprit_name: string;
         };
         RouteRecord: {
             id: number;
@@ -21456,6 +23427,12 @@ export interface components {
         SettlementEthnogenesisInput: {
             settlement_id: number;
         };
+        SettlementForeignersInput: {
+            settlement_id: number;
+            shares?: {
+                [key: string]: number;
+            };
+        };
         SettlementFreeCityInput: {
             settlement_id: number;
             free: boolean;
@@ -21467,6 +23444,7 @@ export interface components {
         };
         SettlementPlanView: {
             entity_id: number;
+            world_id: number | null;
             size_tier: components["schemas"]["SizeTier"];
             treasury: number;
             tax_rate: number;
@@ -21488,6 +23466,21 @@ export interface components {
             construction_capacity: number;
             hauling_capacity: number;
             rationing: boolean;
+            admin_capacity: number;
+            admin: components["schemas"]["AdminView"];
+            food_storage: components["schemas"]["StorageView"];
+            goods_storage: components["schemas"]["StorageView"];
+            defences: components["schemas"]["DefenceView"];
+            district_effects: components["schemas"]["DistrictEffectsView"];
+            prestige_pull_pct: number;
+            prestige_investment_pct: number;
+            designs: components["schemas"]["DistrictDesignView"][];
+            kind_defaults: {
+                [key: string]: {
+                    [key: string]: number;
+                };
+            };
+            armies: components["schemas"]["ArmyOption"][];
             district_slots: number;
             housing: number;
             locked: string[];
@@ -21514,6 +23507,16 @@ export interface components {
             piety?: number | null;
             wealth?: number | null;
         };
+        SettlementStructuresView: {
+            host_id: number;
+            world_id: number | null;
+            size_tier: components["schemas"]["SizeTier"] | null;
+            slots_total: number;
+            slots_used: number;
+            structures: components["schemas"]["StructureView"][];
+            kinds: components["schemas"]["KindOptionView"][];
+            designs: components["schemas"]["DesignView"][];
+        };
         SettlementTaxInput: {
             settlement_id: number;
             rate: number;
@@ -21529,6 +23532,7 @@ export interface components {
         };
         Sex: "female" | "male";
         ShieldType: "none" | "small" | "large" | "tower";
+        ShortfallEffect: "hunger" | "herds" | "cold" | "sickness" | "impiety" | "status" | "toil" | "insecurity" | "arcane";
         SiblingView: {
             son: components["schemas"]["NodeRef"];
             value: number;
@@ -21630,6 +23634,22 @@ export interface components {
         };
         SocialClass: "farmer" | "artisan" | "merchant" | "priest" | "warrior" | "scribe" | "noble" | "serf_or_slave" | "outcast" | "monastic";
         Sociality: "solitary" | "pack" | "herd" | "hive";
+        SocietyDepthView: {
+            entity_id: number;
+            gini: number;
+            staples: components["schemas"]["CommodityKind"][];
+            needs: components["schemas"]["aerona__api__schemas__society_depth__NeedView"][];
+            classes: components["schemas"]["ClassStandingView"][];
+            effects: components["schemas"]["EffectView"][];
+            labour_reasons: components["schemas"]["LabourReasonView"][];
+            held_jobs: components["schemas"]["Job"][];
+            prices: components["schemas"]["PriceView"][];
+            corvee: components["schemas"]["CorveeView"] | null;
+            drift_causes: components["schemas"]["DriftCauseView"][];
+            impositions: components["schemas"]["ImpositionView"][];
+            loyalty: components["schemas"]["LoyaltyView"][];
+            mobility: components["schemas"]["MobilityEventView"][];
+        };
         SocietyFamineInput: {
             entity_id: number;
         };
@@ -21949,7 +23969,7 @@ export interface components {
             value: number;
         };
         SonStatus: "active" | "asleep" | "exiled" | "dead";
-        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_father" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "raise_beast" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "sever_ley" | "hide_secret" | "sanctify_place" | "raise_nexus" | "reshape_land" | "sanctify_region" | "curse_region" | "redirect_river" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "seal_treaty" | "bless_bloodline" | "void_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world" | "commission_artwork" | "design_rite" | "cast_rite" | "found_school" | "bind_mortals" | "touch_mortal" | "reveal_tenet" | "open_rebirth_gate" | "wage_war" | "raise_host" | "disband_host" | "lay_siege" | "offer_peace" | "commission_vessel" | "design_unit" | "plant_spies";
+        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_father" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "raise_beast" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "shape_folk" | "sever_ley" | "loose_disease" | "forge_material" | "hide_secret" | "sanctify_place" | "raise_nexus" | "reshape_land" | "sanctify_region" | "curse_region" | "redirect_river" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "seal_treaty" | "bless_bloodline" | "void_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world" | "raise_district" | "design_district" | "open_trade_route" | "close_trade_route" | "commission_structure" | "commission_artwork" | "design_rite" | "cast_rite" | "found_school" | "bind_mortals" | "touch_mortal" | "reveal_tenet" | "open_rebirth_gate" | "wage_war" | "raise_host" | "disband_host" | "lay_siege" | "offer_peace" | "commission_vessel" | "design_unit" | "plant_spies";
         SonToolsView: {
             son_id: number;
             rarity: components["schemas"]["Rarity"];
@@ -22154,7 +24174,7 @@ export interface components {
             traits: components["schemas"]["CreatureTrait"][];
             uses: components["schemas"]["SpeciesUse"][];
             yields: components["schemas"]["YieldView"][];
-            hosts: components["schemas"]["HostView"][];
+            hosts: components["schemas"]["aerona__api__schemas__wilds__HostView"][];
             ranges: components["schemas"]["RangeView"][];
             herds: components["schemas"]["HerdView"][];
             hunts: components["schemas"]["NodeRef"][];
@@ -22354,6 +24374,7 @@ export interface components {
             wounded: number;
             condition: number;
         };
+        StaffScale: "none" | "few" | "some" | "many";
         Stance: "march" | "forage" | "entrench" | "besiege" | "garrison" | "raid" | "retreat";
         StarDepthInput: {
             history?: string | null;
@@ -22441,6 +24462,7 @@ export interface components {
             commodity: components["schemas"]["CommodityKind"];
             quantity: number;
             material?: components["schemas"]["MaterialKind"] | null;
+            world_material_id?: number | null;
             quality: number;
         };
         StockLotView: {
@@ -22451,6 +24473,25 @@ export interface components {
             label: string;
             quantity: number;
             quality: number;
+            held: boolean;
+        };
+        StockReleaseInput: {
+            lot_id: number;
+        };
+        StockSetInput: {
+            community_id: number;
+            commodity: components["schemas"]["CommodityKind"];
+            material?: components["schemas"]["MaterialKind"] | null;
+            world_material_id?: number | null;
+            quantity: number;
+            quality: number;
+            hold?: boolean | null;
+        };
+        StorageView: {
+            districts: number;
+            workshops: number;
+            other: number;
+            total: number;
         };
         StrainView: {
             id: number;
@@ -22494,14 +24535,78 @@ export interface components {
             at: string;
         };
         StressBreak: "rage" | "flight" | "despair" | "zeal" | "vice" | "revelation";
+        StructureAbandonInput: {
+            structure_id: number;
+            reason: string;
+        };
+        StructureCommissionInput: {
+            site_id: number;
+            kind: components["schemas"]["StructureKind"];
+            level: number;
+            design_id?: number | null;
+            material?: components["schemas"]["MaterialKind"] | null;
+            world_material_id?: number | null;
+            name?: string | null;
+            builder_id?: number | null;
+            architect_id?: number | null;
+            dedicated_son_id?: number | null;
+            funds: number;
+        };
+        StructureDamageInput: {
+            structure_id: number;
+            amount: number;
+            cause: string;
+        };
         StructureDedicateInput: {
             structure_id: number;
             son_id: number;
             hold: boolean;
         };
+        StructureDesignCreateInput: {
+            world_id?: number | null;
+            values?: {
+                [key: string]: number | string | boolean | null;
+            };
+        };
+        StructureDesignEditInput: {
+            design_id: number;
+            values?: {
+                [key: string]: number | string | boolean | null;
+            };
+            release?: string[];
+        };
+        StructureDesignRetireInput: {
+            design_id: number;
+            retired: boolean;
+        };
+        StructureEditInput: {
+            structure_id: number;
+            values?: {
+                [key: string]: number | string | boolean | null;
+            };
+            release?: string[];
+            world_material_id?: number | null;
+        };
+        StructureFinishInput: {
+            structure_id: number;
+        };
+        StructureFundInput: {
+            structure_id: number;
+            amount: number;
+        };
+        StructureGroup: "faith" | "knowledge" | "defence" | "civic" | "commerce" | "production" | "infrastructure" | "memory" | "cosmic";
+        StructureKind: "temple" | "shrine" | "monastery" | "necropolis" | "library" | "school" | "observatory" | "academy" | "hospital" | "wall" | "gate" | "tower" | "citadel" | "watchtower" | "fort" | "palace" | "court" | "prison" | "market" | "harbour" | "warehouse" | "granary" | "caravanserai" | "bank" | "forge" | "mill" | "tannery" | "mine" | "quarry" | "shipyard" | "workshop" | "alchemist_lab" | "road" | "bridge" | "aqueduct" | "sewer" | "canal" | "irrigation" | "dam" | "monument" | "tomb" | "arena" | "theatre" | "wonder" | "cosmic_gate" | "cosmic_archive";
         StructureRazeInput: {
             structure_id: number;
             reason: string;
+        };
+        StructureRepairInput: {
+            structure_id: number;
+        };
+        StructureStaffInput: {
+            structure_id: number;
+            allocated?: number | null;
+            hold: boolean;
         };
         StructureStats: {
             kind: "structure";
@@ -22511,6 +24616,59 @@ export interface components {
         };
         StructureUndedicateInput: {
             structure_id: number;
+        };
+        StructureView: {
+            id: number;
+            name: string;
+            status: components["schemas"]["EntityStatus"];
+            kind: components["schemas"]["StructureKind"];
+            group: components["schemas"]["StructureGroup"];
+            label: string;
+            design_id: number | null;
+            design_name: string | null;
+            level: number;
+            capacity: number;
+            capacity_unit: components["schemas"]["CapacityUnit"];
+            condition: number;
+            durability: number;
+            construction_state: components["schemas"]["ConstructionState"];
+            progress: number;
+            fire_resistance: number;
+            material: components["schemas"]["MaterialKind"] | null;
+            world_material_id: number | null;
+            material_label: string | null;
+            host_id: number | null;
+            host_name: string | null;
+            builder_id: number | null;
+            builder_name: string | null;
+            builder_kind: components["schemas"]["BuilderKind"] | null;
+            architect_id: number | null;
+            architect_name: string | null;
+            dedicated_son_id: number | null;
+            dedicated_son_name: string | null;
+            aesthetic: components["schemas"]["Aesthetic"] | null;
+            on_ley_line: boolean;
+            attuned: boolean;
+            anchor: boolean;
+            splendor: number;
+            function: number;
+            effect_pct: number;
+            staff_pct: number;
+            staff_class: components["schemas"]["SocialClass"] | null;
+            staff_required: number;
+            staff_allocated: number;
+            staff_held: boolean;
+            upkeep_coin: number;
+            upkeep_goods: number;
+            upkeep_commodity: components["schemas"]["CommodityKind"];
+            unpaid_epochs: number;
+            built_epoch: number | null;
+            workshop: components["schemas"]["WorkshopKind"] | null;
+            min_tier: components["schemas"]["SizeTier"];
+            scale: components["schemas"]["BuildScale"];
+            locked: string[];
+            breakdown: components["schemas"]["FunctionBreakdownView"];
+            construction: components["schemas"]["ConstructionView"] | null;
         };
         Subsystem: "core" | "body" | "mind" | "social" | "household" | "demography" | "economy" | "polity" | "law" | "intrigue" | "communication" | "war" | "faith" | "magic" | "knowledge" | "culture" | "language" | "ecology" | "environment" | "gods" | "cosmos";
         SubsystemLink: {
@@ -22650,6 +24808,9 @@ export interface components {
             controller_name: string;
             rate_pct: number;
             set_by_player: boolean;
+            controller_held: boolean;
+            polity_id: number | null;
+            polity_name: string;
         };
         TongueAtlas: {
             ranking: components["schemas"]["TongueRank"][];
@@ -22706,6 +24867,9 @@ export interface components {
         TradeRouteCloseInput: {
             route_id: number;
         };
+        TradeRouteDeleteInput: {
+            route_id: number;
+        };
         TradeRouteDetail: {
             route_id: number;
             name: string;
@@ -22729,7 +24893,32 @@ export interface components {
             last_traffic_epoch: number | null;
             volume: number;
             closed_by_player: boolean;
+            closed_by_son_id: number | null;
+            closed_by_son_name: string;
+            dangers: components["schemas"]["RouteDangerView"];
+            season_pct: number;
+            chokepoint: boolean;
+            locked: string[];
+            untolled: number[];
+            region_names: {
+                [key: string]: string;
+            };
             flows: components["schemas"]["RouteFlowView"][];
+            losses: components["schemas"]["RouteLossView"][];
+        };
+        TradeRouteEditInput: {
+            route_id: number;
+            values?: {
+                [key: string]: number | string | boolean | number[] | null;
+            };
+            release?: string[];
+        };
+        TradeRouteFoundInput: {
+            first_id: number;
+            second_id: number;
+            mode?: components["schemas"]["TradeMode"] | null;
+            controller_id?: number | null;
+            toll_pct?: number | null;
         };
         TradeRouteOpenInput: {
             route_id?: number | null;
@@ -22748,6 +24937,17 @@ export interface components {
             route_id: number;
             region_id: number;
             rate?: number | null;
+        };
+        TradeRouteTollRemoveInput: {
+            route_id: number;
+            region_id: number;
+        };
+        TradeRouteTollStopInput: {
+            route_id: number;
+            region_id: number;
+            controller_id?: number | null;
+            rate?: number | null;
+            release?: string[];
         };
         TradeRouteView: {
             route_id: number;
@@ -22772,6 +24972,16 @@ export interface components {
             last_traffic_epoch: number | null;
             volume: number;
             closed_by_player: boolean;
+            closed_by_son_id: number | null;
+            closed_by_son_name: string;
+            dangers: components["schemas"]["RouteDangerView"];
+            season_pct: number;
+            chokepoint: boolean;
+            locked: string[];
+            untolled: number[];
+            region_names: {
+                [key: string]: string;
+            };
         };
         TraditionCard: {
             kind: components["schemas"]["TraditionKind"];
@@ -22887,7 +25097,7 @@ export interface components {
             foreign_gods: components["schemas"]["GodLine"][];
             sky: components["schemas"]["EntitySummary"][];
         };
-        TreasuryEntry: "tax" | "tolls" | "investment" | "garrison" | "walls" | "building" | "festival" | "alms" | "fire" | "plunder" | "grant";
+        TreasuryEntry: "tax" | "tolls" | "investment" | "garrison" | "walls" | "building" | "festival" | "alms" | "fire" | "plunder" | "grant" | "loan" | "upkeep";
         TreasuryLine: {
             epoch: number;
             entry: components["schemas"]["TreasuryEntry"];
@@ -23229,7 +25439,7 @@ export interface components {
             target_id?: number | null;
             achieved: number;
         };
-        WarAimKind: "conquer_region" | "seize_settlement" | "press_claim" | "convert" | "tribute" | "vassalise" | "liberate" | "destroy_cult" | "seize_resource" | "seize_nexus" | "humiliate" | "revenge" | "loot" | "change_government";
+        WarAimKind: "conquer_region" | "seize_settlement" | "press_claim" | "convert" | "tribute" | "vassalise" | "liberate" | "destroy_cult" | "seize_resource" | "seize_nexus" | "humiliate" | "revenge" | "loot" | "change_government" | "seize_route";
         WarArmyInput: {
             war_id: number;
             community_id: number;
@@ -23439,12 +25649,68 @@ export interface components {
             example?: string | null;
         };
         WordKind: "noun" | "verb" | "adjective" | "affix" | "title" | "place_name" | "proper_name" | "number" | "interjection";
+        WorkFactor: {
+            job: components["schemas"]["Job"];
+            pct: number;
+        };
         WorkerView: {
             community_id: number;
             community_name: string;
             workers: number;
+            held: boolean;
+        };
+        WorkshopDesignCreateInput: {
+            world_id: number;
+            base_kind: components["schemas"]["WorkshopKind"];
+            name: string;
+            values?: {
+                [key: string]: number;
+            };
+            description?: string | null;
+        };
+        WorkshopDesignDeleteInput: {
+            design_id: number;
+        };
+        WorkshopDesignEditInput: {
+            design_id: number;
+            values?: {
+                [key: string]: number;
+            };
+            name?: string | null;
+            description?: string | null;
+            hold?: boolean | null;
+        };
+        WorkshopDesignReleaseInput: {
+            design_id: number;
+        };
+        WorkshopDesignView: {
+            id: number;
+            world_id: number;
+            base_kind: components["schemas"]["WorkshopKind"];
+            label: string;
+            name: string;
+            description: string | null;
+            output_pct: number;
+            capacity_pct: number;
+            store_pct: number;
+            quality_bonus: number;
+            held: boolean;
+            workshops: number;
+        };
+        WorkshopEditInput: {
+            community_id: number;
+            kind: components["schemas"]["WorkshopKind"];
+            fleet?: number | null;
+            idle_epochs?: number | null;
+            structure_id?: number | null;
+            design_id?: number | null;
+            hold?: boolean | null;
         };
         WorkshopKind: "market" | "granary" | "warehouse" | "mine" | "lumber_camp" | "fishery" | "charcoal_kiln" | "forge" | "tannery" | "mill" | "brewery" | "weavery" | "stable" | "mason_yard" | "shipyard" | "siege_yard" | "alchemist" | "shrine_workshop" | "mint";
+        WorkshopReleaseInput: {
+            community_id: number;
+            kind: components["schemas"]["WorkshopKind"];
+        };
         WorkshopSetInput: {
             community_id: number;
             kind: components["schemas"]["WorkshopKind"];
@@ -23458,6 +25724,8 @@ export interface components {
             idle_epochs: number;
             built_epoch: number;
             structure_id: number | null;
+            held: boolean;
+            design_id?: number | null;
         };
         WorldBornEvent: {
             id: number;
@@ -23755,6 +26023,14 @@ export interface components {
             world_material: string | null;
             rate: number;
         };
+        aerona__api__schemas__depth_society__HostView: {
+            species_id: number;
+            name: string;
+            immune: boolean;
+            lands: number;
+            abundance: number;
+            primary: boolean;
+        };
         aerona__api__schemas__depth_society__PressureView: {
             kind: components["schemas"]["PressureKind"];
             value: number;
@@ -23775,10 +26051,28 @@ export interface components {
             harm: number;
             note: string | null;
         };
+        aerona__api__schemas__mind__NeedView: {
+            need: components["schemas"]["NeedKind"];
+            label: string;
+            value: number;
+        };
         aerona__api__schemas__mind__PressureView: {
             pressure: components["schemas"]["PressureKind"];
             label: string;
             value: number;
+        };
+        aerona__api__schemas__society_depth__NeedView: {
+            social_class: components["schemas"]["SocialClass"];
+            commodity: components["schemas"]["CommodityKind"];
+            effect: components["schemas"]["ShortfallEffect"];
+            wanted: number;
+            got: number;
+            held_pct: number | null;
+        };
+        aerona__api__schemas__wilds__HostView: {
+            disease: components["schemas"]["NodeRef"] | null;
+            immune: boolean;
+            locked: string[];
         };
         aerona__domain__enums__mortal__PunishmentKind: "fine" | "flogging" | "exile" | "branding" | "hand" | "tongue" | "eyes" | "death";
         aerona__services__player__interventions__PunishmentKind: "lightning" | "chain" | "exile" | "suppress" | "pardon";
@@ -32455,6 +34749,170 @@ export interface operations {
             };
         };
     };
+    resource_pacts_api_resources__resource_id__pacts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resource_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PactView"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    polity_production_api_polities__polity_id__production_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                polity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolityProductionView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    node_materials_api_nodes__node_id__materials_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NodeMaterialsView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    market_holds_api_markets__market_id__holds_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                market_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketHoldsView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    debt_laws_api_ledger_debt_laws_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtLawView"][];
+                };
+            };
+        };
+    };
+    workshop_designs_api_worlds__world_id__workshop_designs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkshopDesignView"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     demography_api_entities__entity_id__demography_get: {
         parameters: {
             query?: never;
@@ -32559,6 +35017,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SettlementPlanView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    society_depth_api_entities__entity_id__society_depth_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocietyDepthView"];
                 };
             };
             422: {
@@ -33664,6 +36151,93 @@ export interface operations {
             };
         };
     };
+    host_structures_api_entities__entity_id__structures_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettlementStructuresView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    one_structure_api_entities__entity_id__structure_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StructureView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    designs_api_structure_designs_get: {
+        parameters: {
+            query?: {
+                world_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DesignView"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     world_golden_age_api_worlds__world_id__golden_age_get: {
         parameters: {
             query?: never;
@@ -33766,6 +36340,595 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActionCatalogueItem"][];
+                };
+            };
+        };
+    };
+    action_trade_route_found_api_actions_trade_route_found_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeRouteFoundInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_trade_route_edit_api_actions_trade_route_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeRouteEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_trade_route_delete_api_actions_trade_route_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeRouteDeleteInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_trade_route_toll_stop_api_actions_trade_route_toll_stop_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeRouteTollStopInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_trade_route_toll_remove_api_actions_trade_route_toll_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeRouteTollRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resource_pact_api_actions_resource_pact_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResourcePactInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resource_pact_terms_api_actions_resource_pact_terms_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResourcePactTermsInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resource_pact_end_api_actions_resource_pact_end_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResourcePactEndInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_structure_commission_api_actions_structure_commission_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StructureCommissionInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_structure_fund_api_actions_structure_fund_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StructureFundInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_structure_finish_api_actions_structure_finish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StructureFinishInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_structure_abandon_api_actions_structure_abandon_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StructureAbandonInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_structure_staff_api_actions_structure_staff_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StructureStaffInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_structure_damage_api_actions_structure_damage_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StructureDamageInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_structure_repair_api_actions_structure_repair_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StructureRepairInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_structure_edit_api_actions_structure_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StructureEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_structure_design_create_api_actions_structure_design_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["StructureDesignCreateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_structure_design_edit_api_actions_structure_design_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StructureDesignEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_structure_design_retire_api_actions_structure_design_retire_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StructureDesignRetireInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -44385,6 +47548,905 @@ export interface operations {
             };
         };
     };
+    action_material_create_api_actions_material_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MaterialCreateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_material_delete_api_actions_material_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MaterialDeleteInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_material_hold_api_actions_material_hold_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MaterialHoldInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_material_release_api_actions_material_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MaterialReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_node_material_set_api_actions_node_material_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NodeMaterialSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_node_material_release_api_actions_node_material_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NodeMaterialReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_node_material_clear_api_actions_node_material_clear_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NodeMaterialClearInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_stock_set_api_actions_stock_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StockSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_stock_release_api_actions_stock_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StockReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_workshop_edit_api_actions_workshop_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkshopEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_workshop_release_api_actions_workshop_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkshopReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_workshop_design_create_api_actions_workshop_design_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkshopDesignCreateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_workshop_design_edit_api_actions_workshop_design_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkshopDesignEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_workshop_design_release_api_actions_workshop_design_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkshopDesignReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_workshop_design_delete_api_actions_workshop_design_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkshopDesignDeleteInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resource_create_api_actions_resource_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResourceCreateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resource_edit_api_actions_resource_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResourceEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resource_release_api_actions_resource_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResourceReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resource_delete_api_actions_resource_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResourceDeleteInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resource_workers_api_actions_resource_workers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResourceWorkersInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_market_hold_price_api_actions_market_hold_price_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketHoldPriceInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_market_release_price_api_actions_market_release_price_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketReleasePriceInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_currency_create_api_actions_currency_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CurrencyCreateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_currency_release_api_actions_currency_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CurrencyReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_currency_delete_api_actions_currency_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CurrencyDeleteInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_loan_grant_api_actions_loan_grant_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoanGrantInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_loan_edit_api_actions_loan_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoanEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_loan_release_api_actions_loan_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoanReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_loan_delete_api_actions_loan_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoanDeleteInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_people_edit_api_actions_people_edit_post: {
         parameters: {
             query?: never;
@@ -44416,6 +48478,37 @@ export interface operations {
             };
         };
     };
+    action_people_found_api_actions_people_found_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeopleFoundInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_cohort_move_api_actions_cohort_move_post: {
         parameters: {
             query?: never;
@@ -44426,6 +48519,378 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["CohortMoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_needs_hold_api_actions_needs_hold_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NeedsHoldInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_class_standing_api_actions_class_standing_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassStandingInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_labour_set_api_actions_labour_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LabourSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_labour_corvee_api_actions_labour_corvee_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LabourCorveeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_loyalty_edit_api_actions_loyalty_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoyaltyEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_drift_impose_api_actions_drift_impose_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DriftImposeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_drift_edit_api_actions_drift_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DriftEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_drift_cancel_api_actions_drift_cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DriftCancelInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mobility_ennoble_api_actions_mobility_ennoble_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobilityEnnobleInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mobility_ruin_api_actions_mobility_ruin_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobilityRuinInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mobility_enslave_api_actions_mobility_enslave_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobilityEnslaveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mobility_manumit_api_actions_mobility_manumit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobilityManumitInput"];
             };
         };
         responses: {
@@ -44612,6 +49077,192 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["OutbreakEndInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_disease_create_api_actions_disease_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiseaseCreateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_outbreak_edit_api_actions_outbreak_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OutbreakEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_endemic_set_api_actions_endemic_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EndemicSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_endemic_remove_api_actions_endemic_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EndemicRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_cohort_set_api_actions_cohort_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CohortSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mortal_dormancy_api_actions_mortal_dormancy_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MortalDormancyInput"];
             };
         };
         responses: {
@@ -44829,6 +49480,130 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["SettlementCharterInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_settlement_foreigners_api_actions_settlement_foreigners_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettlementForeignersInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_district_design_api_actions_district_design_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DistrictDesignInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_district_design_edit_api_actions_district_design_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DistrictDesignEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_district_design_delete_api_actions_district_design_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DistrictDesignDeleteInput"];
             };
         };
         responses: {
@@ -45356,37 +50131,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["PolityLoanInput"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ActionResponse"];
-                };
-            };
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    action_loan_edit_api_actions_loan_edit_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LoanEditInput"];
             };
         };
         responses: {
@@ -49524,9 +54268,12 @@ export const bondRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["sc
 export const bondStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BondState"]> = ["active", "past", "hidden_rejected", "hidden_closed"];
 export const borderKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BorderKind"]> = ["coast", "region", "sub_region"];
 export const buildMaterialValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BuildMaterial"]> = ["timber", "stone"];
+export const buildScaleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BuildScale"]> = ["minor", "major", "grand", "wonder"];
+export const builderKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BuilderKind"]> = ["community", "polity", "faction", "cult", "patron", "god"];
 export const calendarSlotValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CalendarSlot"]> = ["sowing", "harvest", "midwinter", "campaign", "holy_day"];
 export const canonVerdictValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CanonVerdict"]> = ["canon", "rejected"];
 export const capacityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Capacity"]> = ["melee", "missile", "command", "craft", "scholarship", "presence", "mobility", "fertility"];
+export const capacityUnitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CapacityUnit"]> = ["none", "tons", "volumes", "garrison", "beds", "berths", "seats", "cells", "worshippers", "pupils", "stalls", "hands", "loads", "travellers"];
 export const captiveFateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CaptiveFate"]> = ["held", "ransomed", "enslaved", "sacrificed", "labour", "exchanged", "released"];
 export const captiveStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CaptiveStatus"]> = ["held", "ransomed", "escaped", "executed", "turncoat", "rescued", "released", "ward"];
 export const careerPathValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CareerPath"]> = ["stay", "army", "office", "apprentice", "vows", "trade", "wander", "bandit"];
@@ -49537,18 +54284,20 @@ export const chronicleAuditKindValues: ReadonlyArray<FlattenedDeepRequired<compo
 export const chronicleKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ChronicleKind"]> = ["creation", "speech", "challenge", "prayer", "order", "fate", "death", "birth", "system", "message", "creator_hand", "world", "engine_raw", "knowledge", "resource", "culture", "trade", "exploration", "diplomacy", "production", "language", "miracle", "civilization", "creator_reputation", "construction", "existence", "dream", "star", "divine_sign", "climate", "cosmic", "debt", "foreign_god", "world_age", "council", "previous_creation", "sky", "gift", "worship", "world_birth", "prophecy", "covenant", "army", "ascension", "migration", "legendary_quest", "war", "war_of_gods", "cosmic_law", "horror", "outer_being", "immortality", "rebellion", "apocalypse", "resurrection", "lineage", "disaster", "adventure", "intrigue", "rescue", "chimera", "escape", "domestication", "age_change", "expedition", "spirit", "curse", "denial", "ransom", "prohibition"];
 export const claimBasisValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClaimBasis"]> = ["inheritance", "marriage", "conquest", "divine", "fabricated"];
 export const claudeAuthValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClaudeAuth"]> = ["token", "login"];
-export const clauseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClauseKind"]> = ["call_to_arms", "tribute", "cession", "hostage", "marriage", "trade_rights", "tolls_waived", "religious_freedom", "demilitarised", "champion", "extradition", "wergild", "non_aggression"];
+export const clauseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClauseKind"]> = ["call_to_arms", "tribute", "cession", "hostage", "marriage", "trade_rights", "tolls_waived", "religious_freedom", "demilitarised", "champion", "extradition", "wergild", "non_aggression", "route_control", "resource_demand"];
 export const clergyOfficeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClergyOffice"]> = ["high_priest", "priest", "monk", "inquisitor"];
 export const climateAffinityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClimateAffinity"]> = ["warm", "wet", "cold", "dry", "any"];
 export const climateEraValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClimateEra"]> = ["temperate", "drought", "rain", "ice_age", "scorching"];
 export const coastKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CoastKind"]> = ["none", "cliff", "beach", "harbour_site", "reef"];
-export const cohortConditionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CohortCondition"]> = ["none", "veteran", "sick", "enslaved", "captive"];
+export const cohortConditionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CohortCondition"]> = ["none", "veteran", "sick", "enslaved", "captive", "maimed"];
 export const commanderTraitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommanderTrait"]> = ["aggressive_assaulter", "defensive_genius", "cavalry_master", "winter_campaigner", "hill_fighter", "siege_expert", "reckless", "cautious", "inspiring", "brutal"];
 export const commodityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Commodity"]> = ["food", "ore", "goods"];
 export const commodityFamilyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommodityFamily"]> = ["subsistence", "industrial", "strategic", "luxury"];
 export const commodityKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommodityKind"]> = ["grain", "livestock", "fish", "fodder", "timber", "fuel", "bread", "ore", "stone", "cloth", "tools", "weapons", "armour", "mounts", "siege_materiel", "medicine", "luxuries", "incense", "sacred_goods", "magical_reagents"];
 export const communityRelationLabelValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommunityRelationLabel"]> = ["blood_enemy", "enemy", "cold", "neutral", "friend", "close_friend", "sibling"];
 export const conditionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ConditionKind"]> = ["chronic_illness", "paranoia", "visions", "rage", "melancholy", "addiction", "age_blindness", "age_deafness", "withered_limb", "endless_hunger", "possession", "void_taint", "chosen_mark", "divine_brand"];
+export const constructionStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ConstructionState"]> = ["planned", "building", "complete", "damaged", "ruined"];
+export const constructionStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ConstructionStatus"]> = ["active", "finished", "abandoned"];
 export const contextBlockKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ContextBlockKind"]> = ["world-header", "dialect", "world-line", "cosmos", "pantheon", "threads", "world-summary", "fate-summary", "geography", "map", "languages", "entity-line", "entity-detail", "bond-lines", "son-memory", "tired-images", "recent-events", "powers", "sky-calendar", "mortal", "chronicler"];
 export const cosmosSizeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CosmosSize"]> = ["single", "small", "large"];
 export const councilHeldEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CouncilHeldEvent"]["kind"]> = ["council.held"];
@@ -49570,6 +54319,7 @@ export const dangerHarmValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const dangerOriginValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DangerOrigin"]> = ["derived", "player", "divine"];
 export const dangerSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DangerSource"]> = ["beasts", "bandits", "monsters", "phenomena", "disease", "avalanche", "quicksand", "volcanic"];
 export const deathCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DeathCause"]> = ["old_age", "wounds", "battle", "duel", "execution", "murder", "monster", "disease", "childbirth", "famine", "accident", "disaster", "exposure", "curse", "magic", "divine", "poison", "sacrifice", "hardship", "despair", "unknown"];
+export const debtRemedyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DebtRemedy"]> = ["bondage", "prison", "jubilee"];
 export const debtStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DebtStatus"]> = ["open", "overdue", "repaid", "forgiven"];
 export const decisionRuleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DecisionRule"]> = ["autocratic", "council", "assembly", "divine"];
 export const decreeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DecreeKind"]> = ["war", "peace", "alliance", "marriage", "trade"];
@@ -49584,6 +54334,7 @@ export const diseaseVectorValues: ReadonlyArray<FlattenedDeepRequired<components
 export const districtKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DistrictKind"]> = ["farmland", "market", "craft_quarter", "temple_quarter", "harbour", "citadel", "slums", "palace", "foreign_quarter", "necropolis"];
 export const domainValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Domain"]> = ["sea", "fire", "earth", "sky", "storm", "death", "life", "dream", "time", "light", "shadow", "war", "craft", "knowledge", "love", "trickery", "hunt", "plants", "bone", "blood", "sound", "stone", "ice", "madness", "trade", "road", "plague", "harvest", "moon", "sun", "star", "lies", "oath", "memory", "hunger", "glass", "salt", "ash", "border", "sleep"];
 export const domesticationStageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DomesticationStage"]> = ["wild", "tamed", "herded", "domesticated", "breed"];
+export const driftCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DriftCause"]> = ["god", "ruler", "neighbours", "ideology", "war_fought", "war_won", "war_lost", "plague", "famine", "trade", "conquest"];
 export const duelContextValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DuelContext"]> = ["war", "honour", "trial", "champion", "god"];
 export const edgeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EdgeKind"]> = ["modifier", "rule_switch", "flow", "trigger"];
 export const elevationClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ElevationClass"]> = ["mountainous", "hilly", "plain", "water"];
@@ -49631,10 +54382,13 @@ export const fateWritValues: ReadonlyArray<FlattenedDeepRequired<components>["sc
 export const feedCategoryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FeedCategory"]> = ["voyage", "gate", "leak", "war", "disaster", "sky", "life", "civilization", "world"];
 export const feudPartyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FeudParty"]> = ["house", "community"];
 export const feudStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FeudStatus"]> = ["active", "mediated", "faded", "ended"];
+export const foeNatureValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FoeNature"]> = ["undead", "cursed", "void"];
+export const folkDietValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FolkDiet"]> = ["omnivore", "herbivore", "carnivore", "piscivore", "scavenger", "sanguivore", "lithovore", "essence_feeder", "phototroph"];
 export const foodLinkValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FoodLink"]> = ["pinned", "barred", "derived"];
 export const foreignGodDeepenedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodDeepenedEvent"]["kind"]> = ["foreign_god.deepened"];
 export const foreignGodPowerEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodPowerEffect"]> = ["shield", "caller", "thief", "destroyer", "fertile", "reviving", "deathless", "sharp_tongued"];
 export const foreignGodStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodStatus"]> = ["awake", "asleep", "defeated", "dead"];
+export const funeralCustomValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FuneralCustom"]> = ["burial", "cremation", "sky_burial", "sea_burial", "entombment", "ancestor_shrine", "endocannibalism", "reanimation", "soul_binding"];
 export const funeralRiteValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FuneralRite"]> = ["burial", "burning", "exposure", "nameless", "none"];
 export const genesisFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisFinishedEvent"]["kind"]> = ["genesis.finished"];
 export const genesisTemplateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisTemplate"]> = ["dark_fantasy", "mythic_age", "cosmic_horror", "fairy_tale", "star_myth", "sand_and_ash", "primordial_dawn", "crowns_and_knives", "drowned_world", "long_winter", "after_the_fall", "sky_islands", "age_of_engines"];
@@ -49663,7 +54417,7 @@ export const imageStatusEventKindValues: ReadonlyArray<FlattenedDeepRequired<com
 export const importModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImportMode"]> = ["replace", "merge", "discovery"];
 export const incidentRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IncidentRole"]> = ["subject", "actor", "target", "witness", "place"];
 export const inheritanceCustomValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["InheritanceCustom"]> = ["gavelkind", "primogeniture", "ultimogeniture", "matrilineal", "elective", "by_merit"];
-export const injuryKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["InjuryKind"]> = ["bruise", "cut", "deep_cut", "puncture", "fracture", "crush", "burn", "frostbite", "bite", "venom", "severed", "gouged", "destroyed", "curse_wither", "void_touch", "divine_brand"];
+export const injuryKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["InjuryKind"]> = ["bruise", "cut", "deep_cut", "puncture", "fracture", "crush", "burn", "frostbite", "bite", "venom", "severed", "gouged", "destroyed", "curse_wither", "void_touch", "divine_brand", "sickness"];
 export const injuryStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["InjuryState"]> = ["fresh", "infected", "healing", "healed_scar", "permanent", "lethal"];
 export const integrityTaskValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IntegrityTask"]> = ["dead_bonds", "checkpoint"];
 export const interventionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["InterventionKind"]> = ["miracle", "disaster", "teach_knowledge", "curse"];
@@ -49687,6 +54441,7 @@ export const kinBondInputKindValues: ReadonlyArray<FlattenedDeepRequired<compone
 export const kindFamilyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["KindFamily"]> = ["trait", "skill", "condition"];
 export const knowledgeBranchValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["KnowledgeBranch"]> = ["agriculture", "metallurgy", "seafaring", "writing", "architecture", "medicine", "magic", "warfare", "astronomy", "trade", "sky_navigation", "shipbuilding", "gate_lore", "pathfinding", "void_living", "immortality", "biomancy", "forbidden"];
 export const knowledgeStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["KnowledgeStats"]["kind"]> = ["knowledge"];
+export const labourReasonValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LabourReason"]> = ["class", "price", "structure", "resource", "no_structure", "corvee", "held"];
 export const landKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LandKind"]> = ["region", "place"];
 export const landReleaseInputFieldValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LandReleaseInput"]["field"]> = ["desertification", "desertified", "volcanic", "volcanic_pressure"];
 export const languageRegisterValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LanguageRegister"]> = ["court", "common", "liturgical", "trade"];
@@ -49710,6 +54465,7 @@ export const llmCallStatusValues: ReadonlyArray<FlattenedDeepRequired<components
 export const loanStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LoanStatus"]> = ["open", "repaid", "defaulted", "forgiven"];
 export const logLevelValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LogLevel"]> = ["info", "warning", "error"];
 export const loreLanguageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LoreLanguage"]> = ["english", "turkish"];
+export const loyaltyPartValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LoyaltyPart"]> = ["tribute", "weariness", "conquest", "tax", "routes", "victories", "faith", "prosperity"];
 export const magicSchoolValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MagicSchool"]> = ["elemental_fire", "elemental_water", "earth", "storm", "life", "death", "mind", "illusion", "divination", "warding", "binding", "summoning", "blood", "void"];
 export const magicSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MagicSource"]> = ["ley", "divine", "blood", "soul", "reagent", "void"];
 export const maimedKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaimedKind"]> = ["one_armed", "one_legged", "one_eyed", "blind", "deaf", "mute", "lame", "scarred", "broken_minded"];
@@ -49721,13 +54477,15 @@ export const marriageKindValues: ReadonlyArray<FlattenedDeepRequired<components>
 export const martialStyleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MartialStyle"]> = ["shieldwall", "horse_archer", "skirmisher", "chariot", "phalanx", "berserker", "naval_raider", "siege_engineer", "war_magic", "beast_war"];
 export const materialFamilyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaterialFamily"]> = ["organic", "stone", "metal", "precious", "exotic"];
 export const materialKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaterialKind"]> = ["wood", "bone", "hide", "leather", "cloth", "stone", "flint", "obsidian", "copper", "tin", "bronze", "iron", "steel", "silver", "gold", "glass", "crystal", "ivory", "chitin", "dragonbone", "star_metal", "void_glass", "godflesh", "living_wood", "salt", "amber", "lead", "skysteel", "sulfur", "clay", "gems"];
-export const materialOriginValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaterialOrigin"]> = ["catalog", "god_remains", "dead_star", "beast", "leak_crystal", "research"];
+export const materialOriginValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaterialOrigin"]> = ["catalog", "god_remains", "dead_star", "beast", "leak_crystal", "research", "divine"];
+export const materialSlotValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaterialSlot"]> = ["body", "weapons", "armour", "hull", "fabric"];
 export const medicineTierValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MedicineTier"]> = ["none", "herbs", "surgery", "prosthetics", "reattachment"];
 export const memorialFormValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemorialForm"]> = ["monument", "epic", "lament", "tradition", "tale"];
 export const memoryKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemoryKind"]> = ["harmed_me", "killed_kin", "saved_me", "betrayed_me", "kept_oath", "broke_oath", "maimed_me", "humiliated_me", "gifted_me", "converted_me", "conquered_us", "freed_us", "famine_aid", "desecrated_holy", "married_into", "fought_us", "traded_with", "allied_with", "made_peace", "demanded_tribute", "cheated_us", "spied_on_us", "envied", "failed_to_heal", "taught_me", "held_captive", "lamented", "divine_will", "goodwill", "ill_will", "long_history"];
 export const memoryOriginValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemoryOrigin"]> = ["derived", "player"];
 export const messageIntentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MessageIntent"]> = ["friendship", "alliance", "love", "threat", "mockery", "warning", "bargain", "prayer", "answer", "chat", "dream", "command"];
 export const miracleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Miracle"]> = ["healing", "bounty", "peace", "protection"];
+export const mobilityEventValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MobilityEvent"]> = ["ennobled", "enslaved", "freed", "ruined"];
 export const modifierOpValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ModifierOp"]> = ["add", "multiply"];
 export const modifierSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ModifierSource"]> = ["injury", "condition", "trait", "law", "tradition", "artwork", "doctrine", "treaty", "structure", "wonder", "terrain", "weather", "season", "natural_law", "god_power", "blessing", "curse", "dominion", "phenomenon", "god_death", "player", "suppression", "pin"];
 export const mortalRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalRole"]> = ["ruler", "hero", "warrior", "knight", "hunter", "chosen", "seer", "priest", "sage", "healer", "artisan", "merchant", "scribe", "farmer", "explorer", "captain", "bandit", "saint", "apprentice", "commoner"];
@@ -49741,6 +54499,7 @@ export const mortalsStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<
 export const motifOverrideModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MotifOverrideMode"]> = ["pinned", "allowed"];
 export const naturalLawValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalLaw"]> = ["none", "immortality", "short_life", "dead_return", "magic_price", "war_ban", "bounty", "drought", "sea_ban", "one_language", "disasters", "souls_reincarnate"];
 export const naturalLawStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalLawStats"]["kind"]> = ["natural_law"];
+export const naturalTraitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalTrait"]> = ["dark_sight", "cold_blooded", "winged", "amphibious", "thick_hide", "keen_senses", "venomous", "regenerating", "burrowing", "hive_minded"];
 export const needKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NeedKind"]> = ["sustenance", "safety", "belonging", "status", "purpose", "faith", "pleasure"];
 export const networkRepairedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NetworkRepairedEvent"]["kind"]> = ["network.repaired"];
 export const nodeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NodeKind"]> = ["entity", "son", "creator", "foreign_god", "world", "star"];
@@ -49811,6 +54570,7 @@ export const settlementStatsKindValues: ReadonlyArray<FlattenedDeepRequired<comp
 export const settlementTierValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SettlementTier"]> = ["capital", "village", "town", "city", "great_city"];
 export const sexValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Sex"]> = ["female", "male"];
 export const shieldTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ShieldType"]> = ["none", "small", "large", "tower"];
+export const shortfallEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ShortfallEffect"]> = ["hunger", "herds", "cold", "sickness", "impiety", "status", "toil", "insecurity", "arcane"];
 export const siegeActionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SiegeAction"]> = ["blockade", "bombard", "mine", "assault", "negotiate"];
 export const siegeStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SiegeStatus"]> = ["ongoing", "breached", "repulsed", "lifted"];
 export const sizeClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SizeClass"]> = ["tiny", "small", "medium", "large", "huge", "colossal"];
@@ -49829,7 +54589,7 @@ export const sonDistributedEventKindValues: ReadonlyArray<FlattenedDeepRequired<
 export const sonDistributionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonDistribution"]> = ["auto", "manual"];
 export const sonNewEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonNewEvent"]["kind"]> = ["son.new"];
 export const sonStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonStatus"]> = ["active", "asleep", "exiled", "dead"];
-export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_father", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "raise_beast", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "sever_ley", "hide_secret", "sanctify_place", "raise_nexus", "reshape_land", "sanctify_region", "curse_region", "redirect_river", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "seal_treaty", "bless_bloodline", "void_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world", "commission_artwork", "design_rite", "cast_rite", "found_school", "bind_mortals", "touch_mortal", "reveal_tenet", "open_rebirth_gate", "wage_war", "raise_host", "disband_host", "lay_siege", "offer_peace", "commission_vessel", "design_unit", "plant_spies"];
+export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_father", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "raise_beast", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "shape_folk", "sever_ley", "loose_disease", "forge_material", "hide_secret", "sanctify_place", "raise_nexus", "reshape_land", "sanctify_region", "curse_region", "redirect_river", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "seal_treaty", "bless_bloodline", "void_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world", "raise_district", "design_district", "open_trade_route", "close_trade_route", "commission_structure", "commission_artwork", "design_rite", "cast_rite", "found_school", "bind_mortals", "touch_mortal", "reveal_tenet", "open_rebirth_gate", "wage_war", "raise_host", "disband_host", "lay_siege", "offer_peace", "commission_vessel", "design_unit", "plant_spies"];
 export const sonTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnFinishedEvent"]["kind"]> = ["son.turn_finished"];
 export const sonTurnQueuedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnQueuedEvent"]["kind"]> = ["son.turn_queued"];
 export const sonTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnStartedEvent"]["kind"]> = ["son.turn_started"];
@@ -49842,6 +54602,7 @@ export const spokenIntentValues: ReadonlyArray<FlattenedDeepRequired<components>
 export const spreadPathValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpreadPath"]> = ["origin", "route", "army", "journey", "siege", "loosed", "mutation"];
 export const spyCoverValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpyCover"]> = ["merchant", "priest", "envoy", "beggar"];
 export const spyOperationValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpyOperation"]> = ["steal_knowledge", "sabotage", "assassinate", "incite", "intel", "blackmail", "counterfeit"];
+export const staffScaleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StaffScale"]> = ["none", "few", "some", "many"];
 export const stanceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Stance"]> = ["march", "forage", "entrench", "besiege", "garrison", "raid", "retreat"];
 export const starTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StarType"]> = ["yellow_dwarf", "red_giant", "blue_giant", "binary", "white_dwarf", "dead_star", "black_sun", "broken_star", "pulsar", "star_remnant", "reborn_star", "blue_star", "blue_white_star", "white_star", "yellow_white_star", "orange_dwarf", "red_dwarf", "brown_dwarf", "yellow_giant", "red_supergiant", "blue_supergiant", "hypergiant", "wolf_rayet", "protostar", "carbon_star", "neutron_star", "magnetar", "black_hole", "variable_star", "trinary", "chained_star", "watching_star"];
 export const starvationStageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StarvationStage"]> = ["none", "rationing", "famine", "taboo_broken"];
@@ -49849,6 +54610,8 @@ export const statValues: ReadonlyArray<FlattenedDeepRequired<components>["schema
 export const stratumKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StratumKind"]> = ["paradise", "plain", "torment", "oblivion", "warrior_hall", "ancestor_hall"];
 export const streamHelloEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StreamHelloEvent"]["kind"]> = ["stream.hello"];
 export const stressBreakValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StressBreak"]> = ["rage", "flight", "despair", "zeal", "vice", "revelation"];
+export const structureGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StructureGroup"]> = ["faith", "knowledge", "defence", "civic", "commerce", "production", "infrastructure", "memory", "cosmic"];
+export const structureKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StructureKind"]> = ["temple", "shrine", "monastery", "necropolis", "library", "school", "observatory", "academy", "hospital", "wall", "gate", "tower", "citadel", "watchtower", "fort", "palace", "court", "prison", "market", "harbour", "warehouse", "granary", "caravanserai", "bank", "forge", "mill", "tannery", "mine", "quarry", "shipyard", "workshop", "alchemist_lab", "road", "bridge", "aqueduct", "sewer", "canal", "irrigation", "dam", "monument", "tomb", "arena", "theatre", "wonder", "cosmic_gate", "cosmic_archive"];
 export const structureStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StructureStats"]["kind"]> = ["structure"];
 export const subsystemValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Subsystem"]> = ["core", "body", "mind", "social", "household", "demography", "economy", "polity", "law", "intrigue", "communication", "war", "faith", "magic", "knowledge", "culture", "language", "ecology", "environment", "gods", "cosmos"];
 export const summarySectionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SummarySection"]> = ["pantheon", "threads", "events", "cosmos", "geography", "languages", "map", "legends"];
@@ -49876,7 +54639,7 @@ export const traitEffectValues: ReadonlyArray<FlattenedDeepRequired<components>[
 export const traitKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraitKind"]> = ["brave", "craven", "wrathful", "patient", "cruel", "kind", "ambitious", "content", "greedy", "generous", "honest", "deceitful", "zealous", "cynical", "paranoid", "trusting", "lustful", "chaste", "gluttonous", "ascetic", "scholarly", "illiterate_proud", "gregarious", "reclusive", "vengeful", "forgiving", "stubborn", "fickle", "just", "arbitrary", "humble", "proud", "curious", "incurious", "melancholic", "sanguine", "iron_willed", "impressionable", "cunning_tactician", "reckless"];
 export const traitSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraitSource"]> = ["birth", "inherited", "experience", "condition", "education", "divine", "player"];
 export const travelMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TravelMethod"]> = ["ancient_gate", "space_fold", "light_sail", "cosmic_mount", "dream_journey", "river_of_dead", "divine_bridge", "slingshot_orbit", "swallowed", "wormhole"];
-export const treasuryEntryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TreasuryEntry"]> = ["tax", "tolls", "investment", "garrison", "walls", "building", "festival", "alms", "fire", "plunder", "grant"];
+export const treasuryEntryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TreasuryEntry"]> = ["tax", "tolls", "investment", "garrison", "walls", "building", "festival", "alms", "fire", "plunder", "grant", "loan", "upkeep"];
 export const treatyKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TreatyKind"]> = ["peace", "truce", "alliance_defensive", "alliance_offensive", "non_aggression", "vassalage", "tribute", "marriage_pact", "trade_pact", "condotta", "guarantee", "interworld"];
 export const treatyStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TreatyStats"]["kind"]> = ["treaty"];
 export const treatyStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TreatyStatus"]> = ["in_force", "fulfilled", "broken", "expired", "proposed", "rejected"];
@@ -49890,7 +54653,7 @@ export const verdictChoiceValues: ReadonlyArray<FlattenedDeepRequired<components
 export const vesselArmamentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VesselArmament"]> = ["rams", "missiles", "siege_engines", "rites"];
 export const vesselStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VesselStats"]["kind"]> = ["vessel"];
 export const vesselStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VesselStatus"]> = ["docked", "afloat", "damaged", "wrecked", "ghost"];
-export const warAimKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarAimKind"]> = ["conquer_region", "seize_settlement", "press_claim", "convert", "tribute", "vassalise", "liberate", "destroy_cult", "seize_resource", "seize_nexus", "humiliate", "revenge", "loot", "change_government"];
+export const warAimKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarAimKind"]> = ["conquer_region", "seize_settlement", "press_claim", "convert", "tribute", "vassalise", "liberate", "destroy_cult", "seize_resource", "seize_nexus", "humiliate", "revenge", "loot", "change_government", "seize_route"];
 export const warCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarCause"]> = ["hostility", "uprising", "tribute_revolt", "incited", "declared", "betrayal", "conquest_journey", "foreign_god", "independence", "vendetta", "grudge", "divine_grudge", "rivalry", "debt", "espionage", "sabotage", "envy", "schism", "beast", "resource", "ideology", "trade_route", "claim", "holy_war", "succession", "raid", "liberation", "punitive"];
 export const warEndingValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarEnding"]> = ["victory", "conquest", "tribute", "exhaustion", "peace", "white_peace", "betrayal", "same_front", "no_side_left", "miracle"];
 export const warSideValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarSide"]> = ["attacker", "defender"];

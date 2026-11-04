@@ -3,12 +3,14 @@ from pydantic import Field
 from aerona.catalog.commodities import commodity_label
 from aerona.catalog.production import WORKSHOP_LABELS
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.economy import CommodityKind, WorkshopKind
+from aerona.domain.enums.economy import CommodityKind, MaterialFamily, WorkshopKind
 from aerona.domain.enums.material import MaterialKind
-from aerona.engine.economy import control
+from aerona.domain.enums.society import KnowledgeBranch
+from aerona.engine.economy import control, control_depth
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 NAME_MAX = 60
+DESCRIPTION_MAX = 600
 
 
 class EditMaterial(Command):
@@ -17,6 +19,11 @@ class EditMaterial(Command):
     world_material_id: int | None = None
     values: dict[str, int] = Field(default_factory=dict)
     name: str | None = Field(default=None, max_length=NAME_MAX)
+    description: str | None = Field(default=None, max_length=DESCRIPTION_MAX)
+    family: MaterialFamily | None = None
+    branch: KnowledgeBranch | None = None
+    clear_branch: bool = False
+    hold: bool | None = None
 
 
 class GrantStock(Command):
@@ -24,6 +31,7 @@ class GrantStock(Command):
     commodity: CommodityKind
     quantity: int
     material: MaterialKind | None = None
+    world_material_id: int | None = None
     quality: int = Field(default=50, ge=0, le=100)
 
 
@@ -70,6 +78,9 @@ class EditCurrency(Command):
     purity: int | None = Field(default=None, ge=0, le=100)
     trust: int | None = Field(default=None, ge=0, le=100)
     supply: int | None = Field(default=None, ge=0)
+    name: str | None = Field(default=None, max_length=NAME_MAX)
+    metal: MaterialKind | None = None
+    hold: bool | None = None
 
 
 class CurrencyTarget(Command):
@@ -88,14 +99,18 @@ class LoanTarget(Command):
 class InjectHoard(Command):
     community_id: int
     metal: MaterialKind = MaterialKind.GOLD
+    world_material_id: int | None = None
     units: int | None = Field(default=None, ge=1)
 
 
 @player_action("material:edit", ActionKind.EDIT_RECORD)
 async def edit_material(scope: PlayerScope, command: EditMaterial) -> Effect:
     ctx = await scope.context("material_edit")
+    text = control.MaterialText(
+        description=command.description, family=command.family, branch=command.branch, clear_branch=command.clear_branch, hold=command.hold
+    )
     row = await control.edit_material(
-        ctx, command.world_id, material=command.material, world_material_id=command.world_material_id, values=command.values, name=command.name
+        ctx, command.world_id, material=command.material, world_material_id=command.world_material_id, values=command.values, name=command.name, text=text
     )
     label = row.name or (command.material.value.replace("_", " ") if command.material else "the substance")
     return Effect(f"{label.capitalize()} now holds the properties you set in this world.", values={"world_material_id": row.id})
@@ -104,7 +119,15 @@ async def edit_material(scope: PlayerScope, command: EditMaterial) -> Effect:
 @player_action("stock:grant", ActionKind.EDIT_RECORD)
 async def grant_stock(scope: PlayerScope, command: GrantStock) -> Effect:
     ctx = await scope.context("stock_grant")
-    moved = await control.grant_stock(ctx, command.community_id, command.commodity, command.quantity, material=command.material, quality=command.quality)
+    moved = await control.grant_stock(
+        ctx,
+        command.community_id,
+        command.commodity,
+        command.quantity,
+        material=command.material,
+        quality=command.quality,
+        world_material_id=command.world_material_id,
+    )
     verb = "added to" if moved >= 0 else "taken from"
     return Effect(f"{abs(moved)} {commodity_label(command.commodity).lower()} {verb} the stores.", command.community_id, values={"moved": moved})
 
@@ -157,9 +180,9 @@ async def set_toll(scope: PlayerScope, command: SetToll) -> Effect:
 
 @player_action("currency:edit", ActionKind.EDIT_RECORD)
 async def edit_currency(scope: PlayerScope, command: EditCurrency) -> Effect:
-    row = await control.edit_currency(
-        await scope.context("currency_edit"), command.currency_id, purity=command.purity, trust=command.trust, supply=command.supply
-    )
+    ctx = await scope.context("currency_edit")
+    row = await control.edit_currency(ctx, command.currency_id, purity=command.purity, trust=command.trust, supply=command.supply)
+    await control_depth.rename_currency(ctx, row, command.name, command.metal, command.hold)
     return Effect(f"{row.name}: purity {row.purity}, trust {row.trust}, {row.supply} coins abroad.", row.item_entity_id)
 
 
@@ -183,5 +206,6 @@ async def forgive_loan(scope: PlayerScope, command: LoanTarget) -> Effect:
 
 @player_action("hoard:inject", ActionKind.OTHER)
 async def inject_hoard(scope: PlayerScope, command: InjectHoard) -> Effect:
-    added = await control.hoard(await scope.context("hoard_inject"), command.community_id, command.metal, command.units)
-    return Effect(f"A hoard of {added} loads of {command.metal.value.replace('_', ' ')} flooded the market.", command.community_id)
+    added = await control.hoard(await scope.context("hoard_inject"), command.community_id, command.metal, command.units, command.world_material_id)
+    what = "a substance of this world" if command.world_material_id is not None else command.metal.value.replace("_", " ")
+    return Effect(f"A hoard of {added} loads of {what} flooded the market.", command.community_id, values={"added": added})

@@ -1,0 +1,131 @@
+from aerona.db.tables.economy import ProductionRunRow, TradeRouteLossRow, TradeRouteProfileRow, TradeRouteTollRow
+from aerona.db.tables.military import WarAimRow
+from aerona.db.tables.polity import PolityTreasuryRow, TreatyClauseRow
+from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
+
+ROUTE = "section-trade-route"
+RESOURCE = "section-resource-profile"
+PRODUCTION = "section-polity-production"
+TRADE_LAYER = "map-layer-trade"
+S = Subsystem
+
+ROUTE_MECHANICS = (
+    Mechanic(
+        key="route_dangers",
+        spec_item="S6.4",
+        title="Route danger from bandits, beasts, weather and the sea, and losses laid at the door of each",
+        subsystem=S.ECONOMY,
+        phases=("trade_flow",),
+        surface=Surface(drawer=ROUTE, layer=TRADE_LAYER),
+        backfill="trade_flow: every route's dangers are read from its lands, beasts and weather each epoch",
+        templates=("trade_route.beast_raid", "trade_route.weather_loss", "trade_route.shipwreck"),
+        fields=("danger", "danger_bandits", "danger_beasts", "danger_weather", "danger_sea", "lost"),
+        tables=(TradeRouteProfileRow.__tablename__, TradeRouteLossRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("trade_route", "beast", "region", "faction"),
+        couplings=(
+            Coupling(S.ECOLOGY, "a hungry or enraged beast near the way takes cargo to its hoard", EdgeKind.FLOW, "route_dangers.beast_hoard_pct"),
+            Coupling(S.ENVIRONMENT, "the age's weather in the lands crossed spoils cargo", EdgeKind.MODIFIER, "route_dangers.weather_footing_pct"),
+            Coupling(S.INTRIGUE, "robber bands on the way take a share of what is lost", EdgeKind.FLOW, "trade_routes.bandit_share_pct"),
+        ),
+    ),
+    Mechanic(
+        key="route_seasons",
+        spec_item="S6.4",
+        title="Seasonal throughput: snowed passes, frozen and flooding rivers, burning deserts, storms at sea and in the sky",
+        subsystem=S.ENVIRONMENT,
+        phases=("trade_flow",),
+        surface=Surface(drawer=ROUTE),
+        backfill="trade_flow: each route's worst season is read from the world's seasons and its lands",
+        fields=("season_pct",),
+        tables=(TradeRouteProfileRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("trade_route",),
+        couplings=(
+            Coupling(S.ECONOMY, "a hard season keeps cargo back on every kind of way", EdgeKind.MODIFIER, "route_seasons.land_season_pct"),
+            Coupling(S.ENVIRONMENT, "cold seasons freeze rivers and close high passes", EdgeKind.MODIFIER, "route_seasons.freeze_temperature"),
+        ),
+    ),
+    Mechanic(
+        key="toll_treasuries",
+        spec_item="S6.4",
+        title="Tolls fund realms: a realm that holds a land takes its toll, and members send a share of theirs",
+        subsystem=S.POLITY,
+        phases=("trade_flow",),
+        surface=Surface(drawer=ROUTE),
+        backfill="economy.route_depth_backfill: the tolls of the ages before the ledger are shared out to the realms that held them",
+        fields=("rate_pct", "controller", "polity", "treasury"),
+        tables=(TradeRouteTollRow.__tablename__, PolityTreasuryRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("trade_route", "polity", "settlement", "people", "region"),
+        couplings=(
+            Coupling(S.POLITY, "member tolls swell the realm's treasury", EdgeKind.FLOW, "tolls.polity_share_pct"),
+            Coupling(S.POLITY, "a realm holding a land firmly enough takes its toll itself", EdgeKind.TRIGGER, "tolls.territory_control_pct"),
+        ),
+    ),
+    Mechanic(
+        key="route_holds",
+        spec_item="S6.4",
+        title="Closed and held routes: a way closed by the Creator or a god is never founded again until it is opened, and held values stay as set",
+        subsystem=S.ECONOMY,
+        phases=("trade_flow",),
+        surface=Surface(drawer=ROUTE, layer=TRADE_LAYER),
+        backfill="none: closures and holds are honoured from the moment they are made",
+        fields=("closed_by_player", "closed_by_son_id", "locked", "status", "mode", "controller", "blockaded_by"),
+        tables=(TradeRouteProfileRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("open_trade_route", "close_trade_route"),
+        targets=("trade_route", "people", "settlement"),
+        couplings=(Coupling(S.GODS, "a son may lay or close a road", EdgeKind.TRIGGER, "son_routes.open_cost"),),
+    ),
+    Mechanic(
+        key="route_chokepoints",
+        spec_item="S6.3",
+        title="Scarce strategic goods make narrow routes chokepoints and war aims; the victor takes the road and its tolls",
+        subsystem=S.WAR,
+        phases=("trade_flow", "campaigns", "diplomacy"),
+        surface=Surface(drawer=ROUTE),
+        backfill="economy.route_depth_backfill: wars already fought over roads take the aim of seizing the road",
+        templates=("trade_route.chokepoint_war",),
+        fields=("chokepoint", "controller", "seize_route", "route_control"),
+        tables=(TradeRouteProfileRow.__tablename__, WarAimRow.__tablename__, TreatyClauseRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("trade_route", "people", "settlement", "polity"),
+        couplings=(
+            Coupling(S.WAR, "an overtaxed chokepoint with no other way brings merchants to war", EdgeKind.TRIGGER, "chokepoints.war_chance"),
+            Coupling(S.WAR, "a blockade earns the blockader's aim of seizing the road", EdgeKind.FLOW, "chokepoints.blockade_aim_score"),
+            Coupling(S.ECONOMY, "strategic goods carried make a road vital", EdgeKind.MODIFIER, "chokepoints.strategic_share_pct"),
+        ),
+    ),
+    Mechanic(
+        key="sentient_pacts",
+        spec_item="S6.3",
+        title="A sentient resource's demands become a pact: honoured terms bring gifts, broken terms its wrath",
+        subsystem=S.GODS,
+        phases=("resource_mechanics",),
+        surface=Surface(drawer=RESOURCE),
+        backfill="none: pacts are struck at a sentient resource's next demand",
+        templates=("gods.economy.sentient_pact", "gods.economy.sentient_pact_kept", "gods.economy.sentient_pact_broken"),
+        fields=("resource_demand", "reserve", "prosperity"),
+        tables=(TreatyClauseRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("resource", "people", "settlement", "faction", "cult", "treaty"),
+        couplings=(
+            Coupling(S.ECONOMY, "an honoured pact makes the resource give of itself", EdgeKind.FLOW, "sentient_pacts.honour_reserve_pct"),
+            Coupling(S.POLITY, "a broken pact costs the keeper its prosperity", EdgeKind.FLOW, "sentient_pacts.wrath_prosperity"),
+        ),
+    ),
+    Mechanic(
+        key="polity_production",
+        spec_item="S6.3",
+        title="A realm's production chain: every member's workshops, runs and bottlenecks gathered into one",
+        subsystem=S.ECONOMY,
+        phases=("refining",),
+        surface=Surface(drawer=PRODUCTION),
+        backfill="computed: read from the members' production runs",
+        fields=("made", "bottleneck", "quality"),
+        tables=(ProductionRunRow.__tablename__,),
+        targets=("polity",),
+        couplings=(Coupling(S.POLITY, "a bottleneck in one member starves the realm's chain", EdgeKind.FLOW),),
+    ),
+)

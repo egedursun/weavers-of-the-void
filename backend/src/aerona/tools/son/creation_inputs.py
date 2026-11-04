@@ -30,6 +30,7 @@ from aerona.domain.enums.mortal import MortalSex
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic
+from aerona.domain.enums.structure import STRUCTURE_LEVEL_MAX, StructureKind
 from aerona.domain.enums.travel import VehicleKind
 from aerona.domain.enums.world import SkyEventKind
 from aerona.tools.framework.inputs import ToolInput
@@ -128,6 +129,7 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
         EntityType.ITEM: {
             "item_class": (ItemClass, ...),
             "material": (MaterialKind | None, None),
+            "world_material_id": (int | None, None),
             "secondary_materials": (list[MaterialKind] | None, None),
         },
         EntityType.ARTWORK: {"medium": (ArtMedium, ...), "subject_id": (int | None, None)},
@@ -141,6 +143,13 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
             "within_epochs": (int | None, None),
             "consequence": (ProphecyConsequence | None, None),
             "consequence_id": (int | None, None),
+        },
+        EntityType.STRUCTURE: {
+            "structure_kind": (StructureKind, ...),
+            "material": (MaterialKind | None, None),
+            "world_material_id": (int | None, None),
+            "level": (Annotated[int, Field(ge=1, le=STRUCTURE_LEVEL_MAX)] | None, None),
+            "design_id": (int | None, None),
         },
         EntityType.FACTION: {"faction_kind": (FactionKind, ...)},
         EntityType.LAW: {"law_kind": (LawKind, ...), "law_params": (dict[str, int | str | bool] | None, None)},

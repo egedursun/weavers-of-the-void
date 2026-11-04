@@ -26,6 +26,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.beasts import rob_hoard, wound_harm
 from aerona.engine.economy.money import inject_hoard
+from aerona.engine.economy.sanctity import holy_strike
 from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.mortal_death import die
@@ -314,7 +315,7 @@ async def encounter(ctx: TickContext, hero: EntityRow, monster: EntityRow, conte
         return None
     rng = ctx.rng(seed_of("encounter", hero.id, monster.id))
     patron = await living_patron(ctx.session, hero)
-    hero_total = await hero_power(ctx, hero, patron, rng.die(ctx.rules.world_hunt.die))
+    hero_total = await hero_power(ctx, hero, patron, rng.die(ctx.rules.world_hunt.die)) * await holy_strike(ctx.session, ctx.rules, hero.id, monster)
     monster_total = await monster_power(ctx, monster, rng.die(ctx.rules.world_hunt.die))
     if hero_total >= monster_total:
         return await _hero_wins(ctx, hero, monster, patron, context)
@@ -338,12 +339,14 @@ ENCOUNTER_READS = (
     "species.agility",
     "species.danger",
     "species.strength",
+    "table.beast_profiles",
     "table.bodies",
     "table.bonds",
     "table.community_societies",
     "table.conditions",
     "table.cosmos",
     "table.designated_heirs",
+    "table.entities",
     "table.entity_flags",
     "table.entity_tags",
     "table.entity_traits",
@@ -355,7 +358,10 @@ ENCOUNTER_READS = (
     "table.memories",
     "table.minds",
     "table.name_registry",
+    "table.node_materials",
     "table.nodes",
+    "table.people_biology",
+    "table.people_culture",
     "table.personality_values",
     "table.polity_members",
     "table.prostheses",
@@ -365,6 +371,7 @@ ENCOUNTER_READS = (
     "table.tradition_profiles",
     "table.traits",
     "table.world_maps",
+    "table.world_materials",
 )
 ENCOUNTER_WRITES = (
     "table.mortal_profiles",

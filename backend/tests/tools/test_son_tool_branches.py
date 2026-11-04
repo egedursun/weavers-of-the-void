@@ -18,12 +18,14 @@ from aerona.db.tables.lore import ChronicleRow, LexemeRow, ThreadLinkRow, Thread
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.society import ResurrectionOrderRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ThreadStatus
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import CreatureTrait, NaturalLaw
 from aerona.domain.enums.son import PowerEffect, SonStatus
+from aerona.domain.enums.structure import ConstructionState, StructureKind
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.world import StarType
 from aerona.domain.models.entity_stats import CultStats
@@ -272,11 +274,11 @@ async def test_species_traits_are_capped_and_mighty_beasts_are_megafauna(databas
     rules = tuned_rules(son_tools={"creature_max_traits": 2, "megafauna_power": 3})
     toolkit = await son_toolkit(database, realm.son_id, action_points=4, rules=rules)
     traits = ["flying", "venomous", "soul_eater"]
-    await ok(toolkit, "create_species", creation("Skyfang", realm.people_id, power=3, traits=traits, body_plan="avian"))
+    await ok(toolkit, "create_species", creation("Skyfang", realm.people_id, power=3, traits=traits, body_plan="avian", size_class="large", diet="carnivore"))
     beast = toolkit.created_entity_ids[-1]
-    refused = await rejected(toolkit, "create_species", creation("Mudhopper", realm.people_id, power=1))
+    refused = await rejected(toolkit, "create_species", creation("Mudhopper", realm.people_id, power=1, size_class="small", diet="omnivore"))
     assert "body_plan" in refused
-    await ok(toolkit, "create_species", creation("Mudhopper", realm.people_id, power=1, body_plan="amorphous"))
+    await ok(toolkit, "create_species", creation("Mudhopper", realm.people_id, power=1, body_plan="amorphous", size_class="small", diet="omnivore"))
     small = toolkit.created_entity_ids[-1]
     async with database.read() as session:
         body = await session.get(BodyRow, small)
@@ -319,9 +321,23 @@ async def test_items_draw_might_from_their_source_and_find_an_owner(database: Da
 async def test_structures_need_a_place_and_stand_inside_it(database: Database) -> None:
     realm = await seed_realm(database)
     toolkit = await son_toolkit(database, realm.son_id, action_points=4)
-    await ok(toolkit, "build_structure", creation("Tide Pillar", realm.people_id, location_id=realm.settlement_id))
-    assert (await entity(database, toolkit.created_entity_ids[-1])).location_id == realm.settlement_id
-    assert "location_id is required" in await rejected(toolkit, "build_structure", creation("Lost Pillar", realm.language_id))
+    await ok(toolkit, "build_structure", creation("Tide Pillar", realm.people_id, location_id=realm.settlement_id, structure_kind="shrine", material="stone"))
+    built = toolkit.created_entity_ids[-1]
+    assert (await entity(database, built)).location_id == realm.settlement_id
+    async with database.read() as session:
+        profile = await session.get(StructureProfileRow, built)
+    assert profile is not None and profile.kind is StructureKind.SHRINE and profile.dedicated_son_id == realm.son_id
+    assert "location_id is required" in await rejected(toolkit, "build_structure", creation("Lost Pillar", realm.language_id, structure_kind="shrine"))
+    assert "structure_kind" in await rejected(toolkit, "build_structure", creation("Kindless Pillar", realm.people_id, location_id=realm.settlement_id))
+
+
+async def test_a_son_commissions_a_typed_work_in_his_name(database: Database) -> None:
+    realm = await seed_realm(database)
+    toolkit = await son_toolkit(database, realm.son_id, action_points=4)
+    await ok(toolkit, "commission_structure", {"community_id": realm.settlement_id, "structure_kind": "shrine", "name": "Tide Shrine"})
+    async with database.read() as session:
+        profile = await session.scalar(select(StructureProfileRow).where(StructureProfileRow.kind == StructureKind.SHRINE))
+    assert profile is not None and profile.dedicated_son_id == realm.son_id and profile.construction_state is ConstructionState.BUILDING
 
 
 async def test_a_language_is_born_with_capped_first_words(database: Database) -> None:

@@ -1,7 +1,6 @@
 from pydantic import Field
 
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.polity import (
     ClaimBasis,
     ClauseKind,
@@ -372,14 +371,6 @@ class Lend(Command):
     epochs: int = Field(default=5, ge=1, le=1000)
 
 
-class EditLoan(Command):
-    loan_id: int
-    principal: int | None = Field(default=None, ge=1, le=10**9)
-    interest_pct: int | None = Field(default=None, ge=0, le=100)
-    due_epoch: int | None = Field(default=None, ge=0)
-    status: LoanStatus | None = None
-
-
 @player_action("polity:found", ActionKind.CREATE_ENTITY)
 async def found_realm(scope: PlayerScope, command: FoundRealm) -> Effect:
     found = await control.found_realm(await scope.context("polity_found"), command.core_id, name=command.name, government=command.government)
@@ -490,19 +481,6 @@ async def lend(scope: PlayerScope, command: Lend) -> Effect:
         epochs=command.epochs,
     )
     return Effect(f"The realm borrowed {loan.principal}.", command.polity_id, values={"loan_id": loan.id})
-
-
-@player_action("loan:edit", ActionKind.EDIT_RECORD)
-async def edit_loan(scope: PlayerScope, command: EditLoan) -> Effect:
-    loan = await control.edit_loan(
-        await scope.context("loan_edit"),
-        command.loan_id,
-        principal=command.principal,
-        interest_pct=command.interest_pct,
-        due_epoch=command.due_epoch,
-        status=command.status,
-    )
-    return Effect(f"The loan is {loan.status.value}.", loan.borrower_entity_id)
 
 
 class AddClause(Command):

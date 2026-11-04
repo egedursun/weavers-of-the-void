@@ -16,6 +16,7 @@ from aerona.engine.environment.profile import Geography, Surroundings, rainfall_
 from aerona.engine.phases.climate import climate_of, climate_transition, impose_climate, law_fertility
 from aerona.engine.phases.disasters import apply_disaster, joined_names, natural_disasters, record_disaster_event, send_disaster
 from aerona.engine.phases.society_economy import set_stores
+from aerona.engine.primitives.modifiers import ModifierIndex, live_modifiers
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import (
@@ -94,8 +95,10 @@ async def test_imposed_climate_applies_once_more_at_transition(realm: Realm) -> 
 
 async def test_laws_shift_land_fertility(realm: Realm) -> None:
     await natural_law(realm, "Plenty", NaturalLaw.BOUNTY)
-    await law_fertility(context(realm.session))
-    assert stat(realm.region, "fertility") == 60 + RULES.climate_effects.bounty_law_fertility
+    ctx = context(realm.session)
+    await law_fertility(ctx)
+    with live_modifiers(await ModifierIndex.load(realm.session, ctx.epoch), ctx.epoch, RULES):
+        assert stat(realm.region, "fertility") == round(60 * (1 + RULES.climate_effects.bounty_law_fertility / 100))
 
 
 async def test_disaster_effects_protection_and_collapse(realm: Realm) -> None:
@@ -158,7 +161,13 @@ async def test_city_plague_and_spread(realm: Realm) -> None:
     city = await settlement(realm, "Crowded", population=50000)
     partner = await settlement(realm, "Partner", population=2000, location_id=realm.far_region.id)
     await trade_route(realm, city, partner)
-    ctx = context(realm.session, tuned(disasters={"city_plague_chance": 100, "plague_spread_chance": 100}, epidemiology={"crowd_population": 1000}))
+    ctx = context(
+        realm.session,
+        tuned(
+            disasters={"city_plague_chance": 100, "plague_spread_chance": 100},
+            epidemiology={"crowd_population": 1000, "route_spread_chance": 100, "route_volume_floor_pct": 100},
+        ),
+    )
     await set_stores(ctx, city.id, {Commodity.FOOD: 100})
     await natural_disasters(ctx)
     plagues = [event for event in await named(realm.session, EntityType.EVENT) if event.engine_kind is EngineKind.PLAGUE]

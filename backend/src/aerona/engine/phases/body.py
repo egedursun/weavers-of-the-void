@@ -518,6 +518,7 @@ async def _recruit(ctx: TickContext) -> None:
     "table.injuries",
     "table.maimed_cohorts",
     "table.nodes",
+    "table.tradition_profiles",
 )
 @writes("table.body_customs", "table.maimed_cohorts")
 async def body_society(ctx: TickContext) -> None:

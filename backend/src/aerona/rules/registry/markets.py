@@ -17,6 +17,8 @@ class MarketsRules:
     transport_cost_pct_per_hop: int = rule(4, 0, 100, G, "Price added to carried goods per region crossed (%)")
     danger_cost_pct: int = rule(30, 0, 200, G, "Price added to carried goods at the most dangerous route (% of the danger)")
     seller_wealth_per_value: int = rule(3, 0, 100, G, "Prosperity or wealth a selling market gains per thousand of value sold")
+    rarity_price_pct: int = rule(60, 0, 300, G, "Price added to goods for each point their material's rarity stands above the middle (% of the point)")
+    value_price_pct: int = rule(40, 0, 300, G, "Price added to goods for each point their material's base value stands above the middle (% of the point)")
 
 
 @dataclass(frozen=True)
@@ -37,6 +39,8 @@ class MoneyRules:
     beast_hoard_chance: int = rule(40, 0, 100, G, "A slain beast leaves a hoard that the hero's people carry home to market (%)")
     hoard_supply_pct: int = rule(30, 0, 1000, G, "Coin supply a hoard adds when it floods a market (% of the hoard)")
     hoard_luxury_units: int = rule(40, 0, 100000, G, "Luxuries a looted hoard pours into the market of the one who took it")
+    temple_hoard_units: int = rule(30, 0, 100000, G, "Luxuries a sacked temple pours into the market of the army that took it, before its material's worth")
+    temple_worth_pct: int = rule(100, 0, 500, G, "How strongly a temple's material rarity and value enlarge its looted hoard (%)")
 
 
 @dataclass(frozen=True)
@@ -51,7 +55,7 @@ class TradeRoutesRules:
     capacity_per_bridge: int = rule(250, 0, 100000, G, "Units added per bridge along the way")
     capacity_per_harbour: int = rule(600, 0, 100000, G, "Units added per harbour at the ends of a sea or river route")
     capacity_per_ship: int = rule(300, 0, 100000, G, "Units a ship of either end adds to a sea route")
-    capacity_per_market: int = rule(200, 0, 100000, G, "Units a market district halfway along the way adds as a waystation")
+    capacity_per_market: int = rule(200, 0, 100000, G, "Units a working market structure halfway along the way adds as a waystation")
     capacity_cap: int = rule(50000, 1, 1000000, G, "Most units of goods a route can carry in an epoch")
     sea_length_pct: int = rule(50, 1, 100, G, "Length of a sea crossing compared with walking the same regions (%)")
     river_length_pct: int = rule(70, 1, 100, G, "Length of a river voyage compared with walking the same regions (%)")
@@ -90,6 +94,13 @@ class BankingRules:
     default_bank_loss: int = rule(15, 0, 100, G, "Wealth a bank loses when a loan defaults")
     collapse_wealth: int = rule(10, 0, 100, G, "Wealth below which a bank that has lost loans collapses")
     collapse_merchant_loss: int = rule(20, 0, 100, G, "Merchant satisfaction lost in a community whose bank collapses")
+    polity_lend_chance: int = rule(30, 0, 100, G, "A rich guild lends to an indebted realm or a realm at war with an empty treasury (% per epoch)")
+    polity_treasury_below: int = rule(40, 0, 100000, G, "Treasury below which a realm at war or in debt asks a bank for a loan")
+    polity_principal: int = rule(60, 1, 100000, G, "Silver a bank lends a realm")
+    polity_repay_pct: int = rule(35, 0, 100, G, "Share of what a realm owes that it pays its bank each epoch while its treasury allows (%)")
+    polity_default_debt_pct: int = rule(100, 0, 500, G, "Share of an unpaid realm loan that becomes the realm's standing debt on default (%)")
+    polity_bank_wealth_per_silver: int = rule(4, 0, 100, G, "Wealth a bank gains or loses per hundred silver lent to or repaid by a realm")
+    credit_shy_epochs: int = rule(5, 0, 100, G, "Epochs a bank refuses a borrower after it defaulted, unless the bank is its own")
 
 
 @dataclass(frozen=True)
@@ -98,3 +109,5 @@ class TollsRules:
     greed_rate_pct: int = rule(10, 0, 100, G, "Extra toll taken by a greedy master (%)")
     divert_total_pct: int = rule(30, 0, 100, G, "Total toll along a route at which merchants seek another way (%)")
     revenue_wealth_per_value: int = rule(5, 0, 100, G, "Prosperity or wealth a toll-taker gains per thousand of tolls")
+    polity_share_pct: int = rule(40, 0, 100, G, "Share of a member's tolls that goes to the treasury of its realm (%)")
+    territory_control_pct: int = rule(50, 0, 100, G, "Control a realm needs over a land to take the tolls on it itself")

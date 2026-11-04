@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ArtworkProfileRow, LanguageIntelligibilityRow, LanguageRegisterRow, LanguageStandingRow, SpeakerCohortRow
+from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.mind import SkillRow
@@ -13,6 +14,7 @@ from aerona.domain.enums.chronicle import WritingSystem
 from aerona.domain.enums.culture import LanguageRegister, SpeakerKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
+from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import spoken_language
@@ -126,6 +128,13 @@ async def tongues_of(session: AsyncSession, community_id: int) -> set[int]:
 
 async def barrier(session: AsyncSession, rules: Rules, first: int, second: int, epoch: int) -> float:
     return await understood(session, rules, (first, second), (await tongues_of(session, first), await tongues_of(session, second)), epoch)
+
+
+async def chosen_trade_tongue(session: AsyncSession, community_id: int) -> int | None:
+    entity = await session.get(EntityRow, community_id)
+    people = await people_of(session, entity) if entity is not None else None
+    culture = await session.get(PeopleCultureRow, people.id) if people is not None else None
+    return culture.trade_language_id if culture is not None else None
 
 
 async def register_tongues(session: AsyncSession, holder_id: int, register: LanguageRegister) -> set[int]:
@@ -280,6 +289,7 @@ async def derive_registers(ctx: TickContext, courts: dict[int, int | None], litu
     for community_id, language_id in sorted(common.items()):
         changed += int(await hold_register(ctx, community_id, LanguageRegister.COMMON, language_id))
         if community_id in trading:
-            trade = franca if franca is not None and franca in await tongues_of(ctx.session, community_id) else language_id
+            chosen = await chosen_trade_tongue(ctx.session, community_id)
+            trade = chosen if chosen is not None else franca if franca is not None and franca in await tongues_of(ctx.session, community_id) else language_id
             changed += int(await hold_register(ctx, community_id, LanguageRegister.TRADE, trade))
     return changed

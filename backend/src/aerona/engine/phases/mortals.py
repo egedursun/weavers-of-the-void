@@ -161,6 +161,8 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "table.minds",
     "table.name_registry",
     "table.nodes",
+    "table.people_biology",
+    "table.people_culture",
     "table.personality_values",
     "table.polity_members",
     "table.routes",

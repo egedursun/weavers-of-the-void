@@ -38,3 +38,18 @@ class MaterialsRules:
     soldiers_per_engine: int = rule(200, 1, 100000, G, "Soldiers one unit of siege materiel serves at a siege")
     engine_breach_pct: int = rule(25, 0, 100, G, "Breach chance added by a full train of siege engines (%)")
     march_campaign_pct: int = rule(2, 0, 100, G, "Battle power an army loses per point of armour weight it drags along (%)")
+    hull_guard_pct: int = rule(60, 0, 100, G, "Road danger a vessel's hull turns aside at full toughness and hardness (% of the risk)")
+    hull_wear_pct: int = rule(70, 0, 100, G, "Armour a tough hull keeps when a storm or raider strikes it (% of the usual loss at full toughness)")
+    fabric_light_weight: int = rule(25, 0, 100, G, "Sail or harness weight at or below which a vessel runs a stage faster")
+    fabric_wind_pct: int = rule(50, 0, 100, G, "Wind risk a tough sail or harness turns aside at full toughness (% of the wind risk)")
+    sanctity_undead_pct: int = rule(80, 0, 300, G, "Extra harm a weapon does to the undead per point of its material's sanctity (% of the sanctity)")
+    sanctity_cursed_pct: int = rule(40, 0, 300, G, "Extra harm a weapon does to the cursed per point of its material's sanctity (% of the sanctity)")
+    sanctity_void_pct: int = rule(50, 0, 300, G, "Extra harm a weapon does to beings of the void per point of its material's sanctity (% of the sanctity)")
+    corruption_void_pct: int = rule(
+        30, 0, 300, G, "Harm a corrupt weapon loses against beings of the void that feed on it, per point of corruption (% of the corruption)"
+    )
+    rust_wet_moisture: int = rule(60, 0, 100, G, "Moisture of a land from which items rust or rot by their material's decay each epoch")
+    rust_decay_pct: int = rule(100, 0, 500, G, "Wear an item takes in a wet land for each step of its material's decay (% of the item-wear rule)")
+    rust_decay_step: int = rule(10, 1, 100, G, "Points of a material's decay that make one step of wet-land wear")
+    battle_toughness_pct: int = rule(50, 0, 100, G, "Battle wear a weapon or armour of full toughness shrugs off (%)")
+    item_worth_pct: int = rule(60, 0, 300, G, "How strongly a material's rarity and base value raise the worth of an item made from it (%)")

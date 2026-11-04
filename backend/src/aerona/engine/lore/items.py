@@ -30,7 +30,7 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.conditions import end_condition
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
-from aerona.engine.economy.materials import MaterialBook, MaterialProps, enchantment_cap
+from aerona.engine.economy.materials import WORLD_KEY_PREFIX, MaterialBook, MaterialProps, battle_wear, enchantment_cap, node_material, slot_key, worth_factor
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.faith.book import patron_node
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -49,7 +49,7 @@ from aerona.engine.primitives.threads import open_story
 WET = 60
 HALF = 2
 TEN = 10
-WORLD_PREFIX = "world:"
+WORLD_PREFIX = WORLD_KEY_PREFIX
 CURABLE = frozenset({ConditionKind.CHRONIC_ILLNESS, ConditionKind.MELANCHOLY, ConditionKind.PARANOIA, ConditionKind.AGE_BLINDNESS, ConditionKind.WITHERED_LIMB})
 C = ItemClass
 E = RiteEffectKind
@@ -92,11 +92,7 @@ def curse_for(item_class: ItemClass) -> CurseKind:
 
 
 def material_key(row: NodeMaterialRow | None) -> str | None:
-    if row is None:
-        return None
-    if row.world_material_id is not None:
-        return f"{WORLD_PREFIX}{row.world_material_id}"
-    return row.material.value if row.material is not None else None
+    return slot_key(row.material, row.world_material_id) if row is not None else None
 
 
 def props_of(book: MaterialBook, world_id: int | None, key: str | None) -> MaterialProps | None:
@@ -237,12 +233,19 @@ async def captured(ctx: TickContext, item: EntityRow, row: ItemProfileRow, owner
     return conqueror
 
 
-def fought_wear(ctx: TickContext, row: ItemProfileRow) -> int:
-    return ctx.rules.item_wear.battle_wear if row.item_class in WEAPONS | GUARDS else 0
+async def body_props(ctx: TickContext, book: MaterialBook, item: EntityRow, row: ItemProfileRow) -> MaterialProps | None:
+    node = await node_material(ctx.session, item.id, MaterialSlot.BODY)
+    if node is not None:
+        return book.props(item.world_id, node.material, node.world_material_id)
+    return props_of(book, item.world_id, row.material)
+
+
+def fought_wear(ctx: TickContext, row: ItemProfileRow, props: MaterialProps | None = None) -> int:
+    return battle_wear(ctx.rules, props) if row.item_class in WEAPONS | GUARDS else 0
 
 
 async def decayed(ctx: TickContext, book: MaterialBook, item: EntityRow, row: ItemProfileRow, land: RegionEnvironmentRow | None) -> int:
-    props = props_of(book, item.world_id, row.material)
+    props = await body_props(ctx, book, item, row)
     if land is None or land.moisture < WET or props is None or props.decay <= 0:
         return 0
     return max(1, round_half_up(ctx.rules.item_wear.decay_wet * props.decay / (PERCENT // HALF)))
@@ -250,9 +253,17 @@ async def decayed(ctx: TickContext, book: MaterialBook, item: EntityRow, row: It
 
 async def wear(ctx: TickContext, book: MaterialBook, item: EntityRow, row: ItemProfileRow, *, land: RegionEnvironmentRow | None, fought: bool) -> bool:
     before = row.condition
-    loss = (fought_wear(ctx, row) if fought else 0) + await decayed(ctx, book, item, row, land)
+    loss = (fought_wear(ctx, row, await body_props(ctx, book, item, row)) if fought else 0) + await decayed(ctx, book, item, row, land)
     row.condition = clamp_int(row.condition - loss, 0, PERCENT)
     return before >= ctx.rules.item_wear.broken > row.condition
+
+
+async def material_of(ctx: TickContext, item: EntityRow, book: MaterialBook | None = None) -> MaterialProps | None:
+    node = await node_material(ctx.session, item.id, MaterialSlot.BODY)
+    if node is None:
+        return None
+    materials = book if book is not None else await MaterialBook.load(ctx.session)
+    return materials.props(item.world_id, node.material, node.world_material_id)
 
 
 async def fought_this_epoch(ctx: TickContext, owner: int | None) -> bool:
@@ -291,7 +302,7 @@ def worth(ctx: TickContext, row: ItemProfileRow, props: MaterialProps | None, en
 
 
 async def bound_cap(ctx: TickContext, book: MaterialBook, item: EntityRow, row: ItemProfileRow) -> int:
-    props = props_of(book, item.world_id, row.material)
+    props = await body_props(ctx, book, item, row)
     if props is None:
         return PERCENT
     return enchantment_cap(ctx.rules, props)
@@ -603,7 +614,8 @@ async def item_year(ctx: TickContext, atlas: RegionAtlas, item: EntityRow, book:
     if power:
         counts[f"power_{power}"] = 1
     if "value" not in row.locked:
-        row.value = worth(ctx, row, props_of(book, item.world_id, row.material), sum(spell.strength for spell in spells))
+        props = await body_props(ctx, book, item, row)
+        row.value = round_half_up(worth(ctx, row, props, sum(spell.strength for spell in spells)) * worth_factor(ctx.rules, props))
     row.updated_epoch = ctx.epoch
     return counts
 
@@ -735,7 +747,7 @@ async def craft(ctx: TickContext, item: EntityRow, community_id: int | None, mat
     hands = await ctx.session.get(BodyRow, found[0].id) if found is not None else None
     skill = found[1] * (hands.craft if hands is not None else PERCENT) / PERCENT if found is not None else 0
     book = await MaterialBook.load(ctx.session)
-    props = props_of(book, item.world_id, row.material)
+    props = await body_props(ctx, book, item, row)
     workability = (props.toughness if props is not None else PERCENT // HALF) / PERCENT
     rest = max(0, PERCENT - table.skill_pct - table.material_pct) / PERCENT
     tools = powers.tool_quality if await tools_of(ctx, community_id) else 0
@@ -779,7 +791,7 @@ async def repair(ctx: TickContext, book: MaterialBook, item: EntityRow, row: Ite
     home = holder.location_id if holder is not None and holder.entity_type is EntityType.MORTAL else owner
     if home is None or await smith_of(ctx, home) is None:
         return False
-    props = props_of(book, item.world_id, row.material)
+    props = await body_props(ctx, book, item, row)
     units = ctx.rules.item_powers.repair_units
     ledger = GoodsLedger(ctx.session, ctx.epoch)
     commodity = stock_of(props)

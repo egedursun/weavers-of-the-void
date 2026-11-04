@@ -99,12 +99,12 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
     EntityType.VESSEL: {
         "target_world_id": "If the gate, bridge or ship connects to another world, that world's id: a route is opened",
         "vessel_kind": "What it is: {{ vessel_kinds | join(', ') }}; a gate, ship, mount or bridge opens the matching kind of road",
-        "hull_class": "For a ship, its hull: raft, boat, galley, longship, cog, carrack, warship, light_sailer, bone_hull, generation_ship, skyship, living_ship",
-        "armament": "For a ship, what it fights with: rams, missiles, siege_engines, rites",
-        "hull_material": "For a ship, what its hull is made of: {{ materials | join(', ') }}",
-        "fabric_material": "For a ship, what its sails or skin are made of: {{ materials | join(', ') }}",
-        "home_port_id": "For a ship, the settlement it calls home; its shipyard mends it",
-        "captain_id": "For a ship, the living mortal who captains it",
+        "hull_material": "Its hull or frame: {{ materials | join(', ') }}; a hard, tough hull turns storms and raiders aside. Empty: its makers choose",
+        "fabric_material": "Its sails or harness: {{ materials | join(', ') }}; a light one runs a stage faster, a tough one braves the wind. Empty: its makers choose",
+        "hull_class": "For a ship: its hull class, from a light boat to a great warship",
+        "armament": "For a ship: what it carries to fight (rams, archers, engines, boarders)",
+        "home_port_id": "For a ship: the settlement it sails from",
+        "captain_id": "For a ship: the mortal who commands it",
     },
     EntityType.LEGEND: {
         "legend_category": LEGEND_CATEGORY_FIELD,
@@ -119,7 +119,8 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
     },
     EntityType.ITEM: {
         "item_class": "What kind of thing it is; this decides how it is used and what it does in the world: " + ITEM_CLASSES,
-        "material": MATERIAL_FIELD,
+        "material": "What it is made of: {{ materials | join(', ') }}; sets its edge, guard, worth, rot and holy harm to the undead. Empty: its makers choose",
+        "world_material_id": "Or a substance of this world by its id (see the world's materials); overrides material",
         "secondary_materials": "Other materials worked into it (inlays, bindings, hilts): {{ materials | join(', ') }}",
     },
     EntityType.ARTWORK: {
@@ -136,6 +137,13 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "within_epochs": "In how many ages it must come true; if it does not, the seer is mocked",
         "consequence": "What it means when it comes true: " + CONSEQUENCES,
         "consequence_id": "Whom the consequence touches (the one who will rule, the city that will fall)",
+    },
+    EntityType.STRUCTURE: {
+        "structure_kind": "What it is and what it does: {{ structure_kinds }}",
+        "material": "What it is built of: {{ materials | join(', ') }}; stone lasts and resists fire, holy stone makes a temple shine, wood rots and burns. Empty: its builders choose",
+        "world_material_id": "Or a substance of this world by its id; overrides material",
+        "level": "Its size, 1 to 5",
+        "design_id": "A structure design of the same kind to build to, if one exists",
     },
     EntityType.FACTION: {
         **WORSHIPPED_SON_FIELD,
@@ -388,6 +396,22 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "image_prompt": 'English photoreal prompt of the disaster striking. {% include "shared/image_prompt_rules.md.j2" %}',
         },
     ),
+    T.SHAPE_FOLK: ToolText(
+        "You set the customs of a people that worships you: its way of war, taste in beauty, funeral rite, marriage, inheritance, whether it marries "
+        "only its own, or what it eats. The people holds to what you set until the Creator releases it. Cost: {{ rules.customs.son_shape_essence }} "
+        "essence for each custom; {{ rules.customs.son_shape_ap }} action.",
+        {
+            "people_id": "The people that worships you",
+            "martial_style": "Way of war (shieldwall, horse_archer, skirmisher, chariot, phalanx, berserker, naval_raider, siege_engineer, war_magic, beast_war)",
+            "aesthetic": "Taste in beauty (austere, ornate, geometric, natural, macabre, celestial)",
+            "funeral_rite": "How the dead are handled (burial, cremation, sky_burial, sea_burial, entombment, ancestor_shrine, endocannibalism, reanimation, soul_binding)",
+            "marriage": "Marriage custom (monogamy, polygyny, polyandry, group)",
+            "inheritance": "Inheritance (gavelkind, primogeniture, ultimogeniture, matrilineal, elective, by_merit)",
+            "endogamous": "True if they may marry only their own people",
+            "diet": "What they eat (omnivore, herbivore, carnivore, piscivore, scavenger, sanguivore, lithovore, essence_feeder, phototroph)",
+            "reason": "Why you give them these ways",
+        },
+    ),
     T.TEACH_KNOWLEDGE: ToolText(
         "You teach an existing knowledge to a community or mortal; the knowledge spreads from them to their partners. If unclaimed it starts worshipping you. Cost: "
         "{{ rules.intervention_costs.teach_knowledge | share_of(rules.son_tools.intervention_cost_pct) }} essence; 1 action.",
@@ -429,10 +453,55 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You turn to another world of the cosmos: from now on your creations and inspections happen there. Free.",
         {"world_id": "The id of the world you go to (from the OTHER WORLDS OF THE COSMOS list)"},
     ),
+    T.FORGE_MATERIAL: ToolText(
+        "You forge a new material into a world, a substance of its own with every property you name; you may set a vein of it into a land. "
+        "Smiths can work it once they know its branch to its level. {{ rules.son_tools.forge_material_essence }} essence, 1 action.",
+        {
+            "world_id": "The world it belongs to",
+            "name": "Its proper name",
+            "family": "Its family: {{ material_families | join(', ') }}",
+            "base_kind": "Optional: the catalog material it is akin to ({{ materials | join(', ') }}); unset properties follow it",
+            "hardness": "0 to 100: edge retention and armour",
+            "toughness": "0 to 100: resistance to breaking",
+            "weight": "0 to 100: burden on marches and in heat",
+            "edge": "0 to 100: cutting quality",
+            "conductivity": "0 to 100: how much enchantment it holds",
+            "sanctity": "0 to 100: holiness; harms the undead, the cursed and the void",
+            "corruption": "0 to 100: taint; lures outer beings and curses",
+            "rarity": "0 to 100: scarcity; raises the price of goods made of it",
+            "base_value": "0 to 100: worth of goods made of it",
+            "decay": "0 to 100: how fast it rots, rusts or crumbles",
+            "branch": "Optional knowledge branch needed to work it: {{ knowledge_branches }}",
+            "level": "Level of that branch needed",
+            "place_id": "Optional: a land or place where a vein of it is set",
+            "reason": "Why you forge it",
+        },
+    ),
     T.SEVER_LEY: ToolText(
         "You cut a ley line between two regions: magic stops flowing along it, storms no longer run down it and works on it stop gaining power, "
         "for {{ rules.environment.sever_ley_epochs }} ages. {{ rules.son_tools.sever_ley_essence }} essence, 1 action.",
         {"line_id": "The ley line's id (see the region's ley lines)", "reason": "Why you cut it"},
+    ),
+    T.LOOSE_DISEASE: ToolText(
+        "You forge a new sickness of your own design and loose it on a region or community: you choose how it spreads (vector), the body functions "
+        "it strikes, how readily it passes on, how many it kills, how long it hides before the sick show it, which beast carries it and the climate it loves. "
+        "It spreads along roads, armies and journeys by its vector, survivors grow immune, and you gain essence from every outbreak of it. "
+        "{{ rules.son_tools.loose_disease_essence }} essence, 1 action.",
+        {
+            "target_id": "The region or community it first strikes",
+            "name": "The sickness's name in the world's language",
+            "vector": "How it passes on: air (crowds and cold), water (rivers, marsh, poor sanitation), touch (caravans and armies), "
+            "bite (needs its host beast), spirit (magic, ley lines, the impious), void (void-scarred lands), curse (bound to you while you live)",
+            "target_functions": "The body functions it strikes; survivors may keep a lasting weakness there",
+            "virulence": "How readily it spreads, 1 to 100",
+            "lethality": "How many of the sick die, 1 to 100",
+            "incubation": "Sampled years before the sick show it (0 to 20): long incubation spreads it unseen, past quarantines",
+            "chronic_rate": "How many survivors keep a lasting weakness, 0 to 100",
+            "climate_affinity": "The climate where it spreads fastest",
+            "host_species_id": "Optional: the species that carries it; killing that species weakens the sickness",
+            "severity": "How hard the first outbreak strikes, 1 to 100",
+            "reason": "Why you loose it",
+        },
     ),
     T.HIDE_SECRET: ToolText(
         "You hide a secret in a place: a seam, a relic, a sealed spirit, lost knowledge, a lost rite or a way down to the underworld. "
@@ -623,6 +692,69 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "star_id": "The existing star it will orbit (from the list)",
             "parent_world_id": "If it will be a moon of a world, that world's id",
             "new_star": "Only if no star in the list fits this world's light: a distant system with its own new sun",
+        },
+    ),
+    T.RAISE_DISTRICT: ToolText(
+        "You raise or enlarge a district of a settlement: farmland, market, craft quarter, temple quarter, harbour, citadel, palace, foreign quarter, "
+        "necropolis or one of the world's district designs. Each kind changes the city: storage, housing, order, sanitation, piety, administration, "
+        "policing, trade and harbour capacity. {{ rules.son_tools.raise_district_essence }} essence, {{ rules.son_tools.raise_district_ap }} actions.",
+        {
+            "settlement_id": "The settlement's id",
+            "kind": "The district kind (farmland, market, craft_quarter, temple_quarter, harbour, citadel, slums, palace, foreign_quarter, necropolis)",
+            "design_id": "Or the id of one of the world's district designs",
+            "material": "timber or stone (stone resists fire, flood and storm but falls in earthquakes)",
+            "reason": "Why you raise it",
+        },
+    ),
+    T.DESIGN_DISTRICT: ToolText(
+        "You devise a new kind of district for your world on a base kind; every city may then raise it. Each number you give replaces the base "
+        "kind's effect per level: housing (people), food_store and goods_store (stored goods), harbour (trade capacity), order, sanitation (may be "
+        "negative), piety_floor, admin_pct (administrative reach), policing, investment_pct and tension_relief_pct. "
+        "{{ rules.son_tools.design_district_essence }} essence, {{ rules.son_tools.design_district_ap }} actions.",
+        {
+            "name": "The design's name",
+            "base_kind": "The base district kind it builds on",
+            "housing": "People housed per level",
+            "food_store": "Food stored per level",
+            "goods_store": "Ore and goods stored per level",
+            "harbour": "Harbour trade capacity per level",
+            "order": "Public order per level",
+            "sanitation": "Sanitation per level (negative for squalor)",
+            "piety_floor": "Piety the district keeps alive per level",
+            "admin_pct": "Administrative reach per level (%)",
+            "policing": "Crime suppressed per level",
+            "investment_pct": "Extra investment drawn per level (%)",
+            "tension_relief_pct": "City-countryside tension relieved per level (%)",
+            "reason": "What the district is and why you devise it",
+        },
+    ),
+    T.OPEN_TRADE_ROUTE: ToolText(
+        "You lay a trade route between two markets of the world you are on (peoples or settlements): merchants carry goods along it from this age, the cheap "
+        "market selling to the dear one, tolls fall to the masters of the lands it crosses. If you or a sibling closed the way between them before, it opens again. "
+        "{{ rules.son_routes.open_cost }} essence, {{ rules.son_routes.open_ap }} action.",
+        {
+            "first_id": "The first market (a people or settlement)",
+            "second_id": "The second market",
+            "mode": "How goods travel: road, river, sea, caravan or sky (leave empty to let the land decide)",
+            "reason": "Why you lay this road",
+        },
+    ),
+    T.CLOSE_TRADE_ROUTE: ToolText(
+        "You close a trade route: no caravan passes, and merchants found no new way between its two markets until a god opens it again. "
+        "{{ rules.son_routes.close_cost }} essence, {{ rules.son_routes.close_ap }} action.",
+        {"route_id": "The trade route to close", "reason": "Why you close it"},
+    ),
+    T.COMMISSION_STRUCTURE: ToolText(
+        "You set a settlement or people to raise a work in your name: its builders, stone and coin raise it over the coming ages, and when it stands it is "
+        "dedicated to you (fame, faith, and it can anchor your existence). The kind decides what it does: temples hold piety, walls defend, granaries store, "
+        "hospitals heal, libraries keep learning, palaces lend legitimacy. {{ rules.construction.commission_essence }} essence, 1 action.",
+        {
+            "community_id": "The settlement or people that builds it",
+            "structure_kind": "What it is: {{ structure_kinds }}",
+            "level": "Its size, 1 to 5",
+            "material": "What it is built of (stone, wood, bronze...); by default what its builders know",
+            "design_id": "A structure design of that kind to build to, if one exists",
+            "name": "Its name, if you give one",
         },
     ),
     T.WAGE_WAR: ToolText(

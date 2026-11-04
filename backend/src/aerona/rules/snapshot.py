@@ -6,6 +6,7 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.rules.constraints import ASCENDING_CHAINS, AscendingChain
 from aerona.rules.model import Number, RuleDescriptor, describe, rule_meta
 from aerona.rules.registry import Rules
+from aerona.rules.renames import canonical_overrides
 
 OverrideMap = dict[tuple[str, str], float]
 MAX_SAFE_INTEGER = 2**53 - 1
@@ -50,7 +51,7 @@ def is_default(rules: Rules, namespace: str, key: str, value: float) -> bool:
 
 def apply_overrides(rules: Rules, overrides: OverrideMap) -> Rules:
     grouped: dict[str, dict[str, Number]] = {}
-    for (namespace, key), value in overrides.items():
+    for (namespace, key), value in canonical_overrides(overrides).items():
         try:
             grouped.setdefault(namespace, {})[key] = coerce(rules, namespace, key, value)
         except (NotFoundError, ValidationFailedError):

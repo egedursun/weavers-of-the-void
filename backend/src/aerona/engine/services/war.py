@@ -428,7 +428,7 @@ async def raise_army(ctx: TickContext, strength: MilitaryStrength, sides: SideIn
     engine_kind, subtype = ARMY_KINDS.get(community.entity_type, PEOPLES_ARMY)
     share = await mobilisation(ctx.session, ctx.rules, community, harvest_share=await harvest_share(ctx, community))
     wanted = clamp_int(soldier_count(ctx.rules, strength, community) * share, campaigns.army_min_soldiers, ctx.rules.limits.army_soldier_cap)
-    adults = await fighting_age(ctx.session, community.id)
+    adults = await fighting_age(ctx.session, community.id, ctx.rules)
     if adults is not None:
         wanted = max(campaigns.army_min_soldiers, min(wanted, adults))
     size = levy(ctx.rules, community, wanted)

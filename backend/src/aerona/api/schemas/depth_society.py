@@ -1,6 +1,20 @@
 from aerona.api.schemas.common import ApiModel
-from aerona.domain.enums.demography import Aesthetic, AgeBand, CohortCondition, InheritanceCustom, Job, MarriageCustom, MartialStyle, Sex
+from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.demography import (
+    Aesthetic,
+    AgeBand,
+    CohortCondition,
+    FolkDiet,
+    FuneralCustom,
+    InheritanceCustom,
+    Job,
+    MarriageCustom,
+    MartialStyle,
+    NaturalTrait,
+    Sex,
+)
 from aerona.domain.enums.disease import ClimateAffinity, CureSource, DiseaseTarget, DiseaseVector, OutbreakStatus, SpreadPath
+from aerona.domain.enums.ecology import SizeClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.mind import PressureKind, ValueAxis
@@ -33,6 +47,27 @@ class PressureView(ApiModel):
     value: int
 
 
+class LinkedRecord(ApiModel):
+    id: int
+    name: str
+
+
+class WorkFactor(ApiModel):
+    job: Job
+    pct: int
+
+
+class KinEffectsView(ApiModel):
+    food_pct: int
+    room_pct: int
+    strength_pct: int
+    disease_pct: int
+    fleet_pct: int
+    mount: str
+    hunger_pct: int
+    work: list[WorkFactor]
+
+
 class BiologyView(ApiModel):
     maturity_years: int
     adult_years: int
@@ -40,8 +75,20 @@ class BiologyView(ApiModel):
     fertility_pct: int
     acclimatised: TemperatureBand
     staple: CommodityKind
-    traits: list[str]
+    traits: list[NaturalTrait]
+    immunities: list[LinkedRecord]
+    body_plan: BodyPlan
+    size_class: SizeClass
+    diet: FolkDiet
+    edible: list[CommodityKind]
+    effects: KinEffectsView
     locked: list[str]
+
+
+class MartialRecordView(ApiModel):
+    style: MartialStyle
+    wins: int
+    losses: int
 
 
 class CultureView(ApiModel):
@@ -54,7 +101,13 @@ class CultureView(ApiModel):
     endogamous: bool
     inheritance: InheritanceCustom
     slavery_lawful: bool
-    staples: list[str]
+    staples: list[CommodityKind]
+    liturgical_language: LinkedRecord | None
+    trade_language: LinkedRecord | None
+    funeral_rite: FuneralCustom
+    funeral_tradition: LinkedRecord | None
+    martial_record: list[MartialRecordView]
+    martial_net: int
     locked: list[str]
 
 
@@ -89,6 +142,27 @@ class DemographyView(ApiModel):
     neighbours: list[NeighbourCulture]
     inequality: int
     mobilisation_pct: int
+    afflictions: list["AfflictionView"]
+    named: list["NamedMortalView"]
+    held: list[str]
+
+
+class AfflictionView(ApiModel):
+    disease_id: int
+    disease: str
+    vector: DiseaseVector
+    target_functions: list[DiseaseTarget]
+    severity: int
+    status: OutbreakStatus
+    outbreak_id: int
+
+
+class NamedMortalView(ApiModel):
+    id: int
+    name: str
+    dormant: bool
+    held: bool
+    importance: int
 
 
 class ImmunityView(ApiModel):
@@ -96,6 +170,7 @@ class ImmunityView(ApiModel):
     community: str
     age_band: AgeBand
     immune_pct: int
+    locked: bool
 
 
 class OutbreakView(ApiModel):
@@ -115,6 +190,8 @@ class OutbreakView(ApiModel):
     ended_epoch: int | None
     quarantined: bool
     event_id: int | None
+    locked: list[str]
+    unseen_pct: int
 
 
 class StrainView(ApiModel):
@@ -130,6 +207,9 @@ class EndemicView(ApiModel):
     region: str
     load: int
     since_epoch: int
+    locked: bool
+    disease_id: int
+    disease: str
 
 
 class CureView(ApiModel):
@@ -159,11 +239,35 @@ class DiseaseView(ApiModel):
     origin_region_id: int | None
     emerged_epoch: int
     locked: list[str]
+    origin_incident_id: int | None
+    origin: "IncidentRefView | None"
+    incidents: list["IncidentRefView"]
+    hosts: list["HostView"]
+    unseen_pct: int
+    sick: int
     strains: list[StrainView]
     outbreaks: list[OutbreakView]
     endemic: list[EndemicView]
     cures: list[CureView]
     immunities: list[ImmunityView]
+
+
+class IncidentRefView(ApiModel):
+    id: int
+    epoch: int
+    year: int | None
+    kind: str
+    text: str
+    place_id: int | None
+
+
+class HostView(ApiModel):
+    species_id: int
+    name: str
+    immune: bool
+    lands: int
+    abundance: int
+    primary: bool
 
 
 class QuarantineView(ApiModel):
@@ -186,6 +290,62 @@ class DistrictView(ApiModel):
     condition: int
     material: BuildMaterial
     built_epoch: int
+    design_id: int | None
+    locked: list[str]
+    effects: dict[str, int]
+
+
+class DistrictDesignView(ApiModel):
+    id: int
+    name: str
+    description: str | None
+    base_kind: DistrictKind
+    parameters: dict[str, int | None]
+    defaults: dict[str, int]
+    created_epoch: int
+
+
+class ArmyOption(ApiModel):
+    id: int
+    name: str
+    size: int
+
+
+class AdminView(ApiModel):
+    base: int
+    literacy: int
+    scribes: int
+    writing: int
+    palace: int
+    total: int
+
+
+class StorageView(ApiModel):
+    districts: int
+    workshops: int
+    other: int
+    total: int
+
+
+class DefenceView(ApiModel):
+    wall_pct: int
+    tower_pct: int
+    batter_pct: int
+    gate_weakness_pct: int
+
+
+class DistrictEffectsView(ApiModel):
+    housing: int
+    food_store: int
+    goods_store: int
+    harbour: int
+    order: int
+    sanitation: int
+    piety_floor: int
+    admin_pct: int
+    policing: int
+    investment_pct: int
+    tension_relief_pct: int
 
 
 class InfrastructureView(ApiModel):
@@ -233,6 +393,7 @@ class ForeignShare(ApiModel):
 
 class SettlementPlanView(ApiModel):
     entity_id: int
+    world_id: int | None
     size_tier: SizeTier
     treasury: int
     tax_rate: int
@@ -254,6 +415,17 @@ class SettlementPlanView(ApiModel):
     construction_capacity: int
     hauling_capacity: int
     rationing: bool
+    admin_capacity: int
+    admin: AdminView
+    food_storage: StorageView
+    goods_storage: StorageView
+    defences: DefenceView
+    district_effects: DistrictEffectsView
+    prestige_pull_pct: int
+    prestige_investment_pct: int
+    designs: list[DistrictDesignView]
+    kind_defaults: dict[DistrictKind, dict[str, int]]
+    armies: list[ArmyOption]
     district_slots: int
     housing: int
     locked: list[str]
@@ -262,3 +434,7 @@ class SettlementPlanView(ApiModel):
     districts: list[DistrictView]
     treasury_ledger: list[TreasuryLine]
     history: list[HistoryPoint]
+
+
+DemographyView.model_rebuild()
+DiseaseView.model_rebuild()

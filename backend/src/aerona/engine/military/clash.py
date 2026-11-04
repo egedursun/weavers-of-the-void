@@ -28,8 +28,10 @@ from aerona.domain.enums.mind import SkillKind, TraitEffect, ValueAxis
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.book import perception_of
 from aerona.engine.context import TickContext
+from aerona.engine.demography.biology import battle_edge, profiles_of
 from aerona.engine.ecology.beasts import beast_dread, mounted_edge
 from aerona.engine.economy.materials import MaterialBook
+from aerona.engine.economy.sanctity import holy_strike
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import ancestral_site, guardians_of
 from aerona.engine.lore.items import standard_of
@@ -150,6 +152,7 @@ async def side_of(
     defending: bool,
     enemy: EntityRow,
     knowledge: KnowledgeMap,
+    ground: Field,
 ) -> Side:
     army, row = armies[0]
     rows = []
@@ -173,6 +176,8 @@ async def side_of(
     }
     medicine = knowledge.level(community.id, KnowledgeBranch.MEDICINE) * PERCENT // max(1, table.morale.medicine_levels)
     medicine += await surgeon_skill(ctx, [item.id for item, _ in armies]) * table.battle_magic.surgeon_pct // PERCENT
+    biology, culture = await profiles_of(ctx.session, community)
+    kin = battle_edge(ctx.rules, biology, culture, terrain=ground.terrain, weather=ground.weather, night=ground.night, river=ground.river, defending=defending)
     return Side(
         veteran=table.military_units.veteran_skill_pct / PERCENT * veteran / PERCENT,
         leadership=sum(parts.values()),
@@ -180,7 +185,7 @@ async def side_of(
         army=army,
         profile=profile,
         stacks=stacks,
-        edge=edge * await mounted_edge(ctx, row.commander_entity_id),
+        edge=edge * kin * await holy_strike(ctx.session, table, army.id, enemy) * await mounted_edge(ctx, row.commander_entity_id),
         defending=defending,
         skill=await skill_level(ctx, commander, SkillKind.TACTICS),
         traits=await traits_of(ctx, commander),
@@ -258,8 +263,8 @@ async def clash(
     knowledge = await KnowledgeMap.load(ctx.session)
     mean = max(1e-6, (powers[0] + powers[1]) / 2)
     edges = [max(EDGE_FLOOR, min(EDGE_CEILING, sqrt(max(0.0, power) / mean))) for power in powers]
-    first = await side_of(ctx, attacker, armies[attacker.id], edge=edges[0], defending=False, enemy=defender, knowledge=knowledge)
-    second = await side_of(ctx, defender, armies[defender.id], edge=edges[1], defending=True, enemy=attacker, knowledge=knowledge)
+    first = await side_of(ctx, attacker, armies[attacker.id], edge=edges[0], defending=False, enemy=defender, knowledge=knowledge, ground=ground)
+    second = await side_of(ctx, defender, armies[defender.id], edge=edges[1], defending=True, enemy=attacker, knowledge=knowledge, ground=ground)
     for side in (first, second):
         ctx.count("items_flared", await flaring_items(ctx, ground.weather, side, await leaders_of(ctx, armies[side.entity.id])))
     result = resolve(ctx.rules, streams_for(ctx, war_id, sequence), first, second, ground)

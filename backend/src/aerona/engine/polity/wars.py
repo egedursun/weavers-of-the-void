@@ -82,7 +82,7 @@ async def champions(ctx: TickContext) -> int:
         first, second = await champion(ctx, attacker), await champion(ctx, defender)
         if first is None or second is None:
             continue
-        result = bout(ctx.rules, ctx.rng(f"champions.{war.id}"), await fighter(ctx, first), await fighter(ctx, second), DuelContext.CHAMPION)
+        result = bout(ctx.rules, ctx.rng(f"champions.{war.id}"), await fighter(ctx, first, second), await fighter(ctx, second, first), DuelContext.CHAMPION)
         await wear_in_duel(ctx, first.id, result.exchanges)
         await wear_in_duel(ctx, second.id, result.exchanges)
         hero = result.winner.entity

@@ -1,5 +1,6 @@
 from collections import defaultdict
 from collections.abc import Mapping
+from dataclasses import asdict
 
 from fastapi import APIRouter, Path
 from sqlalchemy import select
@@ -7,20 +8,28 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.schemas.depth_society import (
+    AdminView,
+    ArmyOption,
     BiologyView,
     ClassMood,
     CultureView,
     CureView,
+    DefenceView,
     DemographyView,
     DiseaseView,
+    DistrictDesignView,
+    DistrictEffectsView,
     DistrictView,
     EndemicView,
     ForeignShare,
     HistoryPoint,
     ImmunityView,
     InfrastructureView,
+    KinEffectsView,
     LabourFlowView,
     LabourView,
+    LinkedRecord,
+    MartialRecordView,
     NeighbourCulture,
     OutbreakMapView,
     OutbreakView,
@@ -28,31 +37,64 @@ from aerona.api.schemas.depth_society import (
     PressureView,
     QuarantineView,
     SettlementPlanView,
+    StorageView,
     StrainView,
     TreasuryLine,
     ValuePoint,
+    WorkFactor,
 )
+from aerona.api.views.disease import afflictions, community_holds, disease_incidents, disease_sick, host_views, named_mortals, unseen_pct
+from aerona.catalog.peoples import KIN
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, EndemicDiseaseRow, ImmunityRow, OutbreakRow, QuarantineRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
+from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.settlement import (
+    DESIGN_PARAMETERS,
+    DistrictRow,
+    SettlementHistoryRow,
+    SettlementInfrastructureRow,
+    SettlementProfileRow,
+    SettlementTreasuryRow,
+)
 from aerona.db.tables.society import CommunitySocietyRow
-from aerona.domain.enums.demography import Job
-from aerona.domain.enums.disease import DiseaseTarget
+from aerona.db.tables.warfare import ArmyRow
+from aerona.domain.enums.demography import Job, MartialStyle
+from aerona.domain.enums.disease import DiseaseTarget, OutbreakStatus
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis
-from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.settlement import DistrictKind
+from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.engine.body.customs import culture_of, people_of
-from aerona.engine.demography.labour import AGE_WORK, CONDITION_WORK, jobs_for, mobilisation
+from aerona.engine.demography.biology import (
+    battle_edge,
+    edible,
+    food_need,
+    footprint,
+    hunger_level,
+    immunity_factor,
+    job_factors,
+    mount_fit,
+    natures,
+    record_of,
+    scaled,
+)
+from aerona.engine.demography.labour import AGE_WORK, condition_work, jobs_for, mobilisation
 from aerona.engine.demography.mobility import inequality
+from aerona.engine.disease.harm import community_targets
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.knowledge import known_levels
+from aerona.engine.primitives.society import supply_index
 from aerona.engine.primitives.stats import stat
 from aerona.engine.settlement.book import Town
+from aerona.engine.settlement.districts import base_parameters, designs_for
 from aerona.engine.settlement.life import housing_of, slots_of
+from aerona.engine.settlement.readout import plan_readout
 from aerona.rules.registry import Rules
 
 router = APIRouter(tags=["depth-society"])
@@ -97,12 +139,12 @@ async def neighbours_of(session: AsyncSession, people: EntityRow) -> list[Neighb
     return views
 
 
-def labour_flows(rules: Rules, rows: list[CohortRow]) -> list[LabourFlowView]:
+def labour_flows(rules: Rules, rows: list[CohortRow], targets: frozenset[DiseaseTarget] = frozenset()) -> list[LabourFlowView]:
     found: dict[tuple[SocialClass, Job], float] = defaultdict(float)
     for row in rows:
-        hands = row.count * AGE_WORK[row.age_band] * CONDITION_WORK[row.condition]
+        hands = row.count * AGE_WORK[row.age_band]
         for job, share in jobs_for(rules, row.social_class).items():
-            found[(row.social_class, job)] += hands * share
+            found[(row.social_class, job)] += hands * condition_work(rules, row.condition, job, targets) * share
     return [LabourFlowView(social_class=key[0], job=key[1], workers=round(value)) for key, value in sorted(found.items()) if value >= 1]
 
 
@@ -122,7 +164,9 @@ async def demography(services: ServicesDep, entity_id: int = Path(ge=1)) -> Demo
             for row in await session.scalars(select(LabourRow).where(LabourRow.community_entity_id == entity.id).order_by(LabourRow.job))
         ]
         society = await session.get(CommunitySocietyRow, entity.id)
-        flows = labour_flows(rules, list(await session.scalars(select(CohortRow).where(CohortRow.community_entity_id == entity.id))))
+        flows = labour_flows(
+            rules, list(await session.scalars(select(CohortRow).where(CohortRow.community_entity_id == entity.id))), await community_targets(session, entity.id)
+        )
         pressures = [PressureView(kind=kind, value=value) for kind, value in sorted((await pressures_of(session, entity.id)).items())]
         classes = (
             [ClassMood(social_class=item, share=society.share(item), satisfaction=society.satisfaction(item)) for item in SocialClass]
@@ -140,41 +184,88 @@ async def demography(services: ServicesDep, entity_id: int = Path(ge=1)) -> Demo
             flows=flows,
             pressures=pressures,
             classes=classes,
-            biology=BiologyView(
-                maturity_years=biology.maturity_years,
-                adult_years=biology.adult_years,
-                elder_years=biology.elder_years,
-                fertility_pct=biology.fertility_pct,
-                acclimatised=biology.acclimatised,
-                staple=biology.staple,
-                traits=list(biology.traits),
-                locked=list(biology.locked),
-            )
-            if biology is not None
-            else None,
-            culture=CultureView(
-                cohesion=culture.cohesion,
-                literacy=culture.literacy,
-                urbanisation=culture.urbanisation,
-                aesthetic=culture.aesthetic,
-                martial_style=culture.martial_style,
-                marriage=culture.marriage,
-                endogamous=culture.endogamous,
-                inheritance=culture.inheritance,
-                slavery_lawful=culture.slavery_lawful,
-                staples=list(culture.staples),
-                locked=list(culture.locked),
-            )
-            if culture is not None
-            else None,
+            biology=await biology_view(session, rules, entity, biology, culture) if biology is not None else None,
+            culture=await culture_view(session, culture) if culture is not None else None,
             values=values_list(values),
             neighbours=await neighbours_of(session, people) if people is not None else [],
             inequality=inequality(society) if society is not None else 0,
             mobilisation_pct=round(await mobilisation(session, rules, entity, harvest_share=0.0) * PERCENT),
+            afflictions=await afflictions(session, entity.id),
+            named=await named_mortals(session, entity.id),
+            held=await community_holds(session, entity.id),
         )
 
 
-def outbreak_views(rows: list[OutbreakRow], names: dict[int, str], sources: dict[int, int]) -> list[OutbreakView]:
+async def linked_record(session: AsyncSession, entity_id: int | None) -> LinkedRecord | None:
+    found = await session.get(EntityRow, entity_id) if entity_id is not None else None
+    return LinkedRecord(id=found.id, name=found.name) if found is not None else None
+
+
+async def biology_view(session: AsyncSession, rules: Rules, community: EntityRow, biology: PeopleBiologyRow, culture: PeopleCultureRow | None) -> BiologyView:
+    atlas = await RegionAtlas.load(session)
+    region = atlas.top_region(community.id)
+    ground = await session.get(RegionEnvironmentRow, region) if region is not None else None
+    magic = (await known_levels(session, [community.id])).get(community.id, {}).get(KnowledgeBranch.MAGIC, 0)
+    hunger = hunger_level(rules, biology, ground, await supply_index(session, community.id, Commodity.FOOD), magic)
+    neutral = battle_edge(rules, biology, None, terrain=None, weather=None, night=False, river=False, defending=False)
+    fleet = scaled(KIN[biology.body_plan].naval_pct / PERCENT, rules.biology.naval_pct)
+    immunities = [found for found in [await linked_record(session, item) for item in biology.immunities] if found is not None]
+    return BiologyView(
+        maturity_years=biology.maturity_years,
+        adult_years=biology.adult_years,
+        elder_years=biology.elder_years,
+        fertility_pct=biology.fertility_pct,
+        acclimatised=biology.acclimatised,
+        staple=biology.staple,
+        traits=sorted(natures(biology), key=lambda item: item.value),
+        immunities=immunities,
+        body_plan=biology.body_plan,
+        size_class=biology.size_class,
+        diet=biology.diet,
+        edible=sorted(edible(biology.diet), key=lambda item: item.value),
+        effects=KinEffectsView(
+            food_pct=round(food_need(rules, biology) * PERCENT),
+            room_pct=round(footprint(rules, biology) * PERCENT),
+            strength_pct=round(neutral * PERCENT),
+            disease_pct=round(immunity_factor(rules, biology, culture, 0) * PERCENT),
+            fleet_pct=round(fleet * PERCENT),
+            mount=mount_fit(biology).value,
+            hunger_pct=round(hunger * PERCENT),
+            work=[WorkFactor(job=job, pct=round(value * PERCENT)) for job, value in sorted(job_factors(rules, biology).items())],
+        ),
+        locked=list(biology.locked),
+    )
+
+
+async def culture_view(session: AsyncSession, culture: PeopleCultureRow) -> CultureView:
+    record = [
+        MartialRecordView(style=MartialStyle(style), wins=int(entry[0]), losses=int(entry[1]) if len(entry) > 1 else 0)
+        for style, entry in sorted((culture.martial_record or {}).items())
+        if style in MartialStyle._value2member_map_ and entry
+    ]
+    wins, losses = record_of(culture, culture.martial_style.value)
+    return CultureView(
+        cohesion=culture.cohesion,
+        literacy=culture.literacy,
+        urbanisation=culture.urbanisation,
+        aesthetic=culture.aesthetic,
+        martial_style=culture.martial_style,
+        marriage=culture.marriage,
+        endogamous=culture.endogamous,
+        inheritance=culture.inheritance,
+        slavery_lawful=culture.slavery_lawful,
+        staples=[CommodityKind(item) for item in culture.staples if item in CommodityKind._value2member_map_],
+        liturgical_language=await linked_record(session, culture.liturgical_language_id),
+        trade_language=await linked_record(session, culture.trade_language_id),
+        funeral_rite=culture.funeral_rite,
+        funeral_tradition=await linked_record(session, culture.funeral_rite_id),
+        martial_record=record,
+        martial_net=wins - losses,
+        locked=list(culture.locked),
+    )
+
+
+def outbreak_views(rows: list[OutbreakRow], names: dict[int, str], sources: dict[int, int], unseen: Mapping[int, int] | None = None) -> list[OutbreakView]:
     return [
         OutbreakView(
             id=row.id,
@@ -193,6 +284,32 @@ def outbreak_views(rows: list[OutbreakRow], names: dict[int, str], sources: dict
             quarantined=row.quarantined,
             season_factor=row.season_factor,
             event_id=row.event_entity_id,
+            locked=list(row.locked or []),
+            unseen_pct=(unseen or {}).get(row.id, 0),
+        )
+        for row in rows
+    ]
+
+
+async def unseen_of(session: AsyncSession, rules: Rules, rows: list[OutbreakRow]) -> dict[int, int]:
+    epoch = (await CosmosRepository(session).require_cosmos()).epoch
+    profiles = {
+        row.disease_entity_id: row
+        for row in await session.scalars(select(DiseaseProfileRow).where(DiseaseProfileRow.disease_entity_id.in_({item.disease_entity_id for item in rows})))
+    }
+    return {row.id: unseen_pct(rules, profiles.get(row.disease_entity_id), row, epoch) for row in rows if row.status is not OutbreakStatus.ENDED}
+
+
+def endemic_views(rows: list[EndemicDiseaseRow], names: dict[int, str]) -> list[EndemicView]:
+    return [
+        EndemicView(
+            region_id=row.region_entity_id,
+            region=names.get(row.region_entity_id, ""),
+            load=row.load,
+            since_epoch=row.since_epoch,
+            locked=bool(row.locked),
+            disease_id=row.disease_entity_id,
+            disease=names.get(row.disease_entity_id, ""),
         )
         for row in rows
     ]
@@ -224,11 +341,14 @@ async def disease(services: ServicesDep, entity_id: int = Path(ge=1)) -> Disease
             *(row.disease_entity_id for row in strains),
             *(row.region_entity_id for row in outbreaks),
             *(row.region_entity_id for row in endemic),
+            *(row.disease_entity_id for row in endemic),
             *(row.community_entity_id for row in cures),
             *(row.community_entity_id for row in immunities),
         }
         names = await names_of(session, ids)
         children = {row.id: row for row in await session.scalars(select(EntityRow).where(EntityRow.id.in_([row.disease_entity_id for row in strains])))}
+        rules = await rules_of(session)
+        incidents = await disease_incidents(session, entity.id, profile.origin_incident_id)
         return DiseaseView(
             entity_id=entity.id,
             name=entity.name,
@@ -249,6 +369,12 @@ async def disease(services: ServicesDep, entity_id: int = Path(ge=1)) -> Disease
             origin_region_id=profile.origin_region_id,
             emerged_epoch=profile.emerged_epoch,
             locked=list(profile.locked),
+            origin_incident_id=profile.origin_incident_id,
+            origin=next((item for item in incidents if item.id == profile.origin_incident_id), None),
+            incidents=incidents,
+            hosts=await host_views(session, profile),
+            unseen_pct=unseen_pct(rules, profile, None, 0),
+            sick=await disease_sick(session, entity.id),
             strains=[
                 StrainView(
                     id=row.disease_entity_id,
@@ -260,18 +386,19 @@ async def disease(services: ServicesDep, entity_id: int = Path(ge=1)) -> Disease
                 for row in strains
                 if row.disease_entity_id in children
             ],
-            outbreaks=outbreak_views(outbreaks, names, await source_regions(session, outbreaks)),
-            endemic=[
-                EndemicView(region_id=row.region_entity_id, region=names.get(row.region_entity_id, ""), load=row.load, since_epoch=row.since_epoch)
-                for row in endemic
-            ],
+            outbreaks=outbreak_views(outbreaks, names, await source_regions(session, outbreaks), await unseen_of(session, rules, outbreaks)),
+            endemic=endemic_views(endemic, names),
             cures=[
                 CureView(community_id=row.community_entity_id, community=names.get(row.community_entity_id, ""), source=row.source, since_epoch=row.since_epoch)
                 for row in cures
             ],
             immunities=[
                 ImmunityView(
-                    community_id=row.community_entity_id, community=names.get(row.community_entity_id, ""), age_band=row.age_band, immune_pct=row.immune_pct
+                    community_id=row.community_entity_id,
+                    community=names.get(row.community_entity_id, ""),
+                    age_band=row.age_band,
+                    immune_pct=row.immune_pct,
+                    locked=bool(row.locked),
                 )
                 for row in immunities
             ],
@@ -291,16 +418,15 @@ async def world_outbreaks(services: ServicesDep, world_id: int = Path(ge=1)) -> 
                 *(row.region_entity_id for row in outbreaks),
                 *(row.disease_entity_id for row in outbreaks),
                 *(row.region_entity_id for row in endemic),
+                *(row.disease_entity_id for row in endemic),
                 *(row.region_entity_id for row in quarantines),
             },
         )
+        rules = await rules_of(session)
         return OutbreakMapView(
             world_id=world_id,
-            outbreaks=outbreak_views(outbreaks, names, await source_regions(session, outbreaks)),
-            endemic=[
-                EndemicView(region_id=row.region_entity_id, region=names.get(row.region_entity_id, ""), load=row.load, since_epoch=row.since_epoch)
-                for row in endemic
-            ],
+            outbreaks=outbreak_views(outbreaks, names, await source_regions(session, outbreaks), await unseen_of(session, rules, outbreaks)),
+            endemic=endemic_views(endemic, names),
             quarantines=[
                 QuarantineView(region_id=row.region_entity_id, region=names.get(row.region_entity_id, ""), until_epoch=row.until_epoch) for row in quarantines
             ],
@@ -317,7 +443,17 @@ async def settlement_plan(services: ServicesDep, entity_id: int = Path(ge=1)) ->
         if profile is None or infrastructure is None:
             raise NotFoundError("This settlement is surveyed at the next epoch.")
         districts = list(await session.scalars(select(DistrictRow).where(DistrictRow.settlement_entity_id == entity.id).order_by(DistrictRow.id)))
-        town = Town(entity, profile, infrastructure, districts)
+        town = Town(entity, profile, infrastructure, districts, designs=await designs_for(session, districts))
+        readout = await plan_readout(session, rules, town)
+        armies = [
+            ArmyOption(id=army.id, name=army.name, size=stat(army, "size") or 0)
+            for army in await session.scalars(
+                select(EntityRow)
+                .join(ArmyRow, ArmyRow.entity_id == EntityRow.id)
+                .where(ArmyRow.owner_entity_id == entity.id, ArmyRow.disbanded_epoch.is_(None))
+                .order_by(EntityRow.id)
+            )
+        ]
         ledger = list(
             await session.scalars(
                 select(SettlementTreasuryRow)
@@ -333,6 +469,7 @@ async def settlement_plan(services: ServicesDep, entity_id: int = Path(ge=1)) ->
         names = await names_of(session, {int(key) for key in profile.foreigners})
         return SettlementPlanView(
             entity_id=entity.id,
+            world_id=entity.world_id,
             size_tier=profile.size_tier,
             treasury=profile.treasury,
             tax_rate=profile.tax_rate,
@@ -354,6 +491,28 @@ async def settlement_plan(services: ServicesDep, entity_id: int = Path(ge=1)) ->
             construction_capacity=profile.construction_capacity,
             hauling_capacity=profile.hauling_capacity,
             rationing=profile.rationing,
+            admin_capacity=profile.admin_capacity,
+            admin=AdminView(**asdict(readout.admin), total=readout.admin.total),
+            food_storage=StorageView(**asdict(readout.food), total=readout.food.total),
+            goods_storage=StorageView(**asdict(readout.goods), total=readout.goods.total),
+            defences=DefenceView(**asdict(readout.defences)),
+            district_effects=DistrictEffectsView(**asdict(readout.effects)),
+            prestige_pull_pct=readout.prestige_pull_pct,
+            prestige_investment_pct=readout.prestige_investment_pct,
+            armies=armies,
+            kind_defaults={kind: base_parameters(rules, kind) for kind in DistrictKind},
+            designs=[
+                DistrictDesignView(
+                    id=row.id,
+                    name=row.name,
+                    description=row.description,
+                    base_kind=row.base_kind,
+                    parameters={key: getattr(row, key) for key in DESIGN_PARAMETERS},
+                    defaults=base_parameters(rules, row.base_kind),
+                    created_epoch=row.created_epoch,
+                )
+                for row in readout.designs
+            ],
             district_slots=slots_of(rules, town),
             housing=housing_of(rules, town),
             locked=list(profile.locked),
@@ -375,7 +534,17 @@ async def settlement_plan(services: ServicesDep, entity_id: int = Path(ge=1)) ->
                 locked=list(infrastructure.locked),
             ),
             districts=[
-                DistrictView(id=row.id, kind=row.kind, level=row.level, condition=row.condition, material=row.material, built_epoch=row.built_epoch)
+                DistrictView(
+                    id=row.id,
+                    kind=row.kind,
+                    level=row.level,
+                    condition=row.condition,
+                    material=row.material,
+                    built_epoch=row.built_epoch,
+                    design_id=row.design_id,
+                    locked=list(row.locked or []),
+                    effects=readout.district_effects.get(row.id, {}),
+                )
                 for row in districts
             ],
             treasury_ledger=[TreasuryLine(epoch=row.epoch, entry=row.entry, amount=row.amount, balance=row.balance, note=row.note) for row in ledger],

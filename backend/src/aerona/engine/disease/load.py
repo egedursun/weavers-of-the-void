@@ -4,11 +4,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
-from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
+from aerona.db.tables.disease import EndemicDiseaseRow, ImmunityRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.rules.registry import Rules
 
 
 @dataclass(frozen=True)
@@ -35,3 +36,14 @@ class DiseaseLoads:
 
 async def endemic_regions(session: AsyncSession) -> set[int]:
     return set(await session.scalars(select(EndemicDiseaseRow.region_entity_id).where(EndemicDiseaseRow.load > 0)))
+
+
+async def endemic_repel(session: AsyncSession, rules: Rules, region_id: int, origin_id: int | None) -> float:
+    met = (
+        set(await session.scalars(select(ImmunityRow.disease_entity_id).where(ImmunityRow.community_entity_id == origin_id)))
+        if origin_id is not None
+        else set()
+    )
+    loads = await session.scalars(select(EndemicDiseaseRow).where(EndemicDiseaseRow.region_entity_id == region_id, EndemicDiseaseRow.load > 0))
+    load = min(PERCENT, sum(row.load for row in loads if row.disease_entity_id not in met))
+    return max(0.0, 1 - load / PERCENT * rules.epidemiology.endemic_settler_pct / PERCENT)

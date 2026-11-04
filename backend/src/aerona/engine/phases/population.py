@@ -1,15 +1,18 @@
 import math
 
 from aerona.constants.units import PERCENT
-from aerona.db.tables.demography import PeopleBiologyRow
+from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
+from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import PowerEffect
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.demography.biology import footprint, hunger_level
 from aerona.engine.demography.cohorts import cohorts_of, reconcile
-from aerona.engine.demography.vital import Pressures, demographic_step, hunger_of, stress_of
+from aerona.engine.demography.urban import growth_factor
+from aerona.engine.demography.vital import Pressures, demographic_step, stress_of
 from aerona.engine.disease.load import DiseaseLoads
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.guards import absorb_flow
@@ -21,6 +24,7 @@ from aerona.engine.primitives.ledger import LedgerKey, record
 from aerona.engine.primitives.modifiers import GROWTH_KEY, LIVE_MODIFIERS, virtual_value
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
+from aerona.engine.primitives.society import supply_index
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat
 
 
@@ -104,10 +108,16 @@ async def grow_community(
         mortality *= rules.demography.short_life_death_pct / PERCENT
     people = await people_of(ctx.session, community)
     biology = await ctx.session.get(PeopleBiologyRow, people.id) if people is not None else None
+    culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
+    if community.entity_type is EntityType.SETTLEMENT:
+        vigour *= growth_factor(rules, culture)
+    region_id = model.atlas.top_region(community.id)
+    ground = await ctx.session.get(RegionEnvironmentRow, region_id) if region_id is not None else None
+    magic = model.knowledge.level(community.id, KnowledgeBranch.MAGIC)
     pressures = Pressures(
         fertility=vigour,
-        hunger=await hunger_of(ctx.session, community),
-        crowding=max(0.0, load.population / max(1.0, capacity)),
+        hunger=hunger_level(rules, biology, ground, await supply_index(ctx.session, community.id, Commodity.FOOD), magic),
+        crowding=max(0.0, load.population * footprint(rules, biology) / max(1.0, capacity)),
         disease=diseases.of(community),
         stress=await stress_of(ctx, community),
         mortality=mortality,
@@ -143,6 +153,7 @@ async def grow_community(
     "table.nodes",
     "table.outbreaks",
     "table.people_biology",
+    "table.people_culture",
     "table.place_environment",
     "table.region_environment",
     "table.settlement_profiles",

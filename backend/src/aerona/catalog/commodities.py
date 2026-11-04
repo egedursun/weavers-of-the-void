@@ -30,13 +30,11 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
     {
         item.kind: item
         for item in (
-            CommoditySpec(C.GRAIN, "Grain", F.SUBSISTENCE, Commodity.FOOD, 100, 10, consumption=lambda rules: rules.economy.consumption_grain_per_1000),
-            CommoditySpec(
-                C.LIVESTOCK, "Livestock", F.SUBSISTENCE, Commodity.FOOD, 140, 12, consumption=lambda rules: rules.economy.consumption_livestock_per_1000
-            ),
-            CommoditySpec(C.FISH, "Fish", F.SUBSISTENCE, Commodity.FOOD, 110, 9, consumption=lambda rules: rules.economy.consumption_fish_per_1000),
-            CommoditySpec(C.BREAD, "Bread", F.SUBSISTENCE, Commodity.FOOD, 130, 14, consumption=lambda rules: rules.economy.consumption_bread_per_1000),
-            CommoditySpec(C.FODDER, "Fodder", F.SUBSISTENCE, Commodity.FOOD, 60, consumption=lambda rules: rules.economy.consumption_fodder_per_1000),
+            CommoditySpec(C.GRAIN, "Grain", F.SUBSISTENCE, Commodity.FOOD, 100, 10, consumption=lambda rules: rules.consumption.grain_per_1000),
+            CommoditySpec(C.LIVESTOCK, "Livestock", F.SUBSISTENCE, Commodity.FOOD, 140, 12, consumption=lambda rules: rules.consumption.livestock_per_1000),
+            CommoditySpec(C.FISH, "Fish", F.SUBSISTENCE, Commodity.FOOD, 110, 9, consumption=lambda rules: rules.consumption.fish_per_1000),
+            CommoditySpec(C.BREAD, "Bread", F.SUBSISTENCE, Commodity.FOOD, 130, 14, consumption=lambda rules: rules.consumption.bread_per_1000),
+            CommoditySpec(C.FODDER, "Fodder", F.SUBSISTENCE, Commodity.FOOD, 60, consumption=lambda rules: rules.consumption.fodder_per_1000),
             CommoditySpec(
                 C.TIMBER,
                 "Timber",
@@ -44,9 +42,9 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
                 Commodity.GOODS,
                 80,
                 materials=(M.WOOD, M.LIVING_WOOD),
-                consumption=lambda rules: rules.economy.consumption_timber_per_1000,
+                consumption=lambda rules: rules.consumption.timber_per_1000,
             ),
-            CommoditySpec(C.FUEL, "Fuel", F.SUBSISTENCE, Commodity.GOODS, 70, consumption=lambda rules: rules.economy.consumption_fuel_per_1000),
+            CommoditySpec(C.FUEL, "Fuel", F.SUBSISTENCE, Commodity.GOODS, 70, consumption=lambda rules: rules.consumption.fuel_per_1000),
             CommoditySpec(
                 C.ORE,
                 "Ore",
@@ -54,7 +52,7 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
                 Commodity.ORE,
                 110,
                 materials=tuple(sorted(MINERAL_KINDS)),
-                consumption=lambda rules: rules.economy.consumption_ore_per_1000,
+                consumption=lambda rules: rules.consumption.ore_per_1000,
             ),
             CommoditySpec(
                 C.STONE,
@@ -63,7 +61,7 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
                 Commodity.ORE,
                 70,
                 materials=(M.STONE, M.CLAY, M.OBSIDIAN, M.FLINT),
-                consumption=lambda rules: rules.economy.consumption_stone_per_1000,
+                consumption=lambda rules: rules.consumption.stone_per_1000,
             ),
             CommoditySpec(
                 C.CLOTH,
@@ -72,7 +70,7 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
                 Commodity.GOODS,
                 120,
                 materials=(M.CLOTH, M.HIDE, M.LEATHER),
-                consumption=lambda rules: rules.economy.consumption_cloth_per_1000,
+                consumption=lambda rules: rules.consumption.cloth_per_1000,
             ),
             CommoditySpec(
                 C.TOOLS,
@@ -81,7 +79,7 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
                 Commodity.GOODS,
                 150,
                 materials=TOOL_MATERIALS,
-                consumption=lambda rules: rules.economy.consumption_tools_per_1000,
+                consumption=lambda rules: rules.consumption.tools_per_1000,
             ),
             CommoditySpec(
                 C.WEAPONS,
@@ -90,7 +88,7 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
                 Commodity.GOODS,
                 220,
                 materials=WEAPON_MATERIALS,
-                consumption=lambda rules: rules.economy.consumption_weapons_per_1000,
+                consumption=lambda rules: rules.consumption.weapons_per_1000,
                 strategic=True,
             ),
             CommoditySpec(
@@ -100,7 +98,7 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
                 Commodity.GOODS,
                 240,
                 materials=ARMOUR_MATERIALS,
-                consumption=lambda rules: rules.economy.consumption_armour_per_1000,
+                consumption=lambda rules: rules.consumption.armour_per_1000,
                 strategic=True,
             ),
             CommoditySpec(
@@ -109,7 +107,7 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
                 F.STRATEGIC,
                 Commodity.GOODS,
                 260,
-                consumption=lambda rules: rules.economy.consumption_mounts_per_1000,
+                consumption=lambda rules: rules.consumption.mounts_per_1000,
                 strategic=True,
             ),
             CommoditySpec(
@@ -119,10 +117,10 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
                 Commodity.GOODS,
                 200,
                 materials=(M.WOOD, M.IRON),
-                consumption=lambda rules: rules.economy.consumption_siege_materiel_per_1000,
+                consumption=lambda rules: rules.consumption.siege_materiel_per_1000,
                 strategic=True,
             ),
-            CommoditySpec(C.MEDICINE, "Medicine", F.STRATEGIC, Commodity.GOODS, 230, consumption=lambda rules: rules.economy.consumption_medicine_per_1000),
+            CommoditySpec(C.MEDICINE, "Medicine", F.STRATEGIC, Commodity.GOODS, 230, consumption=lambda rules: rules.consumption.medicine_per_1000),
             CommoditySpec(
                 C.LUXURIES,
                 "Luxuries",
@@ -130,7 +128,7 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
                 Commodity.GOODS,
                 300,
                 materials=LUXURY_MATERIALS,
-                consumption=lambda rules: rules.economy.consumption_luxuries_per_1000,
+                consumption=lambda rules: rules.consumption.luxuries_per_1000,
             ),
             CommoditySpec(
                 C.INCENSE,
@@ -139,11 +137,9 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
                 Commodity.GOODS,
                 180,
                 materials=(M.AMBER, M.WOOD),
-                consumption=lambda rules: rules.economy.consumption_incense_per_1000,
+                consumption=lambda rules: rules.consumption.incense_per_1000,
             ),
-            CommoditySpec(
-                C.SACRED_GOODS, "Sacred goods", F.LUXURY, Commodity.GOODS, 260, consumption=lambda rules: rules.economy.consumption_sacred_goods_per_1000
-            ),
+            CommoditySpec(C.SACRED_GOODS, "Sacred goods", F.LUXURY, Commodity.GOODS, 260, consumption=lambda rules: rules.consumption.sacred_goods_per_1000),
             CommoditySpec(
                 C.MAGICAL_REAGENTS,
                 "Magical reagents",
@@ -151,7 +147,7 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
                 Commodity.GOODS,
                 320,
                 materials=(M.CRYSTAL, M.SULFUR, M.SALT),
-                consumption=lambda rules: rules.economy.consumption_magical_reagents_per_1000,
+                consumption=lambda rules: rules.consumption.magical_reagents_per_1000,
                 strategic=True,
             ),
         )

@@ -30,13 +30,16 @@ from aerona.db.tables.culture import (
     TraditionParticipationRow,
     TraditionProfileRow,
 )
+from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import CustomCatalog, ItemDeed, MagicSchool, ProphecyState, RiteEffectKind, SpeakerKind, SummonForm, Technique
+from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
+from aerona.engine.economy.materials import key_parts, set_node_material
 from aerona.engine.lore import art, ideology, items, kinds, legends, prophecy, rites, traditions
 from aerona.engine.lore.creation import open_lore
 from aerona.engine.lore.history import record
@@ -149,12 +152,28 @@ async def record_of(ctx: TickContext, entity_id: int) -> EntityRow:
     return entity
 
 
+async def body_material(ctx: TickContext, entity: EntityRow, key: object) -> None:
+    material, world_material_id = key_parts(str(key) if key is not None else None)
+    if world_material_id is not None:
+        found = await ctx.session.get(WorldMaterialRow, world_material_id)
+        if found is None or found.world_id != entity.world_id:
+            raise ValidationFailedError(f"{key} is not a substance of this world.")
+    await set_node_material(ctx.session, entity.id, MaterialSlot.BODY, material, world_material_id, force=True)
+
+
+async def assign(ctx: TickContext, entity: EntityRow, row: Base, key: str, value: object) -> None:
+    if isinstance(row, ItemProfileRow) and key == "material":
+        await body_material(ctx, entity, value)
+        return
+    setattr(row, key, value)
+
+
 async def edit_profile(ctx: TickContext, entity_id: int, values: Values, *, release: list[str]) -> Base:
     entity = await record_of(ctx, entity_id)
     row = await PROFILES[entity.entity_type](ctx, entity)
     limits = bounds(row)
     for key, value in values.items():
-        setattr(row, key, coerce(row, key, value, limits))
+        await assign(ctx, entity, row, key, coerce(row, key, value, limits))
         if hasattr(row, "locked"):
             row.locked = lock(row.locked, key)
     if hasattr(row, "locked"):
@@ -180,7 +199,7 @@ async def create_lore(
     if row is not None:
         limits = bounds(row)
         for key, value in rest.items():
-            setattr(row, key, coerce(row, key, value, limits))
+            await assign(ctx, entity, row, key, coerce(row, key, value, limits))
     elif rest:
         raise ValidationFailedError(f"{next(iter(rest)).replace('_', ' ').capitalize()} cannot be set here.")
     await ctx.session.flush()

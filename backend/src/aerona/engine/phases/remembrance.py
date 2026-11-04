@@ -14,6 +14,7 @@ from aerona.domain.enums.domain import DEATH_DOMAINS, Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, HERO_ROLES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.son import SonStatus
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.models.entity_stats import ArtworkStats, EntityStats, LegendStats, StructureStats, TraditionStats
 from aerona.engine.context import TickContext
 from aerona.engine.disease.outbreaks import disease_god
@@ -28,6 +29,7 @@ from aerona.engine.primitives.queries import add_flag, canon, connect, flags_by_
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat
 from aerona.engine.services.community_relations import change_relation
+from aerona.engine.structures.profiles import ensure_profile
 
 EPOCH_MARK = " (Epoch "
 MEMORIAL_TYPES = frozenset({EntityType.ARTWORK, EntityType.LEGEND, EntityType.TRADITION, EntityType.STRUCTURE})
@@ -120,7 +122,7 @@ async def memorial(ctx: TickContext, form: MemorialForm, name: str, subtype: str
     else:
         entity_type, power = EntityType.LEGEND, settings.legend_power
         stats = LegendStats(spread=settings.legend_spread)
-    return await create_record(
+    created = await create_record(
         ctx,
         RecordSpec(
             entity_type=entity_type,
@@ -134,6 +136,9 @@ async def memorial(ctx: TickContext, form: MemorialForm, name: str, subtype: str
             flags=(EntityFlag.COMMEMORATION,),
         ),
     )
+    if entity_type is EntityType.STRUCTURE:
+        await ensure_profile(ctx.session, ctx.rules, ctx.epoch, created, StructureKind.MONUMENT)
+    return created
 
 
 async def _tell(ctx: TickContext, record: EntityRow, about_ids: list[int], description: str) -> None:

@@ -116,7 +116,7 @@ async def region_works_view(services: ServicesDep, region_id: int = Path(ge=1)) 
             raise NotFoundError("This region has not been surveyed yet.")
         rules = services.rules.current
         atlas = await RegionAtlas.load(session)
-        works = (await region_works(session, atlas)).get(region_id)
+        works = (await region_works(session, atlas, rules)).get(region_id)
         here = [
             entity
             for entity in await session.scalars(

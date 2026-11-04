@@ -6,18 +6,24 @@ from aerona.catalog.tenets import OPPOSED
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.polity import LawProfileRow
+from aerona.db.tables.structures import StructureDesignRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import AGENT_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.faith import FuneralRite, TenetKind
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.polity import LegitimacyBasis
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.travel import TravelMethod, VehicleKind
 from aerona.engine.cosmos.routes import RouteSpec, method_label, open_route
 from aerona.engine.cosmos.vessels import set_vessel_kind
+from aerona.engine.economy.materials import set_node_material
+from aerona.engine.economy.provenance import ensure_materials
 from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.environment.places import write_kind
 from aerona.engine.factions.book import new_profile
@@ -30,6 +36,7 @@ from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.polity.laws import attach_profile
 from aerona.engine.primitives.mechanics import assign_mechanics
 from aerona.engine.primitives.stats import set_stats
+from aerona.engine.structures.profiles import ensure_profile
 from aerona.prompts.tools.results import SonResult, result
 from aerona.rules.registry import Rules
 from aerona.tools.framework.call import SonCall
@@ -185,6 +192,39 @@ async def _vessel_route(call: SonCall, args: CreationInput, created: EntityRow) 
     return result(SonResult.ROUTE_OPENED, id=route.id, world=target.name, method=method_label(method))
 
 
+async def _son_materials(call: SonCall, args: CreationInput, created: EntityRow) -> None:
+    chosen = {
+        MaterialSlot.BODY: (args.option("material"), args.option("world_material_id")),
+        MaterialSlot.HULL: (args.option("hull_material"), None),
+        MaterialSlot.FABRIC: (args.option("fabric_material"), None),
+    }
+    for slot, (material, world_material_id) in chosen.items():
+        known = world_material_id is not None and await call.session.get(WorldMaterialRow, world_material_id) is not None
+        if material is not None or known:
+            await set_node_material(call.session, created.id, slot, material, world_material_id if known else None)
+    await ensure_materials(call.session, created, rules=call.rules)
+
+
+async def raise_divine_structure(call: SonCall, args: CreationInput, created: EntityRow, kind: StructureKind) -> str:
+    design_id = args.option("design_id")
+    design = await call.session.get(StructureDesignRow, design_id) if design_id is not None else None
+    if design is not None and (design.retired or design.base_kind is not kind):
+        design = None
+    profile = await ensure_profile(
+        call.session,
+        call.rules,
+        call.epoch,
+        created,
+        kind,
+        level=args.option("level") or 1,
+        design_id=design.id if design is not None else None,
+        builder=call.son,
+        son_id=call.son.id,
+        material=args.option("material"),
+    )
+    return lines.STRUCTURE_RAISED.format(kind=kind.value.replace("_", " "), effect=profile.effect_pct)
+
+
 async def seed_lore_kinds(call: SonCall, args: CreationInput, created: EntityRow) -> None:
     if created.entity_type is EntityType.LEGEND:
         await legends.profile_of(call.tick, created, args.option("archetype"))
@@ -200,9 +240,6 @@ async def seed_lore_kinds(call: SonCall, args: CreationInput, created: EntityRow
 async def seed_made_kinds(call: SonCall, args: CreationInput, created: EntityRow) -> None:
     if created.entity_type is EntityType.ITEM:
         row = await items.profile_of(call.tick, created, args.option("item_class"))
-        material = args.option("material")
-        if material is not None:
-            row.material = material.value
         row.secondary_materials = [item.value for item in args.option("secondary_materials") or []]
     if created.entity_type is EntityType.ARTWORK:
         work = await art.profile_of(call.tick, created, args.option("medium"))
@@ -279,6 +316,10 @@ async def finish_extras(call: SonCall, args: CreationInput, created: EntityRow) 
         route = await _vessel_route(call, args, created)
         if route is not None:
             notes.append(route)
+    await _son_materials(call, args, created)
+    kind = args.option("structure_kind")
+    if created.entity_type is EntityType.STRUCTURE and kind is not None:
+        notes.append(await raise_divine_structure(call, args, created, kind))
     words = args.option("words")
     if created.entity_type is EntityType.LANGUAGE and words:
         await add_words(call.session, created, words[: call.rules.son_tools.coin_word_max_words], actor=(ActorKind.SON, call.son.id), epoch=call.epoch)

@@ -14,11 +14,13 @@ from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
-from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.polity import DebtRemedy, LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
-from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for, total
+from aerona.engine.demography.bound import BOUND, bound_share, move_people, sync_bound_share
+from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for
+from aerona.engine.demography.events import ennobled, enslaved, freed, ruined
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.military.units import resize
@@ -29,18 +31,14 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.services.community_relations import change_relation
+from aerona.engine.services.war import held_captive, take_captive
 from aerona.rules.registry import Rules
 
-BOUND = SocialClass.SERF_OR_SLAVE
 LEAN = 25
 
 
 def inequality(society: CommunitySocietyRow) -> int:
-    present = [social_class for social_class in SocialClass if society.share(social_class) > 0]
-    if len(present) < 2:
-        return 0
-    moods = [society.satisfaction(social_class) for social_class in present]
-    return max(moods) - min(moods)
+    return society.gini
 
 
 def inequality_pressure(rules: Rules, society: CommunitySocietyRow | None, hierarchy: int) -> int:
@@ -49,44 +47,6 @@ def inequality_pressure(rules: Rules, society: CommunitySocietyRow | None, hiera
     table = rules.mobility
     tolerance = max(0.0, hierarchy / PERCENT) * table.hierarchy_tolerance_pct / PERCENT
     return clamp_int(inequality(society) * table.inequality_crime_pct / PERCENT * (1 - tolerance), 0, PERCENT)
-
-
-def bound_share(rows: dict[CohortKey, CohortRow]) -> float:
-    people = total(rows)
-    bound = sum(row.count for key, row in rows.items() if key[2] is BOUND)
-    return bound / people if people else 0.0
-
-
-def sync_bound_share(society: CommunitySocietyRow | None, rows: dict[CohortKey, CohortRow]) -> None:
-    if society is None:
-        return
-    current = society.share(BOUND)
-    target = round(bound_share(rows) * PERCENT, 2)
-    if abs(current - target) < 0.01:
-        return
-    others = [social_class for social_class in SocialClass if social_class is not BOUND]
-    free = sum(society.share(social_class) for social_class in others) or 1.0
-    for social_class in others:
-        setattr(society, f"share_{social_class.value}", round(society.share(social_class) * (PERCENT - target) / free, 2))
-    society.share_serf_or_slave = target
-
-
-async def move_people(
-    ctx: TickContext, community: EntityRow, rows: dict[CohortKey, CohortRow], *, source: SocialClass, target: SocialClass, share: float
-) -> int:
-    moved = 0
-    for key in sorted(rows, key=lambda item: tuple(part.value for part in item)):
-        band, sex, social_class, condition = key
-        if social_class is not source or rows[key].count <= 0:
-            continue
-        count = round_half_up(rows[key].count * share)
-        if count <= 0:
-            continue
-        rows[key].count -= count
-        landed = CohortCondition.NONE if condition in {CohortCondition.ENSLAVED, CohortCondition.CAPTIVE} else condition
-        row_for(ctx.session, rows, community.id, (band, sex, target, landed), ctx.epoch).count += count
-        moved += count
-    return moved
 
 
 async def settle_captives(ctx: TickContext, community: EntityRow, rows: dict[CohortKey, CohortRow], lawful: bool) -> int:
@@ -215,7 +175,7 @@ async def ennoble_heroes(ctx: TickContext) -> int:
             continue
         hero.social_class = SocialClass.NOBLE
         raised += 1
-        await note(ctx, f"For the victory, {hero.name} was raised among the nobles.", key="society.ennobled", ids=[hero.id], kind=ChronicleKind.WORLD)
+        await ennobled(ctx, hero, await living_entity(ctx.session, army.owner_entity_id))
     return raised
 
 
@@ -237,14 +197,14 @@ async def ruin_merchants(ctx: TickContext) -> int:
             if member.social_class is SocialClass.OUTCAST or not ctx.rng(f"ruin.{member.id}.{loan.id}").chance(table.ruin_chance):
                 continue
             remedy = await law_param(ctx.session, member.location_id or 0, LawKind.DEBT_LAW, "remedy")
-            member.social_class = SocialClass.SERF_OR_SLAVE if remedy == "bondage" else SocialClass.OUTCAST
+            if remedy == DebtRemedy.JUBILEE.value:
+                continue
+            member.social_class = SocialClass.SERF_OR_SLAVE if remedy == DebtRemedy.BONDAGE.value else SocialClass.OUTCAST
+            lender = await living_entity(ctx.session, loan.lender_entity_id)
+            if remedy == DebtRemedy.PRISON.value and lender is not None and await held_captive(ctx.session, member.id) is None:
+                await take_captive(ctx, lender, member, None, description="held in debtors' prison", home_id=member.location_id)
             fallen += 1
-            await note(
-                ctx,
-                f"{borrower.name} could not pay; {member.name} lost everything and fell among the outcasts.",
-                key="society.ruined",
-                ids=[member.id, borrower.id],
-            )
+            await ruined(ctx, member, borrower)
     return fallen
 
 
@@ -264,9 +224,13 @@ async def class_mobility(ctx: TickContext, community: EntityRow) -> dict[str, in
     culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
     lawful = culture.slavery_lawful if culture is not None else False
     society = await ctx.session.get(CommunitySocietyRow, community.id)
+    bound = await settle_captives(ctx, community, rows, lawful)
+    loosed = await manumit(ctx, community, rows, lawful)
+    await enslaved(ctx, community, bound)
+    await freed(ctx, community, loosed)
     counts = {
-        "enslaved": await settle_captives(ctx, community, rows, lawful),
-        "freed": await manumit(ctx, community, rows, lawful),
+        "enslaved": bound,
+        "freed": loosed,
         "emigrated": await bitter_emigration(ctx, community, rows, society),
         "laid_down_arms": await lay_down_arms(ctx, community, rows),
     }

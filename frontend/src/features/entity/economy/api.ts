@@ -4,6 +4,14 @@ import { unwrap } from '@/api/errors'
 import { loreKeys } from '../api/keys'
 
 export const economyKeys = {
+  all: ['economy'] as const,
+  nodeMaterials: (id: number) =>
+    [...loreKeys.entity(id), 'node-materials'] as const,
+  holds: (marketId: number) =>
+    [...loreKeys.entity(marketId), 'price-holds'] as const,
+  debtLaws: () => ['economy', 'debt-laws'] as const,
+  workshopDesigns: (worldId: number | null) =>
+    ['economy', 'workshop-designs', worldId] as const,
   community: (id: number) => [...loreKeys.entity(id), 'economy'] as const,
   resource: (id: number) =>
     [...loreKeys.entity(id), 'resource-profile'] as const,
@@ -116,6 +124,54 @@ export function useMarkets(worldId: number | null, enabled = true) {
       unwrap(
         api.GET('/api/markets', {
           params: { query: worldId ? { world_id: worldId } : {} },
+        })
+      ),
+  })
+}
+
+export const ECONOMY_REFRESH = [economyKeys.all]
+
+export function useNodeMaterials(id: number, enabled = true) {
+  return useQuery({
+    queryKey: economyKeys.nodeMaterials(id),
+    enabled,
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/nodes/{node_id}/materials', {
+          params: { path: { node_id: id } },
+        })
+      ),
+  })
+}
+
+export function useMarketHolds(marketId: number, enabled = true) {
+  return useQuery({
+    queryKey: economyKeys.holds(marketId),
+    enabled,
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/markets/{market_id}/holds', {
+          params: { path: { market_id: marketId } },
+        })
+      ),
+  })
+}
+
+export function useDebtLaws() {
+  return useQuery({
+    queryKey: economyKeys.debtLaws(),
+    queryFn: () => unwrap(api.GET('/api/ledger/debt-laws')),
+  })
+}
+
+export function useWorkshopDesigns(worldId: number | null) {
+  return useQuery({
+    queryKey: economyKeys.workshopDesigns(worldId),
+    enabled: worldId !== null,
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/worlds/{world_id}/workshop-designs', {
+          params: { path: { world_id: worldId ?? 0 } },
         })
       ),
   })

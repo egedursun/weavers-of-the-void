@@ -80,6 +80,7 @@ from aerona.rules.registry.exploration import ExplorationRules
 from aerona.rules.registry.factions import BanditryRules, FactionsRules, IntrigueRules, MercenariesRules
 from aerona.rules.registry.faith import FaithRules
 from aerona.rules.registry.fate import FateRules
+from aerona.rules.registry.folk import BiologyRules, CustomsRules
 from aerona.rules.registry.folk_belief import FolkBeliefRules
 from aerona.rules.registry.foreign_gods import ForeignGodsRules
 from aerona.rules.registry.genesis import GenesisRules
@@ -196,17 +197,20 @@ from aerona.rules.registry.region import HazardsRules, RegionalDangerRules, Terr
 from aerona.rules.registry.religion import ReligionRules
 from aerona.rules.registry.remembrance import RemembranceRules
 from aerona.rules.registry.reputation import ReputationRules
+from aerona.rules.registry.routes import ChokepointsRules, RouteDangersRules, RouteSeasonsRules, SentientPactsRules, SonRoutesRules
 from aerona.rules.registry.rumours import RumoursRules
 from aerona.rules.registry.seasonal import SeasonalRules
 from aerona.rules.registry.server import ServerRules
-from aerona.rules.registry.settlement import CrimeRules, FireRules, SanitationRules, TaxationRules, UrbanRules
+from aerona.rules.registry.settlement import CrimeRules, DistrictRules, FireRules, SanitationRules, TaxationRules, UrbanRules
 from aerona.rules.registry.setup_wizard import SetupWizardRules
 from aerona.rules.registry.sky import SkyRules
 from aerona.rules.registry.society import SocietyRules
+from aerona.rules.registry.society_depth import ConsumptionRules, RealmLoyaltyRules
 from aerona.rules.registry.son_relations import SonRelationsRules
 from aerona.rules.registry.son_tools import SonToolsRules
 from aerona.rules.registry.star_types import StarTypeRules
 from aerona.rules.registry.stress import StressRules
+from aerona.rules.registry.structures import ConstructionRules, StructureFunctionsRules, UpkeepRules
 from aerona.rules.registry.summoning import SummoningRules
 from aerona.rules.registry.time import TimeRules
 from aerona.rules.registry.trade import TradeRules
@@ -350,6 +354,11 @@ class Rules:
     trade_routes: TradeRoutesRules = field(default_factory=TradeRoutesRules)
     banking: BankingRules = field(default_factory=BankingRules)
     tolls: TollsRules = field(default_factory=TollsRules)
+    route_dangers: RouteDangersRules = field(default_factory=RouteDangersRules)
+    route_seasons: RouteSeasonsRules = field(default_factory=RouteSeasonsRules)
+    chokepoints: ChokepointsRules = field(default_factory=ChokepointsRules)
+    sentient_pacts: SentientPactsRules = field(default_factory=SentientPactsRules)
+    son_routes: SonRoutesRules = field(default_factory=SonRoutesRules)
     cohorts: CohortsRules = field(default_factory=CohortsRules)
     demography: DemographyRules = field(default_factory=DemographyRules)
     epidemiology: EpidemiologyRules = field(default_factory=EpidemiologyRules)
@@ -358,6 +367,7 @@ class Rules:
     crime: CrimeRules = field(default_factory=CrimeRules)
     fire: FireRules = field(default_factory=FireRules)
     sanitation: SanitationRules = field(default_factory=SanitationRules)
+    districts: DistrictRules = field(default_factory=DistrictRules)
     government: GovernmentRules = field(default_factory=GovernmentRules)
     succession: SuccessionRules = field(default_factory=SuccessionRules)
     legitimacy: LegitimacyRules = field(default_factory=LegitimacyRules)
@@ -430,6 +440,8 @@ class Rules:
     vendetta: VendettaRules = field(default_factory=VendettaRules)
     labour: LabourRules = field(default_factory=LabourRules)
     peoples: PeopleRules = field(default_factory=PeopleRules)
+    biology: BiologyRules = field(default_factory=BiologyRules)
+    customs: CustomsRules = field(default_factory=CustomsRules)
     mobility: MobilityRules = field(default_factory=MobilityRules)
     espionage: EspionageRules = field(default_factory=EspionageRules)
     incitement: IncitementRules = field(default_factory=IncitementRules)
@@ -504,3 +516,8 @@ class Rules:
     world_physics: WorldPhysicsRules = field(default_factory=WorldPhysicsRules)
     world_terrain: WorldTerrainRules = field(default_factory=WorldTerrainRules)
     world_war_strength: WorldWarStrengthRules = field(default_factory=WorldWarStrengthRules)
+    consumption: ConsumptionRules = field(default_factory=ConsumptionRules)
+    realm_loyalty: RealmLoyaltyRules = field(default_factory=RealmLoyaltyRules)
+    construction: ConstructionRules = field(default_factory=ConstructionRules)
+    structure_functions: StructureFunctionsRules = field(default_factory=StructureFunctionsRules)
+    upkeep: UpkeepRules = field(default_factory=UpkeepRules)

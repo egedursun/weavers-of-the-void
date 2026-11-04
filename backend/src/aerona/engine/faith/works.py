@@ -14,9 +14,10 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import CurseKind, ItemClass
 from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
-from aerona.domain.enums.economy import GOODS_SOURCES, CommodityKind, GoodsFlow
+from aerona.domain.enums.economy import GOODS_SOURCES, CommodityKind, GoodsFlow, MaterialSlot
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import HoldingKind, TenetKind
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind, PressureKind, ValueAxis
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind
@@ -25,6 +26,7 @@ from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.outbreaks import open_outbreak
+from aerona.engine.economy.materials import set_node_material
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.faith.book import Church
 from aerona.engine.gods.devotion import add_devotion
@@ -246,7 +248,6 @@ async def bones_of(ctx: TickContext, church: Church, saint: EntityRow) -> Entity
         ItemProfileRow(
             item_entity_id=bones.id,
             item_class=ItemClass.HOLY_RELIC,
-            material="bone",
             quality=PERCENT // 2,
             condition=PERCENT,
             reach=0,
@@ -260,6 +261,7 @@ async def bones_of(ctx: TickContext, church: Church, saint: EntityRow) -> Entity
             locked=[],
         )
     )
+    await set_node_material(ctx.session, bones.id, MaterialSlot.BODY, MaterialKind.BONE, None, force=True)
     await connect(ctx.session, church.cult.id, bones.id, BondKind.OWNS, ctx.epoch, description="the bones of its saint")
     return bones
 

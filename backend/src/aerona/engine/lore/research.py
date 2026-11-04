@@ -3,6 +3,7 @@ from collections import defaultdict
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.structures import RESEARCH_HOUSES
 from aerona.catalog.techniques import BRANCH_GRAPH, BRANCH_SKILLS, TECHNIQUES, Gate
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
@@ -16,7 +17,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import WarSideRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
@@ -24,10 +25,10 @@ from aerona.engine.lore.kinds import custom_bases
 from aerona.engine.primitives.knowledge import raw_level
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount, set_stats, stat
+from aerona.engine.structures.readers import working
 from aerona.rules.registry import Rules
 
 THOUSAND = 1000
-INSTITUTIONS = frozenset({EngineKind.LIBRARY, EngineKind.SCHOOL, EngineKind.OBSERVATORY})
 ORDERS = frozenset({EntityType.CULT, EntityType.FACTION})
 SCHOLARLY = (SkillKind.LORE, SkillKind.THEOLOGY, SkillKind.WRITING, SkillKind.ASTRONOMY, SkillKind.MEDICINE, SkillKind.LAW, SkillKind.ALCHEMY)
 Levels = dict[int, dict[KnowledgeBranch, int]]
@@ -96,10 +97,7 @@ async def ensure_holders(ctx: TickContext) -> int:
 
 
 async def institutions(session: AsyncSession, community_id: int) -> int:
-    rows = await session.scalars(
-        select(EntityRow.id).where(EntityRow.location_id == community_id, EntityRow.status == EntityStatus.CANON, EntityRow.engine_kind.in_(list(INSTITUTIONS)))
-    )
-    return len(list(rows))
+    return len(await working(session, RESEARCH_HOUSES, host_id=community_id))
 
 
 async def need_for(session: AsyncSession, community_id: int, branch: KnowledgeBranch) -> float:

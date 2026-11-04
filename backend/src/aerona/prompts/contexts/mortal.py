@@ -96,6 +96,11 @@ class StoresLine(ContextItem):
     materials: list[str] = Field(default_factory=list)
     short: list[str] = Field(default_factory=list)
     routes: list[str] = Field(default_factory=list)
+    prices: list[str] = Field(default_factory=list)
+    currency: str = ""
+    debts: list[str] = Field(default_factory=list)
+    loans: list[str] = Field(default_factory=list)
+    job: str = ""
 
 
 class HomeLine(ContextItem):
@@ -135,6 +140,11 @@ class HomeLine(ContextItem):
     wildlife: list[str] = Field(default_factory=list)
     herds: list[str] = Field(default_factory=list)
     beasts: list[str] = Field(default_factory=list)
+    needs: list[str] = Field(default_factory=list)
+    wealth: str = ""
+    loyalty: str = ""
+    labour: list[str] = Field(default_factory=list)
+    works: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

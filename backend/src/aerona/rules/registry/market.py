@@ -42,3 +42,10 @@ class MarketRules:
         3, 0, 100, RuleGroup.ECONOMY, "Exhausted resource: abundance taken back from the general regrowth (the rest is its refill speed)"
     )
     refill_abundance: int = rule(30, 1, 100, RuleGroup.ECONOMY, "An exhausted resource is usable again once it refills to this abundance")
+    bondage_share_pct: int = rule(3, 0, 100, RuleGroup.ECONOMY, "Debt law of bondage: share of a defaulting debtor's free people bound into serfdom (%)")
+    bondage_labour_gain: int = rule(4, 0, 100, RuleGroup.ECONOMY, "Debt law of bondage: prosperity the creditor gains from the bound labour")
+    prison_unrest: int = rule(6, 0, 100, RuleGroup.ECONOMY, "Debt law of prison: unrest in the debtor's settlement when its notable is jailed for the debt")
+    jubilee_relation: int = rule(
+        5, 0, 100, RuleGroup.ECONOMY, "Debt law of jubilee: relation the debtor gains toward the creditor when the jubilee wipes the debt"
+    )
+    currency_trust_pct: int = rule(50, 0, 100, RuleGroup.ECONOMY, "Share of a debt's weight lost when the coin it is counted in has lost all trust (%)")

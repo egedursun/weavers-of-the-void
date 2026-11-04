@@ -1,21 +1,29 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
 from aerona.catalog.commodities import COMMODITIES
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.economy import CurrencyRow, MarketPriceRow, TradeFlowRow, TradeRouteProfileRow, TradeRouteRegionRow, TradeRouteTollRow
+from aerona.db.tables.economy import (
+    CurrencyRow,
+    MarketPriceRow,
+    TradeFlowRow,
+    TradeRouteLossRow,
+    TradeRouteProfileRow,
+    TradeRouteRegionRow,
+    TradeRouteTollRow,
+)
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.culture import LanguageRegister, Technique
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeLoss, TradeMode, TradeRouteStatus, WorkshopKind
-from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, LegendCategory
-from aerona.domain.enums.environment import CoastKind, RiverClass, TerrainKind
+from aerona.domain.enums.entity import EntityStatus, EntityType, LegendCategory
+from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.polity import ClauseKind
 from aerona.domain.enums.settlement import TreasuryEntry
@@ -23,14 +31,16 @@ from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import LegendStats, TradeRouteStats
 from aerona.engine.context import TickContext
+from aerona.engine.demography.tongues import trade_barrier
 from aerona.engine.economy.book import EconomyBook
+from aerona.engine.economy.chokepoints import press_route_aims, weigh_chokepoint
 from aerona.engine.economy.credit import sell_on_credit
 from aerona.engine.economy.markets import Quote
+from aerona.engine.economy.route_dangers import CARAVAN_TERRAIN, DANGER_KEYS, Dangers, Lairs, dangers_of, feed_beast, season_pct_of, split, spoil
 from aerona.engine.economy.stocks import goods_of
+from aerona.engine.economy.toll_polities import Realms, fund_polity
 from aerona.engine.environment.profile import Works
-from aerona.engine.factions.book import robber_ids
 from aerona.engine.interconnect.flows import FlowCategory, flowing
-from aerona.engine.lore.language import register_barrier
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.notes import note
 from aerona.engine.polity.accords import clause_pairs
@@ -44,8 +54,6 @@ from aerona.engine.settlement.book import credit
 
 THOUSAND = 1000
 LIVE_STATUSES = frozenset({TradeRouteStatus.FORMING, TradeRouteStatus.OPEN, TradeRouteStatus.BLOCKADED})
-CARAVAN_TERRAIN = frozenset({TerrainKind.DESERT, TerrainKind.STEPPE})
-BANDIT_KINDS = frozenset({EngineKind.REBELS, EngineKind.VOID_PIRATES})
 MODE_WORDS: dict[TradeMode, str] = {
     TradeMode.ROAD: "Road",
     TradeMode.RIVER: "River Way",
@@ -80,7 +88,13 @@ class RouteTally:
     wars: int = 0
     noted: int = 0
     credit: int = 0
+    polity_tolls: int = 0
+    beast_losses: int = 0
+    weather_losses: int = 0
+    chokepoints: int = 0
     volumes: dict[int, int] = field(default_factory=dict)
+    strategic: dict[int, int] = field(default_factory=dict)
+    dangers: dict[int, Dangers] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -185,20 +199,13 @@ def capacity_of(ctx: TickContext, book: EconomyBook, route: Route, works: dict[i
             capacity += (yard.fleet if yard is not None else 0) * table.capacity_per_ship
         if book.blockaded & {book.affiliated.get(first, first), book.affiliated.get(second, second), first, second}:
             capacity = round_half_up(capacity * ctx.rules.naval.blockade_trade_pct / PERCENT)
-    halfway = set(route.path[1:-1])
-    capacity += sum(
-        table.capacity_per_market
-        for community in book.communities
-        if book.workshop(community.id, WorkshopKind.MARKET) and book.ground.atlas.top_region(community.id) in halfway
-    )
+    capacity += sum(region_works(works, region).waystations for region in set(route.path[1:-1]))
     return clamp_int(capacity, 0, table.capacity_cap)
 
 
 async def spoken_capacity(ctx: TickContext, book: EconomyBook, route: Route, works: dict[int, Works]) -> int:
     first, second = route.ends
-    capacity = capacity_of(ctx, book, route, works) * await register_barrier(
-        ctx.session, ctx.rules, first, second, ctx.epoch, ours=LanguageRegister.TRADE, theirs=LanguageRegister.TRADE
-    )
+    capacity = capacity_of(ctx, book, route, works) * await trade_barrier(ctx.session, ctx.rules, first, second, ctx.epoch)
     if route.profile.mode is TradeMode.SEA:
         table = ctx.rules.technique_effects
         held = book.techniques.get(first, set()) | book.techniques.get(second, set())
@@ -218,14 +225,27 @@ def danger_of(book: EconomyBook, path: list[int]) -> int:
     return round_half_up(sum(dangers) / len(dangers)) if dangers else 0
 
 
-def season_factor(ctx: TickContext, book: EconomyBook, route: Route) -> float:
-    if route.profile.mode is not TradeMode.SEA or route.entity.world_id is None:
-        return 1.0
-    seasons = book.ground.seasons_of(route.entity.world_id)
-    if not seasons:
-        return 1.0
-    worst = min(season.travel for season in seasons)
-    return 1 - ctx.rules.trade_routes.sea_season_pct / PERCENT * (PERCENT - worst) / PERCENT
+def held(route: Route, key: str) -> bool:
+    return key in (route.profile.locked or [])
+
+
+def assess(ctx: TickContext, book: EconomyBook, route: Route, lairs: Lairs) -> Dangers:
+    profile = route.profile
+    found = dangers_of(ctx, book, profile.mode, route.path, lairs, route_id=route.entity.id, world_id=route.entity.world_id)
+    for cause, key in DANGER_KEYS.items():
+        if held(route, key):
+            setattr(found, cause.value, getattr(profile, key))
+        else:
+            setattr(profile, key, getattr(found, cause.value))
+    if not held(route, "danger"):
+        set_stats(route.entity, danger=found.total)
+    if not held(route, "season_pct"):
+        profile.season_pct = season_pct_of(ctx.rules, book, profile.mode, route.path, route.entity.world_id)
+    return found
+
+
+def season_factor(route: Route) -> float:
+    return route.profile.season_pct / PERCENT
 
 
 async def write_path(ctx: TickContext, route_id: int, path: list[int]) -> None:
@@ -260,6 +280,8 @@ async def found_route(ctx: TickContext, book: EconomyBook, first: EntityRow, sec
         status=TradeRouteStatus.FORMING,
         length=length_of(ctx, mode, path),
         founded_epoch=ctx.epoch,
+        season_pct=season_pct_of(ctx.rules, book, mode, path, first.world_id),
+        locked=[],
     )
     ctx.session.add(profile)
     await write_path(ctx, entity.id, path)
@@ -269,13 +291,16 @@ async def found_route(ctx: TickContext, book: EconomyBook, first: EntityRow, sec
     return route
 
 
-async def controllers(ctx: TickContext, book: EconomyBook) -> dict[int, int]:
+async def controllers(ctx: TickContext, book: EconomyBook, realms: Realms | None = None) -> dict[int, int]:
     found: dict[int, int] = {}
     statement = select(BondRow).where(BondRow.kind == BondKind.RULES, BondRow.state == BondState.ACTIVE).order_by(BondRow.id)
     for bond in await ctx.session.scalars(statement):
         target = book.entities.get(bond.target_node_id)
         if target is not None and target.entity_type is EntityType.REGION and bond.source_node_id in book.entities:
             found.setdefault(target.id, bond.source_node_id)
+    for land, polity in (realms.masters(ctx.rules) if realms is not None else {}).items():
+        if polity in book.entities:
+            found.setdefault(land, polity)
     for community in sorted(book.communities, key=lambda entity: (-headcount(entity), entity.id)):
         region = book.ground.atlas.top_region(community.id)
         if region is not None:
@@ -283,13 +308,24 @@ async def controllers(ctx: TickContext, book: EconomyBook) -> dict[int, int]:
     return found
 
 
-async def set_tolls(ctx: TickContext, book: EconomyBook, route: Route, masters: dict[int, int], waived: set[frozenset[int]] | None = None) -> None:
+async def set_tolls(
+    ctx: TickContext,
+    book: EconomyBook,
+    route: Route,
+    masters: dict[int, int],
+    *,
+    realms: Realms | None = None,
+    grants: dict[int, int] | None = None,
+    waived: set[frozenset[int]] | None = None,
+) -> None:
     table = ctx.rules.tolls
     first, second = route.ends
+    homes = {first, second} | ({realms.polity_of(first), realms.polity_of(second)} - {None} if realms is not None else set())
+    granted = (grants or {}).get(route.entity.id)
     free = waived if waived is not None else await clause_pairs(ctx.session, ClauseKind.TOLLS_WAIVED)
     for region in route.path:
-        master = masters.get(region)
-        if master is None or master in (first, second):
+        master = granted if granted is not None else masters.get(region)
+        if master is None or master in homes or held(route, f"untolled.{region}"):
             continue
         if frozenset((master, first)) in free or frozenset((master, second)) in free:
             toll = route.tolls.get(region)
@@ -304,8 +340,19 @@ async def set_tolls(ctx: TickContext, book: EconomyBook, route: Route, masters: 
             toll = TradeRouteTollRow(route_entity_id=route.entity.id, region_entity_id=region, controller_entity_id=master, rate_pct=rate)
             ctx.session.add(toll)
             route.tolls[region] = toll
-        elif not toll.set_by_player:
-            toll.controller_entity_id, toll.rate_pct = master, rate
+            continue
+        if not toll.controller_held:
+            toll.controller_entity_id = master
+        if not toll.set_by_player:
+            toll.rate_pct = rate
+    if realms is not None:
+        for toll in route.tolls.values():
+            toll.polity_entity_id = realms.treasury_of(toll.controller_entity_id)
+    if held(route, "controller_entity_id"):
+        return
+    if granted is not None:
+        route.profile.controller_entity_id = granted
+        return
     route.profile.controller_entity_id = (
         max(route.tolls.values(), key=lambda toll: (toll.rate_pct, -toll.region_entity_id)).controller_entity_id if route.tolls else None
     )
@@ -335,16 +382,6 @@ async def blocker_of(ctx: TickContext, book: EconomyBook, route: Route, enemies:
         if (army.owner_entity_id, first) in enemies or (army.owner_entity_id, second) in enemies:
             return entity
     return None
-
-
-def bandits_on(book: EconomyBook, route: Route, robbers: frozenset[int]) -> EntityRow | None:
-    halfway = set(route.path)
-    found = [
-        entity
-        for entity in book.entities.values()
-        if entity.entity_type is EntityType.FACTION and entity.id in robbers and book.ground.atlas.top_region(entity.id) in halfway
-    ]
-    return min(found, key=lambda entity: entity.id) if found else None
 
 
 def pay(rules_wealth: int, entity: EntityRow, value: int) -> int:
@@ -475,10 +512,17 @@ async def settle(ctx: TickContext, book: EconomyBook, route: Route, lane: Lane, 
         fee = round_half_up(value * toll.rate_pct / PERCENT)
         paid += fee
         pay(ctx.rules.tolls.revenue_wealth_per_value, master, fee)
+        label = route.entity.name[:120]
+        if master.entity_type is EntityType.POLITY:
+            tally.polity_tolls += await fund_polity(ctx, master.id, fee, label)
+            continue
+        share = round_half_up(fee * ctx.rules.tolls.polity_share_pct / PERCENT) if toll.polity_entity_id is not None else 0
+        if share and toll.polity_entity_id is not None:
+            tally.polity_tolls += await fund_polity(ctx, toll.polity_entity_id, share, f"from {master.name}: {label}"[:120])
         if master.entity_type is EntityType.SETTLEMENT:
-            await credit(ctx, master, TreasuryEntry.TOLLS, fee, route.entity.name[:120])
+            await credit(ctx, master, TreasuryEntry.TOLLS, fee - share, label)
         else:
-            add_prosperity(ctx.rules, master, round_half_up(fee * ctx.rules.tolls.revenue_wealth_per_value / THOUSAND))
+            add_prosperity(ctx.rules, master, round_half_up((fee - share) * ctx.rules.tolls.revenue_wealth_per_value / THOUSAND))
     return value, paid
 
 
@@ -486,14 +530,26 @@ async def mourn_losses(ctx: TickContext, book: EconomyBook, route: Route, lane: 
     if lost <= 0:
         return None
     lanes = ctx.rules.trade_routes
-    if route.profile.mode is TradeMode.SEA:
-        if ctx.rng(f"wreck.{route.entity.id}.{lane.commodity.value}.{ctx.epoch}").chance(lanes.shipwreck_chance):
+    dangers = tally.dangers.get(route.entity.id) or Dangers(**{cause.value: getattr(route.profile, key) for cause, key in DANGER_KEYS.items()})
+    shares = split(lost, dangers.parts(), route.profile.mode)
+    for cause, units in sorted(shares.items(), key=lambda item: item[0].value):
+        culprit = dangers.culprit(cause)
+        ctx.session.add(
+            TradeRouteLossRow(route_entity_id=route.entity.id, epoch=ctx.epoch, commodity=lane.commodity, cause=cause, units=units, culprit_entity_id=culprit)
+        )
+        if cause is TradeLoss.SEA and ctx.rng(f"wreck.{route.entity.id}.{lane.commodity.value}.{ctx.epoch}").chance(lanes.shipwreck_chance):
             await _shipwreck(ctx, route, book.entities[lane.seller_id], tally)
-        return TradeLoss.SEA
-    bandits = bandits_on(book, route, await robber_ids(ctx.session))
-    if bandits is not None:
-        pay(ctx.rules.markets.seller_wealth_per_value, bandits, round_half_up(lane.landed * lost / PERCENT * lanes.bandit_share_pct / PERCENT))
-    return TradeLoss.BANDITS
+        elif cause is TradeLoss.BANDITS:
+            bandits = book.entities.get(culprit) if culprit is not None else None
+            if bandits is not None:
+                pay(ctx.rules.markets.seller_wealth_per_value, bandits, round_half_up(lane.landed * units / PERCENT * lanes.bandit_share_pct / PERCENT))
+        elif cause is TradeLoss.BEASTS:
+            tally.beast_losses += units
+            await feed_beast(ctx, book, route.entity, lane.commodity, units=units, beast_id=culprit)
+        elif cause is TradeLoss.WEATHER:
+            tally.weather_losses += units
+            await spoil(ctx, route.entity, lane.commodity, units=units, mode=route.profile.mode)
+    return max(shares, key=lambda cause: (shares[cause], cause.value)) if shares else None
 
 
 async def coin_trust(ctx: TickContext, book: EconomyBook, ends: tuple[int, int]) -> int | None:
@@ -512,7 +568,7 @@ async def carry(ctx: TickContext, book: EconomyBook, route: Route, quotes: dict[
     if left_quotes is None or right_quotes is None or route.profile.status is TradeRouteStatus.BLOCKADED:
         return 0
     capacity = stat(route.entity, "capacity") or 0
-    season = season_factor(ctx, book, route)
+    season = season_factor(route)
     trust = await coin_trust(ctx, book, route.ends)
     moved = 0
     for commodity in COMMODITIES:
@@ -543,6 +599,8 @@ async def carry(ctx: TickContext, book: EconomyBook, route: Route, quotes: dict[
         await _record_trade(ctx, lane.seller_id, commodity, exported=done.sent)
         await _record_trade(ctx, lane.buyer_id, commodity, imported=done.delivered)
         moved += done.sent
+        if COMMODITIES[commodity].strategic:
+            tally.strategic[route.entity.id] = tally.strategic.get(route.entity.id, 0) + done.sent
         tally.lost += lost
         tally.tolls += paid
         if moved >= capacity:
@@ -590,37 +648,45 @@ async def _route_war(ctx: TickContext, book: EconomyBook, route: Route, rival: E
             return
 
 
-async def upkeep(ctx: TickContext, book: EconomyBook, route: Route, *, works: dict[int, Works], enemies: set[tuple[int, int]], tally: RouteTally) -> None:
+async def _blockade(ctx: TickContext, book: EconomyBook, route: Route, blocker: EntityRow, tally: RouteTally) -> None:
+    profile = route.profile
+    profile.status = TradeRouteStatus.BLOCKADED
+    profile.blockaded_by_entity_id = blocker.id
+    tally.blockaded += 1
+    for end in route.ends:
+        row = book.societies.get(end)
+        if row is not None:
+            row.satisfaction_merchant = clamp_int(row.satisfaction_merchant - ctx.rules.trade_routes.blockade_merchant_loss, 0, PERCENT)
+    await ctx.chronicle(
+        ChronicleKind.WAR,
+        f"{blocker.name} closed {route.entity.name}; no caravan passes.",
+        template_key="trade_route.blockade",
+        entity_ids=[route.entity.id, blocker.id, *route.ends],
+    )
+    owner = await ctx.session.get(ArmyRow, blocker.id)
+    master = book.entities.get(owner.owner_entity_id) if owner is not None else None
+    if master is not None:
+        await press_route_aims(ctx, master.id, route.entity.id)
+        await _route_war(ctx, book, route, master, tally)
+
+
+async def _grow(ctx: TickContext, route: Route, moved: int) -> None:
+    lanes = ctx.rules.trade_routes
+    if moved < lanes.renown_volume:
+        return
+    before = stat(route.entity, "renown") or 0
+    renown = before if held(route, "renown") else clamp_int(before + lanes.renown_per_epoch, 0, PERCENT)
+    culture = stat(route.entity, "culture") or 0
+    set_stats(route.entity, renown=renown, culture=culture if held(route, "culture") else clamp_int(culture + lanes.culture_per_epoch, 0, PERCENT))
+    if before < lanes.legend_renown <= renown:
+        await _pass_into_legend(ctx, route)
+
+
+async def _age(ctx: TickContext, book: EconomyBook, route: Route, tally: RouteTally) -> bool:
     lanes = ctx.rules.trade_routes
     profile = route.profile
-    set_stats(route.entity, capacity=await spoken_capacity(ctx, book, route, works), danger=danger_of(book, route.path))
-    blocker = await blocker_of(ctx, book, route, enemies)
-    if blocker is not None and profile.status is not TradeRouteStatus.BLOCKADED:
-        profile.status = TradeRouteStatus.BLOCKADED
-        profile.blockaded_by_entity_id = blocker.id
-        tally.blockaded += 1
-        for end in route.ends:
-            row = book.societies.get(end)
-            if row is not None:
-                row.satisfaction_merchant = clamp_int(row.satisfaction_merchant - lanes.blockade_merchant_loss, 0, PERCENT)
-        await ctx.chronicle(
-            ChronicleKind.WAR,
-            f"{blocker.name} closed {route.entity.name}; no caravan passes.",
-            template_key="trade_route.blockade",
-            entity_ids=[route.entity.id, blocker.id, *route.ends],
-        )
-        owner = await ctx.session.get(ArmyRow, blocker.id)
-        master = book.entities.get(owner.owner_entity_id) if owner is not None else None
-        if master is not None:
-            await _route_war(ctx, book, route, master, tally)
-        return
-    if blocker is None and profile.status is TradeRouteStatus.BLOCKADED:
-        profile.status = TradeRouteStatus.OPEN
-        profile.blockaded_by_entity_id = None
-    moved = tally.volumes.get(route.entity.id, 0)
-    if moved > 0:
-        profile.last_traffic_epoch = ctx.epoch
-        profile.traffic_epochs += 1
+    if held(route, "status"):
+        return True
     if profile.status is TradeRouteStatus.FORMING and profile.traffic_epochs >= lanes.formation_epochs:
         profile.status = TradeRouteStatus.OPEN
         route.entity.pending_name = True
@@ -636,15 +702,54 @@ async def upkeep(ctx: TickContext, book: EconomyBook, route: Route, *, works: di
         profile.status = TradeRouteStatus.DECAYED
         tally.decayed += 1
         await retire_in(ctx, route.entity, "fell out of use; grass grew over it", status=EntityStatus.DESTROYED)
+        return False
+    return True
+
+
+async def upkeep(ctx: TickContext, book: EconomyBook, route: Route, *, works: dict[int, Works], enemies: set[tuple[int, int]], tally: RouteTally) -> None:
+    profile = route.profile
+    if not held(route, "capacity"):
+        set_stats(route.entity, capacity=await spoken_capacity(ctx, book, route, works))
+    steady = held(route, "blockaded_by_entity_id") or held(route, "status")
+    blocker = None if steady else await blocker_of(ctx, book, route, enemies)
+    if blocker is not None and profile.status is not TradeRouteStatus.BLOCKADED:
+        await _blockade(ctx, book, route, blocker, tally)
         return
-    if moved >= lanes.renown_volume:
-        renown = clamp_int((stat(route.entity, "renown") or 0) + lanes.renown_per_epoch, 0, PERCENT)
-        before = stat(route.entity, "renown") or 0
-        set_stats(route.entity, renown=renown, culture=clamp_int((stat(route.entity, "culture") or 0) + lanes.culture_per_epoch, 0, PERCENT))
-        if before < lanes.legend_renown <= renown:
-            await _pass_into_legend(ctx, route)
-    if toll_total(route) >= ctx.rules.tolls.divert_total_pct:
-        await divert(ctx, book, route, works)
+    if blocker is None and profile.status is TradeRouteStatus.BLOCKADED and not steady:
+        profile.status = TradeRouteStatus.OPEN
+        profile.blockaded_by_entity_id = None
+    moved = tally.volumes.get(route.entity.id, 0)
+    if moved > 0:
+        profile.last_traffic_epoch = ctx.epoch
+        profile.traffic_epochs += 1
+    if not await _age(ctx, book, route, tally):
+        return
+    await _grow(ctx, route, moved)
+    if not held(route, "chokepoint") and weigh_chokepoint(ctx, book, profile, route.path, moved=moved, strategic=tally.strategic.get(route.entity.id, 0)):
+        tally.chokepoints += 1
+    if toll_total(route) >= ctx.rules.tolls.divert_total_pct and not held(route, "path") and not await divert(ctx, book, route, works) and profile.chokepoint:
+        await _chokepoint_war(ctx, book, route, tally)
+
+
+async def _chokepoint_war(ctx: TickContext, book: EconomyBook, route: Route, tally: RouteTally) -> None:
+    master_id = route.profile.controller_entity_id
+    master = book.entities.get(master_id) if master_id is not None else None
+    if master is None or not ctx.rng(f"chokepoint_war.{route.entity.id}.{ctx.epoch}").chance(ctx.rules.chokepoints.war_chance):
+        return
+    for end in route.ends:
+        row = book.societies.get(end)
+        merchants = row.share(SocialClass.MERCHANT) if row is not None else 0.0
+        if merchants < ctx.rules.markets.district_merchant_pct or end == master.id:
+            continue
+        if await declare_war(ctx, end, master.id, f"the chokepoint of {route.entity.name}", cause=WarCause.TRADE_ROUTE):
+            tally.wars += 1
+            await ctx.chronicle(
+                ChronicleKind.WAR,
+                f"{book.entities[end].name} took up arms against {master.name} over the chokepoint of {route.entity.name}.",
+                template_key="trade_route.chokepoint_war",
+                entity_ids=[route.entity.id, end, master.id],
+            )
+            return
 
 
 async def divert(ctx: TickContext, book: EconomyBook, route: Route, works: dict[int, Works]) -> bool:
@@ -675,7 +780,7 @@ async def contacts(
     ctx: TickContext, book: EconomyBook, markets: list[EntityRow], routes: list[Route], quotes: dict[int, dict[CommodityKind, Quote]]
 ) -> list[tuple[EntityRow, EntityRow, list[int]]]:
     lanes = ctx.rules.trade_routes
-    joined = {frozenset(route.ends) for route in routes}
+    joined = {frozenset(route.ends) for route in routes} | await closed_pairs(ctx)
     meeting: dict[int, int] = defaultdict(int)
     for route in routes:
         for end in route.ends:
@@ -706,6 +811,13 @@ async def contacts(
         meeting[second.id] += 1
         found.append((first, second, path))
     return found
+
+
+async def closed_pairs(ctx: TickContext) -> set[frozenset[int]]:
+    statement = select(TradeRouteProfileRow.first_market_id, TradeRouteProfileRow.second_market_id).where(
+        or_(TradeRouteProfileRow.closed_by_player.is_(True), TradeRouteProfileRow.closed_by_son_id.is_not(None))
+    )
+    return {frozenset((first, second)) for first, second in await ctx.session.execute(statement)}
 
 
 def _worth_carrying(ctx: TickContext, left: dict[CommodityKind, Quote] | None, right: dict[CommodityKind, Quote] | None) -> bool:

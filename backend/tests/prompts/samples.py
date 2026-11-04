@@ -133,7 +133,6 @@ def entity_detail() -> blocks.EntityDetailContext:
             sanity=30,
             clouded=True,
             classes=[blocks.ClassShare(label="Farmers", share=50, satisfaction=40)],
-            granary=blocks.Granary(food=50, ore=2, goods=3, bread_price=120, ore_price=100, goods_price=90),
             relations=[blocks.CommunityRelationLine(id=31, name="Vor", label="enemy", value=-50, blood_feud=True)],
             wars=[blocks.WarLine(id=40, name="Salt War", clashes=2)],
         ),

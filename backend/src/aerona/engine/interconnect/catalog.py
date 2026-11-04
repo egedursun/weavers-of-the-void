@@ -28,6 +28,7 @@ from aerona.db.tables.society import CommunityRelationRow
 from aerona.domain.enums.body import ConditionKind, InjuryKind
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.interconnect.catalog_couplings import COUPLING_MECHANICS
+from aerona.engine.interconnect.catalog_economy import ECONOMY_DEPTH_MECHANICS
 from aerona.engine.interconnect.catalog_faith import BEHAVIOURS as FAITH_BEHAVIOURS
 from aerona.engine.interconnect.catalog_faith import FAITH_MECHANICS
 from aerona.engine.interconnect.catalog_foundations import FOUNDATION_MECHANICS
@@ -39,13 +40,17 @@ from aerona.engine.interconnect.catalog_military import MILITARY_MECHANICS
 from aerona.engine.interconnect.catalog_military_depth import MILITARY_DEPTH_MECHANICS
 from aerona.engine.interconnect.catalog_mortal import BEHAVIOURS as MORTAL_BEHAVIOURS
 from aerona.engine.interconnect.catalog_mortal import MORTAL_MECHANICS
+from aerona.engine.interconnect.catalog_peoples import PEOPLE_MECHANICS
 from aerona.engine.interconnect.catalog_places import PLACE_BEHAVIOURS, PLACE_MECHANICS
 from aerona.engine.interconnect.catalog_realm import BEHAVIOURS as REALM_BEHAVIOURS
 from aerona.engine.interconnect.catalog_realm import REALM_MECHANICS
 from aerona.engine.interconnect.catalog_region import REGION_MECHANICS
+from aerona.engine.interconnect.catalog_routes import ROUTE_MECHANICS
 from aerona.engine.interconnect.catalog_rumours import RUMOUR_MECHANICS
 from aerona.engine.interconnect.catalog_society import BEHAVIOURS as SOCIETY_BEHAVIOURS
 from aerona.engine.interconnect.catalog_society import SOCIETY_MECHANICS
+from aerona.engine.interconnect.catalog_society_depth import SOCIETY_DEPTH_MECHANICS
+from aerona.engine.interconnect.catalog_structures import STRUCTURE_MECHANICS
 from aerona.engine.interconnect.catalog_wilds import BEHAVIOURS as WILDS_BEHAVIOURS
 from aerona.engine.interconnect.catalog_wilds import WILDS_MECHANICS
 from aerona.engine.interconnect.registry import MECHANICS, Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface, register
@@ -945,6 +950,11 @@ BUILT_IN = (
     *LORE_MECHANICS,
     *RUMOUR_MECHANICS,
     *WILDS_MECHANICS,
+    *ROUTE_MECHANICS,
+    *PEOPLE_MECHANICS,
+    *SOCIETY_DEPTH_MECHANICS,
+    *ECONOMY_DEPTH_MECHANICS,
+    *STRUCTURE_MECHANICS,
     *MORTAL_MECHANICS,
     *FOUNDATION_MECHANICS,
     *PLACE_MECHANICS,

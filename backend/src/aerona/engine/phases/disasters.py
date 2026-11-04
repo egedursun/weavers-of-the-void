@@ -1,5 +1,6 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
+from types import MappingProxyType
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,7 +16,8 @@ from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.happenings import RegionGeomorphRow
-from aerona.domain.enums.body import ConditionKind, DamageType, HarmCause
+from aerona.db.tables.structures import StructureProfileRow
+from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.disease import SpreadPath
@@ -24,16 +26,18 @@ from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.happening import EventPhase
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.mortal import DeathCause
+from aerona.domain.enums.settlement import DistrictHarm
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import EventStats
-from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_types import disaster_pct
 from aerona.engine.disease.book import DiseaseBook
+from aerona.engine.disease.harm import disease_harm, lasting_illness
 from aerona.engine.disease.outbreaks import STRIKING, disease_for, lethality_factor, open_outbreak, spread_factor, tally
-from aerona.engine.economy.routes import link_partners
+from aerona.engine.economy.routes import trade_links
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment
 from aerona.engine.environment.geomorph import erupted, eruption_chance, quaked, river_after_flood, shapes_by_region
 from aerona.engine.environment.notable import remember_event_year
@@ -54,6 +58,9 @@ from aerona.engine.primitives.records import RecordSpec, create_record, indefini
 from aerona.engine.primitives.stats import FOLLOWERS_KEY, POPULATION_KEY, headcount_value, set_stats, stat, stat_or
 from aerona.engine.primitives.thresholds import relative_threshold
 from aerona.engine.records import death_path
+from aerona.engine.settlement.districts import damage_districts
+from aerona.engine.structures.damage import harm, quake_loss
+from aerona.engine.structures.readers import strength_at
 from aerona.rules.registry import Rules
 
 DISASTER_DAMAGE: dict[Disaster, DamageType] = {
@@ -87,6 +94,18 @@ class DisasterImpact:
     losses: dict[int, int | None] = field(default_factory=dict)
     dead: list[EntityRow] = field(default_factory=list)
     destroyed: list[EntityRow] = field(default_factory=list)
+
+
+DISTRICT_HARMS: Mapping[Disaster, DistrictHarm] = MappingProxyType(
+    {
+        Disaster.EARTHQUAKE: DistrictHarm.EARTHQUAKE,
+        Disaster.VOLCANIC_QUAKE: DistrictHarm.EARTHQUAKE,
+        Disaster.ERUPTION: DistrictHarm.EARTHQUAKE,
+        Disaster.FLOOD: DistrictHarm.FLOOD,
+        Disaster.STORM: DistrictHarm.STORM,
+        Disaster.DROUGHT: DistrictHarm.DROUGHT,
+    }
+)
 
 
 def joined_names(names: Sequence[str]) -> str:
@@ -153,13 +172,13 @@ async def _strike_mortal(ctx: TickContext, mortal: EntityRow, disaster: Disaster
         return await death_path(ctx, mortal, phrase, manner=DeathCause.DISASTER)
     if not rng.chance(effects.disaster_injury_chance):
         return False
+    profile = STRIKING.get() if disaster is Disaster.PLAGUE else None
+    if profile is not None:
+        harm = await disease_harm(ctx, mortal, profile, harm)
     wounding = await apply_hits(ctx, mortal, harm)
     if disaster is Disaster.PLAGUE and wounding.outcome is WoundOutcome.WOUNDED:
-        profile = STRIKING.get()
         chronic = profile.chronic_rate / ctx.rules.epidemiology.neutral_chronic_rate if profile is not None else 1.0
-        await gain_condition(
-            ctx, mortal, ConditionKind.CHRONIC_ILLNESS, HarmCause.DISASTER, chance=min(PERCENT, ctx.rules.conditions.plague_chronic_chance * chronic)
-        )
+        await lasting_illness(ctx, mortal, profile, chance=min(PERCENT, ctx.rules.conditions.plague_chronic_chance * chronic))
     return wounding.outcome is WoundOutcome.DIED
 
 
@@ -172,16 +191,22 @@ def shaking_loss(rules: Rules, disaster: Disaster) -> float:
 
 async def _quake_structure(ctx: TickContext, structure: EntityRow, scale: float, knowledge: KnowledgeMap, disaster: Disaster = Disaster.EARTHQUAKE) -> bool:
     effects = ctx.rules.intervention_effects
-    durability = stat(structure, "durability")
-    if durability is None:
-        return False
     sturdy = structure.maker_entity_id is not None and knowledge.knows(structure.maker_entity_id, KnowledgeBranch.ARCHITECTURE)
-    loss = shaking_loss(ctx.rules, disaster) * (fraction(effects.architecture_quake_severity) if sturdy else 1.0) * scale
-    remaining = clamp_int(durability - loss, 0, PERCENT)
-    set_stats(structure, durability=remaining)
-    if remaining > 0:
-        return False
-    await EntityRepository(ctx.session).set_status(structure, EntityStatus.DESTROYED, ctx.epoch, f"Collapsed in the {DISASTERS[disaster].label.lower()}.")
+    label = DISASTERS[disaster].label.lower()
+    loss = await quake_loss(ctx, structure, shaking_loss(ctx.rules, disaster) * (fraction(effects.architecture_quake_severity) if sturdy else 1.0) * scale)
+    profile = await ctx.session.get(StructureProfileRow, structure.id)
+    if profile is not None:
+        if not await harm(ctx, structure, profile, loss, cause=f"the {label}", quiet=True):
+            return False
+    else:
+        durability = stat(structure, "durability")
+        if durability is None:
+            return False
+        remaining = clamp_int(durability - loss, 0, PERCENT)
+        set_stats(structure, durability=remaining)
+        if remaining > 0:
+            return False
+    await EntityRepository(ctx.session).set_status(structure, EntityStatus.DESTROYED, ctx.epoch, f"Collapsed in the {label}.")
     return True
 
 
@@ -229,11 +254,16 @@ async def apply_disaster(ctx: TickContext, target: EntityRow, disaster: Disaster
             if entity.status is EntityStatus.CANON and await _strike_mortal(ctx, entity, disaster, scale, knowledge):
                 impact.dead.append(entity)
             continue
+        if disaster is Disaster.FLOOD:
+            scale *= 1 - await strength_at(ctx.session, entity.id, [StructureKind.DAM]) * ctx.rules.structure_functions.dam_flood_cut_pct / PERCENT
         before = headcount_value(entity)
         if disaster in SHAKING and entity.entity_type is EntityType.STRUCTURE and await _quake_structure(ctx, entity, scale, knowledge, disaster):
             impact.destroyed.append(entity)
             continue
         _strike_stats(ctx.rules, entity, disaster, scale, knowledge)
+        harm = DISTRICT_HARMS.get(disaster)
+        if harm is not None and entity.entity_type is EntityType.SETTLEMENT:
+            await damage_districts(ctx, entity, harm, scale)
         after = headcount_value(entity)
         if entity.entity_type in STRUCK_TYPES:
             impact.losses[entity.id] = max(0, before - after) if before is not None and after is not None else None
@@ -398,6 +428,8 @@ async def strike_plague(
     chosen = disease if disease is not None else await disease_for(ctx, book, region) if region is not None else None
     struck = [entity for entity in await affected_entities(ctx.session, target) if entity.entity_type in COMMUNITY_TYPES]
     factor = lethality_factor(book, chosen.id, struck, await KnowledgeMap.load(ctx.session)) if chosen is not None else 1.0
+    if chosen is not None and book.active_of(chosen.id, region_id) is None:
+        factor *= 1 - book.hidden_share(chosen.id) * ctx.rules.epidemiology.incubation_delay_pct / PERCENT
     token = STRIKING.set(book.profiles.get(chosen.id) if chosen is not None else None)
     try:
         with flowing(FlowCategory.PLAGUE):
@@ -519,6 +551,20 @@ async def _city_plagues(ctx: TickContext, world: DisasterWorld) -> None:
         )
 
 
+def route_chance(rules: Rules, volume: int) -> float:
+    table = rules.epidemiology
+    busy = max(table.route_volume_floor_pct / PERCENT, min(table.route_volume_cap_pct / PERCENT, volume / max(1, table.route_busy_volume)))
+    return table.route_spread_chance * busy
+
+
+async def route_volumes(ctx: TickContext) -> dict[int, dict[int, int]]:
+    volumes: dict[int, dict[int, int]] = {}
+    for link in await trade_links(ctx):
+        for here, there in ((link.first, link.second), (link.second, link.first)):
+            volumes.setdefault(here, {})[there] = max(volumes.get(here, {}).get(there, 0), link.volume)
+    return volumes
+
+
 async def _plague_spread(ctx: TickContext) -> int:
     settings = ctx.rules.disasters
     session = ctx.session
@@ -528,9 +574,10 @@ async def _plague_spread(ctx: TickContext) -> int:
         if event.engine_kind is EngineKind.PLAGUE and event.birth_epoch >= ctx.epoch - settings.plague_spread_epochs
     ]
     links = await BondIndex.load(session, [*SPREAD_BOND_KINDS, BondKind.CAUSED])
-    roads = await link_partners(ctx)
+    roads = await route_volumes(ctx)
     knowledge = await KnowledgeMap.load(session)
     book = await DiseaseBook.load(session, ctx.rules, ctx.epoch)
+    medicine_cut = settings.plague_spread_medicine_chance / max(1, settings.plague_spread_chance)
     spread = 0
     for plague in plagues:
         caused = links.outgoing(plague.id, BondKind.CAUSED)
@@ -546,14 +593,32 @@ async def _plague_spread(ctx: TickContext) -> int:
             partner = await session.get(EntityRow, partner_id)
             if partner is None or partner.status is not EntityStatus.CANON or partner.entity_type not in COMMUNITY_TYPES:
                 continue
-            medicine = knowledge.knows(partner.id, KnowledgeBranch.MEDICINE)
-            chance = settings.plague_spread_medicine_chance if medicine else settings.plague_spread_chance
+            on_route = partner.id in traffic
+            chance = route_chance(ctx.rules, traffic[partner.id]) if on_route else float(settings.plague_spread_chance)
+            if knowledge.knows(partner.id, KnowledgeBranch.MEDICINE):
+                chance *= medicine_cut
+            path = SpreadPath.ROUTE if on_route else SpreadPath.ORIGIN
             target_region = book.atlas.top_region(partner.id)
             ground = await session.get(RegionEnvironmentRow, target_region) if target_region is not None else None
-            pressure = spread_factor(book, disease.id, partner, ground, source_region=book.atlas.top_region(source)) if disease is not None else 1.0
-            if not ctx.rng(f"plague_spread.{plague.id}.{partner.id}").chance(min(100, chance * traffic.get(partner.id, 1.0) * pressure)):
+            pressure = (
+                spread_factor(
+                    book,
+                    disease.id,
+                    partner,
+                    ground,
+                    source_region=book.atlas.top_region(source),
+                    path=path,
+                    hidden=book.unseen(outbreak),
+                    sealed=outbreak is not None and outbreak.quarantined,
+                )
+                if disease is not None
+                else 1.0
+            )
+            if not ctx.rng(f"plague_spread.{plague.id}.{partner.id}").chance(min(100, chance * pressure)):
                 continue
             lethal = lethality_factor(book, disease.id, [partner], knowledge) if disease is not None else 1.0
+            if disease is not None and book.active_of(disease.id, target_region) is None:
+                lethal *= 1 - book.hidden_share(disease.id) * ctx.rules.epidemiology.incubation_delay_pct / PERCENT
             token = STRIKING.set(book.profiles.get(disease.id) if disease is not None else None)
             try:
                 with flowing(FlowCategory.PLAGUE):
@@ -561,7 +626,6 @@ async def _plague_spread(ctx: TickContext) -> int:
             finally:
                 STRIKING.reset(token)
             if disease is not None and outbreak is not None and target_region is not None:
-                path = SpreadPath.ROUTE if partner.id in traffic else SpreadPath.ORIGIN
                 landed = await open_outbreak(
                     ctx, book, disease, target_region, path=path, severity=outbreak.severity * settings.plague_spread_severity_pct // PERCENT, source=outbreak
                 )
@@ -616,9 +680,11 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.designated_heirs",
     "table.disease_cures",
     "table.disease_profiles",
+    "table.districts",
     "table.endemic_diseases",
     "table.entity_flags",
     "table.entity_tags",
+    "table.entity_traits",
     "table.epoch_year_cursors",
     "table.event_casualties",
     "table.event_footprints",
@@ -633,6 +699,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.item_profiles",
     "table.language_profiles",
     "table.lexemes",
+    "table.ley_lines",
     "table.memories",
     "table.minds",
     "table.name_registry",
@@ -647,6 +714,9 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.routes",
     "table.sieges",
     "table.sky_events",
+    "table.sons",
+    "table.species_hosts",
+    "table.species_ranges",
     "table.trade_flows",
     "table.trade_route_profiles",
     "table.trade_route_regions",
@@ -672,6 +742,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.chronicle",
     "table.chronicle_entities",
     "table.conditions",
+    "table.districts",
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",

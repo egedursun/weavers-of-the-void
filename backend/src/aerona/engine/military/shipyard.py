@@ -45,12 +45,11 @@ async def commission(session: AsyncSession, rules: Rules, vessel: EntityRow, ord
     row.status = VesselStatus.DOCKED
     row.home_port_entity_id = order.home_port_id or vessel.location_id
     row.captain_entity_id = order.captain_id
-    row.hull_material = order.hull_material.value if order.hull_material is not None else None
-    row.fabric_material = order.fabric_material.value if order.fabric_material is not None else None
     row.renown = row.renown or 0
     row.voyages = row.voyages or 0
     row.locked = list(row.locked or [])
     set_stats(vessel, speed=min(PERCENT, values[(hull.value, "speed")]), crew=row.crew, strangeness=spec.strangeness)
+    await session.flush()
     if order.hull_material is not None:
         await set_node_material(session, vessel.id, MaterialSlot.HULL, order.hull_material)
     if order.fabric_material is not None:
