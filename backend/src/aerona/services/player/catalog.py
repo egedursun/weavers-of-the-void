@@ -54,6 +54,7 @@ from aerona.services.player import (
     native_faith,
     pantheon,
     peoples,
+    profiles,
     realms,
     relations,
     settings,
@@ -1321,6 +1322,20 @@ MECHANIC_ACTIONS = (
     _sync(Meta("incident:link_cause", "Link an incident to its cause", G.SETTINGS), incidents.link_cause, incidents.LinkCause, free, ("F10",)),
     _sync(Meta("incident:unlink_cause", "Cut an incident from its cause", G.SETTINGS), incidents.unlink_cause, incidents.IncidentRef, free, ("F10",)),
     _sync(Meta("incident:delete", "Strike an incident from history", G.SETTINGS), incidents.delete_incident, incidents.IncidentRef, free, ("F10",)),
+    _sync(
+        Meta("profile:set", "Set and hold any value of a record's profile", G.SETTINGS),
+        profiles.set_profile_value,
+        profiles.SetProfileValue,
+        free,
+        ("J.16c",),
+    ),
+    _sync(
+        Meta("profile:release", "Let a held profile value follow the world again", G.SETTINGS),
+        profiles.release_profile_value,
+        profiles.ReleaseProfileValue,
+        free,
+        ("J.16c",),
+    ),
 )
 ACTIONS: tuple[ActionSpec, ...] = (
     *WILDS_ACTIONS,
