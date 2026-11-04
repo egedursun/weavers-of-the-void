@@ -8,6 +8,7 @@ from aerona.rules.registry.awakening import AwakeningRules
 from aerona.rules.registry.backup import BackupRules
 from aerona.rules.registry.balance import BalanceRules
 from aerona.rules.registry.batch import BatchRules
+from aerona.rules.registry.battle_tables import BattleTerrainRules, BattleWeatherRules, TacticMatchupRules
 from aerona.rules.registry.beyond import BeyondRules
 from aerona.rules.registry.body import (
     AnatomyRules,
@@ -211,6 +212,15 @@ from aerona.rules.registry.trade import TradeRules
 from aerona.rules.registry.travel import TravelRules
 from aerona.rules.registry.travel_methods import TravelMethodsRules
 from aerona.rules.registry.ui import UiRules
+from aerona.rules.registry.war_depth import (
+    BattleMagicRules,
+    CampaignDepthRules,
+    CaptiveDepthRules,
+    LevyRules,
+    SeafaringRules,
+    SiegeDepthRules,
+    WarFinanceRules,
+)
 from aerona.rules.registry.weather import WeatherRules
 from aerona.rules.registry.wilds import (
     BeastsRules,
@@ -363,6 +373,16 @@ class Rules:
     terrain_effects: TerrainEffectsRules = field(default_factory=TerrainEffectsRules)
     weather_battle_effects: WeatherBattleEffectsRules = field(default_factory=WeatherBattleEffectsRules)
     tactics: TacticsRules = field(default_factory=TacticsRules)
+    battle_terrain: BattleTerrainRules = field(default_factory=BattleTerrainRules)
+    battle_weather: BattleWeatherRules = field(default_factory=BattleWeatherRules)
+    tactic_matchups: TacticMatchupRules = field(default_factory=TacticMatchupRules)
+    battle_magic: BattleMagicRules = field(default_factory=BattleMagicRules)
+    levies: LevyRules = field(default_factory=LevyRules)
+    campaign_depth: CampaignDepthRules = field(default_factory=CampaignDepthRules)
+    war_finance: WarFinanceRules = field(default_factory=WarFinanceRules)
+    siege_depth: SiegeDepthRules = field(default_factory=SiegeDepthRules)
+    captive_depth: CaptiveDepthRules = field(default_factory=CaptiveDepthRules)
+    seafaring: SeafaringRules = field(default_factory=SeafaringRules)
     interpreters: InterpretersRules = field(default_factory=InterpretersRules)
     prestige: PrestigeRules = field(default_factory=PrestigeRules)
     script: ScriptRules = field(default_factory=ScriptRules)

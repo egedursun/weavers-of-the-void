@@ -48,6 +48,12 @@ class WarCause(StrEnum):
     RESOURCE = "resource"
     IDEOLOGY = "ideology"
     TRADE_ROUTE = "trade_route"
+    CLAIM = "claim"
+    HOLY_WAR = "holy_war"
+    SUCCESSION = "succession"
+    RAID = "raid"
+    LIBERATION = "liberation"
+    PUNITIVE = "punitive"
 
 
 class SiegeStatus(StrEnum):

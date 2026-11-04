@@ -1,19 +1,48 @@
-from sqlalchemy import Float, ForeignKey, Index, String
+from sqlalchemy import JSON, Float, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.entity import CivilizationTier
+from aerona.domain.enums.military import HullClass, VesselStatus
 from aerona.domain.enums.society import ResourceMechanic
 from aerona.domain.enums.travel import VehicleKind
 
 
 class VesselProfileRow(Base):
     __tablename__ = "vessel_profiles"
+    __table_args__ = (
+        between("condition", 0, 100),
+        between("seaworthiness", 0, 100),
+        between("seamanship", 0, 100),
+        at_least("cargo_capacity", 0),
+        at_least("crew", 0),
+        at_least("renown", 0),
+    )
 
     entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     kind: Mapped[VehicleKind] = mapped_column(enum_type(VehicleKind, "kind"), index=True)
+    hull_class: Mapped[HullClass] = mapped_column(enum_type(HullClass, "hull_class"), default=HullClass.BOAT)
+    hull_material: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    fabric_material: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    condition: Mapped[int] = mapped_column(default=100)
+    armament: Mapped[list[str]] = mapped_column(JSON, default=list)
+    seaworthiness: Mapped[int] = mapped_column(default=50)
+    cargo_capacity: Mapped[int] = mapped_column(default=0)
+    crew: Mapped[int] = mapped_column(default=0)
+    seamanship: Mapped[int] = mapped_column(default=0)
+    captain_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    home_port_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    crew_community_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    region_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    fleet_army_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    legend_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    renown: Mapped[int] = mapped_column(default=0)
+    status: Mapped[VesselStatus] = mapped_column(enum_type(VesselStatus, "status"), default=VesselStatus.DOCKED)
+    voyages: Mapped[int] = mapped_column(default=0)
+    updated_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class ResourceMechanicRow(Base):

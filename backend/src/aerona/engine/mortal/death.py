@@ -34,6 +34,7 @@ HARM_DEATHS: dict[HarmCause, DeathCause] = {
     HarmCause.AGE: DeathCause.OLD_AGE,
     HarmCause.PLAYER: DeathCause.DIVINE,
     HarmCause.EXPOSURE: DeathCause.EXPOSURE,
+    HarmCause.RITUAL: DeathCause.ACCIDENT,
 }
 GLORIOUS_DEATHS = frozenset({DeathCause.BATTLE, DeathCause.DUEL, DeathCause.MONSTER, DeathCause.SACRIFICE})
 SHAMEFUL_DEATHS = frozenset({DeathCause.EXECUTION, DeathCause.DESPAIR})

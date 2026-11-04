@@ -86,6 +86,7 @@ from aerona.engine.phases import (
     resources,
     ruins,
     rumours,
+    seafaring,
     settlement_life,
     settlements,
     sky,
@@ -194,6 +195,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + travel.PHASES
     + tribute.PHASES
     + warfare.PHASES
+    + seafaring.PHASES
     + wonders.PHASES
     + works.PHASES
     + writing.PHASES
@@ -242,6 +244,7 @@ SUB_ENGINE_STAGE = stage(
     "prisoners",
     "war_casualties",
     "travel",
+    "seafaring",
     "exploration",
     "geography",
     "place_profiles",

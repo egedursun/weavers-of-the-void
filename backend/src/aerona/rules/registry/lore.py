@@ -184,7 +184,7 @@ class RitesRules:
     spellcraft_xp: int = rule(4, 0, 100, H, "Spellcraft a learned mortal who knows magic gains from study each epoch")
     hp_per_captive: int = rule(8, 1, 1000, H, "Harm a blood rite would cost that one captive's blood pays instead")
     regrow_power: int = rule(7, 1, 10, H, "Power at which a healing rite makes lost limbs whole")
-    undead_per_dead: int = rule(10, 0, 1000, H, "Soldiers of the risen dead each battle death yields")
+    raise_dead_pct: int = rule(50, 0, 100, H, "Share of a battle's dead, not already raised on the field, that a rite of raising can call back (%)")
     undead_per_power: int = rule(40, 0, 10000, H, "Most risen dead a raising rite yields per point of its strength")
     army_chance: int = rule(30, 0, 100, H, "War mages work a battle rite against their army's target in an epoch (%)")
     dark_infamy: int = rule(10, 0, 100, H, "Standing a caster loses for working blood or void magic")

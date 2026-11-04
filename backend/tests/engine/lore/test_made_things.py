@@ -13,6 +13,7 @@ from aerona.db.tables.culture import (
     RiteEffectRow,
 )
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.warfare import BattleRow, WarRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import (
     ArtMedium,
@@ -28,6 +29,7 @@ from aerona.domain.enums.culture import (
 )
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.war import BattleOutcome, WarCause, WarStatus
 from aerona.domain.models.entity_stats import ArtworkStats, EventStats, ItemStats, KnowledgeStats, ProphecyStats
 from aerona.engine.economy.materials import MaterialBook
 from aerona.engine.lore import art, ideology, items, made_control, prophecy, research, rites
@@ -200,3 +202,30 @@ async def test_a_school_is_founded_from_chosen_tenets_and_can_be_suppressed(real
     assert creed.name == "The Lamp"
     assert await realm.session.scalar(select(ArtworkProfileRow)) is None
     assert await realm.session.scalar(select(ItemProfileRow)) is None
+
+
+async def test_a_rite_of_raising_only_calls_back_the_dead_the_battlefield_left_unraised(realm: Realm) -> None:
+    ctx = context(realm.session, tuned(RULES, rites={"raise_dead_pct": 50}), epoch=4)
+    first = await settlement(realm, "Ashford")
+    second = await settlement(realm, "Coldwater")
+    record = await make(realm.session, "War of the Fords", EntityType.EVENT, EventStats(severity=40), world_id=realm.world.id, engine_kind=EngineKind.WAR)
+    war = WarRow(event_entity_id=record.id, world_id=realm.world.id, status=WarStatus.ONGOING, cause=WarCause.HOSTILITY, started_epoch=1)
+    realm.session.add(war)
+    await realm.session.flush()
+    battle = BattleRow(
+        war_id=war.id,
+        epoch=4,
+        sequence=1,
+        winner_entity_id=first.id,
+        loser_entity_id=second.id,
+        outcome=BattleOutcome.FIELD_VICTORY,
+        gap=5.0,
+        winner_losses=100,
+        loser_losses=300,
+        magic={"raised": 150},
+    )
+    realm.session.add(battle)
+    await realm.session.flush()
+    assert await rites.claim_battle_dead(ctx, 500) == 50
+    assert battle.magic["raised"] == 200
+    assert await rites.claim_battle_dead(ctx, 500) == 0

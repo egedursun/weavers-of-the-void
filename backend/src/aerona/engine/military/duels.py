@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.military import DuelContext, DuelEnd
 from aerona.domain.enums.mind import TraitEffect, ValueAxis
 from aerona.engine.body.book import effective
@@ -16,6 +17,8 @@ from aerona.engine.primitives.strength import equipment, weapon_power
 from aerona.rules.registry import Rules
 
 ARMOUR_CAP = 0.8
+SLIPPERY = frozenset({TerrainKind.MARSH, TerrainKind.ICE_SHEET, TerrainKind.TUNDRA, TerrainKind.RIVER_VALLEY, TerrainKind.FLESH})
+WET = frozenset({WeatherKind.RAIN, WeatherKind.DOWNPOUR, WeatherKind.STORM, WeatherKind.SNOW, WeatherKind.BLIZZARD, WeatherKind.HAIL})
 REACH_ITEMS = 2
 
 
@@ -32,6 +35,8 @@ class Fighter:
     stamina: int = PERCENT
     harm: int = 0
     disarmed: bool = False
+    footing: int = PERCENT
+    pain: int = 0
 
 
 @dataclass
@@ -44,6 +49,7 @@ class Bout:
     killed: bool = False
     spared: bool = False
     log: list[str] = field(default_factory=list)
+    hits: list[tuple[int, int]] = field(default_factory=list)
 
 
 async def fighter(ctx: TickContext, hero: EntityRow) -> Fighter:
@@ -77,7 +83,9 @@ def swing(rules: Rules, rng: SeededRandom, fighter: Fighter, foe: Fighter, first
     campaigns, table = rules.campaigns, rules.duels
     reach = 1 + table.reach_pct / PERCENT if first and fighter.reach > foe.reach else 1.0
     armed = 0.3 if fighter.disarmed else 1.0
-    return fighter.power * (0.5 + fighter.stamina / (2 * PERCENT)) * reach * armed + rng.die(campaigns.duel_die) * campaigns.duel_die_mult
+    footing = fighter.footing / PERCENT
+    pain = max(0.2, 1 - fighter.pain / (2 * PERCENT))
+    return fighter.power * (0.5 + fighter.stamina / (2 * PERCENT)) * reach * armed * footing * pain + rng.die(campaigns.duel_die) * campaigns.duel_die_mult
 
 
 def wound(rules: Rules, target: Fighter, margin: float, total: float) -> int:
@@ -85,6 +93,9 @@ def wound(rules: Rules, target: Fighter, margin: float, total: float) -> int:
     shield = min(ARMOUR_CAP, target.armour / PERCENT * table.armour_pct / PERCENT)
     harm = round_half_up(table.hit_hp * (0.5 + margin / max(1.0, total)) * (1 - shield))
     target.harm += harm
+    target.pain = min(PERCENT, target.pain + round_half_up(harm * table.pain_pct / PERCENT))
+    if harm >= table.hit_hp:
+        target.footing = max(table.footing_floor, target.footing - table.stagger)
     return harm
 
 
@@ -100,6 +111,7 @@ def bout(rules: Rules, rng: SeededRandom, first: Fighter, second: Fighter, conte
     table = rules.duels
     count = table.exchanges_min + rng.below(max(1, table.exchanges_max - table.exchanges_min + 1))
     log: list[str] = []
+    hits: list[tuple[int, int]] = []
     for index in range(count):
         roll_a, roll_b = swing(rules, rng, first, second, index == 0), swing(rules, rng, second, first, index == 0)
         hitter, target = (first, second) if roll_a >= roll_b else (second, first)
@@ -108,15 +120,28 @@ def bout(rules: Rules, rng: SeededRandom, first: Fighter, second: Fighter, conte
             target.disarmed = True
             log.append(f"{hitter.entity.name} struck the weapon from {target.entity.name}'s hand")
         else:
-            log.append(f"{hitter.entity.name} hit {target.entity.name} for {wound(rules, target, margin, total)}")
+            harm = wound(rules, target, margin, total)
+            hits.append((target.entity.id, harm))
+            log.append(f"{hitter.entity.name} hit {target.entity.name} for {harm}")
         for one in (first, second):
             one.stamina = max(0, one.stamina - table.stamina_loss - one.burden)
         if target.harm >= target.hp:
             end, killed, spared = downed(rules, rng, hitter, target, context)
-            return Bout(hitter, target, end, context, index + 1, killed, spared, log)
+            return Bout(hitter, target, end, context, index + 1, killed, spared, log, hits)
         if target.harm * 2 >= target.hp and target.honour < table.yield_honour and context is not DuelContext.TRIAL:
-            return Bout(hitter, target, DuelEnd.YIELD, context, index + 1, log=log)
+            return Bout(hitter, target, DuelEnd.YIELD, context, index + 1, log=log, hits=hits)
         if target.disarmed and target.honour < table.yield_honour:
-            return Bout(hitter, target, DuelEnd.DISARM, context, index + 1, log=log)
+            return Bout(hitter, target, DuelEnd.DISARM, context, index + 1, log=log, hits=hits)
     winner, loser = (first, second) if first.harm <= second.harm else (second, first)
-    return Bout(winner, loser, DuelEnd.EXHAUSTION, context, count, log=log)
+    return Bout(winner, loser, DuelEnd.EXHAUSTION, context, count, log=log, hits=hits)
+
+
+def set_footing(rules: Rules, fighter: Fighter, terrain: TerrainKind | None, weather: WeatherKind | None, injuries: int) -> None:
+    table = rules.duels
+    footing = PERCENT
+    if terrain in SLIPPERY:
+        footing -= table.terrain_footing
+    if weather in WET:
+        footing -= table.weather_footing
+    footing -= injuries * table.injury_footing
+    fighter.footing = max(table.footing_floor, footing)

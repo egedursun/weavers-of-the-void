@@ -9,6 +9,7 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.military.logistics import March
 from aerona.engine.military.units import stacks_of, sync
+from aerona.engine.military.vessels import batter_fleet, fleet_bonus, fleet_of, renown_fleet
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import round_half_up
 
@@ -56,9 +57,14 @@ def sink(rows: list[ArmyUnitRow], share: float) -> int:
 
 async def sea_battle(ctx: TickContext, marches: list[March], weather: WeatherKind | None, slot: str) -> SeaFight | None:
     fleets = [await stacks_of(ctx.session, march.army.id) for march in marches]
-    if not all(ships(rows) for rows in fleets):
+    afloat = [bool(ships(rows)) or bool(await fleet_of(ctx, march.army.id)) for rows, march in zip(fleets, marches, strict=True)]
+    if not all(afloat):
         return None
-    powers = [fleet_power(ctx, rows, weather) * (0.8 + ctx.rng(f"sea.{slot}.{index}").below(40) / PERCENT) for index, rows in enumerate(fleets)]
+    bonuses = [await fleet_bonus(ctx, march.army.id, weather) for march in marches]
+    powers = [
+        (fleet_power(ctx, rows, weather) + bonus) * (0.8 + ctx.rng(f"sea.{slot}.{index}").below(40) / PERCENT)
+        for index, (rows, bonus) in enumerate(zip(fleets, bonuses, strict=True))
+    ]
     first_wins = powers[0] >= powers[1]
     winner, loser = (0, 1) if first_wins else (1, 0)
     ratio = powers[loser] / max(1.0, powers[winner])
@@ -70,6 +76,9 @@ async def sea_battle(ctx: TickContext, marches: list[March], weather: WeatherKin
         sync(march.army, rows, ctx.rules)
     marches[winner].profile.blockade_entity_id = marches[loser].owner.id
     marches[loser].profile.blockade_entity_id = None
+    await batter_fleet(ctx, marches[loser].army.id, min(0.6, 0.15 + (1 - ratio) / 2), region_id=marches[loser].profile.region_entity_id)
+    await batter_fleet(ctx, marches[winner].army.id, 0.1 * ratio, region_id=marches[winner].profile.region_entity_id)
+    await renown_fleet(ctx, marches[winner].army.id)
     return SeaFight(marches[winner], marches[loser], sunk)
 
 

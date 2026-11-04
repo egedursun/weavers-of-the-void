@@ -17,6 +17,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.taboos import forbidden
 from aerona.engine.military.captivity import announce, cohort_fates, ransom_lawful, rich, wring_intel
+from aerona.engine.military.ransom import grow_ward, marry_captive, named_ransom, pay_from_treasury, release_by_opinion, ward_returns
 from aerona.engine.mind.book import stored_values, values_for, write_values
 from aerona.engine.mind.drives import closeness, cruelty_drive
 from aerona.engine.mind.hooks import judged, witnessed
@@ -48,9 +49,9 @@ async def home_of(ctx: TickContext, captive: EntityRow, row: CaptiveRow) -> Enti
 
 
 async def pay_ransom(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: EntityRow, home: EntityRow) -> None:
-    cost = ctx.rules.campaigns.ransom_cost
-    shift_stat(home, "wealth", -cost)
-    shift_stat(home, "prosperity", -cost)
+    cost = await pay_from_treasury(ctx, home, await named_ransom(ctx, captive), captive=captive)
+    if cost <= 0:
+        return
     shift_stat(captor, "wealth", cost)
     add_prosperity(ctx.rules, captor, cost)
     await change_relation(ctx, home.id, captor.id, ctx.rules.campaigns.ransom_relation, MemoryKind.FREED_US, note="ransom")
@@ -111,6 +112,7 @@ async def torture(ctx: TickContext, captive: EntityRow, captor: EntityRow, home:
 async def foster(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: EntityRow) -> bool:
     if (stat(captive, "age") or ctx.rules.skills.adult_age) >= ctx.rules.skills.adult_age:
         if row.status is CaptiveStatus.WARD:
+            await ward_returns(ctx, row, captive, captor)
             await release_captive(ctx, row, CaptiveStatus.RELEASED)
             text = f"{captive.name}, raised at the court of {captor.name}, came of age and went home."
             await _note(ctx, ChronicleKind.WAR, text, "prisoner.ward_home", (captor.id, captive.id))
@@ -125,6 +127,7 @@ async def foster(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: 
     step = ctx.rules.captivity.ward_drift
     drifted = {axis: own.get(axis, 0) + max(-step, min(step, theirs.get(axis, 0) - own.get(axis, 0))) for axis in ValueAxis}
     await write_values(ctx.session, ValueHolder.PERSONAL, captive.id, drifted)
+    await grow_ward(ctx, row, captive, captor)
     ctx.count("wards")
     return True
 
@@ -134,6 +137,19 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
     rng = ctx.rng("captivity")
     home = await home_of(ctx, captive, row)
     if await foster(ctx, row, captive, captor):
+        return
+    if await marry_captive(ctx, row, captive, captor) is not None:
+        await _note(ctx, ChronicleKind.WAR, f"{captive.name} was married into the house of {captor.name}.", "prisoner.married", (captor.id, captive.id))
+        return
+    if await release_by_opinion(ctx, captor, home):
+        await release_captive(ctx, row, CaptiveStatus.RELEASED)
+        await _note(
+            ctx,
+            ChronicleKind.WAR,
+            f"{captor.name} thought well of {captive.name}'s people and let the prisoner go.",
+            "prisoner.released",
+            (captor.id, captive.id),
+        )
         return
     if home is not None and rich(ctx, home) and await ransom_lawful(ctx, captor) and rng.chance(campaigns.ransom_chance):
         await pay_ransom(ctx, row, captive, captor, home)
@@ -177,6 +193,77 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
     "table.entities",
     "table.epoch_year_cursors",
     "table.incidents",
+)
+@reads(
+    "table.applied_fixups",
+    "table.army_officers",
+    "table.claims",
+    "table.community_cohorts",
+    "table.community_stocks",
+    "table.currencies",
+    "table.districts",
+    "table.feuds",
+    "table.goods",
+    "table.house_members",
+    "table.house_profiles",
+    "table.injuries",
+    "table.law_profiles",
+    "table.learned_tactics",
+    "table.loans",
+    "table.memories",
+    "table.mercenary_contracts",
+    "table.offices",
+    "table.peace_terms",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.routes",
+    "table.settlement_infrastructure",
+    "table.settlement_profiles",
+    "table.spy_agents",
+    "table.treaty_clauses",
+    "table.treaty_profiles",
+    "table.unit_designs",
+    "table.vessel_profiles",
+    "table.workshops",
+)
+@writes(
+    "army.size",
+    "people.population",
+    "people.wealth",
+    "settlement.population",
+    "settlement.wealth",
+    "table.applied_fixups",
+    "table.army_officers",
+    "table.battle_casualties",
+    "table.battle_stacks",
+    "table.bonds",
+    "table.captive_cohorts",
+    "table.captives",
+    "table.claims",
+    "table.community_cohorts",
+    "table.community_stocks",
+    "table.currencies",
+    "table.districts",
+    "table.entities",
+    "table.feuds",
+    "table.goods",
+    "table.house_members",
+    "table.house_profiles",
+    "table.learned_tactics",
+    "table.loans",
+    "table.maimed_cohorts",
+    "table.memories",
+    "table.mercenary_contracts",
+    "table.offices",
+    "table.peace_terms",
+    "table.polity_profiles",
+    "table.region_environment",
+    "table.settlement_infrastructure",
+    "table.settlement_profiles",
+    "table.spy_agents",
+    "table.spy_networks",
+    "table.treaty_breaches",
+    "table.vessel_profiles",
 )
 async def prisoners(ctx: TickContext) -> None:
     held = (CaptiveStatus.HELD, CaptiveStatus.WARD)

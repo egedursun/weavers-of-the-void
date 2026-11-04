@@ -31,6 +31,7 @@ class UnitSpec:
     counters_charge: bool = False
     terror: int = 0
     terrain: dict[TerrainKind, float] = field(default_factory=dict)
+    flying: bool = False
 
 
 UNITS: MappingProxyType[UnitKind, UnitSpec] = MappingProxyType(
@@ -122,7 +123,7 @@ UNITS: MappingProxyType[UnitKind, UnitSpec] = MappingProxyType(
             ),
             UnitSpec(K.WAR_BEASTS, F.BEAST, "War beasts", 70, 0, 50, 60, 100, 6, 5, terror=25),
             UnitSpec(K.BOUND_BEASTS, F.BEAST, "Bound beasts", 90, 0, 70, 60, 120, 10, 6, terror=40),
-            UnitSpec(K.SKY_MOUNTS, F.BEAST, "Sky mounts", 60, 30, 40, 120, 60, 9, 6, terror=20),
+            UnitSpec(K.SKY_MOUNTS, F.BEAST, "Sky mounts", 60, 30, 40, 120, 60, 9, 6, terror=20, flying=True),
             UnitSpec(K.SAPPERS, F.ENGINEER, "Sappers", 20, 0, 30, 35, 10, 3, 2, branch=KnowledgeBranch.ARCHITECTURE, level=1),
             UnitSpec(K.SIEGE_ENGINES, F.ENGINEER, "Siege engines", 0, 70, 20, 15, 0, 8, 4, branch=KnowledgeBranch.ARCHITECTURE, level=2),
             UnitSpec(K.WAR_MAGES, F.MAGIC, "War mages", 20, 70, 30, 40, 5, 9, 5, branch=KnowledgeBranch.MAGIC, level=2, terror=10),
@@ -132,7 +133,7 @@ UNITS: MappingProxyType[UnitKind, UnitSpec] = MappingProxyType(
             UnitSpec(K.LONGSHIPS, F.NAVAL, "Longships", 55, 10, 35, 75, 50, 6, 3, branch=KnowledgeBranch.SEAFARING, level=1),
             UnitSpec(K.WARSHIPS, F.NAVAL, "Warships", 50, 50, 60, 55, 90, 12, 6, branch=KnowledgeBranch.SHIPBUILDING, level=2),
             UnitSpec(K.FIRE_SHIPS, F.NAVAL, "Fire ships", 80, 0, 10, 60, 60, 5, 2, branch=KnowledgeBranch.SEAFARING, level=2),
-            UnitSpec(K.SKYSHIPS, F.NAVAL, "Skyships", 40, 60, 40, 110, 50, 15, 8, branch=KnowledgeBranch.SKY_NAVIGATION, level=1),
+            UnitSpec(K.SKYSHIPS, F.NAVAL, "Skyships", 40, 60, 40, 110, 50, 15, 8, branch=KnowledgeBranch.SKY_NAVIGATION, level=1, flying=True),
             UnitSpec(K.GOLEMS, F.EXOTIC, "Golems", 85, 0, 90, 25, 110, 14, 2, ArmourType.ENCHANTED, branch=KnowledgeBranch.MAGIC, level=3, terror=30),
             UnitSpec(K.VOID_SPAWN, F.EXOTIC, "Void spawn", 75, 20, 50, 60, 60, 10, 4, terror=50),
             UnitSpec(K.GHOST_HOST, F.EXOTIC, "Ghost host", 55, 0, 80, 70, 10, 10, 1, terror=45),
@@ -189,6 +190,36 @@ WEATHER_EFFECTS: MappingProxyType[WeatherKind, dict[UnitFamily, float]] = Mappin
         W.ASH_FALL: {F.MISSILE: 0.7},
         W.VOID_RAIN: {F.EXOTIC: 1.3},
         W.ECLIPSE_DARK: {F.MISSILE: 0.6},
+    }
+)
+BURROWERS = frozenset({K.SAPPERS, K.VOID_SPAWN})
+WEAPON_EDGE = MappingProxyType({"blunt": 100, "pike": 70, "crossbow": 90, "spear": 40, "bow": 30, "blade": 20, "claw": 30, "staff": 10, "sling": 50})
+FAMILY_WEAPONS: MappingProxyType[UnitFamily, tuple[str, ...]] = MappingProxyType(
+    {
+        F.INFANTRY: ("spear", "blade", "blunt"),
+        F.MISSILE: ("bow", "crossbow", "sling", "blade"),
+        F.MOUNTED: ("spear", "blade", "bow"),
+        F.BEAST: ("claw",),
+        F.ENGINEER: ("blunt",),
+        F.MAGIC: ("staff",),
+        F.NAVAL: ("spear", "bow"),
+        F.EXOTIC: ("claw",),
+    }
+)
+KIND_WEAPONS = MappingProxyType(
+    {
+        K.PIKEMEN: ("pike", "blade"),
+        K.SPEARMEN: ("spear", "blade"),
+        K.SHIELD_WALL: ("spear", "blade"),
+        K.HEAVY_INFANTRY: ("blade", "blunt"),
+        K.BERSERKERS: ("blunt", "blade"),
+        K.ARCHERS: ("bow", "blade"),
+        K.HORSE_ARCHERS: ("bow", "blade"),
+        K.CROSSBOWMEN: ("crossbow", "blade"),
+        K.SLINGERS: ("sling",),
+        K.JAVELINEERS: ("spear",),
+        K.HEAVY_CAVALRY: ("spear", "blade"),
+        K.LIGHT_CAVALRY: ("spear", "blade"),
     }
 )
 HEAVY_WEATHER = frozenset({W.HEAT_WAVE, W.SNOW, W.BLIZZARD})

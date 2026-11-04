@@ -2,7 +2,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, replace
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.lore import DESPERATE_SCHOOLS, DOMAIN_SCHOOLS, RITE_TEMPLATES
@@ -22,7 +22,7 @@ from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, CaptiveCohort
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
-from aerona.db.tables.warfare import WarSideRow
+from aerona.db.tables.warfare import BattleRow, WarSideRow
 from aerona.domain.enums.body import DamageType, HarmCause, InjuryState
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import (
@@ -627,16 +627,26 @@ async def army_of(ctx: TickContext, caster: EntityRow) -> int | None:
     )
 
 
-async def battle_dead(ctx: TickContext) -> int:
-    count = await ctx.session.scalar(select(func.count(BondRow.id)).where(BondRow.kind == BondKind.KILLED, BondRow.epoch >= ctx.epoch - 1))
-    return int(count or 0)
+async def claim_battle_dead(ctx: TickContext, wanted: int) -> int:
+    battles = await ctx.session.scalars(select(BattleRow).where(BattleRow.epoch >= ctx.epoch - 1).order_by(BattleRow.id))
+    claimed = 0
+    for battle in battles:
+        if claimed >= wanted:
+            break
+        raised = (battle.magic or {}).get("raised", 0)
+        fallen = (battle.winner_losses + battle.loser_losses) * ctx.rules.rites.raise_dead_pct // PERCENT
+        free = max(0, fallen - raised)
+        take = min(free, wanted - claimed)
+        if take > 0:
+            battle.magic = {**(battle.magic or {}), "raised": raised + take}
+            claimed += take
+    return claimed
 
 
 async def do_raise(ctx: TickContext, work: Working) -> str | None:
     army = await army_of(ctx, work.caster)
-    dead = await battle_dead(ctx)
-    if army is not None and dead > 0:
-        count = min(dead * ctx.rules.rites.undead_per_dead, work.magnitude * ctx.rules.rites.undead_per_power)
+    if army is not None:
+        count = await claim_battle_dead(ctx, work.magnitude * ctx.rules.rites.undead_per_power)
         if count > 0:
             await add_stack(ctx, army, UnitKind.GHOST_HOST, count)
             return f"raised {count} of the battle dead to march again"

@@ -108,7 +108,6 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
 
 
 @reads(
-    "table.mortal_equipment",
     "mortal.intellect",
     "settlement.prosperity",
     "table.bonds",
@@ -122,6 +121,9 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.ley_lines",
+    "table.minds",
+    "table.mortal_equipment",
+    "table.mortal_profiles",
     "table.nodes",
     "table.offices",
     "table.personality_values",
@@ -132,8 +134,10 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
     "table.resurrection_orders",
     "table.reverences",
     "table.rite_profiles",
+    "table.skills",
     "table.sky_events",
     "table.stars",
+    "table.traits",
     "table.vassalages",
     "table.world_maps",
     "table.world_seasons",

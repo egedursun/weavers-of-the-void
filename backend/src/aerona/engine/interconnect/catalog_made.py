@@ -353,7 +353,7 @@ RAW: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tuple[str
         LORE,
         ("rite", "army"),
         ("summon_form",),
-        (S.WAR, "rites.undead_per_dead", "units"),
+        (S.WAR, "rites.raise_dead_pct", "units"),
     ),
     (
         "war_mages",

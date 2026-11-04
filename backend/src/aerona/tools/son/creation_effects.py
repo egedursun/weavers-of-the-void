@@ -20,6 +20,7 @@ from aerona.engine.faith.book import FaithBook
 from aerona.engine.faith.doctrine import found_doctrine
 from aerona.engine.gods.queries import worshippers_of
 from aerona.engine.lore import art, items, legends, prophecy, traditions
+from aerona.engine.military.shipyard import Commission, commission
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.mechanics import assign_mechanics
 from aerona.engine.primitives.stats import set_stats
@@ -147,6 +148,20 @@ async def mandatory_holder(call: SonCall, created: EntityRow, linked: list[Entit
 async def _vessel_route(call: SonCall, args: CreationInput, created: EntityRow) -> str | None:
     kind = args.option("vessel_kind") or VehicleKind.SHIP
     await set_vessel_kind(call.session, created.id, kind)
+    if kind is VehicleKind.SHIP:
+        await commission(
+            call.session,
+            call.rules,
+            created,
+            Commission(
+                hull=args.option("hull_class"),
+                armament=args.option("armament"),
+                hull_material=args.option("hull_material"),
+                fabric_material=args.option("fabric_material"),
+                home_port_id=args.option("home_port_id"),
+                captain_id=args.option("captain_id"),
+            ),
+        )
     target_id = args.option("target_world_id")
     target = await call.session.get(WorldRow, target_id) if target_id is not None else None
     if target is None or target.id == created.world_id:

@@ -6,12 +6,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.mind import MEMORIES
 from aerona.catalog.society import community_relation_label
 from aerona.constants.schema import SINGLETON_ID
+from aerona.constants.units import PERCENT
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.military import FeudRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
+from aerona.domain.enums.military import FeudParty, FeudStatus
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.society import CommunityRelationLabel
 from aerona.engine.body.customs import people_of
@@ -161,6 +164,7 @@ async def start_blood_feud(ctx: TickContext, first: int, second: int, reason: st
     row = await _ensure_row(session, rules, first, second)
     if row.blood_feud_since_epoch is None:
         row.blood_feud_since_epoch = epoch
+    await open_feud(session, rules, first, second, epoch=epoch, cause=reason, party=FeudParty.COMMUNITY)
     decay = rules.memory.feud_decay_pct
     for holder, subject in ((first, second), (second, first)):
         await remember(
@@ -177,25 +181,71 @@ async def start_blood_feud(ctx: TickContext, first: int, second: int, reason: st
     return await refresh_relation(session, rules, epoch, first, second)
 
 
-async def end_blood_feud(session: AsyncSession, first: int, second: int) -> bool:
+async def end_blood_feud(session: AsyncSession, first: int, second: int, *, epoch: int | None = None, status: FeudStatus = FeudStatus.ENDED) -> bool:
     row = await _row(session, first, second)
+    closed = await close_feud(session, first, second, epoch=epoch or 0, status=status)
     if row is None or row.blood_feud_since_epoch is None:
-        return False
+        return closed
     row.blood_feud_since_epoch = None
     await session.flush()
     return True
 
 
 async def has_blood_feud(session: AsyncSession, first: int, second: int) -> bool:
-    row = await _row(session, first, second)
-    return row is not None and row.blood_feud_since_epoch is not None
+    return await feud_between(session, first, second) is not None
 
 
 async def blood_feud_pairs(session: AsyncSession) -> set[tuple[int, int]]:
-    rows = await session.execute(
-        select(CommunityRelationRow.entity_a_id, CommunityRelationRow.entity_b_id).where(CommunityRelationRow.blood_feud_since_epoch.is_not(None))
-    )
+    rows = await session.execute(select(FeudRow.first_entity_id, FeudRow.second_entity_id).where(FeudRow.status == FeudStatus.ACTIVE))
     return {(first, second) for first, second in rows}
+
+
+def ordered(first: int, second: int) -> tuple[int, int]:
+    return (first, second) if first < second else (second, first)
+
+
+async def feud_between(session: AsyncSession, first: int, second: int) -> FeudRow | None:
+    low, high = ordered(first, second)
+    statement = select(FeudRow).where(FeudRow.first_entity_id == low, FeudRow.second_entity_id == high, FeudRow.status == FeudStatus.ACTIVE)
+    found: FeudRow | None = await session.scalar(statement.order_by(FeudRow.id.desc()).limit(1))
+    return found
+
+
+async def open_feud(session: AsyncSession, rules: Rules, first: int, second: int, *, epoch: int, cause: str, party: FeudParty) -> FeudRow:
+    found = await feud_between(session, first, second)
+    if found is not None:
+        if "grievance" not in found.locked:
+            found.grievance = clamp_int(found.grievance + rules.vendetta.grievance // 2, 0, PERCENT)
+        if "intensity" not in found.locked:
+            found.intensity = clamp_int(found.intensity + rules.vendetta.grievance // 2, 0, PERCENT)
+        found.last_epoch = epoch
+        return found
+    low, high = ordered(first, second)
+    row = FeudRow(
+        first_entity_id=low,
+        second_entity_id=high,
+        party=party,
+        intensity=rules.vendetta.grievance,
+        grievance=rules.vendetta.grievance,
+        generations=0,
+        status=FeudStatus.ACTIVE,
+        cause=cause[:240],
+        since_epoch=epoch,
+        last_epoch=epoch,
+        locked=[],
+    )
+    session.add(row)
+    await session.flush()
+    return row
+
+
+async def close_feud(session: AsyncSession, first: int, second: int, *, epoch: int, status: FeudStatus = FeudStatus.ENDED) -> bool:
+    found = await feud_between(session, first, second)
+    if found is None:
+        return False
+    found.status = status
+    found.ended_epoch = epoch
+    return True
 
 
 def event_of(row: MemoryRow, epoch: int) -> RelationEvent:

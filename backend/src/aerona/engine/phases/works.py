@@ -215,6 +215,7 @@ def can_build(rules: Rules, community: EntityRow) -> bool:
     "table.minds",
     "table.name_registry",
     "table.nodes",
+    "table.tradition_profiles",
     "table.traits",
 )
 @writes(
