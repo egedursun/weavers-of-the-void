@@ -14,10 +14,12 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import LanguageRegister
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import ClauseKind, OathKind, PartyRole, TreatyKind, TreatyStatus
 from aerona.domain.models.entity_stats import TreatyStats
 from aerona.engine.context import TickContext
 from aerona.engine.lore.language import register_barrier
+from aerona.engine.mortal.kinship import marry
 from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.oaths import break_oath, oath_god, swear
@@ -415,7 +417,18 @@ async def keep_clause(ctx: TickContext, profile: TreatyProfileRow, clause: Treat
                 await breach(ctx, profile, clause.obligor_node_id, clause=clause, reason="it marched soldiers into the demilitarised land")
                 return False
     elif clause.kind is ClauseKind.MARRIAGE and "first_id" in clause.params and "second_id" in clause.params:
-        await connect(ctx.session, int(clause.params["first_id"]), int(clause.params["second_id"]), BondKind.LOVES, ctx.epoch, description="marriage by treaty")
+        first_spouse = await living_entity(ctx.session, int(clause.params["first_id"]))
+        second_spouse = await living_entity(ctx.session, int(clause.params["second_id"]))
+        if first_spouse is not None and second_spouse is not None and first_spouse.entity_type is second_spouse.entity_type is EntityType.MORTAL:
+            await marry(
+                ctx.session,
+                first_spouse,
+                second_spouse,
+                ctx.epoch,
+                kind=MarriageKind.POLITICAL,
+                treaty_id=profile.treaty_entity_id,
+                description="marriage by treaty",
+            )
     elif clause.kind is ClauseKind.EXTRADITION and clause.beneficiary_node_id is not None and clause.obligor_node_id is not None:
         fugitives = await ctx.session.scalars(
             select(EntityRow).where(

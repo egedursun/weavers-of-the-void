@@ -56,10 +56,21 @@ class SetSkill(MindTarget):
     skill: SkillKind
     level: int = Field(ge=SKILL_MIN, le=SKILL_MAX)
     lock: bool = False
+    subject_id: int | None = None
 
 
 class SkillTarget(MindTarget):
     skill: SkillKind
+    subject_id: int | None = None
+
+
+class EditSkill(Command):
+    skill_id: int
+    level: int | None = Field(default=None, ge=SKILL_MIN, le=SKILL_MAX)
+    xp: int | None = Field(default=None, ge=0)
+    peak: int | None = Field(default=None, ge=SKILL_MIN, le=SKILL_MAX)
+    subject_id: int | None = None
+    clear_subject: bool = False
 
 
 class AddMemory(Command):
@@ -180,7 +191,9 @@ async def give_skill(scope: PlayerScope, command: SetSkill) -> Effect:
     if not isinstance(node, EntityRow) or node.entity_type is not EntityType.MORTAL:
         raise ValidationFailedError("Only mortals learn skills.")
     await mind_for(scope, node)
-    await set_skill(scope.session, node.id, command.skill, command.level, epoch=await scope.epoch(), source=SkillSource.PLAYER)
+    await set_skill(
+        scope.session, node.id, command.skill, command.level, epoch=await scope.epoch(), source=SkillSource.PLAYER, subject_node_id=command.subject_id
+    )
     await hold(scope, node, SKILL_LOCK, command.lock)
     return Effect(f"{node.name}'s {SKILLS[command.skill].label.lower()} is now {command.level}.", target_node_id=node.id)
 
@@ -188,12 +201,33 @@ async def give_skill(scope: PlayerScope, command: SetSkill) -> Effect:
 @player_action("mind:skill_remove", ActionKind.OTHER)
 async def forget_skill(scope: PlayerScope, command: SkillTarget) -> Effect:
     node = await holder_of(scope, command.node_id)
-    result = await scope.session.execute(
-        delete(SkillRow).where(SkillRow.holder_node_id == node.id, SkillRow.skill == command.skill, SkillRow.subject_node_id.is_(None))
-    )
+    subject = SkillRow.subject_node_id == command.subject_id if command.subject_id is not None else SkillRow.subject_node_id.is_(None)
+    result = await scope.session.execute(delete(SkillRow).where(SkillRow.holder_node_id == node.id, SkillRow.skill == command.skill, subject))
     if not getattr(result, "rowcount", 0):
         raise ValidationFailedError(f"{node.name} has no {SKILLS[command.skill].label.lower()} to forget.")
     return Effect(f"{node.name} forgot {SKILLS[command.skill].label.lower()}.", target_node_id=node.id)
+
+
+@player_action("mind:skill_edit", ActionKind.OTHER)
+async def edit_skill(scope: PlayerScope, command: EditSkill) -> Effect:
+    row = await scope.session.get(SkillRow, command.skill_id)
+    if row is None:
+        raise NotFoundError("No such skill.")
+    if command.subject_id is not None:
+        if await load_holder(scope.session, command.subject_id) is None and await scope.session.get(EntityRow, command.subject_id) is None:
+            raise ValidationFailedError("A skill can only be about a record that exists.")
+        row.subject_node_id = command.subject_id
+    if command.clear_subject:
+        row.subject_node_id = None
+    if command.level is not None:
+        row.level = command.level
+    if command.xp is not None:
+        row.xp = command.xp
+    if command.peak is not None:
+        row.peak = command.peak
+    row.peak = max(row.peak, row.level)
+    await scope.session.flush()
+    return Effect(f"The {SKILLS[row.skill].label.lower()} skill was changed.", target_node_id=row.holder_node_id)
 
 
 @player_action("mind:memory", ActionKind.OTHER)

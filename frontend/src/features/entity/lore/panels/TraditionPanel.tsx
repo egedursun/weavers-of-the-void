@@ -267,6 +267,23 @@ export function TraditionPanel({
             {lookup(CALENDAR_SLOTS, card.calendar_slot).label}
           </NamedChip>
         )}
+        {card.in_season === true && (
+          <NamedChip spec={{ label: '', icon: CalendarDays, tone: 'success' }}>
+            Kept in its season
+          </NamedChip>
+        )}
+        {card.in_season === false && (
+          <NamedChip spec={{ label: '', icon: CalendarDays, tone: 'warning' }}>
+            Drifted off its season
+          </NamedChip>
+        )}
+        {card.calendar_entity_id != null && (
+          <NamedChip
+            spec={{ label: '', icon: CalendarDays, tone: 'verdigris' }}
+          >
+            Date fixed by a calendar
+          </NamedChip>
+        )}
         {card.taboo_target && (
           <NamedChip spec={TRADITION_KINDS.taboo}>
             {`Will not touch ${card.taboo_target.replaceAll('_', ' ')}`}
@@ -393,7 +410,21 @@ export function TraditionPanel({
           <LoreFields
             entityId={id}
             surface='TraditionForm'
-            fields={[{ key: 'kind', kind: 'enum', table: TRADITION_KINDS }]}
+            fields={[
+              { key: 'kind', kind: 'enum', table: TRADITION_KINDS },
+              {
+                key: 'season_position',
+                kind: 'number',
+                min: 0,
+                nullable: true,
+              },
+              {
+                key: 'calendar_entity_id',
+                kind: 'number',
+                min: 1,
+                nullable: true,
+              },
+            ]}
             current={card}
             blocked={blocked}
           />

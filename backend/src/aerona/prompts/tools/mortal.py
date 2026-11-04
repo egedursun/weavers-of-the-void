@@ -102,6 +102,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "location_id": "Your own settlement, place or region; if empty, where you are",
             "dedicated_son_id": "The god it is dedicated to, if any",
             "material": "What it is built of (stone, wood, clay, glass…); holy stone makes a temple shine, soft wood rots; it must be in your people's stores",
+            "channels_ley": "True if it is raised to draw on the ley lines (a ley gate, a star tower, a stone ring); it gains strength only where a line runs",
             "image_prompt": IMAGE_PROMPT_FIELD,
         },
     ),

@@ -101,6 +101,10 @@ class TraditionEffectView(ApiModel):
 class TraditionCard(ApiModel):
     kind: TraditionKind
     calendar_slot: CalendarSlot | None
+    season_position: int | None = None
+    calendar_entity_id: int | None = None
+    notable_year_id: int | None = None
+    in_season: bool | None = None
     cost: dict[str, int]
     effects: list[TraditionEffectView]
     taboo_target: str | None

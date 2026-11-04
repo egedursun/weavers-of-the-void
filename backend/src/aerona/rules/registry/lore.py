@@ -88,6 +88,8 @@ class TraditionsRules:
     cap: int = rule(40, 0, 1000, C, "Most traditions celebrated in an epoch")
     harvest_blessing: int = rule(2, 0, 100, C, "Harvest a harvest rite blesses the land with (%)")
     value_push: int = rule(1, 0, 100, C, "Values a tradition of a new kind pushes each epoch")
+    rest_pct: int = rule(100, 0, 300, C, "Strength of a midday rest kept as a tradition (%)")
+    vigil_pct: int = rule(100, 0, 300, C, "Strength of a night vigil kept as a tradition (%)")
     scar_harm: int = rule(4, 0, 100, C, "Harm a ritual scar deals the youth who takes it")
     season_growth: int = rule(60, 0, 100, C, "Growth of a season in which sowing and harvest feasts fall")
     dead_growth: int = rule(20, 0, 100, C, "Growth at or below which a season is the dead of winter")
@@ -114,11 +116,13 @@ class ResearchRules:
     institution_pct: int = rule(50, 0, 500, C, "Weight of each school, academy or library in research (%)")
     literacy_pct: int = rule(100, 0, 500, C, "Weight of literacy in research (%)")
     contact_pct: int = rule(50, 0, 500, C, "Weight of contact with a more learned people in research (%)")
+    scholar_pct: int = rule(50, 0, 500, C, "Weight of the community's best scholar, by skill and ability to study, in research (%)")
+    master_scholarship: int = rule(50, 0, 100, C, "Ability to study below which a master no longer counts as one")
+    master_skill: int = rule(50, 0, 100, C, "Skill in its craft at which a mortal is a master and keeps a branch of knowledge alive")
     practitioners_per_level: int = rule(20, 0, 100000, C, "Practitioners each level of a knowledge needs among a thousand people")
     loss_chance: int = rule(30, 0, 100, C, "A level is lost when its practitioners die and no books or masters remain (%)")
     book_diffusion_pct: int = rule(50, 0, 300, C, "Weight of books in carrying knowledge without a teacher (%)")
     teacher_pct: int = rule(100, 0, 300, C, "Weight of a teacher bond in passing knowledge (%)")
-    master_skill: int = rule(50, 0, 100, C, "Skill in its craft a mortal needs to keep a branch of knowledge alive as its master")
     book_progress: int = rule(10, 0, 100, C, "Progress toward the next level a faithful book gives its readers each epoch")
     progress_pct: int = rule(100, 0, 500, C, "Weight of research pressure in the progress toward a deeper level (%)")
     enlightenment_relief_pct: int = rule(10, 0, 100, C, "Share of the world's mean spread of learning that eases the doom each epoch (%)")
@@ -161,6 +165,7 @@ class IdeologiesRules:
 
 @dataclass(frozen=True)
 class RitesRules:
+    fire_wet_pct: int = rule(70, 0, 100, H, "Strength a fire rite loses under fully wet weather (%)")
     enchant_chance: int = rule(10, 0, 100, H, "A wizard binds a rite into an item they made (%)")
     cult_chance: int = rule(10, 0, 100, H, "A cult performs a collective rite in an epoch (%)")
     invention_chance: int = rule(5, 0, 100, H, "A wizard devises a new rite (%)")
@@ -281,6 +286,7 @@ class RelicsRules:
     healing_chance: int = rule(10, 0, 100, H, "A pilgrim is healed at a relic (%)")
     theft_chance: int = rule(3, 0, 100, H, "A rival faith steals a relic (%)")
     zeal: int = rule(3, 0, 100, H, "Zeal a famous relic stirs")
+    pilgrims_per_cure: int = rule(100, 1, 100000, H, "Pilgrims at a relic for each sick pilgrim it can heal in an epoch")
 
 
 @dataclass(frozen=True)

@@ -8,15 +8,17 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import BattlePhaseRow, CaptiveCohortRow, CommanderTraitRow, SpyNetworkRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.warfare import ArmyRow
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.military import CaptiveFate, CommanderTrait, OutcomeClass, Tactic, UnitFamily
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import SocialClass
+from aerona.engine.body.book import perception_of
 from aerona.engine.context import TickContext
-from aerona.engine.ecology.beasts import beast_dread
+from aerona.engine.ecology.beasts import beast_dread, mounted_edge
 from aerona.engine.faith.book import faith_tenets, patron_node
-from aerona.engine.faith.souls import guardians_of
+from aerona.engine.faith.souls import ancestral_site, guardians_of
 from aerona.engine.lore.items import standard_of
 from aerona.engine.lore.language import barrier
 from aerona.engine.military.battle import BattleResult, Field, Side, make_stacks, resolve
@@ -59,7 +61,7 @@ async def side_of(
     table = ctx.rules
     lead = await skill_level(ctx, row.commander_entity_id, SkillKind.LEADERSHIP)
     veteran = max([await skill_level(ctx, row.commander_entity_id, skill) for skill in COMBAT_SKILLS] or [0])
-    spirit = await faith_spirit(ctx, community, enemy) - await babel(ctx, community) - await beast_dread(ctx, enemy.id)
+    spirit = await faith_spirit(ctx, community, enemy, army.location_id) - await babel(ctx, community) - await beast_dread(ctx, enemy.id)
     return Side(
         veteran=table.military_units.veteran_skill_pct / PERCENT * veteran / PERCENT,
         leadership=round(PERCENT * table.morale.leadership_pct / PERCENT * lead / PERCENT) + spirit,
@@ -67,12 +69,20 @@ async def side_of(
         army=army,
         profile=profile,
         stacks=stacks,
-        edge=edge,
+        edge=edge * await mounted_edge(ctx, row.commander_entity_id),
         defending=defending,
         skill=await skill_level(ctx, row.commander_entity_id, SkillKind.TACTICS),
         traits=await traits_of(ctx, row.commander_entity_id),
         intel=await intel_on(ctx, community.id, enemy.id),
+        watch=await watchfulness(ctx, row.commander_entity_id),
     )
+
+
+async def watchfulness(ctx: TickContext, commander_id: int | None) -> float:
+    commander = await ctx.session.get(EntityRow, commander_id) if commander_id is not None else None
+    if commander is None or commander.entity_type is not EntityType.MORTAL:
+        return 0.0
+    return await perception_of(ctx.session, ctx.rules, commander) * ctx.rules.capacities.scouting_perception_pct / PERCENT
 
 
 async def babel(ctx: TickContext, community: EntityRow) -> int:
@@ -85,12 +95,12 @@ async def babel(ctx: TickContext, community: EntityRow) -> int:
     return 0
 
 
-async def faith_spirit(ctx: TickContext, community: EntityRow, enemy: EntityRow) -> int:
+async def faith_spirit(ctx: TickContext, community: EntityRow, enemy: EntityRow, place_id: int | None = None) -> int:
     tenets = await faith_tenets(ctx.session, community.id)
     lift = 0
     if TenetKind.HOLY_WAR in tenets and await patron_node(ctx.session, community.id) != await patron_node(ctx.session, enemy.id):
         lift += ctx.rules.doctrine.holy_war_morale
-    if TenetKind.ANCESTOR_VENERATION in tenets and await guardians_of(ctx, community.id):
+    if TenetKind.ANCESTOR_VENERATION in tenets and await guardians_of(ctx, community.id) and await ancestral_site(ctx, community, place_id):
         lift += ctx.rules.spirits.guardian_morale
     return lift + await standard_of(ctx, [community.id])
 

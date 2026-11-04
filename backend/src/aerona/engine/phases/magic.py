@@ -13,6 +13,7 @@ from aerona.engine.faith.book import FaithBook
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.rites import cast, choose, spellcraft
 from aerona.engine.mind.skills import practise_any
+from aerona.engine.mortal.equipment import focus_pct
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.polity.book import RealmBook
@@ -107,6 +108,7 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
 
 
 @reads(
+    "table.mortal_equipment",
     "mortal.intellect",
     "settlement.prosperity",
     "table.bonds",
@@ -114,6 +116,7 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
     "table.cult_tenets",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.forced_weather",
     "table.holder_levels",
     "table.holder_techniques",
     "table.law_jurisdictions",
@@ -125,11 +128,16 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
+    "table.region_environment",
     "table.resurrection_orders",
     "table.reverences",
     "table.rite_profiles",
+    "table.sky_events",
+    "table.stars",
     "table.vassalages",
     "table.world_maps",
+    "table.world_seasons",
+    "table.worlds",
 )
 @writes(
     "settlement.prosperity",
@@ -169,7 +177,7 @@ async def wizards(ctx: TickContext) -> None:
             await add_flag(ctx.session, mortal.id, EntityFlag.WIZARD, ctx.epoch)
             await note(ctx, f"{mortal.name} deciphered the language of magic; now a wizard.", key="magic.wizard", ids=[mortal.id])
         ley = rules.environment.ley_wizard_pct / PERCENT if web.on_line(atlas.top_region(mortal.id)) else 1
-        if not rng.chance(rules.world_engine.sorcerer_act_chance * ley * holy):
+        if not rng.chance(rules.world_engine.sorcerer_act_chance * ley * holy * await focus_pct(ctx.session, rules, mortal.id)):
             continue
         home = await living_entity(ctx.session, mortal.location_id)
         if home is None or worked >= rules.rites.cap:

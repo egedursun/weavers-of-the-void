@@ -17,13 +17,14 @@ from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.body.book import effective, strike_style
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
-from aerona.engine.ecology.beasts import rob_hoard
+from aerona.engine.ecology.beasts import rob_hoard, wound_harm
 from aerona.engine.economy.money import inject_hoard
 from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.annotations import reads, writes
@@ -192,12 +193,25 @@ async def _hero_wins(ctx: TickContext, hero: EntityRow, monster: EntityRow, patr
             )
             await rob_hoard(ctx, monster, hero)
             await apply_hits(
-                ctx, monster, Harm(ctx.rules.beasts.wound_damage, HarmCause.MONSTER, f"slain by {hero.name}", killer_id=hero.id, source_node_id=hero.id)
+                ctx,
+                monster,
+                Harm(
+                    wound_harm(ctx.rules, await ctx.session.get(BeastProfileRow, monster.id)),
+                    HarmCause.MONSTER,
+                    f"slain by {hero.name}",
+                    killer_id=hero.id,
+                    source_node_id=hero.id,
+                ),
             )
     if slain:
         await retire(ctx.session, monster, ctx.epoch, f"Epoch {ctx.epoch}: killed by {hero.name}.")
         home = await community_of(ctx.session, hero)
-        if home is not None and home.entity_type in SOCIETY_TYPES and ctx.rng(f"hoard.{monster.id}").chance(ctx.rules.money.beast_hoard_chance):
+        if (
+            home is not None
+            and home.entity_type in SOCIETY_TYPES
+            and monster.entity_type is not EntityType.BEAST
+            and ctx.rng(f"hoard.{monster.id}").chance(ctx.rules.money.beast_hoard_chance)
+        ):
             await inject_hoard(ctx, home, ctx.rules.money.hoard_luxury_units, MaterialKind.GOLD)
     if slain and EntityFlag.MEGAFAUNA in monster_flags:
         hero.title = f"{monster.name} Slayer"
@@ -279,7 +293,7 @@ async def _hero_loses(ctx: TickContext, hero: EntityRow, monster: EntityRow, pat
         return EncounterResult(EncounterOutcome.WOUNDED)
     style = await strike_style(ctx.session, ctx.rules, monster, hero)
     await fatal_injury(ctx, hero, Harm(hunt.armor_save_hp_loss, HarmCause.MONSTER, f"fell before {monster.name}", style=style, killer_id=monster.id))
-    await die(ctx, hero, cause=f"fell before {monster.name}", killer_id=monster.id, forced=True)
+    await die(ctx, hero, cause=f"fell before {monster.name}", manner=DeathCause.MONSTER, killer_id=monster.id, forced=True)
     lament = await _legend(
         ctx,
         name=f"Lament for {hero.name}",
@@ -307,18 +321,10 @@ async def encounter(ctx: TickContext, hero: EntityRow, monster: EntityRow, conte
     return await _hero_loses(ctx, hero, monster, patron, context)
 
 
-@reads("table.bonds")
-async def sworn_hunts(ctx: TickContext) -> None:
-    for bond in await active_bonds(ctx.session, [BondKind.HUNTS]):
-        hunter = await living_entity(ctx.session, bond.source_node_id)
-        prey = await living_entity(ctx.session, bond.target_node_id)
-        if hunter is None or prey is None or hunter.entity_type is not EntityType.MORTAL or prey.entity_type is not EntityType.SPECIES:
-            continue
-        await close(ctx.session, bond, ctx.epoch, "sworn hunt")
-        await encounter(ctx, hunter, prey, "in a sworn hunt")
-
-
-@reads(
+ENCOUNTER_READS = (
+    "table.house_members",
+    "table.marriages",
+    "table.mortal_profiles",
     "item.damage",
     "item.might",
     "item.protection",
@@ -356,10 +362,12 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.routes",
     "table.skills",
     "table.spirit_profiles",
+    "table.tradition_profiles",
     "table.traits",
     "table.world_maps",
 )
-@writes(
+ENCOUNTER_WRITES = (
+    "table.mortal_profiles",
     "item.might",
     "item.protection",
     "mortal.charisma",
@@ -381,6 +389,22 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.sons",
     "table.spirit_profiles",
 )
+
+
+@reads(*ENCOUNTER_READS)
+@writes(*ENCOUNTER_WRITES)
+async def sworn_hunts(ctx: TickContext) -> None:
+    for bond in await active_bonds(ctx.session, [BondKind.HUNTS]):
+        hunter = await living_entity(ctx.session, bond.source_node_id)
+        prey = await living_entity(ctx.session, bond.target_node_id)
+        if hunter is None or prey is None or hunter.entity_type is not EntityType.MORTAL or prey.entity_type is not EntityType.SPECIES:
+            continue
+        await close(ctx.session, bond, ctx.epoch, "sworn hunt")
+        await encounter(ctx, hunter, prey, "in a sworn hunt")
+
+
+@reads(*ENCOUNTER_READS)
+@writes(*ENCOUNTER_WRITES)
 async def glory_hunts(ctx: TickContext) -> None:
     engine = ctx.rules.world_engine
     rng = ctx.rng()

@@ -32,6 +32,8 @@ INFRA_NUMBERS = {
     "granary_capacity": (0, 100000000),
     "warehouse_capacity": (0, 100000000),
     "harbour_capacity": (0, 100000000),
+    "bridges": (0, 5),
+    "irrigation": (0, 5),
 }
 
 

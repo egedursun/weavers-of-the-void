@@ -122,6 +122,8 @@ const TRADITION_EFFECTS = named(
     'harvest',
     'safety',
     'food_saved',
+    'rest',
+    'vigil',
   ],
   { ...TRADITION_TERMS, safety: TRADITION_TERMS.hospitality }
 )

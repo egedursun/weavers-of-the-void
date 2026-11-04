@@ -4,6 +4,7 @@ export type MapSearch = DrawerSearch & {
   world?: number
   epoch?: number
   focus?: number
+  species?: number
 }
 
 function positive(value: unknown): number | undefined {
@@ -18,8 +19,10 @@ export function validateMapSearch(search: Record<string, unknown>): MapSearch {
   const world = positive(search.world)
   const epoch = positive(search.epoch)
   const focus = positive(search.focus)
+  const species = positive(search.species)
   if (world !== undefined) result.world = world
   if (epoch !== undefined) result.epoch = epoch
   if (focus !== undefined) result.focus = focus
+  if (species !== undefined) result.species = species
   return result
 }

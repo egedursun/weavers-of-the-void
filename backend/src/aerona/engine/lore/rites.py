@@ -16,7 +16,7 @@ from aerona.db.tables.culture import CastingRow, ItemEnchantmentRow, RiteEffectR
 from aerona.db.tables.ecology import BeastProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.environment import ForcedWeatherRow, LeyLineRow, WorldSeasonRow
-from aerona.db.tables.faith import SpiritProfileRow
+from aerona.db.tables.faith import PossessionRow, SpiritProfileRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, CaptiveCohortRow
 from aerona.db.tables.mind import SkillRow
@@ -39,7 +39,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
-from aerona.domain.enums.environment import WeatherKind
+from aerona.domain.enums.environment import WeatherEffect, WeatherKind
 from aerona.domain.enums.faith import AfterlifeState, BindingKind, SpiritAlignment, TenetKind
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.mind import ActKind, SkillKind, ValueAxis
@@ -55,7 +55,9 @@ from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.ecology.control import spawn_beast
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.environment.control import force_weather
+from aerona.engine.environment.local import weather_here
 from aerona.engine.faith.book import faith_tenets, patron_node
+from aerona.engine.faith.souls import exorcise, seal_with, soul_near, unseal_with
 from aerona.engine.gods.interventions import apply_abundance
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -560,6 +562,8 @@ async def do_bind(ctx: TickContext, work: Working) -> str | None:
     spirit = await wandering_near(ctx, work.caster.location_id or 0)
     if spirit is None:
         return None
+    if "binding" in spirit.locked:
+        return None
     spirit.binding, spirit.bound_entity_id, spirit.alignment = BindingKind.PLACE, work.caster.location_id, SpiritAlignment.GUARDIAN
     return "bound a wandering spirit as a guardian"
 
@@ -639,6 +643,8 @@ async def do_raise(ctx: TickContext, work: Working) -> str | None:
     spirit = await wandering_near(ctx, work.caster.location_id or 0)
     if spirit is None:
         return None
+    if "binding" in spirit.locked:
+        return None
     spirit.binding, spirit.bound_entity_id, spirit.alignment = BindingKind.PERSON, work.caster.id, SpiritAlignment.VENGEFUL
     await connect(ctx.session, work.caster.id, spirit.spirit_entity_id, BondKind.COMMANDS, ctx.epoch, description="raised from the dead")
     return "raised a dead soul to serve"
@@ -664,6 +670,50 @@ async def do_harvest(ctx: TickContext, work: Working) -> str | None:
     return f"blessed the fields of {home.name}"
 
 
+async def do_seal(ctx: TickContext, work: Working) -> str | None:
+    caster, target, row = work.caster, work.target, work.row
+    spirit_id = target.id if target is not None and target.entity_type is EntityType.SPIRIT else None
+    if spirit_id is None:
+        found = await soul_near(ctx, caster.location_id, sealed=False)
+        spirit_id = found.spirit_entity_id if found is not None else None
+    if spirit_id is None or not await seal_with(ctx, spirit_id, row.power):
+        return None
+    spirit = await ctx.session.get(EntityRow, spirit_id)
+    return f"sealed {spirit.name if spirit is not None else 'a soul'} against return"
+
+
+async def do_unseal(ctx: TickContext, work: Working) -> str | None:
+    caster, target, row = work.caster, work.target, work.row
+    spirit_id = target.id if target is not None and target.entity_type is EntityType.SPIRIT else None
+    if spirit_id is None:
+        found = await soul_near(ctx, caster.location_id, sealed=True)
+        spirit_id = found.spirit_entity_id if found is not None else None
+    if spirit_id is None:
+        return None
+    if not await unseal_with(ctx, spirit_id, row.power):
+        return "the seal on the soul held"
+    spirit = await ctx.session.get(EntityRow, spirit_id)
+    return f"broke the seal on {spirit.name if spirit is not None else 'a soul'}"
+
+
+async def do_exorcise(ctx: TickContext, work: Working) -> str | None:
+    caster, target, row = work.caster, work.target, work.row
+    host = target if target is not None and target.entity_type is EntityType.MORTAL else await possessed_near(ctx, caster.location_id)
+    if host is None:
+        return None
+    if not await exorcise(ctx, host, row.power):
+        return f"the spirit in {host.name} would not go"
+    return f"drove the spirit out of {host.name}"
+
+
+async def possessed_near(ctx: TickContext, place_id: int | None) -> EntityRow | None:
+    if place_id is None:
+        return None
+    hosts = select(PossessionRow.host_entity_id)
+    statement = select(EntityRow).where(EntityRow.location_id == place_id, EntityRow.status == EntityStatus.CANON, EntityRow.id.in_(hosts))
+    return await ctx.session.scalar(statement.order_by(EntityRow.id).limit(1))
+
+
 EFFECTS: dict[RiteEffectKind, Callable[[TickContext, Working], Awaitable[str | None]]] = {
     E.DAMAGE: do_damage,
     E.HEAL: do_heal,
@@ -677,6 +727,9 @@ EFFECTS: dict[RiteEffectKind, Callable[[TickContext, Working], Awaitable[str | N
     E.RAISE_DEAD: do_raise,
     E.FERTILITY: do_fertility,
     E.HARVEST_BLESSING: do_harvest,
+    E.SEAL_SOUL: do_seal,
+    E.UNSEAL_SOUL: do_unseal,
+    E.EXORCISE: do_exorcise,
 }
 
 
@@ -764,6 +817,14 @@ def wanted(row: RiteProfileRow, effects: list[RiteEffectRow], target: EntityRow 
     return any(effect.effect in HOSTILE for effect in effects) or row.school in DESPERATE_SCHOOLS
 
 
+async def dampening(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> float:
+    if row.school is not S.ELEMENTAL_FIRE:
+        return 1.0
+    weather = await weather_here(ctx, caster.id, f"rite.{caster.id}")
+    wet = weather.effect(WeatherEffect.WET) if weather is not None else 0
+    return max(0.0, 1 - wet / PERCENT * ctx.rules.rites.fire_wet_pct / PERCENT)
+
+
 async def cast(
     ctx: TickContext,
     caster: EntityRow,
@@ -792,7 +853,11 @@ async def cast(
         casting.succeeded, casting.backlash = False, await backlash(ctx, caster, row)
         casting.effect = f"the rite turned on {caster.name} ({casting.backlash.value})"
     else:
-        done = [await EFFECTS[effect.effect](ctx, await working(ctx, caster, target, effect, row)) for effect in await effects_of(ctx, rite.id)]
+        damp = await dampening(ctx, caster, row)
+        works = [await working(ctx, caster, target, effect, row) for effect in await effects_of(ctx, rite.id)]
+        done = [await EFFECTS[work.effect.effect](ctx, replace(work, magnitude=round_half_up(work.magnitude * damp))) for work in works]
+        if damp < 1:
+            done.append("the wet weather smothered its fire")
         casting.effect = "; ".join(text for text in done if text)[:480] or "the rite was worked to no end"
         await infamy(ctx, caster, row, target)
     set_stats(rite, castings=(stat(rite, "castings") or 0) + 1)
@@ -883,7 +948,10 @@ async def warded(ctx: TickContext, settlement_id: int) -> float:
     return 1 + min(PERCENT, total) / PERCENT
 
 
-GENTLE = {True: frozenset({E.WARD, E.BLESS, E.HEAL, E.BIND}), False: frozenset({E.HARVEST_BLESSING, E.FERTILITY, E.WEATHER_CHANGE, E.SUMMON})}
+GENTLE = {
+    True: frozenset({E.WARD, E.BLESS, E.HEAL, E.BIND, E.EXORCISE, E.SEAL_SOUL}),
+    False: frozenset({E.HARVEST_BLESSING, E.FERTILITY, E.WEATHER_CHANGE, E.SUMMON}),
+}
 
 
 def fits(school: MagicSchool, *, hostile: bool, protective: bool) -> int:

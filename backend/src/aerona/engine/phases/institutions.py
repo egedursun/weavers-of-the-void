@@ -305,7 +305,8 @@ async def joining(ctx: TickContext, people: EntityRow, largest: EntityRow, *, ra
         rules_it = bool(await BondRepository(ctx.session).active_between(largest.id, people.id, [BondKind.RULES]))
         chance = cycles.assimilation_chance + (cycles.assimilation_rule_bonus if rules_it else 0) + (cycles.assimilation_language_bonus if shared else 0)
         understood = 1.0 if shared else await word_share(ctx, people.id, largest.id)
-        return False if rng.chance(chance * kinship * understood) else None
+        regard = max(0.0, 1 + await relation(ctx.session, ctx.rules, people.id, largest.id) / PERCENT * cycles.assimilation_opinion_pct / PERCENT)
+        return False if rng.chance(chance * kinship * understood * regard) else None
     if ratio >= cycles.union_ratio_pct and shared and await relation(ctx.session, ctx.rules, people.id, largest.id) >= cycles.union_relation:
         same_god = await BondRepository(ctx.session).patron(people.id) == await BondRepository(ctx.session).patron(largest.id)
         return True if same_god and rng.chance(cycles.union_chance * kinship) else None

@@ -12,7 +12,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow, TraitRow
 from aerona.db.tables.society import CommunityRelationRow
-from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.mind import OpinionComponent, TraitEffect, TraitKind, ValueAxis
@@ -24,7 +24,7 @@ from aerona.engine.primitives.queries import BondIndex, active_bonds, spoken_lan
 from aerona.rules.registry import Rules
 
 PAIR_BONDS = (BondKind.ENEMY, BondKind.ALLY, BondKind.TRADES_WITH, BondKind.PAYS_TRIBUTE)
-KIN_BONDS = (BondKind.DESCENDS_FROM, BondKind.LOVES)
+KIN_BONDS = KIN_BOND_KINDS
 NEGATIVE_COMPONENTS = frozenset({OpinionComponent.GRIEVANCE, OpinionComponent.FEAR})
 
 

@@ -30,6 +30,7 @@ class ModifierRow(CreatedAtMixin, Base):
     end_epoch: Mapped[int | None]
     decay_pct: Mapped[int | None]
     reason_key: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
+    held: Mapped[bool] = mapped_column(default=False)
 
 
 class IncidentRow(CreatedAtMixin, Base):

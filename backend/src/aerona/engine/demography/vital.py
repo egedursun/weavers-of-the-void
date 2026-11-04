@@ -7,9 +7,12 @@ from aerona.db.tables.demography import CohortRow, PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
+from aerona.domain.enums.mortal import HarshnessScale
 from aerona.domain.enums.society import Commodity
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import CohortKey, age_cohorts, row_for, seed, total
+from aerona.engine.environment.years import world_years
+from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.society import class_shares, supply_index
 from aerona.engine.services.war import ongoing_wars
@@ -62,8 +65,12 @@ def one_year(rules: Rules, rows: dict[CohortKey, CohortRow], biology: PeopleBiol
     mothers = sum(row.count for key, row in rows.items() if key[0] is A.ADULT and key[1] is Sex.FEMALE and key[3] is not CohortCondition.SICK)
     birth_rate = table.birth_pct_per_year / PERCENT * fertility * pressures.fertility
     birth_rate *= max(0.0, 1 - pressures.hunger * table.hunger_birth_pct / PERCENT) * max(0.0, 1 - pressures.stress * table.stress_birth_pct / PERCENT)
-    extra = 1 + pressures.hunger * table.hunger_death_pct / PERCENT + pressures.crowding * table.crowding_death_pct / PERCENT
-    extra += pressures.disease * table.disease_death_pct / PERCENT
+    extra = (
+        1
+        + pressures.hunger * table.hunger_death_pct / PERCENT * harshness(rules, HarshnessScale.FAMINE_DEATH)
+        + pressures.crowding * table.crowding_death_pct / PERCENT
+    )
+    extra += pressures.disease * table.disease_death_pct / PERCENT * harshness(rules, HarshnessScale.DISEASE_DEATH)
     deaths = {}
     for band in DEATH_RATES:
         people = sum(row.count for key, row in rows.items() if key[0] is band)
@@ -107,7 +114,7 @@ async def demographic_step(ctx: TickContext, community: EntityRow, biology: Peop
     if not rows:
         return 0
     before = total(rows)
-    sampled = min(ctx.rules.demography.sampled_years, ctx.rules.time.years_per_epoch)
+    sampled = len(world_years(ctx.environment, community.world_id or 0, "births"))
     births = 0
     deaths = 0
     table = ctx.rules.peoples

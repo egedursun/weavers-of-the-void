@@ -51,6 +51,12 @@ class BondKind(StrEnum):
     TRUCE = "truce"
     OWES = "owes"
     TREATED_BY = "treated_by"
+    PARENT_OF = "parent_of"
+    SPOUSE_OF = "spouse_of"
+    BETROTHED_TO = "betrothed_to"
+    CONCUBINE_OF = "concubine_of"
+    FOSTERED_BY = "fostered_by"
+    SWORN_KIN = "sworn_kin"
     TELLS = "tells"
     FIXED_IN = "fixed_in"
     ADHERENT_OF = "adherent_of"
@@ -101,4 +107,24 @@ class BondRole(StrEnum):
 DERIVED_BOND_KINDS = frozenset({BondKind.TELLS, BondKind.FIXED_IN, BondKind.ADHERENT_OF, BondKind.PRACTISES})
 VISIBLE_BOND_STATES = frozenset({BondState.ACTIVE, BondState.PAST})
 ROLE_BOND_KINDS = frozenset({BondKind.PARTY_TO, BondKind.RELATED})
-SYMMETRIC_BOND_KINDS = frozenset({BondKind.ENEMY, BondKind.ALLY, BondKind.TRADES_WITH, BondKind.TRUCE, BondKind.COMPANION, BondKind.RIVAL})
+SYMMETRIC_BOND_KINDS = frozenset(
+    {
+        BondKind.ENEMY,
+        BondKind.ALLY,
+        BondKind.TRADES_WITH,
+        BondKind.TRUCE,
+        BondKind.COMPANION,
+        BondKind.RIVAL,
+        BondKind.SPOUSE_OF,
+        BondKind.BETROTHED_TO,
+        BondKind.SWORN_KIN,
+    }
+)
+KIN_BOND_KINDS = (
+    BondKind.PARENT_OF,
+    BondKind.SPOUSE_OF,
+    BondKind.CONCUBINE_OF,
+    BondKind.FOSTERED_BY,
+    BondKind.SWORN_KIN,
+    BondKind.BETROTHED_TO,
+)

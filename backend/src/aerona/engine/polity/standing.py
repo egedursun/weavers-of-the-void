@@ -1,35 +1,45 @@
 from sqlalchemy import func, select
 
+from aerona.catalog.mind import MEMORIES
 from aerona.constants.units import PERCENT
-from aerona.db.tables.body import InjuryRow
+from aerona.db.tables.body import BodyRow, InjuryRow
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultDoctrineRow, CultTenetRow
+from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.body import LASTING_INJURY_STATES
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind, RegionalStanding
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.lore.items import regalia_holder
 from aerona.engine.lore.legends import foretold_return
+from aerona.engine.mind.book import values_for
+from aerona.engine.mind.memories import strength_of
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.knowledge import KnowledgeMap
+from aerona.engine.primitives.modifiers import combine, live_contributions
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import bond_exists, connect, has_flag
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.services.war import declare_war
 
 RECENT_EPOCHS = 3
+HEIRLOOM_CLASSES = frozenset({ItemClass.PROSTHESIS, ItemClass.HOLY_RELIC})
 TEN = 10
 TWENTY = 20
 
@@ -91,7 +101,44 @@ async def legitimacy(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawB
     if pacifist and (await war_record(ctx, realm))[2]:
         parts["a pacifist faith at war"] = -ctx.rules.doctrine.pacifist_legitimacy
     parts.update(await fortunes(ctx, book, realm, ruler))
+    parts.update(await bearing(ctx, realm, ruler))
     return parts
+
+
+async def bearing(ctx: TickContext, realm: Realm, ruler: EntityRow) -> dict[str, int]:
+    table = ctx.rules.legitimacy
+    parts: dict[str, int] = {}
+    body = await ctx.session.get(BodyRow, ruler.id)
+    if body is not None and body.presence < PERCENT:
+        parts["a diminished presence"] = -round_half_up((PERCENT - body.presence) * table.presence_pct / PERCENT)
+    values = await values_for(ctx.session, ruler.location_id) if ruler.location_id is not None else {}
+    if body is not None and body.melee < PERCENT and values.get(ValueAxis.MARTIAL, 0) >= table.martial_value:
+        parts["a warlord who can no longer fight"] = -round_half_up((PERCENT - body.melee) * table.martial_melee_pct / PERCENT)
+    acts = await deeds_reading(ctx, realm, ruler)
+    if acts:
+        parts["the realm's judgement of their deeds"] = acts
+    if await heirloom_relic(ctx, ruler):
+        parts["an heirloom relic of the line"] = table.relic_legitimacy
+    return parts
+
+
+async def deeds_reading(ctx: TickContext, realm: Realm, ruler: EntityRow) -> int:
+    table = ctx.rules.legitimacy
+    holders = [realm.entity.id, *realm.members]
+    rows = await ctx.session.scalars(select(MemoryRow).where(MemoryRow.holder_node_id.in_(holders), MemoryRow.subject_node_id == ruler.id))
+    weight = sum(strength_of(row, ctx.epoch) for row in rows if MEMORIES[row.kind].act is not None)
+    cap = table.acts_cap
+    return max(-cap, min(cap, round_half_up(weight * table.acts_pct / PERCENT / max(1, len(holders)))))
+
+
+async def heirloom_relic(ctx: TickContext, ruler: EntityRow) -> bool:
+    owned = select(BondRow.target_node_id).where(BondRow.source_node_id == ruler.id, BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE)
+    found = await ctx.session.scalar(
+        select(ItemProfileRow.item_entity_id)
+        .where(ItemProfileRow.item_entity_id.in_(owned), ItemProfileRow.item_class.in_(list(HEIRLOOM_CLASSES)), ItemProfileRow.symbol.is_(True))
+        .limit(1)
+    )
+    return found is not None
 
 
 async def fortunes(ctx: TickContext, book: RealmBook, realm: Realm, ruler: EntityRow) -> dict[str, int]:
@@ -247,9 +294,10 @@ def realm_tier(book: RealmBook, realm: Realm) -> int:
 def settle(realm: Realm, legit: dict[str, int], steady: dict[str, int]) -> None:
     profile = realm.profile
     if "legitimacy" not in profile.locked:
-        profile.legitimacy = clamp_int(sum(legit.values()), 0, PERCENT)
+        profile.legitimacy = clamp_int(combine(sum(legit.values()), live_contributions(realm.entity.id, "legitimacy")).value, 0, PERCENT)
     if "stability" not in profile.locked:
-        profile.stability = clamp_int(profile.legitimacy + sum(value for key, value in steady.items() if key != "legitimacy"), 0, PERCENT)
+        steady_sum = profile.legitimacy + sum(value for key, value in steady.items() if key != "legitimacy")
+        profile.stability = clamp_int(combine(steady_sum, live_contributions(realm.entity.id, "stability")).value, 0, PERCENT)
     kept = {key: value for key, value in profile.legitimacy_parts.items() if key == "usurper"}
     profile.legitimacy_parts = {
         **kept,

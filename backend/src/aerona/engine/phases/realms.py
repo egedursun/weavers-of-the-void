@@ -16,6 +16,8 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 
 
 @reads(
+    "table.bodies",
+    "table.memories",
     "faction.strength",
     "law.rigidity",
     "mortal.age",

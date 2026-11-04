@@ -93,6 +93,8 @@ import {
   Wrench,
   Zap,
   type LucideIcon,
+  Lock,
+  LockOpen,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -239,6 +241,8 @@ export const TRADITION_KINDS: Record<Schemas['TraditionKind'], LoreNamed> = {
     icon: Utensils,
     tone: 'verdigris',
   },
+  siesta: { label: 'Midday rest', icon: Sun, tone: 'gold' },
+  night_vigil: { label: 'Night vigil', icon: Flame, tone: 'info' },
 }
 
 export const TRADITION_TERMS: Record<string, LoreNamed> = {
@@ -248,6 +252,8 @@ export const TRADITION_TERMS: Record<string, LoreNamed> = {
   satisfaction: { label: 'Satisfaction', icon: Smile, tone: 'success' },
   piety: { label: 'Piety', icon: Church, tone: 'gold' },
   food_saved: { label: 'Food saved', icon: Wheat, tone: 'success' },
+  rest: { label: 'Midday rest', icon: Sun, tone: 'gold' },
+  vigil: { label: 'Night vigil', icon: Flame, tone: 'info' },
   rite: { label: 'Rites for the dead', icon: Flower2, tone: 'muted' },
   scar: { label: 'Scarring', icon: Droplet, tone: 'danger' },
   fertility: { label: 'Births', icon: Baby, tone: 'success' },
@@ -346,6 +352,9 @@ export const EFFECTS: Record<Schemas['RiteEffectKind'], LoreNamed> = {
   raise_dead: { label: 'Raises the dead', icon: Bone, tone: 'danger' },
   fertility: { label: 'Fertility', icon: Baby, tone: 'success' },
   harvest_blessing: { label: 'Blesses the harvest', icon: Wheat, tone: 'gold' },
+  seal_soul: { label: 'Seals a soul', icon: Lock, tone: 'warning' },
+  unseal_soul: { label: 'Breaks a seal', icon: LockOpen, tone: 'info' },
+  exorcise: { label: 'Exorcism', icon: Ban, tone: 'gold' },
 }
 
 export const PREDICATES: Record<Schemas['ProphecyPredicate'], LoreNamed> = {

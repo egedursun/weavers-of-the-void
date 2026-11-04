@@ -189,6 +189,7 @@ class MarketPriceRow(Base):
     demand: Mapped[int]
     imported: Mapped[int] = mapped_column(default=0)
     exported: Mapped[int] = mapped_column(default=0)
+    swing: Mapped[int] = mapped_column(default=0)
 
 
 class TradeRouteProfileRow(Base):

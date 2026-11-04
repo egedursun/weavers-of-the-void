@@ -16,6 +16,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore import ideology, legends, prophecy, research, rites, traditions
 from aerona.engine.lore.backfill import backfill_typed_kinds
+from aerona.engine.lore.calendar_rites import RiteCalendar, found_sleep_customs
 from aerona.engine.lore.language import SACRED_STAT, derive_registers, learn_second, prestige_parts, remeasure, speakers, standing_of, tongues_of
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -350,6 +351,7 @@ async def commemorations(ctx: TickContext, atlas: RegionAtlas) -> None:
     "settlement.population",
     "table.applied_fixups",
     "table.bonds",
+    "table.calendars",
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_societies",
@@ -372,7 +374,9 @@ async def commemorations(ctx: TickContext, atlas: RegionAtlas) -> None:
     "table.notable_years",
     "table.people_culture",
     "table.polity_members",
+    "table.region_dangers",
     "table.region_environment",
+    "table.settlement_profiles",
     "table.sky_events",
     "table.spirit_profiles",
     "table.tradition_effects",
@@ -382,9 +386,13 @@ async def commemorations(ctx: TickContext, atlas: RegionAtlas) -> None:
     "table.value_profiles",
     "table.world_maps",
     "table.world_seasons",
+    "table.worlds",
     "tradition.rigidity",
 )
 @writes(
+    "people.prosperity",
+    "region.danger",
+    "settlement.prosperity",
     "table.applied_fixups",
     "table.bonds",
     "table.chronicle",
@@ -401,7 +409,9 @@ async def commemorations(ctx: TickContext, atlas: RegionAtlas) -> None:
     "table.injuries",
     "table.legend_profiles",
     "table.name_registry",
+    "table.nodes",
     "table.people_culture",
+    "table.region_dangers",
     "table.region_environment",
     "table.settlement_profiles",
     "table.spirit_profiles",
@@ -415,20 +425,27 @@ async def tradition_cycles(ctx: TickContext) -> None:
     ctx.count("typed_kinds_backfilled", await backfill_typed_kinds(ctx))
     atlas = await RegionAtlas.load(ctx.session)
     laws = await LawBook.load(ctx.session)
+    rites = await RiteCalendar.load(ctx.session)
     held = 0
     for tradition in await canon(ctx.session, [EntityType.TRADITION]):
-        kind = (await traditions.profile_of(ctx, tradition)).kind
+        profile = await traditions.profile_of(ctx, tradition)
+        kind = profile.kind
         for community in await traditions.celebrants(ctx, tradition.id):
+            rites.bind(profile, tradition, community)
             if held >= table.cap:
                 await traditions.participate(ctx, tradition, community)
                 continue
-            done = await traditions.celebrate(ctx, tradition, community, atlas)
+            keeping = rites.keeping(ctx, profile, tradition, community)
+            done = await traditions.celebrate(ctx, tradition, community, atlas, keeping)
+            if keeping.in_season is not None:
+                ctx.count("traditions_in_season" if keeping.in_season else "traditions_off_season")
             held += 1
             ctx.count(f"tradition_{done or 'none'}")
             if await defied(ctx, laws, tradition, kind, community):
                 ctx.count("tradition_defiance")
             ctx.count("creeds_resisted", await resisted_creeds(ctx, tradition, kind, community))
     await commemorations(ctx, atlas)
+    ctx.count("sleep_customs", await found_sleep_customs(ctx, atlas))
     skipped = await ctx.session.scalars(select(TraditionParticipationRow).where(TraditionParticipationRow.skipped > 0))
     ctx.count("traditions_skipped", len(list(skipped)))
 

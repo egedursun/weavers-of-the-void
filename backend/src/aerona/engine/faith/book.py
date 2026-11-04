@@ -14,6 +14,13 @@ from aerona.domain.enums.faith import TenetKind
 from aerona.engine.primitives.faith import FaithIndex
 
 
+@dataclass(frozen=True)
+class FaithLine:
+    text: str
+    key: str
+    ids: tuple[int, ...] = ()
+
+
 @dataclass
 class Church:
     cult: EntityRow

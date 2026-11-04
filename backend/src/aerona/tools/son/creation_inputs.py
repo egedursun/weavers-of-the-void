@@ -18,10 +18,14 @@ from aerona.constants.tool_inputs import (
 )
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.culture import ArtMedium, CalendarSlot, ItemClass, LegendArchetype, ProphecyConsequence, ProphecyPredicate, TraditionKind
+from aerona.domain.enums.ecology import BeastTemper, Diet, SizeClass, Sociality, YieldProduct
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, EntityType, LegendCategory
+from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPath, TenetKind
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.mind import ActKind, TraitKind
+from aerona.domain.enums.mortal import MortalSex
+from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic
 from aerona.domain.enums.travel import VehicleKind
 from aerona.domain.enums.world import SkyEventKind
@@ -29,6 +33,7 @@ from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.shared_inputs import LinkInput, WordInput
 
 Tag = Annotated[str, Field(min_length=1, max_length=TAG_MAX)]
+TENETS_MAX = 12
 WORSHIPPING_TYPES = frozenset({EntityType.CULT, EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.FACTION})
 
 
@@ -58,6 +63,9 @@ class CreationInput(ToolInput):
         return getattr(self, name, None)
 
 
+MORTAL_TRAITS_MAX = 5
+
+
 def _stats_input(spec: EntityTypeSpec) -> type[ToolInput]:
     fields: dict[str, Any] = {field.key: (int | None, None) for field in spec.stats}
     model: type[ToolInput] = create_model(f"{spec.type.value.title().replace('_', '')}StatsInput", __base__=ToolInput, **fields)
@@ -69,10 +77,33 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
         EntityType.NATURAL_LAW: {"mechanic": (NaturalLaw | None, None)},
         EntityType.KNOWLEDGE: {"branch": (KnowledgeBranch, ...), "learner_ids": (list[int] | None, None)},
         EntityType.REGION: {"water": (bool | None, None)},
-        EntityType.SPECIES: {"traits": (list[CreatureTrait] | None, None), "body_plan": (BodyPlan, ...)},
+        EntityType.PLACE: {"place_kind": (PlaceKind, ...)},
+        EntityType.SPECIES: {
+            "traits": (list[CreatureTrait] | None, None),
+            "body_plan": (BodyPlan, ...),
+            "size_class": (SizeClass, ...),
+            "diet": (Diet, ...),
+            "sociality": (Sociality | None, None),
+            "nocturnal": (bool | None, None),
+            "migratory": (bool | None, None),
+            "products": (list[YieldProduct] | None, None),
+        },
+        EntityType.BEAST: {
+            "species_id": (int | None, None),
+            "size_class": (SizeClass | None, None),
+            "temper": (BeastTemper | None, None),
+            "endurance": (Annotated[int, Field(ge=0, le=100)] | None, None),
+            "perception": (Annotated[int, Field(ge=0, le=100)] | None, None),
+            "willpower": (Annotated[int, Field(ge=0, le=100)] | None, None),
+            "intelligence": (Annotated[int, Field(ge=0, le=100)] | None, None),
+        },
         EntityType.VESSEL: {"target_world_id": (int | None, None), "vessel_kind": (VehicleKind | None, None)},
         EntityType.LANGUAGE: {"words": (Annotated[list[WordInput], Field(min_length=1)], ...)},
-        EntityType.MORTAL: {"title": (Annotated[str, Field(max_length=TITLE_MAX)] | None, None)},
+        EntityType.MORTAL: {
+            "title": (Annotated[str, Field(max_length=TITLE_MAX)] | None, None),
+            "sex": (MortalSex | None, None),
+            "traits": (Annotated[list[TraitKind], Field(max_length=MORTAL_TRAITS_MAX)] | None, None),
+        },
         EntityType.EVENT: {"effects": (list[EventEffectInput] | None, None)},
         EntityType.LEGEND: {"legend_category": (LegendCategory | None, None), "archetype": (LegendArchetype, ...)},
         EntityType.TRADITION: {
@@ -80,6 +111,7 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
             "calendar_slot": (CalendarSlot | None, None),
             "taboo_target": (CommodityKind | None, None),
             "taboo_act": (ActKind | None, None),
+            "funeral_rite": (FuneralRite | None, None),
         },
         EntityType.ITEM: {
             "item_class": (ItemClass, ...),
@@ -97,6 +129,11 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
             "within_epochs": (int | None, None),
             "consequence": (ProphecyConsequence | None, None),
             "consequence_id": (int | None, None),
+        },
+        EntityType.CULT: {
+            "tenets": (Annotated[list[TenetKind], Field(max_length=TENETS_MAX)] | None, None),
+            "judgement": (JudgementDoctrine | None, None),
+            "rebirth_path": (RebirthPath | None, None),
         },
         EntityType.RESOURCE: {
             "commodity": (CommodityKind | None, None),

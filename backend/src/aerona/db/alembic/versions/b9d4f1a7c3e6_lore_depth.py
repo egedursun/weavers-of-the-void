@@ -170,6 +170,8 @@ def upgrade() -> None:
                 "harvest",
                 "safety",
                 "food_saved",
+                "rest",
+                "vigil",
                 name="effect",
                 native_enum=False,
                 create_constraint=True,

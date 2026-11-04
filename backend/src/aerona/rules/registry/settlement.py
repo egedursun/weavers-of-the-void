@@ -41,6 +41,10 @@ class UrbanRules:
     aqueduct_level: int = rule(3, 0, 20, G, "Architecture level that builds an aqueduct")
     cistern_level: int = rule(1, 0, 20, G, "Architecture level that builds a cistern")
     sewer_level: int = rule(4, 0, 20, G, "Architecture level that digs sewers")
+    bridge_level: int = rule(2, 0, 20, G, "Architecture level that spans a river with a bridge")
+    bridge_population: int = rule(1500, 0, 100000000, G, "People a riverside settlement needs before it builds bridges")
+    irrigation_population: int = rule(800, 0, 100000000, G, "People a farming settlement needs before it digs irrigation works")
+    works_cap: int = rule(3, 0, 5, G, "Most bridges or irrigation works a settlement keeps up on its own")
     walls_per_level: int = rule(10, 0, 100, G, "Defense of a settlement per wall level")
     granary_per_level: int = rule(2000, 0, 100000000, G, "Food a farmland or market district level can store")
     harbour_per_level: int = rule(200, 0, 100000000, G, "Trade capacity a harbour district level adds")
@@ -101,6 +105,8 @@ class FireRules:
     death_pct: int = rule(2, 0, 100, G, "Share of the people who die in a great fire (%)")
     treasury_loss: int = rule(100, 0, 10000000, G, "Treasury lost to a great fire")
     stone_level: int = rule(2, 0, 20, G, "Architecture level that rebuilds a burned district in stone")
+    wind_spread_pct: int = rule(150, 0, 1000, G, "Extra burning and deaths a gale-force wind brings to a great fire (%)")
+    wet_damp_pct: int = rule(80, 0, 100, G, "Fire chance a fully wet sampled year puts out (%)")
 
 
 @dataclass(frozen=True)

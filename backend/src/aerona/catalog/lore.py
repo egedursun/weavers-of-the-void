@@ -81,6 +81,8 @@ TRADITIONS = MappingProxyType(
             TraditionSpec(K.WAR_DANCE, {}, {"martial": 2}, {V.MARTIAL: 2}),
             TraditionSpec(K.SCAR_RITE, {}, {"scar": 1}, {V.MARTIAL: 1, V.PURITY: -1}),
             TraditionSpec(K.ANCESTOR_FEAST, {"food": 2}, {"placation": 1}, {V.KINSHIP: 1, V.DEATH: 1}),
+            TraditionSpec(K.SIESTA, {}, {"rest": 1}, {V.TRADITION: 1}),
+            TraditionSpec(K.NIGHT_VIGIL, {}, {"vigil": 1}, {V.PIETY: 1, V.DEATH: 1}),
         )
     }
 )
@@ -196,12 +198,12 @@ RITE_TEMPLATES = MappingProxyType(
         S.EARTH: RiteTemplate(S.EARTH, "Blessing of the Furrow", MagicSource.REAGENT, ((E.HARVEST_BLESSING, 3),), 2),
         S.STORM: RiteTemplate(S.STORM, "Raising of the Storm", MagicSource.LEY, ((E.WEATHER_CHANGE, 5), (E.DAMAGE, 2)), 5),
         S.LIFE: RiteTemplate(S.LIFE, "Laying on of Hands", MagicSource.DIVINE, ((E.HEAL, 4), (E.FERTILITY, 2)), 3),
-        S.DEATH: RiteTemplate(S.DEATH, "Raising of the Fallen", MagicSource.SOUL, ((E.RAISE_DEAD, 4),), 6),
+        S.DEATH: RiteTemplate(S.DEATH, "Raising of the Fallen", MagicSource.SOUL, ((E.RAISE_DEAD, 4), (E.UNSEAL_SOUL, 3)), 6),
         S.MIND: RiteTemplate(S.MIND, "Bending of the Will", MagicSource.LEY, ((E.CURSE, 3),), 3),
         S.ILLUSION: RiteTemplate(S.ILLUSION, "Veil of Fog", MagicSource.LEY, ((E.WEATHER_CHANGE, 4),), 4),
         S.DIVINATION: RiteTemplate(S.DIVINATION, "Reading of Omens", MagicSource.REAGENT, ((E.SCRY, 4),), 2),
-        S.WARDING: RiteTemplate(S.WARDING, "Warding of the Walls", MagicSource.LEY, ((E.WARD, 4), (E.BLESS, 2)), 3),
-        S.BINDING: RiteTemplate(S.BINDING, "Chain of Spirits", MagicSource.SOUL, ((E.BIND, 4),), 4),
+        S.WARDING: RiteTemplate(S.WARDING, "Warding of the Walls", MagicSource.LEY, ((E.WARD, 4), (E.BLESS, 2), (E.EXORCISE, 3)), 3),
+        S.BINDING: RiteTemplate(S.BINDING, "Chain of Spirits", MagicSource.SOUL, ((E.BIND, 4), (E.SEAL_SOUL, 3)), 4),
         S.SUMMONING: RiteTemplate(S.SUMMONING, "Calling of the Beast", MagicSource.REAGENT, ((E.SUMMON, 4),), 5),
         S.BLOOD: RiteTemplate(S.BLOOD, "Blood Offering", MagicSource.BLOOD, ((E.BLESS, 4), (E.DAMAGE, 3)), 5),
         S.VOID: RiteTemplate(S.VOID, "Opening of the Void", MagicSource.VOID, ((E.DAMAGE, 6), (E.CURSE, 4)), 8),

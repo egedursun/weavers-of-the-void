@@ -14,12 +14,14 @@ from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow, EntityTraitRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.ecology import BeastTemper, SizeClass
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
@@ -336,7 +338,28 @@ async def route_lines(session: AsyncSession, rules: Rules, epoch: int, world_id:
     return lines
 
 
+FAR_MOUNT_TRAITS = (CreatureTrait.FLYING, CreatureTrait.AQUATIC)
+GREAT_MOUNTS = (SizeClass.HUGE, SizeClass.COLOSSAL)
+
+
+async def has_beast_mount(session: AsyncSession, traveller_id: int) -> bool:
+    far = select(EntityTraitRow.entity_id).where(EntityTraitRow.trait.in_(FAR_MOUNT_TRAITS))
+    statement = (
+        select(BeastProfileRow.beast_entity_id)
+        .join(EntityRow, EntityRow.id == BeastProfileRow.beast_entity_id)
+        .where(
+            BeastProfileRow.bound_to_node_id == traveller_id,
+            BeastProfileRow.temper == BeastTemper.TAMED,
+            EntityRow.status == EntityStatus.CANON,
+            or_(BeastProfileRow.size_class.in_(GREAT_MOUNTS), BeastProfileRow.species_entity_id.in_(far)),
+        )
+    )
+    return await session.scalar(statement.limit(1)) is not None
+
+
 async def has_tamed_mount(session: AsyncSession, traveller_id: int) -> bool:
+    if await has_beast_mount(session, traveller_id):
+        return True
     statement = (
         select(EntityRow.id)
         .join(BondRow, BondRow.target_node_id == EntityRow.id)

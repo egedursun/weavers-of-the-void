@@ -33,6 +33,7 @@ T = EntityType
 DWELLING_TARGETS = frozenset({T.REGION, T.PLACE, T.SETTLEMENT, T.PEOPLE, T.FACTION, T.CULT})
 RULED_TARGETS = frozenset({T.REGION, T.PLACE, T.SETTLEMENT, T.PEOPLE, T.FACTION, T.CULT, T.LAW, T.ARMY})
 WORSHIPPER_TYPES = AGENT_TYPES | {T.SPIRIT}
+KIN_TYPES = frozenset({T.MORTAL})
 
 BOND_KINDS: dict[BondKind, BondKindSpec] = {
     spec.kind: spec
@@ -86,6 +87,12 @@ BOND_KINDS: dict[BondKind, BondKindSpec] = {
         BondKindSpec(BondKind.TRUCE, "made truce with", MECHANICAL),
         BondKindSpec(BondKind.OWES, "owes", MECHANICAL),
         BondKindSpec(BondKind.TREATED_BY, "treated by", MECHANICAL),
+        BondKindSpec(BondKind.PARENT_OF, "parent of", MECHANICAL, KIN_TYPES, KIN_TYPES),
+        BondKindSpec(BondKind.SPOUSE_OF, "spouse of", MECHANICAL, KIN_TYPES, KIN_TYPES),
+        BondKindSpec(BondKind.BETROTHED_TO, "betrothed to", MECHANICAL, KIN_TYPES, KIN_TYPES),
+        BondKindSpec(BondKind.CONCUBINE_OF, "concubine of", MECHANICAL, KIN_TYPES, KIN_TYPES),
+        BondKindSpec(BondKind.FOSTERED_BY, "fostered by", MECHANICAL, KIN_TYPES, KIN_TYPES),
+        BondKindSpec(BondKind.SWORN_KIN, "sworn kin of", MECHANICAL, KIN_TYPES, KIN_TYPES),
         BondKindSpec(BondKind.TELLS, "tells", MECHANICAL),
         BondKindSpec(BondKind.FIXED_IN, "is fixed in", MECHANICAL),
         BondKindSpec(BondKind.ADHERENT_OF, "adheres to", MECHANICAL),
@@ -146,7 +153,21 @@ LINK_GROUP_LABELS: dict[LinkGroup, str] = {
     LinkGroup.LINEAGE: "Lineage, property and making",
     LinkGroup.KNOWLEDGE: "Knowledge, language and trade",
 }
-LINEAGE_KINDS = (B.DESCENDS_FROM, B.RULES, B.OWNS, B.PRODUCED, B.BUILT, B.MIGRATED_TO, B.MEMBER_OF, B.APPRENTICE_OF, B.COMMANDS, B.PART_OF)
+LINEAGE_KINDS = (
+    B.DESCENDS_FROM,
+    B.PARENT_OF,
+    B.SPOUSE_OF,
+    B.FOSTERED_BY,
+    B.RULES,
+    B.OWNS,
+    B.PRODUCED,
+    B.BUILT,
+    B.MIGRATED_TO,
+    B.MEMBER_OF,
+    B.APPRENTICE_OF,
+    B.COMMANDS,
+    B.PART_OF,
+)
 LINK_GROUP_KINDS: dict[LinkGroup, frozenset[str]] = {
     LinkGroup.CONFLICT: frozenset(
         kind.value for kind in (B.ENEMY, B.KILLED, B.CURSED, B.HUNTS, B.DESTROYED, B.CAUSED, B.PARTY_TO, B.BEAT, B.RIVAL, B.PURSUES, B.HOLDS_CAPTIVE)
@@ -156,7 +177,24 @@ LINK_GROUP_KINDS: dict[LinkGroup, frozenset[str]] = {
         [
             *(
                 kind.value
-                for kind in (B.DESCENDS_FROM, B.RULES, B.OWNS, B.PRODUCED, B.BUILT, B.MIGRATED_TO, B.MEMBER_OF, B.APPRENTICE_OF, B.COMMANDS, B.PART_OF)
+                for kind in (
+                    B.DESCENDS_FROM,
+                    B.PARENT_OF,
+                    B.SPOUSE_OF,
+                    B.BETROTHED_TO,
+                    B.CONCUBINE_OF,
+                    B.FOSTERED_BY,
+                    B.SWORN_KIN,
+                    B.RULES,
+                    B.OWNS,
+                    B.PRODUCED,
+                    B.BUILT,
+                    B.MIGRATED_TO,
+                    B.MEMBER_OF,
+                    B.APPRENTICE_OF,
+                    B.COMMANDS,
+                    B.PART_OF,
+                )
             ),
             P.CREATED.value,
         ]

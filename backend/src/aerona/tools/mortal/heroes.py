@@ -202,12 +202,12 @@ async def adopt(call: MortalCall, args: AdoptInput) -> str:
     if not (await same_region(call, child) or await near(call, child)):
         fail(MortalResult.ADOPT_FAR, name=child.name)
     bonds = BondRepository(call.session)
-    if await bonds.exists_between(call.me.id, child.id, BondKind.DESCENDS_FROM):
+    if await bonds.exists_between(call.me.id, child.id, BondKind.PARENT_OF) or await bonds.exists_between(call.me.id, child.id, BondKind.FOSTERED_BY):
         fail(MortalResult.LINEAGE_EXISTS, name=child.name)
     mine, theirs = stat(call.me, "age"), stat(child, "age")
     if mine is not None and theirs is not None and theirs >= mine:
         fail(MortalResult.NOT_YOUNGER, name=child.name, mine=mine, theirs=theirs)
-    await bonds.connect(BondDraft(child.id, call.me.id, BondKind.DESCENDS_FROM, call.epoch, lines.ADOPTION_BOND.format(reason=args.reason)))
+    await bonds.connect(BondDraft(call.me.id, child.id, BondKind.PARENT_OF, call.epoch, lines.ADOPTION_BOND.format(reason=args.reason)))
     await change_relation(call.tick, call.me.id, child.id, call.rules.civilization.adoption_relation, MemoryKind.GOODWILL, note=lines.ADOPTION_EVENT)
     await call.bump(TurnCounter.ADOPTIONS)
     call.target(child.id)

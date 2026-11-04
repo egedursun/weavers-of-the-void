@@ -7,6 +7,7 @@ from aerona.constants.units import PERCENT
 from aerona.constants.warfare import BATTLE_NAME_TEMPLATE, SIEGE_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.repositories.chronicle import ChronicleRepository, caused_by
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.bonds import BondRow
@@ -25,6 +26,7 @@ from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.military import DuelContext, DuelEnd, OutcomeClass, Stance, StarvationStage
 from aerona.domain.enums.mind import ActKind, MemoryKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import Commodity, NaturalLaw
 from aerona.domain.enums.war import BattleOutcome, SiegeStatus, WarCause, WarEnding, WarStatus
 from aerona.domain.models.calendar import epoch_start_year
@@ -34,10 +36,20 @@ from aerona.engine.body.cohorts import return_maimed
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.equipment import march_burden, siege_engines, suffer_heat
-from aerona.engine.environment.battleground import BattleGround, attack_factor, defend_factor, night_chance, omen_morale, scar_battlefield, season_losses
+from aerona.engine.environment.battleground import (
+    BattleGround,
+    attack_factor,
+    battle_site,
+    defend_factor,
+    night_chance,
+    omen_morale,
+    scar_battlefield,
+    season_losses,
+)
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment, scar_region
 from aerona.engine.environment.years import grant_sub_steps
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.interconnect.causes import war_cause_incident
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.arms import wear_in_duel
 from aerona.engine.lore.rites import warded
@@ -117,12 +129,19 @@ class Theatre:
     def battleground(self, ctx: TickContext, war: WarRow, defender: EntityRow, *, slot: str, season_index: int, year: int | None) -> BattleGround:
         region = self.ground.region_of(defender.id)
         place = self.ground.place_of(defender.location_id) or self.ground.place_of(defender.id)
+        site = (
+            None
+            if place is not None
+            else battle_site(ctx.rules, self.ground, self.ground.atlas.top_region(defender.id), ctx.environment.rng(f"site.{war.id}.{slot}"))
+        )
         season = self.ground.season_at(defender.world_id, season_index)
         weather = self.ground.weather(ctx.environment.world_seed, ctx.epoch, region, season, slot) if region is not None else None
         world = self.ground.worlds.get(defender.world_id)
         chance = night_chance(ctx.rules, world.world_type, world.day_length_hours) if world is not None else 0.0
         night = ctx.environment.rng(f"night.{war.id}.{slot}").chance(chance)
-        return BattleGround(region=region, place=place, season=season, weather=weather, year=year, night=night)
+        return BattleGround(
+            region=region, place=place or site, season=season, weather=weather, year=year, night=night, site_id=site.entity_id if site is not None else None
+        )
 
 
 @dataclass
@@ -328,6 +347,7 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.world_seasons",
 )
 @writes("table.occupations", "table.war_sides")
+@writes("table.memories", "table.sons")
 async def war_upkeep(ctx: TickContext) -> None:
     ctx.count("armies_stood_down", await idle_armies(ctx))
     ctx.count("heat_losses", await heat_toll(ctx))
@@ -455,9 +475,12 @@ def _community_losses(ctx: TickContext, winner: EntityRow, loser: EntityRow, los
     shift_stat(winner, "wealth", campaigns.winner_wealth_gain)
 
 
-async def _place(ctx: TickContext, theatre: Theatre, loser: EntityRow, besieged: EntityRow | None) -> EntityRow | None:
+async def _place(ctx: TickContext, theatre: Theatre, loser: EntityRow, besieged: EntityRow | None, site_id: int | None = None) -> EntityRow | None:
     if besieged is not None:
         return besieged
+    site = await living_entity(ctx.session, site_id)
+    if site is not None:
+        return site
     if loser.entity_type is EntityType.SETTLEMENT:
         return loser
     location = await living_entity(ctx.session, loser.location_id)
@@ -697,14 +720,15 @@ async def _refused(
 
 async def _announce(
     ctx: TickContext, report: BattleReport, event: EntityRow, *, ground: BattleGround, place: EntityRow | None, son_id: int | None, taken: int
-) -> None:
+) -> int | None:
     war = report.war
     ids = [*([report.record.id] if report.record is not None else []), war.event_entity_id, report.winner.id, report.loser.id, *report.ids]
     setting = ground.describe()
     lead = f"{event.name}, {setting}" if setting else event.name
     captives = f" {taken} soldiers were led away captive." if taken else ""
     text = f"{lead}: {report.summary}.{captives}{''.join(report.hero_texts)}"
-    await ctx.chronicle(
+    outbreak = await ChronicleRepository(ctx.session).prior_incident([war.event_entity_id], ("war.outbreak", "war.battle."))
+    write = await ctx.chronicle(
         ChronicleKind.WAR,
         text,
         template_key=f"war.battle.{report.outcome.value}",
@@ -713,7 +737,10 @@ async def _announce(
         feed_category=FeedCategory.WAR,
         place_entity_id=place.id if place is not None else None,
         year=ground.year,
+        cause_incident_id=outbreak,
+        roles={report.winner.id: IncidentRole.ACTOR, report.loser.id: IncidentRole.TARGET},
     )
+    return write.incident_id
 
 
 async def _powers(
@@ -780,7 +807,7 @@ async def fight_battle(
     await _omens(ctx, theatre, ground, (attacker, defender), armies)
     attacker_power, defender_power = await _powers(ctx, theatre, war, (attacker, defender), armies, ground=ground, besieged=besieged)
     river = ground.region is not None and ground.region.river_class in {RiverClass.RIVER, RiverClass.GREAT_RIVER}
-    field = Field(ground.terrain, ground.weather.kind if ground.weather is not None else None, ground.night, river)
+    field = Field(ground.terrain, ground.weather.kind if ground.weather is not None else None, ground.night, river, ground.cover)
     result = await clash(ctx, war.id, war.battles + 1, armies, (attacker, defender), powers=(attacker_power, defender_power), ground=field)
     assert result.winner is not None and result.loser is not None
     winner, loser = result.winner.entity, result.loser.entity
@@ -807,7 +834,7 @@ async def fight_battle(
     _community_losses(ctx, winner, loser, result.loser.lost / max(1, result.loser.start))
     await change_relation(ctx, attacker.id, defender.id, -campaigns.battle_relation, MemoryKind.FOUGHT_US, note="battle")
     son_id = await _patron_effects(ctx, theatre, winner, loser)
-    place = await _place(ctx, theatre, loser, besieged)
+    place = await _place(ctx, theatre, loser, besieged, ground.site_id)
     report = BattleReport(war, winner, loser, gap, outcome, summary)
     await _record(ctx, report, place, army_entities, war.battles)
     await ctx.session.flush()
@@ -818,10 +845,11 @@ async def fight_battle(
     await _mark_ground(ctx, ground, gap, outcome)
     await _heroics(ctx, theatre, report)
     await _seasoned(ctx, theatre, (winner, loser), armies)
-    await _announce(ctx, report, event, ground=ground, place=place, son_id=son_id, taken=taken)
+    battle_incident = await _announce(ctx, report, event, ground=ground, place=place, son_id=son_id, taken=taken)
     ctx.count("battles")
     ctx.count("battle_captives", taken)
-    report.settlement = await check_war_end(ctx, item, attacker, defender, armies)
+    with caused_by(battle_incident):
+        report.settlement = await check_war_end(ctx, item, attacker, defender, armies)
     return report
 
 
@@ -872,6 +900,7 @@ async def check_war_end(
             template_key="war.ended_white_peace",
             entity_ids=(war.event_entity_id, attacker.id, defender.id),
             feed_category=FeedCategory.WAR,
+            roles={attacker.id: IncidentRole.ACTOR, defender.id: IncidentRole.ACTOR},
         )
         return settlement
     settlement = await end_war(ctx, war, WarEnding.VICTORY, victor_id=victor.id, loser_id=loser.id)
@@ -886,6 +915,7 @@ async def check_war_end(
         template_key=f"war.ended_{settlement.ending.value}",
         entity_ids=(war.event_entity_id, attacker.id, defender.id),
         feed_category=FeedCategory.WAR,
+        roles={victor.id: IncidentRole.ACTOR, loser.id: IncidentRole.TARGET},
     )
     return settlement
 
@@ -897,7 +927,11 @@ async def _outbreak(ctx: TickContext, war: WarRow, attacker: EntityRow, defender
         f"faces {second.name} ({stat(second, 'size') or 0} soldiers)."
     )
     ids = (war.event_entity_id, attacker.id, defender.id, first.id, second.id)
-    await ctx.chronicle(ChronicleKind.WAR, text, template_key="war.outbreak", entity_ids=ids, feed_category=FeedCategory.WAR)
+    cause = await war_cause_incident(ctx.session, war.cause, attacker.id, defender.id, ctx.epoch)
+    roles = {attacker.id: IncidentRole.ACTOR, defender.id: IncidentRole.TARGET, first.id: IncidentRole.ACTOR, second.id: IncidentRole.TARGET}
+    await ctx.chronicle(
+        ChronicleKind.WAR, text, template_key="war.outbreak", entity_ids=ids, feed_category=FeedCategory.WAR, cause_incident_id=cause, roles=roles
+    )
 
 
 async def _armies(ctx: TickContext, theatre: Theatre, war: WarRow, attacker: EntityRow, defender: EntityRow) -> dict[int, tuple[EntityRow, ArmyRow]]:
@@ -1155,10 +1189,15 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.entity_flags",
     "table.entity_traits",
     "table.epoch_year_cursors",
+    "table.event_casualties",
+    "table.event_footprints",
+    "table.event_profiles",
     "table.forced_weather",
     "table.herds",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.incident_participants",
+    "table.incidents",
     "table.injuries",
     "table.item_profiles",
     "table.language_profiles",
@@ -1176,11 +1215,13 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.people_culture",
     "table.personality_values",
     "table.place_environment",
+    "table.polity_map_knowledge",
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
     "table.polity_treasury",
     "table.prostheses",
+    "table.region_dangers",
     "table.region_environment",
     "table.routes",
     "table.sieges",
@@ -1232,6 +1273,9 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.event_casualties",
+    "table.event_footprints",
+    "table.event_profiles",
     "table.incident_participants",
     "table.incidents",
     "table.injuries",

@@ -24,9 +24,11 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
     if ground is None or seam is None:
         return
     settings = rules.land_use
-    ground.mined = clamp_int(ground.mined + settings.mining_per_owner * owners, 0, PERCENT)
+    if "mined" not in ground.locked:
+        ground.mined = clamp_int(ground.mined + settings.mining_per_owner * owners, 0, PERCENT)
     layers = dict(ground.mineral_layers)
-    layers[seam] = max(0, layers[seam] - settings.seam_depletion * owners)
+    if f"seam.{seam}" not in ground.locked:
+        layers[seam] = max(0, layers[seam] - settings.seam_depletion * owners)
     ground.mineral_layers = {key: value for key, value in layers.items() if value > 0}
 
 

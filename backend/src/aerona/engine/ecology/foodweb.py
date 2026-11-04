@@ -1,4 +1,5 @@
 from collections import defaultdict
+from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
@@ -44,16 +45,56 @@ async def diet_allows(ctx: TickContext, hunter: EntityRow, prey: EntityRow, rang
     return can_take(ctx.rules.food_web.size_reach, await profile_of(ctx, hunter), await profile_of(ctx, prey), await traits_of(ctx.session, prey.id))
 
 
-async def broken_links(ctx: TickContext, species: list[EntityRow], ranges: dict[int, dict[int, int]]) -> int:
-    by_id = {item.id: item for item in species}
-    broken = 0
+@dataclass
+class WebChange:
+    formed: dict[int, list[int]] = field(default_factory=lambda: defaultdict(list))
+    broken: int = 0
+
+
+async def wanted_prey(ctx: TickContext, species: list[EntityRow], ranges: dict[int, dict[int, int]]) -> dict[int, set[int]]:
+    reach = ctx.rules.food_web.size_reach
+    known = {item.id for item in species}
+    profiles = {item.id: await profile_of(ctx, item) for item in species}
+    marks = {item.id: await traits_of(ctx.session, item.id) for item in species}
+    lands = {item.id: set(ranges.get(item.id, {})) for item in species}
+    wanted: dict[int, set[int]] = {}
+    for hunter in species:
+        profile = profiles[hunter.id]
+        found: set[int] = set()
+        if profile.diet in HUNTERS and lands[hunter.id]:
+            found = {
+                prey.id
+                for prey in species
+                if prey.id != hunter.id
+                and prey.world_id == hunter.world_id
+                and lands[hunter.id] & lands[prey.id]
+                and can_take(reach, profile, profiles[prey.id], marks[prey.id])
+            }
+        found -= set(profile.barred_prey)
+        found |= {prey for prey in profile.pinned_prey if prey in known and prey != hunter.id}
+        wanted[hunter.id] = found
+    return wanted
+
+
+async def derive_links(ctx: TickContext, species: list[EntityRow]) -> WebChange:
+    wanted = await wanted_prey(ctx, species, await regions_of(ctx))
+    change = WebChange()
+    held: set[tuple[int, int]] = set()
+    bonds = BondRepository(ctx.session)
     for bond in await active_bonds(ctx.session, [BondKind.HUNTS]):
-        hunter, prey = by_id.get(bond.source_node_id), by_id.get(bond.target_node_id)
-        if hunter is None or prey is None or await diet_allows(ctx, hunter, prey, ranges):
+        if bond.source_node_id not in wanted or bond.target_node_id not in wanted:
             continue
-        await BondRepository(ctx.session).deactivate(bond, ctx.epoch, "their lands or appetites parted")
-        broken += 1
-    return broken
+        if bond.target_node_id in wanted[bond.source_node_id]:
+            held.add((bond.source_node_id, bond.target_node_id))
+            continue
+        await bonds.deactivate(bond, ctx.epoch, "their lands or appetites parted")
+        change.broken += 1
+    for hunter_id, prey_ids in wanted.items():
+        for prey_id in sorted(prey_ids):
+            if (hunter_id, prey_id) not in held:
+                await bonds.connect(BondDraft(hunter_id, prey_id, BondKind.HUNTS, ctx.epoch, "predator and prey"))
+                change.formed[hunter_id].append(prey_id)
+    return change
 
 
 def prey_mean(hunter_id: int, prey_ids: list[int], ranges: dict[int, dict[int, int]]) -> float | None:
@@ -96,7 +137,3 @@ async def raid_chance(ctx: TickContext, monster: EntityRow, hunger: dict[int, fl
     aggression = profile.aggression if profile is not None else stat(monster, "danger") or 0
     bold = 1 - profile.fear_of_people / PERCENT * ctx.rules.food_web.fear_pct / PERCENT if profile is not None else 1.0
     return aggression * hunger.get(monster.id, 1.0) * bold / ctx.rules.world_engine.raid_danger_divisor
-
-
-async def form_link(ctx: TickContext, hunter: EntityRow, prey: EntityRow) -> None:
-    await BondRepository(ctx.session).connect(BondDraft(hunter.id, prey.id, BondKind.HUNTS, ctx.epoch, "predator and prey"))

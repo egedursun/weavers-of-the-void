@@ -30,6 +30,7 @@ from aerona.domain.enums.culture import (
     TraditionEffectKind,
     TraditionKind,
 )
+from aerona.domain.enums.faith import FuneralRite
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import KnowledgeBranch
@@ -103,15 +104,21 @@ class LegendProfileRow(Base):
 
 class TraditionProfileRow(Base):
     __tablename__ = "tradition_profiles"
+    __table_args__ = (at_least("season_position", 0),)
 
     tradition_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     kind: Mapped[TraditionKind] = mapped_column(enum_type(TraditionKind, "kind"))
     custom_kind_id: Mapped[int | None] = mapped_column(ForeignKey("custom_kinds.id", ondelete="SET NULL"))
     calendar_slot: Mapped[CalendarSlot | None] = mapped_column(enum_type(CalendarSlot, "calendar_slot"))
+    season_position: Mapped[int | None]
+    calendar_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    notable_year_id: Mapped[int | None] = mapped_column(ForeignKey("notable_years.id", ondelete="SET NULL"))
+    in_season: Mapped[bool | None]
     cost: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
     effects: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
     taboo_target: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
     taboo_act: Mapped[ActKind | None] = mapped_column(enum_type(ActKind, "taboo_act"))
+    funeral_rite: Mapped[FuneralRite | None] = mapped_column(enum_type(FuneralRite, "funeral_rite"))
     origin_incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
     origin_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     updated_epoch: Mapped[int] = mapped_column(default=0)

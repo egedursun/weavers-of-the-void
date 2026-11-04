@@ -70,7 +70,7 @@ async def _diffuse_direction(
     for knowledge in holdings.known_by(source.id):
         if spread[0] >= cap or holdings.knows(target.id, knowledge.id) or knowledge.knowledge_branch in hidden:
             continue
-        mastered = await masters(ctx.session, source.id, knowledge.knowledge_branch, ctx.rules.research.master_skill)
+        mastered = await masters(ctx.session, ctx.rules, source.id, knowledge.knowledge_branch)
         taught = ctx.rules.research.teacher_pct / PERCENT if mastered else 0.0
         books = (ctx.rules.research.book_diffusion_pct + paper) / PERCENT if knowledge.id in written else 0.0
         if not rng.chance(min(100.0, chance * (1 + books + taught))):

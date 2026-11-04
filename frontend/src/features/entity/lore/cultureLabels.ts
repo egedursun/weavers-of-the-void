@@ -68,6 +68,8 @@ export const TRADITION_EFFECTS: Record<TraditionEffect['effect'], LoreNamed> = {
   harvest: { label: 'Harvest', icon: Wheat, tone: 'gold' },
   safety: TRADITION_TERMS.hospitality,
   food_saved: TRADITION_TERMS.food_saved,
+  rest: TRADITION_TERMS.rest,
+  vigil: TRADITION_TERMS.vigil,
 }
 
 export const ACTS: Record<ActKind, LoreNamed> = {

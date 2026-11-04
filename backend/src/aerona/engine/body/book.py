@@ -1,4 +1,5 @@
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass, replace
 
 from sqlalchemy import select
@@ -11,6 +12,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow, ProsthesisRow
+from aerona.db.tables.ecology import SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow, EntityTagRow, EntityTraitRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import SkillRow, TraitRow
@@ -18,14 +20,18 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import OPEN_INJURY_STATES, BodyBuild, BodyFunction, BodyPlan, Capacity, HeightClass, InjuryState, StrikeStyle
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
+from aerona.domain.enums.mind import TraitKind
+from aerona.domain.enums.modifier import ModifierSource
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
-from aerona.engine.body.capacities import BearerStats, BodyState, capacities
+from aerona.engine.body.capacities import FUNCTION_LEVELS, BearerStats, BodyState, capacities, function_percents, perception_factor
 from aerona.engine.body.functions import Wound
 from aerona.engine.body.hits import Armour
 from aerona.engine.lore.arms import guard_of, held_profiles
+from aerona.engine.mortal.equipment import worn_coverage
 from aerona.engine.primitives.knowledge import known_levels
+from aerona.engine.primitives.modifiers import combine, live_contributions
 from aerona.engine.primitives.queries import active_bonds, living_entity
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import base_stat, clamp_to_field, stat
 from aerona.rules.registry import Rules
 
 Bearer = EntityRow | SonRow | ForeignGodRow
@@ -34,8 +40,14 @@ ARMOUR_TAG = "armour"
 SHIELD_TAG = "shield"
 PROTECTION = "protection"
 DEFAULT_STAT = 50
+BODY_PLAN_VALUES = frozenset(plan.value for plan in BodyPlan)
 
-TRAIT_FUNCTIONS: dict[CreatureTrait, BodyFunction] = {CreatureTrait.FLYING: BodyFunction.FLIGHT, CreatureTrait.VENOMOUS: BodyFunction.VENOM}
+TRAIT_FUNCTIONS: dict[CreatureTrait, BodyFunction] = {
+    CreatureTrait.FLYING: BodyFunction.FLIGHT,
+    CreatureTrait.VENOMOUS: BodyFunction.VENOM,
+    CreatureTrait.HORNED: BodyFunction.HORN,
+    CreatureTrait.TAILED: BodyFunction.TAIL,
+}
 TRAIT_PLANS: tuple[tuple[CreatureTrait, BodyPlan], ...] = (
     (CreatureTrait.HIVE_MIND, BodyPlan.INSECTOID),
     (CreatureTrait.SHAPESHIFTER, BodyPlan.AMORPHOUS),
@@ -57,7 +69,7 @@ def bearer_stats(bearer: Bearer) -> BearerStats:
             agility=agility,
             intellect=stat(bearer, "intellect") or DEFAULT_STAT,
             charisma=stat(bearer, "charisma") or DEFAULT_STAT,
-            endurance=agility,
+            endurance=stat(bearer, "endurance") or agility,
             age=stat(bearer, "age"),
             lifespan=stat(bearer, "lifespan"),
         )
@@ -77,7 +89,7 @@ def plan_from_traits(traits: set[CreatureTrait]) -> BodyPlan:
     return next((plan for trait, plan in TRAIT_PLANS if trait in traits), BodyPlan.QUADRUPED)
 
 
-def plan_from_words(text: str) -> BodyPlan | None:
+def legacy_plan_from_words(text: str) -> BodyPlan | None:
     found = set(re.findall(r"[a-z]+", text.lower()))
     for spec in PLANS.values():
         if any(word in found or f"{word}s" in found for word in spec.words):
@@ -85,17 +97,25 @@ def plan_from_words(text: str) -> BodyPlan | None:
     return None
 
 
-async def guess_plan(session: AsyncSession, species: EntityRow, traits: set[CreatureTrait]) -> BodyPlan:
+async def typed_plan(session: AsyncSession, species: EntityRow, traits: set[CreatureTrait]) -> BodyPlan:
     by_trait = next((plan for trait, plan in TRAIT_PLANS if trait in traits), None)
     if by_trait is not None:
         return by_trait
     if EntityFlag.MEGAFAUNA in await EntityRepository(session).flags(species.id):
         return BodyPlan.COLOSSAL
-    by_words = plan_from_words(" ".join(part for part in (species.name, species.subtype or "", species.description or "") if part))
-    if by_words is not None:
-        return by_words
+    profile = await session.get(SpeciesProfileRow, species.id)
+    if profile is not None and profile.body_plan in BODY_PLAN_VALUES:
+        return BodyPlan(profile.body_plan)
     home = await living_entity(session, species.location_id)
     return BodyPlan.AQUATIC if home is not None and home.is_water else BodyPlan.QUADRUPED
+
+
+async def recorded_plan(session: AsyncSession, species: EntityRow, traits: set[CreatureTrait]) -> BodyPlan:
+    typed = await typed_plan(session, species, traits)
+    if typed is not BodyPlan.QUADRUPED:
+        return typed
+    worded = legacy_plan_from_words(" ".join(part for part in (species.name, species.subtype or "", species.description or "") if part))
+    return worded or typed
 
 
 def size_of(body: BodyRow) -> int:
@@ -108,7 +128,7 @@ def mortal_frame(rules: Rules, bearer: EntityRow, plan: BodyPlan) -> tuple[Heigh
     heights = list(HeightClass)
     height = spec.height
     if rng.chance(rules.anatomy.height_shift_chance):
-        index = heights.index(height) + (1 if rng.chance(50) else -1)
+        index = heights.index(height) + (1 if rng.chance(rules.anatomy.height_shift_up_pct) else -1)
         height = heights[max(0, min(len(heights) - 2, index))] if height is not HeightClass.GIANT else height
     strength = stat(bearer, "strength") or DEFAULT_STAT
     build = spec.build
@@ -176,7 +196,7 @@ async def ensure_species_body(session: AsyncSession, species: EntityRow, plan: B
         return body
     traits = await species_traits(session, species.id)
     functions = sorted(TRAIT_FUNCTIONS[trait].value for trait in traits if trait in TRAIT_FUNCTIONS)
-    chosen = plan or await guess_plan(session, species, traits)
+    chosen = plan or await typed_plan(session, species, traits)
     body = BodyRow(
         node_id=species.id,
         plan=chosen,
@@ -250,6 +270,10 @@ async def armour_of(session: AsyncSession, rules: Rules, bearer: Bearer, communi
             limbs = max(limbs, min(table.coverage_cap, protection * table.shield_limbs_pct // PERCENT))
             torso = max(torso, min(table.coverage_cap, protection * table.shield_torso_pct // PERCENT))
     guard = guard_of(await held_profiles(session, bearer.id), rules.item_wear.broken) * table.armour_torso_pct // PERCENT
+    worn = await worn_coverage(session, bearer.id)
+    if worn is not None:
+        head = max(head, min(table.coverage_cap, worn[0] * table.armour_head_pct // PERCENT))
+        torso = max(torso, min(table.coverage_cap, worn[1] * table.armour_torso_pct // PERCENT))
     return Armour(head, min(table.coverage_cap, max(torso, guard)), limbs)
 
 
@@ -276,6 +300,28 @@ def factors_of(
 
 
 BEDRIDDEN_LOSSES = (Capacity.MELEE, Capacity.MISSILE, Capacity.COMMAND, Capacity.MOBILITY, Capacity.CRAFT)
+
+
+async def function_level(session: AsyncSession, rules: Rules, node_id: int | None, function: BodyFunction) -> int:
+    if node_id is None:
+        return 0
+    body = await session.get(BodyRow, node_id)
+    if body is None:
+        return 0
+    anatomy = anatomy_for(body)
+    if not anatomy.with_function(function):
+        return 0
+    injuries = await injuries_of(session, node_id)
+    state = BodyState(anatomy, wounds_from(injuries, await prostheses_of(session, node_id)), body.fingers, open_severity(injuries))
+    return function_percents(rules, state)[function] if function in FUNCTION_LEVELS else PERCENT
+
+
+async def perception_of(session: AsyncSession, rules: Rules, mortal: EntityRow) -> float:
+    base = stat(mortal, "perception") or DEFAULT_STAT
+    body = await session.get(BodyRow, mortal.id)
+    if body is None:
+        return float(base)
+    return base * perception_factor(rules.capacities, body.hearing, body.sight)
 
 
 def bedridden(rules: Rules, bearer: object) -> bool:
@@ -334,6 +380,7 @@ def frame_style(rules: Rules, attacker_size: int, target: BodyRow) -> StrikeStyl
     return StrikeStyle.NORMAL
 
 
+BODY_SOURCES = frozenset({ModifierSource.INJURY, ModifierSource.TRAIT})
 STAT_CAPACITY: dict[str, Capacity] = {
     "strength": Capacity.MELEE,
     "agility": Capacity.MOBILITY,
@@ -342,10 +389,13 @@ STAT_CAPACITY: dict[str, Capacity] = {
 }
 
 
-async def temperament(session: AsyncSession, rules: Rules, node_id: int, capacity: Capacity) -> float:
-    held = await session.scalars(select(TraitRow.trait).where(TraitRow.node_id == node_id))
+def temperament_factor(rules: Rules, held: Iterable[TraitKind], capacity: Capacity) -> float:
     lift = sum(TRAITS[trait].capacities.get(capacity, 0) for trait in held) * rules.traits.capacity_scale_pct / PERCENT
     return max(0.0, (PERCENT + lift) / PERCENT)
+
+
+async def temperament(session: AsyncSession, rules: Rules, node_id: int, capacity: Capacity) -> float:
+    return temperament_factor(rules, await session.scalars(select(TraitRow.trait).where(TraitRow.node_id == node_id)), capacity)
 
 
 async def training(session: AsyncSession, rules: Rules, node_id: int, capacity: Capacity) -> float:
@@ -359,10 +409,15 @@ async def training(session: AsyncSession, rules: Rules, node_id: int, capacity: 
 async def effective(
     session: AsyncSession, mortal: EntityRow, key: str, default: int = 0, capacity: Capacity | None = None, *, rules: Rules | None = None
 ) -> float:
-    value = stat(mortal, key)
+    contributions = live_contributions(mortal.id, key)
+    held = {item.source_kind for item in contributions if item.held and item.source_kind in BODY_SOURCES}
+    kept = [item for item in contributions if item.source_kind not in BODY_SOURCES or item.held]
+    raw = base_stat(mortal, key)
+    value = raw if raw is None or not contributions else clamp_to_field(mortal, key, combine(raw, kept).value)
     base = default if value is None else value
     use = capacity or STAT_CAPACITY[key]
-    result = base * await factor(session, mortal.id, use)
+    result = base if ModifierSource.INJURY in held else base * await factor(session, mortal.id, use)
     if rules is not None:
-        result *= await temperament(session, rules, mortal.id, use) * await training(session, rules, mortal.id, use)
+        mood = 1.0 if ModifierSource.TRAIT in held else await temperament(session, rules, mortal.id, use)
+        result *= mood * await training(session, rules, mortal.id, use)
     return result

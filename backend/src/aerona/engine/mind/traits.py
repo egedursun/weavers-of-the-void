@@ -6,11 +6,10 @@ from aerona.catalog.mind import CONDITION_TRAITS, DIVINE_TRAITS, TRAITS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.domain.enums.body import ConditionKind
-from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.mind import TraitKind, TraitSource, ValueAxis
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import add_trait, locked_for, traits_of
-from aerona.engine.primitives.queries import active_bonds
+from aerona.engine.mortal.kin import parents_of
 from aerona.rules.registry import Rules
 
 TRAIT_LOCK = "traits"
@@ -39,10 +38,10 @@ def pick_traits(rng: SeededRandom, choices: Sequence[TraitKind], values: Mapping
 
 async def parent_traits(session: AsyncSession, mortal_id: int) -> list[tuple[int, TraitKind]]:
     found: list[tuple[int, TraitKind]] = []
-    for bond in await active_bonds(session, [BondKind.DESCENDS_FROM], sources=[mortal_id]):
-        for trait in sorted(await traits_of(session, bond.target_node_id)):
+    for parent in await parents_of(session, mortal_id):
+        for trait in sorted(await traits_of(session, parent)):
             if TRAITS[trait].heritable:
-                found.append((bond.target_node_id, trait))
+                found.append((parent, trait))
     return found
 
 

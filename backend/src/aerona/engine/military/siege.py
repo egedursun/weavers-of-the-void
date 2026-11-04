@@ -11,6 +11,7 @@ from aerona.domain.enums.military import DefenderAction, SiegeAction, Starvation
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
 from aerona.engine.economy.equipment import siege_engines
+from aerona.engine.happenings.emergence import record_sack
 from aerona.engine.lore.art import smash
 from aerona.engine.military.logistics import March, desert, dishearten
 from aerona.engine.military.units import stacks_of, sync, take
@@ -194,5 +195,6 @@ async def sack(ctx: TickContext, besieged: EntityRow, profile: ArmyProfileRow | 
         desert(ctx.rules, march, rows, round_half_up((stat(march.army, "size") or 0) * morale.home_sacked_desertion_pct / PERCENT))
         sync(march.army, rows, ctx.rules)
     ctx.count("sacks")
+    await record_sack(ctx, besieged, dead)
     ctx.count("sacked_images", len(await smash(ctx, besieged.id, ctx.rules.art.sack_chance, "broken by the army that sacked the city")))
     return dead

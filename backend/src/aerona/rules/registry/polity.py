@@ -57,6 +57,12 @@ class LegitimacyRules:
     faction_pct: int = rule(30, 0, 100, P, "Stability lost when one faction overwhelms the rest (%)")
     unrest_pct: int = rule(50, 0, 100, P, "Stability lost at the worst unrest of the realm's cities (%)")
     weariness_decay: int = rule(10, 0, 100, P, "War weariness lost per epoch at peace")
+    presence_pct: int = rule(20, 0, 100, P, "Legitimacy a ruler loses at no presence at all (%)")
+    martial_melee_pct: int = rule(15, 0, 100, P, "Legitimacy a ruler of a warlike people loses at no strength of arms (%)")
+    martial_value: int = rule(30, -100, 100, P, "How warlike a people must be before it judges its ruler by strength of arms")
+    acts_pct: int = rule(25, 0, 200, P, "How much the realm's judgement of the ruler's deeds moves legitimacy (%)")
+    acts_cap: int = rule(20, 0, 100, P, "Most legitimacy the ruler's deeds can win or lose")
+    relic_legitimacy: int = rule(8, 0, 100, P, "Legitimacy from holding an heirloom relic of the line, such as a legendary prosthesis")
 
 
 @dataclass(frozen=True)
