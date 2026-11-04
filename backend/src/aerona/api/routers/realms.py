@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.schemas.realms import (
+    BalanceSlice,
     BreachView,
     ClaimView,
     ClauseView,
@@ -13,6 +14,7 @@ from aerona.api.schemas.realms import (
     LawKindSpec,
     LawParamSpec,
     LawView,
+    LoanView,
     MemberView,
     NamedNode,
     OathsView,
@@ -21,10 +23,13 @@ from aerona.api.schemas.realms import (
     PartyView,
     RealmLink,
     RealmView,
+    ReputeView,
+    SentenceView,
     TerritoryView,
     TreasuryLineView,
     TreatyBrief,
     TreatyView,
+    VassalView,
     WhyPart,
 )
 from aerona.catalog.laws import LAW_PARAMS, law_effect
@@ -32,16 +37,20 @@ from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.polity import (
     ClaimRow,
     HeirloomRow,
     HouseMemberRow,
     HouseProfileRow,
+    MortalReputeRow,
     OathRow,
     OfficeRow,
     PolityMemberRow,
     PolityTreasuryRow,
+    SentenceRow,
     TreatyBreachRow,
     TreatyClauseRow,
     TreatyPartyRow,
@@ -52,9 +61,10 @@ from aerona.domain.enums.body import LASTING_INJURY_STATES
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.polity import LAW_AREAS
+from aerona.engine.factions.balance import power_balance
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.laws import LawBook
-from aerona.engine.polity.offices import succession_line
+from aerona.engine.polity.offices import powers_of, succession_line
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import stat
 
@@ -83,6 +93,22 @@ def claim_view(row: ClaimRow, names: dict[int, str]) -> ClaimView:
         basis=row.basis,
         pressed=row.pressed,
         since_epoch=row.since_epoch,
+        office=row.office,
+        backer_id=row.backer_entity_id,
+        locked=list(row.locked),
+    )
+
+
+def vassal_view(row: VassalageRow, names: dict[int, str]) -> VassalView:
+    return VassalView(
+        id=row.vassal_entity_id,
+        name=names.get(row.vassal_entity_id, ""),
+        overlord_id=row.overlord_entity_id,
+        tribute_pct=row.tribute_pct,
+        levy_pct=row.levy_pct,
+        loyalty=row.loyalty,
+        treaty_id=row.treaty_entity_id,
+        locked=list(row.locked),
     )
 
 
@@ -137,8 +163,58 @@ async def realm(services: ServicesDep, polity_id: int = Path(ge=1)) -> RealmView
             *([overlord.overlord_entity_id] if overlord else []),
             *(item for item in (profile.core_entity_id, profile.capital_entity_id, profile.state_religion_id, found.ruler_id) if item),
         }
+        loans = list(await session.scalars(select(LoanRow).where(LoanRow.borrower_entity_id == polity_id).order_by(LoanRow.id)))
+        balance = await power_balance(ctx, found)
+        sentences = list(
+            await session.scalars(
+                select(SentenceRow).where(SentenceRow.settlement_entity_id.in_(list(found.members) or [-1])).order_by(SentenceRow.epoch, SentenceRow.id)
+            )
+        )
+        repute = await session.get(MortalReputeRow, found.ruler_id) if found.ruler_id is not None else None
+        ids |= {*(row.lender_entity_id for row in loans), *balance, *(row.mortal_entity_id for row in sentences)}
+        ids |= {office.target_entity_id for office in found.offices if office.target_entity_id}
         names = await names_of(session, ids)
+        whole = sum(balance.values()) or 1
+        kinds = {
+            row.faction_entity_id: row.kind.value
+            for row in await session.scalars(select(FactionProfileRow).where(FactionProfileRow.faction_entity_id.in_(list(balance) or [-1])))
+        }
         return RealmView(
+            tier_strain=profile.tier_strain,
+            power_balance=[
+                BalanceSlice(id=key, name=names.get(key, ""), kind=kinds.get(key, ""), share=round(value * 100 / whole))
+                for key, value in sorted(balance.items())
+            ],
+            loans=[
+                LoanView(
+                    id=row.id,
+                    lender_id=row.lender_entity_id,
+                    lender=names.get(row.lender_entity_id, ""),
+                    principal=row.principal,
+                    interest_pct=row.interest_pct,
+                    repaid=row.repaid,
+                    due_epoch=row.due_epoch,
+                    status=row.status.value,
+                )
+                for row in loans
+            ],
+            vassal_terms=[vassal_view(row, names) for row in vassals],
+            overlord_terms=vassal_view(overlord, names) if overlord is not None else None,
+            ruler_repute=ReputeView(mortal_id=repute.mortal_entity_id, honour=repute.honour, infamy=repute.infamy, locked=list(repute.locked))
+            if repute is not None
+            else None,
+            sentences=[
+                SentenceView(
+                    id=row.id,
+                    mortal_id=row.mortal_entity_id,
+                    mortal=names.get(row.mortal_entity_id, ""),
+                    settlement_id=row.settlement_entity_id,
+                    crime=row.crime.value,
+                    penalty=row.penalty,
+                    epoch=row.epoch,
+                )
+                for row in sentences
+            ],
             id=found.entity.id,
             name=found.entity.name,
             government=profile.government,
@@ -167,11 +243,15 @@ async def realm(services: ServicesDep, polity_id: int = Path(ge=1)) -> RealmView
                     entity_type=book.entities[member_id].entity_type,
                     autonomy=row.autonomy,
                     population=stat(book.entities[member_id], "population") or 0,
+                    locked=list(row.locked),
                 )
                 for member_id, row in sorted(found.members.items())
                 if member_id in book.entities
             ],
-            territory=[TerritoryView(region_id=region, name=names.get(region, ""), control=row.control) for region, row in sorted(found.territory.items())],
+            territory=[
+                TerritoryView(region_id=region, name=names.get(region, ""), control=row.control, province=row.province, locked=list(row.locked))
+                for region, row in sorted(found.territory.items())
+            ],
             offices=[
                 OfficeView(
                     id=office.id,
@@ -181,6 +261,11 @@ async def realm(services: ServicesDep, polity_id: int = Path(ge=1)) -> RealmView
                     region_id=office.region_entity_id,
                     region=names.get(office.region_entity_id) if office.region_entity_id else None,
                     since_epoch=office.since_epoch,
+                    title=office.title,
+                    powers=sorted(power.value for power in powers_of(office)),
+                    target_id=office.target_entity_id,
+                    target=names.get(office.target_entity_id) if office.target_entity_id else None,
+                    locked=list(office.locked),
                 )
                 for office in found.offices
             ],
