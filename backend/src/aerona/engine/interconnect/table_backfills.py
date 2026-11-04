@@ -15,6 +15,7 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
     ("epidemics", "disease_cures"): "none: cures are found from the next epoch; no outbreak was cured before the wave",
     ("epidemics", "quarantines"): "none: quarantines are ordered from the next epoch",
     ("polity_cycles", "vassalages"): "none: vassalages are sworn by treaties from the next epoch",
+    ("geomorphology", "river_shifts"): "none: a river shift is recorded when a river moves; the courses rivers took before the wave are their present beds",
     ("spy_networks", "spy_networks"): "existing mechanic: the next espionage step gives every agent network bond its record",
 }
 

@@ -159,6 +159,6 @@ SOURCE_WRITERS: MappingProxyType[ModifierSource, str] = MappingProxyType(
         S.TERRAIN: "environment_modifiers",
         S.SEASON: "environment_modifiers",
         S.WEATHER: "environment_modifiers",
-        S.NATURAL_LAW: "law_fertility",
+        S.NATURAL_LAW: "natural_law_fertility",
     }
 )
