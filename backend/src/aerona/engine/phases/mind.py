@@ -414,6 +414,17 @@ async def vengeance(ctx: TickContext) -> int:
 
 
 @reads("table.memories")
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.epoch_year_cursors",
+    "table.hero_quests",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+    "table.oaths",
+)
 async def mind_memories(ctx: TickContext) -> None:
     ctx.count("vengeance_sworn", await vengeance(ctx))
     ctx.count("memories_forgotten", await forget_faded(ctx.session, ctx.rules, ctx.epoch))

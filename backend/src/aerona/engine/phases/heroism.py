@@ -307,18 +307,7 @@ async def encounter(ctx: TickContext, hero: EntityRow, monster: EntityRow, conte
     return await _hero_loses(ctx, hero, monster, patron, context)
 
 
-@reads("table.bonds")
-async def sworn_hunts(ctx: TickContext) -> None:
-    for bond in await active_bonds(ctx.session, [BondKind.HUNTS]):
-        hunter = await living_entity(ctx.session, bond.source_node_id)
-        prey = await living_entity(ctx.session, bond.target_node_id)
-        if hunter is None or prey is None or hunter.entity_type is not EntityType.MORTAL or prey.entity_type is not EntityType.SPECIES:
-            continue
-        await close(ctx.session, bond, ctx.epoch, "sworn hunt")
-        await encounter(ctx, hunter, prey, "in a sworn hunt")
-
-
-@reads(
+ENCOUNTER_READS = (
     "item.damage",
     "item.might",
     "item.protection",
@@ -359,7 +348,7 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.traits",
     "table.world_maps",
 )
-@writes(
+ENCOUNTER_WRITES = (
     "item.might",
     "item.protection",
     "mortal.charisma",
@@ -381,6 +370,22 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.sons",
     "table.spirit_profiles",
 )
+
+
+@reads(*ENCOUNTER_READS)
+@writes(*ENCOUNTER_WRITES)
+async def sworn_hunts(ctx: TickContext) -> None:
+    for bond in await active_bonds(ctx.session, [BondKind.HUNTS]):
+        hunter = await living_entity(ctx.session, bond.source_node_id)
+        prey = await living_entity(ctx.session, bond.target_node_id)
+        if hunter is None or prey is None or hunter.entity_type is not EntityType.MORTAL or prey.entity_type is not EntityType.SPECIES:
+            continue
+        await close(ctx.session, bond, ctx.epoch, "sworn hunt")
+        await encounter(ctx, hunter, prey, "in a sworn hunt")
+
+
+@reads(*ENCOUNTER_READS)
+@writes(*ENCOUNTER_WRITES)
 async def glory_hunts(ctx: TickContext) -> None:
     engine = ctx.rules.world_engine
     rng = ctx.rng()

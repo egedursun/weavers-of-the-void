@@ -93,6 +93,10 @@ class WorldLineContext(PromptContext):
     time_factor: float
     leak: int = 0
     cosmology: str | None = None
+    golden_age_epochs: int | None = None
+    golden_age_since: int | None = None
+    golden_age_gain: int = 0
+    golden_age_soft: bool = False
 
 
 class CosmosWorld(ContextItem):

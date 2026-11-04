@@ -11,7 +11,7 @@ from aerona.domain.models.entity_stats import SettlementStats
 from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
-from aerona.engine.interconnect.annotations import reads
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.legends import haunted_regions
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.drives import closeness, hunger
@@ -146,6 +146,21 @@ async def migrate(ctx: TickContext, atlas: RegionAtlas, source: EntityRow, targe
     "table.sky_events",
     "table.world_maps",
     "table.world_seasons",
+)
+@writes(
+    "people.population",
+    "settlement.population",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.language_profiles",
+    "table.name_registry",
+    "table.nodes",
 )
 async def famine_migration(ctx: TickContext) -> None:
     rules = ctx.rules

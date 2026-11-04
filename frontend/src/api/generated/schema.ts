@@ -4863,6 +4863,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/worlds/{world_id}/golden-age": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["world_golden_age_api_worlds__world_id__golden_age_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sons/{son_id}/anchorage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["son_anchorage_api_sons__son_id__anchorage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/dedication": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["structure_dedication_api_entities__entity_id__dedication_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions": {
         parameters: {
             query?: never;
@@ -4873,6 +4921,118 @@ export interface paths {
         get: operations["list_actions_api_actions_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/war:incite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_war_incite_api_actions_war_incite_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/world:date_golden_age": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_world_date_golden_age_api_actions_world_date_golden_age_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/structure:dedicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_structure_dedicate_api_actions_structure_dedicate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/structure:undedicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_structure_undedicate_api_actions_structure_undedicate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/son:anchor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_son_anchor_api_actions_son_anchor_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/son:clear_anchor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_son_clear_anchor_api_actions_son_clear_anchor_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/foundation:hold": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_foundation_hold_api_actions_foundation_hold_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10263,6 +10423,15 @@ export interface components {
             first_id: number;
             second_id: number;
         };
+        AnchorageView: {
+            son_id: number;
+            anchor: components["schemas"]["NodeRef"] | null;
+            anchor_alive: boolean;
+            anchor_held: boolean;
+            shrines: components["schemas"]["NodeRef"][];
+            creations: components["schemas"]["NodeRef"][];
+            incited: components["schemas"]["IncitedWarView"][];
+        };
         ArchiveMode: "history" | "atlas" | "automatic";
         ArchiveOverride: "history" | "atlas";
         ArchiveReadInput: {
@@ -11584,6 +11753,12 @@ export interface components {
         };
         DecisionRule: "autocratic" | "council" | "assembly" | "divine";
         DecreeKind: "war" | "peace" | "alliance" | "marriage" | "trade";
+        DedicationView: {
+            structure_id: number;
+            son: components["schemas"]["NodeRef"] | null;
+            held: boolean;
+            anchors_son: boolean;
+        };
         DeedView: {
             epoch: number;
             deed: components["schemas"]["ItemDeed"];
@@ -12615,6 +12790,11 @@ export interface components {
             name: string;
             share: number;
         };
+        FoundationHoldInput: {
+            kind: components["schemas"]["HoldKind"];
+            node_id: number;
+            held: boolean;
+        };
         FrontView: {
             first_region: components["schemas"]["NodeRef"] | null;
             second_region: components["schemas"]["NodeRef"] | null;
@@ -12705,6 +12885,20 @@ export interface components {
             name: string;
             used_by: string;
             meaning: string;
+        };
+        GoldenAgeView: {
+            world_id: number;
+            active: boolean;
+            since_epoch: number | null;
+            epochs: number;
+            prosperity_gain: number;
+            decadence: number;
+            held: boolean;
+            communities: number;
+            golden_communities: number;
+            deepening_epochs: number;
+            deepening_steps: number;
+            decadence_epochs: number;
         };
         GovernmentKind: "chiefdom" | "monarchy" | "theocracy" | "oligarchy" | "republic" | "tribal_confederation" | "empire" | "hive_council" | "god_kingdom" | "occupation";
         GraphLink: {
@@ -12879,6 +13073,7 @@ export interface components {
             metal: components["schemas"]["MaterialKind"];
             units?: number | null;
         };
+        HoldKind: "incited_by_son_id" | "golden_age" | "dedicated_son_id" | "anchor_entity_id";
         HoldingKind: "temple" | "land" | "relic" | "holy_place" | "monastery";
         HoldingView: {
             kind: components["schemas"]["HoldingKind"];
@@ -13113,6 +13308,16 @@ export interface components {
             consequences: number[];
         };
         IncidentRole: "subject" | "actor" | "target" | "witness" | "place";
+        IncitedWarView: {
+            war_id: number;
+            event: components["schemas"]["NodeRef"] | null;
+            status: components["schemas"]["WarStatus"];
+            ending: components["schemas"]["WarEnding"] | null;
+            started_epoch: number;
+            ended_epoch: number | null;
+            battles: number;
+            held: boolean;
+        };
         InfrastructureView: {
             walls_level: number;
             walls_material: components["schemas"]["BuildMaterial"];
@@ -16443,6 +16648,11 @@ export interface components {
             intent: components["schemas"]["SpokenIntent"];
             text: string;
         };
+        SonAnchorInput: {
+            son_id: number;
+            entity_id: number;
+            hold: boolean;
+        };
         SonAscendedEvent: {
             id: number;
             kind: "son.ascended";
@@ -16474,6 +16684,9 @@ export interface components {
             kind: "son.chat_replied";
             payload: components["schemas"]["ChatPayload"];
             at: string;
+        };
+        SonClearAnchorInput: {
+            son_id: number;
         };
         SonDeathCause: "fading" | "killed_by_sibling" | "killed_by_creator" | "devoured" | "foreign_god" | "cosmic_horror" | "other";
         SonDelta: {
@@ -17151,6 +17364,11 @@ export interface components {
             payload: components["schemas"]["EventPayload"];
             at: string;
         };
+        StructureDedicateInput: {
+            structure_id: number;
+            son_id: number;
+            hold: boolean;
+        };
         StructureRazeInput: {
             structure_id: number;
             reason: string;
@@ -17160,6 +17378,9 @@ export interface components {
             splendor?: number | null;
             durability?: number | null;
             function?: number | null;
+        };
+        StructureUndedicateInput: {
+            structure_id: number;
         };
         Subsystem: "core" | "body" | "mind" | "social" | "household" | "demography" | "economy" | "polity" | "law" | "intrigue" | "communication" | "war" | "faith" | "magic" | "knowledge" | "culture" | "language" | "ecology" | "environment" | "gods" | "cosmos";
         SummarySection: "pantheon" | "threads" | "events" | "cosmos" | "geography" | "languages" | "map" | "legends";
@@ -17673,6 +17894,11 @@ export interface components {
             victor_id: number;
             terms?: components["schemas"]["WarAimKind"][];
         };
+        WarInciteInput: {
+            war_id: number;
+            son_id?: number | null;
+            hold: boolean;
+        };
         WarOpenInput: {
             attacker_id: number;
             defender_id: number;
@@ -17714,6 +17940,8 @@ export interface components {
             victor: components["schemas"]["NodeRef"] | null;
             loser: components["schemas"]["NodeRef"] | null;
             sides: components["schemas"]["WarSideView"][];
+            instigator?: components["schemas"]["NodeRef"] | null;
+            incitement_held: boolean;
         };
         WarVictoryInput: {
             war_id: number;
@@ -17889,6 +18117,11 @@ export interface components {
             settlements: number;
             living: number;
             population: number;
+        };
+        WorldDateGoldenAgeInput: {
+            world_id: number;
+            since_epoch: number;
+            hold: boolean;
         };
         WorldDepthInput: {
             history?: string | null;
@@ -27226,6 +27459,93 @@ export interface operations {
             };
         };
     };
+    world_golden_age_api_worlds__world_id__golden_age_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoldenAgeView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    son_anchorage_api_sons__son_id__anchorage_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                son_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnchorageView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    structure_dedication_api_entities__entity_id__dedication_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DedicationView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_actions_api_actions_get: {
         parameters: {
             query?: never;
@@ -27241,6 +27561,223 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActionCatalogueItem"][];
+                };
+            };
+        };
+    };
+    action_war_incite_api_actions_war_incite_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarInciteInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_world_date_golden_age_api_actions_world_date_golden_age_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorldDateGoldenAgeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_structure_dedicate_api_actions_structure_dedicate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StructureDedicateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_structure_undedicate_api_actions_structure_undedicate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StructureUndedicateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_son_anchor_api_actions_son_anchor_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SonAnchorInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_son_clear_anchor_api_actions_son_clear_anchor_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SonClearAnchorInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_foundation_hold_api_actions_foundation_hold_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FoundationHoldInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -37327,6 +37864,7 @@ export const gravityValues: ReadonlyArray<FlattenedDeepRequired<components>["sch
 export const harmCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HarmCause"]> = ["battle", "duel", "punishment", "torture", "accident", "monster", "disaster", "curse", "magic_backlash", "god", "poison", "quest", "escape", "sacrifice", "age", "player"];
 export const heightClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HeightClass"]> = ["short", "average", "tall", "giant"];
 export const heroQuestKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HeroQuestKind"]> = ["hunt", "thread", "relic", "knowledge", "vengeance"];
+export const holdKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HoldKind"]> = ["incited_by_son_id", "golden_age", "dedicated_son_id", "anchor_entity_id"];
 export const holdingKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HoldingKind"]> = ["temple", "land", "relic", "holy_place", "monastery"];
 export const horizonStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HorizonStatus"]> = ["pending", "processing", "born", "wasted"];
 export const horrorEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HorrorEventKind"]> = ["stars_align", "eye_in_the_sky", "wave_of_silence", "reverse_rain", "visit_of_the_void", "the_dimming", "whispers_from_beyond"];

@@ -306,3 +306,4 @@ class CalendarsRules:
 @dataclass(frozen=True)
 class EngineBudgetRules:
     max_sub_steps_per_epoch: int = rule(400, 1, 1000000, RuleGroup.ENGINE_PHASES, "Most campaign seasons and sampled years the engine evaluates in one epoch")
+    tick_target_seconds: int = rule(20, 1, 3600, RuleGroup.ENGINE_PHASES, "Seconds one engine tick of the reference world should stay under")

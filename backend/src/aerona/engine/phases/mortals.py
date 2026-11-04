@@ -49,6 +49,26 @@ async def succumb(ctx: TickContext, mortal: EntityRow) -> None:
 
 
 @reads("mortal.hp")
+@writes(
+    "mortal.death_year",
+    "mortal.hp",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.designated_heirs",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.injuries",
+    "table.item_history",
+    "table.language_profiles",
+    "table.memories",
+    "table.name_registry",
+    "table.sons",
+    "table.spirit_profiles",
+)
 async def mortal_wounds(ctx: TickContext) -> None:
     for mortal in await canon(ctx.session, [EntityType.MORTAL]):
         hp = stat(mortal, "hp")

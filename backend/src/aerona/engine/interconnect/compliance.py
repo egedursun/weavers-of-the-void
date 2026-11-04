@@ -89,7 +89,8 @@ from aerona.db.tables.polity import (
     VassalageRow,
 )
 from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
-from aerona.db.tables.warfare import SiegeRow, WarSideRow
+from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.tables.warfare import SiegeRow, WarRow, WarSideRow
 
 
 @dataclass(frozen=True)
@@ -106,6 +107,27 @@ class ComplianceRow:
 
 
 CATALOGUE: tuple[ComplianceRow, ...] = (
+    ComplianceRow(
+        "W0",
+        (WarRow.__tablename__, CommunitySocietyRow.__tablename__),
+        ("war_upkeep", "campaigns", "diplomacy", "doom_clock", "sons_renewal", "works_remember_gods"),
+        (
+            "war:incite",
+            "world:golden_age",
+            "world:end_golden_age",
+            "world:date_golden_age",
+            "structure:dedicate",
+            "structure:undedicate",
+            "son:anchor",
+            "son:clear_anchor",
+            "foundation:hold",
+        ),
+        ("WarIncitement", "GoldenAge", "SonAnchorage", "StructureDedication", "FoundationHold"),
+        ("son_turn_system", "world_line"),
+        ("choose_anchor",),
+        ("war.incitement_reaped", "world_age.golden_age"),
+        ("doom_clock",),
+    ),
     ComplianceRow(
         "F1",
         (NotableYearRow.__tablename__,),
