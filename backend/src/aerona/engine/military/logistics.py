@@ -4,15 +4,20 @@ from math import log2
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.military import ArmyMovementRow, ArmyProfileRow, ArmyUnitRow, CampaignFrontRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, PolityTreasuryRow
+from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.culture import ItemClass, Technique
 from aerona.domain.enums.environment import MovementMode
 from aerona.domain.enums.military import Stance
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.lore.research import has_technique
 from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.levies import demobilise
@@ -49,12 +54,12 @@ def passable(rules: Rules, region: RegionEnvironmentRow | None) -> bool:
     return region.passability.get(MovementMode.ON_FOOT.value, PERCENT) >= rules.logistics.passability_floor
 
 
-def step_towards(rules: Rules, atlas: RegionAtlas, ground: EnvironmentBook, march: March) -> int:
+def step_towards(rules: Rules, atlas: RegionAtlas, ground: EnvironmentBook, march: March, *, charted: bool = False, supplied: bool = False) -> int:
     profile = march.profile
     if march.goal is None or profile.region_entity_id is None or profile.region_entity_id == march.goal:
         return 0
     path = atlas.region_path(profile.region_entity_id, march.goal) or []
-    reach = rules.logistics.march_regions
+    reach = rules.logistics.march_regions + (rules.maps.march_regions if charted else 0) + (rules.technique_effects.logistics_regions if supplied else 0)
     if profile.forced_march:
         reach = round_half_up(reach * rules.logistics.forced_march_pct / PERCENT)
     moved = 0
@@ -170,12 +175,22 @@ def dishearten(rows: list[ArmyUnitRow], loss: int) -> None:
         row.morale = clamp_int(row.morale - loss, 0, PERCENT)
 
 
+async def holds_map(ctx: TickContext, owner_id: int) -> bool:
+    owned = select(BondRow.target_node_id).where(BondRow.source_node_id == owner_id, BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE)
+    found = await ctx.session.scalar(
+        select(ItemProfileRow.item_entity_id).where(ItemProfileRow.item_entity_id.in_(owned), ItemProfileRow.item_class == ItemClass.MAP).limit(1)
+    )
+    return found is not None
+
+
 async def campaign_season(ctx: TickContext, atlas: RegionAtlas, ground: EnvironmentBook, march: March, season: int) -> Season:
     log = Season()
     rows = await stacks_of(ctx.session, march.army.id)
     profile = march.profile
     origin = profile.region_entity_id
-    log.moved = 0 if "region_id" in profile.locked else step_towards(ctx.rules, atlas, ground, march)
+    charted = await holds_map(ctx, march.owner.id)
+    supplied = await has_technique(ctx.session, march.owner.id, Technique.LOGISTICS)
+    log.moved = 0 if "region_id" in profile.locked else step_towards(ctx.rules, atlas, ground, march, charted=charted, supplied=supplied)
     if "stance" in profile.locked:
         pass
     elif march.goal is not None and profile.region_entity_id == march.goal:

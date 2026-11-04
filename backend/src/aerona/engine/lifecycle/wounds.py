@@ -18,6 +18,7 @@ from aerona.engine.economy.equipment import weapon_of
 from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_immortal, is_notable
 from aerona.engine.lifecycle.mortal_death import die
+from aerona.engine.lore.arms import best_weapon, grip, held_profiles
 from aerona.engine.mind.hooks import wound_memories
 from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
@@ -160,6 +161,9 @@ async def _hp_loss(ctx: TickContext, bearer: Bearer, harm: Harm, hits: list[Hit]
     return 0, False
 
 
+DAMAGE_TYPES = frozenset(item.value for item in DamageType)
+
+
 async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bool = True) -> Wounding:
     if isinstance(bearer, EntityRow) and (bearer.entity_type is not EntityType.MORTAL or bearer.status is not EntityStatus.CANON):
         return Wounding(None)
@@ -169,9 +173,18 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
     anatomy = anatomy_for(body)
     rng = ctx.rng(seed_of("hits", bearer.id, harm.cause.value, round_half_up(harm.damage)))
     if harm.edge is None and harm.damage_type is None:
-        blade = await weapon_of(ctx.session, harm.source_node_id or harm.killer_id)
+        wielder = harm.source_node_id or harm.killer_id
+        blade = await weapon_of(ctx.session, wielder)
         if blade is not None:
             harm = replace(harm, edge=blade.edge, heft=blade.weight)
+        held = best_weapon(await held_profiles(ctx.session, wielder))
+        if held is not None:
+            harm = replace(
+                harm,
+                damage=harm.damage * grip(held),
+                damage_type=DamageType(held.damage_type) if held.damage_type in DAMAGE_TYPES else None,
+                heft=(harm.heft or 0) + held.weight,
+            )
     hits = hits_for(ctx.rules, anatomy, harm, _armour(body), rng)
     if not lethal:
         hits = [_spare(hit) for hit in hits]

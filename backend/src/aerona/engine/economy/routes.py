@@ -12,6 +12,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeLoss, TradeMode, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, LegendCategory
 from aerona.domain.enums.environment import CoastKind, RiverClass, TerrainKind
@@ -27,6 +28,7 @@ from aerona.engine.economy.markets import Quote
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.environment.profile import Works
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.lore.language import barrier
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -188,6 +190,18 @@ def capacity_of(ctx: TickContext, book: EconomyBook, route: Route, works: dict[i
     return clamp_int(capacity, 0, table.capacity_cap)
 
 
+async def spoken_capacity(ctx: TickContext, book: EconomyBook, route: Route, works: dict[int, Works]) -> int:
+    first, second = route.ends
+    capacity = capacity_of(ctx, book, route, works) * await barrier(ctx.session, ctx.rules, first, second, ctx.epoch)
+    if route.profile.mode is TradeMode.SEA:
+        table = ctx.rules.technique_effects
+        held = book.techniques.get(first, set()) | book.techniques.get(second, set())
+        capacity *= (
+            1 + (table.navigation_pct * (Technique.NAVIGATION_STARS in held) + table.instruments_pct * (Technique.ASTRONOMY_INSTRUMENTS in held)) / PERCENT
+        )
+    return clamp_int(round_half_up(capacity), 0, ctx.rules.trade_routes.capacity_cap)
+
+
 def danger_of(book: EconomyBook, path: list[int]) -> int:
     dangers = [stat(book.entities[region], "danger") or 0 for region in path if region in book.entities]
     return round_half_up(sum(dangers) / len(dangers)) if dangers else 0
@@ -240,7 +254,7 @@ async def found_route(ctx: TickContext, book: EconomyBook, first: EntityRow, sec
     await write_path(ctx, entity.id, path)
     await ctx.session.flush()
     route = Route(entity, profile, path)
-    set_stats(entity, capacity=capacity_of(ctx, book, route, works))
+    set_stats(entity, capacity=await spoken_capacity(ctx, book, route, works))
     return route
 
 
@@ -561,7 +575,7 @@ async def _route_war(ctx: TickContext, book: EconomyBook, route: Route, rival: E
 async def upkeep(ctx: TickContext, book: EconomyBook, route: Route, *, works: dict[int, Works], enemies: set[tuple[int, int]], tally: RouteTally) -> None:
     lanes = ctx.rules.trade_routes
     profile = route.profile
-    set_stats(route.entity, capacity=capacity_of(ctx, book, route, works), danger=danger_of(book, route.path))
+    set_stats(route.entity, capacity=await spoken_capacity(ctx, book, route, works), danger=danger_of(book, route.path))
     blocker = await blocker_of(ctx, book, route, enemies)
     if blocker is not None and profile.status is not TradeRouteStatus.BLOCKADED:
         profile.status = TradeRouteStatus.BLOCKADED
@@ -628,7 +642,7 @@ async def divert(ctx: TickContext, book: EconomyBook, route: Route, works: dict[
         if region not in other:
             await ctx.session.delete(route.tolls.pop(region))
     route.profile.length = length_of(ctx, route.profile.mode, other)
-    set_stats(route.entity, capacity=capacity_of(ctx, book, route, works))
+    set_stats(route.entity, capacity=await spoken_capacity(ctx, book, route, works))
     await note(
         ctx,
         f"Merchants turned off {route.entity.name} to dodge the tolls and found another way.",

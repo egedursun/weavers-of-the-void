@@ -4,6 +4,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.military import DuelContext, FeudAction
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
@@ -13,6 +14,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.lore.traditions import keeps
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.opinion import mortal_rulers
 from aerona.engine.notes import note
@@ -163,7 +165,10 @@ async def honour_duels(ctx: TickContext) -> int:
         holder, subject = await living_entity(ctx.session, holder_id), await living_entity(ctx.session, subject_id)
         if holder is None or subject is None or holder.entity_type is not EntityType.MORTAL or subject.entity_type is not EntityType.MORTAL:
             continue
-        if holder.status is not EntityStatus.CANON or (await values_for(ctx.session, holder.id)).get(ValueAxis.HONOUR, 0) <= 0:
+        if holder.status is not EntityStatus.CANON:
+            continue
+        customary = holder.location_id is not None and await keeps(ctx, holder.location_id, TraditionKind.DUEL_CUSTOM)
+        if not customary and (await values_for(ctx.session, holder.id)).get(ValueAxis.HONOUR, 0) <= 0:
             continue
         if stat(holder, "hp") == 0 or holder.location_id != subject.location_id:
             continue

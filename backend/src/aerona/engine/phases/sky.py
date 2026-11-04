@@ -16,6 +16,7 @@ from aerona.db.tables.lore import ThreadLinkRow, ThreadRow
 from aerona.db.tables.routes import RouteRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory, ThreadLinkRole, ThreadStatus
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.war import WarEnding
@@ -30,6 +31,7 @@ from aerona.engine.cosmos.world_types import mechanics_of
 from aerona.engine.cosmos.worlds import align_moons
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lore.research import has_technique
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.manual import manual_context
@@ -103,8 +105,11 @@ async def _eclipse(ctx: TickContext, world: WorldRow) -> str:
     sky = ctx.rules.sky
     seen = await sky_clarity(ctx, world, "sky.eclipse")
     for entity in await canon(ctx.session, INHABITANT_TYPES, world.id):
-        shift_sanity(ctx.rules, entity, -round(sky.eclipse_sanity_loss * seen))
-        shift_bounded(ctx.rules, entity, PIETY_KEY, round(sky.eclipse_piety_gain * seen))
+        dread = seen * (
+            1 - ctx.rules.technique_effects.eclipse_calm_pct / PERCENT if await has_technique(ctx.session, entity.id, Technique.ECLIPSE_PREDICTION) else 1
+        )
+        shift_sanity(ctx.rules, entity, -round(sky.eclipse_sanity_loss * dread))
+        shift_bounded(ctx.rules, entity, PIETY_KEY, round(sky.eclipse_piety_gain * dread))
     rng = ctx.rng("eclipse")
     prophecy = await open_record(
         ctx.session,

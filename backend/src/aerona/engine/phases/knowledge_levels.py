@@ -20,6 +20,7 @@ from aerona.domain.models.entity_stats import KnowledgeStats
 from aerona.engine.context import TickContext
 from aerona.engine.disease.load import DiseaseLoads, endemic_regions
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lore.research import holder_levels, raise_holder, research_factor
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.knowledge import teach
@@ -153,6 +154,7 @@ async def deepen_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     deepened = 0
     loads = await DiseaseLoads.load(ctx.session)
     sick = await endemic_regions(ctx.session)
+    levels = await holder_levels(ctx.session)
     for community in scene.communities:
         if deepened >= table.deepen_cap:
             break
@@ -169,16 +171,23 @@ async def deepen_round(ctx: TickContext, scene: KnowledgeScene) -> int:
         if healing and loads.atlas.top_region(community.id) in sick:
             chance *= ctx.rules.epidemiology.medicine_pressure_pct / PERCENT
             options = healing
+        chosen = rng.pick(options)
+        branch = chosen.knowledge_branch
+        held = levels.get(community.id, {}).get(branch, knowledge_level(ctx.rules, chosen)) if branch is not None else 0
+        if branch is not None:
+            chance *= await research_factor(ctx, community, branch, held, levels)
         if not rng.chance(chance):
             continue
-        chosen = rng.pick(options)
-        level = shift_level(ctx.rules, chosen, 1)
-        if level is None:
+        reached = await raise_holder(ctx, community.id, branch, table.level_cap) if branch is not None else None
+        level = shift_level(ctx.rules, chosen, 1) if reached is None or reached > knowledge_level(ctx.rules, chosen) else None
+        if reached is None and level is None:
             continue
         deepened += 1
+        shown = level if level is not None else reached
+        frontier = " and pushed the frontier" if level is not None else ""
         await note(
             ctx,
-            f"The masters of {community.name} deepened the knowledge of {chosen.name}; it now stands at level {level}.",
+            f"The masters of {community.name} deepened their knowledge of {chosen.name}{frontier}; they now stand at level {shown}.",
             key="knowledge.deepened",
             ids=[community.id, chosen.id],
             kind=ChronicleKind.KNOWLEDGE,

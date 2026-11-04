@@ -5,6 +5,7 @@ import {
   BookA,
   BookPlus,
   BookText,
+  Crown,
   Feather,
   FlaskConical,
   GitBranch,
@@ -40,6 +41,7 @@ import { Dictionary } from './Dictionary'
 import { KnowledgeTree } from './KnowledgeTree'
 import { LanguageTree } from './LanguageTree'
 import { NameHealth } from './NameHealth'
+import { TongueAtlas } from './TongueAtlas'
 import { useEpochWords } from './api'
 import { buildFamilies } from './languageFamilies'
 import { COSMIC_BRANCHES, tierNumeral } from './languageIcons'
@@ -229,6 +231,10 @@ export function LanguagesScreen() {
             <ShieldCheck />
             Name health
           </TabsTrigger>
+          <TabsTrigger value='tongues'>
+            <Crown />
+            Prestige
+          </TabsTrigger>
         </TabsList>
         <TabsContent value='dictionary'>
           {languages.isPending ? (
@@ -269,6 +275,9 @@ export function LanguagesScreen() {
         </TabsContent>
         <TabsContent value='names'>
           <NameHealth />
+        </TabsContent>
+        <TabsContent value='tongues'>
+          <TongueAtlas worldId={world ?? worlds[0]?.id ?? null} />
         </TabsContent>
       </Tabs>
     </>

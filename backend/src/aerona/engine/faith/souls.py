@@ -1,11 +1,13 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.db.tables.culture import CastingRow, RiteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import AfterlifeStratumRow, CultDoctrineRow, PossessionRow, ReincarnationRow, SpiritProfileRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import ConditionKind, HarmCause
+from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.domain import DEATH_DOMAINS
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import AfterlifeState, JudgementDoctrine, ReincarnationGate, SpiritAlignment, StratumKind, TenetKind
@@ -84,7 +86,21 @@ async def gates(ctx: TickContext, profile: SpiritProfileRow, home: EntityRow | N
     laws = await ctx.laws()
     if home is not None and laws.has(NaturalLaw.SOULS_REINCARNATE, home.world_id):
         return ReincarnationGate.NATURAL_LAW
+    if home is not None and await rebirth_rite(ctx, home.id, profile.spirit_entity_id):
+        return ReincarnationGate.RITE
     return None
+
+
+async def rebirth_rite(ctx: TickContext, home_id: int, spirit_id: int) -> bool:
+    rites = select(RiteProfileRow.rite_entity_id).where(RiteProfileRow.school.in_([MagicSchool.DEATH, MagicSchool.LIFE]))
+    casters = select(EntityRow.id).where(EntityRow.location_id == home_id)
+    statement = select(CastingRow.id).where(
+        CastingRow.rite_entity_id.in_(rites),
+        CastingRow.succeeded.is_(True),
+        CastingRow.epoch >= ctx.epoch - 1,
+        (CastingRow.target_entity_id == spirit_id) | CastingRow.caster_entity_id.in_(casters),
+    )
+    return await ctx.session.scalar(statement.limit(1)) is not None
 
 
 async def rebirth(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow, home: EntityRow, gate: ReincarnationGate) -> EntityRow:

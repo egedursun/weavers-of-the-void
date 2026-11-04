@@ -97,6 +97,23 @@ class RegionRealm(ApiModel):
     control: int
 
 
+class MapLore(ApiModel):
+    kind: str
+    entity_id: int
+    name: str
+    place_id: int
+    x: float
+    y: float
+    detail: str | None = None
+
+
+class RegionTongue(ApiModel):
+    language_id: int
+    name: str
+    prestige: int
+    lingua_franca: bool
+
+
 class MapArmy(ApiModel):
     army_id: int
     name: str
@@ -167,5 +184,7 @@ class MapView(ApiModel):
     occupations: dict[int, MapOccupation] = Field(default_factory=dict)
     fronts: list[MapFront] = Field(default_factory=list)
     holy: list[MapHoly] = Field(default_factory=list)
+    lore: list[MapLore] = Field(default_factory=list)
+    tongues: dict[int, RegionTongue] = Field(default_factory=dict)
     notes: list[MapNoteRecord]
     time: MapTime

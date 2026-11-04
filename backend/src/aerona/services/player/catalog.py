@@ -42,6 +42,7 @@ from aerona.services.player import (
     levers,
     life_cycles,
     living_stats,
+    lore,
     market,
     mechanics,
     memory,
@@ -1092,6 +1093,38 @@ ECONOMY_ACTIONS = (
     _sync(Meta("afterlife:stratum", "Set a stratum of the afterlife", G.BEYOND), faith.set_stratum, faith.SetStratum, free, ("S3.3",)),
 )
 
+
+LORE_ACTIONS = (
+    _sync(
+        Meta("lore:edit", "Edit a language, legend, tradition, creed, rite, prophecy, item or artwork", G.LANGUAGES),
+        lore.edit_lore,
+        lore.EditLore,
+        free,
+        ("S8.1", "S8.2", "S8.3", "S8.5", "S8.6", "S8.7", "S7.1", "S7.4"),
+    ),
+    _sync(
+        Meta("language:intelligibility", "Set how well two tongues understand each other", G.LANGUAGES),
+        lore.set_intelligibility,
+        lore.Intelligibility,
+        free,
+        ("S8.1",),
+    ),
+    _sync(Meta("language:speakers", "Set the speakers of a tongue in a community", G.LANGUAGES), lore.set_speakers, lore.Speakers, free, ("S8.1",)),
+    _sync(Meta("research:level", "Set a people's level in a branch of knowledge", G.SOCIETY), lore.set_level, lore.HolderLevel, free, ("S8.4",)),
+    _sync(Meta("research:technique", "Give or take a technique", G.SOCIETY), lore.set_technique, lore.HolderTechnique, free, ("S8.4",)),
+    _sync(Meta("creed:tenet", "Add or remove a creed's tenet", G.SOCIETY), lore.set_creed_tenet, lore.CreedTenet, free, ("S8.5",)),
+    _sync(Meta("creed:adherent", "Set a community's adherence to a creed", G.SOCIETY), lore.set_adherent, lore.Adherent, free, ("S8.5",)),
+    _sync(Meta("creed:found", "Let a mortal found a creed", G.SOCIETY), lore.found_creed, lore.FoundCreed, free, ("S8.5",)),
+    _sync(Meta("rite:devise", "Let a mortal devise a rite", G.BEYOND), lore.devise_rite, lore.DeviseRite, free, ("S8.6",)),
+    _sync(Meta("rite:effect", "Set what a rite does", G.BEYOND), lore.set_rite_effect, lore.RiteEffect, free, ("S8.6",)),
+    _sync(Meta("rite:cast", "Work a rite now", G.BEYOND), lore.cast_rite, lore.CastRite, free, ("S8.6",)),
+    _sync(Meta("prophecy:resolve", "Fulfil or fail a prophecy", G.MEMORY), lore.resolve_prophecy, lore.ResolveProphecy, free, ("S8.7",)),
+    _sync(Meta("item:enchant", "Set an enchantment on an item", G.BEYOND), lore.set_enchantment, lore.Enchantment, free, ("S7.1", "S8.6")),
+    _sync(
+        Meta("tradition:participation", "Set how fully a community keeps a tradition", G.SOCIETY), lore.set_participation, lore.Participation, free, ("S8.3",)
+    ),
+)
+
 ENVIRONMENT_ACTIONS = (
     _sync(
         Meta("ley:sever", "Cut a ley line for some epochs", G.WORLDS),
@@ -1244,6 +1277,7 @@ MECHANIC_ACTIONS = (
     _sync(Meta("incident:annotate", "Keep a note beside an incident", G.SETTINGS), levers.annotate_incident, levers.AnnotateIncident, free, ("F10",)),
 )
 ACTIONS: tuple[ActionSpec, ...] = (
+    *LORE_ACTIONS,
     *CREATOR_ACTIONS,
     *SON_ACTIONS,
     *GOD_POWER_ACTIONS,

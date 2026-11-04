@@ -3,18 +3,21 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import AGENT_TYPES, COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.engine.context import TickContext
 from aerona.engine.economy.routes import link_weight, trade_links
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lore.research import books_of, has_technique, masters
 from aerona.engine.mind.hooks import converted
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -59,10 +62,14 @@ async def _diffuse_direction(
     rng = ctx.rng(f"diffusion.{source.id}.{target.id}")
     writing = times_of(ctx.rules.knowledge, holdings.branch_level(source.id, KnowledgeBranch.WRITING), settings.writing_diffusion_mult)
     chance = min(100.0, settings.diffusion_chance * writing * weight)
+    written = await books_of(ctx.session, source.id)
+    paper = ctx.rules.technique_effects.paper_pct if await has_technique(ctx.session, source.id, Technique.PAPER) else 0
+    taught = ctx.rules.research.teacher_pct / PERCENT if await masters(ctx.session, source.id) else 0.0
     for knowledge in holdings.known_by(source.id):
         if spread[0] >= cap or holdings.knows(target.id, knowledge.id):
             continue
-        if not rng.chance(chance):
+        books = (ctx.rules.research.book_diffusion_pct + paper) / PERCENT if knowledge.id in written else 0.0
+        if not rng.chance(min(100.0, chance * (1 + books + taught))):
             continue
         if await teach(ctx, target.id, knowledge, f"spread from {source.name}", holdings):
             spread[0] += 1

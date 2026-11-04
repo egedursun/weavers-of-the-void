@@ -161,6 +161,7 @@ class WarAimKind(StrEnum):
     HUMILIATE = "humiliate"
     REVENGE = "revenge"
     LOOT = "loot"
+    CHANGE_GOVERNMENT = "change_government"
 
 
 class CaptiveFate(StrEnum):

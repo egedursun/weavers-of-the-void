@@ -9,9 +9,11 @@ from aerona.db.tables.economy import ProductionRunRow, ResourceProfileRow, Resou
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import HarmCause, InjuryKind, MaimedKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind, ExtractionKind, GoodsFlow, HazardKind
 from aerona.domain.enums.entity import EntityType, MortalRole
+from aerona.domain.enums.environment import TerrainKind
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.models.entity_stats import SpeciesStats
@@ -149,6 +151,25 @@ def material_value(profile: ResourceProfileRow) -> int:
     return COMMODITIES[profile.commodity].base_price
 
 
+HILLY = frozenset({TerrainKind.HILLS, TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS, TerrainKind.CANYON})
+
+
+def craft_factor(ctx: TickContext, book: EconomyBook, community_id: int, resource_id: int, kind: ExtractionKind) -> float:
+    table = ctx.rules.technique_effects
+    held = book.techniques.get(community_id, set())
+    lift = 0.0
+    if kind in (ExtractionKind.FARMING, ExtractionKind.HERDING) and Technique.SELECTIVE_BREEDING in held:
+        lift += table.breeding_pct / PERCENT
+    if kind is ExtractionKind.FARMING:
+        land = book.ground.region_of(resource_id)
+        lift += (table.plough_pct / PERCENT) * (Technique.PLOUGH in held) + (table.crop_rotation_pct / PERCENT) * (Technique.CROP_ROTATION in held)
+        if land is not None and Technique.IRRIGATION in held:
+            lift += table.irrigation_pct / PERCENT * max(0, PERCENT - land.moisture) / PERCENT
+        if land is not None and Technique.TERRACING in held and land.dominant_terrain in HILLY:
+            lift += table.terracing_pct / PERCENT
+    return 1 + lift
+
+
 async def output_of(ctx: TickContext, book: EconomyBook, resource: EntityRow, profile: ResourceProfileRow, community: EntityRow, *, workers: int) -> int:
     table = ctx.rules.extraction
     kind = extraction_kind(profile)
@@ -162,6 +183,7 @@ async def output_of(ctx: TickContext, book: EconomyBook, resource: EntityRow, pr
     site = book.workshop(community.id, spec.workshop) if spec.workshop is not None else None
     works = 1 + (site.level if site is not None else 0) * table.workshop_pct_per_level / PERCENT
     raw = base * skill * knowledge * season * difficulty * works * await tools_factor(ctx, community.id, workers) * await labour_factor(ctx, community)
+    raw *= craft_factor(ctx, book, community.id, resource.id, kind)
     return max(0, min(profile.reserve, round_half_up(raw)))
 
 

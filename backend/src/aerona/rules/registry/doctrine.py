@@ -64,7 +64,6 @@ class MissionsRules:
     skill_pct: int = rule(100, 0, 300, R, "Weight of the missionary's skill (%)")
     miracle_pct: int = rule(50, 0, 300, R, "Weight of the god's recent miracles (%)")
     rival_clergy_pct: int = rule(50, 0, 300, R, "Weight of the rival clergy's quality against a mission (%)")
-    language_pct: int = rule(50, 0, 100, R, "Mission strength left across a language barrier (%)")
     cap: int = rule(3, 0, 100, R, "Most missions in an epoch")
 
 

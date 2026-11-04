@@ -2040,7 +2040,7 @@ Old namespace `DERIN_YASAM` · 348 rows · defined in `src/derin.js` · also rea
 | tale_forget_spread | masal_unutma_yayginlik | 3 | 0 | 100 | Religion and language | An old fairy tale falling to this spread is forgotten |
 | tale_forget_min_age | masal_unutma_cag | 15 | 0 | 1000 | Religion and language | Age of a fairy tale before it can be forgotten (epochs) |
 | manifestation_cap | tezahur_tavan | 1 | 0 | 20 | Religion and language | Maximum legends becoming real per epoch |
-| manifestation_min_spread | tezahur_yayginlik | 70 | 0 | 100 | Religion and language | Minimum spread of a legend that can become real |
+| ~~manifestation_min_spread~~ | tezahur_yayginlik | 70 | 0 | 100 | Religion and language | Removed by spec 13 8.2: a legend takes shape by credence, not spread |
 | manifestation_max_power | tezahur_guc_ust | 8 | 1 | 12 | Religion and language | Maximum power level of something born from a legend |
 | manifestation_power_bonus | tezahur_guc_ek | 1 | 0 | 12 | Religion and language | Power level of something born from a legend is this much above the legend's |
 | legend_power_gap | efsane_guc_fark | 1 | 0 | 12 | Religion and language | Power level of a legend born from an event is this much lower than the event's |

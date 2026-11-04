@@ -1,6 +1,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.agents.context.lore import lore_lines
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
@@ -69,7 +70,16 @@ async def home_for(session: AsyncSession, me: EntityRow) -> HomeLine | None:
     ]
     wars, command, occupied, captives = await war_lines(session, me, home, region)
     tenets, judgement, zeal = await faith_lines(session, home)
+    lore = await lore_lines(session, me, home, realm_id, house_id)
     return HomeLine(
+        tongues=lore.tongues,
+        techniques=lore.techniques,
+        creed=lore.creed,
+        legends=lore.legends,
+        traditions=lore.traditions,
+        prophecies=lore.prophecies,
+        rites=lore.rites,
+        treasures=lore.treasures,
         tenets=tenets,
         judgement=judgement,
         zeal=zeal,

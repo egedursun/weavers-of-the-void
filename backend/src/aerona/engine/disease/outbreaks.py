@@ -109,6 +109,8 @@ def spread_factor(book: DiseaseBook, disease_id: int, target: EntityRow, ground:
     factor *= 1 - book.sanitation.get(region or -1, 0) / PERCENT * table.sanitation_spread_pct / PERCENT
     if book.quarantined(region) or book.quarantined(source_region):
         factor *= table.quarantine_spread_pct / PERCENT
+    if target.id in book.inoculated:
+        factor *= 1 - book.rules.technique_effects.inoculation_pct / PERCENT
     return max(0.0, factor)
 
 

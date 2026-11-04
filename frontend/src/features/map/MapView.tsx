@@ -81,6 +81,7 @@ const DEFAULT_OVERLAYS: Record<Overlay, boolean> = {
   outbreaks: true,
   military: true,
   faith: true,
+  lore: true,
   ties: true,
   wars: true,
   events: true,

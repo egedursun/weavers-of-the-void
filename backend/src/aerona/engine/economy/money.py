@@ -10,6 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, LoanStatus
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
@@ -134,6 +135,8 @@ async def mint(ctx: TickContext, book: EconomyBook, issuer: EntityRow, tally: Mo
         return
     currency = await issued_by(ctx, issuer.id)
     if currency is None:
+        if book.lacks(issuer.id, Technique.COINAGE):
+            return
         if riches(issuer) < ctx.rules.trade.coinage_min_wealth or not ctx.rng(f"mint.{issuer.id}.{ctx.epoch}").chance(ctx.rules.trade.coinage_chance):
             return
         currency = await found_currency(ctx, issuer, lot.material)
@@ -242,7 +245,10 @@ async def banks(ctx: TickContext, book: EconomyBook) -> list[EntityRow]:
     return [
         entity
         for entity in book.entities.values()
-        if entity.entity_type is EntityType.FACTION and entity.engine_kind is EngineKind.MERCHANT_GUILD and riches(entity) >= table.bank_wealth
+        if entity.entity_type is EntityType.FACTION
+        and entity.engine_kind is EngineKind.MERCHANT_GUILD
+        and riches(entity) >= table.bank_wealth
+        and not book.lacks(entity.location_id or 0, Technique.BANKING)
     ]
 
 

@@ -1,6 +1,8 @@
 from sqlalchemy import select
 
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import LanguageStandingRow
+from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityFlag, EntityType
@@ -35,7 +37,15 @@ async def last_home_phrase(ctx: TickContext, language_id: int) -> str | None:
     return community_phrase(home.entity_type, home.name) if home is not None else None
 
 
-@reads("table.bonds", "table.entity_flags", "table.language_profiles")
+async def liturgical(ctx: TickContext, language_id: int) -> bool:
+    standing = await ctx.session.get(LanguageStandingRow, language_id)
+    if standing is not None and standing.liturgical:
+        return True
+    used = await ctx.session.scalar(select(PeopleCultureRow.people_entity_id).where(PeopleCultureRow.liturgical_language_id == language_id).limit(1))
+    return used is not None
+
+
+@reads("table.bonds", "table.entity_flags", "table.language_profiles", "table.language_standings", "table.people_culture")
 async def language_death(ctx: TickContext) -> None:
     rules = ctx.rules
     notes_written = 0
@@ -44,6 +54,12 @@ async def language_death(ctx: TickContext) -> None:
         written = await has_script(ctx.session, language.id)
         assessment = assess_vitality(ctx.epoch - language.birth_epoch, await living_speakers(ctx, language.id), dead, written, rules)
         if assessment is None:
+            continue
+        if assessment.change is VitalityChange.DIED and await liturgical(ctx, language.id):
+            await add_flag(ctx.session, language.id, EntityFlag.DEAD_LANGUAGE, ctx.epoch)
+            ctx.count("kept_in_liturgy")
+            text = f"No one is raised speaking {language.name} any more, yet the priests still chant in it."
+            await note(ctx, text, key="languages.liturgical", ids=[language.id])
             continue
         if assessment.change is VitalityChange.DIED:
             await add_flag(ctx.session, language.id, EntityFlag.DEAD_LANGUAGE, ctx.epoch)

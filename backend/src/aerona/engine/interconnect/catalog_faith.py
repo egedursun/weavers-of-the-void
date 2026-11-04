@@ -535,7 +535,7 @@ RAW = (
         DOCTRINE,
         (C, "language"),
         ("liturgical_language",),
-        (S.LANGUAGE, "missions.language_pct", "barrier"),
+        (S.LANGUAGE, "interpreters.barrier_floor_pct", "barrier"),
     ),
     ("mission_cap", "S4.4", "Only so many missions an epoch", ("religion_spread",), DOCTRINE, (C,), ("conversions",), (S.FAITH, "missions.cap", "missions")),
     (

@@ -14,6 +14,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import Church, FaithBook, patron_node
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.lore.art import smash
 from aerona.engine.mind.book import skill_level, values_for
 from aerona.engine.mind.space import value_distance
 from aerona.engine.primitives.distance import RegionAtlas
@@ -90,13 +91,15 @@ async def iconoclasm(ctx: TickContext, church: Church) -> str | None:
         .order_by(EntityRow.id)
         .limit(1)
     )
+    broken = [work for home in homes for work in await smash(ctx, home, ctx.rules.art.iconoclasm_chance, f"smashed by the iconoclasts of {church.cult.name}")]
     if rival is None:
-        return None
+        return f"The iconoclasts of {church.cult.name} smashed {len(broken)} images." if broken else None
     await retire_in(ctx, rival, f"torn down by the iconoclasts of {church.cult.name}", close_bonds=True)
     place = await ctx.session.get(EntityRow, rival.location_id) if rival.location_id is not None else None
     if place is not None:
         shift_stat(place, "prosperity", -ctx.rules.inquisition.iconoclasm_prosperity)
-    return f"The iconoclasts of {church.cult.name} tore down {rival.name}."
+    images = f" and smashed {len(broken)} images" if broken else ""
+    return f"The iconoclasts of {church.cult.name} tore down {rival.name}{images}."
 
 
 async def fanaticism(ctx: TickContext, church: Church, book: FaithBook, atlas: RegionAtlas) -> str | None:

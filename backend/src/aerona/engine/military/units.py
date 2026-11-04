@@ -3,6 +3,7 @@ from collections.abc import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.techniques import UNIT_TECHNIQUES
 from aerona.catalog.units import STYLE_UNITS, UNITS, UnitSpec
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleCultureRow
@@ -10,6 +11,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import CoastKind, ScarKind
 from aerona.domain.enums.military import ArmourType, ShieldType, Stance, UnitFamily, UnitKind
@@ -17,6 +19,7 @@ from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import holding
+from aerona.engine.lore.research import techniques_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -38,8 +41,11 @@ FALLBACK = UnitKind.LEVY
 NAVAL_LADDER = (UnitKind.WARSHIPS, UnitKind.GALLEYS, UnitKind.LONGSHIPS)
 
 
-def allowed(spec: UnitSpec, community_id: int, knowledge: KnowledgeMap) -> bool:
-    return spec.branch is None or knowledge.level(community_id, spec.branch) >= spec.level
+def allowed(spec: UnitSpec, community_id: int, knowledge: KnowledgeMap, techniques: set[Technique] | None = None) -> bool:
+    if spec.branch is not None and knowledge.level(community_id, spec.branch) < spec.level:
+        return False
+    needed = UNIT_TECHNIQUES.get(spec.kind)
+    return not techniques or needed is None or needed in techniques
 
 
 async def doctrine_of(session: AsyncSession, community: EntityRow) -> str:
@@ -48,8 +54,8 @@ async def doctrine_of(session: AsyncSession, community: EntityRow) -> str:
     return culture.martial_style.value if culture is not None else "shieldwall"
 
 
-def best(kinds: tuple[UnitKind, ...], community_id: int, knowledge: KnowledgeMap) -> UnitKind | None:
-    return next((kind for kind in kinds if allowed(UNITS[kind], community_id, knowledge)), None)
+def best(kinds: tuple[UnitKind, ...], community_id: int, knowledge: KnowledgeMap, techniques: set[Technique] | None = None) -> UnitKind | None:
+    return next((kind for kind in kinds if allowed(UNITS[kind], community_id, knowledge, techniques)), None)
 
 
 def add(plan: dict[UnitKind, float], kind: UnitKind | None, share: float) -> None:
@@ -66,14 +72,15 @@ async def extras(ctx: TickContext, community: EntityRow, knowledge: KnowledgeMap
     table = ctx.rules.military_units
     plan: dict[UnitKind, float] = {}
     cid = community.id
+    techniques = await techniques_of(ctx.session, cid)
     land = await land_of(ctx, community)
     if society is not None and society.share(SocialClass.NOBLE) > 0:
-        add(plan, best((UnitKind.HEAVY_CAVALRY,), cid, knowledge), society.share(SocialClass.NOBLE) / PERCENT * table.noble_share_pct / PERCENT)
+        add(plan, best((UnitKind.HEAVY_CAVALRY,), cid, knowledge, techniques), society.share(SocialClass.NOBLE) / PERCENT * table.noble_share_pct / PERCENT)
     if land is not None and land.coast_kind is not CoastKind.NONE:
         fleet = table.naval_share_pct / PERCENT
-        add(plan, best(NAVAL_LADDER, cid, knowledge), fleet * 3 / 4)
-        add(plan, best((UnitKind.FIRE_SHIPS,), cid, knowledge), fleet / 4)
-    add(plan, best((UnitKind.SKYSHIPS,), cid, knowledge), table.naval_share_pct / PERCENT / 2)
+        add(plan, best(NAVAL_LADDER, cid, knowledge, techniques), fleet * 3 / 4)
+        add(plan, best((UnitKind.FIRE_SHIPS,), cid, knowledge, techniques), fleet / 4)
+    add(plan, best((UnitKind.SKYSHIPS,), cid, knowledge, techniques), table.naval_share_pct / PERCENT / 2)
     if await holding(ctx.session, cid, CommodityKind.MOUNTS) > 0:
         beasts = table.beast_share_pct / PERCENT
         add(plan, UnitKind.BEAST_RIDERS, beasts / 2)
@@ -83,16 +90,16 @@ async def extras(ctx: TickContext, community: EntityRow, knowledge: KnowledgeMap
         if knowledge.level(cid, KnowledgeBranch.MAGIC) >= UNITS[UnitKind.WAR_MAGES].level:
             add(plan, UnitKind.BOUND_BEASTS, beasts / 4)
     magic = table.magic_share_pct / PERCENT
-    add(plan, best((UnitKind.WAR_MAGES,), cid, knowledge), magic)
-    add(plan, best((UnitKind.GOLEMS,), cid, knowledge), magic / 2)
-    if allowed(UNITS[UnitKind.NECROMANCERS], cid, knowledge):
+    add(plan, best((UnitKind.WAR_MAGES,), cid, knowledge, techniques), magic)
+    add(plan, best((UnitKind.GOLEMS,), cid, knowledge, techniques), magic / 2)
+    if allowed(UNITS[UnitKind.NECROMANCERS], cid, knowledge, techniques):
         add(plan, UnitKind.NECROMANCERS, magic / 2)
         add(plan, UnitKind.GHOST_HOST, magic)
     if land is not None and land.scars.get(ScarKind.LEAK_WOUND.value, 0) > 0:
         add(plan, UnitKind.VOID_SPAWN, magic * land.scars[ScarKind.LEAK_WOUND.value] / PERCENT)
     engineers = table.engineer_share_pct / PERCENT
-    add(plan, best((UnitKind.SAPPERS,), cid, knowledge), engineers / 2)
-    add(plan, best((UnitKind.SIEGE_ENGINES,), cid, knowledge), engineers / 2)
+    add(plan, best((UnitKind.SAPPERS,), cid, knowledge, techniques), engineers / 2)
+    add(plan, best((UnitKind.SIEGE_ENGINES,), cid, knowledge, techniques), engineers / 2)
     if society is not None and society.share(SocialClass.PRIEST) >= PERCENT / 10:
         add(plan, UnitKind.PRIESTS, table.priest_share_pct / PERCENT)
         add(plan, UnitKind.TEMPLE_GUARD, table.priest_share_pct / PERCENT)
@@ -104,7 +111,8 @@ async def composition(ctx: TickContext, community: EntityRow, size: int, knowled
     style = await doctrine_of(ctx.session, community)
     society = await ctx.session.get(CommunitySocietyRow, community.id)
     plan: dict[UnitKind, float] = {}
-    styled = [kind for kind in STYLE_UNITS.get(style, STYLE_UNITS["shieldwall"]) if allowed(UNITS[kind], community.id, knowledge)]
+    techniques = await techniques_of(ctx.session, community.id)
+    styled = [kind for kind in STYLE_UNITS.get(style, STYLE_UNITS["shieldwall"]) if allowed(UNITS[kind], community.id, knowledge, techniques)]
     for index, kind in enumerate(styled):
         plan[kind] = plan.get(kind, 0.0) + table.style_share_pct / PERCENT / (index + 1) / sum(1 / (i + 1) for i in range(len(styled)))
     for kind, share in (await extras(ctx, community, knowledge, society)).items():

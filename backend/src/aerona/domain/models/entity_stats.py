@@ -227,6 +227,18 @@ class TreatyStats(ValueObject):
     trust: Percent | None = None
 
 
+class IdeologyStats(ValueObject):
+    kind: Literal["ideology"] = "ideology"
+    adherents: Count | None = None
+    appeal: Percent | None = None
+
+
+class RiteStats(ValueObject):
+    kind: Literal["rite"] = "rite"
+    power: Annotated[int, Field(ge=1, le=10)] | None = None
+    castings: Count | None = None
+
+
 EntityStats = Annotated[
     RegionStats
     | PlaceStats
@@ -257,6 +269,8 @@ EntityStats = Annotated[
     | PolityStats
     | HouseStats
     | TreatyStats
+    | IdeologyStats
+    | RiteStats
     | NaturalLawStats,
     Field(discriminator="kind"),
 ]

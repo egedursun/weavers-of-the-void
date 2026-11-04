@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.disease import (
     DiseaseCureRow,
@@ -16,6 +17,7 @@ from aerona.db.tables.disease import (
 )
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -55,6 +57,7 @@ class DiseaseBook:
     hospitals: dict[int, list[EntityRow]]
     bands: dict[int, dict[AgeBand, int]] = field(default_factory=dict)
     sanitation: dict[int, int] = field(default_factory=dict)
+    inoculated: set[int] = field(default_factory=set)
 
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules, epoch: int) -> "DiseaseBook":
@@ -88,6 +91,7 @@ class DiseaseBook:
                 weighted[region] += profile.sanitation * people
                 totals[region] += people
         book.sanitation = {region: round_half_up(weighted[region] / totals[region]) for region in totals}
+        book.inoculated = set(await session.scalars(select(HolderTechniqueRow.holder_entity_id).where(HolderTechniqueRow.technique == Technique.INOCULATION)))
         return book
 
     def outbreaks_in(self, region_id: int | None) -> list[OutbreakRow]:

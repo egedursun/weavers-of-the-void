@@ -1,4 +1,7 @@
-import { type ThemeColors } from '@/components/domain/useThemeColors'
+import {
+  type ThemeColorName,
+  type ThemeColors,
+} from '@/components/domain/useThemeColors'
 import { type MapView } from './api'
 import { type Transform, tracePolyline } from './mapModel'
 
@@ -320,6 +323,7 @@ export function drawLines(
     outbreaks?: boolean
     military?: boolean
     faith?: boolean
+    lore?: boolean
     time: number
     animate: boolean
     fade: number
@@ -330,6 +334,7 @@ export function drawLines(
   if (options.military)
     drawArmies(context, view, tokens, transform.k, options.fade)
   if (options.faith) drawHoly(context, view, tokens, transform.k, options.fade)
+  if (options.lore) drawLore(context, view, tokens, transform.k, options.fade)
   const shapes = visibleShapes(
     view,
     options.roads,
@@ -472,6 +477,45 @@ function drawHoly(
     context.lineTo(place.x, place.y + size)
     context.lineTo(place.x - size, place.y)
     context.closePath()
+    context.fill()
+  }
+  context.globalAlpha = fade
+}
+
+const LORE_RADIUS = 3
+const LORE_ALPHA = 0.85
+const LORE_COLOR: Record<string, ThemeColorName> = {
+  haunted: 'muted-foreground',
+  casting: 'rarity-legendary',
+  creed: 'brand-verdigris',
+  artwork: 'rarity-rare',
+}
+
+function drawLore(
+  context: CanvasRenderingContext2D,
+  view: MapView,
+  tokens: ThemeColors,
+  k: number,
+  fade: number
+): void {
+  context.globalAlpha = LORE_ALPHA * fade
+  for (const mark of view.lore ?? []) {
+    const size = LORE_RADIUS / k
+    context.fillStyle = tokens[LORE_COLOR[mark.kind] ?? 'accent']
+    context.beginPath()
+    if (mark.kind === 'creed')
+      context.rect(mark.x - size, mark.y - size, size * 2, size * 2)
+    else if (mark.kind === 'casting') {
+      for (let point = 0; point < 10; point += 1) {
+        const radius = point % 2 === 0 ? size * 1.4 : size * 0.6
+        const angle = (Math.PI * point) / 5 - Math.PI / 2
+        context.lineTo(
+          mark.x + radius * Math.cos(angle),
+          mark.y + radius * Math.sin(angle)
+        )
+      }
+      context.closePath()
+    } else context.arc(mark.x, mark.y, size, 0, Math.PI * 2)
     context.fill()
   }
   context.globalAlpha = fade

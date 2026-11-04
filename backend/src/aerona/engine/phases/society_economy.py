@@ -30,6 +30,7 @@ from aerona.engine.economy.household import eat, enforce_storage, gather_commons
 from aerona.engine.economy.materials import MaterialBook, armour_protection, curse_bonus, enchantment_cap, set_node_material, weapon_damage
 from aerona.engine.economy.stocks import goods_of, holding, lots_of, sync_aggregates
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lore.items import craft
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.community import CommunityBook
@@ -387,6 +388,8 @@ async def forge_weapons(ctx: TickContext, entity: EntityRow, society: Society) -
         ),
     )
     await set_node_material(ctx.session, weapon.id, MaterialSlot.BODY, props.kind if props.world_material_id is None else None, props.world_material_id)
+    if await craft(ctx, weapon, location, quality):
+        ctx.count("masterworks")
     bonds = BondRepository(ctx.session)
     await bonds.connect(BondDraft(entity.id, weapon.id, BondKind.PRODUCED, ctx.epoch, "forge"))
     await bonds.connect(BondDraft(entity.id, weapon.id, BondKind.OWNS, ctx.epoch, "forge"))

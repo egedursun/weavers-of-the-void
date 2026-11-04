@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.economy import ResourceProfileRow, ResourceWorkerRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -14,6 +15,7 @@ from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import TreatyClauseRow, TreatyPartyRow, TreatyProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityStatus, EntityType
@@ -47,6 +49,7 @@ class EconomyBook:
     labour: dict[int, dict[Job, LabourRow]] = field(default_factory=dict)
     waived: set[frozenset[int]] = field(default_factory=set)
     blockaded: set[int] = field(default_factory=set)
+    techniques: dict[int, set[Technique]] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, ctx: TickContext) -> "EconomyBook":
@@ -99,6 +102,8 @@ class EconomyBook:
         for party in await session.scalars(select(TreatyPartyRow).where(TreatyPartyRow.treaty_entity_id.in_(waivers))):
             signers[party.treaty_entity_id].add(party.party_node_id)
         book.waived = {frozenset(pair) for parties in signers.values() for pair in combinations(sorted(parties), 2)}
+        for known in await session.scalars(select(HolderTechniqueRow)):
+            book.techniques.setdefault(known.holder_entity_id, set()).add(known.technique)
         book.blockaded = set(await session.scalars(select(ArmyProfileRow.blockade_entity_id).where(ArmyProfileRow.blockade_entity_id.is_not(None))))
         return book
 
@@ -116,6 +121,10 @@ class EconomyBook:
         if home is not None and self.entities[home].entity_type in SOCIETY_TYPES:
             return home
         return None
+
+    def lacks(self, community_id: int, technique: Technique) -> bool:
+        held = self.techniques.get(community_id, set())
+        return bool(held) and technique not in held
 
     def hands(self, community_id: int, *jobs: Job) -> int | None:
         rows = self.labour.get(community_id)

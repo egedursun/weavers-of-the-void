@@ -12,8 +12,10 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CosmosRow
+from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.culture import ItemDeed
 from aerona.domain.enums.domain import DEATH_DOMAINS
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.faith import SpiritAlignment
@@ -24,6 +26,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.faith.judgement import profile_for
 from aerona.engine.lifecycle.aging import immortal, raise_lifespan_to_death_age
 from aerona.engine.lifecycle.succession import dynasty_root, pass_rule
+from aerona.engine.lore.items import record
 from aerona.engine.mind.memories import inherit_memories, mourn
 from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
@@ -157,7 +160,13 @@ async def _bequeath(ctx: TickContext, mortal: EntityRow) -> None:
         await close(session, bond, ctx.epoch, "inheritance")
         if receiver is not None:
             await connect(session, receiver.id, bond.target_node_id, BondKind.OWNS, ctx.epoch, description=f"inherited from {mortal.name}")
+            if await session.get(ItemProfileRow, bond.target_node_id) is not None:
+                record(ctx, bond.target_node_id, ItemDeed.OWNED, receiver.id, f"an heirloom of {mortal.name}")
     item_ids = [bond.target_node_id for bond in items]
+    if receiver is None:
+        for item_id in item_ids:
+            if await session.get(ItemProfileRow, item_id) is not None:
+                record(ctx, item_id, ItemDeed.BURIAL, mortal.id, f"laid in the grave of {mortal.name}")
     if receiver is not None:
         text = f"{len(items)} items of {mortal.name} passed to {receiver.name}."
         ids = [mortal.id, *item_ids, receiver.id]

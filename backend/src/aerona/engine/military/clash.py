@@ -16,8 +16,11 @@ from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import guardians_of
+from aerona.engine.lore.items import standard_of
+from aerona.engine.lore.language import barrier
 from aerona.engine.military.battle import BattleResult, Field, Side, make_stacks, resolve
 from aerona.engine.military.units import muster, profile_of, sync
+from aerona.engine.polity.book import RealmBook
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.stats import stat
 
@@ -55,9 +58,10 @@ async def side_of(
     table = ctx.rules
     lead = await skill_level(ctx, row.commander_entity_id, SkillKind.LEADERSHIP)
     veteran = max([await skill_level(ctx, row.commander_entity_id, skill) for skill in COMBAT_SKILLS] or [0])
+    spirit = await faith_spirit(ctx, community, enemy) - await babel(ctx, community)
     return Side(
         veteran=table.military_units.veteran_skill_pct / PERCENT * veteran / PERCENT,
-        leadership=round(PERCENT * table.morale.leadership_pct / PERCENT * lead / PERCENT) + await faith_spirit(ctx, community, enemy),
+        leadership=round(PERCENT * table.morale.leadership_pct / PERCENT * lead / PERCENT) + spirit,
         entity=community,
         army=army,
         profile=profile,
@@ -70,6 +74,16 @@ async def side_of(
     )
 
 
+async def babel(ctx: TickContext, community: EntityRow) -> int:
+    realm = (await RealmBook.load(ctx.session)).realm_of(community.id)
+    if realm is None:
+        return 0
+    for member in sorted(realm.members):
+        if member != community.id and await barrier(ctx.session, ctx.rules, community.id, member, ctx.epoch) < 1:
+            return ctx.rules.interpreters.army_cohesion_pct
+    return 0
+
+
 async def faith_spirit(ctx: TickContext, community: EntityRow, enemy: EntityRow) -> int:
     tenets = await faith_tenets(ctx.session, community.id)
     lift = 0
@@ -77,7 +91,7 @@ async def faith_spirit(ctx: TickContext, community: EntityRow, enemy: EntityRow)
         lift += ctx.rules.doctrine.holy_war_morale
     if TenetKind.ANCESTOR_VENERATION in tenets and await guardians_of(ctx, community.id):
         lift += ctx.rules.spirits.guardian_morale
-    return lift
+    return lift + await standard_of(ctx, [community.id])
 
 
 async def clash(

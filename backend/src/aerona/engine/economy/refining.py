@@ -7,6 +7,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import ProductionRunRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.material import MaterialKind
@@ -88,17 +89,29 @@ async def best_input(ctx: TickContext, book: EconomyBook, community: EntityRow, 
     return material, world_material
 
 
+MATERIAL_TECHNIQUES = {
+    M.BRONZE: (Technique.BRONZE,),
+    M.IRON: (Technique.IRON,),
+    M.STEEL: (Technique.STEEL,),
+    M.SKYSTEEL: (Technique.SKYSTEEL,),
+}
+
+
 def forged_material(
     ctx: TickContext, book: EconomyBook, community: EntityRow, raw: MaterialKind, *, levels: dict[KnowledgeBranch, int], density: int
 ) -> MaterialKind | None:
     props = book.materials.props(community.world_id, raw)
     if props is None or not workable(ctx.rules, props, levels, density):
         return None
-    if raw is M.IRON:
+    if any(book.lacks(community.id, technique) for technique in MATERIAL_TECHNIQUES.get(raw, ())):
+        return None
+    if raw is M.IRON and not book.lacks(community.id, Technique.SKYSTEEL):
         sky = book.materials.props(community.world_id, EXOTIC_FROM_IRON)
         if sky is not None and workable(ctx.rules, sky, levels, density):
             return EXOTIC_FROM_IRON
     upgrade = UPGRADES.get(raw)
+    if upgrade is not None and any(book.lacks(community.id, technique) for technique in MATERIAL_TECHNIQUES.get(upgrade, ())):
+        upgrade = None
     if upgrade is not None:
         better = book.materials.props(community.world_id, upgrade)
         if better is not None and workable(ctx.rules, better, levels, density):

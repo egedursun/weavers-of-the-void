@@ -65,6 +65,7 @@ export const OVERLAY_SURFACE: Partial<Record<Overlay, string>> = {
   outbreaks: 'map-layer-outbreaks',
   military: 'map-layer-military',
   faith: 'map-layer-faith',
+  lore: 'map-layer-lore',
 }
 
 export const STOCK_LAYERS = ['population', 'followers', 'soldiers'] as const
@@ -76,6 +77,7 @@ export const OVERLAYS = [
   'outbreaks',
   'military',
   'faith',
+  'lore',
   'ties',
   'wars',
   'events',
@@ -90,6 +92,7 @@ export const OVERLAY_LABEL: Record<Overlay, string> = {
   outbreaks: 'Sickness',
   military: 'Armies',
   faith: 'Holy places',
+  lore: 'Legends and rites',
   ties: 'Ties',
   wars: 'Wars',
   events: 'Events',

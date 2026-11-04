@@ -677,6 +677,7 @@ export const drawScene: DrawScene = (context, input) => {
     outbreaks: overlays.outbreaks,
     military: overlays.military,
     faith: overlays.faith,
+    lore: overlays.lore,
     time: input.time,
     animate: input.animate,
     fade,

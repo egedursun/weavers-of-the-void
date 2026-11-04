@@ -39,6 +39,7 @@ from aerona.engine.environment.book import EnvironmentBook, add_scar, region_env
 from aerona.engine.environment.years import grant_sub_steps
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.lore.rites import warded
 from aerona.engine.military.aims import REGION_AIMS, advance, set_aims
 from aerona.engine.military.battle import BattleResult, Field
 from aerona.engine.military.clash import captives_taken, cautious, clash, earn_traits, log_phases
@@ -704,7 +705,7 @@ async def _powers(
     attacker_power = await battle_power(ctx, theatre, attacker, *armies[attacker.id]) * attack_factor(ctx.rules, ground)
     defender_power = await battle_power(ctx, theatre, defender, *armies[defender.id]) * defend_factor(ctx.rules, ground)
     if besieged is not None:
-        defender_power *= wall_defence(ctx, await open_siege(ctx, war, besieged, attacker))
+        defender_power *= wall_defence(ctx, await open_siege(ctx, war, besieged, attacker)) * await warded(ctx, besieged.id)
     return attacker_power, defender_power
 
 

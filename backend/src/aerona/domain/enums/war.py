@@ -46,6 +46,7 @@ class WarCause(StrEnum):
     SCHISM = "schism"
     BEAST = "beast"
     RESOURCE = "resource"
+    IDEOLOGY = "ideology"
     TRADE_ROUTE = "trade_route"
 
 

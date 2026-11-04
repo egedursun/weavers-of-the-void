@@ -16,6 +16,7 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.society import CommunityRelationLabel
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.lore.language import barrier
 from aerona.engine.mind.book import ValueIndex
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import memories_between, remember, strength_of
@@ -113,6 +114,8 @@ async def change_relation(
         return RELATION_MAX
     if delta == 0:
         return await relation(session, rules, first, second)
+    if delta > 0:
+        delta *= await barrier(session, rules, first, second, epoch)
     await _ensure_row(session, rules, first, second)
     await remember(session, rules, holder_id=first, subject_id=second, kind=kind, magnitude=delta, epoch=epoch, note=note, event_id=event_id)
     await remember(session, rules, holder_id=second, subject_id=first, kind=reverse or kind, magnitude=delta, epoch=epoch, note=note, event_id=event_id)

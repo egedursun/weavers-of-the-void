@@ -6,6 +6,7 @@ from enum import StrEnum
 
 from sqlalchemy import or_, select
 
+from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
@@ -20,6 +21,7 @@ from aerona.domain.enums.war import WarEnding
 from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lore.language import intelligibility
 from aerona.engine.mind.drives import closeness
 from aerona.engine.mind.space import value_distance
 from aerona.engine.notes import note
@@ -32,7 +34,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import is_living_god
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.population_history import median_of
-from aerona.engine.primitives.queries import add_flag, canon, connect, living_entity
+from aerona.engine.primitives.queries import add_flag, canon, connect, living_entity, spoken_language
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat
 from aerona.engine.services.community_relations import relation
@@ -284,6 +286,14 @@ async def folds_in(ctx: TickContext, people: EntityRow, into: EntityRow, *, shar
     return value_distance(await culture_of(ctx.session, people.id), await culture_of(ctx.session, into.id)) < table.assimilation_distance
 
 
+async def word_share(ctx: TickContext, first: int, second: int) -> float:
+    ours, theirs = await spoken_language(ctx.session, first), await spoken_language(ctx.session, second)
+    floor = ctx.rules.interpreters.assimilation_pct / PERCENT
+    if ours is None or theirs is None:
+        return 1.0
+    return floor + (1 - floor) * await intelligibility(ctx.session, ctx.rules, ours.id, theirs.id, ctx.epoch) / PERCENT
+
+
 async def joining(ctx: TickContext, people: EntityRow, largest: EntityRow, *, ratio: float) -> bool | None:
     cycles = ctx.rules.life_cycles
     shared = bool(await tongues(ctx, people.id) & await tongues(ctx, largest.id))
@@ -294,7 +304,8 @@ async def joining(ctx: TickContext, people: EntityRow, largest: EntityRow, *, ra
     if ratio <= cycles.assimilation_ratio_pct:
         rules_it = bool(await BondRepository(ctx.session).active_between(largest.id, people.id, [BondKind.RULES]))
         chance = cycles.assimilation_chance + (cycles.assimilation_rule_bonus if rules_it else 0) + (cycles.assimilation_language_bonus if shared else 0)
-        return False if rng.chance(chance * kinship) else None
+        understood = 1.0 if shared else await word_share(ctx, people.id, largest.id)
+        return False if rng.chance(chance * kinship * understood) else None
     if ratio >= cycles.union_ratio_pct and shared and await relation(ctx.session, ctx.rules, people.id, largest.id) >= cycles.union_relation:
         same_god = await BondRepository(ctx.session).patron(people.id) == await BondRepository(ctx.session).patron(largest.id)
         return True if same_god and rng.chance(cycles.union_chance * kinship) else None

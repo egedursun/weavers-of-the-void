@@ -495,6 +495,34 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             ("peace", "alliance", "vassal oath", "marriage pact", "trade pact"),
         ),
         EntityTypeSpec(
+            EntityType.IDEOLOGY,
+            "Ideology",
+            "Ideologies",
+            "ideology",
+            None,
+            frozenset(),
+            False,
+            (
+                StatField("adherents", "Adherents", lambda rules: 0, lambda rules: 100000),
+                StatField("appeal", "Appeal"),
+            ),
+            ("egalitarian creed", "doctrine of divine right", "school of reason", "mercantile creed", "godless creed"),
+        ),
+        EntityTypeSpec(
+            EntityType.RITE,
+            "Rite",
+            "Rites",
+            "rite",
+            None,
+            frozenset(),
+            False,
+            (
+                StatField("power", "Power", lambda rules: 1, lambda rules: 10),
+                StatField("castings", "Castings", lambda rules: 0, lambda rules: 100000),
+            ),
+            ("calling of flame", "rain summoning", "warding of the walls", "raising of the fallen", "reading of omens"),
+        ),
+        EntityTypeSpec(
             EntityType.NATURAL_LAW,
             "Natural law",
             "Natural laws",
@@ -539,6 +567,8 @@ CREATION_BASE_COST_RULES: dict[EntityType, RuleBound] = {
     EntityType.POLITY: lambda rules: rules.creation_base_cost.polity,
     EntityType.HOUSE: lambda rules: rules.creation_base_cost.house,
     EntityType.TREATY: lambda rules: rules.creation_base_cost.treaty,
+    EntityType.IDEOLOGY: lambda rules: rules.creation_base_cost.ideology,
+    EntityType.RITE: lambda rules: rules.creation_base_cost.rite,
 }
 
 

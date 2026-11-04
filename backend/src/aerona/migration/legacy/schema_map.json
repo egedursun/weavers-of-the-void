@@ -2925,7 +2925,7 @@
     "DERIN_YASAM.tezahur_guc_ek": "deep_life.manifestation_power_bonus",
     "DERIN_YASAM.tezahur_guc_ust": "deep_life.manifestation_max_power",
     "DERIN_YASAM.tezahur_tavan": "deep_life.manifestation_cap",
-    "DERIN_YASAM.tezahur_yayginlik": "deep_life.manifestation_min_spread",
+    "DERIN_YASAM.tezahur_yayginlik": null,
     "DERIN_YASAM.turev_guc_alt": "deep_life.derived_min_power",
     "DERIN_YASAM.unlu_alt": "deep_life.notable_cap_min",
     "DERIN_YASAM.unlu_kalabalik_bolen": "deep_life.notable_crowd_divisor",
@@ -5384,6 +5384,7 @@
     "ZAMAN.cag_yil": "time.years_per_epoch"
   },
   "rules_unmapped": [
+    "DERIN_YASAM.tezahur_yayginlik",
     "DERIN_SEFER.galip_kayip_bolen",
     "DERIN_SEFER.galip_kayip_ek",
     "DERIN_SEFER.galip_kayip",

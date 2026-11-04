@@ -5,7 +5,6 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.chronicle import write_line
-from aerona.agents.context.powers import unlocked
 from aerona.agents.fate.facts import entities_in_text, usable
 from aerona.agents.fate.naming import apply_naming
 from aerona.agents.fate.rollback import roll_back_rejection
@@ -16,16 +15,15 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import CreationVerdictRow, EntityRow
 from aerona.db.tables.lore import FateRewardRow, LexemeRow, ThreadRow, lexeme_key
-from aerona.db.tables.sons import SonPowerRow, SonRow
+from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.agent import Verdict
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, PartOfSpeech, ThreadStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType, ProphecyReading
 from aerona.domain.enums.node import ActorKind
-from aerona.domain.enums.son import PowerEffect
-from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.gods.progress import grant_progress
 from aerona.engine.gods.rewards import adjust_reward
+from aerona.engine.lore.prophecy import reward_fulfilment
 from aerona.engine.primitives.canon_facts import FactDraft, apply_fate_facts, certain_facts
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.motifs import plain, record_motifs
@@ -121,13 +119,7 @@ async def apply_verdicts(session: AsyncSession, rules: Rules, ruling: FateRuling
             await record_verdict(session, entity, Verdict.ACCEPTED, rationale, ruling.epoch)
 
 
-async def has_seer(session: AsyncSession, rules: Rules, son: SonRow) -> bool:
-    powers = await session.scalars(select(SonPowerRow).where(SonPowerRow.son_id == son.id, SonPowerRow.effect == PowerEffect.SEER))
-    return any(unlocked(rules, son, power) for power in powers)
-
-
 async def apply_prophecies(session: AsyncSession, rules: Rules, ruling: FateRuling, output: FateJudgmentOutput) -> None:
-    fate = rules.fate
     for item in first_by_id(output.fulfilled_prophecies, lambda prophecy: prophecy.id):
         prophecy = await session.get(EntityRow, item.id)
         if item.id not in ruling.prophecy_ids or prophecy is None or prophecy.status is not EntityStatus.CANON:
@@ -143,16 +135,8 @@ async def apply_prophecies(session: AsyncSession, rules: Rules, ruling: FateRuli
         await write_line(
             session, rules, ruling.epoch, ChronicleKind.PROPHECY, text, key="fate.prophecy_fulfilled", entity_ids=[prophecy.id], son_id=prophecy.creator_son_id
         )
-        seer = await session.get(EntityRow, prophecy.maker_entity_id) if prophecy.maker_entity_id is not None else None
-        if seer is not None and seer.status is EntityStatus.CANON and isinstance(seer.stats, MortalStats):
-            change = -fate.seer_wrong_charisma_loss if item.reading is ProphecyReading.MISREAD else fate.seer_correct_charisma
-            charisma = max(0, min(PERCENT, (seer.stats.charisma if seer.stats.charisma is not None else fate.seer_default_charisma) + change))
-            seer.stats = seer.stats.model_copy(update={"charisma": charisma})
-        son = await session.get(SonRow, prophecy.creator_son_id) if prophecy.creator_son_id is not None else None
-        if son is not None:
-            factor = fate.seer_power_mult if await has_seer(session, rules, son) else 1
-            ctx = await manual_context(session, "fate_prophecy", rules, key=str(prophecy.id))
-            await grant_progress(ctx, son, xp=fate.prophecy_xp * factor, fame=fate.prophecy_renown * factor)
+        ctx = await manual_context(session, "fate_prophecy", rules, key=str(prophecy.id))
+        await reward_fulfilment(ctx, prophecy, misread=item.reading is ProphecyReading.MISREAD)
 
 
 async def apply_threads(session: AsyncSession, rules: Rules, ruling: FateRuling, output: FateJudgmentOutput) -> None:

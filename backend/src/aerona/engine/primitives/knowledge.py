@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -64,6 +65,13 @@ async def known_levels(session: AsyncSession, entity_ids: Iterable[int] | None =
     for source, branch, stats in await session.execute(statement):
         if branch is not None:
             known[source][branch] = max(known[source].get(branch, 0), raw_level(stats))
+    held = select(HolderLevelRow).where(HolderLevelRow.level > 0)
+    if entity_ids is not None:
+        held = held.where(HolderLevelRow.holder_entity_id.in_(list(entity_ids)))
+    for row in await session.scalars(held):
+        frontier = known.get(row.holder_entity_id, {}).get(row.branch)
+        if frontier is not None:
+            known[row.holder_entity_id][row.branch] = min(frontier, row.level)
     return known
 
 

@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from types import MappingProxyType
 
 from sqlalchemy import select
@@ -16,6 +16,7 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClauseKind, OathKind, PartyRole, TreatyKind, TreatyStatus
 from aerona.domain.models.entity_stats import TreatyStats
 from aerona.engine.context import TickContext
+from aerona.engine.lore.language import barrier
 from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.oaths import break_oath, oath_god, swear
@@ -115,7 +116,7 @@ async def sign(
     ctx.session.add(profile)
     for party, role in parties:
         ctx.session.add(TreatyPartyRow(treaty_entity_id=treaty.id, party_node_id=party, role=role))
-    chosen = list(clauses) or [Clause(item, parties[0][0], parties[-1][0]) for item in DEFAULT_CLAUSES.get(kind, ())]
+    chosen = [await misread(ctx, clause) for clause in list(clauses) or [Clause(item, parties[0][0], parties[-1][0]) for item in DEFAULT_CLAUSES.get(kind, ())]]
     for clause in chosen:
         ctx.session.add(
             TreatyClauseRow(
@@ -135,6 +136,23 @@ async def sign(
     await execute_on_signing(ctx, treaty, chosen)
     ctx.count(f"treaty.{kind.value}")
     return treaty
+
+
+def halved(value: int | str | bool) -> int | str | bool:
+    return value // 2 if isinstance(value, int) and not isinstance(value, bool) else value
+
+
+async def misread(ctx: TickContext, clause: Clause) -> Clause:
+    if clause.obligor is None or clause.beneficiary is None or clause.obligor == clause.beneficiary:
+        return clause
+    if await barrier(ctx.session, ctx.rules, clause.obligor, clause.beneficiary, ctx.epoch) >= 1:
+        return clause
+    if not ctx.rng(f"misread.{clause.kind.value}.{clause.obligor}.{clause.beneficiary}.{ctx.epoch}").chance(ctx.rules.interpreters.misread_chance):
+        return clause
+    params = {key: halved(value) for key, value in clause.params.items()}
+    params["misread"] = True
+    ctx.count("treaty_clause_misread")
+    return replace(clause, params=params)
 
 
 async def sworn_by(ctx: TickContext, party: EntityRow) -> EntityRow | None:

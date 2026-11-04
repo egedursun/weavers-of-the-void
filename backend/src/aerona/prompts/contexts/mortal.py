@@ -113,6 +113,14 @@ class HomeLine(ContextItem):
     tenets: list[str] = Field(default_factory=list)
     judgement: str = ""
     zeal: int | None = None
+    tongues: list[str] = Field(default_factory=list)
+    techniques: list[str] = Field(default_factory=list)
+    creed: str = ""
+    legends: list[str] = Field(default_factory=list)
+    traditions: list[str] = Field(default_factory=list)
+    prophecies: list[str] = Field(default_factory=list)
+    rites: list[str] = Field(default_factory=list)
+    treasures: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

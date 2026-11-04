@@ -6,12 +6,15 @@ from aerona.catalog.tenets import STRATUM_NAMES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import AfterlifeStratumRow, CultDoctrineRow, SoulJudgementRow, SpiritProfileRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import HarmCause
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.faith import AfterlifeState, FuneralRite, JudgementDoctrine, SpiritAlignment, StratumKind, TenetKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind
@@ -52,6 +55,23 @@ async def ledger(ctx: TickContext, mortal: EntityRow) -> dict[str, int]:
     }
 
 
+FUNERAL_WORDS = ((("burn", "pyre", "fire", "ash"), FuneralRite.BURNING), (("sky", "tower", "vulture", "expos", "wind"), FuneralRite.EXPOSURE))
+
+
+async def funeral_custom(ctx: TickContext, community_id: int) -> FuneralRite | None:
+    kept = select(BondRow.target_node_id).where(BondRow.source_node_id == community_id, BondRow.kind == BondKind.CELEBRATES, BondRow.state == BondState.ACTIVE)
+    rites = select(TraditionProfileRow.tradition_entity_id).where(
+        TraditionProfileRow.tradition_entity_id.in_(kept), TraditionProfileRow.kind == TraditionKind.FUNERAL_RITE
+    )
+    tradition = await ctx.session.scalar(
+        select(EntityRow).where(EntityRow.id.in_(rites), EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id).limit(1)
+    )
+    if tradition is None:
+        return None
+    text = f"{tradition.name} {tradition.subtype or ''}".lower()
+    return next((rite for words, rite in FUNERAL_WORDS if any(word in text for word in words)), FuneralRite.BURIAL)
+
+
 async def rite_for(ctx: TickContext, mortal: EntityRow) -> FuneralRite:
     table = ctx.rules.afterlife
     fell = await ctx.session.scalar(
@@ -62,7 +82,10 @@ async def rite_for(ctx: TickContext, mortal: EntityRow) -> FuneralRite:
         return FuneralRite.NONE
     home = mortal.location_id
     custom = await law_param(ctx.session, home, LawKind.BURIAL_LAW, "rite") if home is not None else None
-    return FuneralRite(str(custom)) if custom in {rite.value for rite in FuneralRite} else FuneralRite.BURIAL
+    if custom in {rite.value for rite in FuneralRite}:
+        return FuneralRite(str(custom))
+    kept = await funeral_custom(ctx, home) if home is not None else None
+    return kept or FuneralRite.BURIAL
 
 
 async def judgement_for(ctx: TickContext, mortal: EntityRow) -> tuple[SonRow | None, JudgementDoctrine, set[TenetKind]]:

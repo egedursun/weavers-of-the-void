@@ -143,7 +143,6 @@ class DeepLifeRules:
     tale_forget_spread: int = rule(3, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "An old fairy tale falling to this spread is forgotten")
     tale_forget_min_age: int = rule(15, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Age of a fairy tale before it can be forgotten (epochs)")
     manifestation_cap: int = rule(1, 0, 20, RuleGroup.RELIGION_AND_LANGUAGE, "Maximum legends becoming real per epoch")
-    manifestation_min_spread: int = rule(70, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Minimum spread of a legend that can become real")
     manifestation_max_power: int = rule(8, 1, 12, RuleGroup.RELIGION_AND_LANGUAGE, "Maximum power level of something born from a legend")
     manifestation_power_bonus: int = rule(
         1, 0, 12, RuleGroup.RELIGION_AND_LANGUAGE, "Power level of something born from a legend is this much above the legend's"

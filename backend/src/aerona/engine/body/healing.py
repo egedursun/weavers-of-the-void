@@ -25,6 +25,7 @@ from aerona.domain.enums.body import (
     MedicineTier,
 )
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
@@ -40,6 +41,7 @@ from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.lifecycle.mortal_death import die
+from aerona.engine.lore.research import lacks
 from aerona.engine.mind.hooks import failed_to_heal, healed
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
@@ -67,6 +69,16 @@ def tier_of(rules: HealingRules, medicine: int, magic: int, biomancy: bool) -> M
     if medicine >= rules.herbs_level:
         return MedicineTier.HERBS
     return MedicineTier.NONE
+
+
+async def known_tier(session: AsyncSession, holder_id: int | None, tier: MedicineTier) -> MedicineTier:
+    if tier is MedicineTier.NONE or tier_index(tier) > tier_index(MedicineTier.SURGERY):
+        return tier
+    if await lacks(session, holder_id, Technique.HERBALISM):
+        return MedicineTier.NONE
+    if tier is MedicineTier.SURGERY and await lacks(session, holder_id, Technique.SURGERY):
+        return MedicineTier.HERBS
+    return tier
 
 
 def tier_index(tier: MedicineTier) -> int:
@@ -150,6 +162,7 @@ class Care:
     disease: int
     metallurgy: int
     artisan: EntityRow | None
+    amputation: bool = True
 
 
 @dataclass
@@ -216,7 +229,9 @@ class HealingWorld:
         region = self.atlas.top_region(bearer.id)
         disease = self.disease.get(region, rules.healing.disease_reference) if region is not None else rules.healing.disease_reference
         artisan = self.best_artisan(bearer) if notable else None
-        return Care(tier_of(rules.healing, medicine, magic, biomancy), healer, disease, metallurgy, artisan)
+        home = community.id if community is not None else None
+        tier = await known_tier(session, home, tier_of(rules.healing, medicine, magic, biomancy))
+        return Care(tier, healer, disease, metallurgy, artisan, amputation=not await lacks(session, home, Technique.AMPUTATION))
 
 
 async def _renown(ctx: TickContext, healer: Healer | None, *, healed: bool) -> None:
@@ -263,7 +278,7 @@ async def _fester(ctx: TickContext, bearer: Bearer, body: BodyRow, row: InjuryRo
     index = tier_index(care.tier)
     deadly = (table.lethal_infected_vital if vital else table.lethal_infected_limb) * max(0, PERCENT - index * table.lethal_medicine_cut_pct) / PERCENT
     if row.infected_epochs >= table.lethal_after_epochs or rng.chance(deadly):
-        if index >= tier_index(MedicineTier.SURGERY) and _limb(part) and rng.chance(table.amputation_chance):
+        if index >= tier_index(MedicineTier.SURGERY) and care.amputation and _limb(part) and rng.chance(table.amputation_chance):
             row.kind, row.function_loss, row.state, row.infected_epochs = InjuryKind.SEVERED, PERCENT, InjuryState.HEALING, 0
             if row.part == FINGERS:
                 body.fingers = 0
@@ -442,6 +457,8 @@ async def fit_prosthesis(
     item: EntityRow | None = None,
 ) -> ProsthesisRow:
     table = ctx.rules.prosthetics
+    if maker is not None and await lacks(ctx.session, maker.location_id, Technique.PROSTHETICS):
+        quality = min(quality if quality is not None else table.default_quality, table.default_quality // 2)
     if quality is None:
         quality = (
             clamp_int(

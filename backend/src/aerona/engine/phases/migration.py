@@ -12,6 +12,7 @@ from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.interconnect.annotations import reads
+from aerona.engine.lore.legends import haunted_regions
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.drives import closeness, hunger
 from aerona.engine.notes import note
@@ -83,7 +84,10 @@ async def greener_region(
     own = stat(region, "fertility")
     floor = (own if own is not None else effects.unknown_fertility) + effects.famine_fertility_margin
     best: tuple[float, EntityRow] | None = None
+    haunted = {atlas.top_region(place) or place for place in await haunted_regions(ctx)}
     for neighbour_id in atlas.neighbour_regions(region.id):
+        if neighbour_id in haunted:
+            continue
         neighbour = await living_entity(ctx.session, neighbour_id)
         if neighbour is None or neighbour.entity_type is not EntityType.REGION or neighbour.world_id != region.world_id or atlas.is_water(neighbour.id):
             continue

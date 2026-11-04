@@ -9,15 +9,16 @@ from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
 from aerona.engine.environment.ley import LeyWeb
 from aerona.engine.faith.book import FaithBook
-from aerona.engine.gods.interventions import apply_abundance
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lore.rites import cast, choose
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
+from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.queries import active_bonds, add_flag, canon, connect, has_flag, living_entity
+from aerona.engine.primitives.queries import active_bonds, add_flag, canon, has_flag, living_entity
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.stats import set_stats, stat
 
@@ -105,19 +106,6 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
     return None
 
 
-async def ward_home(ctx: TickContext, wizard: EntityRow, home: EntityRow, protective: bool) -> None:
-    if protective:
-        defense = stat(home, "defense")
-        if defense is not None:
-            set_stats(home, defense=clamp_int(defense + ctx.rules.intervention_effects.protection_defense_gain, 0, PERCENT))
-        await add_flag(ctx.session, home.id, EntityFlag.PROTECTED, ctx.epoch)
-        text = f"Wizard {wizard.name} wove a protective spell over {home.name}."
-    else:
-        await apply_abundance(ctx, home)
-        text = f"Wizard {wizard.name} wove a spell of plenty over {home.name}."
-    await note(ctx, text, key="magic.ward" if protective else "magic.plenty", ids=[wizard.id, home.id])
-
-
 @reads(
     "mortal.intellect",
     "settlement.prosperity",
@@ -147,6 +135,8 @@ async def wizards(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     laws = await LawBook.load(ctx.session)
     churches = await FaithBook.load(ctx.session)
+    realms = await RealmBook.load(ctx.session)
+    worked = 0
     for mortal in await canon(ctx.session, [EntityType.MORTAL]):
         if mortal.status is not EntityStatus.CANON or (stat(mortal, "intellect") or 0) < rules.world_effects.sorcerer_min_intellect:
             continue
@@ -165,13 +155,22 @@ async def wizards(ctx: TickContext) -> None:
         if not rng.chance(rules.world_engine.sorcerer_act_chance * ley * holy):
             continue
         home = await living_entity(ctx.session, mortal.location_id)
-        enemy = await first_enemy(ctx, home.id) if home is not None else None
-        if home is not None and enemy is not None and rng.chance(rules.world_engine.sorcerer_curse_chance):
-            await add_flag(ctx.session, enemy.id, EntityFlag.CURSED, ctx.epoch)
-            await connect(ctx.session, mortal.id, enemy.id, BondKind.CURSED, ctx.epoch, description="by magic")
-            await note(ctx, f"Wizard {mortal.name} cursed {home.name}'s enemy {enemy.name}.", key="magic.curse", ids=[mortal.id, enemy.id])
-        elif home is not None and home.entity_type in WARDED_HOME_TYPES:
-            await ward_home(ctx, mortal, home, rng.chance(rules.world_effects.sorcerer_protect_chance))
+        if home is None or worked >= rules.rites.cap:
+            continue
+        enemy = await first_enemy(ctx, home.id)
+        hostile = enemy is not None and rng.chance(rules.world_engine.sorcerer_curse_chance)
+        if not hostile and home.entity_type not in WARDED_HOME_TYPES:
+            continue
+        chosen = await choose(ctx, mortal, hostile=hostile, protective=rng.chance(rules.world_effects.sorcerer_protect_chance))
+        if chosen is None:
+            continue
+        rite, row = chosen
+        casting = await cast(ctx, mortal, rite, row, target=enemy if hostile else None, realms=realms)
+        if casting is None:
+            continue
+        worked += 1
+        targets = [enemy.id] if hostile and enemy is not None else [home.id]
+        await note(ctx, f"Wizard {mortal.name} worked {rite.name}: {casting.effect}.", key="magic.rite", ids=[mortal.id, rite.id, *targets])
 
 
 @reads("people.magic", "people.population")

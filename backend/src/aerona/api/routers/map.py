@@ -16,6 +16,7 @@ from aerona.api.schemas.maps import (
     MapArmy,
     MapFront,
     MapHoly,
+    MapLore,
     MapOccupation,
     MapOutbreak,
     MapPoint,
@@ -28,6 +29,7 @@ from aerona.api.schemas.maps import (
     RegionGround,
     RegionRealm,
     RegionStocks,
+    RegionTongue,
     RelationLineKind,
 )
 from aerona.api.schemas.records import EntitySummary, MapNoteRecord, WorldRecord
@@ -35,16 +37,20 @@ from aerona.cartography.generator import generate_map
 from aerona.cartography.model import MARKER_TYPES, WorldMap
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
+from aerona.db.tables.culture import ArtworkProfileRow, CastingRow, LanguageStandingRow, LegendProfileRow
 from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
 from aerona.db.tables.economy import TradeFlowRow, TradeRouteProfileRow, TradeRouteRegionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
 from aerona.db.tables.faith import CultHoldingRow
 from aerona.db.tables.military import ArmyProfileRow, CampaignFrontRow, OccupationRow
-from aerona.db.tables.polity import PolityTerritoryRow
+from aerona.db.tables.polity import PolityProfileRow, PolityTerritoryRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.culture import LegendArchetype
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import LandUse
@@ -166,6 +172,8 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
             occupations=await occupation_marks(session, world_id),
             fronts=await front_lines(session, world_id, positions),
             holy=await holy_marks(session, world_id, positions),
+            lore=await lore_marks(session, world_id, positions, current),
+            tongues=await region_tongues(session, world_id),
             notes=[MapNoteRecord.model_validate(row) for row in await map_notes(session, world_id)],
             time=MapTime(current=current, shown=shown, snapshots=await snapshot_epochs(session, world_id)),
         )
@@ -256,6 +264,98 @@ async def holy_marks(session: AsyncSession, world_id: int, positions: dict[int, 
         point = positions.get(row.holding_entity_id)
         if point is not None:
             found.append(MapHoly(cult_id=row.cult_entity_id, cult=name, holding_id=row.holding_entity_id, kind=row.kind, x=point[0], y=point[1]))
+    return found
+
+
+async def lore_marks(session: AsyncSession, world_id: int, positions: dict[int, tuple[float, float]], current: int) -> list[MapLore]:
+    found: list[MapLore] = []
+    haunts = await session.execute(
+        select(EntityRow.id, EntityRow.name, EntityRow.location_id, LegendProfileRow.credence)
+        .join(LegendProfileRow, LegendProfileRow.legend_entity_id == EntityRow.id)
+        .where(EntityRow.world_id == world_id, EntityRow.status == EntityStatus.CANON, LegendProfileRow.archetype == LegendArchetype.HAUNTED_PLACE)
+    )
+    for entity_id, name, place, credence in haunts:
+        if place in positions:
+            found.append(
+                MapLore(
+                    kind="haunted", entity_id=entity_id, name=name, place_id=place, x=positions[place][0], y=positions[place][1], detail=f"{credence}% believed"
+                )
+            )
+    works = await session.execute(
+        select(EntityRow.id, EntityRow.name, EntityRow.location_id, ArtworkProfileRow.medium)
+        .join(ArtworkProfileRow, ArtworkProfileRow.artwork_entity_id == EntityRow.id)
+        .where(EntityRow.world_id == world_id, EntityRow.status == EntityStatus.CANON)
+    )
+    for entity_id, name, place, medium in works:
+        if place in positions:
+            found.append(
+                MapLore(kind="artwork", entity_id=entity_id, name=name, place_id=place, x=positions[place][0], y=positions[place][1], detail=medium.value)
+            )
+    casters = await session.execute(
+        select(CastingRow.rite_entity_id, EntityRow.location_id, CastingRow.effect)
+        .join(EntityRow, EntityRow.id == CastingRow.caster_entity_id)
+        .where(EntityRow.world_id == world_id, CastingRow.epoch >= current - 1)
+        .order_by(CastingRow.id)
+    )
+    names = dict((await session.execute(select(EntityRow.id, EntityRow.name).where(EntityRow.entity_type == EntityType.RITE))).all())
+    for rite_id, place, effect in casters:
+        if place in positions:
+            found.append(
+                MapLore(
+                    kind="casting",
+                    entity_id=rite_id,
+                    name=names.get(rite_id, "rite"),
+                    place_id=place,
+                    x=positions[place][0],
+                    y=positions[place][1],
+                    detail=effect or None,
+                )
+            )
+    creeds = await session.execute(
+        select(PolityProfileRow.ideology_entity_id, PolityProfileRow.capital_entity_id, PolityProfileRow.core_entity_id).where(
+            PolityProfileRow.ideology_entity_id.is_not(None)
+        )
+    )
+    for creed_id, capital, core in creeds:
+        place = capital or core
+        if creed_id is not None and place in positions:
+            creed = await session.get(EntityRow, creed_id)
+            if creed is not None and creed.world_id == world_id:
+                found.append(
+                    MapLore(
+                        kind="creed", entity_id=creed_id, name=creed.name, place_id=place, x=positions[place][0], y=positions[place][1], detail="state creed"
+                    )
+                )
+    return found
+
+
+async def region_tongues(session: AsyncSession, world_id: int) -> dict[int, RegionTongue]:
+    atlas = await RegionAtlas.load(session)
+    speech = await session.execute(
+        select(BondRow.source_node_id, BondRow.target_node_id)
+        .join(EntityRow, EntityRow.id == BondRow.target_node_id)
+        .where(BondRow.kind == BondKind.SPEAKS, BondRow.state == BondState.ACTIVE, EntityRow.world_id == world_id, EntityRow.status == EntityStatus.CANON)
+    )
+    tally: dict[int, dict[int, int]] = {}
+    for speaker, language in speech:
+        region = atlas.top_region(speaker)
+        if region is not None:
+            tally.setdefault(region, {})
+            tally[region][language] = tally[region].get(language, 0) + 1
+    standings = {row.language_entity_id: row for row in await session.scalars(select(LanguageStandingRow))}
+    names = dict(
+        (await session.execute(select(EntityRow.id, EntityRow.name).where(EntityRow.entity_type == EntityType.LANGUAGE, EntityRow.world_id == world_id))).all()
+    )
+    found: dict[int, RegionTongue] = {}
+    for region, counts in tally.items():
+        language = max(counts, key=lambda item: (counts[item], standings[item].prestige if item in standings else 0, -item))
+        standing = standings.get(language)
+        found[region] = RegionTongue(
+            language_id=language,
+            name=names.get(language, "?"),
+            prestige=standing.prestige if standing is not None else 0,
+            lingua_franca=standing.lingua_franca if standing is not None else False,
+        )
     return found
 
 

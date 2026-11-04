@@ -18,6 +18,7 @@ from aerona.domain.enums.polity import LawKind, RegionalStanding
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
+from aerona.engine.lore.items import regalia_holder
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook
@@ -79,6 +80,11 @@ async def legitimacy(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawB
         parts["divine kingship"] = table.divine_kingship
     if church is not None and ruler.id in church.excommunicated:
         parts["excommunicated"] = -table.excommunication
+    held, lost = await regalia_holder(ctx, realm.entity.id, ruler.id)
+    if held:
+        parts["the crown of the realm"] = ctx.rules.regalia.legitimacy
+    if lost:
+        parts["regalia in other hands"] = -ctx.rules.regalia.lost_legitimacy
     pacifist = church is not None and await ctx.session.get(CultTenetRow, (church.cult_entity_id, TenetKind.PACIFISM)) is not None
     if pacifist and (await war_record(ctx, realm))[2]:
         parts["a pacifist faith at war"] = -ctx.rules.doctrine.pacifist_legitimacy

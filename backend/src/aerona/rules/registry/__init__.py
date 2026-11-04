@@ -98,6 +98,29 @@ from aerona.rules.registry.ledger import LedgerRules
 from aerona.rules.registry.life_cycles import LifeCyclesRules
 from aerona.rules.registry.limits import LimitsRules
 from aerona.rules.registry.link_graph import LinkGraphRules
+from aerona.rules.registry.lore import (
+    ArtRules,
+    BacklashRules,
+    BeliefRules,
+    CraftingRules,
+    IdeologiesRules,
+    InterpretersRules,
+    ItemCursesRules,
+    ItemRenownRules,
+    ItemWearRules,
+    MapsRules,
+    PrestigeRules,
+    PropagandaRules,
+    ProphecyRules,
+    RegaliaRules,
+    RelicsRules,
+    ResearchRules,
+    RitesRules,
+    ScriptRules,
+    TechGraphRules,
+    TechniqueEffectsRules,
+    TraditionsRules,
+)
 from aerona.rules.registry.market import MarketRules
 from aerona.rules.registry.markets import BankingRules, MarketsRules, MoneyRules, TollsRules, TradeRoutesRules
 from aerona.rules.registry.materials import MaterialsRules
@@ -291,6 +314,27 @@ class Rules:
     terrain_effects: TerrainEffectsRules = field(default_factory=TerrainEffectsRules)
     weather_battle_effects: WeatherBattleEffectsRules = field(default_factory=WeatherBattleEffectsRules)
     tactics: TacticsRules = field(default_factory=TacticsRules)
+    interpreters: InterpretersRules = field(default_factory=InterpretersRules)
+    prestige: PrestigeRules = field(default_factory=PrestigeRules)
+    script: ScriptRules = field(default_factory=ScriptRules)
+    belief: BeliefRules = field(default_factory=BeliefRules)
+    traditions: TraditionsRules = field(default_factory=TraditionsRules)
+    research: ResearchRules = field(default_factory=ResearchRules)
+    tech_graph: TechGraphRules = field(default_factory=TechGraphRules)
+    ideologies: IdeologiesRules = field(default_factory=IdeologiesRules)
+    rites: RitesRules = field(default_factory=RitesRules)
+    backlash: BacklashRules = field(default_factory=BacklashRules)
+    prophecy: ProphecyRules = field(default_factory=ProphecyRules)
+    crafting: CraftingRules = field(default_factory=CraftingRules)
+    item_wear: ItemWearRules = field(default_factory=ItemWearRules)
+    item_curses: ItemCursesRules = field(default_factory=ItemCursesRules)
+    maps: MapsRules = field(default_factory=MapsRules)
+    technique_effects: TechniqueEffectsRules = field(default_factory=TechniqueEffectsRules)
+    item_renown: ItemRenownRules = field(default_factory=ItemRenownRules)
+    regalia: RegaliaRules = field(default_factory=RegaliaRules)
+    relics: RelicsRules = field(default_factory=RelicsRules)
+    art: ArtRules = field(default_factory=ArtRules)
+    propaganda: PropagandaRules = field(default_factory=PropagandaRules)
     doctrine: DoctrineRules = field(default_factory=DoctrineRules)
     zeal: ZealRules = field(default_factory=ZealRules)
     tithes: TithesRules = field(default_factory=TithesRules)

@@ -4,18 +4,16 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.repositories.sons import SonRepository
-from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import PressureRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
@@ -29,6 +27,7 @@ from aerona.engine.economy.routes import link_partners
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.faith.zealotry import drifted, record_heresy
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lore.language import barrier
 from aerona.engine.mind.book import ValueIndex
 from aerona.engine.mind.drives import zeal_drive
 from aerona.engine.mind.hooks import converted
@@ -251,7 +250,6 @@ class SpreadWorld:
     zeal: Mapping[int, float] = field(default_factory=dict)
     roads: Mapping[int, Mapping[int, float]] = field(default_factory=dict)
     churches: FaithBook | None = None
-    languages: Mapping[int, int] = field(default_factory=dict)
 
 
 def god_kinship(world: SpreadWorld, first: int, second: int) -> float:
@@ -325,8 +323,7 @@ def missions(rules: Rules, community: EntityRow, world: SpreadWorld, old: int | 
             continue
         skill = church.doctrine.clergy_quality / PERCENT * table.skill_pct / PERCENT
         miracles = (church.doctrine.zeal_parts.get("miracles of the god", 0) > 0) * table.miracle_pct / PERCENT
-        barrier = 1.0 if world.languages.get(partner_id) == world.languages.get(community.id) else table.language_pct / PERCENT
-        pull = fraction(table.base_pct) * doctrine_fit(rules, world, church.cult, community) * (1 + skill + miracles) * barrier
+        pull = fraction(table.base_pct) * doctrine_fit(rules, world, church.cult, community) * (1 + skill + miracles)
         pull -= rival_quality / PERCENT * table.rival_clergy_pct / PERCENT * fraction(table.base_pct)
         if pull > 0:
             found.append(ConversionSource(church.god.id, pull, f"through the missionaries of {church.cult.name}", church.cult.id))
@@ -420,14 +417,6 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.reverences",
 )
 @reads("cult.followers", "cult.influence", "people.population", "settlement.population")
-async def spoken_languages(session: AsyncSession) -> dict[int, int]:
-    statement = select(BondRow.source_node_id, BondRow.target_node_id).where(BondRow.kind == BondKind.SPEAKS, BondRow.state == BondState.ACTIVE)
-    found: dict[int, int] = {}
-    for speaker, language in await session.execute(statement.order_by(BondRow.id)):
-        found.setdefault(speaker, language)
-    return found
-
-
 async def religion_spread(ctx: TickContext) -> None:
     settings = ctx.rules.religion
     session = ctx.session
@@ -447,7 +436,6 @@ async def religion_spread(ctx: TickContext) -> None:
         {cult.id: await zeal_drive(session, ctx.rules, cult.id) for cult in communities if cult.entity_type is EntityType.CULT},
         await link_partners(ctx),
         await FaithBook.load(session),
-        await spoken_languages(session),
     )
     shares = WorshipShares.count(ctx.rules, communities, faith)
     shares.faith = await faith_shares(session)
@@ -465,7 +453,10 @@ async def religion_spread(ctx: TickContext) -> None:
             continue
         seeker = old is None or community.id in flags[EntityFlag.SEEKING_GOD] or community.id in flags[EntityFlag.GODLESS]
         chosen = best_source(ctx.rules, conversion_sources(ctx.rules, community, world, seeker), old, seeker, (faith, shares))
-        if chosen is None or not rng.probability(min(1.0, chosen.pull * tolerance(ctx, laws, community.id))):
+        understood = (
+            await barrier(session, ctx.rules, chosen.converter_id, community.id, ctx.epoch) if chosen is not None and chosen.converter_id is not None else 1.0
+        )
+        if chosen is None or not rng.probability(min(1.0, chosen.pull * understood * tolerance(ctx, laws, community.id))):
             continue
         weight = syncretism_weight(ctx.rules, world, community.id, chosen.god_id)
         syncretic = old is not None and not seeker and rng.chance(settings.syncretism_pct * god_kinship(world, old, chosen.god_id) * weight)

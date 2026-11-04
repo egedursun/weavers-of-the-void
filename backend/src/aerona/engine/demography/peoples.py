@@ -7,6 +7,7 @@ from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import Aesthetic, InheritanceCustom, MarriageCustom, MartialStyle
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -14,6 +15,8 @@ from aerona.domain.enums.environment import CoastKind, TemperatureBand, TerrainK
 from aerona.domain.enums.mind import SkillKind, ValueAxis
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.customs import culture_of
+from aerona.engine.lore.language import script_factor
+from aerona.engine.lore.research import has_technique
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds
@@ -119,10 +122,13 @@ async def culture_for(session: AsyncSession, rules: Rules, people: EntityRow, re
     levels = (await known_levels(session, [people.id])).get(people.id, {})
     homes = len(await active_bonds(session, [BondKind.LIVES_IN], sources=[people.id]))
     marriage, endogamous, inheritance, slavery = customs_of(values)
+    script = await script_factor(session, rules, people.id)
+    if await has_technique(session, people.id, Technique.ALPHABET):
+        script = max(script, rules.script.alphabet_pct / PERCENT)
     return PeopleCultureRow(
         people_entity_id=people.id,
         cohesion=clamp_int(table.cohesion_base - max(0, tongues - 1) * table.cohesion_per_tongue + values.get(ValueAxis.KINSHIP, 0) // 4, 0, PERCENT),
-        literacy=clamp_int(levels.get(KnowledgeBranch.WRITING, 0) * table.literacy_per_writing_level, 0, PERCENT),
+        literacy=clamp_int(round_half_up(levels.get(KnowledgeBranch.WRITING, 0) * table.literacy_per_writing_level * script), 0, PERCENT),
         urbanisation=clamp_int(homes * table.urban_per_settlement, 0, PERCENT),
         staples=[staple_of(region).value],
         aesthetic=aesthetic_of(values),

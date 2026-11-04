@@ -2,9 +2,11 @@ from collections import defaultdict
 
 from sqlalchemy import func, select
 
+from aerona.catalog.lore import IDEOLOGY_VALUES
 from aerona.catalog.mind import DOMAIN_VALUES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import MaimedCohortRow
+from aerona.db.tables.culture import IdeologyTenetRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.disease import OutbreakRow, QuarantineRow
 from aerona.db.tables.mind import PersonalityValueRow
@@ -13,6 +15,7 @@ from aerona.db.tables.settlement import SettlementProfileRow, SettlementTreasury
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import InheritanceCustom, MarriageCustom
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.mind import TraitKind, ValueAxis
@@ -21,6 +24,7 @@ from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, Treasury
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
+from aerona.engine.lore.research import lacks
 from aerona.engine.mind.book import traits_of
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
@@ -33,6 +37,7 @@ from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.settlement.book import town_of
 from aerona.engine.settlement.life import add_district
 
+CREED_SCALE = 10
 LEAN = 25
 BASELINE_LAWS = frozenset({LawKind.SUCCESSION_RULE, LawKind.SLAVERY, LawKind.RELIGIOUS_TOLERANCE, LawKind.TAX_RATE, LawKind.PENAL_CODE})
 COUNCIL_KINDS = 5
@@ -44,7 +49,7 @@ INHERITANCE_RULES = {
 }
 
 
-async def will(ctx: TickContext, realm: Realm) -> dict[ValueAxis, int]:
+async def base_will(ctx: TickContext, realm: Realm) -> dict[ValueAxis, int]:
     profile = realm.profile
     core = profile.core_entity_id
     if profile.decision_rule is DecisionRule.DIVINE and profile.patron_son_id is not None:
@@ -68,6 +73,19 @@ async def will(ctx: TickContext, realm: Realm) -> dict[ValueAxis, int]:
             if sums:
                 return {axis: round_half_up(sum(values) / len(values)) for axis, values in sums.items()}
     return await culture_of(ctx.session, core) if core is not None else {}
+
+
+async def will(ctx: TickContext, realm: Realm) -> dict[ValueAxis, int]:
+    found = await base_will(ctx, realm)
+    creed = realm.profile.ideology_entity_id
+    if creed is None:
+        return found
+    weight = ctx.rules.ideologies.decision_pct / PERCENT
+    merged = dict(found)
+    for tenet in await ctx.session.scalars(select(IdeologyTenetRow.tenet).where(IdeologyTenetRow.ideology_entity_id == creed)):
+        for axis, value in IDEOLOGY_VALUES[tenet].items():
+            merged[axis] = merged.get(axis, 0) + round_half_up(value * CREED_SCALE * weight)
+    return merged
 
 
 async def plagued(ctx: TickContext, realm: Realm) -> bool:
@@ -334,7 +352,8 @@ async def law_effects(ctx: TickContext, book: RealmBook, realm: Realm, laws: Law
     quarantine = laws.in_force(polity, LawKind.QUARANTINE)
     for member_id in realm.members:
         await member_effects(ctx, member_id, laws, polity)
-    if quarantine is not None and bool(quarantine.params.get("automatic", True)):
+    known = not await lacks(ctx.session, realm.profile.core_entity_id, Technique.QUARANTINE)
+    if quarantine is not None and bool(quarantine.params.get("automatic", True)) and known:
         for outbreak in await ctx.session.scalars(
             select(OutbreakRow).where(OutbreakRow.region_entity_id.in_(list(realm.territory)), OutbreakRow.status != OutbreakStatus.ENDED)
         ):

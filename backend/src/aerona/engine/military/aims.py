@@ -11,7 +11,7 @@ from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.military import WarAimKind
-from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
+from aerona.domain.enums.polity import ClauseKind, GovernmentKind, PartyRole, TreatyKind
 from aerona.domain.enums.war import CaptiveStatus, WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.polity.book import RealmBook
@@ -46,6 +46,7 @@ CAUSE_AIMS: dict[WarCause, tuple[WarAimKind, ...]] = {
     WarCause.SCHISM: (A.CONVERT, A.DESTROY_CULT),
     WarCause.BEAST: (A.LOOT, A.REVENGE),
     WarCause.RESOURCE: (A.SEIZE_RESOURCE, A.CONQUER_REGION),
+    WarCause.IDEOLOGY: (A.CHANGE_GOVERNMENT, A.LIBERATE),
 }
 DEFENDER_AIMS = (A.HUMILIATE, A.LOOT)
 REGION_AIMS = frozenset({A.CONQUER_REGION, A.SEIZE_RESOURCE, A.SEIZE_NEXUS})
@@ -199,6 +200,15 @@ async def faith_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: Sides
     return f"{loser.name} opened its temples to the faith of {victor.name}", Clause(ClauseKind.RELIGIOUS_FREEDOM, loser.id, victor.id)
 
 
+async def government_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: Sides, book: RealmBook) -> Term:
+    victor, loser = sides
+    realm = book.realm_of(loser.id)
+    if aim.achieved < ctx.rules.peace.cession_score or realm is None:
+        return None
+    realm.profile.government = GovernmentKind.REPUBLIC
+    return f"{victor.name} overturned the rule of {loser.name}; the realm is now a republic", Clause(ClauseKind.NON_AGGRESSION, loser.id, victor.id)
+
+
 TERMS = {
     A.CONQUER_REGION: cession_term,
     A.SEIZE_RESOURCE: cession_term,
@@ -213,6 +223,7 @@ TERMS = {
     A.PRESS_CLAIM: claim_term,
     A.DESTROY_CULT: cult_term,
     A.CONVERT: faith_term,
+    A.CHANGE_GOVERNMENT: government_term,
 }
 
 

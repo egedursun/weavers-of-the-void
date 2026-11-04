@@ -14,6 +14,7 @@ from aerona.db.tables.warfare import ArmyRow, SiegeRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import AgeBand, Job
 from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
@@ -30,6 +31,7 @@ from aerona.engine.demography.mobility import bound_revolt, inequality_pressure
 from aerona.engine.economy.routes import BANDIT_KINDS
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.lore.research import lacks
 from aerona.engine.military.occupation import occupation_over, occupation_tax, pay_occupier
 from aerona.engine.mind.drives import unrest as needs_unrest
 from aerona.engine.mind.space import value_distance
@@ -142,6 +144,17 @@ async def keep_walls(ctx: TickContext, town: Town) -> None:
     floor = round_half_up(walls.walls_level * table.walls_per_level * walls.walls_condition / PERCENT)
     if (stat(town.entity, "defense") or 0) < floor:
         set_stats(town.entity, defense=clamp_int(floor, 0, PERCENT))
+
+
+async def permitted(ctx: TickContext, town: Town, wants: list[str]) -> list[str]:
+    entity = town.entity.id
+    walls_cap = 2 if await lacks(ctx.session, entity, Technique.FORTIFICATION) else 3 if await lacks(ctx.session, entity, Technique.FORTRESS) else 5
+    barred = {
+        want
+        for want, technique in (("aqueduct", Technique.AQUEDUCT), ("sewers", Technique.ARCH), ("district:temple_quarter", Technique.DOME))
+        if await lacks(ctx.session, entity, technique)
+    }
+    return [want for want in wants if want not in barred and not (want == "walls" and town.infrastructure.walls_level >= walls_cap)]
 
 
 def wanted_works(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_war: bool, foreign: int) -> list[str]:
@@ -258,7 +271,7 @@ async def build(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_war
     architecture = knowledge.level(town.entity.id, KnowledgeBranch.ARCHITECTURE)
     material = BuildMaterial.STONE if architecture >= ctx.rules.fire.stone_level else BuildMaterial.TIMBER
     built = 0
-    for want in wanted_works(ctx, town, knowledge, at_war=at_war, foreign=foreign):
+    for want in await permitted(ctx, town, wanted_works(ctx, town, knowledge, at_war=at_war, foreign=foreign)):
         kind, _, detail = want.partition(":")
         if kind == "repair":
             district = next((item for item in town.districts if str(item.id) == detail), None)

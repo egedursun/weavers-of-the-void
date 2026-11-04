@@ -21,6 +21,7 @@ import {
   Landmark,
   Languages,
   Lightbulb,
+  Wand2,
   type LucideIcon,
   Map,
   MapPin,
@@ -81,6 +82,8 @@ export const ENTITY_TYPE_ICON: Record<Schemas['EntityType'], LucideIcon> = {
   polity: Landmark,
   house: Shield,
   treaty: Handshake,
+  ideology: Lightbulb,
+  rite: Wand2,
 }
 
 export const STAT_ICON: Record<Schemas['Stat'], LucideIcon> = {

@@ -10,13 +10,18 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import NotableYearRow
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.culture import ProphecyState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType, LegendCategory, MortalRole
 from aerona.domain.enums.environment import NotableYearKind
 from aerona.domain.models.entity_stats import EntityStats, ItemStats, LegendStats, ResourceStats, SpeciesStats, SpiritStats
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lore.legends import believed
+from aerona.engine.lore.prophecy import condition_of
+from aerona.engine.lore.prophecy import fail as fail_prophecy
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
+from aerona.engine.phases.living_stats import mock_prophecy
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, add_flag, canon, connect, flags_by_entity, living_entity, remove_flag
@@ -167,13 +172,13 @@ async def forgotten_tales(ctx: TickContext) -> None:
 
 
 async def forgotten_prophecies(ctx: TickContext) -> None:
-    age_limit = ctx.rules.deep_life.prophecy_forget_epochs
-    if age_limit <= 0:
-        return
     for prophecy in await canon(ctx.session, [EntityType.PROPHECY]):
-        age = ctx.epoch - prophecy.birth_epoch
-        if age <= age_limit:
+        row = await condition_of(ctx, prophecy)
+        if row.deadline_epoch is None or ctx.epoch <= row.deadline_epoch or row.state is not ProphecyState.PENDING:
             continue
+        age = ctx.epoch - prophecy.birth_epoch
+        await fail_prophecy(ctx, row)
+        await mock_prophecy(ctx, prophecy)
         await retire(ctx.session, prophecy, ctx.epoch, f"Epoch {ctx.epoch}: waited {age} epochs and was forgotten unfulfilled.", close_bonds=True)
         await note(
             ctx,
@@ -233,7 +238,7 @@ async def manifestations(ctx: TickContext) -> None:
     for legend in await canon(ctx.session, [EntityType.LEGEND]):
         if made >= life.manifestation_cap:
             return
-        if legend.id in manifested or (stat(legend, "spread") or 0) < life.manifestation_min_spread:
+        if legend.id in manifested or not await believed(ctx, legend):
             continue
         if not rng.chance(ctx.rules.deep_world.manifestation_chance):
             continue

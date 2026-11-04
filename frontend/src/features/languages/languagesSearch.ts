@@ -3,6 +3,7 @@ export const LANGUAGE_VIEWS = [
   'tree',
   'knowledge',
   'names',
+  'tongues',
 ] as const
 export type LanguageViewKey = (typeof LANGUAGE_VIEWS)[number]
 

@@ -32,6 +32,8 @@ class EntityType(StrEnum):
     POLITY = "polity"
     HOUSE = "house"
     TREATY = "treaty"
+    IDEOLOGY = "ideology"
+    RITE = "rite"
 
 
 class EntityStatus(StrEnum):

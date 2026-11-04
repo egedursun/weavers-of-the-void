@@ -60,6 +60,7 @@ from aerona.engine.phases import (
     life_cycles,
     life_seed,
     living_stats,
+    lore,
     magic,
     market,
     mechanics_assignment,
@@ -187,6 +188,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + works.PHASES
     + writing.PHASES
     + epidemics.PHASES
+    + lore.PHASES
     + faith.PHASES
     + vendettas.PHASES
     + realms.PHASES
@@ -276,6 +278,7 @@ SOCIETY_STAGE = stage(
     "settlement_laws",
     "currency",
     "wizards",
+    "rite_cycles",
     "creature_rebellion",
     "godlessness",
     "speciation",
@@ -285,6 +288,7 @@ SOCIETY_STAGE = stage(
     "dialect_divergence",
     "language_death",
     "language_contact",
+    "language_cycles",
     "price_of_magic",
     "architecture",
 )
@@ -299,15 +303,19 @@ SOCIETY_ENGINE_STAGE = stage(
     "heroes",
     "spontaneous_births",
     "factions",
+    "ideology_cycles",
     "engine_works",
     "splendor_growth",
     "religion_spread",
     "life_seed",
     "writing_systems",
     "knowledge_levels",
+    "research_cycles",
     "calendars",
     "living_stats",
     "belief_and_memory",
+    "legend_cycles",
+    "prophecy_cycles",
     "espionage",
     "wonders",
     "dark_ages",
@@ -317,8 +325,11 @@ SOCIETY_ENGINE_STAGE = stage(
     "material_decay",
     "institution_cycles",
     "culture_cycles",
+    "tradition_cycles",
     "people_cycles",
     "remembrance",
+    "item_cycles",
+    "artwork_cycles",
 )
 AGING_STAGE = stage("body_healing", "mortal_wounds", "body_conditions", "body_society", "mortal_aging", "dead_bonds_closing")
 MIND_STAGE = stage("mind_values", "mind_skills", "mind_memories", "mind_needs", "famine_aid", "mind_opinion", "incident_threads")

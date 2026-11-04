@@ -8,10 +8,10 @@ import {
   Crown,
   Flag,
   Flame,
+  Ghost,
   Landmark,
   Languages,
   Layers,
-  type LucideIcon,
   Map as MapIcon,
   MapPin,
   Maximize,
@@ -30,6 +30,7 @@ import {
   Waypoints,
   Wheat,
   Zap,
+  type LucideIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -91,6 +92,7 @@ const OVERLAY_ICON: Record<Overlay, LucideIcon> = {
   outbreaks: Biohazard,
   military: Flag,
   faith: Church,
+  lore: Ghost,
   ties: Waypoints,
   wars: Swords,
   events: Zap,
