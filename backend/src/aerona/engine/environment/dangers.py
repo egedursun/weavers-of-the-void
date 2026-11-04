@@ -1,5 +1,5 @@
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
@@ -31,9 +31,60 @@ HELD_BEASTS = frozenset({BeastTemper.BOUND, BeastTemper.TAMED})
 DANGER_KEY = "danger"
 
 
+HARM_WEIGHTS: dict[tuple[DangerSource, DangerHarm], Callable[[Rules], int]] = {
+    (DangerSource.BEASTS, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.beasts_settlers,
+    (DangerSource.BEASTS, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.beasts_livestock,
+    (DangerSource.BEASTS, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.beasts_travellers,
+    (DangerSource.BEASTS, DangerHarm.ARMIES): lambda rules: rules.regional_danger.beasts_armies,
+    (DangerSource.BEASTS, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.beasts_ambush,
+    (DangerSource.BEASTS, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.beasts_merchants,
+    (DangerSource.BANDITS, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.bandits_settlers,
+    (DangerSource.BANDITS, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.bandits_livestock,
+    (DangerSource.BANDITS, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.bandits_travellers,
+    (DangerSource.BANDITS, DangerHarm.ARMIES): lambda rules: rules.regional_danger.bandits_armies,
+    (DangerSource.BANDITS, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.bandits_ambush,
+    (DangerSource.BANDITS, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.bandits_merchants,
+    (DangerSource.MONSTERS, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.monsters_settlers,
+    (DangerSource.MONSTERS, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.monsters_livestock,
+    (DangerSource.MONSTERS, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.monsters_travellers,
+    (DangerSource.MONSTERS, DangerHarm.ARMIES): lambda rules: rules.regional_danger.monsters_armies,
+    (DangerSource.MONSTERS, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.monsters_ambush,
+    (DangerSource.MONSTERS, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.monsters_merchants,
+    (DangerSource.PHENOMENA, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.phenomena_settlers,
+    (DangerSource.PHENOMENA, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.phenomena_livestock,
+    (DangerSource.PHENOMENA, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.phenomena_travellers,
+    (DangerSource.PHENOMENA, DangerHarm.ARMIES): lambda rules: rules.regional_danger.phenomena_armies,
+    (DangerSource.PHENOMENA, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.phenomena_ambush,
+    (DangerSource.PHENOMENA, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.phenomena_merchants,
+    (DangerSource.DISEASE, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.disease_settlers,
+    (DangerSource.DISEASE, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.disease_livestock,
+    (DangerSource.DISEASE, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.disease_travellers,
+    (DangerSource.DISEASE, DangerHarm.ARMIES): lambda rules: rules.regional_danger.disease_armies,
+    (DangerSource.DISEASE, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.disease_ambush,
+    (DangerSource.DISEASE, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.disease_merchants,
+    (DangerSource.AVALANCHE, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.avalanche_settlers,
+    (DangerSource.AVALANCHE, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.avalanche_livestock,
+    (DangerSource.AVALANCHE, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.avalanche_travellers,
+    (DangerSource.AVALANCHE, DangerHarm.ARMIES): lambda rules: rules.regional_danger.avalanche_armies,
+    (DangerSource.AVALANCHE, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.avalanche_ambush,
+    (DangerSource.AVALANCHE, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.avalanche_merchants,
+    (DangerSource.QUICKSAND, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.quicksand_settlers,
+    (DangerSource.QUICKSAND, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.quicksand_livestock,
+    (DangerSource.QUICKSAND, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.quicksand_travellers,
+    (DangerSource.QUICKSAND, DangerHarm.ARMIES): lambda rules: rules.regional_danger.quicksand_armies,
+    (DangerSource.QUICKSAND, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.quicksand_ambush,
+    (DangerSource.QUICKSAND, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.quicksand_merchants,
+    (DangerSource.VOLCANIC, DangerHarm.SETTLERS): lambda rules: rules.regional_danger.volcanic_settlers,
+    (DangerSource.VOLCANIC, DangerHarm.LIVESTOCK): lambda rules: rules.regional_danger.volcanic_livestock,
+    (DangerSource.VOLCANIC, DangerHarm.TRAVELLERS): lambda rules: rules.regional_danger.volcanic_travellers,
+    (DangerSource.VOLCANIC, DangerHarm.ARMIES): lambda rules: rules.regional_danger.volcanic_armies,
+    (DangerSource.VOLCANIC, DangerHarm.AMBUSH): lambda rules: rules.regional_danger.volcanic_ambush,
+    (DangerSource.VOLCANIC, DangerHarm.MERCHANTS): lambda rules: rules.regional_danger.volcanic_merchants,
+}
+
+
 def harm_weight(rules: Rules, source: DangerSource, harm: DangerHarm) -> int:
-    value: int = getattr(rules.regional_danger, f"{source.value}_{harm.value}")
-    return value
+    return HARM_WEIGHTS[source, harm](rules)
 
 
 def weighted(rules: Rules, rows: Iterable[RegionDangerRow], harm: DangerHarm) -> int:

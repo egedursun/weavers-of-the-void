@@ -79,7 +79,10 @@ async def restore_ruin(
 
 
 @reads("law.justice", "settlement.defense", "settlement.prosperity")
-@writes("settlement.defense")
+@writes(
+    "settlement.defense",
+    "table.entities",
+)
 async def settlement_laws(ctx: TickContext) -> None:
     effects = ctx.rules.world_effects
     justice: dict[int, list[int]] = defaultdict(list)
@@ -104,7 +107,10 @@ async def settlement_laws(ctx: TickContext) -> None:
 
 
 @reads("settlement.defense", "table.holder_levels")
-@writes("settlement.defense")
+@writes(
+    "settlement.defense",
+    "table.entities",
+)
 async def architecture(ctx: TickContext) -> None:
     effects = ctx.rules.world_effects
     knowledge = await KnowledgeMap.load(ctx.session)

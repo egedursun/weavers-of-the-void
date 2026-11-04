@@ -150,6 +150,8 @@ async def region_environment(services: ServicesDep, region_id: int = Path(ge=1))
             land_use={use.value: getattr(ground, use.value) for use in LandUse},
             erosion=ground.erosion,
             harvest_pct=ground.harvest_pct,
+            sacredness=ground.sacredness,
+            derived_fertility=ground.derived_fertility,
             locked=list(ground.locked),
             forecast=forecast,
             ley_lines=await ley_views(session, region.id),

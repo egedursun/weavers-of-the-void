@@ -1,4 +1,5 @@
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from sqlalchemy import select
@@ -48,14 +49,36 @@ class Remembered:
     incident_id: int | None = None
 
 
+DARKNESS: dict[RegionMemoryKind, Callable[[Rules], int]] = {
+    RegionMemoryKind.BATTLE: lambda rules: rules.terrain.battle_darkness,
+    RegionMemoryKind.MASSACRE: lambda rules: rules.terrain.massacre_darkness,
+    RegionMemoryKind.SACK: lambda rules: rules.terrain.sack_darkness,
+    RegionMemoryKind.DISASTER: lambda rules: rules.terrain.disaster_darkness,
+    RegionMemoryKind.PLAGUE: lambda rules: rules.terrain.plague_darkness,
+    RegionMemoryKind.FAMINE: lambda rules: rules.terrain.famine_darkness,
+    RegionMemoryKind.GOD_DEATH: lambda rules: rules.terrain.god_death_darkness,
+    RegionMemoryKind.SAINT_BURIAL: lambda rules: rules.terrain.saint_burial_darkness,
+    RegionMemoryKind.MIRACLE: lambda rules: rules.terrain.miracle_darkness,
+}
+HOLINESS: dict[RegionMemoryKind, Callable[[Rules], int]] = {
+    RegionMemoryKind.BATTLE: lambda rules: rules.terrain.battle_holiness,
+    RegionMemoryKind.MASSACRE: lambda rules: rules.terrain.massacre_holiness,
+    RegionMemoryKind.SACK: lambda rules: rules.terrain.sack_holiness,
+    RegionMemoryKind.DISASTER: lambda rules: rules.terrain.disaster_holiness,
+    RegionMemoryKind.PLAGUE: lambda rules: rules.terrain.plague_holiness,
+    RegionMemoryKind.FAMINE: lambda rules: rules.terrain.famine_holiness,
+    RegionMemoryKind.GOD_DEATH: lambda rules: rules.terrain.god_death_holiness,
+    RegionMemoryKind.SAINT_BURIAL: lambda rules: rules.terrain.saint_burial_holiness,
+    RegionMemoryKind.MIRACLE: lambda rules: rules.terrain.miracle_holiness,
+}
+
+
 def darkness_of(rules: Rules, kind: RegionMemoryKind) -> int:
-    value: int = getattr(rules.terrain, f"{kind.value}_darkness")
-    return value
+    return DARKNESS[kind](rules)
 
 
 def holiness_of(rules: Rules, kind: RegionMemoryKind) -> int:
-    value: int = getattr(rules.terrain, f"{kind.value}_holiness")
-    return value
+    return HOLINESS[kind](rules)
 
 
 def fades(rules: Rules, kind: RegionMemoryKind) -> bool:

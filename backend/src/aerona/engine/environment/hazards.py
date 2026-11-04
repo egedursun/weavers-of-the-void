@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from sqlalchemy import select
@@ -37,24 +38,46 @@ class HazardTally:
     soldiers: int = 0
 
 
+CHANCES: dict[TerrainHazard, Callable[[Rules], int]] = {
+    TerrainHazard.AVALANCHE: lambda rules: rules.hazards.avalanche_chance,
+    TerrainHazard.SPRING_FLOOD: lambda rules: rules.hazards.spring_flood_chance,
+    TerrainHazard.WILDFIRE: lambda rules: rules.hazards.wildfire_chance,
+    TerrainHazard.WHITEOUT: lambda rules: rules.hazards.whiteout_chance,
+}
+THRESHOLDS: dict[TerrainHazard, Callable[[Rules], int]] = {
+    TerrainHazard.AVALANCHE: lambda rules: rules.hazards.avalanche_weather_min,
+    TerrainHazard.SPRING_FLOOD: lambda rules: rules.hazards.spring_flood_weather_min,
+    TerrainHazard.WILDFIRE: lambda rules: rules.hazards.wildfire_weather_min,
+    TerrainHazard.WHITEOUT: lambda rules: rules.hazards.whiteout_weather_min,
+}
+DEATHS: dict[TerrainHazard, Callable[[Rules], int]] = {
+    TerrainHazard.AVALANCHE: lambda rules: rules.hazards.avalanche_deaths_permille,
+    TerrainHazard.SPRING_FLOOD: lambda rules: rules.hazards.spring_flood_deaths_permille,
+    TerrainHazard.WILDFIRE: lambda rules: rules.hazards.wildfire_deaths_permille,
+    TerrainHazard.WHITEOUT: lambda rules: rules.hazards.whiteout_deaths_permille,
+}
+ARMY_LOSSES: dict[TerrainHazard, Callable[[Rules], int]] = {
+    TerrainHazard.AVALANCHE: lambda rules: rules.hazards.avalanche_army_pct,
+    TerrainHazard.SPRING_FLOOD: lambda rules: rules.hazards.spring_flood_army_pct,
+    TerrainHazard.WILDFIRE: lambda rules: rules.hazards.wildfire_army_pct,
+    TerrainHazard.WHITEOUT: lambda rules: rules.hazards.whiteout_army_pct,
+}
+
+
 def chance_of(rules: Rules, hazard: TerrainHazard) -> int:
-    value: int = getattr(rules.hazards, f"{hazard.value}_chance")
-    return value
+    return CHANCES[hazard](rules)
 
 
 def threshold_of(rules: Rules, hazard: TerrainHazard) -> int:
-    value: int = getattr(rules.hazards, f"{hazard.value}_weather_min")
-    return value
+    return THRESHOLDS[hazard](rules)
 
 
 def deaths_of(rules: Rules, hazard: TerrainHazard) -> int:
-    value: int = getattr(rules.hazards, f"{hazard.value}_deaths_permille")
-    return value
+    return DEATHS[hazard](rules)
 
 
 def army_loss_of(rules: Rules, hazard: TerrainHazard) -> int:
-    value: int = getattr(rules.hazards, f"{hazard.value}_army_pct")
-    return value
+    return ARMY_LOSSES[hazard](rules)
 
 
 def exposed(rules: Rules, hazard: TerrainHazard, spec: HazardSpec, ground: RegionEnvironmentRow) -> bool:

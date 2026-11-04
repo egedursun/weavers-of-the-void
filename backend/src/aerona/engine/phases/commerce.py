@@ -1,14 +1,14 @@
+from aerona.domain.enums.region import DangerHarm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.markets import MarketTally, apply_aggregate_prices, market_nodes, quote_market, raise_district, store_quotes
 from aerona.engine.economy.money import MoneyTally, collect, lend
 from aerona.engine.economy.routes import RouteTally, carry, contacts, controllers, enemies_of, found_route, load_routes, set_tolls, upkeep
 from aerona.engine.economy.stocks import sync_aggregates
+from aerona.engine.environment.dangers import weighted_dangers
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.phases.environment import works_by_region
-from aerona.engine.environment.dangers import weighted_dangers
-from aerona.domain.enums.region import DangerHarm
 
 
 @reads(

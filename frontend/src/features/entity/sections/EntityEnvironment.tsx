@@ -56,6 +56,8 @@ import {
   HoldWeather,
   NotableYears,
 } from '../environment/RegionPowers'
+import { BiomeMix, SeamForge } from '../environment/RegionSeams'
+import { RegionTerrainSection } from '../environment/RegionTerrain'
 import {
   BAND,
   COAST,
@@ -76,6 +78,7 @@ import {
   named,
   plain,
 } from '../environment/labels'
+import { seamLabel, useSeamNames } from '../environment/seams'
 
 type RegionEnvironment = components['schemas']['RegionEnvironmentView']
 type PlaceEnvironment = components['schemas']['PlaceEnvironmentView']
@@ -100,6 +103,12 @@ const REGION_CHOICES: {
   { key: 'soil', table: SOIL },
   { key: 'river_class', table: RIVER },
   { key: 'coast_kind', table: COAST },
+  {
+    key: 'temperature_band',
+    table: Object.fromEntries(
+      Object.entries(BAND).map(([key, value]) => [key, value.label])
+    ),
+  },
 ]
 const PLACE_CHOICES: {
   key: 'terrain' | 'cover' | 'water_source'
@@ -398,6 +407,8 @@ function regionGroups(ground: RegionEnvironment): AdjustGroup[] {
         percentField('erosion', ground.erosion),
         percentField('disease_load', ground.disease_load),
         percentField('defensibility', ground.defensibility),
+        percentField('sacredness', ground.sacredness),
+        percentField('derived_fertility', ground.derived_fertility ?? 0),
       ],
     },
     {
@@ -497,6 +508,7 @@ function RegionControls({
             region_id: regionId,
             kind: key.slice(SCAR_PREFIX.length) as ScarKind,
             depth: Number(value),
+            lock: hold,
           },
         })
       )
@@ -507,6 +519,7 @@ function RegionControls({
             region_id: regionId,
             material: key.slice(SEAM_PREFIX.length) as MaterialKind,
             richness: Number(value),
+            lock: hold,
           },
         })
       )
@@ -610,6 +623,7 @@ function RegionEnvironmentSection({ regionId }: { regionId: number }) {
     retry: false,
   })
   const ground = view.data
+  const seamNames = useSeamNames(ground?.world_id ?? 0)
   return (
     <Section
       id='section-environment'
@@ -691,7 +705,7 @@ function RegionEnvironmentSection({ regionId }: { regionId: number }) {
                   .map(([key, richness]) => (
                     <StatBar
                       key={key}
-                      label={plain(MINERALS, key)}
+                      label={seamLabel(key, seamNames)}
                       value={richness}
                       max={PERCENT}
                       icon={Gem}
@@ -739,6 +753,14 @@ function RegionEnvironmentSection({ regionId }: { regionId: number }) {
             </Card>
             <Card title='Years remembered' icon={Scroll}>
               <NotableYears regionId={regionId} ground={ground} />
+            </Card>
+          </div>
+          <div className='grid min-w-0 grid-cols-1 gap-3 @xl/env:grid-cols-2'>
+            <Card title='Seams of any material' icon={Gem}>
+              <SeamForge regionId={regionId} ground={ground} />
+            </Card>
+            <Card title='Biomes of the land' icon={Mountain}>
+              <BiomeMix regionId={regionId} ground={ground} />
             </Card>
           </div>
           <RegionControls regionId={regionId} ground={ground} />
@@ -912,7 +934,12 @@ export function EntityEnvironment({
   entityType: string
 }) {
   if (entityType === 'region')
-    return <RegionEnvironmentSection regionId={entityId} />
+    return (
+      <>
+        <RegionEnvironmentSection regionId={entityId} />
+        <RegionTerrainSection regionId={entityId} />
+      </>
+    )
   if (entityType === 'place')
     return <PlaceEnvironmentSection placeId={entityId} />
   return null
