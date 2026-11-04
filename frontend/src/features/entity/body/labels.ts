@@ -180,6 +180,7 @@ export const INJURIES: Record<string, Named> = {
   },
   void_touch: { label: 'Touched by the void', icon: Eclipse, tone: 'danger' },
   divine_brand: { label: 'Divine brand', icon: Sun, tone: 'gold' },
+  sickness: { label: 'Ravaged by sickness', icon: Biohazard, tone: 'danger' },
 }
 
 export const STATES: Record<string, Named & { badge: BadgeTone }> = {

@@ -11,7 +11,7 @@ from aerona.db.tables.routes import JourneyRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.demography import AgeBand
-from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
+from aerona.domain.enums.disease import DiseaseVector, OutbreakStatus, SpreadPath
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.travel import JourneyStatus
 from aerona.domain.enums.war import SiegeStatus
@@ -19,7 +19,8 @@ from aerona.domain.models.entity_stats import TraditionStats
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.emergence import WET, new_strain
-from aerona.engine.disease.outbreaks import lethality_factor, spread_factor, tally
+from aerona.engine.disease.origin import caused_by_origin, mark_strain_origin, origin_line
+from aerona.engine.disease.outbreaks import QUARANTINE_LOCK, STATUS_LOCK, lethality_factor, spread_factor, tally
 from aerona.engine.notes import note
 from aerona.engine.phases.disasters import strike_plague
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -27,6 +28,7 @@ from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat
+from aerona.rules.registry.epidemiology import EpidemiologyRules
 
 ENDEMIC_LOAD = 40
 
@@ -48,6 +50,8 @@ async def linger(ctx: TickContext, book: DiseaseBook, outbreak: OutbreakRow, kno
     effects = ctx.rules.intervention_effects
     communities = await region_communities(ctx, book, outbreak.region_entity_id)
     scale = outbreak.severity / ctx.rules.disasters.scale_divisor * table.waning_death_pct / PERCENT
+    if ctx.epoch - outbreak.started_epoch == 1:
+        scale += outbreak.severity / ctx.rules.disasters.scale_divisor * book.hidden_share(disease.id) * table.incubation_delay_pct / PERCENT
     dead = 0
     for community in communities:
         rate = fraction(effects.plague_population_loss) * scale * lethality_factor(book, disease.id, [community], knowledge)
@@ -63,6 +67,8 @@ async def linger(ctx: TickContext, book: DiseaseBook, outbreak: OutbreakRow, kno
 
 async def finish(ctx: TickContext, book: DiseaseBook, outbreak: OutbreakRow) -> None:
     table = ctx.rules.epidemiology
+    if STATUS_LOCK in outbreak.locked:
+        return
     outbreak.status = OutbreakStatus.ENDED
     outbreak.ended_epoch = ctx.epoch
     communities = await region_communities(ctx, book, outbreak.region_entity_id)
@@ -78,6 +84,8 @@ async def finish(ctx: TickContext, book: DiseaseBook, outbreak: OutbreakRow) -> 
                 )
                 ctx.session.add(row)
                 rows[band] = row
+            if row.locked:
+                continue
             row.immune_pct = clamp_int(max(row.immune_pct, reached * table.survivor_immunity_pct), 0, PERCENT)
             row.since_epoch = ctx.epoch
     ground = await ctx.session.get(RegionEnvironmentRow, outbreak.region_entity_id)
@@ -99,7 +107,7 @@ async def make_endemic(ctx: TickContext, book: DiseaseBook, region_id: int, dise
         disease = book.diseases.get(disease_id)
         region = await ctx.session.get(EntityRow, region_id)
         if disease is not None and region is not None:
-            await note(
+            written = await note(
                 ctx,
                 f"{disease.name.capitalize()} never quite left {region.name}; it became a sickness of the land, and strangers now fear it.",
                 key="disease.endemic",
@@ -107,7 +115,8 @@ async def make_endemic(ctx: TickContext, book: DiseaseBook, region_id: int, dise
                 feed=FeedCategory.DISASTER,
                 kind=ChronicleKind.DISASTER,
             )
-    else:
+            await caused_by_origin(ctx, written, book.profiles.get(disease_id))
+    elif not row.locked:
         row.load = clamp_int(row.load + table.endemic_load, 0, PERCENT)
     return row
 
@@ -117,12 +126,14 @@ async def plague_tradition(ctx: TickContext, book: DiseaseBook, outbreak: Outbre
     if disease is None:
         return
     name = ctx.rng(f"plague_tradition.{outbreak.id}").pick(TRADITION_NAMES)
+    profile = book.profiles.get(disease.id)
+    origin = await origin_line(ctx, profile)
     tradition = await create_record(
         ctx,
         RecordSpec(
             entity_type=EntityType.TRADITION,
             name=f"{name} of {community.name}",
-            body=f"Kept by {community.name} in memory of the {outbreak.dead} who died of {disease.name}.",
+            body=f"Kept by {community.name} in memory of the {outbreak.dead} who died of {disease.name}{origin}.",
             stats=TraditionStats(spread=20, rigidity=40),
             power=2,
             location_id=community.id,
@@ -131,13 +142,14 @@ async def plague_tradition(ctx: TickContext, book: DiseaseBook, outbreak: Outbre
             pending=False,
         ),
     )
-    await note(
+    row = await note(
         ctx,
         f"The survivors of {disease.name} in {community.name} began to keep {tradition.name}.",
         key="disease.tradition",
         ids=[tradition.id, community.id, disease.id],
         kind=ChronicleKind.WORLD,
     )
+    await caused_by_origin(ctx, row, profile)
 
 
 async def run_course(ctx: TickContext, book: DiseaseBook) -> None:
@@ -150,14 +162,26 @@ async def run_course(ctx: TickContext, book: DiseaseBook) -> None:
         immune = sum(book.immune_share(item.id, outbreak.disease_entity_id) * (stat(item, "population") or 0) for item in communities) / max(1, people)
         if age <= 0:
             continue
-        if outbreak.status is OutbreakStatus.WANING or immune >= book.herd_threshold(outbreak.disease_entity_id) or not communities:
+        if QUARANTINE_LOCK not in outbreak.locked:
+            outbreak.quarantined = book.quarantined(outbreak.region_entity_id)
+        held = STATUS_LOCK in outbreak.locked
+        starved = host_gone(book, outbreak)
+        if not held and (outbreak.status is OutbreakStatus.WANING or immune >= book.herd_threshold(outbreak.disease_entity_id) or not communities):
             await finish(ctx, book, outbreak)
             ctx.count("outbreaks_ended")
             continue
         await linger(ctx, book, outbreak, knowledge)
-        if age >= table.outbreak_epochs:
+        if not held and (age >= table.outbreak_epochs or starved):
             outbreak.status = OutbreakStatus.WANING
+            ctx.count("outbreaks_starved", int(starved))
     book.outbreaks = [item for item in book.outbreaks if item.status is not OutbreakStatus.ENDED]
+
+
+def host_gone(book: DiseaseBook, outbreak: OutbreakRow) -> bool:
+    profile = book.profiles.get(outbreak.disease_entity_id)
+    if profile is None or not book.host_bound(profile.disease_entity_id) or profile.vector is not DiseaseVector.BITE:
+        return False
+    return book.host_abundance(profile.disease_entity_id, outbreak.region_entity_id) <= 0
 
 
 def fade_immunity(ctx: TickContext, book: DiseaseBook) -> None:
@@ -168,16 +192,25 @@ def fade_immunity(ctx: TickContext, book: DiseaseBook) -> None:
         region = book.atlas.top_region(community_id)
         endemic = next((row.load for row in book.endemic.get(region or -1, []) if row.disease_entity_id == disease_id), 0)
         for band, row in rows.items():
+            if row.locked:
+                continue
             kept = row.immune_pct * keep * (1 - table.child_immunity_loss_pct / PERCENT if band is AgeBand.CHILD else 1)
             row.immune_pct = clamp_int(max(kept, endemic if band is not AgeBand.CHILD else endemic / 2), 0, PERCENT)
 
 
 async def settle_endemic(ctx: TickContext, book: DiseaseBook) -> None:
     table = ctx.rules.epidemiology
-    renewed = {(item.region_entity_id, item.disease_entity_id) for item in book.outbreaks}
+    renewed = {(item.region_entity_id, item.disease_entity_id) for item in book.outbreaks if not host_gone(book, item)}
     for region_id, rows in list(book.endemic.items()):
         for row in list(rows):
-            if (region_id, row.disease_entity_id) in renewed:
+            if (region_id, row.disease_entity_id) in renewed or row.locked:
+                continue
+            kept = host_keeps(book, row)
+            if kept is not None:
+                row.load = max(row.load - table.endemic_decay, min(row.load, kept)) if kept > 0 else max(0, row.load - decay_without_host(table))
+                if row.load <= 0:
+                    await ctx.session.delete(row)
+                    rows.remove(row)
                 continue
             row.load = max(0, row.load - table.endemic_decay)
             if row.load <= 0:
@@ -197,6 +230,17 @@ async def settle_endemic(ctx: TickContext, book: DiseaseBook) -> None:
                         )
                         ctx.session.add(immune)
                         book.immunity[(community_id, row.disease_entity_id)][band] = immune
+
+
+def host_keeps(book: DiseaseBook, row: EndemicDiseaseRow) -> int | None:
+    if not book.host_bound(row.disease_entity_id):
+        return None
+    abundance = book.host_abundance(row.disease_entity_id, row.region_entity_id)
+    return round_half_up(book.rules.epidemiology.endemic_load * book.rules.epidemiology.host_endemic_pct / PERCENT * abundance)
+
+
+def decay_without_host(table: EpidemiologyRules) -> int:
+    return round_half_up(table.endemic_decay * table.host_gone_decay_pct / PERCENT)
 
 
 async def mutate(ctx: TickContext, book: DiseaseBook) -> int:
@@ -229,7 +273,7 @@ async def mutate(ctx: TickContext, book: DiseaseBook) -> int:
         if targets:
             target = max(targets, key=lambda item: (stat(item, "population") or 0, -item.id))
             await strike_plague(ctx, target, home.severity, disease=strain, path=SpreadPath.MUTATION, source=home)
-        await note(
+        written = await note(
             ctx,
             f"In {region.name}, {disease.name} changed: {strain.name} struck even those who had survived the old sickness.",
             key="disease.strain",
@@ -237,7 +281,12 @@ async def mutate(ctx: TickContext, book: DiseaseBook) -> int:
             feed=FeedCategory.DISASTER,
             kind=ChronicleKind.DISASTER,
         )
+        await mark_strain_origin(ctx, book.profiles.get(strain.id), written)
     return made
+
+
+def army_weight(table: EpidemiologyRules, size: int) -> float:
+    return min(table.army_size_cap_pct / PERCENT, max(0, size) / max(1, table.army_spread_size))
 
 
 async def carry_by_armies(ctx: TickContext, book: DiseaseBook) -> int:
@@ -258,7 +307,10 @@ async def carry_by_armies(ctx: TickContext, book: DiseaseBook) -> int:
             if disease is None or book.active_of(disease.id, home) is not None:
                 continue
             ground = await ctx.session.get(RegionEnvironmentRow, home) if home is not None else None
-            chance = table.army_spread_chance * spread_factor(book, disease.id, owner, ground, source_region=here)
+            pressure = spread_factor(
+                book, disease.id, owner, ground, source_region=here, path=SpreadPath.ARMY, hidden=book.unseen(outbreak), sealed=outbreak.quarantined
+            )
+            chance = table.army_spread_chance * army_weight(table, stat(army, "size") or 0) * pressure
             if not ctx.rng(f"army_spread.{army.id}.{outbreak.id}").chance(min(PERCENT, chance)):
                 continue
             await strike_plague(ctx, owner, outbreak.severity, disease=disease, path=SpreadPath.ARMY, source=outbreak)
@@ -292,7 +344,10 @@ async def carry_by_journeys(ctx: TickContext, book: DiseaseBook) -> int:
             if disease is None:
                 continue
             ground = await ctx.session.get(RegionEnvironmentRow, book.atlas.top_region(landed.id) or -1)
-            chance = table.journey_spread_chance * spread_factor(book, disease.id, landed, ground, source_region=origin)
+            pressure = spread_factor(
+                book, disease.id, landed, ground, source_region=origin, path=SpreadPath.JOURNEY, hidden=book.unseen(outbreak), sealed=outbreak.quarantined
+            )
+            chance = table.journey_spread_chance * pressure
             if not ctx.rng(f"journey_spread.{journey.id}.{outbreak.id}").chance(min(PERCENT, chance)):
                 continue
             await strike_plague(ctx, landed, outbreak.severity, disease=disease, path=SpreadPath.JOURNEY, source=outbreak)

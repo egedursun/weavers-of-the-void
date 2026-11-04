@@ -5,18 +5,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.disease import DiseaseProfileRow, OutbreakRow
-from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.entities import EntityRow, EntityTraitRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.disease import ClimateAffinity, OutbreakStatus, SpreadPath
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.environment import TemperatureBand
-from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.emergence import COLD_BANDS, DRY, WARM_BANDS, WET, new_disease
+from aerona.engine.disease.vectors import Spot, crowd_weight, host_factor, sanitation_weight, vector_factor
 from aerona.engine.gods.progress import cap_gained_essence
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int
@@ -26,9 +27,15 @@ from aerona.engine.primitives.stats import set_stats, stat
 PLAGUE_SON_DOMAINS = frozenset({Domain.PLAGUE})
 STRIKING: ContextVar[DiseaseProfileRow | None] = ContextVar("striking_disease", default=None)
 FACTOR_FLOOR, FACTOR_CEILING = 0.05, 6.0
+SEVERITY_LOCK = "severity"
+STATUS_LOCK = "status"
+INFECTED_LOCK = "infected"
+DEAD_LOCK = "dead"
+QUARANTINE_LOCK = "quarantined"
+OUTBREAK_LOCKS = (SEVERITY_LOCK, STATUS_LOCK, INFECTED_LOCK, DEAD_LOCK, QUARANTINE_LOCK)
 
 
-async def disease_for(ctx: TickContext, book: DiseaseBook, region: EntityRow) -> EntityRow:
+async def disease_for(ctx: TickContext, book: DiseaseBook, region: EntityRow, *, quiet: bool = False) -> EntityRow:
     rng = ctx.rng(f"disease.for.{region.id}")
     nearby = {region.id, *book.atlas.neighbour_regions(region.id)}
     known = sorted(
@@ -39,7 +46,20 @@ async def disease_for(ctx: TickContext, book: DiseaseBook, region: EntityRow) ->
     known = [disease_id for disease_id in known if disease_id in book.diseases]
     if known and rng.chance(ctx.rules.epidemiology.reuse_disease_chance):
         return book.diseases[rng.pick(known)]
-    return await new_disease(ctx, book, region, path=SpreadPath.ORIGIN)
+    return await new_disease(ctx, book, region, path=SpreadPath.ORIGIN, host=await host_for(ctx, book, region.id), quiet=quiet)
+
+
+async def host_for(ctx: TickContext, book: DiseaseBook, region_id: int) -> EntityRow | None:
+    bearers = set(await ctx.session.scalars(select(EntityTraitRow.entity_id).where(EntityTraitRow.trait == CreatureTrait.PLAGUE_BEARER)))
+    found = sorted(
+        ((abundance, species_id) for (species_id, place), abundance in book.ranges.items() if place == region_id and species_id in bearers), reverse=True
+    )
+    if not found:
+        return None
+    abundance, species_id = found[0]
+    if not ctx.rng(f"disease.host.{region_id}.{len(book.diseases)}").chance(ctx.rules.epidemiology.host_emergence_pct * min(PERCENT, abundance) / PERCENT):
+        return None
+    return await ctx.session.get(EntityRow, species_id)
 
 
 def climate_fit(rules_pct: tuple[int, int], profile: DiseaseProfileRow, ground: RegionEnvironmentRow | None) -> float:
@@ -90,7 +110,17 @@ def lethality_factor(book: DiseaseBook, disease_id: int, communities: list[Entit
     return max(FACTOR_FLOOR, min(FACTOR_CEILING, base * blended))
 
 
-def spread_factor(book: DiseaseBook, disease_id: int, target: EntityRow, ground: RegionEnvironmentRow | None, *, source_region: int | None) -> float:
+def spread_factor(
+    book: DiseaseBook,
+    disease_id: int,
+    target: EntityRow,
+    ground: RegionEnvironmentRow | None,
+    *,
+    source_region: int | None,
+    path: SpreadPath = SpreadPath.ORIGIN,
+    hidden: float = 0.0,
+    sealed: bool = False,
+) -> float:
     table = book.rules.epidemiology
     profile = book.profiles.get(disease_id)
     if profile is None:
@@ -105,10 +135,14 @@ def spread_factor(book: DiseaseBook, disease_id: int, target: EntityRow, ground:
     load = ground.disease_load if ground is not None else 0
     factor *= 1 + load / PERCENT * table.load_spread_pct / PERCENT
     crowd = min(1.0, (stat(target, "population") or 0) / max(1, table.crowd_population))
-    factor *= 1 + crowd * table.crowd_spread_pct / PERCENT
-    factor *= 1 - book.sanitation.get(region or -1, 0) / PERCENT * table.sanitation_spread_pct / PERCENT
-    if book.quarantined(region) or book.quarantined(source_region):
-        factor *= table.quarantine_spread_pct / PERCENT
+    factor *= 1 + crowd * crowd_weight(book, profile)
+    factor *= max(0.0, 1 - book.sanitation.get(region or -1, 0) / PERCENT * sanitation_weight(book, profile))
+    factor *= vector_factor(book, profile, Spot(target, ground, region, path))
+    factor *= host_factor(book, profile, region)
+    if sealed or book.quarantined(region) or book.quarantined(source_region):
+        held = table.quarantine_spread_pct / PERCENT
+        factor *= held + (1 - held) * hidden
+    factor *= 1 + hidden * table.incubation_spread_pct / PERCENT
     if target.id in book.inoculated:
         factor *= 1 - book.rules.technique_effects.inoculation_pct / PERCENT
     return max(0.0, factor)
@@ -127,8 +161,10 @@ async def open_outbreak(
 ) -> OutbreakRow:
     found = book.active_of(disease.id, region_id)
     if found is not None:
-        found.severity = clamp_int(max(found.severity, severity), 0, PERCENT)
-        found.status = OutbreakStatus.ACTIVE
+        if SEVERITY_LOCK not in found.locked:
+            found.severity = clamp_int(max(found.severity, severity), 0, PERCENT)
+        if STATUS_LOCK not in found.locked:
+            found.status = OutbreakStatus.ACTIVE
         if event is not None and found.event_entity_id is None:
             found.event_entity_id = event.id
         return found
@@ -145,6 +181,7 @@ async def open_outbreak(
         started_epoch=ctx.epoch,
         ended_epoch=None,
         quarantined=book.quarantined(region_id),
+        locked=[],
     )
     ctx.session.add(row)
     await ctx.session.flush()
@@ -157,8 +194,10 @@ async def open_outbreak(
 
 
 def tally(disease: EntityRow, outbreak: OutbreakRow, *, infected: int, dead: int) -> None:
-    outbreak.infected += max(0, infected)
-    outbreak.dead += max(0, dead)
+    if INFECTED_LOCK not in outbreak.locked:
+        outbreak.infected += max(0, infected)
+    if DEAD_LOCK not in outbreak.locked:
+        outbreak.dead += max(0, dead)
     set_stats(disease, infected=(stat(disease, "infected") or 0) + max(0, infected), dead=(stat(disease, "dead") or 0) + max(0, dead))
 
 

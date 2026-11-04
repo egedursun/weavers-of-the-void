@@ -158,7 +158,13 @@ async def test_city_plague_and_spread(realm: Realm) -> None:
     city = await settlement(realm, "Crowded", population=50000)
     partner = await settlement(realm, "Partner", population=2000, location_id=realm.far_region.id)
     await trade_route(realm, city, partner)
-    ctx = context(realm.session, tuned(disasters={"city_plague_chance": 100, "plague_spread_chance": 100}, epidemiology={"crowd_population": 1000}))
+    ctx = context(
+        realm.session,
+        tuned(
+            disasters={"city_plague_chance": 100, "plague_spread_chance": 100},
+            epidemiology={"crowd_population": 1000, "route_spread_chance": 100, "route_volume_floor_pct": 100},
+        ),
+    )
     await set_stores(ctx, city.id, {Commodity.FOOD: 100})
     await natural_disasters(ctx)
     plagues = [event for event in await named(realm.session, EntityType.EVENT) if event.engine_kind is EngineKind.PLAGUE]

@@ -123,6 +123,7 @@ describe('body diagram model', () => {
       'curse_wither',
       'void_touch',
       'divine_brand',
+      'sickness',
     ]
     const conditions: components['schemas']['ConditionKind'][] = [
       'chronic_illness',

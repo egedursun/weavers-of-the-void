@@ -18,6 +18,7 @@ class CohortCondition(StrEnum):
     SICK = "sick"
     ENSLAVED = "enslaved"
     CAPTIVE = "captive"
+    MAIMED = "maimed"
 
 
 class Job(StrEnum):

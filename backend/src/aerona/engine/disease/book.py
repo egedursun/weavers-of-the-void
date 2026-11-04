@@ -15,12 +15,16 @@ from aerona.db.tables.disease import (
     OutbreakRow,
     QuarantineRow,
 )
+from aerona.db.tables.ecology import SpeciesHostRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import LeyLineRow
 from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.son import SonStatus
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import stat
@@ -58,6 +62,10 @@ class DiseaseBook:
     bands: dict[int, dict[AgeBand, int]] = field(default_factory=dict)
     sanitation: dict[int, int] = field(default_factory=dict)
     inoculated: set[int] = field(default_factory=set)
+    hosts: dict[int, set[int]] = field(default_factory=dict)
+    ranges: dict[tuple[int, int], int] = field(default_factory=dict)
+    ley: set[int] = field(default_factory=set)
+    living_sons: set[int] = field(default_factory=set)
 
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules, epoch: int) -> "DiseaseBook":
@@ -92,7 +100,31 @@ class DiseaseBook:
                 totals[region] += people
         book.sanitation = {region: round_half_up(weighted[region] / totals[region]) for region in totals}
         book.inoculated = set(await session.scalars(select(HolderTechniqueRow.holder_entity_id).where(HolderTechniqueRow.technique == Technique.INOCULATION)))
+        await book.load_hosts(session)
+        for line in await session.scalars(select(LeyLineRow).where(LeyLineRow.severed.is_(False))):
+            book.ley |= {line.region_a_id, line.region_b_id}
+        book.living_sons = set(await session.scalars(select(SonRow.id).where(SonRow.status == SonStatus.ACTIVE)))
         return book
+
+    async def load_hosts(self, session: AsyncSession) -> None:
+        hosts: dict[int, set[int]] = defaultdict(set)
+        for disease_id, profile in self.profiles.items():
+            if profile.host_species_id is not None:
+                hosts[disease_id].add(profile.host_species_id)
+        for species_id, disease_id in await session.execute(
+            select(SpeciesHostRow.species_entity_id, SpeciesHostRow.disease_entity_id).where(SpeciesHostRow.immune.is_(False))
+        ):
+            hosts[disease_id].add(species_id)
+        immune = {
+            (row.species_entity_id, row.disease_entity_id) for row in await session.scalars(select(SpeciesHostRow).where(SpeciesHostRow.immune.is_(True)))
+        }
+        self.hosts = {disease_id: {item for item in found if (item, disease_id) not in immune} for disease_id, found in hosts.items()}
+        living = set(await session.scalars(select(EntityRow.id).where(EntityRow.entity_type == EntityType.SPECIES, EntityRow.status == EntityStatus.CANON)))
+        self.ranges = {
+            (row.species_entity_id, row.region_entity_id): row.abundance
+            for row in await session.scalars(select(SpeciesRangeRow))
+            if row.species_entity_id in living and row.abundance > 0
+        }
 
     def outbreaks_in(self, region_id: int | None) -> list[OutbreakRow]:
         return [outbreak for outbreak in self.outbreaks if outbreak.region_entity_id == region_id]
@@ -131,6 +163,29 @@ class DiseaseBook:
 
     def endemic_load(self, region_id: int | None) -> int:
         return sum(row.load for row in self.endemic.get(region_id or -1, []))
+
+    def host_bound(self, disease_id: int) -> bool:
+        return bool(self.hosts.get(disease_id))
+
+    def host_abundance(self, disease_id: int, region_id: int | None) -> float:
+        if region_id is None:
+            return 0.0
+        return min(1.0, max((self.ranges.get((species_id, region_id), 0) for species_id in self.hosts.get(disease_id, set())), default=0) / PERCENT)
+
+    def host_alive(self, disease_id: int) -> bool:
+        found = self.hosts.get(disease_id, set())
+        return any(key[0] in found for key in self.ranges)
+
+    def hidden_share(self, disease_id: int) -> float:
+        profile = self.profiles.get(disease_id)
+        if profile is None:
+            return 0.0
+        return min(1.0, profile.incubation * self.rules.epidemiology.incubation_hidden_pct / PERCENT)
+
+    def unseen(self, outbreak: OutbreakRow | None) -> float:
+        if outbreak is None or self.epoch - outbreak.started_epoch > 1:
+            return 0.0
+        return self.hidden_share(outbreak.disease_entity_id)
 
     def herd_threshold(self, disease_id: int) -> float:
         profile = self.profiles.get(disease_id)

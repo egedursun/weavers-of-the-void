@@ -22,6 +22,8 @@ class CohortsRules:
     promotion_maimed_min: int = rule(100, 1, 1000000, G, "Maimed in one epoch that count as a mass maiming")
     promotion_famine_dead_min: int = rule(200, 1, 1000000, G, "Famine dead in one epoch that leave orphans worth a name")
     promotion_cap: int = rule(4, 0, 100, G, "Most named mortals raised from cohorts in an epoch")
+    promotion_injury_severity: int = rule(4, 1, 5, G, "Severity of the matching wound a mortal raised from a mass maiming bears")
+    promotion_orphan_intensity: int = rule(70, 0, 100, G, "Weight of the famine memory a mortal raised as a famine orphan carries")
 
 
 @dataclass(frozen=True)

@@ -1,4 +1,5 @@
 import {
+  Accessibility,
   Anchor,
   Axe,
   Baby,
@@ -185,6 +186,12 @@ export const CONDITION_SPEC: Record<CohortCondition, Spec> = {
     tone: 'warning',
     hint: 'Taken in war and not yet ransomed or freed',
   },
+  maimed: {
+    label: 'Maimed',
+    icon: Accessibility,
+    tone: 'warning',
+    hint: 'Crippled but no veterans; they work less and are never levied',
+  },
 }
 
 export const PRESSURE_HINT: Record<string, string> = {
@@ -290,13 +297,48 @@ export const INHERITANCE_SPEC: Record<InheritanceCustom, Spec> = {
 }
 
 export const VECTOR_SPEC: Record<DiseaseVector, Spec> = {
-  air: { label: 'Breath and air', icon: Wind, tone: 'info' },
-  water: { label: 'Water', icon: Droplets, tone: 'info' },
-  touch: { label: 'Touch', icon: Hand, tone: 'warning' },
-  bite: { label: 'Bites of beasts', icon: Bug, tone: 'warning' },
-  spirit: { label: 'Spirits', icon: Ghost, tone: 'verdigris' },
-  void: { label: 'The void', icon: Orbit, tone: 'danger' },
-  curse: { label: 'A curse', icon: Sparkles, tone: 'danger' },
+  air: {
+    label: 'Breath and air',
+    icon: Wind,
+    tone: 'info',
+    hint: 'Thrives in crowds and in cold or dry lands where people huddle indoors',
+  },
+  water: {
+    label: 'Water',
+    icon: Droplets,
+    tone: 'info',
+    hint: 'Follows rivers and marsh; clean wells and sewers hold it back best',
+  },
+  touch: {
+    label: 'Touch',
+    icon: Hand,
+    tone: 'warning',
+    hint: 'Rides with caravans, armies and travellers; weak without contact',
+  },
+  bite: {
+    label: 'Bites of beasts',
+    icon: Bug,
+    tone: 'warning',
+    hint: 'Needs its host beast; where the host is gone it all but dies out',
+  },
+  spirit: {
+    label: 'Spirits',
+    icon: Ghost,
+    tone: 'verdigris',
+    hint: 'Gathers where magic runs thick and on ley lines; the pious resist it',
+  },
+  void: {
+    label: 'The void',
+    icon: Orbit,
+    tone: 'danger',
+    hint: 'Spreads where the void has wounded the land; faint elsewhere',
+  },
+  curse: {
+    label: 'A curse',
+    icon: Sparkles,
+    tone: 'danger',
+    hint: 'Ignores clean water; strong while the god who laid it lives',
+  },
 }
 
 export const AFFINITY_SPEC: Record<ClimateAffinity, Spec> = {
@@ -308,12 +350,38 @@ export const AFFINITY_SPEC: Record<ClimateAffinity, Spec> = {
 }
 
 export const TARGET_SPEC: Record<DiseaseTarget, Spec> = {
-  breath: { label: 'Breath', icon: Wind, tone: 'info' },
-  vital: { label: 'Vital organs', icon: HeartPulse, tone: 'danger' },
-  cognition: { label: 'Mind', icon: Brain, tone: 'verdigris' },
-  sight: { label: 'Sight', icon: Eye, tone: 'warning' },
-  skin: { label: 'Skin', icon: Fingerprint, tone: 'warning' },
+  breath: {
+    label: 'Breath',
+    icon: Wind,
+    tone: 'info',
+    hint: 'Lungs and throat; the sick cannot farm, mine, build or march',
+  },
+  vital: {
+    label: 'Vital organs',
+    icon: HeartPulse,
+    tone: 'danger',
+    hint: 'Heart and gut; every kind of work suffers',
+  },
+  cognition: {
+    label: 'Mind',
+    icon: Brain,
+    tone: 'verdigris',
+    hint: 'The head; scholars, priests and traders falter',
+  },
+  sight: {
+    label: 'Sight',
+    icon: Eye,
+    tone: 'warning',
+    hint: 'The eyes; crafts, scholarship and hunting suffer',
+  },
+  skin: {
+    label: 'Skin',
+    icon: Fingerprint,
+    tone: 'warning',
+    hint: 'Face and presence; traders and priests are shunned',
+  },
 }
+export const TARGET_ORDER = Object.keys(TARGET_SPEC) as DiseaseTarget[]
 
 export const PATH_SPEC: Record<SpreadPath, Spec> = {
   origin: { label: 'Rose here', icon: Sprout, tone: 'danger' },
@@ -391,6 +459,15 @@ export const FIELD_LABEL: Record<string, string> = {
   cure_level: 'Medicine to cure',
   vector: 'Spread',
   climate_affinity: 'Climate',
+  target_functions: 'Struck body functions',
+  host_species_id: 'Host species',
+  origin_incident_id: 'Origin event',
+  origin_region_id: 'Land of origin',
+  severity: 'Severity',
+  infected: 'Fell sick',
+  dead: 'Dead',
+  status: 'State',
+  quarantined: 'Sealed',
 }
 
 export const TREASURY_ICON: LucideIcon = HandCoins

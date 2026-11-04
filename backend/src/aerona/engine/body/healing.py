@@ -332,6 +332,8 @@ async def _close(ctx: TickContext, bearer: Bearer, row: InjuryRow, care: Care, r
         await gain_condition(ctx, bearer, ConditionKind.WITHERED_LIMB, row.cause_kind, severity=row.severity, part=row.part, source_node_id=row.cause_node_id)
     if lasting and row.kind is InjuryKind.VENOM:
         await gain_condition(ctx, bearer, ConditionKind.CHRONIC_ILLNESS, row.cause_kind, severity=row.severity, source_node_id=row.cause_node_id)
+    if lasting and row.kind is InjuryKind.SICKNESS:
+        await gain_condition(ctx, bearer, ConditionKind.CHRONIC_ILLNESS, row.cause_kind, severity=row.severity, part=row.part, source_node_id=row.cause_node_id)
 
 
 HEALING_KEY = "healing"
