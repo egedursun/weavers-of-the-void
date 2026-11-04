@@ -19,7 +19,7 @@ type PrayerAnswerFormProps = {
 
 export function PrayerAnswerForm({ messageId, mortal }: PrayerAnswerFormProps) {
   const [text, setText] = useState('')
-  const [essence, setEssence] = useState('')
+  const [essence, setEssence] = useState('0')
   const rule = useRuleLookup()
   const { reason, essence: available } = useGodGate()
   const cap = rule('god_actions.prayer_essence_cap')

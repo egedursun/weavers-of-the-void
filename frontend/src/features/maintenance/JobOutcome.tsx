@@ -52,6 +52,7 @@ export function JobOutcome({
         title={title}
         action={
           <Button
+            className='self-start'
             variant='ghost'
             size='icon-sm'
             aria-label='Dismiss progress'

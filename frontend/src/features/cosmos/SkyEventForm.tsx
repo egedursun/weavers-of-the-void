@@ -40,7 +40,10 @@ export function SkyEventForm({ index, rules, worldId }: SkyEventFormProps) {
   const [worldChoice, setWorld] = useState('')
   const [star, setStar] = useState(NO_STAR)
   const [routeChoice, setRoute] = useState('')
-  const [epochs, setEpochs] = useState('')
+  const [epochs, setEpochs] = useState(() => {
+    const known = rules.get('stormEpochs')
+    return known === undefined ? '' : String(known)
+  })
   const openRoutes = index.data.routes.filter((route) => routeState(route).open)
   const storm = kind === 'void_storm'
   const world =

@@ -748,7 +748,7 @@ export function FoundRouteDialog({
   const [second, setSecond] = useState<string | null>(null)
   const [mode, setMode] = useState<string>(LAND_DECIDES)
   const [keeper, setKeeper] = useState<string | null>(null)
-  const [toll, setToll] = useState('')
+  const [toll, setToll] = useState('10')
   const found = useGodAction({
     run: () =>
       unwrap(

@@ -66,33 +66,37 @@ function MultiField({
   onChange: (next: string[]) => void
 }) {
   return (
-    <FormRow label={field.label}>
-      {() => (
-        <div className='flex min-w-0 flex-wrap gap-2'>
-          {Object.entries(field.table).map(([key, spec]) => {
-            const on = value.includes(key)
-            return (
-              <Button
-                key={key}
-                size='sm'
-                variant={on ? 'default' : 'outline'}
-                aria-pressed={on}
-                disabled={blocked !== null}
-                disabledReason={blocked ?? undefined}
-                onClick={() =>
-                  onChange(
-                    on ? value.filter((item) => item !== key) : [...value, key]
-                  )
-                }
-              >
-                <spec.icon aria-hidden='true' />
-                {spec.label}
-              </Button>
-            )
-          })}
-        </div>
-      )}
-    </FormRow>
+    <div className='min-w-0 sm:col-span-2'>
+      <FormRow label={field.label}>
+        {() => (
+          <div className='flex min-w-0 flex-wrap gap-2'>
+            {Object.entries(field.table).map(([key, spec]) => {
+              const on = value.includes(key)
+              return (
+                <Button
+                  key={key}
+                  size='sm'
+                  variant={on ? 'default' : 'outline'}
+                  aria-pressed={on}
+                  disabled={blocked !== null}
+                  disabledReason={blocked ?? undefined}
+                  onClick={() =>
+                    onChange(
+                      on
+                        ? value.filter((item) => item !== key)
+                        : [...value, key]
+                    )
+                  }
+                >
+                  <spec.icon aria-hidden='true' />
+                  {spec.label}
+                </Button>
+              )
+            })}
+          </div>
+        )}
+      </FormRow>
+    </div>
   )
 }
 
@@ -259,7 +263,7 @@ export function LoreForge({
               />
             )}
           </FormRow>
-          <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2'>
+          <div className='grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-2'>
             {typed.map((field) => (
               <DraftField
                 key={field.key}

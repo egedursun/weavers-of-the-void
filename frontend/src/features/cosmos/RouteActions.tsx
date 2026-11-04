@@ -39,7 +39,10 @@ type RouteActionsProps = {
 export function RouteActions({ route, index, rules }: RouteActionsProps) {
   const state = routeState(route)
   const defaultEpochs = rules.get('severEpochs')
-  const [epochs, setEpochs] = useState('')
+  const [epochs, setEpochs] = useState(() => {
+    const known = rules.get('severEpochs')
+    return known === undefined ? '' : String(known)
+  })
   const [danger, setDanger] = useState(String(route.danger))
   const epochsId = useId()
   const dangerId = useId()

@@ -552,7 +552,7 @@ export function TreatyBuilder({
   blocked: string | null
 }) {
   const [clauseKind, setClauseKind] = useState<string>('tribute')
-  const [amount, setAmount] = useState('')
+  const [amount, setAmount] = useState('100')
   const [party, setParty] = useState<number | null>(null)
   const [role, setRole] = useState<string>('guarantor')
   const first = treaty.parties[0]?.id ?? null

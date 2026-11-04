@@ -52,7 +52,7 @@ type RowProps = {
 function RelationRow({ entry, selfId, readOnlyReason }: RowProps) {
   const set = useSetRelation(selfId)
   const endFeud = useEndFeud(selfId)
-  const [draft, setDraft] = useState('')
+  const [draft, setDraft] = useState(String(entry.value))
   const parsed = Number(draft)
   const invalid =
     draft.trim() === '' ||
@@ -232,7 +232,7 @@ function NewRelation({
   const start = useStartFeud(ctx.entity.id)
   const set = useSetRelation(ctx.entity.id)
   const [otherId, setOtherId] = useState<number | null>(null)
-  const [value, setValue] = useState('')
+  const [value, setValue] = useState('0')
   const parsed = Number(value)
   const valueInvalid =
     value.trim() === '' ||

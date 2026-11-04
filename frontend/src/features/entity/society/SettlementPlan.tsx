@@ -791,6 +791,7 @@ function PlanControls({
               : `${plan.district_slots - plan.districts.length} open plots`}
           </Muted>
           <Button
+            className='self-start'
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -836,6 +837,7 @@ function PlanControls({
               kind.
             </Muted>
             <Button
+              className='self-start'
               size='sm'
               disabled={busy !== null || retype === '' || target === ''}
               disabledReason={busy ?? 'Choose a district and what it becomes'}

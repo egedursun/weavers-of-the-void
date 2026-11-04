@@ -63,7 +63,7 @@ export function GodPanel({ doom }: { doom: number }) {
   const rule = useRuleLookup()
   const { reason, essence } = useGodGate()
   const threshold = rule('balance.apocalypse_threshold')
-  const [pour, setPour] = useState('')
+  const [pour, setPour] = useState('10')
   const [clock, setClock] = useState(String(doom))
   const [sign, setSign] = useState<SignKind>('grace')
   const [signTarget, setSignTarget] = useState<string | null>(null)

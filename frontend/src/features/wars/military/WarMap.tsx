@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Castle, Flag, Map as MapIcon, Swords, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -30,6 +30,146 @@ const MIN_SPAN = 0.14
 const LABEL_GAP_X = 70
 const LABEL_GAP_Y = 16
 const UNIT_DIVISOR = 320
+
+const GLYPH_BOX = '0 0 20 20'
+
+function Glyph({ children }: { children: ReactNode }) {
+  return (
+    <svg
+      viewBox={GLYPH_BOX}
+      aria-hidden='true'
+      className='size-icon-sm shrink-0 overflow-visible'
+    >
+      {children}
+    </svg>
+  )
+}
+
+const SYMBOLS: { key: string; label: string; glyph: ReactNode }[] = [
+  {
+    key: 'army',
+    label: 'Army',
+    glyph: (
+      <circle
+        cx={10}
+        cy={10}
+        r={6}
+        className='fill-muted-foreground stroke-background'
+        strokeWidth={2}
+      />
+    ),
+  },
+  {
+    key: 'march',
+    label: 'March',
+    glyph: (
+      <polyline
+        points='2,15 9,7 18,10'
+        className='fill-none stroke-muted-foreground'
+        strokeWidth={2}
+        strokeLinecap='round'
+        strokeLinejoin='round'
+      />
+    ),
+  },
+  {
+    key: 'front',
+    label: 'Front',
+    glyph: (
+      <line
+        x1={2}
+        y1={10}
+        x2={18}
+        y2={10}
+        className='stroke-destructive'
+        strokeWidth={2.5}
+        strokeDasharray='4 3'
+        strokeLinecap='round'
+      />
+    ),
+  },
+  {
+    key: 'battle',
+    label: 'Battle',
+    glyph: (
+      <g className='stroke-destructive' strokeWidth={2.5} strokeLinecap='round'>
+        <line x1={5} y1={5} x2={15} y2={15} />
+        <line x1={5} y1={15} x2={15} y2={5} />
+      </g>
+    ),
+  },
+  {
+    key: 'siege',
+    label: 'Siege',
+    glyph: (
+      <g>
+        <circle
+          cx={10}
+          cy={10}
+          r={8.5}
+          className='fill-none stroke-warning'
+          strokeWidth={1.5}
+          strokeDasharray='2 2'
+        />
+        <rect
+          x={6}
+          y={6}
+          width={8}
+          height={8}
+          rx={1.5}
+          className='fill-muted-foreground'
+        />
+      </g>
+    ),
+  },
+  {
+    key: 'occupied',
+    label: 'Occupied',
+    glyph: (
+      <circle
+        cx={10}
+        cy={10}
+        r={7}
+        className='fill-none stroke-muted-foreground'
+        strokeWidth={2}
+        strokeDasharray='3 3'
+      />
+    ),
+  },
+]
+
+function MapKey({ sides }: { sides: { id: number; name: string }[] }) {
+  return (
+    <div
+      data-surface='WarMapKey'
+      className='pointer-events-none absolute inset-x-2 bottom-2 flex min-w-0 flex-col gap-1.5 rounded-lg border bg-background/85 px-3 py-2 shadow-sm backdrop-blur-sm'
+    >
+      <div className='flex min-w-0 flex-wrap gap-x-3 gap-y-1'>
+        {sides.map((side, index) => (
+          <span key={side.id} className='flex min-w-0 items-center gap-1.5'>
+            <span
+              aria-hidden='true'
+              className={`size-icon-xs shrink-0 rounded-full ring-2 ring-background ${SIDE_SWATCH[index % SIDE_SWATCH.length]}`}
+            />
+            <Text as='span' variant='caption' weight='semibold' truncate>
+              {side.name}
+            </Text>
+          </span>
+        ))}
+      </div>
+      <div className='flex min-w-0 flex-wrap gap-x-3 gap-y-1'>
+        {SYMBOLS.map((symbol) => (
+          <span key={symbol.key} className='flex items-center gap-1'>
+            <Glyph>{symbol.glyph}</Glyph>
+            <Muted as='span' variant='caption'>
+              {symbol.label}
+            </Muted>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 type Point = { x: number; y: number }
 type Box = { x: number; y: number; width: number; height: number }
@@ -374,14 +514,16 @@ export function WarMap({ room }: { room: WarRoom }) {
                   y={
                     entry.below
                       ? entry.spot.y + unit * 36
-                      : entry.spot.y - unit * 7
+                      : entry.spot.y - unit * 18
                   }
                   textAnchor='middle'
                   className='fill-foreground stroke-background'
-                  strokeWidth={unit * 2.5}
+                  strokeWidth={unit * 3}
+                  strokeLinejoin='round'
                   paintOrder='stroke'
-                  fontSize={unit * 10}
+                  fontSize={unit * 8.5}
                   fontWeight={600}
+                  letterSpacing={unit * 0.2}
                 >
                   {entry.name}
                 </text>
@@ -463,6 +605,7 @@ export function WarMap({ room }: { room: WarRoom }) {
               )
             })}
           </svg>
+          <MapKey sides={sides} />
         </div>
         <div className='flex min-w-0 flex-col justify-start gap-3 @3xl/mil:col-span-2'>
           <EpochSlider

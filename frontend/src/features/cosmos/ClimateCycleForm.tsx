@@ -30,7 +30,10 @@ export function ClimateCycleForm({
 }) {
   const [world, setWorld] = useState(ALL)
   const [era, setEra] = useState<ClimateEra>('rain')
-  const [epochs, setEpochs] = useState('')
+  const [epochs, setEpochs] = useState(() => {
+    const known = rules.get('climateEpochs')
+    return known === undefined ? '' : String(known)
+  })
   const cap = rules.get('climateMaxEpochs')
   const fallback = rules.get('climateEpochs')
   const parsed = epochs.trim() === '' ? undefined : Number(epochs)

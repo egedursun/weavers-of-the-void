@@ -689,6 +689,7 @@ export function EndemicControls({
         </div>
         <div className='mt-auto flex min-w-0 flex-col gap-1.5'>
           <Button
+            className='self-start'
             size='sm'
             variant='outline'
             disabled={noLand !== null}
@@ -699,6 +700,7 @@ export function EndemicControls({
             {current ? 'Set its load' : 'Make it endemic here'}
           </Button>
           <Button
+            className='self-start'
             size='sm'
             variant='outline'
             disabled={noLand !== null || !current}
@@ -827,6 +829,7 @@ export function ImmunityControls({
       </div>
       <div className='mt-auto flex min-w-0 flex-col gap-1.5'>
         <Button
+          className='self-start'
           size='sm'
           variant='outline'
           disabled={none !== null}
@@ -837,6 +840,7 @@ export function ImmunityControls({
           Set their resistance
         </Button>
         <Button
+          className='self-start'
           size='sm'
           variant='outline'
           disabled={none !== null}

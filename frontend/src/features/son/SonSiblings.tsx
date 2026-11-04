@@ -42,7 +42,7 @@ export function RelationEditor({
   options: { id: number; name: string; value: number }[]
 }) {
   const [other, setOther] = useState('')
-  const [value, setValue] = useState('')
+  const [value, setValue] = useState('0')
   const { reason } = useGodGate()
   const set = useGodAction({
     run: () =>

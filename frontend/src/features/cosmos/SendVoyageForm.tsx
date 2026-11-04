@@ -50,7 +50,10 @@ export function SendVoyageForm({
   const [traveller, setTraveller] = useState('')
   const [routeChoice, setRoute] = useState('')
   const [intent, setIntent] = useState<JourneyIntent>('exploration')
-  const [percent, setPercent] = useState('')
+  const [percent, setPercent] = useState(() => {
+    const known = rules.get('voyagePercent')
+    return known === undefined ? '' : String(known)
+  })
   const travelling = useMemo(
     () =>
       new Set(

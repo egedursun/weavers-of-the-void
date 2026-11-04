@@ -316,7 +316,7 @@ function PlantMemory({ mind }: { mind: Mind }) {
   const [subject, setSubject] = useState<string | null>(null)
   const [kind, setKind] = useState('')
   const [size, setSize] = useState(DEFAULT_SIZE)
-  const [decay, setDecay] = useState('')
+  const [decay, setDecay] = useState('5')
   const options = useMemo(
     () =>
       (names.data ?? [])

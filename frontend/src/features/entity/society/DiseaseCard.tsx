@@ -688,6 +688,7 @@ function Levers({ view, blocked }: { view: Disease; blocked: string | null }) {
         />
         <div className='mt-auto flex min-w-0 flex-col gap-1.5'>
           <Button
+            className='self-start'
             size='sm'
             variant='outline'
             disabled={noCommunity !== null}
@@ -698,6 +699,7 @@ function Levers({ view, blocked }: { view: Disease; blocked: string | null }) {
             Give the cure
           </Button>
           <Button
+            className='self-start'
             size='sm'
             variant='outline'
             disabled={noCommunity !== null}
@@ -708,6 +710,7 @@ function Levers({ view, blocked }: { view: Disease; blocked: string | null }) {
             Take the cure away
           </Button>
           <Button
+            className='self-start'
             size='sm'
             variant='outline'
             disabled={noCommunity !== null}

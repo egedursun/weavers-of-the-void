@@ -154,7 +154,7 @@ export function PantheonScreen() {
           title='No world yet'
           description='Create the world in the genesis wizard; your sons appear here once they answer your call.'
           action={
-            <Button asChild>
+            <Button className='self-start' asChild>
               <Link to='/genesis'>Begin genesis</Link>
             </Button>
           }

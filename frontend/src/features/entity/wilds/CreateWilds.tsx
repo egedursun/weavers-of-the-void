@@ -63,6 +63,66 @@ const BEAST_STATS = [
   ['intelligence', 'Intelligence', 0, 100],
 ] as const
 const POWER_MAX = 10
+const STAT_CAP = 100
+const SIZE_SCALE: Record<string, number> = {
+  tiny: 0.4,
+  small: 0.7,
+  medium: 1,
+  large: 1.4,
+  huge: 1.8,
+  colossal: 2.4,
+}
+const SPECIES_BASE: Record<string, number> = {
+  hp: 60,
+  strength: 30,
+  agility: 50,
+  intelligence: 20,
+  danger: 20,
+  might: 20,
+  abundance: 40,
+}
+const BEAST_BASE: Record<string, number> = {
+  hp: 400,
+  strength: 45,
+  agility: 50,
+  danger: 45,
+  cunning: 45,
+  renown: 20,
+  terror: 30,
+  endurance: 45,
+  perception: 50,
+  willpower: 45,
+  intelligence: 30,
+}
+const GROWS_WITH_SIZE = new Set([
+  'strength',
+  'danger',
+  'might',
+  'terror',
+  'endurance',
+  'renown',
+])
+const SHRINKS_WITH_SIZE = new Set(['agility', 'abundance'])
+
+function sizedDefaults(
+  base: Record<string, number>,
+  size: string
+): Record<string, string> {
+  const scale = SIZE_SCALE[size] ?? 1
+  return Object.fromEntries(
+    Object.entries(base).map(([key, value]) => {
+      const sized =
+        key === 'hp'
+          ? value * scale * scale
+          : GROWS_WITH_SIZE.has(key)
+            ? Math.min(STAT_CAP, value * scale)
+            : SHRINKS_WITH_SIZE.has(key)
+              ? Math.min(STAT_CAP, value / scale)
+              : value
+      return [key, String(Math.max(1, Math.round(sized)))]
+    })
+  )
+}
 
 function numbers(
   fields: readonly (readonly [string, string, number, number])[],
@@ -191,9 +251,8 @@ export function CreateSpeciesDialog({ regionId }: { regionId?: number }) {
   const [migratory, setMigratory] = useState(false)
   const [products, setProducts] = useState<string[]>([])
   const [traits, setTraits] = useState<string[]>([])
-  const [stats, setStats] = useState<Record<string, string>>({
-    abundance: '40',
-  })
+  const [stats, setStats] = useState<Record<string, string>>({})
+  const shownStats = { ...sizedDefaults(SPECIES_BASE, size), ...stats }
   const [power, setPower] = useState('2')
   const { reason } = useGodGate()
   const create = useWildAction<void>(
@@ -211,7 +270,7 @@ export function CreateSpeciesDialog({ regionId }: { regionId?: number }) {
       products,
       traits,
       power: Math.min(POWER_MAX, Math.max(1, Math.round(Number(power) || 1))),
-      ...numbers(SPECIES_STATS, stats),
+      ...numbers(SPECIES_STATS, shownStats),
     }),
     () => {
       setOpen(false)
@@ -338,11 +397,11 @@ export function CreateSpeciesDialog({ regionId }: { regionId?: number }) {
           <div className='flex min-w-0 flex-col gap-1.5'>
             <Label variant='overline'>Its numbers</Label>
             <Muted variant='caption'>
-              Leave a number empty and the world sets it.
+              Set from its size; change any number to make it your own.
             </Muted>
             <StatFields
               fields={SPECIES_STATS}
-              values={stats}
+              values={shownStats}
               onChange={(key, value) =>
                 setStats((before) => ({ ...before, [key]: value }))
               }
@@ -387,11 +446,8 @@ export function CreateBeastDialog({
   const [lair, setLair] = useState<number | null>(regionId ?? null)
   const [size, setSize] = useState('huge')
   const [temper, setTemper] = useState('sleeping')
-  const [stats, setStats] = useState<Record<string, string>>({
-    strength: '80',
-    terror: '20',
-    renown: '20',
-  })
+  const [stats, setStats] = useState<Record<string, string>>({})
+  const shownStats = { ...sizedDefaults(BEAST_BASE, size), ...stats }
   const [power, setPower] = useState('3')
   const { reason } = useGodGate()
   const create = useWildAction<void>(
@@ -404,7 +460,7 @@ export function CreateBeastDialog({
       size_class: size,
       temper,
       power: Math.min(POWER_MAX, Math.max(1, Math.round(Number(power) || 1))),
-      ...numbers(BEAST_STATS, stats),
+      ...numbers(BEAST_STATS, shownStats),
     }),
     () => {
       setOpen(false)
@@ -494,11 +550,11 @@ export function CreateBeastDialog({
           <div className='flex min-w-0 flex-col gap-1.5'>
             <Label variant='overline'>Its might and mind</Label>
             <Muted variant='caption'>
-              Leave a number empty and the world sets it from its kind.
+              Set from its size; change any number to make it your own.
             </Muted>
             <StatFields
               fields={BEAST_STATS}
-              values={stats}
+              values={shownStats}
               onChange={(key, value) =>
                 setStats((before) => ({ ...before, [key]: value }))
               }

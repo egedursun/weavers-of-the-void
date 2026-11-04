@@ -114,6 +114,7 @@ export function ShareWorld({ hasWorld, readOnly }: ShareWorldProps) {
             </div>
           </div>
           <Button
+            className='self-start'
             variant='outline'
             size='tile'
             disabled={!hasWorld}
@@ -143,6 +144,7 @@ export function ShareWorld({ hasWorld, readOnly }: ShareWorldProps) {
             )}
           </Button>
           <Button
+            className='self-start'
             variant='outline'
             size='tile'
             disabled={!hasWorld}
