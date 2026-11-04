@@ -62,6 +62,7 @@ from aerona.services.player import (
     society,
     society_depth,
     son_tools,
+    structures,
     urban,
     warfare,
     wilds,
@@ -663,7 +664,7 @@ SOCIETY_ACTIONS = (
     _sync(Meta("society:uprising", "Incite a class uprising", G.SOCIETY), society.class_uprising, society.ClassUprising, free, ()),
     _sync(Meta("resource:commodity", "Set what a resource yields", G.SOCIETY), society.resource_commodity, society.ResourceCommodity, free, ()),
     _sync(Meta("community:mint", "Order a coin minted", G.SOCIETY), society.mint, society.Mint, free, ()),
-    _sync(Meta("community:work", "Commission a work", G.SOCIETY), society.raise_work, society.Work, free, ()),
+    _sync(Meta("community:work", "Commission a work", G.SOCIETY), society.raise_work, society.Work, free, ("S7.2",)),
     _sync(Meta("community:exodus", "Send a community into exodus", G.SOCIETY), society.exodus, society.Exodus, free, ()),
     _sync(Meta("community:contact", "Bring two cultures into contact", G.SOCIETY), society.contact, society.Contact, free, ()),
     _sync(Meta("world:golden_age", "Proclaim a golden age", G.WORLDS), society.golden_age, society.WorldTarget, free, ()),
@@ -1436,6 +1437,26 @@ MECHANIC_ACTIONS = (
         ("J.16c",),
     ),
 )
+
+
+def finish_cost_text(rules: Rules) -> str:
+    return f"{rules.construction.finish_cost} essence"
+
+
+S72 = ("S7.2",)
+STRUCTURE_ACTIONS = (
+    _sync(Meta("structure:commission", "Commission a structure", G.SOCIETY), structures.commission, structures.Commission, free, S72),
+    _sync(Meta("structure:fund", "Fund a structure under construction", G.SOCIETY), structures.fund, structures.Fund, free, S72),
+    _sync(Meta("structure:finish", "Finish a structure at once", G.SOCIETY), structures.finish, structures.StructureTarget, finish_cost_text, S72),
+    _sync(Meta("structure:abandon", "Abandon a structure under construction", G.SOCIETY), structures.abandon, structures.Abandon, free, S72),
+    _sync(Meta("structure:staff", "Staff a structure or release its staff", G.SOCIETY), structures.staff, structures.Staff, free, S72),
+    _sync(Meta("structure:damage", "Damage a structure", G.SOCIETY), structures.damage, structures.Damage, free, S72),
+    _sync(Meta("structure:repair", "Repair a structure", G.SOCIETY), structures.repair, structures.StructureTarget, free, S72),
+    _sync(Meta("structure:edit", "Edit, hold or release a structure's values", G.SOCIETY), structures.edit, structures.EditStructure, free, S72),
+    _sync(Meta("structure_design:create", "Draw up a new structure design", G.SOCIETY), structures.create_design, structures.CreateDesign, free, S72),
+    _sync(Meta("structure_design:edit", "Edit, hold or release a structure design", G.SOCIETY), structures.edit_design, structures.EditDesign, free, S72),
+    _sync(Meta("structure_design:retire", "Retire or restore a structure design", G.SOCIETY), structures.retire_design, structures.RetireDesign, free, S72),
+)
 ROUTE_ACTIONS = (
     _sync(
         Meta("trade_route:found", "Lay out a new trade route: its ends, way of travel, master and toll", G.SOCIETY),
@@ -1454,6 +1475,7 @@ ROUTE_ACTIONS = (
 )
 ACTIONS: tuple[ActionSpec, ...] = (
     *ROUTE_ACTIONS,
+    *STRUCTURE_ACTIONS,
     *WILDS_ACTIONS,
     *LORE_ACTIONS,
     *CREATOR_ACTIONS,

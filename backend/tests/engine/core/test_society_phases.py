@@ -6,6 +6,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.lore import ChronicleRow, LexemeRow
+from aerona.db.tables.structures import ConstructionRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType, LegendCategory
@@ -40,6 +41,7 @@ from aerona.engine.phases.writing import writing_systems
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import has_flag, spoken_language
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.structures.construction import finish
 from tests.engine.core.factories import CoreWorld, add_empty_world, bond, entity, knowledge, mortal, settlement, tuned_rules
 
 
@@ -221,6 +223,8 @@ async def test_works_rise_and_grow_in_splendor(session: AsyncSession, world: Cor
     await engine_works(ctx)
     built = list(await session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.STRUCTURE)))
     assert built
+    for row in list(await session.scalars(select(ConstructionRow))):
+        await finish(ctx, row)
     before = stat(built[0], "splendor") or 0
     await splendor_growth(ctx)
     assert (stat(built[0], "splendor") or 0) > before

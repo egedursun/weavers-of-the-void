@@ -60,6 +60,7 @@ import { Muted, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { CityWorkings, DesignEditor, DistrictDesigns } from './CityWorks'
+import { SettlementStructures } from './Structures'
 import { useSettlementPlan } from './api'
 import { DESIGN_FIELDS, signed } from './cityFields'
 import {
@@ -1107,6 +1108,14 @@ export function SettlementPlanSection({
             </ul>
           </Panel>
           <DistrictDesigns plan={plan} blocked={blocked} />
+          <Panel
+            title='Works and buildings'
+            icon={Landmark}
+            tone='verdigris'
+            hint='Temples, walls, granaries, workshops and wonders: what each does, how well, and what it costs'
+          >
+            <SettlementStructures hostId={settlementId} blocked={blocked} />
+          </Panel>
           <PlanControls
             key={JSON.stringify([
               plan.locked,

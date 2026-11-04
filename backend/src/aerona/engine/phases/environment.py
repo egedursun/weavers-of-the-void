@@ -14,11 +14,13 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.environment import CoastKind, LandUse, NotableYearKind, RiverClass, ScarKind, SoilKind, WeatherEffect, WeatherKind
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.world import ClimateEra, Discovery
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
@@ -62,6 +64,9 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, canon, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.structures.profiles import design_of
+from aerona.engine.structures.readers import Working, regions_of, working
+from aerona.engine.structures.spec import resolve
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
 
@@ -327,29 +332,50 @@ async def write_seasons(ctx: TickContext, world: WorldRow) -> list[WorldSeasonRo
     return rows
 
 
-BRIDGE_SUBTYPE = "bridge"
-HARBOUR_SUBTYPE = "harbour"
+WORKS_BY_KIND: dict[StructureKind, tuple[str, ...]] = {
+    StructureKind.ROAD: ("roads",),
+    StructureKind.BRIDGE: ("bridges",),
+    StructureKind.HARBOUR: ("harbours",),
+    StructureKind.CANAL: ("harbours", "irrigation"),
+    StructureKind.IRRIGATION: ("irrigation",),
+    StructureKind.DAM: ("irrigation",),
+    StructureKind.CARAVANSERAI: (),
+    StructureKind.MARKET: (),
+}
+
+
+def waystation_capacity(rules: Rules, item: Working) -> int:
+    if item.profile.kind is StructureKind.CARAVANSERAI:
+        return round_half_up(rules.structure_functions.caravanserai_capacity * item.profile.level * item.strength)
+    if item.profile.kind is StructureKind.MARKET:
+        return round_half_up(rules.trade_routes.capacity_per_market * item.strength)
+    return 0
 
 
 async def works_by_region(ctx: TickContext, book: EnvironmentBook) -> dict[int, Works]:
     knowledge = await KnowledgeMap.load(ctx.session)
     tallies: dict[int, Counter[str]] = {}
-    for entity in await canon(ctx.session, [EntityType.STRUCTURE, EntityType.SETTLEMENT]):
+    for item in await working(ctx.session, list(WORKS_BY_KIND)):
+        region_id = book.atlas.top_region(item.structure.id)
+        if region_id is None:
+            continue
+        tally = tallies.setdefault(region_id, Counter())
+        for key in WORKS_BY_KIND[item.profile.kind]:
+            tally[key] += max(1, round_half_up(item.profile.level * item.strength))
+        tally["waystations"] += waystation_capacity(ctx.rules, item)
+    for entity in await canon(ctx.session, [EntityType.SETTLEMENT]):
         region_id = book.atlas.top_region(entity.id)
         if region_id is None:
             continue
         tally = tallies.setdefault(region_id, Counter())
-        subtype = (entity.subtype or "").lower()
-        if entity.entity_type is EntityType.STRUCTURE:
-            tally["bridges"] += BRIDGE_SUBTYPE in subtype
-            tally["harbours"] += HARBOUR_SUBTYPE in subtype
-            continue
         tally["roads"] += knowledge.knows(entity.id, KnowledgeBranch.ARCHITECTURE)
         harbour = await ctx.session.get(SettlementInfrastructureRow, entity.id)
         tally["harbours"] += harbour.harbour_capacity // ctx.rules.districts.harbour_works_capacity if harbour is not None else 0
         tally["irrigation"] += knowledge.level(entity.id, KnowledgeBranch.AGRICULTURE) >= ctx.rules.environment.irrigation_agriculture_level
     return {
-        region_id: Works(roads=tally["roads"], bridges=tally["bridges"], harbours=tally["harbours"], irrigation=tally["irrigation"])
+        region_id: Works(
+            roads=tally["roads"], bridges=tally["bridges"], harbours=tally["harbours"], irrigation=tally["irrigation"], waystations=tally["waystations"]
+        )
         for region_id, tally in tallies.items()
     }
 
@@ -716,9 +742,9 @@ class YearHarvest:
 
 
 async def calendar_regions(ctx: TickContext, book: EnvironmentBook) -> set[int]:
+    regions: set[int] = set(await regions_of(ctx.session, [StructureKind.OBSERVATORY], book.atlas))
     if not book.calendars:
-        return set()
-    regions: set[int] = set()
+        return regions
     for bond in await active_bonds(ctx.session, [BondKind.KNOWS], targets=list(book.calendars)):
         region_id = book.atlas.top_region(bond.source_node_id)
         if region_id is not None:
@@ -1126,15 +1152,6 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
     return crowned
 
 
-LEY_WORK_KINDS = frozenset({EngineKind.TEMPLE, EngineKind.OBSERVATORY})
-LEY_WORK_SUBTYPES = ("gate", "tower", "temple", "observatory", "shrine")
-
-
-def ley_work(work: EntityRow) -> bool:
-    subtype = (work.subtype or "").lower()
-    return work.engine_kind in LEY_WORK_KINDS or any(word in subtype for word in LEY_WORK_SUBTYPES)
-
-
 async def empower_works(ctx: TickContext, web: LeyWeb) -> int:
     settings = ctx.rules.environment
     atlas = await RegionAtlas.load(ctx.session)
@@ -1143,7 +1160,13 @@ async def empower_works(ctx: TickContext, web: LeyWeb) -> int:
     empowered = 0
     for work in await canon(ctx.session, [EntityType.STRUCTURE]):
         region_id = atlas.top_region(work.id)
-        if region_id is None or not degree[region_id] or not ley_work(work):
+        profile = await ctx.session.get(StructureProfileRow, work.id)
+        if profile is None:
+            continue
+        on_line = region_id is not None and bool(degree[region_id])
+        if "on_ley_line" not in profile.locked:
+            profile.on_ley_line = on_line
+        if not profile.on_ley_line or not resolve(profile.kind, await design_of(ctx.session, profile)).ley:
             continue
         gain = settings.ley_function_gain * (settings.nexus_function_mult if work.location_id in nexus else 1)
         current = stat_or(work, "function", settings.ley_function_base)
@@ -1162,10 +1185,13 @@ async def empower_works(ctx: TickContext, web: LeyWeb) -> int:
     "table.ley_lines",
     "table.place_environment",
     "table.region_environment",
+    "table.structure_designs",
+    "table.structure_profiles",
     "table.world_maps",
 )
 @writes(
     "structure.function",
+    "table.structure_profiles",
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",

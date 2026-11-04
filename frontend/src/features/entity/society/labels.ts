@@ -253,6 +253,7 @@ export const TREASURY_SPEC: Record<TreasuryEntry, Spec> = {
   plunder: { label: 'Plunder', icon: Swords, tone: 'danger' },
   grant: { label: 'Grant', icon: Gift, tone: 'gold' },
   loan: { label: 'Bank loan', icon: Landmark, tone: 'warning' },
+  upkeep: { label: 'Upkeep of works', icon: Building, tone: 'warning' },
 }
 
 export const AESTHETIC_SPEC: Record<Aesthetic, Spec> = {

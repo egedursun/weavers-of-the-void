@@ -1,54 +1,33 @@
-from collections.abc import Callable
-from dataclasses import dataclass
+from sqlalchemy import select
 
+from aerona.catalog.structures import ENGINE_KIND_STRUCTURES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.db.tables.structures import ConstructionRow, StructureProfileRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityType
 from aerona.domain.enums.mind import ActKind
-from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
-from aerona.domain.models.entity_stats import StructureStats
+from aerona.domain.enums.society import KnowledgeBranch, SocialClass
+from aerona.domain.enums.structure import STANDING_STATES, ConstructionState, ConstructionStatus, StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.hooks import judged
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
-from aerona.engine.primitives.faith import living_patron
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
-from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
-from aerona.engine.primitives.queries import active_bonds, canon, connect, count_communities, living_entity
-from aerona.engine.primitives.records import RecordSpec, indefinite, open_record
-from aerona.engine.primitives.society import class_shares, shift_stock
+from aerona.engine.primitives.queries import active_bonds, canon, count_communities, living_entity
+from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import set_stats, stat
-from aerona.language.generator import NameKind
+from aerona.engine.structures.construction import Commission, active_at, advance, begin
+from aerona.engine.structures.needs import facts_for, wanted
+from aerona.engine.structures.spec import resolve, slots_for, tier_allows
 from aerona.rules.registry import Rules
 
 BUILDER_TYPES = (EntityType.SETTLEMENT, EntityType.PEOPLE)
 OWNER_BOND_KINDS = (BondKind.BUILT, BondKind.OWNS, BondKind.RULES)
-
-
-@dataclass(frozen=True)
-class Site:
-    builder: EntityRow
-    shares: dict[SocialClass, float]
-    knows_architecture: bool
-    knows_writing: bool
-    at_war: bool
-    has_patron: bool
-    architecture_effect: float = 0.0
-
-
-@dataclass(frozen=True)
-class WorkKind:
-    kind: EngineKind
-    subtype: str
-    suffix: str
-    eligible: Callable[[Rules, Site], bool]
-    effect: Callable[[Rules, EntityRow], None]
 
 
 def prosperity_of(rules: Rules, community: EntityRow) -> int:
@@ -61,128 +40,13 @@ def prosperity_of(rules: Rules, community: EntityRow) -> int:
     return 0
 
 
-def _temple_ok(rules: Rules, site: Site) -> bool:
-    piety = stat(site.builder, "piety")
-    life = rules.deep_life
+async def craft_ready(ctx: TickContext, community: EntityRow, knowledge: KnowledgeMap) -> bool:
+    life = ctx.rules.deep_life
+    shares = await class_shares(ctx.session, ctx.rules, community.id)
     return (
-        site.has_patron
-        and (piety if piety is not None else rules.society.default_stat) >= life.temple_min_piety
-        and site.shares[SocialClass.PRIEST] >= life.temple_min_priest_pct
-    )
-
-
-def _walls_ok(rules: Rules, site: Site) -> bool:
-    defense = stat(site.builder, "defense")
-    life = rules.deep_life
-    return site.builder.entity_type is EntityType.SETTLEMENT and (
-        (defense if defense is not None else life.wall_default_defense) < life.wall_defense_threshold or site.at_war
-    )
-
-
-def _library_ok(rules: Rules, site: Site) -> bool:
-    return site.shares[SocialClass.SCRIBE] >= rules.deep_life.library_min_scribe_pct or site.knows_writing
-
-
-def _raise_piety(rules: Rules, builder: EntityRow) -> None:
-    piety = stat(builder, "piety")
-    if piety is not None:
-        set_stats(builder, piety=clamp_int(piety + rules.deep_life.temple_piety_gain, 0, PERCENT))
-
-
-def _raise_walls(rules: Rules, builder: EntityRow) -> None:
-    defense = stat(builder, "defense")
-    base = defense if defense is not None else rules.deep_life.wall_default_defense
-    set_stats(builder, defense=clamp_int(base + rules.deep_life.wall_defense_gain, 0, PERCENT))
-
-
-def _no_effect(rules: Rules, builder: EntityRow) -> None:
-    del rules, builder
-
-
-WORK_KINDS = (
-    WorkKind(EngineKind.TEMPLE, "temple", "Temple", _temple_ok, _raise_piety),
-    WorkKind(EngineKind.WALL, "wall", "Walls", _walls_ok, _raise_walls),
-    WorkKind(EngineKind.LIBRARY, "library", "Library", _library_ok, _no_effect),
-)
-
-
-async def site_of(ctx: TickContext, builder: EntityRow, knowledge: KnowledgeMap) -> Site:
-    at_war = bool(
-        await active_bonds(ctx.session, [BondKind.ENEMY], sources=[builder.id]) or await active_bonds(ctx.session, [BondKind.ENEMY], targets=[builder.id])
-    )
-    return Site(
-        builder=builder,
-        shares=await class_shares(ctx.session, ctx.rules, builder.id),
-        knows_architecture=knowledge.knows(builder.id, KnowledgeBranch.ARCHITECTURE),
-        architecture_effect=knowledge.effect(ctx.rules, builder.id, KnowledgeBranch.ARCHITECTURE),
-        knows_writing=knowledge.knows(builder.id, KnowledgeBranch.WRITING),
-        at_war=at_war,
-        has_patron=await living_patron(ctx.session, builder) is not None,
-    )
-
-
-async def existing_kinds(ctx: TickContext, builder: EntityRow, place_id: int | None) -> set[EngineKind]:
-    works = list(await EntityRepository(ctx.session).contents(place_id)) if place_id is not None else []
-    for bond in await active_bonds(ctx.session, [BondKind.BUILT], sources=[builder.id]):
-        work = await living_entity(ctx.session, bond.target_node_id)
-        if work is not None:
-            works.append(work)
-    return {work.engine_kind for work in works if work.entity_type is EntityType.STRUCTURE and work.engine_kind is not None}
-
-
-async def build(ctx: TickContext, site: Site, kind: WorkKind) -> EntityRow:
-    rules = ctx.rules
-    life = rules.deep_life
-    builder = site.builder
-    rng = ctx.rng(seed_of("work", builder.id, kind.kind.value))
-    place_id = builder.id if builder.entity_type is EntityType.SETTLEMENT else builder.location_id
-    place_name = await Namer(ctx.session, rules).from_speaker(builder.id, seed_of(builder.id, ctx.epoch, kind.kind.value), NameKind.PLACE)
-    work = await open_record(
-        ctx.session,
-        ctx.epoch,
-        RecordSpec(
-            entity_type=EntityType.STRUCTURE,
-            name=f"{place_name or builder.name} {kind.suffix}",
-            body=f"The masters of prosperous {builder.name} built {indefinite(kind.subtype)}.",
-            stats=StructureStats(
-                splendor=clamp_int(
-                    life.structure_splendor_base
-                    + rng.die(life.structure_splendor_die)
-                    + round_half_up(life.structure_architecture_bonus * site.architecture_effect),
-                    0,
-                    PERCENT,
-                ),
-                durability=clamp_int(life.structure_durability_base + rng.die(life.structure_durability_die), 0, PERCENT),
-                function=clamp_int(life.structure_function_base + rng.die(life.structure_function_die), 0, PERCENT),
-            ),
-            power=clamp_int(
-                round_half_up(builder.power_level * life.structure_power_share_pct / PERCENT) + 1, life.derived_min_power, life.structure_max_power
-            ),
-            location_id=place_id,
-            world_id=builder.world_id,
-            subtype=kind.subtype,
-            engine_kind=kind.kind,
-        ),
-    )
-    await connect(ctx.session, builder.id, work.id, BondKind.BUILT, ctx.epoch)
-    if kind.kind is EngineKind.TEMPLE:
-        await judged(ctx, builder.id, builder.id, ActKind.BUILDING_TEMPLES, note=work.name)
-    kind.effect(rules, builder)
-    prosperity = stat(builder, "prosperity")
-    if prosperity is not None:
-        set_stats(builder, prosperity=clamp_int(prosperity - life.structure_prosperity_cost, 0, PERCENT))
-    await shift_stock(ctx.session, rules, builder.id, Commodity.GOODS, -life.structure_goods_cost, epoch=ctx.epoch, flow=GoodsFlow.CONSTRUCTION)
-    await note(ctx, f"The masters of {builder.name} built {indefinite(kind.subtype)}.", key="works.built", ids=[builder.id, work.id])
-    ctx.count("built")
-    return work
-
-
-def craft_ready(rules: Rules, site: Site) -> bool:
-    life = rules.deep_life
-    return (
-        site.shares[SocialClass.ARTISAN] >= life.structure_min_artisan_pct
-        or (stat(site.builder, "craft") or 0) >= life.structure_min_craft
-        or site.knows_architecture
+        shares[SocialClass.ARTISAN] >= life.structure_min_artisan_pct
+        or (stat(community, "craft") or 0) >= life.structure_min_craft
+        or knowledge.knows(community.id, KnowledgeBranch.ARCHITECTURE)
     )
 
 
@@ -191,6 +55,49 @@ def can_build(rules: Rules, community: EntityRow) -> bool:
     population = stat(community, "population") or 0
     minimum = life.structure_settlement_min_population if community.entity_type is EntityType.SETTLEMENT else life.structure_people_min_population
     return population >= minimum and prosperity_of(rules, community) >= rules.deep_world.structure_min_prosperity
+
+
+async def used_slots(ctx: TickContext, host_id: int) -> int:
+    rows = await ctx.session.scalars(
+        select(StructureProfileRow.structure_entity_id).where(
+            StructureProfileRow.host_entity_id == host_id,
+            StructureProfileRow.construction_state != ConstructionState.RUINED,
+        )
+    )
+    return len(list(rows))
+
+
+async def free_slots(ctx: TickContext, site: EntityRow) -> int:
+    town = await ctx.session.get(SettlementProfileRow, site.id)
+    if town is None:
+        return ctx.rules.construction.slots_base - await used_slots(ctx, site.id)
+    return slots_for(ctx.rules, town.size_tier) - await used_slots(ctx, site.id)
+
+
+async def plan_work(ctx: TickContext, site: EntityRow, knowledge: KnowledgeMap, atlas: RegionAtlas) -> EntityRow | None:
+    if await free_slots(ctx, site) <= 0 or len(await active_at(ctx, site.id)) >= ctx.rules.construction.active_per_site:
+        return None
+    facts = await facts_for(ctx, site, knowledge, atlas)
+    tier = facts.town.size_tier if facts.town is not None else None
+    for kind in wanted(ctx.rules, facts):
+        if tier is not None and not tier_allows(tier, resolve(kind)):
+            continue
+        work, _ = await begin(ctx, Commission(site=site, kind=kind))
+        if kind is StructureKind.TEMPLE:
+            await judged(ctx, site.id, site.id, ActKind.BUILDING_TEMPLES, note=work.name)
+        return work
+    return None
+
+
+async def advance_all(ctx: TickContext, knowledge: KnowledgeMap) -> int:
+    rows = list(await ctx.session.scalars(select(ConstructionRow).where(ConstructionRow.status == ConstructionStatus.ACTIVE).order_by(ConstructionRow.id)))
+    sites: dict[int | None, int] = {}
+    for row in rows:
+        sites[row.site_entity_id] = sites.get(row.site_entity_id, 0) + 1
+    advanced = 0
+    for row in rows:
+        advanced += 1 if await advance(ctx, row, active=sites[row.site_entity_id], knowledge=knowledge) else 0
+    return advanced
 
 
 @reads(
@@ -202,9 +109,13 @@ def can_build(rules: Rules, community: EntityRow) -> bool:
     "settlement.piety",
     "settlement.population",
     "settlement.prosperity",
+    "structure.durability",
     "table.bonds",
+    "table.community_cohorts",
+    "table.community_labour",
     "table.community_societies",
     "table.community_stocks",
+    "table.constructions",
     "table.cosmos",
     "table.culture_values",
     "table.currencies",
@@ -212,6 +123,7 @@ def can_build(rules: Rules, community: EntityRow) -> bool:
     "table.epoch_year_cursors",
     "table.goods_flows",
     "table.holder_levels",
+    "table.holder_techniques",
     "table.language_profiles",
     "table.lexemes",
     "table.memories",
@@ -219,10 +131,20 @@ def can_build(rules: Rules, community: EntityRow) -> bool:
     "table.name_registry",
     "table.node_materials",
     "table.nodes",
+    "table.outbreaks",
+    "table.people_culture",
+    "table.polity_profiles",
     "table.region_environment",
     "table.resource_profiles",
+    "table.settlement_profiles",
+    "table.skills",
+    "table.structure_designs",
+    "table.structure_profiles",
+    "table.structure_staff",
     "table.traits",
     "table.vessel_profiles",
+    "table.workshops",
+    "table.world_maps",
     "table.world_materials",
 )
 @writes(
@@ -231,12 +153,16 @@ def can_build(rules: Rules, community: EntityRow) -> bool:
     "settlement.defense",
     "settlement.piety",
     "settlement.prosperity",
+    "structure.durability",
+    "structure.splendor",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_societies",
     "table.community_stocks",
+    "table.constructions",
     "table.entities",
+    "table.entity_flags",
     "table.epoch_year_cursors",
     "table.goods_flows",
     "table.incident_participants",
@@ -245,27 +171,31 @@ def can_build(rules: Rules, community: EntityRow) -> bool:
     "table.memories",
     "table.name_registry",
     "table.node_materials",
+    "table.settlement_profiles",
+    "table.settlement_treasury",
+    "table.structure_profiles",
+    "table.structure_staff",
+    "table.workshops",
 )
 async def engine_works(ctx: TickContext) -> None:
     rules = ctx.rules
-    rng = ctx.rng()
     knowledge = await KnowledgeMap.load(ctx.session)
-    built = 0
+    ctx.count("advanced", await advance_all(ctx, knowledge))
+    atlas = await RegionAtlas.load(ctx.session)
+    rng = ctx.rng()
+    begun = 0
     cap = scaled_cap(rules.deep_world.structure_cap, rules.deep_world.structure_cap_community_divisor, await count_communities(ctx.session))
     for builder in await canon(ctx.session, BUILDER_TYPES):
-        if built >= cap:
+        if begun >= cap:
             break
-        if not can_build(rules, builder):
+        if not can_build(rules, builder) or not await craft_ready(ctx, builder, knowledge) or not rng.chance(rules.deep_world.structure_chance):
             continue
-        site = await site_of(ctx, builder, knowledge)
-        if not craft_ready(rules, site) or not rng.chance(rules.deep_world.structure_chance):
-            continue
-        present = await existing_kinds(ctx, builder, builder.id if builder.entity_type is EntityType.SETTLEMENT else builder.location_id)
-        kind = next((item for item in WORK_KINDS if item.kind not in present and item.eligible(rules, site)), None)
-        if kind is None:
-            continue
-        await build(ctx, site, kind)
-        built += 1
+        site = builder if builder.entity_type is EntityType.SETTLEMENT else await living_entity(ctx.session, builder.location_id)
+        if site is None or site.entity_type not in COMMUNITY_TYPES:
+            site = builder
+        if await plan_work(ctx, site, knowledge, atlas) is not None:
+            begun += 1
+            ctx.count("built")
 
 
 async def owner_of(ctx: TickContext, work: EntityRow) -> EntityRow | None:
@@ -277,13 +207,25 @@ async def owner_of(ctx: TickContext, work: EntityRow) -> EntityRow | None:
     return owner if owner is not None and owner.entity_type in COMMUNITY_TYPES else None
 
 
-@reads("people.craft", "people.prosperity", "settlement.prosperity", "structure.splendor", "table.bonds", "table.community_societies", "table.holder_levels")
+@reads(
+    "people.craft",
+    "people.prosperity",
+    "settlement.prosperity",
+    "structure.splendor",
+    "table.bonds",
+    "table.community_societies",
+    "table.holder_levels",
+    "table.structure_profiles",
+)
 @writes("structure.splendor", "table.entities")
 async def splendor_growth(ctx: TickContext) -> None:
     rules = ctx.rules
     life = rules.deep_life
     knowledge = await KnowledgeMap.load(ctx.session)
     for work in await canon(ctx.session, [EntityType.STRUCTURE]):
+        profile = await ctx.session.get(StructureProfileRow, work.id)
+        if profile is not None and profile.construction_state not in STANDING_STATES:
+            continue
         splendor = stat(work, "splendor")
         if splendor is not None and splendor >= PERCENT:
             continue
@@ -301,14 +243,16 @@ async def commission_work(ctx: TickContext, community_id: int, kind: EngineKind 
     builder = await living_entity(ctx.session, community_id)
     if builder is None or builder.entity_type not in BUILDER_TYPES:
         raise ValidationFailedError("Only a living people or settlement can raise a work.")
-    site = await site_of(ctx, builder, await KnowledgeMap.load(ctx.session))
-    present = await existing_kinds(ctx, builder, builder.id if builder.entity_type is EntityType.SETTLEMENT else builder.location_id)
-    candidates = [item for item in WORK_KINDS if item.kind not in present and (kind is None or item.kind is kind)]
-    if kind is None:
-        candidates = [item for item in candidates if item.eligible(ctx.rules, site)] or candidates
-    if not candidates:
-        raise ValidationFailedError(f"{builder.name} already has every work it could build.")
-    return await build(ctx, site, candidates[0])
+    knowledge = await KnowledgeMap.load(ctx.session)
+    if kind is not None:
+        if kind not in ENGINE_KIND_STRUCTURES:
+            raise ValidationFailedError(f"{kind.value.replace('_', ' ')} is not a kind of work.")
+        work, _ = await begin(ctx, Commission(site=builder, kind=ENGINE_KIND_STRUCTURES[kind], player=True))
+        return work
+    planned = await plan_work(ctx, builder, knowledge, await RegionAtlas.load(ctx.session))
+    if planned is None:
+        raise ValidationFailedError(f"{builder.name} has nothing it needs to build, or no room to build it.")
+    return planned
 
 
 BUILD_PHASES = (Phase("engine_works", engine_works),)

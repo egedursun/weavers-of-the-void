@@ -106,6 +106,10 @@ WHITELISTED_TABLES = frozenset(
         "market_price_holds",
         "currencies",
         "loans",
+        "structure_profiles",
+        "structure_staff",
+        "constructions",
+        "structure_designs",
     }
 )
 PERMANENT_BIRTH_TABLES = frozenset({"sons", "worlds"})

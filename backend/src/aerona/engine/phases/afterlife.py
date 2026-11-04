@@ -21,6 +21,7 @@ from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.travel import JourneyStatus, TravelMethod
 from aerona.domain.enums.world import Discovery, SkyEventKind
 from aerona.domain.models.entity_stats import MortalStats, SpeciesStats, SpiritStats, StructureStats
@@ -43,6 +44,7 @@ from aerona.engine.primitives.queries import BondIndex, canon, count_communities
 from aerona.engine.primitives.records import RecordSpec, open_record, retire
 from aerona.engine.primitives.stats import FOLLOWERS_KEY, POPULATION_KEY, scale_stat, shift_bounded, stat_or
 from aerona.engine.services.community_relations import change_relation
+from aerona.engine.structures.profiles import ensure_profile
 from aerona.rules.registry import Rules
 
 BINDABLE_TYPES = frozenset({EntityType.ITEM, EntityType.VESSEL, EntityType.STRUCTURE})
@@ -317,6 +319,7 @@ async def raise_archive(ctx: TickContext) -> EntityRow | None:
             flags=(EntityFlag.WONDER,),
         ),
     )
+    await ensure_profile(ctx.session, ctx.rules, ctx.epoch, archive, StructureKind.COSMIC_ARCHIVE)
     world = await ctx.session.get(WorldRow, region.world_id)
     await note(
         ctx,

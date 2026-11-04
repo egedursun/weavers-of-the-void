@@ -26,6 +26,7 @@ from aerona.engine.mind.book import traits_of, values_for
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.structures.readers import rite_keeping
 from aerona.rules.registry.doctrine import AfterlifeRules
 
 HALF = 2
@@ -77,7 +78,8 @@ async def rite_for(ctx: TickContext, mortal: EntityRow) -> FuneralRite:
     fell = await ctx.session.scalar(
         select(InjuryRow.id).where(InjuryRow.bearer_node_id == mortal.id, InjuryRow.cause_kind.in_([HarmCause.BATTLE, HarmCause.DUEL])).limit(1)
     )
-    chance = table.battle_no_rite_chance if fell is not None else table.no_rite_chance
+    base = table.battle_no_rite_chance if fell is not None else table.no_rite_chance
+    chance = base * (1 - await rite_keeping(ctx.session, ctx.rules, mortal.location_id))
     if ctx.rng(f"rite.{mortal.id}").chance(chance):
         return FuneralRite.NONE
     home = mortal.location_id

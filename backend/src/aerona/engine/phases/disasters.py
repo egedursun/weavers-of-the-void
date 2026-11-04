@@ -15,6 +15,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
@@ -24,6 +25,7 @@ from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.settlement import DistrictHarm
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.body.hits import Harm
@@ -52,6 +54,8 @@ from aerona.engine.primitives.stats import FOLLOWERS_KEY, POPULATION_KEY, headco
 from aerona.engine.primitives.thresholds import relative_threshold
 from aerona.engine.records import death_path
 from aerona.engine.settlement.districts import damage_districts
+from aerona.engine.structures.damage import harm, quake_loss
+from aerona.engine.structures.readers import strength_at
 from aerona.rules.registry import Rules
 
 DISASTER_DAMAGE: dict[Disaster, DamageType] = {
@@ -166,15 +170,20 @@ async def _strike_mortal(ctx: TickContext, mortal: EntityRow, disaster: Disaster
 
 async def _quake_structure(ctx: TickContext, structure: EntityRow, scale: float, knowledge: KnowledgeMap) -> bool:
     effects = ctx.rules.intervention_effects
-    durability = stat(structure, "durability")
-    if durability is None:
-        return False
     sturdy = structure.maker_entity_id is not None and knowledge.knows(structure.maker_entity_id, KnowledgeBranch.ARCHITECTURE)
-    loss = effects.earthquake_durability_loss * (fraction(effects.architecture_quake_severity) if sturdy else 1.0) * scale
-    remaining = clamp_int(durability - loss, 0, PERCENT)
-    set_stats(structure, durability=remaining)
-    if remaining > 0:
-        return False
+    loss = await quake_loss(ctx, structure, effects.earthquake_durability_loss * (fraction(effects.architecture_quake_severity) if sturdy else 1.0) * scale)
+    profile = await ctx.session.get(StructureProfileRow, structure.id)
+    if profile is not None:
+        if not await harm(ctx, structure, profile, loss, cause="the earthquake", quiet=True):
+            return False
+    else:
+        durability = stat(structure, "durability")
+        if durability is None:
+            return False
+        remaining = clamp_int(durability - loss, 0, PERCENT)
+        set_stats(structure, durability=remaining)
+        if remaining > 0:
+            return False
     await EntityRepository(ctx.session).set_status(structure, EntityStatus.DESTROYED, ctx.epoch, "Collapsed in the earthquake.")
     return True
 
@@ -218,6 +227,8 @@ async def apply_disaster(ctx: TickContext, target: EntityRow, disaster: Disaster
             if entity.status is EntityStatus.CANON and await _strike_mortal(ctx, entity, disaster, scale, knowledge):
                 impact.dead.append(entity)
             continue
+        if disaster is Disaster.FLOOD:
+            scale *= 1 - await strength_at(ctx.session, entity.id, [StructureKind.DAM]) * ctx.rules.structure_functions.dam_flood_cut_pct / PERCENT
         before = headcount_value(entity)
         if disaster is Disaster.EARTHQUAKE and entity.entity_type is EntityType.STRUCTURE and await _quake_structure(ctx, entity, scale, knowledge):
             impact.destroyed.append(entity)

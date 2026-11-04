@@ -80,6 +80,7 @@ class SonToolId(StrEnum):
     DESIGN_DISTRICT = "design_district"
     OPEN_TRADE_ROUTE = "open_trade_route"
     CLOSE_TRADE_ROUTE = "close_trade_route"
+    COMMISSION_STRUCTURE = "commission_structure"
 
 
 class MortalToolId(StrEnum):

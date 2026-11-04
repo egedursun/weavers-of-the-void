@@ -195,6 +195,7 @@ from aerona.rules.registry.society_depth import ConsumptionRules, LoyaltyRules, 
 from aerona.rules.registry.son_relations import SonRelationsRules
 from aerona.rules.registry.son_tools import SonToolsRules
 from aerona.rules.registry.star_types import StarTypeRules
+from aerona.rules.registry.structures import ConstructionRules, StructureFunctionsRules, UpkeepRules
 from aerona.rules.registry.summoning import SummoningRules
 from aerona.rules.registry.time import TimeRules
 from aerona.rules.registry.trade import TradeRules
@@ -445,3 +446,6 @@ class Rules:
     consumption: ConsumptionRules = field(default_factory=ConsumptionRules)
     mobilisation: MobilisationRules = field(default_factory=MobilisationRules)
     loyalty: LoyaltyRules = field(default_factory=LoyaltyRules)
+    construction: ConstructionRules = field(default_factory=ConstructionRules)
+    structure_functions: StructureFunctionsRules = field(default_factory=StructureFunctionsRules)
+    upkeep: UpkeepRules = field(default_factory=UpkeepRules)

@@ -20,6 +20,7 @@ from aerona.engine.economy.workshop_designs import capacity_scale, output_scale,
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount
+from aerona.engine.structures.readers import workshop_output
 
 M = MaterialKind
 UPGRADES: dict[MaterialKind, MaterialKind] = {M.COPPER: M.BRONZE, M.IRON: M.STEEL}
@@ -180,7 +181,7 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
     table = ctx.rules.refining
     workshop = book.workshop(community.id, step.workshop) if step.workshop is not None else None
     design = book.design_of(workshop)
-    room = capacity(ctx, step, workshop, design)
+    room = round_half_up(capacity(ctx, step, workshop, design) * await workshop_output(ctx.session, ctx.rules, workshop))
     if room <= 0 or (step.branch is not None and book.level(community.id, step.branch) < step.level):
         return 0
     wanted = target_units(ctx, community, step.output) - await holding(ctx.session, community.id, step.output)
@@ -287,7 +288,12 @@ async def build_workshops(ctx: TickContext, book: EconomyBook, community: Entity
 async def launch_ships(ctx: TickContext, book: EconomyBook, community: EntityRow, tally: RefiningTally) -> None:
     table = ctx.rules.refining
     yard = book.workshop(community.id, WorkshopKind.SHIPYARD)
-    if yard is None or yard.held or yard.fleet >= table.fleet_cap or not ctx.rng(f"ship.{community.id}").chance(table.ship_chance):
+    if (
+        yard is None
+        or yard.held
+        or yard.fleet >= table.fleet_cap
+        or not ctx.rng(f"ship.{community.id}").chance(table.ship_chance * await workshop_output(ctx.session, ctx.rules, yard))
+    ):
         return
     for commodity, amount in SHIP_INPUTS:
         if await holding(ctx.session, community.id, commodity) < amount:

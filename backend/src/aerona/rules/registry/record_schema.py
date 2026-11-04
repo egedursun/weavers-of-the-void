@@ -13,14 +13,8 @@ class RecordSchemaRules:
         4, 0, 100, RuleGroup.EXPLORATION, "Place mystery: piety a nearby community gains from pilgrims when no lost knowledge waits there"
     )
     mystery_cap: int = rule(1, 0, 100, RuleGroup.EXPLORATION, "Place mystery: most secrets solved per epoch")
-    function_floor_pct: int = rule(50, 0, 100, RuleGroup.CIVILIZATION, "Structure function: holds its owner's matching stat up to function times this (%)")
     function_step: int = rule(3, 0, 100, RuleGroup.CIVILIZATION, "Structure function: most the matching stat rises per epoch")
-    function_knowledge_divisor: int = rule(
-        12, 1, 1000, RuleGroup.CIVILIZATION, "Library or observatory: chance it deepens one of its owner's knowledges is function divided by this (%)"
-    )
     function_knowledge_cap: int = rule(2, 0, 100, RuleGroup.CIVILIZATION, "Library or observatory: most knowledges deepened per epoch")
-    function_sturdy_threshold: int = rule(25, 0, 100, RuleGroup.CIVILIZATION, "A structure below this durability loses function")
-    function_wear: int = rule(5, 0, 100, RuleGroup.CIVILIZATION, "Function a crumbling structure loses per epoch")
     prophecy_grace: int = rule(3, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Prophecy: certainty starts to wear after this many epochs")
     certainty_wear: int = rule(3, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Prophecy: certainty an unfulfilled prophecy loses per epoch")
     certainty_threshold: int = rule(

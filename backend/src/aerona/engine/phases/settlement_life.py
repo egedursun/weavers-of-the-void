@@ -39,6 +39,7 @@ from aerona.engine.settlement.life import (
     urban_drift,
     wear,
 )
+from aerona.engine.structures.settlement import serve_town
 
 JUSTICE_FULL = 100
 
@@ -72,6 +73,7 @@ JUSTICE_FULL = 100
     "table.settlement_infrastructure",
     "table.settlement_profiles",
     "table.sieges",
+    "table.structure_profiles",
     "table.trade_flows",
     "table.traits",
     "table.tributes",
@@ -130,11 +132,13 @@ async def settlement_life(ctx: TickContext) -> None:
         festival = festivals_and_alms(ctx, town, society)
         tension = await urban_drift(ctx, town)
         await stir_unrest(ctx, town, tension=tension, festival=festival, region=region)
-        ctx.count("fires", await fires(ctx, town, ground, knowledge))
+        burned = await fires(ctx, town, ground, knowledge)
+        ctx.count("fires", burned)
         sanitation(ctx, town, knowledge)
         hallow(ctx, town)
         await endure_siege(ctx, town, values)
         await prestige(ctx, town)
+        ctx.count("structures_serving", await serve_town(ctx, settlement, town.profile, town.infrastructure, fires=burned))
         tier = retier(ctx, town)
         if tier is not None:
             await note(

@@ -597,5 +597,286 @@
       "töre",
       "söz"
     ]
+  },
+  "structures": {
+    "cosmic_archive": [
+      "cosmic archive",
+      "kozmik arşiv"
+    ],
+    "cosmic_gate": [
+      "cosmic gate",
+      "star gate",
+      "kozmik kapı",
+      "yıldız kapısı"
+    ],
+    "temple": [
+      "temple",
+      "sanctuary",
+      "tapınak",
+      "mabet"
+    ],
+    "shrine": [
+      "shrine",
+      "altar",
+      "sunak",
+      "türbe",
+      "kandil"
+    ],
+    "monastery": [
+      "monastery",
+      "abbey",
+      "convent",
+      "manastır",
+      "tekke"
+    ],
+    "necropolis": [
+      "necropolis",
+      "cemetery",
+      "graveyard",
+      "mezarlık",
+      "kül avlusu"
+    ],
+    "library": [
+      "library",
+      "archive",
+      "scriptorium",
+      "kütüphane",
+      "arşiv",
+      "kayıt"
+    ],
+    "school": [
+      "school",
+      "college",
+      "okul",
+      "medrese"
+    ],
+    "observatory": [
+      "observatory",
+      "gözlemevi",
+      "rasathane"
+    ],
+    "academy": [
+      "academy",
+      "university",
+      "akademi"
+    ],
+    "hospital": [
+      "hospital",
+      "house of healing",
+      "infirmary",
+      "şifahane",
+      "hastane",
+      "darüşşifa"
+    ],
+    "citadel": [
+      "citadel",
+      "keep",
+      "kale",
+      "hisar"
+    ],
+    "watchtower": [
+      "watchtower",
+      "gözcü",
+      "gözetleme"
+    ],
+    "fort": [
+      "fort",
+      "fortress",
+      "bastion",
+      "garrison",
+      "istihkam"
+    ],
+    "tower": [
+      "tower",
+      "kule"
+    ],
+    "gate": [
+      "gate",
+      "gatehouse",
+      "kapı"
+    ],
+    "wall": [
+      "wall",
+      "walls",
+      "rampart",
+      "palisade",
+      "sur",
+      "duvar",
+      "surları"
+    ],
+    "palace": [
+      "palace",
+      "saray"
+    ],
+    "court": [
+      "court",
+      "tribunal",
+      "courthouse",
+      "mahkeme",
+      "divan",
+      "sayım"
+    ],
+    "prison": [
+      "prison",
+      "jail",
+      "dungeon",
+      "zindan",
+      "hapishane"
+    ],
+    "market": [
+      "market",
+      "bazaar",
+      "pazar",
+      "çarşı"
+    ],
+    "harbour": [
+      "harbour",
+      "harbor",
+      "port",
+      "pier",
+      "quay",
+      "liman",
+      "iskele"
+    ],
+    "warehouse": [
+      "warehouse",
+      "storehouse",
+      "depo"
+    ],
+    "granary": [
+      "granary",
+      "silo",
+      "ambar",
+      "tahıl"
+    ],
+    "caravanserai": [
+      "caravanserai",
+      "inn",
+      "waystation",
+      "kervansaray",
+      "han"
+    ],
+    "bank": [
+      "bank",
+      "counting house",
+      "banka",
+      "sarraf"
+    ],
+    "forge": [
+      "forge",
+      "smithy",
+      "foundry",
+      "demirhane",
+      "dökümhane",
+      "ocağı"
+    ],
+    "mill": [
+      "mill",
+      "değirmen"
+    ],
+    "tannery": [
+      "tannery",
+      "tabakhane"
+    ],
+    "mine": [
+      "mine",
+      "maden"
+    ],
+    "quarry": [
+      "quarry",
+      "taş ocağı"
+    ],
+    "shipyard": [
+      "shipyard",
+      "dock",
+      "tersane",
+      "tekne damı"
+    ],
+    "workshop": [
+      "workshop",
+      "atelier",
+      "atölye",
+      "işlik"
+    ],
+    "alchemist_lab": [
+      "alchemist",
+      "laboratory",
+      "simya"
+    ],
+    "road": [
+      "road",
+      "highway",
+      "yol"
+    ],
+    "bridge": [
+      "bridge",
+      "köprü"
+    ],
+    "aqueduct": [
+      "aqueduct",
+      "cistern",
+      "well",
+      "kemer",
+      "sarnıç",
+      "kuyu",
+      "havuz"
+    ],
+    "sewer": [
+      "sewer",
+      "drain",
+      "gutter",
+      "lağım",
+      "oluk"
+    ],
+    "canal": [
+      "canal",
+      "kanal"
+    ],
+    "irrigation": [
+      "irrigation",
+      "terrace",
+      "field",
+      "sulama",
+      "seki",
+      "tarla"
+    ],
+    "dam": [
+      "dam",
+      "levee",
+      "bent",
+      "baraj"
+    ],
+    "tomb": [
+      "tomb",
+      "mausoleum",
+      "mezar"
+    ],
+    "arena": [
+      "arena",
+      "colosseum",
+      "amphitheatre"
+    ],
+    "theatre": [
+      "theatre",
+      "theater",
+      "odeon",
+      "tiyatro"
+    ],
+    "wonder": [
+      "wonder",
+      "harika"
+    ],
+    "monument": [
+      "monument",
+      "statue",
+      "memorial",
+      "obelisk",
+      "anıt",
+      "heykel",
+      "anma",
+      "yapıt",
+      "taş",
+      "gölgelik"
+    ]
   }
 }

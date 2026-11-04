@@ -133,6 +133,7 @@ class HomeLine(ContextItem):
     wealth: str = ""
     loyalty: str = ""
     labour: list[str] = Field(default_factory=list)
+    works: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

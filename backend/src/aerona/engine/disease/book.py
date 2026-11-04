@@ -20,30 +20,45 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import LeyLineRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.son import SonStatus
+from aerona.domain.enums.structure import STANDING_STATES, UNFINISHED_STATES, StructureKind
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import stat
+from aerona.engine.structures.readers import region_strength, regions_of
 from aerona.rules.registry import Rules
 
-HOSPITAL = "hospital"
 COLONY = "colony of the sick"
+HOSPITAL_STATES = (*STANDING_STATES, *UNFINISHED_STATES)
 
 
 async def hospital_regions(session: AsyncSession, atlas: RegionAtlas) -> dict[int, list[EntityRow]]:
     hospitals: dict[int, list[EntityRow]] = defaultdict(list)
     structures = await session.scalars(
-        select(EntityRow).where(EntityRow.entity_type == EntityType.STRUCTURE, EntityRow.status == EntityStatus.CANON, EntityRow.subtype == HOSPITAL)
+        select(EntityRow)
+        .join(StructureProfileRow, StructureProfileRow.structure_entity_id == EntityRow.id)
+        .where(
+            EntityRow.status == EntityStatus.CANON,
+            StructureProfileRow.kind == StructureKind.HOSPITAL,
+            StructureProfileRow.construction_state.in_(list(HOSPITAL_STATES)),
+        )
+        .order_by(EntityRow.id)
     )
     for structure in structures:
         region = atlas.top_region(structure.id)
         if region is not None:
             hospitals[region].append(structure)
     return hospitals
+
+
+async def hospital_strengths(session: AsyncSession, atlas: RegionAtlas) -> dict[int, float]:
+    found = await regions_of(session, [StructureKind.HOSPITAL], atlas)
+    return {region: region_strength(found, region) for region in found}
 
 
 @dataclass
@@ -59,6 +74,7 @@ class DiseaseBook:
     cures: set[tuple[int, int]]
     quarantines: dict[int, QuarantineRow]
     hospitals: dict[int, list[EntityRow]]
+    hospital_strength: dict[int, float] = field(default_factory=dict)
     bands: dict[int, dict[AgeBand, int]] = field(default_factory=dict)
     sanitation: dict[int, int] = field(default_factory=dict)
     inoculated: set[int] = field(default_factory=set)
@@ -86,6 +102,7 @@ class DiseaseBook:
         quarantines = {row.region_entity_id: row for row in await session.scalars(select(QuarantineRow).where(QuarantineRow.until_epoch >= epoch))}
         hospitals = await hospital_regions(session, atlas)
         book = cls(rules, epoch, atlas, diseases, profiles, outbreaks, immunity, endemic, cures, quarantines, hospitals)
+        book.hospital_strength = await hospital_strengths(session, atlas)
         for cohort in await session.scalars(select(CohortRow)):
             book.bands.setdefault(cohort.community_entity_id, defaultdict(int))[cohort.age_band] += cohort.count
         weighted: dict[int, float] = defaultdict(float)

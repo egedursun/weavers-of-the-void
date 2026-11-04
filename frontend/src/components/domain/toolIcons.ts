@@ -188,6 +188,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   design_district: Compass,
   open_trade_route: Route,
   close_trade_route: Ban,
+  commission_structure: Landmark,
   establish_trade: Store,
   worship: Church,
   diplomacy: Landmark,

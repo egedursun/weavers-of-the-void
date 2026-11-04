@@ -61,6 +61,7 @@ from aerona.api.routers import (
     society_depth,
     sons,
     state,
+    structures,
     wars,
     wilds,
 )
@@ -128,6 +129,7 @@ ROUTERS: tuple[ModuleType, ...] = (
     faith,
     lore,
     wilds,
+    structures,
     actions,
 )
 IMAGE_UPLOAD_SUFFIX = "/images"
