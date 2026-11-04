@@ -1,73 +1,115 @@
-from collections.abc import Callable
 from dataclasses import dataclass
 
 from aerona.domain.enums.environment import PlaceCover, TerrainKind, WaterSource
+from aerona.domain.enums.place import PlaceHeight, PlaceKind, SacredClass, SecretKind
 from aerona.rules.registry import Rules
+
+K = PlaceKind
+S = SecretKind
+C = PlaceCover
+W = WaterSource
+T = TerrainKind
+H = PlaceHeight
+R = SacredClass
 
 
 @dataclass(frozen=True)
-class PlaceProfile:
+class PlaceKindSpec:
+    label: str
     terrain: TerrainKind | None
     cover: PlaceCover
     water: WaterSource
-    height: Callable[[Rules], int]
-    chokepoint: bool = False
+    height: PlaceHeight
+    chokepoint: bool
+    sacred: SacredClass
+    secrets: tuple[SecretKind, ...]
+    deep: bool
 
 
-def _none(rules: Rules) -> int:
+PLACE_KINDS: dict[PlaceKind, PlaceKindSpec] = {
+    K.MOUNTAIN: PlaceKindSpec("Mountain", T.MOUNTAINS, C.LIGHT, W.SPRING, H.HIGH, False, R.PROFANE, (S.HIDDEN_RESOURCE, S.UNDERWORLD_ENTRANCE), True),
+    K.PEAK: PlaceKindSpec("Peak", T.MOUNTAINS, C.OPEN, W.NONE, H.HIGH, False, R.NOTABLE, (S.LOST_RITE, S.BURIED_RELIC), False),
+    K.PASS: PlaceKindSpec("Pass", T.HIGH_PASS, C.LIGHT, W.NONE, H.HIGH, True, R.PROFANE, (S.BURIED_RELIC,), False),
+    K.FOREST: PlaceKindSpec("Forest", T.FOREST, C.HEAVY, W.SPRING, H.FLAT, False, R.PROFANE, (S.SEALED_SPIRIT, S.LOST_RITE), False),
+    K.GROVE: PlaceKindSpec("Grove", T.FOREST, C.HEAVY, W.SPRING, H.FLAT, False, R.NOTABLE, (S.LOST_RITE, S.SEALED_SPIRIT), False),
+    K.RIVER: PlaceKindSpec("River", T.RIVER_VALLEY, C.OPEN, W.RIVER, H.FLAT, True, R.PROFANE, (S.HIDDEN_RESOURCE,), False),
+    K.FORD: PlaceKindSpec("Ford", T.RIVER_VALLEY, C.OPEN, W.RIVER, H.FLAT, True, R.PROFANE, (S.BURIED_RELIC,), False),
+    K.LAKE: PlaceKindSpec("Lake", None, C.OPEN, W.LAKE, H.FLAT, False, R.PROFANE, (S.SEALED_SPIRIT, S.BURIED_RELIC), False),
+    K.SPRING: PlaceKindSpec("Spring", None, C.LIGHT, W.SPRING, H.FLAT, False, R.NOTABLE, (S.LOST_RITE, S.SEALED_SPIRIT), False),
+    K.CAVE: PlaceKindSpec("Cave", T.UNDERGROUND, C.HEAVY, W.SPRING, H.LOW, True, R.PROFANE, (S.HIDDEN_RESOURCE, S.SEALED_SPIRIT, S.UNDERWORLD_ENTRANCE), True),
+    K.CAVERN_SYSTEM: PlaceKindSpec(
+        "Cavern system", T.UNDERGROUND, C.HEAVY, W.SPRING, H.LOW, True, R.PROFANE, (S.UNDERWORLD_ENTRANCE, S.SEALED_SPIRIT, S.HIDDEN_RESOURCE), True
+    ),
+    K.RUIN: PlaceKindSpec("Ruin", T.RUIN_FIELD, C.HEAVY, W.WELL, H.LOW, False, R.PROFANE, (S.BURIED_RELIC, S.LOST_KNOWLEDGE, S.LOST_RITE), True),
+    K.ISLAND: PlaceKindSpec("Island", T.ISLAND, C.LIGHT, W.SEA, H.LOW, False, R.PROFANE, (S.BURIED_RELIC, S.HIDDEN_RESOURCE), False),
+    K.SWAMP: PlaceKindSpec("Swamp", T.MARSH, C.LIGHT, W.LAKE, H.FLAT, False, R.PROFANE, (S.SEALED_SPIRIT, S.BURIED_RELIC), False),
+    K.WELL: PlaceKindSpec("Well", None, C.OPEN, W.WELL, H.FLAT, False, R.NOTABLE, (S.LOST_RITE, S.SEALED_SPIRIT), True),
+    K.VALLEY: PlaceKindSpec("Valley", T.RIVER_VALLEY, C.LIGHT, W.RIVER, H.FLAT, False, R.PROFANE, (S.HIDDEN_RESOURCE,), False),
+    K.CLIFF: PlaceKindSpec("Cliff", T.CANYON, C.LIGHT, W.NONE, H.HIGH, True, R.PROFANE, (S.HIDDEN_RESOURCE, S.BURIED_RELIC), True),
+    K.VOLCANO: PlaceKindSpec("Volcano", T.VOLCANIC, C.OPEN, W.NONE, H.HIGH, False, R.NOTABLE, (S.HIDDEN_RESOURCE, S.UNDERWORLD_ENTRANCE, S.SEALED_SPIRIT), True),
+    K.CRATER: PlaceKindSpec("Crater", None, C.OPEN, W.NONE, H.LOW, False, R.NOTABLE, (S.HIDDEN_RESOURCE, S.LOST_KNOWLEDGE), True),
+    K.BATTLEFIELD: PlaceKindSpec("Battlefield", None, C.OPEN, W.NONE, H.FLAT, False, R.NOTABLE, (S.BURIED_RELIC, S.SEALED_SPIRIT), False),
+    K.BURIAL_GROUND: PlaceKindSpec("Burial ground", None, C.LIGHT, W.NONE, H.LOW, False, R.HOLY, (S.BURIED_RELIC, S.SEALED_SPIRIT, S.LOST_KNOWLEDGE), True),
+    K.LAIR: PlaceKindSpec("Lair", None, C.HEAVY, W.NONE, H.LOW, True, R.PROFANE, (S.BURIED_RELIC, S.HIDDEN_RESOURCE), True),
+    K.NEXUS: PlaceKindSpec("Ley nexus", None, C.OPEN, W.NONE, H.FLAT, False, R.HOLY, (S.LOST_RITE, S.LOST_KNOWLEDGE), False),
+    K.SHRINE_SITE: PlaceKindSpec("Shrine site", None, C.LIGHT, W.SPRING, H.LOW, False, R.HOLY, (S.LOST_RITE, S.BURIED_RELIC), False),
+    K.GOD_CORPSE: PlaceKindSpec("God corpse", None, C.LIGHT, W.NONE, H.HIGH, False, R.HOLY, (S.SEALED_SPIRIT, S.LOST_KNOWLEDGE, S.BURIED_RELIC), True),
+    K.MINE_SITE: PlaceKindSpec("Mine site", T.UNDERGROUND, C.LIGHT, W.NONE, H.LOW, False, R.PROFANE, (S.HIDDEN_RESOURCE, S.SEALED_SPIRIT, S.UNDERWORLD_ENTRANCE), True),
+    K.HARBOUR_SITE: PlaceKindSpec("Harbour site", T.COAST, C.OPEN, W.SEA, H.FLAT, False, R.PROFANE, (S.BURIED_RELIC,), False),
+    K.CROSSROADS: PlaceKindSpec("Crossroads", None, C.OPEN, W.WELL, H.FLAT, True, R.PROFANE, (S.BURIED_RELIC, S.LOST_KNOWLEDGE), False),
+}
+
+TERRAIN_KINDS: dict[TerrainKind, PlaceKind] = {
+    T.PLAIN: K.VALLEY,
+    T.STEPPE: K.CROSSROADS,
+    T.FOREST: K.FOREST,
+    T.JUNGLE: K.FOREST,
+    T.MARSH: K.SWAMP,
+    T.HILLS: K.MOUNTAIN,
+    T.MOUNTAINS: K.MOUNTAIN,
+    T.HIGH_PASS: K.PASS,
+    T.DESERT: K.CRATER,
+    T.TUNDRA: K.VALLEY,
+    T.ICE_SHEET: K.MOUNTAIN,
+    T.VOLCANIC: K.VOLCANO,
+    T.COAST: K.HARBOUR_SITE,
+    T.ISLAND: K.ISLAND,
+    T.RIVER_VALLEY: K.RIVER,
+    T.CANYON: K.CLIFF,
+    T.UNDERGROUND: K.CAVE,
+    T.CRYSTAL_FIELD: K.CRATER,
+    T.FLESH: K.SWAMP,
+    T.VOID_SHORE: K.CLIFF,
+    T.RUIN_FIELD: K.RUIN,
+    T.URBAN: K.CROSSROADS,
+    T.SEA: K.ISLAND,
+}
+DEFAULT_KIND = PlaceKind.VALLEY
+BATTLEFIELD_FROM = frozenset({PlaceKind.VALLEY, PlaceKind.CROSSROADS})
+DEEPENS = {PlaceKind.CAVE: PlaceKind.CAVERN_SYSTEM, PlaceKind.MINE_SITE: PlaceKind.CAVERN_SYSTEM}
+
+TERRAIN_NATURES: dict[TerrainKind, tuple[str, ...]] = {
+    T.MOUNTAINS: ("pass", "cave", "chasm"),
+    T.HILLS: ("hill", "upland", "cave"),
+    T.CANYON: ("chasm", "pass"),
+    T.MARSH: ("marsh", "lake"),
+    T.FOREST: ("forest", "misty grove"),
+    T.JUNGLE: ("forest", "marsh"),
+    T.RIVER_VALLEY: ("river", "valley"),
+    T.COAST: ("cove",),
+    T.DESERT: ("dune", "oasis"),
+    T.STEPPE: ("plain",),
+    T.PLAIN: ("plain", "river"),
+}
+
+
+def height_of(rules: Rules, height: PlaceHeight) -> int:
+    if height is PlaceHeight.HIGH:
+        return rules.environment.place_height_high
+    if height is PlaceHeight.LOW:
+        return rules.environment.place_height_low
     return 0
 
 
-def _low(rules: Rules) -> int:
-    return rules.environment.place_height_low
-
-
-def _high(rules: Rules) -> int:
-    return rules.environment.place_height_high
-
-
-DEFAULT_PROFILE = PlaceProfile(None, PlaceCover.LIGHT, WaterSource.NONE, _none)
-
-PLACE_PROFILES: dict[str, PlaceProfile] = {
-    "forest": PlaceProfile(TerrainKind.FOREST, PlaceCover.HEAVY, WaterSource.SPRING, _none),
-    "misty grove": PlaceProfile(TerrainKind.FOREST, PlaceCover.HEAVY, WaterSource.SPRING, _none),
-    "lake": PlaceProfile(None, PlaceCover.OPEN, WaterSource.LAKE, _none),
-    "valley": PlaceProfile(TerrainKind.RIVER_VALLEY, PlaceCover.LIGHT, WaterSource.RIVER, _none),
-    "river": PlaceProfile(TerrainKind.RIVER_VALLEY, PlaceCover.OPEN, WaterSource.RIVER, _none, chokepoint=True),
-    "cave": PlaceProfile(TerrainKind.UNDERGROUND, PlaceCover.HEAVY, WaterSource.SPRING, _low, chokepoint=True),
-    "marsh": PlaceProfile(TerrainKind.MARSH, PlaceCover.LIGHT, WaterSource.LAKE, _none),
-    "pass": PlaceProfile(TerrainKind.HIGH_PASS, PlaceCover.LIGHT, WaterSource.NONE, _high, chokepoint=True),
-    "chasm": PlaceProfile(TerrainKind.CANYON, PlaceCover.LIGHT, WaterSource.NONE, _high, chokepoint=True),
-    "well": PlaceProfile(None, PlaceCover.OPEN, WaterSource.WELL, _none),
-    "stone circle": PlaceProfile(None, PlaceCover.OPEN, WaterSource.NONE, _low),
-    "hill": PlaceProfile(TerrainKind.HILLS, PlaceCover.LIGHT, WaterSource.NONE, _high),
-    "upland": PlaceProfile(TerrainKind.HILLS, PlaceCover.LIGHT, WaterSource.SPRING, _high),
-    "plain": PlaceProfile(TerrainKind.PLAIN, PlaceCover.OPEN, WaterSource.NONE, _none),
-    "cove": PlaceProfile(TerrainKind.COAST, PlaceCover.LIGHT, WaterSource.SEA, _low),
-    "island": PlaceProfile(TerrainKind.ISLAND, PlaceCover.LIGHT, WaterSource.SEA, _low),
-    "reef": PlaceProfile(TerrainKind.COAST, PlaceCover.OPEN, WaterSource.SEA, _none, chokepoint=True),
-    "oasis": PlaceProfile(TerrainKind.DESERT, PlaceCover.LIGHT, WaterSource.SPRING, _none),
-    "dune": PlaceProfile(TerrainKind.DESERT, PlaceCover.LIGHT, WaterSource.NONE, _low),
-    "glacier": PlaceProfile(TerrainKind.ICE_SHEET, PlaceCover.OPEN, WaterSource.NONE, _low),
-    "hot spring": PlaceProfile(None, PlaceCover.OPEN, WaterSource.SPRING, _none),
-    "lava lake": PlaceProfile(TerrainKind.VOLCANIC, PlaceCover.OPEN, WaterSource.NONE, _none),
-    "ash plain": PlaceProfile(TerrainKind.VOLCANIC, PlaceCover.OPEN, WaterSource.NONE, _none),
-}
-
-TERRAIN_NATURES: dict[TerrainKind, tuple[str, ...]] = {
-    TerrainKind.MOUNTAINS: ("pass", "cave", "chasm"),
-    TerrainKind.HILLS: ("hill", "upland", "cave"),
-    TerrainKind.CANYON: ("chasm", "pass"),
-    TerrainKind.MARSH: ("marsh", "lake"),
-    TerrainKind.FOREST: ("forest", "misty grove"),
-    TerrainKind.JUNGLE: ("forest", "marsh"),
-    TerrainKind.RIVER_VALLEY: ("river", "valley"),
-    TerrainKind.COAST: ("cove",),
-    TerrainKind.DESERT: ("dune", "oasis"),
-    TerrainKind.STEPPE: ("plain",),
-    TerrainKind.PLAIN: ("plain", "river"),
-}
-
-
-def place_profile(subtype: str | None) -> PlaceProfile:
-    return PLACE_PROFILES.get((subtype or "").strip().lower(), DEFAULT_PROFILE)
+def kind_spec(kind: PlaceKind) -> PlaceKindSpec:
+    return PLACE_KINDS[kind]

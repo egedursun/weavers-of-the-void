@@ -8,10 +8,12 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import PlaceStats
 from aerona.engine.context import TickContext
+from aerona.engine.environment.places import write_kind
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -28,38 +30,39 @@ class Nature:
     subtype: str
     suffix: str
     shifted: str | None
+    kind: PlaceKind
 
 
 FERTILE = (
-    Nature("forest", "Forest", "fertility"),
-    Nature("lake", "Lake", "fertility"),
-    Nature("valley", "Valley", "fertility"),
-    Nature("river", "River", "fertility"),
+    Nature("forest", "Forest", "fertility", PlaceKind.FOREST),
+    Nature("lake", "Lake", "fertility", PlaceKind.LAKE),
+    Nature("valley", "Valley", "fertility", PlaceKind.VALLEY),
+    Nature("river", "River", "fertility", PlaceKind.RIVER),
 )
-DANGEROUS = (Nature("cave", "Cave", "danger"), Nature("marsh", "Marsh", "danger"), Nature("pass", "Pass", "danger"), Nature("chasm", "Chasm", "danger"))
-MAGICAL = (Nature("well", "Well", "mystery"), Nature("stone circle", "Stone Circle", "mystery"), Nature("misty grove", "Misty Grove", "mystery"))
-COMMON = (Nature("hill", "Hill", None), Nature("plain", "Plain", None), Nature("cove", "Cove", None), Nature("upland", "Upland", None))
+DANGEROUS = (Nature("cave", "Cave", "danger", PlaceKind.CAVE), Nature("marsh", "Marsh", "danger", PlaceKind.SWAMP), Nature("pass", "Pass", "danger", PlaceKind.PASS), Nature("chasm", "Chasm", "danger", PlaceKind.CLIFF))
+MAGICAL = (Nature("well", "Well", "mystery", PlaceKind.WELL), Nature("stone circle", "Stone Circle", "mystery", PlaceKind.SHRINE_SITE), Nature("misty grove", "Misty Grove", "mystery", PlaceKind.GROVE))
+COMMON = (Nature("hill", "Hill", None, PlaceKind.MOUNTAIN), Nature("plain", "Plain", None, PlaceKind.VALLEY), Nature("cove", "Cove", None, PlaceKind.HARBOUR_SITE), Nature("upland", "Upland", None, PlaceKind.MOUNTAIN))
 WORLD_NATURES: dict[WorldType, tuple[Nature, ...]] = {
-    WorldType.OCEAN: (Nature("island", "Island", "fertility"), Nature("reef", "Reef", "danger")),
-    WorldType.SAND: (Nature("oasis", "Oasis", "fertility"), Nature("dune", "Dune", "danger")),
-    WorldType.ICE: (Nature("glacier", "Glacier", "danger"), Nature("hot spring", "Hot Spring", "fertility")),
-    WorldType.LAVA: (Nature("lava lake", "Lava Lake", "danger"), Nature("ash plain", "Ash Plain", "mystery")),
-    WorldType.SUPER_EARTH: (Nature("great plain", "Great Plain", "fertility"), Nature("deep trench", "Deep Trench", "danger")),
-    WorldType.ICE_GIANT: (Nature("cloud reef", "Cloud Reef", "fertility"), Nature("dark spot", "Dark Spot", "danger")),
-    WorldType.HOT_GIANT: (Nature("glow band", "Glow Band", "danger"), Nature("night band", "Night Band", "mystery")),
-    WorldType.IRON: (Nature("lodestone", "Lodestone", "mystery"), Nature("rust field", "Rust Field", "danger")),
-    WorldType.CARBON: (Nature("diamond scarp", "Diamond Scarp", "fertility"), Nature("tar pit", "Tar Pit", "danger")),
-    WorldType.GREENHOUSE: (Nature("acid pool", "Acid Pool", "danger"), Nature("cloud summit", "Cloud Summit", "mystery")),
-    WorldType.DWARF_PLANET: (Nature("crater", "Crater", "danger"), Nature("frost plain", "Frost Plain", "mystery")),
-    WorldType.CHTHONIAN: (Nature("core vent", "Core Vent", "danger"), Nature("glass plain", "Glass Plain", "mystery")),
-    WorldType.HYCEAN: (Nature("steam vent", "Steam Vent", "danger"), Nature("rock isle", "Rock Isle", "fertility")),
-    WorldType.JUNGLE: (Nature("canopy", "Canopy", "fertility"), Nature("swamp", "Swamp", "danger")),
-    WorldType.FORGE: (Nature("ore vein", "Ore Vein", "fertility"), Nature("slag field", "Slag Field", "danger")),
-    WorldType.FUNGAL: (Nature("spore grove", "Spore Grove", "mystery"), Nature("mycelium mat", "Mycelium Mat", "fertility")),
-    WorldType.SHATTERED: (Nature("floating isle", "Floating Isle", "mystery"), Nature("sky rift", "Sky Rift", "danger")),
-    WorldType.HOLLOW: (Nature("polar opening", "Polar Opening", "danger"), Nature("shadow band", "Shadow Band", "mystery")),
-    WorldType.ICE_SHELL: (Nature("geyser", "Geyser", "danger"), Nature("vent garden", "Vent Garden", "fertility")),
-    WorldType.METHANE: (Nature("methane lake", "Methane Lake", "danger"), Nature("haze dune", "Haze Dune", "mystery")),
+    WorldType.OCEAN: (Nature("island", "Island", "fertility", PlaceKind.ISLAND), Nature("reef", "Reef", "danger", PlaceKind.ISLAND)),
+    WorldType.SAND: (Nature("oasis", "Oasis", "fertility", PlaceKind.SPRING), Nature("dune", "Dune", "danger", PlaceKind.CRATER)),
+    WorldType.ICE: (Nature("glacier", "Glacier", "danger", PlaceKind.MOUNTAIN), Nature("hot spring", "Hot Spring", "fertility", PlaceKind.SPRING)),
+    WorldType.LAVA: (Nature("lava lake", "Lava Lake", "danger", PlaceKind.VOLCANO), Nature("ash plain", "Ash Plain", "mystery", PlaceKind.CRATER)),
+    WorldType.SUPER_EARTH: (Nature("great plain", "Great Plain", "fertility", PlaceKind.VALLEY), Nature("deep trench", "Deep Trench", "danger", PlaceKind.CLIFF)),
+    WorldType.ICE_GIANT: (Nature("cloud reef", "Cloud Reef", "fertility", PlaceKind.ISLAND), Nature("dark spot", "Dark Spot", "danger", PlaceKind.CRATER)),
+    WorldType.HOT_GIANT: (Nature("glow band", "Glow Band", "danger", PlaceKind.VALLEY), Nature("night band", "Night Band", "mystery", PlaceKind.CRATER)),
+    WorldType.IRON: (Nature("lodestone", "Lodestone", "mystery", PlaceKind.MINE_SITE), Nature("rust field", "Rust Field", "danger", PlaceKind.CRATER)),
+    WorldType.CARBON: (Nature("diamond scarp", "Diamond Scarp", "fertility", PlaceKind.CLIFF), Nature("tar pit", "Tar Pit", "danger", PlaceKind.SWAMP)),
+    WorldType.GREENHOUSE: (Nature("acid pool", "Acid Pool", "danger", PlaceKind.LAKE), Nature("cloud summit", "Cloud Summit", "mystery", PlaceKind.PEAK)),
+    WorldType.DWARF_PLANET: (Nature("crater", "Crater", "danger", PlaceKind.CRATER), Nature("frost plain", "Frost Plain", "mystery", PlaceKind.VALLEY)),
+    WorldType.CHTHONIAN: (Nature("core vent", "Core Vent", "danger", PlaceKind.VOLCANO), Nature("glass plain", "Glass Plain", "mystery", PlaceKind.CRATER)),
+    WorldType.HYCEAN: (Nature("steam vent", "Steam Vent", "danger", PlaceKind.VOLCANO), Nature("rock isle", "Rock Isle", "fertility", PlaceKind.ISLAND)),
+    WorldType.JUNGLE: (Nature("canopy", "Canopy", "fertility", PlaceKind.FOREST), Nature("swamp", "Swamp", "danger", PlaceKind.SWAMP)),
+    WorldType.FORGE: (Nature("ore vein", "Ore Vein", "fertility", PlaceKind.MINE_SITE), Nature("slag field", "Slag Field", "danger", PlaceKind.CRATER)),
+    WorldType.FUNGAL: (Nature("spore grove", "Spore Grove", "mystery", PlaceKind.GROVE), Nature("mycelium mat", "Mycelium Mat", "fertility", PlaceKind.FOREST)),
+    WorldType.SHATTERED: (Nature("floating isle", "Floating Isle", "mystery", PlaceKind.ISLAND), Nature("sky rift", "Sky Rift", "danger", PlaceKind.CLIFF)),
+    WorldType.HOLLOW: (Nature("polar opening", "Polar Opening", "danger", PlaceKind.CAVERN_SYSTEM), Nature("shadow band", "Shadow Band", "mystery", PlaceKind.GROVE)),
+    WorldType.ICE_SHELL: (Nature("geyser", "Geyser", "danger", PlaceKind.SPRING), Nature("vent garden", "Vent Garden", "fertility", PlaceKind.SPRING)),
+    WorldType.METHANE: (Nature("methane lake", "Methane Lake", "danger", PlaceKind.LAKE), Nature("haze dune", "Haze Dune", "mystery", PlaceKind.CRATER)),
 }
 
 
@@ -123,6 +126,7 @@ async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None =
             flags=(EntityFlag.NAME_FROM_LANGUAGE,) if derived else (),
         ),
     )
+    await write_kind(ctx.session, ctx.rules, place.id, nature.kind)
     moved: EntityRow | None = None
     if settlements and (move if move is not None else rng.chance(settings.move_chance)):
         moved = settlements[0]
@@ -144,6 +148,8 @@ async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None =
     "table.lexemes",
     "table.name_registry",
     "table.nodes",
+    "table.place_environment",
+    "table.place_profiles",
     "table.region_environment",
 )
 @writes(
@@ -156,6 +162,8 @@ async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None =
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
+    "table.place_environment",
+    "table.place_profiles",
 )
 async def geography(ctx: TickContext) -> None:
     settings = ctx.rules.geography

@@ -100,6 +100,8 @@ class EnginePhasesRules:
     goals: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: goals")
     war_casualties: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: war casualties")
     geography: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: geography")
+    place_profiles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: place profiles")
+    place_secrets: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: place secrets")
     ecology: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: ecology")
     world_balance: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: world balance")
     disaster_casualties: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: disaster casualties")

@@ -5,7 +5,7 @@ from sqlalchemy import delete, func, select
 
 from aerona.cartography.biomes import Biome
 from aerona.cartography.model import RegionRecord
-from aerona.catalog.place_terrain import place_profile
+from aerona.catalog.place_terrain import height_of, kind_spec
 from aerona.catalog.weather import WEATHER
 from aerona.constants.cartography import BIOME_COUNT
 from aerona.constants.units import PERCENT
@@ -23,6 +23,9 @@ from aerona.domain.enums.world import ClimateEra, Discovery
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
+from aerona.engine.environment.place_backfill import ensure_profiles
+from aerona.engine.environment.places import place_kind_of
+from aerona.domain.enums.place import PlaceKind
 from aerona.engine.cosmos.star_types import star_heat
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.ley import LeyWeb, candidate_lines, cut_by_land, pair
@@ -263,8 +266,8 @@ def new_region_environment(ctx: TickContext, region: EntityRow, geography: Geogr
     return env
 
 
-def new_place_environment(rules: Rules, place: EntityRow, region_id: int | None, factor: float) -> PlaceEnvironmentRow:
-    profile = place_profile(place.subtype)
+def new_place_environment(rules: Rules, place: EntityRow, region_id: int | None, factor: float, kind: PlaceKind) -> PlaceEnvironmentRow:
+    profile = kind_spec(kind)
     fertility = stat(place, "fertility")
     soil = soil_for(fertility, factor) if fertility is not None else rules.environment.ideal_rainfall
     return PlaceEnvironmentRow(
@@ -273,7 +276,7 @@ def new_place_environment(rules: Rules, place: EntityRow, region_id: int | None,
         terrain=profile.terrain,
         cover=profile.cover,
         water_source=profile.water,
-        height_advantage=clamp_int(profile.height(rules), 0, PERCENT),
+        height_advantage=clamp_int(height_of(rules, profile.height), 0, PERCENT),
         chokepoint=profile.chokepoint,
         soil_fertility=soil,
         derived_fertility=fertility,
@@ -393,14 +396,24 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
     "table.entity_flags",
     "table.forced_weather",
     "table.holder_levels",
+    "table.beast_profiles",
     "table.notable_years",
     "table.place_environment",
+    "table.place_profiles",
     "table.region_environment",
     "table.sky_events",
     "table.world_maps",
     "table.world_seasons",
 )
-@writes("table.applied_fixups", "table.notable_years", "table.place_environment", "table.region_environment", "table.world_seasons", "table.worlds")
+@writes(
+    "table.applied_fixups",
+    "table.notable_years",
+    "table.place_environment",
+    "table.place_profiles",
+    "table.region_environment",
+    "table.world_seasons",
+    "table.worlds",
+)
 async def environment_survey(ctx: TickContext) -> None:
     ctx.count("notable_years_backfilled", await backfill_notable_years(ctx))
     moons = await moons_by_world(ctx)
@@ -439,6 +452,7 @@ async def environment_survey(ctx: TickContext) -> None:
             synced += 1
     await ctx.session.flush()
     await settle_new_ground(ctx, fresh)
+    kinds = await ensure_profiles(ctx, book)
     placed = 0
     for place in await canon(ctx.session, [EntityType.PLACE]):
         if place.id in book.places:
@@ -447,7 +461,8 @@ async def environment_survey(ctx: TickContext) -> None:
         env = book.regions.get(region_id) if region_id is not None else None
         context = contexts.get(region_id) if region_id is not None else None
         factor = factor_of(ctx.rules, env, context.works if context is not None else Works()) if env is not None else 1.0
-        row = new_place_environment(ctx.rules, place, region_id, factor)
+        kind = kinds.get(place.id) or await place_kind_of(ctx.session, place.id)
+        row = new_place_environment(ctx.rules, place, region_id, factor, kind)
         ctx.session.add(row)
         book.places[place.id] = row
         placed += 1

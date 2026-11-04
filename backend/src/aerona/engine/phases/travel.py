@@ -332,7 +332,7 @@ async def _send_spontaneously(ctx: TickContext, book: RouteBook, community: Enti
     target = other_end(route, community.world_id)
     warlike = max(stat_or(community, "martiality", 0), stat_or(community, "defense", 0)) >= ctx.rules.travel.conquest_min_martiality
     empty = await _world_population(ctx.session, target) == 0
-    intent = choose_intent(ctx.rules, rng, community.civ_tier or 0, empty, holy_site=await has_holy_site(ctx.session, community, target), warlike=warlike)
+    intent = choose_intent(ctx.rules, rng, community.civ_tier or 0, empty, holy_site=await has_holy_site(ctx.session, community, target, ctx.rules), warlike=warlike)
     settling = intent in (JourneyIntent.COLONY, JourneyIntent.CONQUEST)
     carried = round(headcount(community) * ctx.rules.travel.colony_share_pct / PERCENT) if settling else 0
     try:
@@ -848,6 +848,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.nodes",
     "table.personality_values",
     "table.place_environment",
+    "table.place_profiles",
     "table.pressures",
     "table.region_environment",
     "table.reverences",

@@ -57,6 +57,9 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "learner_ids": "Communities that first learn this knowledge (at most {{ rules.son_tools.knowledge_first_learners }})",
     },
     EntityType.REGION: {"water": "True if the region is a sea or ocean (water) rather than land; default false"},
+    EntityType.PLACE: {
+        "place_kind": "What kind of place it is: {{ place_kinds | join(', ') }}; its ground, cover, water, height, sacredness and hidden secrets follow the kind"
+    },
     EntityType.SPECIES: {
         "traits": "The creature's traits (at most {{ rules.son_tools.creature_max_traits }}): {{ creature_traits }}",
         "body_plan": "The creature's body: {{ body_plans }}; its wounds, armour and fighting follow this body",
@@ -287,6 +290,26 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You cut a ley line between two regions: magic stops flowing along it, storms no longer run down it and works on it stop gaining power, "
         "for {{ rules.environment.sever_ley_epochs }} ages. {{ rules.son_tools.sever_ley_essence }} essence, 1 action.",
         {"line_id": "The ley line's id (see the region's ley lines)", "reason": "Why you cut it"},
+    ),
+    T.HIDE_SECRET: ToolText(
+        "You hide a secret in a place: a seam, a relic, a sealed spirit, lost knowledge, a lost rite or a way down to the underworld. "
+        "Explorers, seers and deep miners may find it; deep mining breaks what is sealed. {{ rules.places.hide_secret_essence }} essence, 1 action.",
+        {
+            "place_id": "The place's id",
+            "kind": "What you hide: {{ secret_kinds | join(', ') }}",
+            "strength": "How deep it lies and how strong its seal (0-100); stronger secrets are found later",
+            "reason": "Why you hide it",
+        },
+    ),
+    T.SANCTIFY_PLACE: ToolText(
+        "You sanctify a place: its sacredness rises by {{ rules.places.sanctify_amount }}, it draws pilgrims and becomes a holy site of the faithful. "
+        "{{ rules.places.sanctify_essence }} essence, 1 action.",
+        {"place_id": "The place's id", "reason": "Why it is holy to you"},
+    ),
+    T.RAISE_NEXUS: ToolText(
+        "You draw the ley lines together at a place: it becomes a nexus that feeds works, draws wizards and armies, and is holy to cults. "
+        "{{ rules.places.raise_nexus_essence }} essence, 1 action.",
+        {"place_id": "The place's id", "reason": "Why you raise it"},
     ),
     T.REORDER_SEASONS: ToolText(
         "You reorder the seasons of a world: the year runs in the order you name, so harvests, campaigns, travel and festivals fall differently. "

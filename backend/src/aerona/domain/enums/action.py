@@ -239,6 +239,10 @@ class ActionKind(StrEnum):
     SEED_PLACE = "seed_place"
     DECLARE_PILGRIMAGE_SITE = "declare_pilgrimage_site"
     ORDER_END = "order_end"
+    HIDE_SECRET = "hide_secret"
+    REVEAL_SECRET = "reveal_secret"
+    SANCTIFY_PLACE = "sanctify_place"
+    RAISE_NEXUS = "raise_nexus"
     OTHER = "other"
 
 

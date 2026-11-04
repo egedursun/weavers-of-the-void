@@ -88,6 +88,7 @@ PLACE_ENUMS: dict[str, type[StrEnum]] = {"terrain": TerrainKind, "cover": PlaceC
 PLACE_NUMBERS = frozenset({"height_advantage", "soil_fertility"})
 PASSABILITY_PREFIX = "passability."
 PLACE_FLAGS = frozenset({"chokepoint", "nexus"})
+PLACE_LOCKABLE = frozenset({"terrain", "cover", "water_source", "height_advantage", "chokepoint"})
 INHERIT = "inherit"
 HARVEST_MAX = 200
 CAPS: dict[str, int] = {"harvest_pct": HARVEST_MAX}
@@ -155,18 +156,24 @@ def unlock_region_field(ground: RegionEnvironmentRow, field: str) -> bool:
     return True
 
 
-def set_place_field(ground: PlaceEnvironmentRow, field: str, value: int | str | bool) -> None:
+def set_place_field(ground: PlaceEnvironmentRow, field: str, value: int | str | bool, *, lock: bool = True) -> None:
     if field in PLACE_FLAGS:
         setattr(ground, field, bool(value))
-        if field == "nexus":
-            ground.locked = sorted({*ground.locked, field})
-        return
-    if isinstance(value, bool):
+    elif isinstance(value, bool):
         raise ValidationFailedError(f"{field.replace('_', ' ')} does not take yes or no.")
-    if field == "terrain" and value == INHERIT:
+    elif field == "terrain" and value == INHERIT:
         ground.terrain = None
-        return
-    setattr(ground, field, coerce(field, value, PLACE_ENUMS, PLACE_NUMBERS))
+    else:
+        setattr(ground, field, coerce(field, value, PLACE_ENUMS, PLACE_NUMBERS))
+    if lock and (field in PLACE_LOCKABLE or field == "nexus"):
+        ground.locked = sorted({*ground.locked, field})
+
+
+def unlock_place_field(ground: PlaceEnvironmentRow, field: str) -> bool:
+    if field not in ground.locked:
+        return False
+    ground.locked = sorted(set(ground.locked) - {field})
+    return True
 
 
 def set_scar(ground: RegionEnvironmentRow, kind: ScarKind, depth: int) -> None:
