@@ -62,14 +62,15 @@ export function WarMap({ room }: { room: WarRoom }) {
     })
     return [...found.entries()]
   }, [room])
+  const lone = regions.length === 1
   const spots: Spot[] = regions.map(([id, name], index) => {
     const angle =
       (index / Math.max(1, regions.length)) * Math.PI * 2 - Math.PI / 2
     return {
       id,
       name,
-      x: CENTER + RADIUS * Math.cos(angle),
-      y: CENTER + RADIUS * Math.sin(angle),
+      x: lone ? CENTER : CENTER + RADIUS * Math.cos(angle),
+      y: lone ? CENTER : CENTER + RADIUS * Math.sin(angle),
     }
   })
   const where = new Map(spots.map((spot) => [spot.id, spot]))

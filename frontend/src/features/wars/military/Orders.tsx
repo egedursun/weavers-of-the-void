@@ -246,7 +246,7 @@ export function WarOrders({
       </Adjust>
       <RecordPanel
         kind='war'
-        scope={null}
+        scope={warId}
         title='War record'
         blocked={blocked}
         choices={{ cause: CAUSE }}

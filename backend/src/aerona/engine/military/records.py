@@ -55,7 +55,7 @@ KINDS: dict[str, RecordKind] = {
         RecordKind("army_profile", ArmyProfileRow, "Army orders", "army_entity_id", ("army_entity_id",), creatable=False, deletable=False),
         RecordKind("officer", ArmyOfficerRow, "Army officer", "army_entity_id", ("army_entity_id", "mortal_entity_id", "role")),
         RecordKind("contract", MercenaryContractRow, "Mercenary contract", "employer_entity_id", ("employer_entity_id", "soldiers", "pay_per_season")),
-        RecordKind("war", WarRow, "War", "event_entity_id", (), creatable=False, deletable=False, hidden=("event_entity_id", "world_id")),
+        RecordKind("war", WarRow, "War", "id", (), creatable=False, deletable=False, hidden=("event_entity_id", "world_id")),
         RecordKind("siege", SiegeRow, "Siege", "war_id", ("war_id", "besieged_entity_id", "besieger_entity_id")),
         RecordKind("war_aim", WarAimRow, "War aim", "war_id", ("war_id", "side_entity_id", "kind")),
         RecordKind("occupation", OccupationRow, "Occupation", "occupier_entity_id", ("region_entity_id", "occupier_entity_id")),

@@ -27,6 +27,10 @@ import {
 import { type Named, busyOf, fieldLabel } from './labels'
 import { Adjust, FieldGrid, Panel } from './parts'
 
+function columnLabel(name: string): string {
+  return fieldLabel(name.replace(/_entity_id$|_id$/, ''))
+}
+
 type Choices = Record<string, Record<string, Named>>
 
 function Field({
@@ -43,7 +47,7 @@ function Field({
   onChange: (value: unknown) => void
 }) {
   const id = useId()
-  const label = fieldLabel(column.name)
+  const label = columnLabel(column.name)
   const table = choices[column.name]
   return (
     <div className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-background p-2.5'>
@@ -218,7 +222,7 @@ function RowCard({
             return (
               <Badge key={column.name} size='sm' variant='secondary'>
                 <span className='text-muted-foreground'>
-                  {fieldLabel(column.name)}
+                  {columnLabel(column.name)}
                 </span>
                 {ref
                   ? ref.name
@@ -443,7 +447,11 @@ export function RecordPanel({
         <EmptyState
           icon={icon}
           title={empty ?? `No ${title.toLowerCase()} yet`}
-          description='Create one below, or let the world make its own.'
+          description={
+            table.creatable
+              ? 'Create one below, or let the world make its own.'
+              : 'It appears once the world brings it about.'
+          }
         />
       ) : (
         <div className='flex min-w-0 flex-col gap-2'>
