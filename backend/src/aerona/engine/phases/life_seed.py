@@ -8,7 +8,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.entity_stats import PeopleStats, SpeciesStats
 from aerona.engine.context import TickContext
-from aerona.engine.interconnect.annotations import reads
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
@@ -107,6 +107,19 @@ async def native_species(ctx: TickContext, world: WorldRow, region: EntityRow) -
 
 
 @reads("region.fertility")
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.language_profiles",
+    "table.name_registry",
+    "table.nodes",
+)
 async def life_seed(ctx: TickContext) -> None:
     rules = ctx.rules
     rng = ctx.rng()

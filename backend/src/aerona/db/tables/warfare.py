@@ -3,8 +3,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.db.base import Base, CreatedAtMixin
-from aerona.db.profile_guard import register_profile_table
 from aerona.db.columns import at_least, enum_type
+from aerona.db.profile_guard import register_profile_table
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.military import DefenderAction, OutcomeClass, SackChoice, SiegeAction, StarvationStage, Tactic
 from aerona.domain.enums.war import (

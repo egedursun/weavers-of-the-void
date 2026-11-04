@@ -6,7 +6,7 @@ from aerona.db.tables.warfare import CaptiveRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.body import Capacity, HarmCause
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.war import CaptiveStatus, WarCause
@@ -29,7 +29,11 @@ from aerona.tools.mortal.inputs import EscapeInput, RansomInput, RescueInput
 from aerona.tools.mortal.support import STRENGTH_CHAIN, enemies, first_stat, near, same_region
 
 PERCENT = 100
-KIN_BONDS = (BondKind.PROTECTS, BondKind.DESCENDS_FROM, BondKind.COMPANION)
+KIN_BONDS = (
+    BondKind.PROTECTS,
+    BondKind.COMPANION,
+    *KIN_BOND_KINDS,
+)
 GUARD_CHAIN = ("defense", "strength", "martiality")
 RANSOM_EVENT = "ransom"
 

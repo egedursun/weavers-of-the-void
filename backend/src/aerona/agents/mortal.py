@@ -47,9 +47,9 @@ from aerona.prompts.contexts.opportunities import MortalOpportunitiesContext
 from aerona.prompts.contexts.son_turn import DoneAction, TurnContinuationContext, TurnInterruption
 from aerona.rules.registry import Rules
 
-AGENT_TYPES = (EntityType.PEOPLE, EntityType.FACTION, EntityType.CULT, EntityType.SETTLEMENT, EntityType.MORTAL, EntityType.SPECIES, EntityType.BEAST)
+AGENT_TYPES = (EntityType.PEOPLE, EntityType.FACTION, EntityType.CULT, EntityType.SETTLEMENT, EntityType.MORTAL, EntityType.BEAST)
 SELECTION_STREAM = "agents.mortal_selection"
-CREATURES = frozenset({EntityType.SPECIES, EntityType.BEAST})
+CREATURES = frozenset({EntityType.BEAST})
 CROWD_FLOOR = 10
 
 

@@ -82,7 +82,7 @@ async def test_friendly_neighbours_form_marriage_alliance(session: AsyncSession,
     await diplomacy(make_ctx(session, rules))
     repository = BondRepository(session)
     assert await repository.exists_between(first, second, BondKind.ALLY)
-    assert await repository.exists_between(bride.id, groom.id, BondKind.LOVES)
+    assert await repository.exists_between(bride.id, groom.id, BondKind.SPOUSE_OF)
 
 
 async def test_betrayal_in_a_multi_world_cosmos_goes_to_the_cosmic_court(session: AsyncSession, world_id: int) -> None:

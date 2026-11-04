@@ -122,6 +122,9 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
 
 
 @reads(
+    "mortal.endurance",
+    "table.mortal_equipment",
+    "table.mortal_profiles",
     "item.curse",
     "item.protection",
     "mortal.age",
@@ -155,6 +158,7 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
     "table.world_materials",
 )
 @writes(
+    "table.mortal_profiles",
     "mortal.hp",
     "settlement.defense",
     "settlement.prosperity",

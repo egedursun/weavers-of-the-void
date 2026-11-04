@@ -8,11 +8,14 @@ from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.military import DuelContext, FeudAction, FeudParty, FeudStatus
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.interconnect.causes import war_cause_incident
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.traditions import keeps
 from aerona.engine.military.feuds import active_feuds, head_of, peace_mediator, realm_party, sides_of, temper
@@ -94,7 +97,9 @@ async def assassinate(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) ->
     victim = await target_of(ctx, enemy)
     if victim is None:
         return None
-    await death_path(ctx, victim, f"murdered in the blood feud with {avenger.name}", avenger.id, "feud killing", forced=True, harm=HarmCause.BATTLE)
+    await death_path(
+        ctx, victim, f"murdered in the blood feud with {avenger.name}", avenger.id, "feud killing", forced=True, harm=HarmCause.BATTLE, manner=DeathCause.MURDER
+    )
     if enemy.entity_type is EntityType.HOUSE or avenger.entity_type is EntityType.HOUSE:
         await open_feud(ctx.session, ctx.rules, enemy.id, avenger.id, epoch=ctx.epoch, cause=f"the murder of {victim.name}", party=FeudParty.HOUSE)
     else:
@@ -157,7 +162,10 @@ async def feuds(ctx: TickContext) -> int:
         ctx.count(f"feud_{action.value if action is not None else 'mediated'}")
         if text is not None:
             acted += 1
-            await note(ctx, text, key=f"vendetta.{action.value if action is not None else 'mediated'}", ids=[avenger.id, enemy.id], kind=ChronicleKind.WAR)
+            cause = await war_cause_incident(ctx.session, WarCause.VENDETTA, avenger.id, enemy.id, ctx.epoch)
+            key = f"vendetta.{action.value if action is not None else 'mediated'}"
+            roles = {avenger.id: IncidentRole.ACTOR, enemy.id: IncidentRole.TARGET}
+            await note(ctx, text, key=key, ids=[avenger.id, enemy.id], kind=ChronicleKind.WAR, roles=roles, cause_incident_id=cause)
     return acted
 
 

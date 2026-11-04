@@ -101,6 +101,16 @@ class EngineKind(StrEnum):
     RESURRECTION_ORDER = "resurrection_order"
     GHOST_SHIP = "ghost_ship"
     COLONY = "colony"
+    FESTIVAL_OF_NOTE = "festival_of_note"
+    CORONATION = "coronation"
+    WEDDING = "wedding"
+    MASSACRE = "massacre"
+    SACK = "sack"
+    FIRE = "fire"
+    ERUPTION = "eruption"
+    RIOT = "riot"
+    SCHISM_COUNCIL = "schism_council"
+    ECLIPSE_WATCH = "eclipse_watch"
 
 
 class MortalRole(StrEnum):

@@ -53,6 +53,7 @@ from aerona.engine.mind.memories import forget_faded, memories_about, remember
 from aerona.engine.mind.opinion import opinion
 from aerona.engine.mind.skills import left_to_beg, practise, weather_skills
 from aerona.engine.mind.space import value_distance, value_reading
+from aerona.engine.mortal.kinship import add_parent
 from aerona.engine.phases.mind import famine_aid, mind_memories, mind_needs, mind_opinion, mind_skills, mind_survey, mind_values
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.services.community_relations import change_relation, refresh_relation, relation
@@ -178,7 +179,7 @@ async def test_a_killing_leaves_grief_in_the_kin_and_memories_pass_on(realm: Rea
     father = await mortal(realm, "Arn")
     daughter = await mortal(realm, "Ysa")
     killer = await mortal(realm, "Vorn")
-    await link(realm.session, daughter.id, father.id, BondKind.DESCENDS_FROM)
+    await add_parent(realm.session, father.id, daughter.id, 1)
     old_foe = await mortal(realm, "Grell")
     await remember(realm.session, RULES, holder_id=father.id, subject_id=old_foe.id, kind=MemoryKind.BETRAYED_ME, magnitude=-80, epoch=3)
     await die(context(realm.session), father, cause="was slain", killer_id=killer.id)

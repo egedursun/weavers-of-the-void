@@ -7,6 +7,8 @@ from aerona.constants.tool_inputs import PLAN_MAX, PLAN_MIN, REASON_MAX, REASON_
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.engine.gods.dedication import may_anchor
+from aerona.engine.primitives.holds import ANCHOR_KEY, is_held
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
 from aerona.tools.framework.call import SonCall
@@ -43,10 +45,12 @@ async def write_plan(call: SonCall, args: WritePlanInput) -> str:
 
 
 async def choose_anchor(call: SonCall, args: ChooseAnchorInput) -> str:
+    if await is_held(call.session, call.son.id, ANCHOR_KEY, call.epoch):
+        fail(SonResult.ANCHOR_HELD)
     cap = call.rules.son_tools.anchor_per_epoch
     await call.within_limit(TurnCounter.ANCHOR_CHOSEN, cap, "son_tools.anchor_per_epoch", SonResult.ANCHOR_LIMIT)
     entity = await require_canon(call.session, args.entity_id)
-    if entity.creator_son_id != call.son.id:
+    if not await may_anchor(call.session, call.son, entity):
         fail(SonResult.ANCHOR_NOT_OWN)
     cost = call.rules.costs.anchor
     require_essence(call, cost)

@@ -37,7 +37,6 @@ class DemographyRules:
     stress_birth_pct: int = rule(30, 0, 100, G, "Births lost at war or in deep unrest (%)")
     immortality_death_pct: int = rule(10, 0, 1000, G, "Deaths kept under the immortality law (%)")
     short_life_death_pct: int = rule(200, 0, 1000, G, "Deaths under the short-life law (%)")
-    sampled_years: int = rule(5, 1, 100, G, "Years of births and deaths computed in an epoch (the rest are extrapolated)")
 
 
 @dataclass(frozen=True)

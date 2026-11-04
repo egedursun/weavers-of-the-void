@@ -10,6 +10,7 @@ from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import OPEN_INJURY_STATES, HarmCause, InjuryState
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -17,6 +18,8 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.aging import effective_lifespan, immortal, medicine_regions
 from aerona.engine.lifecycle.mortal_death import die, world_year
 from aerona.engine.lifecycle.wounds import fatal_injury
+from aerona.engine.mortal.life import hazard_chance
+from aerona.engine.mortal.profile import profile_of
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -45,10 +48,30 @@ async def succumb(ctx: TickContext, mortal: EntityRow) -> None:
         open_wounds[0].state = InjuryState.LETHAL
     else:
         await fatal_injury(ctx, mortal, Harm(ctx.rules.casualties.wound_hp, HarmCause.ACCIDENT, WOUND_DEATH))
-    await die(ctx, mortal, cause=WOUND_DEATH)
+    await die(ctx, mortal, cause=WOUND_DEATH, manner=DeathCause.WOUNDS)
 
 
 @reads("mortal.hp")
+@writes(
+    "mortal.death_year",
+    "mortal.hp",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.designated_heirs",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.injuries",
+    "table.item_history",
+    "table.language_profiles",
+    "table.memories",
+    "table.name_registry",
+    "table.sons",
+    "table.spirit_profiles",
+)
 async def mortal_wounds(ctx: TickContext) -> None:
     for mortal in await canon(ctx.session, [EntityType.MORTAL]):
         hp = stat(mortal, "hp")
@@ -88,12 +111,15 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     lived = years_lived(ctx, mortal)
     multiplier = (effects.short_life_aging_mult if laws.has(NaturalLaw.SHORT_LIFE, mortal.world_id) else 1) * physics.of(mortal.world_id).time
     aged = age + round_half_up(lived * multiplier)
-    limit = (await effective_lifespan(ctx.session, rules, mortal, world.atlas, world.medicine)).effective
-    if aged < limit:
+    info = await effective_lifespan(ctx.session, rules, mortal, world.atlas, world.medicine)
+    limit = info.effective
+    profile = await profile_of(ctx.session, mortal.id)
+    health = profile.health if profile is not None else PERCENT
+    if (first and aged < limit) or not rng.chance(hazard_chance(rules, aged, limit, health, medicine=info.medicine > 0)):
         set_stats(mortal, age=aged)
         return
     years = rules.time.years_per_epoch
-    death_age = max(age, limit)
+    death_age = aged
     offset = years - lived if first else 0
     death_year = world.start_year + offset + min(years - 1, max(0, round_half_up((death_age - age) / max(MIN_AGING_MULTIPLIER, multiplier))))
     set_stats(mortal, age=death_age)
@@ -108,10 +134,12 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
             son_id=mortal.creator_son_id,
         )
         return
-    await die(ctx, mortal, natural=True, year=death_year)
+    await die(ctx, mortal, natural=True, year=death_year, manner=DeathCause.OLD_AGE)
 
 
 @reads(
+    "table.marriages",
+    "table.mortal_profiles",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
@@ -141,6 +169,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "table.world_maps",
 )
 @writes(
+    "table.mortal_profiles",
     "mortal.age",
     "mortal.death_year",
     "table.bonds",

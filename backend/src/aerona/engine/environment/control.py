@@ -3,6 +3,7 @@ from enum import StrEnum
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.cartography.biomes import Biome
 from aerona.catalog.weather import WEATHER
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -18,6 +19,7 @@ from aerona.domain.enums.environment import (
     RiverClass,
     ScarKind,
     SoilKind,
+    TemperatureBand,
     TerrainKind,
     WaterSource,
     WeatherKind,
@@ -31,6 +33,7 @@ from aerona.rules.registry import Rules
 
 REGION_ENUMS: dict[str, type[StrEnum]] = {
     "dominant_terrain": TerrainKind,
+    "temperature_band": TemperatureBand,
     "soil": SoilKind,
     "river_class": RiverClass,
     "coast_kind": CoastKind,
@@ -60,10 +63,14 @@ REGION_NUMBERS = frozenset(
         "erosion",
         "seasonality",
         "harvest_pct",
+        "sacredness",
+        "derived_fertility",
     }
 )
 LOCKABLE = frozenset(
     {
+        "soil",
+        "soil_base",
         "dominant_terrain",
         "river_class",
         "coast_kind",
@@ -82,12 +89,28 @@ LOCKABLE = frozenset(
         "seasonality",
         "magic_density",
         "harvest_pct",
+        "soil_fertility",
+        "cleared",
+        "farmed",
+        "grazed",
+        "mined",
+        "built",
+        "erosion",
+        "sacredness",
+        "temperature_band",
+        "derived_fertility",
+        "biome_mix",
     }
 )
+SCAR_PREFIX = "scar."
+SEAM_PREFIX = "seam."
+WORLD_SEAM = "world:"
+BIOME_COUNT = len(Biome)
 PLACE_ENUMS: dict[str, type[StrEnum]] = {"terrain": TerrainKind, "cover": PlaceCover, "water_source": WaterSource}
 PLACE_NUMBERS = frozenset({"height_advantage", "soil_fertility"})
 PASSABILITY_PREFIX = "passability."
 PLACE_FLAGS = frozenset({"chokepoint", "nexus"})
+PLACE_LOCKABLE = frozenset({"terrain", "cover", "water_source", "height_advantage", "chokepoint"})
 INHERIT = "inherit"
 HARVEST_MAX = 200
 CAPS: dict[str, int] = {"harvest_pct": HARVEST_MAX}
@@ -155,36 +178,74 @@ def unlock_region_field(ground: RegionEnvironmentRow, field: str) -> bool:
     return True
 
 
-def set_place_field(ground: PlaceEnvironmentRow, field: str, value: int | str | bool) -> None:
+def set_place_field(ground: PlaceEnvironmentRow, field: str, value: int | str | bool, *, lock: bool = True) -> None:
     if field in PLACE_FLAGS:
         setattr(ground, field, bool(value))
-        if field == "nexus":
-            ground.locked = sorted({*ground.locked, field})
-        return
-    if isinstance(value, bool):
+    elif isinstance(value, bool):
         raise ValidationFailedError(f"{field.replace('_', ' ')} does not take yes or no.")
-    if field == "terrain" and value == INHERIT:
+    elif field == "terrain" and value == INHERIT:
         ground.terrain = None
-        return
-    setattr(ground, field, coerce(field, value, PLACE_ENUMS, PLACE_NUMBERS))
+    else:
+        setattr(ground, field, coerce(field, value, PLACE_ENUMS, PLACE_NUMBERS))
+    if lock and (field in PLACE_LOCKABLE or field == "nexus"):
+        ground.locked = sorted({*ground.locked, field})
 
 
-def set_scar(ground: RegionEnvironmentRow, kind: ScarKind, depth: int) -> None:
+def unlock_place_field(ground: PlaceEnvironmentRow, field: str) -> bool:
+    if field not in ground.locked:
+        return False
+    ground.locked = sorted(set(ground.locked) - {field})
+    return True
+
+
+def held(ground: RegionEnvironmentRow, field: str) -> bool:
+    return field in ground.locked
+
+
+def hold(ground: RegionEnvironmentRow, field: str, lock: bool) -> None:
+    locked = set(ground.locked)
+    if lock:
+        locked.add(field)
+    else:
+        locked.discard(field)
+    ground.locked = sorted(locked)
+
+
+def set_scar(ground: RegionEnvironmentRow, kind: ScarKind, depth: int, *, lock: bool = False) -> None:
     scars = dict(ground.scars)
     if depth <= 0:
         scars.pop(kind.value, None)
     else:
         scars[kind.value] = clamp_int(depth, 0, PERCENT)
     ground.scars = scars
+    hold(ground, f"{SCAR_PREFIX}{kind.value}", lock and depth > 0)
 
 
-def set_mineral(ground: RegionEnvironmentRow, material: str, richness: int) -> None:
+def world_seam(world_material_id: int) -> str:
+    return f"{WORLD_SEAM}{world_material_id}"
+
+
+def world_seam_id(key: str) -> int | None:
+    return int(key.removeprefix(WORLD_SEAM)) if key.startswith(WORLD_SEAM) and key.removeprefix(WORLD_SEAM).isdigit() else None
+
+
+def set_biome(ground: RegionEnvironmentRow, biome: int, share: int, *, lock: bool) -> None:
+    if not 0 <= biome < BIOME_COUNT:
+        raise ValidationFailedError("No such biome.")
+    mix = [*ground.biome_mix, *([0] * max(0, BIOME_COUNT - len(ground.biome_mix)))]
+    mix[biome] = clamp_int(share, 0, PERCENT)
+    ground.biome_mix = mix
+    hold(ground, "biome_mix", lock or "biome_mix" in ground.locked)
+
+
+def set_mineral(ground: RegionEnvironmentRow, material: str, richness: int, *, lock: bool = False) -> None:
     layers = dict(ground.mineral_layers)
     if richness <= 0:
         layers.pop(material, None)
     else:
         layers[material] = clamp_int(richness, 0, PERCENT)
     ground.mineral_layers = layers
+    hold(ground, f"{SEAM_PREFIX}{material}", lock and richness > 0)
 
 
 async def world_seasons(session: AsyncSession, world_id: int) -> list[WorldSeasonRow]:

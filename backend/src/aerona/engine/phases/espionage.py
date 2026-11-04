@@ -18,6 +18,7 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.military import SabotageKind, SpyCover, SpyOperation
 from aerona.domain.enums.mind import MemoryKind, SkillKind
+from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import WarCause
@@ -195,7 +196,9 @@ async def assassinate(ctx: TickContext, spymaster: EntityRow, target: EntityRow,
         text = f"An assassin of {spymaster.name} struck at {victim.name}, ruler of {target.name}, and left them wounded."
         await _note(ctx, text, "espionage.assassination_wounded", (spymaster.id, target.id, victim.id))
         return text
-    await death_path(ctx, victim, f"murdered by the agents of {spymaster.name}", spymaster.id, "assassination", forced=True, harm=HarmCause.POISON)
+    await death_path(
+        ctx, victim, f"murdered by the agents of {spymaster.name}", spymaster.id, "assassination", forced=True, harm=HarmCause.POISON, manner=DeathCause.MURDER
+    )
     for agent in await agents_of(ctx, network):
         if agent.mortal_entity_id is not None:
             await house_feud(ctx, agent.mortal_entity_id, victim.id, f"the murder of {victim.name}")

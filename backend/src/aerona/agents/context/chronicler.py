@@ -8,6 +8,7 @@ from sqlalchemy import func, or_, select
 
 from aerona.agents.context.chronicle_facts import epoch_facts
 from aerona.agents.context.entity_line import line_items
+from aerona.agents.context.happenings import event_phase_lines
 from aerona.agents.context.recent_chronicle import prompt_text
 from aerona.agents.context.scope import Scope
 from aerona.agents.context.tired_images import tired_images
@@ -235,6 +236,7 @@ async def chronicler_context(
         events=await events_by_world(scope, epoch, chosen),
         engine_notes=list(engine_notes),
         chains=[chain.line for chain in await chains_in(scope.session, epoch, CHAIN_MINIMUM, scope.rules.incidents.chain_depth)],
+        event_phases=await event_phase_lines(scope.session, epoch),
         pending=pending,
         facts=(await epoch_facts(scope, epoch)).sheet,
     )

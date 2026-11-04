@@ -82,6 +82,9 @@ class ResearchRules:
     institution_pct: int = rule(50, 0, 500, C, "Weight of each school, academy or library in research (%)")
     literacy_pct: int = rule(100, 0, 500, C, "Weight of literacy in research (%)")
     contact_pct: int = rule(50, 0, 500, C, "Weight of contact with a more learned people in research (%)")
+    scholar_pct: int = rule(50, 0, 500, C, "Weight of the community's best scholar, by skill and ability to study, in research (%)")
+    master_scholarship: int = rule(50, 0, 100, C, "Ability to study below which a master no longer counts as one")
+    master_skill: int = rule(50, 0, 100, C, "Skill at which a mortal is a master")
     practitioners_per_level: int = rule(20, 0, 100000, C, "Practitioners each level of a knowledge needs among a thousand people")
     loss_chance: int = rule(30, 0, 100, C, "A level is lost when its practitioners die and no books or masters remain (%)")
     book_diffusion_pct: int = rule(50, 0, 300, C, "Weight of books in carrying knowledge without a teacher (%)")
@@ -114,6 +117,7 @@ class IdeologiesRules:
 
 @dataclass(frozen=True)
 class RitesRules:
+    fire_wet_pct: int = rule(70, 0, 100, H, "Strength a fire rite loses under fully wet weather (%)")
     enchant_chance: int = rule(10, 0, 100, H, "A wizard binds a rite into an item they made (%)")
     cult_chance: int = rule(10, 0, 100, H, "A cult performs a collective rite in an epoch (%)")
     invention_chance: int = rule(5, 0, 100, H, "A wizard devises a new rite (%)")
@@ -217,6 +221,7 @@ class RelicsRules:
     healing_chance: int = rule(10, 0, 100, H, "A pilgrim is healed at a relic (%)")
     theft_chance: int = rule(3, 0, 100, H, "A rival faith steals a relic (%)")
     zeal: int = rule(3, 0, 100, H, "Zeal a famous relic stirs")
+    pilgrims_per_cure: int = rule(100, 1, 100000, H, "Pilgrims at a relic for each sick pilgrim it can heal in an epoch")
 
 
 @dataclass(frozen=True)

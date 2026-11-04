@@ -2,7 +2,7 @@ from sqlalchemy import func, select
 
 from aerona.catalog.lore import ITEM_CLASSES, ITEM_WORDS, KNOWLEDGE_ITEMS, REGALIA, WEAPONS
 from aerona.constants.units import PERCENT
-from aerona.db.tables.body import ConditionRow
+from aerona.db.tables.body import BodyRow, ConditionRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ItemHistoryRow, ItemProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -223,22 +223,23 @@ async def relic_year(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
             continue
         shift_stat(cult, "zeal", table.zeal * relic.sanctity // PERCENT)
         counts["stirred"] += 1
+        pilgrims_here = select(EntityRow.id).where(EntityRow.location_id == relic.shrine_entity_id, EntityRow.status == EntityStatus.CANON)
         sick = await ctx.session.scalars(
             select(ConditionRow)
-            .where(ConditionRow.ended_epoch.is_(None), ConditionRow.kind.in_(list(CURABLE)))
+            .where(ConditionRow.ended_epoch.is_(None), ConditionRow.kind.in_(list(CURABLE)), ConditionRow.bearer_node_id.in_(pilgrims_here))
             .order_by(ConditionRow.id)
-            .limit(relic.pilgrims // 100 + 1)
+            .limit(relic.pilgrims // table.pilgrims_per_cure + 1)
         )
         for condition in list(sick):
             bearer = await ctx.session.get(EntityRow, condition.bearer_node_id)
-            if bearer is None or bearer.location_id != relic.shrine_entity_id:
+            if bearer is None:
                 continue
             if ctx.rng(f"relic_heal.{relic.item_entity_id}.{condition.id}.{ctx.epoch}").chance(table.healing_chance):
                 await end_condition(ctx, bearer, condition.kind)
                 counts["healed"] += 1
         region = atlas.top_region(relic.shrine_entity_id) if relic.shrine_entity_id is not None else None
         rivals = [other for other in cults if other.id != cult.id and region is not None and atlas.top_region(other.id) == region]
-        if rivals and ctx.rng(f"relic_theft.{relic.item_entity_id}.{ctx.epoch}").chance(table.theft_chance):
+        if rivals and "cult_entity_id" not in relic.locked and ctx.rng(f"relic_theft.{relic.item_entity_id}.{ctx.epoch}").chance(table.theft_chance):
             thief = rivals[0]
             relic.cult_entity_id = thief.id
             record(ctx, relic.item_entity_id, ItemDeed.THEFT, thief.id, f"stolen by {thief.name} from {cult.name}")
@@ -278,7 +279,8 @@ async def craft(ctx: TickContext, item: EntityRow, community_id: int | None, mat
     table = ctx.rules.crafting
     row = await profile_of(ctx, item)
     found = await smith_of(ctx, community_id)
-    skill = found[1] if found is not None else 0
+    hands = await ctx.session.get(BodyRow, found[0].id) if found is not None else None
+    skill = found[1] * (hands.craft if hands is not None else PERCENT) / PERCENT if found is not None else 0
     rest = max(0, PERCENT - table.skill_pct - table.material_pct) / PERCENT
     if "quality" not in row.locked:
         row.quality = clamp_int(

@@ -13,6 +13,7 @@ from aerona.domain.enums.mind import PressureKind, ValueAxis, ValueHolder
 from aerona.engine.mind.book import Holder, holder_kind, needs_of, pressures_of, skills_of, traits_of, values_of
 from aerona.engine.mind.memories import strongest
 from aerona.engine.mind.space import top_values
+from aerona.engine.mortal.describe import life_lines
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.rules.registry import Rules
 
@@ -98,6 +99,8 @@ async def mind_lines(session: AsyncSession, rules: Rules, node: Holder, epoch: i
     values = await values_of(session, node)
     if values:
         lines.append(f"{HOLDER_WORDS[kind]} prizes most: {value_phrase(values, table.mind_values_shown)}")
+    if isinstance(node, EntityRow) and node.entity_type is EntityType.MORTAL:
+        lines.extend(await life_lines(session, rules, node, private=private))
     if not private:
         return lines
     skills = sorted((await skills_of(session, node.id)).values(), key=lambda row: (-row.level, row.skill))[: table.mind_skills_shown]

@@ -1,6 +1,8 @@
+from pydantic import Field
+
 from aerona.api.schemas.common import ApiModel
 from aerona.domain.enums.modifier import IncidentRole, ModifierOp, ModifierSource
-from aerona.engine.interconnect.registry import Exposure, Subsystem
+from aerona.engine.interconnect.registry import EdgeKind, Exposure, Subsystem
 
 
 class MechanicRecord(ApiModel):
@@ -33,6 +35,7 @@ class ModifierRecord(ApiModel):
     start_epoch: int
     end_epoch: int | None
     decay_pct: int | None
+    held: bool = False
 
 
 class EffectiveValue(ApiModel):
@@ -49,6 +52,12 @@ class GuardRecord(ApiModel):
     end_epoch: int | None
 
 
+class IncidentParticipantRecord(ApiModel):
+    node_id: int
+    name: str | None
+    role: IncidentRole
+
+
 class IncidentRecord(ApiModel):
     id: int
     kind: str
@@ -63,6 +72,8 @@ class IncidentRecord(ApiModel):
     thread_id: int | None
     causes: list[str]
     consequences: list[int]
+    place_entity_id: int | None = None
+    participants: list[IncidentParticipantRecord] = Field(default_factory=list)
 
 
 class ActingMechanic(ApiModel):
@@ -89,3 +100,64 @@ class NodeMechanicsView(ApiModel):
     pins: list[GuardRecord]
     suppressions: list[GuardRecord]
     incidents: list[IncidentRecord]
+
+
+class CausalNode(ApiModel):
+    id: int
+    kind: str
+    epoch: int
+    year: int | None
+    magnitude: int
+    text: str
+    own: bool
+    role: IncidentRole | None
+    cause_incident_id: int | None
+
+
+class CausalEdge(ApiModel):
+    cause: int
+    effect: int
+    span: int
+
+
+class CausalityView(ApiModel):
+    node_id: int
+    nodes: list[CausalNode]
+    edges: list[CausalEdge]
+
+
+class SubsystemLink(ApiModel):
+    source: Subsystem
+    target: Subsystem
+    kinds: list[EdgeKind]
+    edges: int
+    carriers: list[str]
+    writers: list[str]
+    readers: list[str]
+
+
+class SubsystemSummary(ApiModel):
+    key: Subsystem
+    mechanics: int
+    outgoing: int
+    incoming: int
+
+
+class MechanicsGraphView(ApiModel):
+    subsystems: list[SubsystemSummary]
+    links: list[SubsystemLink]
+    mechanics: list[MechanicRecord]
+
+
+class MechanicLinkRecord(ApiModel):
+    direction: str
+    other: str
+    other_title: str | None
+    other_subsystem: Subsystem | None
+    kind: EdgeKind
+    carriers: list[str]
+
+
+class MechanicDetailView(ApiModel):
+    mechanic: MechanicRecord
+    links: list[MechanicLinkRecord]

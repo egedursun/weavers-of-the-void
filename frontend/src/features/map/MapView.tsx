@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { navItem } from '@/config/navigation'
 import { Compass, Loader2, Map as MapIcon, RefreshCw } from 'lucide-react'
@@ -15,6 +15,7 @@ import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
 import { useGlobalWorld } from '@/components/layout/worldFilter'
 import { Text } from '@/components/typography'
 import { EpochStarChip } from '@/features/cosmos/EpochStarChip'
+import { useRangeMap } from '@/features/entity/wilds/api'
 import {
   MapCanvas,
   type MapViewport,
@@ -30,6 +31,7 @@ import { MapStatusLine } from './MapStatusLine'
 import { MapTimeSlider } from './MapTimeSlider'
 import { MapToolbar, type WorldOption } from './MapToolbar'
 import { PastEpochBanner } from './PastEpochBanner'
+import { SpeciesRangePanel } from './SpeciesRangePanel'
 import {
   type MapView as MapViewData,
   ruleValue,
@@ -56,6 +58,7 @@ import { type MapSearch } from './mapRouteSearch'
 import { type HitTarget, type MarkerFilter, type Thresholds } from './mapScene'
 import { entityStack, eventStack, warStack } from './mapStacks'
 import { type HoverText, hoverText } from './mapText'
+import { rangeShade } from './speciesRange'
 import { useLayerPalette } from './useLayerPalette'
 import {
   isBoolean,
@@ -242,6 +245,8 @@ export function MapView() {
         worlds={worlds}
         mobile={mobile}
         focusId={search.focus ?? null}
+        rangeSpecies={search.species ?? null}
+        onSpecies={(id) => setSearch({ species: id ?? undefined })}
         onWorld={(id) => {
           setStoredWorld(id)
           setSearch({ world: id, epoch: undefined, focus: undefined })
@@ -269,6 +274,8 @@ type MapScreenProps = {
   worlds: WorldOption[]
   mobile: boolean
   focusId: number | null
+  rangeSpecies: number | null
+  onSpecies: (id: number | null) => void
   onWorld: (id: number) => void
   onEpoch: (epoch: number | null) => void
   onFocus: (id: number) => void
@@ -280,6 +287,8 @@ function MapScreen({
   worlds,
   mobile,
   focusId,
+  rangeSpecies,
+  onSpecies,
   onWorld,
   onEpoch,
   onFocus,
@@ -365,7 +374,18 @@ function MapScreen({
     }),
     [sons.data, languages.data]
   )
-  const palette = useLayerPalette(view, mode, names, tokens)
+  useEffect(() => {
+    if (rangeSpecies !== null) setMode('species_range')
+  }, [rangeSpecies, setMode])
+  const rangeMap = useRangeMap(mode === 'species_range' ? rangeSpecies : null)
+  const range = useMemo(
+    () =>
+      rangeMap.data
+        ? rangeShade(rangeMap.data.cells, rangeMap.data.peak)
+        : null,
+    [rangeMap.data]
+  )
+  const palette = useLayerPalette(view, mode, names, tokens, range)
   const points = useMemo(() => positionedPoints(view), [view])
   const pointById = useMemo(
     () => new Map(points.map((point) => [point.id, point])),
@@ -499,6 +519,14 @@ function MapScreen({
         regenerating={regenerate.isPending}
         mobile={mobile}
       />
+      {mode === 'species_range' && (
+        <SpeciesRangePanel
+          worldId={view.world.id}
+          speciesId={rangeSpecies}
+          range={rangeMap.data ?? null}
+          onSpecies={onSpecies}
+        />
+      )}
       {past && (
         <PastEpochBanner
           epoch={view.time.shown}

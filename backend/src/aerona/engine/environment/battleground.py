@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 
 from aerona.constants.units import PERCENT
+from aerona.core.random import SeededRandom
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.environment import ScarKind, TerrainKind, WeatherEffect
+from aerona.domain.enums.environment import PlaceCover, ScarKind, TerrainKind, WeatherEffect
 from aerona.domain.enums.world import WorldType
-from aerona.engine.environment.book import add_scar, season_attrition
+from aerona.engine.environment.book import EnvironmentBook, add_scar, season_attrition
 from aerona.engine.environment.weather import Weather
 from aerona.rules.registry import Rules
 
@@ -21,6 +22,11 @@ class BattleGround:
     year: int | None = None
     night: bool = False
     urban: bool = False
+    site_id: int | None = None
+
+    @property
+    def cover(self) -> PlaceCover | None:
+        return self.place.cover if self.place is not None else None
 
     @property
     def terrain(self) -> TerrainKind | None:
@@ -71,7 +77,36 @@ def defend_factor(rules: Rules, ground: BattleGround) -> float:
         factor += ground.place.height_advantage * settings.height_defender_pct / PERCENT / PERCENT
         if ground.place.chokepoint:
             factor += settings.chokepoint_defender_pct / PERCENT
+        factor += cover_defence(rules, ground.place.cover) / PERCENT
     return factor
+
+
+def cover_defence(rules: Rules, cover: PlaceCover | None) -> int:
+    table = rules.places
+    if cover is PlaceCover.HEAVY:
+        return table.cover_defender_heavy_pct
+    if cover is PlaceCover.LIGHT:
+        return table.cover_defender_light_pct
+    return 0
+
+
+def cover_missile_pct(rules: Rules, cover: PlaceCover | None) -> int:
+    table = rules.places
+    if cover is PlaceCover.HEAVY:
+        return table.cover_missile_heavy_pct
+    if cover is PlaceCover.LIGHT:
+        return table.cover_missile_light_pct
+    return PERCENT
+
+
+def battle_site(rules: Rules, book: EnvironmentBook, region_id: int | None, rng: SeededRandom) -> PlaceEnvironmentRow | None:
+    if region_id is None or not rng.chance(rules.places.chokepoint_battle_pct):
+        return None
+    sites = sorted(
+        (place for place in book.places.values() if place.region_entity_id == region_id and place.chokepoint and place.entity_id in book.living_places),
+        key=lambda place: (-place.height_advantage, place.entity_id),
+    )
+    return rng.pick(sites) if sites else None
 
 
 def omen_morale(rules: Rules, weather: Weather | None, domains: frozenset[Domain], superstition: int) -> int:

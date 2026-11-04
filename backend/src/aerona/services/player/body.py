@@ -22,6 +22,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.body import (
     BodyBuild,
     BodyFunction,
+    BodyPart,
     BodyPlan,
     BodyReading,
     ConditionKind,
@@ -37,7 +38,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.engine.body.book import Bearer, anatomy_for, ensure_body
 from aerona.engine.body.conditions import end_condition, gain_condition
 from aerona.engine.body.customs import CUSTOM_FIELDS, ensure_customs
-from aerona.engine.body.healing import fit_prosthesis, mend
+from aerona.engine.body.healing import INJURY_HOLD, fit_prosthesis, mend, workability
 from aerona.engine.body.hits import TOTAL_LOSS_KINDS, Harm
 from aerona.engine.body.state import PAIN, refresh
 from aerona.engine.lifecycle.wounds import apply_hits, wound_sentence
@@ -72,6 +73,29 @@ class EditInjury(Command):
     severity: int | None = Field(default=None, ge=SEVERITY_MIN, le=SEVERITY_MAX)
     function_loss: int | None = Field(default=None, ge=0, le=PERCENT)
     visible: bool | None = None
+    part: BodyPart | None = None
+    kind: InjuryKind | None = None
+    damage_type: DamageType | None = None
+    cause: HarmCause | None = None
+    infected_epochs: int | None = Field(default=None, ge=0)
+
+
+class EditCondition(Command):
+    condition_id: int
+    severity: int | None = Field(default=None, ge=SEVERITY_MIN, le=SEVERITY_MAX)
+    visible: bool | None = None
+    part: BodyPart | None = None
+
+
+class EditProsthesis(Command):
+    prosthesis_id: int
+    quality: int | None = Field(default=None, ge=0, le=PERCENT)
+    restored_pct: int | None = Field(default=None, ge=0, le=PERCENT)
+    material: MaterialKind | None = None
+
+
+class HoldInjuries(BearerTarget):
+    hold: bool = True
 
 
 class FitProsthesis(Command):
@@ -211,12 +235,60 @@ async def maim(scope: PlayerScope, command: Maim) -> Effect:
 async def edit_injury(scope: PlayerScope, command: EditInjury) -> Effect:
     row = await _injury(scope, command.injury_id)
     bearer = await bearer_of(scope, row.bearer_node_id)
-    for name in ("state", "severity", "function_loss", "visible"):
+    for name in ("state", "severity", "function_loss", "visible", "part", "kind", "damage_type", "infected_epochs"):
+        value = getattr(command, name)
+        if value is not None:
+            setattr(row, name, value)
+    if command.cause is not None:
+        row.cause_kind = command.cause
+    await refresh(scope.session, scope.rules, bearer, await scope.epoch())
+    return Effect(f"The wound to {bearer.name}'s {_label(row.part)} was changed.", target_node_id=bearer.id)
+
+
+@player_action("body:condition_edit", ActionKind.OTHER)
+async def edit_condition(scope: PlayerScope, command: EditCondition) -> Effect:
+    row = await scope.session.get(ConditionRow, command.condition_id)
+    if row is None:
+        raise NotFoundError("No such condition.")
+    bearer = await bearer_of(scope, row.bearer_node_id)
+    for name in ("severity", "visible", "part"):
         value = getattr(command, name)
         if value is not None:
             setattr(row, name, value)
     await refresh(scope.session, scope.rules, bearer, await scope.epoch())
-    return Effect(f"The wound to {bearer.name}'s {_label(row.part)} was changed.", target_node_id=bearer.id)
+    return Effect(f"{bearer.name}'s {_label(row.kind.value)} was changed.", target_node_id=bearer.id)
+
+
+@player_action("body:prosthesis_edit", ActionKind.OTHER)
+async def edit_prosthesis(scope: PlayerScope, command: EditProsthesis) -> Effect:
+    row = await scope.session.get(ProsthesisRow, command.prosthesis_id)
+    if row is None:
+        raise NotFoundError("No such prosthesis.")
+    bearer = await bearer_of(scope, row.bearer_node_id)
+    if command.material is not None:
+        row.material = command.material
+    if command.quality is not None:
+        row.quality = command.quality
+        if command.restored_pct is None:
+            row.restored_pct = min(PERCENT, workability(scope.rules.prosthetics, row.material) * command.quality // PERCENT)
+    if command.restored_pct is not None:
+        row.restored_pct = command.restored_pct
+    await refresh(scope.session, scope.rules, bearer, await scope.epoch())
+    return Effect(f"{bearer.name}'s {_label(row.material.value)} {_label(row.part)} was reworked.", target_node_id=bearer.id)
+
+
+@player_action("body:injury_hold", ActionKind.OTHER)
+async def hold_injuries(scope: PlayerScope, command: HoldInjuries) -> Effect:
+    bearer = await bearer_of(scope, command.bearer_id)
+    body = await ensure_body(scope.session, scope.rules, bearer, await scope.epoch())
+    locked = set(body.locked)
+    if command.hold:
+        locked.add(INJURY_HOLD)
+    else:
+        locked.discard(INJURY_HOLD)
+    body.locked = sorted(locked)
+    verb = "are held as they are" if command.hold else "heal or fester again"
+    return Effect(f"{bearer.name}'s wounds {verb}.", target_node_id=bearer.id)
 
 
 @player_action("body:prosthesis", ActionKind.OTHER)

@@ -16,23 +16,12 @@ from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.enums.world import StarType, WorldType
 from aerona.domain.models.entity_stats import KnowledgeStats, MortalStats, PeopleStats, SpeciesStats, SpiritStats, StructureStats
 from aerona.engine.context import TickContext
-from aerona.engine.cosmos.fauna import assign_traits, hinted_traits, stowaway, weave_chimera
+from aerona.engine.cosmos.fauna import stowaway, weave_chimera
 from aerona.engine.cosmos.quests import legendary_quests, open_quest, settle_quest
 from aerona.engine.phases.afterlife import archive_burned, cosmic_court, mirror_worlds, pursuit_of_immortality, soul_bind, soul_descent
 from aerona.engine.phases.creatures import _mutation_chance, danger_reversion, predation_pressure, predator_bonds, species_mutations, starving_predators
 from aerona.rules.registry import Rules
 from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, make_son, make_world, teach, tick, tuned
-
-
-def test_trait_hints() -> None:
-    assert hinted_traits("A winged beast with venom fangs", 2) == [CreatureTrait.FLYING, CreatureTrait.VENOMOUS]
-
-
-async def test_assign_traits_and_hive_mind(ctx: TickContext, cosmos: Cosmos) -> None:
-    swarm = await make_entity(ctx.session, "Hivelings", EntityType.SPECIES, SpeciesStats(intelligence=10), world_id=cosmos.home.id)
-    assert await assign_traits(ctx, swarm) == [CreatureTrait.HIVE_MIND]
-    assert swarm.stats.intelligence == 10 + ctx.rules.creatures.hive_mind_intelligence
-    assert await assign_traits(ctx, swarm) == []
 
 
 async def test_mutation_and_chimera(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
@@ -60,7 +49,7 @@ async def test_mutation_chance_adds_the_might_term(session: AsyncSession, cosmos
 
 
 async def test_predators_hunt_starve_and_revert(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
-    ctx = tick(session, tuned(rules, "creatures", predation_link_chance=100, prey_depletion_chance=100))
+    ctx = tick(session, tuned(rules, "creatures", prey_depletion_chance=100))
     region = await make_region(session, "Wilds", cosmos.home.id)
     wolf = await make_entity(session, "Duskwolf", EntityType.SPECIES, SpeciesStats(strength=80, danger=90), world_id=cosmos.home.id, location_id=region.id)
     deer = await make_entity(

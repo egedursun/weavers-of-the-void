@@ -47,7 +47,15 @@ COMMODITY_FIELD = "What its people draw from it: {{ commodities | join(', ') }};
 MATERIAL_FIELD = "What it is made of or yields, if a material: {{ materials | join(', ') }}; it sets hardness, edge, weight, holiness and taint"
 
 CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
-    EntityType.CULT: WORSHIPPED_SON_FIELD,
+    EntityType.CULT: {
+        **WORSHIPPED_SON_FIELD,
+        "tenets": "The tenets you teach this cult (at most {{ rules.doctrine.tenets_max }}; opposites cannot stand together): {{ tenets }}",
+        "judgement": "How its god judges the dead: {{ judgements | join(', ') }}",
+        "rebirth_path": "Where its exceptional souls are reborn: {{ rebirth_paths | join(', ') }} (people: the same people; house: the same house; merit: by their deeds)",
+    },
+    EntityType.TRADITION: {
+        "funeral_rite": "If it is a funeral custom, how its people send off the dead: {{ funeral_rites | join(', ') }}; nameless seals the soul"
+    },
     EntityType.PEOPLE: WORSHIPPED_SON_FIELD,
     EntityType.SETTLEMENT: WORSHIPPED_SON_FIELD,
     EntityType.FACTION: WORSHIPPED_SON_FIELD,
@@ -57,9 +65,27 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "learner_ids": "Communities that first learn this knowledge (at most {{ rules.son_tools.knowledge_first_learners }})",
     },
     EntityType.REGION: {"water": "True if the region is a sea or ocean (water) rather than land; default false"},
+    EntityType.PLACE: {
+        "place_kind": "What kind of place it is: {{ place_kinds | join(', ') }}; its ground, cover, water, height, sacredness and hidden secrets follow the kind"
+    },
     EntityType.SPECIES: {
         "traits": "The creature's traits (at most {{ rules.son_tools.creature_max_traits }}): {{ creature_traits }}",
         "body_plan": "The creature's body: {{ body_plans }}; its wounds, armour and fighting follow this body",
+        "size_class": "How big one of them stands: {{ size_classes | join(', ') }}; it sets what it can hunt, its lifespan, litters and whether it can be ridden",
+        "diet": "What it feeds on: {{ diets | join(', ') }}; soul eaters swallow the dead, mineral eaters gnaw ore, void eaters need nothing living",
+        "sociality": "How it lives with its kind: {{ socialities | join(', ') }}; packs hunt harder, herds and hives shield their numbers",
+        "nocturnal": "True if it wakes at night; night kinds escape hunters more often",
+        "migratory": "True if its herds move between lands with the seasons",
+        "products": "What it yields beyond meat, hide and bone, if anything: {{ yield_products | join(', ') }}; silk and venom feed crafts, dragonbone feeds forges",
+    },
+    EntityType.BEAST: {
+        "species_id": "The kind it is the greatest of (species id), if any; it takes that kind's body, yields and lifespan",
+        "size_class": "How big it stands: {{ size_classes | join(', ') }}; huge and colossal beasts take more in their raids and can carry a rider",
+        "temper": "Its mood when it wakes in the world: {{ beast_tempers | join(', ') }}; a sleeping beast waits, a hungry one raids",
+        "endurance": "0-100: how far it ranges on its raids and how much harm it shrugs off",
+        "perception": "0-100: how easily disturbance wakes it and how little thieves take from its hoard",
+        "willpower": "0-100: how hard it is to tame and how seldom it rests after a hunt",
+        "intelligence": "0-100: at {{ rules.mortal_agents.creature_min_intelligence }} or more it speaks, bargains and acts by itself",
     },
     EntityType.VESSEL: {
         "target_world_id": "If the gate, bridge or ship connects to another world, that world's id: a route is opened",
@@ -72,7 +98,11 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "mechanics": "The resource's strange rules, at most {{ rules.mechanics.resource_max }} (if left empty they are read from its name and text; sacred makes it yours): {{ resource_mechanics }}",
     },
     EntityType.LANGUAGE: {**WORD_FIELDS, "words": "The language's first words (at most {{ rules.son_tools.coin_word_max_words }}); matching the naming rule"},
-    EntityType.MORTAL: {"title": 'Their nickname or title ("Salt Seer", "Ash Mouth"); do not bury it in the name, write it here'},
+    EntityType.MORTAL: {
+        "title": 'Their nickname or title ("Salt Seer", "Ash Mouth"); do not bury it in the name, write it here',
+        "sex": "female, male or other",
+        "traits": "Up to five typed traits of temper, such as brave, cruel, scholarly or zealous",
+    },
     EntityType.EVENT: {
         "effects": "How the event is reflected on the stats of affected entities (at most {{ rules.son_tools.event_max_effects }}; e.g. war lowers population). The same stat of the same entity counts once; touching a sibling's creation angers its maker",
         "effects.entity_id": "The affected entity",
@@ -113,9 +143,30 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"plan": "Your goal spread over several ages and your next steps"},
     ),
     T.CHOOSE_ANCHOR: ToolText(
-        "You choose one of your own creations as the anchor of your existence. While your anchor lives your existence stays firm; if it is destroyed you begin to fade. "
+        "You choose one of your own creations, or a temple, shrine or other structure mortals dedicated to you, as the anchor of your existence. "
+        "While your anchor lives your existence stays firm; if it is destroyed you begin to fade. "
         "Free, {{ rules.son_tools.anchor_per_epoch }} per age.",
-        {"entity_id": "Your own canonical creation", "reason": "Why this creation holds your existence"},
+        {"entity_id": "Your own canonical creation or a structure dedicated to you", "reason": "Why this holds your existence"},
+    ),
+    T.BIND_MORTALS: ToolText(
+        "You bind two living mortals by your will: promise them to each other, wed them, give the first to the second as a ward, or make them sworn kin. "
+        "Costs {{ rules.costs.influence }} essence and one action.",
+        {
+            "first_id": "The first mortal",
+            "second_id": "The second mortal (the fosterer when you foster)",
+            "binding": "betroth, wed, foster or swear_kin",
+            "reason": "Why you bind them",
+        },
+    ),
+    T.TOUCH_MORTAL: ToolText(
+        "You touch one living mortal: ease or burden their mind, grant renown or shame, heal their body, or strengthen one ability. "
+        "Costs {{ rules.costs.influence }} essence and one action.",
+        {
+            "mortal_id": "The mortal you touch",
+            "touch": "ease_mind, burden_mind, grant_renown, shame, heal_body or strengthen",
+            "ability": "When you strengthen: endurance, willpower, perception, wisdom, creativity or beauty",
+            "reason": "Why you touch them",
+        },
     ),
     T.COIN_WORDS: ToolText(
         "You add words to a language's dictionary: meaning, word class and origin (from which event, from which words it was born). Languages grow this way and new names "
@@ -288,6 +339,56 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "for {{ rules.environment.sever_ley_epochs }} ages. {{ rules.son_tools.sever_ley_essence }} essence, 1 action.",
         {"line_id": "The ley line's id (see the region's ley lines)", "reason": "Why you cut it"},
     ),
+    T.HIDE_SECRET: ToolText(
+        "You hide a secret in a place: a seam, a relic, a sealed spirit, lost knowledge, a lost rite or a way down to the underworld. "
+        "Explorers, seers and deep miners may find it; deep mining breaks what is sealed. {{ rules.places.hide_secret_essence }} essence, 1 action.",
+        {
+            "place_id": "The place's id",
+            "kind": "What you hide: {{ secret_kinds | join(', ') }}",
+            "strength": "How deep it lies and how strong its seal (0-100); stronger secrets are found later",
+            "reason": "Why you hide it",
+        },
+    ),
+    T.SANCTIFY_PLACE: ToolText(
+        "You sanctify a place: its sacredness rises by {{ rules.places.sanctify_amount }}, it draws pilgrims and becomes a holy site of the faithful. "
+        "{{ rules.places.sanctify_essence }} essence, 1 action.",
+        {"place_id": "The place's id", "reason": "Why it is holy to you"},
+    ),
+    T.RAISE_NEXUS: ToolText(
+        "You draw the ley lines together at a place: it becomes a nexus that feeds works, draws wizards and armies, and is holy to cults. "
+        "{{ rules.places.raise_nexus_essence }} essence, 1 action.",
+        {"place_id": "The place's id", "reason": "Why you raise it"},
+    ),
+    T.RESHAPE_LAND: ToolText(
+        "You lay a hand on a land and reshape it: move its river into a neighbouring land (shift_river), parch it into desert (parch), "
+        "bring the grass back to a desert (green), sow its soil with salt (salt_soil) or make its soil rich (enrich_soil). "
+        "Rivers bow to gods of sea, storm, earth or stone; deserts to gods of sun, fire, hunger, salt or ash; green to gods of plants, harvest, "
+        "life or sea; salt to gods of salt, sea or death; rich soil to gods of earth, fire, ash, harvest, plants or stone. Wells and fields follow "
+        "the river, deserts lose their rain and harvests, salt kills the soil. {{ rules.son_tools.reshape_land_essence }} essence, "
+        "{{ rules.son_tools.reshape_land_ap }} actions.",
+        {
+            "region_id": "The land's id",
+            "act": "shift_river, parch, green, salt_soil or enrich_soil",
+            "target_region_id": "For shift_river: the neighbouring land the river should flow into (leave empty to let it find the lowest bed)",
+            "reason": "Why you do it",
+        },
+    ),
+    T.SANCTIFY_REGION: ToolText(
+        "You sanctify a region: its ground becomes holy, drawing pilgrims who bring wealth and piety, warding off hauntings and strange phenomena. "
+        "{{ rules.terrain.sanctify_essence }} essence, 1 action.",
+        {"region_id": "The region's id", "sacredness": "How holy, 0-100 (leave out for the usual sanctification)", "reason": "Why you hallow it"},
+    ),
+    T.CURSE_REGION: ToolText(
+        "You loose a danger upon a region: beasts, bandits, monsters, phenomena, disease, avalanches, quicksand or volcanic fire. It harms settlers, herds, "
+        "travellers, armies and merchants there, and fades over the ages unless the land breeds it. {{ rules.terrain.curse_essence }} essence, 1 action, "
+        "strength at most {{ rules.terrain.curse_strength_max }}.",
+        {"region_id": "The region's id", "danger": "Which danger", "strength": "How strong, 1-100", "reason": "Why you curse it"},
+    ),
+    T.REDIRECT_RIVER: ToolText(
+        "You turn a river out of its bed into a neighbouring region: the old valley dries to a stream or a dry bed, the new one floods and grows. "
+        "{{ rules.terrain.redirect_essence }} essence, 1 action.",
+        {"from_region_id": "The region the river runs through now", "to_region_id": "The neighbouring region it will run through", "reason": "Why you turn it"},
+    ),
     T.REORDER_SEASONS: ToolText(
         "You reorder the seasons of a world: the year runs in the order you name, so harvests, campaigns, travel and festivals fall differently. "
         "Only gods of sky, storm, time, sun, moon, harvest, ice or plants can do it. {{ rules.son_tools.reorder_seasons_essence }} essence, "
@@ -372,6 +473,23 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "FORBIDDEN: you bargain with the nameless thing that came from outside the cosmos. You gain great essence; but leakage rises, your siblings are disgusted by you, "
         "your loyalty to your father unravels and one day the price is demanded. Does not spend an action, {{ rules.son_tools.outer_bargain_per_epoch }} per age.",
         {"outsider_id": "The outer being's id", "request": "What you ask of it"},
+    ),
+    T.REVEAL_TENET: ToolText(
+        "You reveal a tenet to one of your own cults. The faithful accept it only if it fits your domains or what they already believe "
+        "(fit at least {{ rules.doctrine.reveal_fit }}); a tenet cannot stand beside its opposite. Once per cult per age. "
+        "{{ rules.doctrine.reveal_cost }} essence, 1 action.",
+        {
+            "cult_id": "One of your own cults",
+            "tenet": "The tenet: {{ tenets }}",
+            "name": "Optional: the name your faithful give this tenet",
+            "target": "Only for dietary law (a food), sacred species (the species id) or pilgrimage duty (the holy place id)",
+        },
+    ),
+    T.OPEN_REBIRTH_GATE: ToolText(
+        "By your own hand you open the gate of rebirth for a soul: it is born again as a newborn in a community, carrying some of its old traits and faint memories. "
+        "Only for souls of your own faith, or any soul if you are a god of death; a sealed soul cannot return. "
+        "{{ rules.necromancy.rebirth_gate_cost }} essence, 1 action.",
+        {"spirit_id": "The soul (a spirit) to send back", "community_id": "Optional: the community it is born into; otherwise its doctrine decides"},
     ),
     T.BIRTH_WORLD: ToolText(
         "You birth a new world into the cosmos: with its own sky, physics, regions, unique resource and perhaps natives. The world reflects your domains and you turn to it. "

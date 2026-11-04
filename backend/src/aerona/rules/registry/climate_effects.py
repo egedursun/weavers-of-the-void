@@ -34,5 +34,5 @@ class ClimateEffectsRules:
     fertility_decline_divisor: int = rule(
         10, 1, 200, RuleGroup.POPULATION_AND_GROWTH, "Rate at which enriched soil falls back to its natural fertility (divisor)"
     )
-    bounty_law_fertility: int = rule(3, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Per-epoch fertility gain of lands under the bounty law")
-    drought_law_fertility: int = rule(3, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Per-epoch fertility loss of lands under the drought law")
+    bounty_law_fertility: int = rule(15, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Extra fertility lands under the bounty law enjoy while the law holds (%)")
+    drought_law_fertility: int = rule(15, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Fertility lands under the drought law lose while the law holds (%)")

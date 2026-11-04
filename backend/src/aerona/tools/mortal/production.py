@@ -22,6 +22,7 @@ from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarCause
 from aerona.engine.economy.materials import armour_protection, curse_bonus, decay_loss, enchantment_cap, sanctity_splendour, set_node_material, weapon_damage
 from aerona.engine.economy.resources import ensure_profile, set_resource_yield
+from aerona.engine.environment.ley_works import ley_row
 from aerona.engine.primitives.mechanics import assign_mechanics
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
@@ -205,6 +206,7 @@ async def build_structure(call: MortalCall, args: BuildInput) -> str:
     )
     if material is not None:
         await set_node_material(call.session, work.id, MaterialSlot.BODY, material.kind, material.world_material_id)
+    await ley_row(call.session, work, attuned=args.channels_ley or None)
     bonds = BondRepository(call.session)
     await bonds.connect(BondDraft(call.me.id, work.id, BondKind.BUILT, call.epoch))
     god = await call.session.get(SonRow, args.dedicated_son_id) if args.dedicated_son_id is not None else None

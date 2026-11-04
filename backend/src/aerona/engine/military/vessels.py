@@ -106,8 +106,8 @@ async def backfill_vessels(ctx: TickContext) -> int:
     made = 0
     profiled = select(VesselProfileRow.entity_id)
     bare = await ctx.session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.VESSEL, EntityRow.id.not_in(profiled)))
-    for vessel in list(bare):
-        ctx.session.add(VesselProfileRow(entity_id=vessel.id, kind=VehicleKind.SHIP, locked=[]))
+    for bare_vessel in list(bare):
+        ctx.session.add(VesselProfileRow(entity_id=bare_vessel.id, kind=VehicleKind.SHIP, locked=[]))
     await ctx.session.flush()
     for row in list(await ctx.session.scalars(select(VesselProfileRow).where(VesselProfileRow.kind == VehicleKind.SHIP))):
         vessel = await ctx.session.get(EntityRow, row.entity_id)

@@ -17,6 +17,7 @@ from aerona.domain.enums.environment import MovementMode, WeatherKind
 from aerona.domain.enums.military import MutinyOutcome, Stance
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.environment.perils import danger_toll, navigate
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import has_technique
 from aerona.engine.military.campaign import (
@@ -304,6 +305,10 @@ async def campaign_season(
         log.moved = step_towards(ctx.rules, atlas, ground, march, charted=charted, supplied=supplied, weather=weather, season=season_row)
     if enemy is not None:
         log.raided = raid_supply(ctx.rules, profile, enemy.profile) > 0 or log.raided
+    wandering = await navigate(ctx, march.army, march.owner, profile.region_entity_id, origin, charted=charted)
+    if wandering.lost and "region_id" not in profile.locked:
+        profile.region_entity_id = origin
+        log.moved = 0
     tire(ctx.rules, rows, profile)
     entrench(ctx.rules, profile)
     region = ground.regions.get(profile.region_entity_id) if profile.region_entity_id is not None else None
@@ -318,7 +323,9 @@ async def campaign_season(
     profile.supply_days += await quartermaster(ctx, march.army.id)
     sanitation = await sanitation_of(ctx, march.owner)
     fever = summer(season_row, ground.seasons_of(march.owner.world_id))
+    peril = await danger_toll(ctx, march.army, rows, profile.region_entity_id)
     dead = feed(ctx, march, region, home, log, season=season_row) + camp_sickness(ctx, march, region, sanitation=sanitation, fever=fever)
+    dead += wandering.dead + peril.dead
     log.unfed_mounts = not feed_mounts(ctx.rules, profile, rows, log.foraged)
     await rearm(ctx, march.army, march.owner, rows)
     dead += await hardship(ctx, march, rows, log)
@@ -348,6 +355,8 @@ async def campaign_season(
                     ("scorched", log.scorched),
                     ("mounts unfed", log.unfed_mounts),
                     ("mutiny", log.mutiny is not None),
+                    ("lost", wandering.lost),
+                    ("ambushed", peril.ambushed),
                 )
                 if hit
             )

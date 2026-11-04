@@ -48,7 +48,7 @@ async def linger(ctx: TickContext, book: DiseaseBook, outbreak: OutbreakRow, kno
     table = ctx.rules.epidemiology
     effects = ctx.rules.intervention_effects
     communities = await region_communities(ctx, book, outbreak.region_entity_id)
-    scale = outbreak.severity / ctx.rules.disasters.scale_divisor * table.waning_death_pct / PERCENT
+    scale = outbreak.severity / ctx.rules.disasters.scale_divisor * table.waning_death_pct / PERCENT * book.seasonal.get(outbreak.region_entity_id, 1.0)
     dead = 0
     for community in communities:
         rate = fraction(effects.plague_population_loss) * scale * lethality_factor(book, disease.id, [community], knowledge)

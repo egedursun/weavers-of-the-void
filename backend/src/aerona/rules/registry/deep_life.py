@@ -266,3 +266,8 @@ class DeepLifeRules:
     golden_age_min_world_age: int = rule(3, 0, 1000, RuleGroup.CIVILIZATION, "Minimum world age to enter a golden age (epochs)")
     golden_age_prosperity_gain: int = rule(1, 0, 100, RuleGroup.CIVILIZATION, "Per-epoch prosperity gain of communities in a golden age")
     golden_age_record_links: int = rule(6, 0, 100, RuleGroup.CHRONICLE, "Maximum communities linked to the golden-age record")
+    golden_age_deepening_epochs: int = rule(2, 1, 1000, RuleGroup.CIVILIZATION, "Epochs a golden age must last for each further step of prosperity gain")
+    golden_age_deepening_gain: int = rule(1, 0, 100, RuleGroup.CIVILIZATION, "Extra per-epoch prosperity gain each step of a long golden age adds")
+    golden_age_deepening_steps: int = rule(3, 0, 100, RuleGroup.CIVILIZATION, "Most steps a golden age can deepen")
+    golden_age_decadence_epochs: int = rule(8, 0, 1000, RuleGroup.CIVILIZATION, "Epochs after which a golden age turns soft (0 = never)")
+    golden_age_decadence_loss: int = rule(1, 0, 100, RuleGroup.CIVILIZATION, "Per-epoch martiality and defense a soft golden age wears away")

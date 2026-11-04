@@ -38,6 +38,8 @@ class TraditionKind(StrEnum):
     WAR_DANCE = "war_dance"
     SCAR_RITE = "scar_rite"
     ANCESTOR_FEAST = "ancestor_feast"
+    SIESTA = "siesta"
+    NIGHT_VIGIL = "night_vigil"
 
 
 class Technique(StrEnum):
@@ -138,6 +140,9 @@ class RiteEffectKind(StrEnum):
     RAISE_DEAD = "raise_dead"
     FERTILITY = "fertility"
     HARVEST_BLESSING = "harvest_blessing"
+    SEAL_SOUL = "seal_soul"
+    UNSEAL_SOUL = "unseal_soul"
+    EXORCISE = "exorcise"
 
 
 class BacklashKind(StrEnum):

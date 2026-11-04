@@ -23,11 +23,16 @@ export const LAYER_MODES = [
   'soil',
   'climate',
   'land_use',
+  'rainfall',
+  'danger',
+  'scars',
+  'sacred',
   'ley',
   'population',
   'followers',
   'soldiers',
   'wildlife',
+  'species_range',
 ] as const
 export type LayerMode = (typeof LAYER_MODES)[number]
 
@@ -43,11 +48,16 @@ export const LAYER_LABEL: Record<LayerMode, string> = {
   soil: 'Soil',
   climate: 'Climate',
   land_use: 'Land use',
+  rainfall: 'Rainfall',
+  danger: 'Danger sources',
+  scars: 'Scars',
+  sacred: 'Holy ground',
   ley: 'Ley lines',
   population: 'Population',
   followers: 'Followers',
   soldiers: 'Soldiers',
   wildlife: 'Wildlife',
+  species_range: 'Species range',
 }
 
 export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
@@ -56,11 +66,16 @@ export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
   soil: 'map-layer-soil',
   climate: 'map-layer-climate',
   land_use: 'map-layer-land-use',
+  rainfall: 'map-layer-rainfall',
+  danger: 'map-layer-danger',
+  scars: 'map-layer-scars',
+  sacred: 'map-layer-sacred',
   ley: 'map-layer-ley',
   population: 'map-layer-population',
   followers: 'map-layer-followers',
   soldiers: 'map-layer-soldiers',
   wildlife: 'map-layer-wildlife',
+  species_range: 'map-layer-species-range',
 }
 
 export const OVERLAY_SURFACE: Partial<Record<Overlay, string>> = {

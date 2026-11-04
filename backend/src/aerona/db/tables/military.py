@@ -3,8 +3,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
-from aerona.db.profile_guard import register_profile_table
 from aerona.db.columns import at_least, between, enum_type
+from aerona.db.profile_guard import register_profile_table
 from aerona.domain.enums.demography import CohortCondition
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.military import (

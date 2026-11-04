@@ -1,4 +1,5 @@
 from collections.abc import Mapping
+from dataclasses import dataclass, field
 from typing import Any
 
 from sqlalchemy import select
@@ -7,24 +8,38 @@ from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.base import Base
 from aerona.db.repositories.entities import EntityRepository
-from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesHostRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow, SpeciesYieldRow
+from aerona.db.tables.ecology import (
+    BeastProfileRow,
+    HerdRow,
+    SpeciesCustomUseRow,
+    SpeciesHostRow,
+    SpeciesProfileRow,
+    SpeciesRangeRow,
+    SpeciesUseKindRow,
+    SpeciesUseRow,
+    SpeciesYieldRow,
+)
+from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow, EntityTraitRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.ecology import BeastTemper, DomesticationStage, RangeTrend, SpeciesUse
+from aerona.domain.enums.culture import ItemDeed
+from aerona.domain.enums.ecology import BeastTemper, DomesticationStage, FoodLink, RangeTrend, SizeClass, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import CreatureTrait
-from aerona.domain.models.entity_stats import BeastStats
+from aerona.domain.models.entity_stats import BeastStats, SpeciesStats
+from aerona.engine.body.book import ensure_species_body
 from aerona.engine.context import TickContext
-from aerona.engine.ecology.beasts import profile_beast
+from aerona.engine.ecology.beasts import fall, hand_over, owned_items, profile_beast
 from aerona.engine.ecology.domestication import offspring
-from aerona.engine.ecology.profiles import profile_of
+from aerona.engine.ecology.profiles import SpeciesSpec, profile_of
+from aerona.engine.ecology.totems import drop_totem, found_totem
 from aerona.engine.lore.control import bounds, coerce
 from aerona.engine.polity.control import lock
-from aerona.engine.primitives.queries import connect, living_entity
-from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.primitives.queries import close, connect, directed_bond, living_entity
+from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import stat
 
 Values = Mapping[str, Any]
@@ -105,10 +120,29 @@ async def drop_range(ctx: TickContext, species_id: int, region_id: int) -> None:
     await ctx.session.flush()
 
 
+async def world_material_of(ctx: TickContext, material_id: int | None) -> WorldMaterialRow | None:
+    if material_id is None:
+        return None
+    found = await ctx.session.get(WorldMaterialRow, material_id)
+    if found is None:
+        raise NotFoundError("No such world material.")
+    return found
+
+
 async def set_yield(
-    ctx: TickContext, species_id: int, product: str, *, commodity: CommodityKind | None, material: MaterialKind | None, rate: int
+    ctx: TickContext,
+    species_id: int,
+    product: str,
+    *,
+    commodity: CommodityKind | None,
+    material: MaterialKind | None,
+    rate: int,
+    world_material_id: int | None = None,
 ) -> SpeciesYieldRow | None:
     await species_of(ctx, species_id)
+    stuff = await world_material_of(ctx, world_material_id)
+    if stuff is not None and material is None:
+        material = stuff.base_kind
     row = await ctx.session.get(SpeciesYieldRow, (species_id, product))
     if rate == 0:
         if row is not None:
@@ -120,7 +154,7 @@ async def set_yield(
     if row is None:
         row = SpeciesYieldRow(species_entity_id=species_id, product=product, commodity=commodity, material=material, rate=rate)
         ctx.session.add(row)
-    row.commodity, row.material, row.rate = commodity, material, rate
+    row.commodity, row.material, row.rate, row.world_material_id = commodity, material, rate, world_material_id
     await ctx.session.flush()
     return row
 
@@ -140,7 +174,7 @@ async def set_use(ctx: TickContext, species_id: int, use: SpeciesUse, *, held: b
     return row
 
 
-async def set_host(ctx: TickContext, species_id: int, disease_id: int, *, carried: bool, immune: bool) -> SpeciesHostRow | None:
+async def set_host(ctx: TickContext, species_id: int, disease_id: int, *, carried: bool, immune: bool, release: bool = False) -> SpeciesHostRow | None:
     await species_of(ctx, species_id)
     disease = await living_entity(ctx.session, disease_id)
     if disease is None or disease.entity_type is not EntityType.DISEASE:
@@ -152,9 +186,10 @@ async def set_host(ctx: TickContext, species_id: int, disease_id: int, *, carrie
             await ctx.session.flush()
         return None
     if row is None:
-        row = SpeciesHostRow(species_entity_id=species_id, disease_entity_id=disease_id, immune=immune)
+        row = SpeciesHostRow(species_entity_id=species_id, disease_entity_id=disease_id, immune=immune, locked=[])
         ctx.session.add(row)
     row.immune = immune
+    row.locked = [item for item in row.locked if item != "immune"] if release else lock(row.locked, "immune")
     await ctx.session.flush()
     return row
 
@@ -299,3 +334,218 @@ async def spawn_beast(ctx: TickContext, species_id: int) -> EntityRow:
     await profile_beast(ctx, beast, species)
     await connect(ctx.session, beast.id, species.id, BondKind.DESCENDS_FROM, ctx.epoch, description="the greatest of its kind")
     return beast
+
+
+@dataclass(frozen=True)
+class NewSpecies:
+    name: str
+    description: str
+    region_id: int
+    spec: SpeciesSpec
+    stats: SpeciesStats
+    power: int = 2
+    traits: tuple[CreatureTrait, ...] = ()
+    abundance: int | None = None
+
+
+async def create_species(ctx: TickContext, draft: NewSpecies) -> EntityRow:
+    region = await region_of(ctx, draft.region_id)
+    species = await create_record(
+        ctx,
+        RecordSpec(
+            name=draft.name,
+            entity_type=EntityType.SPECIES,
+            body=draft.description,
+            stats=draft.stats,
+            power=draft.power,
+            world_id=region.world_id,
+            location_id=region.id,
+            traits=list(dict.fromkeys(draft.traits)),
+        ),
+    )
+    await ensure_species_body(ctx.session, species, draft.spec.body_plan)
+    await profile_of(ctx, species, draft.spec)
+    ctx.session.add(
+        SpeciesRangeRow(
+            species_entity_id=species.id,
+            region_entity_id=region.id,
+            abundance=draft.abundance if draft.abundance is not None else ctx.rules.ecology.initial_base,
+            trend=RangeTrend.STEADY,
+            fit=PERCENT // 2,
+            hunted=0,
+            since_epoch=ctx.epoch,
+            updated_epoch=ctx.epoch,
+            locked=[],
+        )
+    )
+    await connect(ctx.session, species.id, region.id, BondKind.LIVES_IN, ctx.epoch, description="set there by the Creator")
+    await ctx.session.flush()
+    return species
+
+
+@dataclass(frozen=True)
+class NewBeast:
+    name: str
+    description: str
+    stats: BeastStats
+    species_id: int | None = None
+    lair_id: int | None = None
+    size_class: SizeClass | None = None
+    temper: BeastTemper | None = None
+    power: int = 3
+    abilities: dict[str, int] = field(default_factory=dict)
+
+
+ABILITIES = frozenset({"endurance", "perception", "willpower", "intelligence", "lifespan", "age"})
+
+
+async def create_beast(ctx: TickContext, draft: NewBeast, *, world_id: int | None = None) -> EntityRow:
+    species = await species_of(ctx, draft.species_id) if draft.species_id is not None else None
+    lair = await living_entity(ctx.session, draft.lair_id) if draft.lair_id is not None else None
+    if draft.lair_id is not None and (lair is None or lair.entity_type not in {EntityType.PLACE, EntityType.REGION}):
+        raise NotFoundError("A lair is a place or a region.")
+    home = lair.id if lair is not None else species.location_id if species is not None else None
+    world = lair.world_id if lair is not None else species.world_id if species is not None else world_id
+    stats = draft.stats
+    if stats.hp is None:
+        stats = stats.model_copy(update={"hp": (stat(species, "hp") or PERCENT) * 2 if species is not None else PERCENT * 2})
+    beast = await create_record(
+        ctx,
+        RecordSpec(
+            name=draft.name,
+            entity_type=EntityType.BEAST,
+            stats=stats,
+            body=draft.description,
+            power=draft.power,
+            world_id=world,
+            location_id=home,
+        ),
+    )
+    row = await profile_beast(ctx, beast, species, draft.size_class)
+    if lair is not None:
+        row.lair_place_id = lair.id
+    if draft.temper is not None:
+        row.temper = draft.temper
+    patch(row, {key: value for key, value in draft.abilities.items() if key in ABILITIES}, [])
+    row.locked = []
+    if species is not None:
+        await connect(ctx.session, beast.id, species.id, BondKind.DESCENDS_FROM, ctx.epoch, description="the greatest of its kind")
+    await ctx.session.flush()
+    return beast
+
+
+async def slay_beast(ctx: TickContext, beast_id: int, slayer_id: int | None) -> str:
+    beast, row = await beast_of(ctx, beast_id)
+    if slayer_id is not None:
+        slayer = await living_entity(ctx.session, slayer_id)
+        if slayer is None:
+            raise NotFoundError("No such slayer.")
+        await connect(ctx.session, slayer.id, beast.id, BondKind.KILLED, ctx.epoch, description="slew the beast")
+    await retire_in(ctx, beast, "slain by the Creator's will" if slayer_id is None else "slain")
+    told = await fall(ctx, beast, row)
+    await ctx.session.flush()
+    return told
+
+
+async def drop_herd(ctx: TickContext, community_id: int, species_id: int) -> None:
+    row = await ctx.session.get(HerdRow, (community_id, species_id))
+    if row is None:
+        raise NotFoundError("That community keeps no such herd.")
+    await ctx.session.delete(row)
+    await ctx.session.flush()
+
+
+async def set_prey(ctx: TickContext, hunter_id: int, prey_id: int, link: FoodLink) -> SpeciesProfileRow:
+    hunter = await species_of(ctx, hunter_id)
+    prey = await species_of(ctx, prey_id)
+    if hunter.id == prey.id:
+        raise ValidationFailedError("A kind does not hunt itself.")
+    row = await profile_of(ctx, hunter)
+    row.pinned_prey = sorted({*row.pinned_prey, prey.id}) if link is FoodLink.PINNED else [item for item in row.pinned_prey if item != prey.id]
+    row.barred_prey = sorted({*row.barred_prey, prey.id}) if link is FoodLink.BARRED else [item for item in row.barred_prey if item != prey.id]
+    bond = await directed_bond(ctx.session, hunter.id, prey.id, BondKind.HUNTS)
+    if link is FoodLink.PINNED and bond is None:
+        await connect(ctx.session, hunter.id, prey.id, BondKind.HUNTS, ctx.epoch, description="set by the Creator")
+    if link is FoodLink.BARRED and bond is not None:
+        await close(ctx.session, bond, ctx.epoch, "forbidden by the Creator")
+    await ctx.session.flush()
+    return row
+
+
+async def set_totem(ctx: TickContext, people_id: int, species_id: int | None) -> EntityRow | None:
+    people = await living_entity(ctx.session, people_id)
+    if people is None or people.entity_type is not EntityType.PEOPLE:
+        raise NotFoundError("Only a living people keeps a totem.")
+    await drop_totem(ctx, people.id)
+    if species_id is None:
+        await ctx.session.flush()
+        return None
+    tradition = await found_totem(ctx, people, await species_of(ctx, species_id))
+    await ctx.session.flush()
+    return tradition
+
+
+async def move_treasure(ctx: TickContext, beast_id: int, item_id: int, *, into_hoard: bool, receiver_id: int | None) -> EntityRow:
+    beast, _ = await beast_of(ctx, beast_id)
+    item = await living_entity(ctx.session, item_id)
+    if item is None or item.entity_type is not EntityType.ITEM:
+        raise NotFoundError("No such item.")
+    if into_hoard:
+        await hand_over(ctx, item.id, beast.id, ItemDeed.OWNED, f"laid in the hoard of {beast.name} by the Creator")
+        return item
+    if item.id not in await owned_items(ctx, [beast.id]):
+        raise ValidationFailedError(f"{item.name} is not in the hoard of {beast.name}.")
+    receiver = await living_entity(ctx.session, receiver_id) if receiver_id is not None else None
+    if receiver is None:
+        raise NotFoundError("Name who takes the item from the hoard.")
+    await hand_over(ctx, item.id, receiver.id, ItemDeed.OWNED, f"taken from the hoard of {beast.name} by the Creator")
+    return item
+
+
+async def use_kind_of(ctx: TickContext, kind_id: int) -> SpeciesUseKindRow:
+    row = await ctx.session.get(SpeciesUseKindRow, kind_id)
+    if row is None:
+        raise NotFoundError("No such kind of keeping.")
+    return row
+
+
+async def create_use_kind(ctx: TickContext, name: str, base_use: SpeciesUse, output_pct: int, description: str | None) -> SpeciesUseKindRow:
+    if not name.strip():
+        raise ValidationFailedError("A kind of keeping needs a name.")
+    row = SpeciesUseKindRow(name=name.strip(), base_use=base_use, output_pct=output_pct, description=description, locked=[])
+    patch(row, {"output_pct": output_pct}, [])
+    row.locked = []
+    ctx.session.add(row)
+    await ctx.session.flush()
+    return row
+
+
+async def edit_use_kind(ctx: TickContext, kind_id: int, values: Values, *, release: list[str]) -> SpeciesUseKindRow:
+    row = await use_kind_of(ctx, kind_id)
+    patch(row, values, release)
+    for species_id in list(await ctx.session.scalars(select(SpeciesCustomUseRow.species_entity_id).where(SpeciesCustomUseRow.kind_id == row.id))):
+        await set_use(ctx, species_id, row.base_use, held=True)
+    await ctx.session.flush()
+    return row
+
+
+async def drop_use_kind(ctx: TickContext, kind_id: int) -> None:
+    await ctx.session.delete(await use_kind_of(ctx, kind_id))
+    await ctx.session.flush()
+
+
+async def set_custom_use(ctx: TickContext, species_id: int, kind_id: int, *, held: bool) -> SpeciesCustomUseRow | None:
+    await species_of(ctx, species_id)
+    kind = await use_kind_of(ctx, kind_id)
+    row = await ctx.session.get(SpeciesCustomUseRow, (species_id, kind.id))
+    if not held:
+        if row is not None:
+            await ctx.session.delete(row)
+            await ctx.session.flush()
+        return None
+    if row is None:
+        row = SpeciesCustomUseRow(species_entity_id=species_id, kind_id=kind.id)
+        ctx.session.add(row)
+    await set_use(ctx, species_id, kind.base_use, held=True)
+    await ctx.session.flush()
+    return row

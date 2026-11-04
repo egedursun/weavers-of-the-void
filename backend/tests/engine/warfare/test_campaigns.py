@@ -81,7 +81,7 @@ async def test_siege_starvation_costs_the_attacker_morale(session: AsyncSession,
 
 
 async def test_capture_takes_a_hero_prisoner_with_synced_bond(session: AsyncSession, world_id: int) -> None:
-    rules = tune(Rules(), campaigns={**QUIET, "capture_chance": 100})
+    rules = tune(Rules(), campaigns={**QUIET, "capture_chance": 100}, tactics={"scouting_margin": 1000})
     ctx = make_ctx(session, rules)
     strong = await make(session, "Iron Folk", EntityType.PEOPLE, world_id, population=9000, martiality=90)
     weak = await make(session, "Reed Folk", EntityType.PEOPLE, world_id, population=900, martiality=10)

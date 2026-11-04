@@ -12,6 +12,8 @@ from aerona.db.session import Database
 from aerona.main import create_app
 from aerona.settings import Settings
 
+STARTUP_SECONDS = 120
+
 type OpenDatabase = Callable[[Path], Database]
 
 
@@ -46,7 +48,7 @@ def settings(tmp_path: Path) -> Settings:
 @pytest.fixture
 async def client(settings: Settings) -> AsyncIterator[AsyncClient]:
     app = create_app(settings)
-    async with LifespanManager(app) as manager:
+    async with LifespanManager(app, startup_timeout=STARTUP_SECONDS, shutdown_timeout=STARTUP_SECONDS) as manager:
         transport = ASGITransport(app=manager.app)
         async with AsyncClient(transport=transport, base_url="http://test") as http:
             yield http

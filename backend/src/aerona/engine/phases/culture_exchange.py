@@ -64,7 +64,7 @@ async def _diffuse_direction(
     chance = min(100.0, settings.diffusion_chance * writing * weight)
     written = await books_of(ctx.session, source.id)
     paper = ctx.rules.technique_effects.paper_pct if await has_technique(ctx.session, source.id, Technique.PAPER) else 0
-    taught = ctx.rules.research.teacher_pct / PERCENT if await masters(ctx.session, source.id) else 0.0
+    taught = ctx.rules.research.teacher_pct / PERCENT if await masters(ctx.session, ctx.rules, source.id) else 0.0
     for knowledge in holdings.known_by(source.id):
         if spread[0] >= cap or holdings.knows(target.id, knowledge.id):
             continue

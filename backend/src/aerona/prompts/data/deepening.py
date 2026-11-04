@@ -83,7 +83,7 @@ SPECIAL_SECTIONS: dict[EntityType, SpecialSection] = {
         _fields(
             ("behaviour", "Behaviour"),
             ("life_cycle", "Life cycle"),
-            ("diet", "What it feeds on"),
+            ("feeding", "How it feeds, told from the diet, size and habits given in its typed nature; never change them"),
             ("special_ability", "Special ability"),
             ("weakness", "Weakness"),
         ),

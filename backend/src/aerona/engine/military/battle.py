@@ -17,9 +17,12 @@ from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
-from aerona.domain.enums.environment import TerrainKind, WeatherKind
+from aerona.domain.enums.environment import PlaceCover, TerrainKind, WeatherKind
 from aerona.domain.enums.military import ArmourType, BattlePhase, CommanderTrait, OutcomeClass, Tactic, UnitFamily, UnitKind
+from aerona.domain.enums.mortal import HarshnessScale
+from aerona.engine.environment.battleground import cover_missile_pct
 from aerona.engine.military.tables import counters, defender_cell, matchup, terrain_cell, unit_terrain, weather_cell
+from aerona.engine.primitives.harshness import harshness
 from aerona.rules.registry import Rules
 
 F = UnitFamily
@@ -87,6 +90,7 @@ class Side:
     skill: int
     traits: set[CommanderTrait]
     intel: int = 0
+    watch: float = 0.0
     veteran: float = 0.0
     leadership: int = 0
     tactic: Tactic = Tactic.HOLD_LINE
@@ -157,6 +161,7 @@ class Field:
     river: bool = False
     bridge: bool = False
     ford: bool = False
+    cover: PlaceCover | None = None
 
 
 def weather_now(side: Side, enemy: Side, ground: Field) -> WeatherKind | None:
@@ -250,7 +255,7 @@ def strength(rules: Rules, side: Side, ground: Field) -> float:
 
 def scouting(side: Side) -> float:
     eyes = sum(stack.row.count * stack.spec.speed / PERCENT for stack in side.stacks if stack.alive and stack.row.kind in SCOUTS)
-    return eyes + side.skill * 10 + side.intel
+    return eyes + side.skill * 10 + side.intel + side.watch
 
 
 def choose_tactic(rules: Rules, rng: SeededRandom, side: Side, enemy_doctrine: str, ground: Field) -> Tactic:
@@ -267,7 +272,9 @@ def choose_tactic(rules: Rules, rng: SeededRandom, side: Side, enemy_doctrine: s
             weight *= 2.0 if ground.terrain in TACTIC_TERRAIN[option] else 0.4
         if counters(option, expected):
             weight *= 1 + side.skill * rules.tactics.skill_weight / 10
-        if option is Tactic.AMBUSH and not (ground.terrain in AMBUSH_TERRAIN or ground.weather is WeatherKind.FOG or ground.night):
+        if option is Tactic.AMBUSH and not (
+            ground.terrain in AMBUSH_TERRAIN or ground.cover is PlaceCover.HEAVY or ground.weather is WeatherKind.FOG or ground.night
+        ):
             weight *= 0.1
         if option is Tactic.NIGHT_RAID and not ground.night:
             weight *= 0.1
@@ -301,7 +308,8 @@ def deal(targets: list[Stack], damage: float, rules: Rules, *, piercing: float =
     for stack in alive:
         share = stack.row.count / total
         armour = stack.armour * (1 - piercing if stack.row.armour in HEAVY else 1)
-        losses = min(stack.row.count, int(damage * share * rules.tactics.loss_scale_pct / PERCENT * NORMAL / max(10, armour)))
+        harsh = harshness(rules, HarshnessScale.BATTLE_LOSS)
+        losses = min(stack.row.count, int(damage * share * rules.tactics.loss_scale_pct / PERCENT * NORMAL / max(10, armour) * harsh))
         stack.row.count -= losses
         stack.lost += losses
         killed += losses
@@ -351,6 +359,8 @@ def missiles(rules: Rules, streams: Streams, shooter: Side, target: Side, ground
         damage += (
             stack.row.count * stack.spec.missile / PERCENT * modifier(rules, stack, shooter, ground, target) * share * fortune(rules, streams, "missile", stack)
         )
+    if target.defending:
+        damage *= cover_missile_pct(rules, ground.cover) / PERCENT
     return deal(target.stacks, damage, rules, piercing=piercing_of(rules, shooter.stacks))
 
 
@@ -488,7 +498,7 @@ def pursue(rules: Rules, winner: Side, loser: Side, ground: Field) -> int:
     span = min(1.0, 2 * riders / max(1, winner.standing))
     shelter = 0.5 if ground.terrain in SHELTER else 1.0
     fleeing = sum(stack.row.count for stack in loser.stacks)
-    losses = round(fleeing * rules.tactics.pursuit_pct / PERCENT * (0.3 + span) * shelter)
+    losses = round(fleeing * rules.tactics.pursuit_pct / PERCENT * (0.3 + span) * shelter * harshness(rules, HarshnessScale.BATTLE_LOSS))
     taken = 0
     for stack in sorted(loser.stacks, key=lambda item: -item.row.count):
         part = min(stack.row.count, round(losses * stack.row.count / max(1, fleeing)))
@@ -528,7 +538,7 @@ def opening(rules: Rules, streams: Streams, attacker: Side, defender: Side, grou
             refused = True
         else:
             lead.defending, other.defending = True, False
-            if ground.terrain in AMBUSH_TERRAIN or ground.weather is WeatherKind.FOG or ground.night:
+            if ground.terrain in AMBUSH_TERRAIN or ground.cover is PlaceCover.HEAVY or ground.weather is WeatherKind.FOG or ground.night:
                 lead.surprise = rules.weather_battle_effects.fog_ambush_pct / PERCENT
     summary = f"{lead.entity.name} saw further" + (" and refused battle" if refused else " and chose the ground")
     phases = [PhaseLog(BattlePhase.SCOUTING, 0, 0, summary, {"margin": round(margin), "ground": lead.entity.name})]

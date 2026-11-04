@@ -68,6 +68,7 @@ CONDITIONS: dict[SonToolId, Condition] = {
     T.MAKE_INTERWORLD_TREATY: lambda _rules, state: state.world_count >= 2,
     T.REKINDLE_STAR: lambda _rules, state: state.dead_star,
     T.BIND_SPIRIT: lambda _rules, state: state.free_spirit,
+    T.OPEN_REBIRTH_GATE: lambda _rules, state: state.free_spirit,
     T.TALK_TO_FOREIGN_GOD: lambda _rules, state: state.contacted_foreign_god,
     T.WAR_ON_FOREIGN_GOD: lambda _rules, state: state.contacted_foreign_god,
     T.STITCH_LEAK: lambda rules, _state: rules.son_tools.stitch_per_epoch > 0,
