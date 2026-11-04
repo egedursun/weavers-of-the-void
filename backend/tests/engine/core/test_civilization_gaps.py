@@ -127,7 +127,7 @@ async def test_an_elder_adopts_a_nearby_orphan_on_their_own(session: AsyncSessio
     elder = await mortal(session, "Orrin", world, region, age=50)
     child = await mortal(session, "Pell", world, region, age=8)
     await spontaneous_adoption(ctx)
-    assert await BondRepository(session).exists_between(child.id, elder.id, BondKind.DESCENDS_FROM)
+    assert await BondRepository(session).exists_between(child.id, elder.id, BondKind.FOSTERED_BY)
     recorded = await keys(session)
     assert "civilization.adoption" in recorded and "civilization.adoption_note" in recorded
 

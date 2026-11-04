@@ -5,6 +5,7 @@ from aerona.agents.context.bond_lines import bond_line_lists
 from aerona.agents.context.entity_line import line_item, line_items
 from aerona.agents.context.scope import Scope
 from aerona.agents.context.society import people_facts
+from aerona.agents.context.wilds import nature_lines
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.db.repositories.entities import EntityRepository
@@ -84,7 +85,7 @@ async def entity_detail_context(scope: Scope, entity: EntityRow, *, private: boo
         contents=await line_items(session, contents, with_location=False),
         lexicon=lexicon,
         society=await society_lines(session, scope.rules, entity),
-        facts=[*await fact_lines(session, scope.rules, entity), *await people_facts(session, entity)],
+        facts=[*await nature_lines(session, entity), *await fact_lines(session, scope.rules, entity), *await people_facts(session, entity)],
         body=await body_lines(session, scope.rules, entity, private=private),
         mind=await mind_lines(session, scope.rules, entity, scope.epoch, private=private),
         effects=[

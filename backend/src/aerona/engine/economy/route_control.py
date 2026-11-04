@@ -9,7 +9,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.routes import Route, found_route, length_of, load_routes, spoken_capacity, write_path
-from aerona.engine.phases.environment import works_by_region
+from aerona.engine.environment.works import works_by_region
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import set_stats

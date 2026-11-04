@@ -174,6 +174,7 @@ class ImmunityView(ApiModel):
 
 
 class OutbreakView(ApiModel):
+    season_factor: int = 100
     id: int
     disease_id: int
     disease: str
@@ -359,6 +360,8 @@ class InfrastructureView(ApiModel):
     warehouse_capacity: int
     harbour_capacity: int
     towers: int
+    bridges: int = 0
+    irrigation: int = 0
     locked: list[str]
 
 

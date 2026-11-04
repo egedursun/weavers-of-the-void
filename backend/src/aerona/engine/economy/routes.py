@@ -213,7 +213,12 @@ async def spoken_capacity(ctx: TickContext, book: EconomyBook, route: Route, wor
 
 
 def danger_of(book: EconomyBook, path: list[int]) -> int:
-    dangers = [stat(book.entities[region], "danger") or 0 for region in path if region in book.entities]
+    share = book.ground.rules.regional_danger.merchant_route_pct
+    dangers = [
+        round_half_up(book.merchant_danger[region] * share / PERCENT) if region in book.merchant_danger else stat(book.entities[region], "danger") or 0
+        for region in path
+        if region in book.entities
+    ]
     return round_half_up(sum(dangers) / len(dangers)) if dangers else 0
 
 

@@ -10,6 +10,7 @@ from aerona.core.random import SeededRandom
 from aerona.db.tables.body import BodyCustomRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SKILL_MAX, SkillRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType, MortalRole
@@ -87,6 +88,9 @@ async def practise(
     if row is None:
         row = await set_skill(session, node_id, skill, 0, epoch=epoch, source=source)
     rate = scaled_by(await effect_of(session, node_id, TraitEffect.LEARNING, rules.traits.effect_scale_pct))
+    schooled = await session.get(MortalProfileRow, node_id)
+    if schooled is not None:
+        rate *= 1 + schooled.education / PERCENT * rules.education.education_skill_pct / PERCENT
     if row.level < row.peak:
         rate *= rules.skills.relearn_pct / PERCENT
     row.xp += round(xp * rate)

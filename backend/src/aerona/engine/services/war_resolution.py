@@ -15,6 +15,7 @@ from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.war import SiegeStatus, WarEnding, WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.faith.church import holy_peace
+from aerona.engine.gods.incitement import answer_incitement
 from aerona.engine.military.aims import peace_terms, white_peace
 from aerona.engine.military.captivity import exchange_at_peace
 from aerona.engine.mind.book import values_for
@@ -118,6 +119,7 @@ async def close_war(ctx: TickContext, war: WarRow, ending: WarEnding, victor_id:
         if army is not None:
             stand_down(ctx.rules, army, await living_entity(ctx.session, army_row.owner_entity_id))
             await retire_in(ctx, army, f"disbanded when {event.name} ended ({label})", close_bonds=True)
+    await answer_incitement(ctx, war, victor_id, loser_id)
     await ctx.session.flush()
     ctx.count("wars_ended")
 

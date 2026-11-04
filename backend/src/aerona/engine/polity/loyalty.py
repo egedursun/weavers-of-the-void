@@ -53,7 +53,7 @@ def mean_satisfaction(society: CommunitySocietyRow | None) -> int:
 
 
 async def loyalty_parts(ctx: TickContext, realm: Realm, member: EntityRow, won: int) -> dict[LoyaltyPart, int]:
-    table = ctx.rules.loyalty
+    table = ctx.rules.realm_loyalty
     parts: dict[LoyaltyPart, int] = {}
     tribute = len(await active_bonds(ctx.session, [BondKind.PAYS_TRIBUTE], sources=[member.id]))
     if tribute:
@@ -88,12 +88,12 @@ async def loyalty_parts(ctx: TickContext, realm: Realm, member: EntityRow, won: 
 
 
 def loyalty_of(rules: Rules, distance: int, grievances: int, benefits: int, satisfaction: int) -> int:
-    table = rules.loyalty
+    table = rules.realm_loyalty
     return clamp_int(round_half_up(table.base - distance * table.distance_pct / PERCENT - grievances + benefits + satisfaction), 0, PERCENT)
 
 
 def satisfaction_term(rules: Rules, mood: int) -> int:
-    return round_half_up((mood - MIDDLE) * rules.loyalty.satisfaction_pct / PERCENT)
+    return round_half_up((mood - MIDDLE) * rules.realm_loyalty.satisfaction_pct / PERCENT)
 
 
 async def member_loyalty(ctx: TickContext, realm: Realm, member: EntityRow, won: int) -> PolityLoyaltyRow:
@@ -115,7 +115,7 @@ async def member_loyalty(ctx: TickContext, realm: Realm, member: EntityRow, won:
     if "loyalty" not in row.locked:
         row.loyalty = loyalty_of(ctx.rules, row.value_distance, row.grievances, row.benefits, row.satisfaction)
     row.epoch = ctx.epoch
-    if row.loyalty < ctx.rules.loyalty.wavering_loyalty <= before:
+    if row.loyalty < ctx.rules.realm_loyalty.wavering_loyalty <= before:
         await note(
             ctx,
             f"{member.name} wavers in its loyalty to {realm.entity.name}.",
@@ -127,7 +127,7 @@ async def member_loyalty(ctx: TickContext, realm: Realm, member: EntityRow, won:
 
 
 def autonomy_pull(rules: Rules, loyalty: int) -> int:
-    return round_half_up((MIDDLE - loyalty) * rules.loyalty.autonomy_pct / PERCENT)
+    return round_half_up((MIDDLE - loyalty) * rules.realm_loyalty.autonomy_pct / PERCENT)
 
 
 async def loyalty_autonomy(ctx: TickContext, realm: Realm, member: EntityRow | None) -> int:

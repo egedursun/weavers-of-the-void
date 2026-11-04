@@ -166,7 +166,7 @@ async def test_manual_births(session: AsyncSession, world: CoreWorld) -> None:
     first = await mortal(session, "Ana", world, world.regions[0].id)
     second = await mortal(session, "Bo", world, world.regions[0].id)
     child = await bless_with_child(ctx, first.id, second.id)
-    assert await BondRepository(session).exists_between(child.id, first.id, BondKind.DESCENDS_FROM)
+    assert await BondRepository(session).exists_between(first.id, child.id, BondKind.PARENT_OF)
     notable = await raise_notable_by_hand(ctx, world.people.id)
     assert notable.mortal_role is not None
     ruler = await crown_ruler(ctx, world.people.id)
@@ -186,10 +186,10 @@ async def test_manual_births(session: AsyncSession, world: CoreWorld) -> None:
 
 
 async def test_couples_and_single_rule(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await manual_context(session, "couples", tuned_rules(world_engine={"birth_chance": 100}))
-    first = await mortal(session, "Ana", world, world.regions[0].id)
-    second = await mortal(session, "Bo", world, world.regions[0].id)
-    await bond(session, first.id, second.id, BondKind.LOVES)
+    ctx = await manual_context(session, "couples", tuned_rules(world_engine={"birth_chance": 100}, fertility={"stillbirth_pct": 0.0}))
+    first = await mortal(session, "Ana", world, world.regions[0].id, age=25)
+    second = await mortal(session, "Bo", world, world.regions[0].id, age=25)
+    await bond(session, first.id, second.id, BondKind.SPOUSE_OF)
     await couples_bear_children(ctx)
     assert "births.child" in await keys(session)
     town = await settlement(session, "Brookhold", world, world.regions[0])

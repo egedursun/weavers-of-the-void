@@ -16,8 +16,9 @@ from aerona.engine.context import TickContext
 from aerona.engine.ecology.domestication import domestic_head
 from aerona.engine.ecology.extinction import cascade
 from aerona.engine.ecology.foodweb import appetites
+from aerona.engine.ecology.hosts import acquire_immunity
 from aerona.engine.ecology.pests import plague_of_pests
-from aerona.engine.ecology.ranges import RangeMarks, Wilds, harvest_hunt, load_wilds, migrate, overall, plan, seed, settle, spread
+from aerona.engine.ecology.ranges import RangeMarks, Wilds, harvest_hunt, load_wilds, migrate, overall, plan, seed, settle, size_weights, spread
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -224,6 +225,7 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.species_hosts",
     "table.species_profiles",
     "table.species_ranges",
     "table.species_uses",
@@ -240,6 +242,8 @@ async def ecology(ctx: TickContext) -> None:
     ]
     marks = EcologyMarks(*flags)
     wilds, _ = await wild_numbers(ctx, species, marks)
+    weights = size_weights(wilds.atlas, wilds.regions)
+    ctx.count("immunities", await acquire_immunity(ctx, wilds))
     ctx.count("hungry_hunters", sum(1 for value in (await appetites(ctx, species, adjust=True)).values() if value > 1))
     web = await food_web(ctx, species)
     habitat = await load_habitat(ctx, species, marks.invasive)
@@ -250,7 +254,7 @@ async def ecology(ctx: TickContext) -> None:
         if not rows and head is None:
             ctx.count("unplaced")
             continue
-        value = overall(ctx.rules, rows) if head is None else clamp_int(head // HERD_UNIT, 1 if head > 0 else 0, 100)
+        value = overall(ctx.rules, rows, weights) if head is None else clamp_int(head // HERD_UNIT, 1 if head > 0 else 0, 100)
         if value <= 0 and item.id in marks.protected:
             value = settings.last_herd
         if value <= 0:

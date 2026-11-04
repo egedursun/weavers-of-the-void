@@ -92,6 +92,8 @@ class RegionEnvironmentView(ApiModel):
     land_use: dict[str, int]
     erosion: int
     harvest_pct: int
+    sacredness: int = 0
+    derived_fertility: int | None = None
     locked: list[str]
     forecast: list[WeatherForecast]
     ley_lines: list[LeyLineView]
@@ -110,6 +112,7 @@ class PlaceEnvironmentView(ApiModel):
     chokepoint: bool
     nexus: bool
     soil_fertility: int
+    locked: list[str]
 
 
 class SeasonView(ApiModel):

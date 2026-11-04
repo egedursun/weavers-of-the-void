@@ -192,7 +192,7 @@ async def test_hero_tools(database: Database) -> None:
     await ok(toolkit, "go_on_adventure", {"target_id": realm.species_id, "goal": "to bring back a pelt"})
     assert await bonds_between(database, realm.mortal_id, realm.species_id, BondKind.HUNTS) == 1
     await ok(toolkit, "adopt", {"child_id": child.id, "reason": "an orphan of the storm"})
-    assert await bonds_between(database, child.id, realm.mortal_id, BondKind.DESCENDS_FROM) == 1
+    assert await bonds_between(database, realm.mortal_id, child.id, BondKind.PARENT_OF) == 1
     defied = await ok(toolkit, "challenge_god", {"son_id": realm.son_id, "reason": "he drowned my father"})
     assert defied
 

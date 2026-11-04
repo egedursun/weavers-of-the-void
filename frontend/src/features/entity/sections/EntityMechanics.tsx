@@ -1,20 +1,8 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import {
-  Cog,
-  Lock,
-  Pause,
-  Play,
-  Plus,
-  Sigma,
-  Sparkles,
-  Trash2,
-  Unlock,
-} from 'lucide-react'
+import { Cog, Lock, Pause, Play, Plus, Sigma, Unlock } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
-import type { components } from '@/api/generated/schema'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -24,19 +12,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Medallion, Section, Timeline } from '@/components/domain'
+import { Section, Timeline } from '@/components/domain'
 import { ChoiceTiles } from '@/components/domain/SettingsKit'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { humanize } from '../actions/schema'
 import { loreKeys } from '../api/keys'
+import { CausalityGraph } from '../mechanics/CausalityGraph'
+import { IncidentForge } from '../mechanics/IncidentForge'
+import { ModifierCard, ModifierForge } from '../mechanics/ModifierForge'
+import { ProfileValues, profilesKey } from '../mechanics/ProfileValues'
 import {
   ActingMechanics,
   IncidentEntry,
   WhyBreakdown,
 } from '../mechanics/parts'
 
-type Modifier = components['schemas']['ModifierRecord']
 type Op = 'add' | 'multiply'
 
 const DEFAULT_SUPPRESS_EPOCHS = 1
@@ -69,56 +60,6 @@ function positive(value: string): number | null {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }
 
-function modifierText(modifier: Modifier): string {
-  if (modifier.op === 'multiply') return `× ${modifier.magnitude}`
-  return `${modifier.magnitude > 0 ? '+' : ''}${modifier.magnitude}`
-}
-
-function ModifierRow({
-  modifier,
-  blocked,
-  onRemove,
-}: {
-  modifier: Modifier
-  blocked: string | undefined
-  onRemove: () => void
-}) {
-  return (
-    <li className='flex min-w-0 flex-wrap items-center gap-3 rounded-lg border bg-muted/30 p-2'>
-      <Medallion
-        icon={Sparkles}
-        tone={modifier.op === 'multiply' ? 'verdigris' : 'gold'}
-        size='sm'
-      />
-      <div className='flex min-w-0 flex-1 flex-col'>
-        <Text weight='medium' truncate>
-          {`${humanize(modifier.key)} ${modifierText(modifier)}`}
-        </Text>
-        <Muted variant='caption' truncate>
-          {modifier.end_epoch !== null
-            ? `Until epoch ${modifier.end_epoch}`
-            : 'Lasts until removed'}
-          {modifier.decay_pct !== null &&
-            ` · fades ${modifier.decay_pct}% each epoch`}
-        </Muted>
-      </div>
-      <Badge size='sm' variant='info'>
-        {humanize(modifier.source_kind)}
-      </Badge>
-      <Button
-        size='sm'
-        variant='ghost'
-        disabled={blocked !== undefined}
-        disabledReason={blocked}
-        onClick={onRemove}
-      >
-        <Trash2 />
-        Remove
-      </Button>
-    </li>
-  )
-}
-
 export function EntityMechanics({
   nodeId,
   statKeys,
@@ -141,6 +82,21 @@ export function EntityMechanics({
     queryKey: [...loreKeys.catalogue, 'mechanics'] as const,
     queryFn: () => unwrap(api.GET('/api/mechanics')),
   })
+  const profiles = useQuery({
+    queryKey: profilesKey(nodeId),
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/nodes/{node_id}/profiles', {
+          params: { path: { node_id: nodeId } },
+        })
+      ),
+  })
+  const pinKeys = [
+    ...statKeys,
+    ...(profiles.data ?? []).flatMap((table) =>
+      table.columns.map((column) => `${table.table}.${column.name}`)
+    ),
+  ]
   const [field, setField] = useState(statKeys[0] ?? '')
   const [op, setOp] = useState<Op>('add')
   const [magnitude, setMagnitude] = useState('')
@@ -207,17 +163,8 @@ export function EntityMechanics({
       ),
     success: 'Modifier added',
   })
-  const remove = useGodAction({
-    run: (modifierId: number) =>
-      unwrap(
-        api.POST('/api/actions/modifier:remove', {
-          body: { modifier_id: modifierId },
-        })
-      ),
-    success: 'Modifier removed',
-  })
   const data = view.data
-  const pending = [pin, unpin, suppress, unsuppress, runNow, add, remove].some(
+  const pending = [pin, unpin, suppress, unsuppress, runNow, add].some(
     (item) => item.isPending
   )
   const blocked = readOnlyReason ?? (pending ? WORKING : undefined)
@@ -257,11 +204,10 @@ export function EntityMechanics({
             ) : (
               <ul className='flex min-w-0 flex-col gap-2'>
                 {data.modifiers.map((modifier) => (
-                  <ModifierRow
+                  <ModifierCard
                     key={modifier.id}
                     modifier={modifier}
                     blocked={needs(null)}
-                    onRemove={() => remove.mutate(modifier.id)}
                   />
                 ))}
               </ul>
@@ -309,6 +255,7 @@ export function EntityMechanics({
                   <IncidentEntry
                     key={incident.id}
                     incident={incident}
+                    incidents={data.incidents}
                     last={index === data.incidents.length - 1}
                     blocked={needs(null)}
                   />
@@ -316,6 +263,21 @@ export function EntityMechanics({
               </Timeline>
             )}
           </div>
+          <div className='flex min-w-0 flex-col gap-2'>
+            <Label variant='overline'>Chains of cause</Label>
+            <CausalityGraph nodeId={nodeId} />
+          </div>
+          <ModifierForge
+            nodeId={nodeId}
+            statKeys={statKeys}
+            blocked={needs(null)}
+          />
+          <IncidentForge
+            nodeId={nodeId}
+            incidents={data.incidents}
+            blocked={needs(null)}
+          />
+          <ProfileValues nodeId={nodeId} blocked={needs(null)} />
         </div>
       )}
       <div className='@container/mech flex min-w-0 flex-col gap-4 rounded-lg border border-dashed bg-muted/20 p-3'>
@@ -342,7 +304,7 @@ export function EntityMechanics({
                 <SelectValue placeholder='Field' />
               </SelectTrigger>
               <SelectContent>
-                {statKeys.map((key) => (
+                {pinKeys.map((key) => (
                   <SelectItem key={key} value={key}>
                     {humanize(key)}
                   </SelectItem>

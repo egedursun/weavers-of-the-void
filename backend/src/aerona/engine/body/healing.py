@@ -9,6 +9,7 @@ from aerona.catalog.mind import HEALING_SKILLS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow, InjuryRow, ProsthesisRow
+from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import SkillRow
@@ -25,9 +26,11 @@ from aerona.domain.enums.body import (
     MedicineTier,
 )
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.culture import ItemClass, Technique
+from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.mortal import DeathCause, HarshnessScale
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.body.book import Bearer, anatomy_for, bearer_stats, ensure_body, injuries_of, prostheses_of
@@ -37,6 +40,7 @@ from aerona.engine.body.state import refresh
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import hospital_strengths
 from aerona.engine.disease.load import DiseaseLoads
+from aerona.engine.economy.materials import set_node_material
 from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_notable
@@ -45,11 +49,12 @@ from aerona.engine.lore.research import lacks
 from aerona.engine.mind.hooks import failed_to_heal, healed
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon, connect, directed_bond
-from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.rules.registry import Rules
 from aerona.rules.registry.body import HealingRules, ProstheticsRules
@@ -281,6 +286,7 @@ async def _fester(ctx: TickContext, bearer: Bearer, body: BodyRow, row: InjuryRo
     index = tier_index(care.tier)
     deadly = (table.lethal_infected_vital if vital else table.lethal_infected_limb) * max(0, PERCENT - index * table.lethal_medicine_cut_pct) / PERCENT
     deadly *= 1 - care.hospital * ctx.rules.structure_functions.hospital_death_cut_pct / PERCENT
+    deadly *= harshness(ctx.rules, HarshnessScale.INFECTION)
     if row.infected_epochs >= table.lethal_after_epochs or rng.chance(deadly):
         if index >= tier_index(MedicineTier.SURGERY) and care.amputation and _limb(part) and rng.chance(table.amputation_chance):
             row.kind, row.function_loss, row.state, row.infected_epochs = InjuryKind.SEVERED, PERCENT, InjuryState.HEALING, 0
@@ -301,8 +307,11 @@ async def _fester(ctx: TickContext, bearer: Bearer, body: BodyRow, row: InjuryRo
         await _renown(ctx, care.healer, healed=False)
         if care.healer is not None and isinstance(bearer, EntityRow):
             await failed_to_heal(ctx, care.healer.mortal.id, bearer)
+        if isinstance(bearer, EntityRow) and bearer.entity_type is EntityType.BEAST:
+            await retire_in(ctx, bearer, FESTER_DEATH)
+            return Tending(died=True, changed=True)
         if isinstance(bearer, EntityRow):
-            await die(ctx, bearer, cause=FESTER_DEATH, event_id=row.event_entity_id)
+            await die(ctx, bearer, cause=FESTER_DEATH, manner=DeathCause.WOUNDS, event_id=row.event_entity_id)
             return Tending(died=True, changed=True)
         row.state = InjuryState.PERMANENT
         return Tending(changed=True)
@@ -318,7 +327,7 @@ async def _fester(ctx: TickContext, bearer: Bearer, body: BodyRow, row: InjuryRo
 async def _close(ctx: TickContext, bearer: Bearer, row: InjuryRow, care: Care, rng_key: str) -> None:
     table = ctx.rules.healing
     rng = ctx.rng(seed_of("scar", rng_key))
-    lasting = row.kind in PERMANENT_KINDS or rng.chance(lasting_chance(table, row.kind, row.severity))
+    lasting = row.kind in PERMANENT_KINDS or rng.chance(lasting_chance(table, row.kind, row.severity) * harshness(ctx.rules, HarshnessScale.PERMANENT_INJURY))
     if lasting:
         row.state = InjuryState.PERMANENT
         if row.kind not in TOTAL_LOSS_KINDS:
@@ -341,12 +350,15 @@ async def _close(ctx: TickContext, bearer: Bearer, row: InjuryRow, care: Care, r
 
 
 HEALING_KEY = "healing"
+INJURY_HOLD = "injuries"
 
 
 async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending:
     if blocked(bearer.id, HEALING_KEY):
         return Tending()
     body = await ensure_body(ctx.session, ctx.rules, bearer, ctx.epoch)
+    if INJURY_HOLD in body.locked:
+        return Tending()
     anatomy = anatomy_for(body)
     table = ctx.rules.healing
     care = await world.care_for(ctx.session, bearer)
@@ -362,6 +374,7 @@ async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending
         skill = care.healer.skill if care.healer is not None else 0
         if row.state is not InjuryState.INFECTED and anatomy.infects:
             chance = infection_base(table, row.kind) * care.disease / table.disease_reference
+            chance *= harshness(ctx.rules, HarshnessScale.INFECTION) * (1 + (PERCENT - body.vital) * table.vital_infection_pct / PERCENT / PERCENT)
             chance *= (PERCENT - medicine_cut(table, care.tier)) / PERCENT * (PERCENT - min(table.healer_skill_cap, skill)) / PERCENT
             chance *= 1 - care.hospital * ctx.rules.structure_functions.hospital_infection_cut_pct / PERCENT
             checks = max(1, ctx.rules.campaigns.seasons_per_war_epoch) if campaign else 1
@@ -481,13 +494,15 @@ async def fit_prosthesis(
             hands = await ctx.session.get(BodyRow, maker.id)
             quality = clamp_int(quality * (hands.craft if hands is not None else PERCENT) / PERCENT, 0, PERCENT)
     restored = clamp_int(workability(table, material) * quality / PERCENT, 0, PERCENT)
-    if item is None and material in PRECIOUS and quality >= table.relic_quality:
+    relic = material in PRECIOUS and quality >= table.relic_quality
+    if item is None:
+        made = material.value.replace("_", " ")
         item = await create_record(
             ctx,
             RecordSpec(
                 entity_type=EntityType.ITEM,
-                name=f"The {material.value.replace('_', ' ').title()} {part.label.split()[-1].title()} of {bearer.name}",
-                body=f"A {material.value.replace('_', ' ')} {part.label.lower()} made for {bearer.name}.",
+                name=f"The {made.title()} {part.label.split()[-1].title()} of {bearer.name}" if relic else f"{made.capitalize()} {part.label.lower()}",
+                body=f"A {made} {part.label.lower()} made for {bearer.name}.",
                 stats=ItemStats(might=quality),
                 power=max(1, quality // table.relic_power_div),
                 location_id=bearer.location_id,
@@ -497,6 +512,7 @@ async def fit_prosthesis(
             ),
         )
         await connect(ctx.session, bearer.id, item.id, BondKind.OWNS, ctx.epoch, description="wears it in place of what was lost")
+    await prosthesis_profile(ctx, item, row.part, material, quality, relic=relic, maker=maker)
     prosthesis = ProsthesisRow(
         bearer_node_id=bearer.id,
         injury_id=row.id,
@@ -520,11 +536,38 @@ async def fit_prosthesis(
     return prosthesis
 
 
+async def prosthesis_profile(
+    ctx: TickContext, item: EntityRow, part: str, material: MaterialKind, quality: int, *, relic: bool, maker: EntityRow | None
+) -> ItemProfileRow:
+    row = await ctx.session.get(ItemProfileRow, item.id)
+    if row is None:
+        row = ItemProfileRow(item_entity_id=item.id, item_class=ItemClass.PROSTHESIS, locked=[])
+        ctx.session.add(row)
+    row.item_class = ItemClass.PROSTHESIS
+    row.prosthesis_for = part
+    row.quality = quality
+    row.value = quality
+    row.renown = quality if relic else row.renown or 0
+    row.symbol = relic
+    row.maker_entity_id = maker.id if maker is not None else row.maker_entity_id
+    row.updated_epoch = ctx.epoch
+    await set_node_material(ctx.session, item.id, MaterialSlot.BODY, material, None, force=True)
+    await ctx.session.flush()
+    return row
+
+
+def hp_ceiling(rules: Rules, bearer: EntityRow) -> int:
+    endurance = stat(bearer, "endurance")
+    if endurance is None:
+        return 0
+    return round_half_up(rules.world_effects.heir_hp + endurance * rules.healing.endurance_hp_pct / PERCENT)
+
+
 def regenerate(rules: Rules, bearer: EntityRow, body: BodyRow, infected: bool) -> None:
     hp = stat(bearer, "hp")
     if hp is None:
         return
-    body.hp_max = max(body.hp_max, hp)
+    body.hp_max = max(body.hp_max, hp, hp_ceiling(rules, bearer))
     if infected or hp >= body.hp_max:
         return
     gain = rules.healing.hp_regen_base + bearer_stats(bearer).endurance / rules.healing.endurance_div
@@ -534,7 +577,7 @@ def regenerate(rules: Rules, bearer: EntityRow, body: BodyRow, infected: bool) -
 async def heal_wounds(ctx: TickContext) -> None:
     world = await HealingWorld.load(ctx.session, ctx.rules)
     list(await ctx.session.scalars(select(BodyRow)))
-    bearers: list[Bearer] = [*await canon(ctx.session, [EntityType.MORTAL])]
+    bearers: list[Bearer] = [*await canon(ctx.session, [EntityType.MORTAL, EntityType.BEAST])]
     bearers.extend(await ctx.session.scalars(select(SonRow)))
     bearers.extend(await ctx.session.scalars(select(ForeignGodRow)))
     open_bearers = set(await ctx.session.scalars(select(InjuryRow.bearer_node_id).where(InjuryRow.state.in_(OPEN_INJURY_STATES))))

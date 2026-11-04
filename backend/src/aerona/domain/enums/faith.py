@@ -101,4 +101,11 @@ class FuneralRite(StrEnum):
     BURIAL = "burial"
     BURNING = "burning"
     EXPOSURE = "exposure"
+    NAMELESS = "nameless"
     NONE = "none"
+
+
+class RebirthPath(StrEnum):
+    PEOPLE = "people"
+    HOUSE = "house"
+    MERIT = "merit"

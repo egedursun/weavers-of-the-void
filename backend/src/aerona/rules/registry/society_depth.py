@@ -61,7 +61,7 @@ class MobilisationRules:
 
 
 @dataclass(frozen=True)
-class LoyaltyRules:
+class RealmLoyaltyRules:
     base: int = rule(60, 0, 100, P, "Loyalty of a member to its realm before values, grievances and benefits")
     distance_pct: int = rule(30, 0, 300, P, "Loyalty lost per point of value distance between a member and its ruler (%)")
     tribute_grievance: int = rule(10, 0, 100, P, "Grievance from tribute paid to others")

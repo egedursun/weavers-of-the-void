@@ -94,6 +94,10 @@ class WorldLineContext(PromptContext):
     time_factor: float
     leak: int = 0
     cosmology: str | None = None
+    golden_age_epochs: int | None = None
+    golden_age_since: int | None = None
+    golden_age_gain: int = 0
+    golden_age_soft: bool = False
 
 
 class CosmosWorld(ContextItem):
@@ -305,11 +309,20 @@ class RegionGeography(ContextItem):
     use: str | None = None
     nexus: str | None = None
     weather: str | None = None
+    places: list[str] = Field(default_factory=list)
+    works: str | None = None
+    drying: str | None = None
+    dangers: list[str] = Field(default_factory=list)
+    sacredness: int | None = None
+    memories: list[str] = Field(default_factory=list)
+    mapped_by: list[str] = Field(default_factory=list)
 
 
 class GeographyLinesContext(PromptContext):
     known_regions: int
     regions: list[RegionGeography]
+    seasons: list[str] = Field(default_factory=list)
+    long_days: str | None = None
 
 
 class SummarySection(StrEnum):

@@ -3,11 +3,17 @@ import {
   BookOpen,
   Church,
   Coins,
+  Crown,
   Flame,
-  Gem,
   GitBranch,
+  Ghost,
+  HandCoins,
+  Languages,
   Lock,
+  Pencil,
   Plus,
+  RotateCcw,
+  Scale,
   ScrollText,
   Sparkles,
   Trash2,
@@ -27,13 +33,11 @@ import { Switch } from '@/components/ui/switch'
 import {
   ChangeChip,
   EmptyState,
-  IconStat,
   KpiTile,
   Medallion,
   RangeField,
   Section,
   ShowMore,
-  StatBar,
   useShowMore,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
@@ -54,17 +58,23 @@ import {
   WhyList,
 } from '../realm/parts'
 import {
+  ClergyOffices,
+  HeresyLevers,
+  HoldingLevers,
+  RelicShrine,
+} from './Church'
+import {
   type Doctrine,
   type TenetKind,
   useDoctrine,
   useTenetKinds,
 } from './api'
 import {
-  CLERGY,
   DOCTRINE_FIELDS,
   FANATICISMS,
   HOLDINGS,
   JUDGEMENTS,
+  REBIRTH_PATHS,
   TENETS,
 } from './labels'
 
@@ -139,7 +149,23 @@ function TenetCard({
         })
       ),
   })
-  const busy = busyOf(blocked, drop.isPending)
+  const [renaming, setRenaming] = useState(false)
+  const [name, setName] = useState(tenet.name ?? '')
+  const rename = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/cult:tenet', {
+          body: {
+            cult_id: cultId,
+            tenet: tenet.tenet,
+            held: true,
+            target: tenet.target,
+            name,
+          },
+        })
+      ),
+  })
+  const busy = busyOf(blocked, drop.isPending, rename.isPending)
   const spec = named(TENETS, tenet.tenet)
   return (
     <li
@@ -150,12 +176,13 @@ function TenetCard({
         <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>
           <Text as='span' weight='semibold' truncate>
-            {spec.label}
+            {tenet.name ?? spec.label}
           </Text>
-          <Muted
-            variant='caption'
-            truncate
-          >{`Revealed in epoch ${tenet.since_epoch}`}</Muted>
+          <Muted variant='caption' truncate>
+            {tenet.name
+              ? `${spec.label} · revealed in epoch ${tenet.since_epoch}`
+              : `Revealed in epoch ${tenet.since_epoch}`}
+          </Muted>
         </div>
         {tenet.target_name && (
           <Badge size='sm' variant='outline'>
@@ -164,7 +191,39 @@ function TenetCard({
         )}
       </div>
       <Muted className='flex-1'>{tenet.effect}</Muted>
-      <div className='flex min-w-0 justify-end'>
+      {renaming && (
+        <div className='flex min-w-0 flex-wrap items-end gap-2'>
+          <div className='flex min-w-40 flex-1 flex-col gap-1'>
+            <Label>Its name among the faithful</Label>
+            <Input
+              value={name}
+              aria-label='Its name among the faithful'
+              placeholder={spec.label}
+              onChange={(event) => setName(event.target.value)}
+            />
+          </div>
+          <Button
+            size='sm'
+            disabled={busy !== null}
+            disabledReason={busy ?? undefined}
+            onClick={() => rename.mutate(undefined)}
+          >
+            <ScrollText />
+            Name it
+          </Button>
+        </div>
+      )}
+      <div className='flex min-w-0 justify-end gap-1'>
+        <Button
+          size='sm'
+          variant='ghost'
+          disabled={busy !== null}
+          disabledReason={busy ?? undefined}
+          onClick={() => setRenaming(!renaming)}
+        >
+          <Pencil />
+          Rename
+        </Button>
         <Button
           size='sm'
           variant='ghost'
@@ -193,6 +252,7 @@ function AddTenet({
   const free = tenetKindValues.filter((item) => !held.includes(item))
   const [tenet, setTenet] = useState<string>(free[0] ?? 'proselytism')
   const [target, setTarget] = useState('')
+  const [name, setName] = useState('')
   const spec = kinds.data?.find((item) => item.tenet === tenet)
   const add = useGodAction({
     run: () =>
@@ -203,6 +263,7 @@ function AddTenet({
             tenet: tenet as TenetKind,
             held: true,
             target: target || null,
+            name: name || null,
           },
         })
       ),
@@ -225,6 +286,15 @@ function AddTenet({
           blocked={busy}
           onPick={setTenet}
         />
+        <div className='flex min-w-0 flex-col gap-1'>
+          <Label>Its name among the faithful</Label>
+          <Input
+            value={name}
+            aria-label='Its name among the faithful'
+            placeholder={look.label}
+            onChange={(event) => setName(event.target.value)}
+          />
+        </div>
         {spec?.targeted && (
           <div className='flex min-w-0 flex-col gap-1'>
             <Label>Its object</Label>
@@ -287,6 +357,21 @@ function DoctrineForm({
   const [treasury, setTreasury] = useState(String(doctrine.treasury))
   const [clergy, setClergy] = useState(String(doctrine.clergy_count))
   const [judgement, setJudgement] = useState<string>(doctrine.judgement)
+  const [path, setPath] = useState<string>(doctrine.rebirth_path)
+  const [devotion, setDevotion] = useState(String(doctrine.devotion))
+  const [liturgy, setLiturgy] = useState<number | null>(
+    doctrine.liturgical_language?.id ?? null
+  )
+  const [mother, setMother] = useState<number | null>(
+    doctrine.parent_cult?.id ?? null
+  )
+  const [fanaticism, setFanaticism] = useState<string>(
+    doctrine.fanaticism ?? 'none'
+  )
+  const [outcasts, setOutcasts] = useState<number[]>(
+    doctrine.excommunicated.map((item) => item.id)
+  )
+  const [outcast, setOutcast] = useState<number | null>(null)
   const save = useGodAction({
     run: () =>
       unwrap(
@@ -302,10 +387,30 @@ function DoctrineForm({
               ),
               treasury: Math.max(0, Math.round(Number(treasury) || 0)),
               clergy_count: Math.max(0, Math.round(Number(clergy) || 0)),
+              devotion: Math.max(0, Math.round(Number(devotion) || 0)),
               judgement,
+              rebirth_path: path,
+              liturgical_language_id: liturgy,
+              parent_cult_id: mother,
+              fanaticism: fanaticism === 'none' ? null : fanaticism,
+              excommunicated: outcasts,
             },
           },
         })
+      ),
+  })
+  const holdForces = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/cult:doctrine', {
+          body: { cult_id: id, values: { zeal_parts: doctrine.zeal_parts } },
+        })
+      ),
+  })
+  const reset = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/cult:reset_doctrine', { body: { cult_id: id } })
       ),
   })
   const release = useGodAction({
@@ -316,7 +421,13 @@ function DoctrineForm({
         })
       ),
   })
-  const busy = busyOf(blocked, save.isPending, release.isPending)
+  const busy = busyOf(
+    blocked,
+    save.isPending,
+    release.isPending,
+    holdForces.isPending,
+    reset.isPending
+  )
   return (
     <AdjustPanel
       trigger='Adjust the doctrine'
@@ -334,6 +445,97 @@ function DoctrineForm({
           blocked={busy}
           onPick={setJudgement}
         />
+        <ChoiceGrid
+          label='Exceptional souls are reborn'
+          table={REBIRTH_PATHS}
+          hints={Object.fromEntries(
+            Object.entries(REBIRTH_PATHS).map(([key, item]) => [key, item.hint])
+          )}
+          value={path}
+          blocked={busy}
+          onPick={setPath}
+        />
+        <ChoiceGrid
+          label='Fanaticism'
+          table={{
+            none: { label: 'At peace', icon: Sparkles, tone: 'muted' },
+            ...FANATICISMS,
+          }}
+          value={fanaticism}
+          blocked={busy}
+          onPick={setFanaticism}
+        />
+        <div className='grid min-w-0 grid-cols-1 gap-3 @xl/faith:grid-cols-2'>
+          <RecordField
+            label='Liturgy is sung in'
+            types={['language']}
+            value={liturgy}
+            onChange={setLiturgy}
+            blocked={busy}
+            placeholder='The tongue of the faithful'
+          />
+          <RecordField
+            label='Mother church'
+            types={['cult']}
+            value={mother}
+            onChange={setMother}
+            blocked={busy}
+            placeholder='None; it stands alone'
+          />
+        </div>
+        <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-card p-3'>
+          <div className='flex min-w-0 items-center gap-2'>
+            <Medallion icon={UserX} tone='danger' size='sm' />
+            <Text as='span' weight='medium'>
+              Cast out of the faith
+            </Text>
+          </div>
+          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+            {outcasts.length === 0 && <Muted>No one is cast out.</Muted>}
+            {outcasts.map((item) => (
+              <Button
+                key={item}
+                size='sm'
+                variant='outline'
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() =>
+                  setOutcasts(outcasts.filter((other) => other !== item))
+                }
+              >
+                <Trash2 />
+                {doctrine.excommunicated.find((node) => node.id === item)
+                  ?.name ?? `#${item}`}
+              </Button>
+            ))}
+          </div>
+          <div className='flex min-w-0 flex-wrap items-end gap-2'>
+            <div className='min-w-48 flex-1'>
+              <RecordField
+                label='Cast out'
+                types={['mortal']}
+                value={outcast}
+                onChange={setOutcast}
+                blocked={busy}
+                placeholder='Choose a mortal'
+              />
+            </div>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null || outcast === null}
+              disabledReason={busy ?? 'Choose the mortal first.'}
+              onClick={() => {
+                if (outcast !== null && !outcasts.includes(outcast))
+                  setOutcasts([...outcasts, outcast])
+                setOutcast(null)
+              }}
+            >
+              <UserX />
+              Add to the cast out
+            </Button>
+          </div>
+        </div>
         <div className='grid min-w-0 grid-cols-1 gap-3 @xl/faith:grid-cols-2'>
           {RANGES.map(([key, icon, words, low, high]) => (
             <RangeField
@@ -381,6 +583,15 @@ function DoctrineForm({
                 blocked={busy}
                 onChange={setClergy}
               />
+              <NumberField
+                label='Devotion'
+                icon={HandCoins}
+                tone='text-primary'
+                min={0}
+                value={devotion}
+                blocked={busy}
+                onChange={setDevotion}
+              />
             </div>
           </div>
         </div>
@@ -417,6 +628,26 @@ function DoctrineForm({
               Let the faith decide again
             </Button>
           )}
+          <Button
+            size='sm'
+            variant='outline'
+            disabled={busy !== null}
+            disabledReason={busy ?? undefined}
+            onClick={() => holdForces.mutate(undefined)}
+          >
+            <Flame />
+            Hold the forces on the zeal
+          </Button>
+          <Button
+            size='sm'
+            variant='ghost'
+            disabled={busy !== null}
+            disabledReason={busy ?? undefined}
+            onClick={() => reset.mutate(undefined)}
+          >
+            <RotateCcw />
+            Unwrite and teach anew
+          </Button>
         </div>
       </div>
     </AdjustPanel>
@@ -469,6 +700,13 @@ function HeresyRow({
         />
         <Text as='span'>Hunt it</Text>
       </label>
+      <div className='w-full min-w-0'>
+        <HeresyLevers
+          key={`${heresy.distance}.${heresy.tolerated}.${heresy.locked.join()}`}
+          heresy={heresy}
+          blocked={blocked}
+        />
+      </div>
     </li>
   )
 }
@@ -594,54 +832,11 @@ function Saints({
         ) : (
           <ul className='flex min-w-0 flex-col gap-2'>
             {doctrine.relics.map((relic) => (
-              <li
-                key={relic.item?.id ?? relic.saint?.id}
-                className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'
-              >
-                <div className='flex min-w-0 items-center gap-2'>
-                  <Medallion icon={Sparkles} tone='gold' size='sm' />
-                  <div className='flex min-w-0 flex-1 flex-col'>
-                    <Label variant='overline'>Saint</Label>
-                    {relic.saint ? (
-                      <RefLink node={relic.saint} />
-                    ) : (
-                      <Muted>Nameless</Muted>
-                    )}
-                  </div>
-                  <IconStat
-                    icon={Users}
-                    label='Pilgrims'
-                    value={formatInteger(relic.pilgrims)}
-                    tone='info'
-                  />
-                </div>
-                <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-                  <Gem
-                    aria-hidden='true'
-                    className='size-icon-xs shrink-0 text-brand-verdigris'
-                  />
-                  {relic.item ? (
-                    <RefLink node={relic.item} />
-                  ) : (
-                    <Muted>No relic</Muted>
-                  )}
-                  {relic.shrine && (
-                    <>
-                      <Church
-                        aria-hidden='true'
-                        className='size-icon-xs shrink-0 text-muted-foreground'
-                      />
-                      <RefLink node={relic.shrine} />
-                    </>
-                  )}
-                </div>
-                <StatBar
-                  label={`Sanctity, canonised in epoch ${relic.canonised_epoch}`}
-                  value={relic.sanctity}
-                  max={PERCENT}
-                  icon={Sparkles}
-                />
-              </li>
+              <RelicShrine
+                key={`${relic.item?.id ?? relic.saint?.id}.${relic.sanctity}.${relic.pilgrims}.${relic.shrine?.id ?? 0}`}
+                relic={relic}
+                blocked={blocked}
+              />
             ))}
           </ul>
         )}
@@ -685,7 +880,13 @@ function Saints({
   )
 }
 
-function Holdings({ doctrine }: { doctrine: Doctrine }) {
+function Holdings({
+  doctrine,
+  blocked,
+}: {
+  doctrine: Doctrine
+  blocked: string | null
+}) {
   const [kind, setKind] = useState<string | null>(null)
   const kinds = Object.keys(HOLDINGS).filter((key) =>
     doctrine.holdings.some((item) => item.kind === key)
@@ -750,6 +951,7 @@ function Holdings({ doctrine }: { doctrine: Doctrine }) {
             <ShowMore state={list} noun={['holding', 'holdings']} />
           </>
         )}
+        <HoldingLevers doctrine={doctrine} blocked={blocked} />
       </div>
     </Panel>
   )
@@ -766,7 +968,7 @@ function DoctrineBody({
   const parts = Object.entries(doctrine.zeal_parts)
   const judgement = named(JUDGEMENTS, doctrine.judgement)
   const zeal = goodBand(doctrine.zeal, ZEAL_WORDS)
-  const filled = doctrine.clergy.filter((office) => office.holder).length
+  const path = named(REBIRTH_PATHS, doctrine.rebirth_path)
   return (
     <div
       data-surface='DoctrineSheet'
@@ -800,6 +1002,19 @@ function DoctrineBody({
           <Tag
             spec={{ label: 'Heresy', icon: GitBranch, tone: 'warning' }}
             text={`Heresy of ${doctrine.mother.parent.name}`}
+          />
+        )}
+        <Tag spec={path} text={`Souls reborn ${path.label.toLowerCase()}`} />
+        {doctrine.liturgical_language && (
+          <Tag
+            spec={{ label: 'Liturgy', icon: Languages, tone: 'info' }}
+            text={`Liturgy in ${doctrine.liturgical_language.name}`}
+          />
+        )}
+        {doctrine.god_king && (
+          <Tag
+            spec={{ label: 'God-king', icon: Crown, tone: 'gold' }}
+            text={`${doctrine.god_king.name} is god-king and high priest`}
           />
         )}
         {doctrine.excommunicated.map((item) => (
@@ -837,7 +1052,7 @@ function DoctrineBody({
           icon={Coins}
           tone='gold'
           meter={{ value: doctrine.tithe_rate, max: PERCENT, label: 'Tithe' }}
-          hint={`Tithe of ${doctrine.tithe_rate}% from the faithful`}
+          hint={`Tithe of ${doctrine.tithe_rate}% from ${doctrine.tithe_base.length} ${doctrine.tithe_base.length === 1 ? 'land' : 'lands'}`}
         />
         <KpiTile
           label='Clergy'
@@ -852,6 +1067,59 @@ function DoctrineBody({
           hint={`Learning ${doctrine.clergy_quality} of 100`}
         />
       </div>
+      <div
+        data-surface='FaithPowers'
+        className='grid min-w-0 grid-cols-1 gap-3 @xs/faith:grid-cols-2 @xl/faith:grid-cols-4'
+      >
+        <KpiTile
+          label='Devotion'
+          value={formatInteger(doctrine.devotion)}
+          icon={HandCoins}
+          tone='gold'
+          hint='Gathered from the faithful; the god draws on it and fanatics spend it'
+        />
+        <KpiTile
+          label='Souls in the god’s realm'
+          value={formatInteger(doctrine.realm_population)}
+          icon={Ghost}
+          tone='verdigris'
+          hint='The faithful dead resting in the strata'
+        />
+        <KpiTile
+          label='Liturgy understood'
+          value={`${doctrine.liturgy_reach}%`}
+          icon={Languages}
+          tone='info'
+          meter={{
+            value: doctrine.liturgy_reach,
+            max: PERCENT,
+            label: 'Liturgy understood',
+          }}
+          hint={
+            doctrine.liturgical_language
+              ? `Share of its peoples who speak ${doctrine.liturgical_language.name}`
+              : 'No liturgical tongue is set'
+          }
+        />
+        <KpiTile
+          label='Sway over the crown'
+          value={doctrine.clergy_sway}
+          icon={Scale}
+          tone={doctrine.god_king ? 'gold' : 'warning'}
+          meter={{
+            value: doctrine.clergy_sway,
+            max: PERCENT,
+            label: 'Clergy sway',
+          }}
+          hint={
+            doctrine.god_king
+              ? 'Crown and altar are one'
+              : doctrine.state_realm
+                ? `Clergy weight in ${doctrine.state_realm.name}`
+                : 'No realm keeps this faith'
+          }
+        />
+      </div>
       <DoctrineForm
         key={JSON.stringify([
           doctrine.locked,
@@ -863,6 +1131,12 @@ function DoctrineBody({
           doctrine.clergy_count,
           doctrine.clergy_quality,
           doctrine.doctrinal_distance,
+          doctrine.rebirth_path,
+          doctrine.devotion,
+          doctrine.liturgical_language?.id,
+          doctrine.parent_cult?.id,
+          doctrine.fanaticism,
+          doctrine.excommunicated.map((item) => item.id),
         ])}
         doctrine={doctrine}
         blocked={blocked}
@@ -890,45 +1164,7 @@ function DoctrineBody({
             )}
           </div>
         </Panel>
-        <Panel
-          title='Clergy'
-          icon={Church}
-          tone='verdigris'
-          hint={`${filled} of ${doctrine.clergy.length} offices filled`}
-        >
-          <ul className='flex min-w-0 flex-col gap-2'>
-            {doctrine.clergy.length === 0 && (
-              <Muted>No office is founded.</Muted>
-            )}
-            {doctrine.clergy.map((office) => {
-              const spec = named(CLERGY, office.kind)
-              return (
-                <li
-                  key={office.kind}
-                  className='flex min-w-0 items-center gap-2'
-                >
-                  <Medallion
-                    icon={spec.icon}
-                    tone={office.holder ? spec.tone : 'muted'}
-                    size='sm'
-                  />
-                  <div className='flex min-w-0 flex-1 flex-col'>
-                    <Label truncate>{spec.label}</Label>
-                    {office.holder ? (
-                      <RefLink node={office.holder} />
-                    ) : (
-                      <Muted as='span'>Vacant</Muted>
-                    )}
-                  </div>
-                  <Muted
-                    as='span'
-                    variant='caption'
-                  >{`since ${office.since_epoch}`}</Muted>
-                </li>
-              )
-            })}
-          </ul>
-        </Panel>
+        <ClergyOffices doctrine={doctrine} blocked={blocked} />
       </div>
       <Panel
         title='Tenets'
@@ -956,7 +1192,7 @@ function DoctrineBody({
           blocked={blocked}
         />
       </Panel>
-      <Holdings doctrine={doctrine} />
+      <Holdings doctrine={doctrine} blocked={blocked} />
       <div className='grid min-w-0 grid-cols-1 gap-3 @xl/faith:grid-cols-2'>
         <Heresies doctrine={doctrine} blocked={blocked} />
         <Saints doctrine={doctrine} blocked={blocked} />

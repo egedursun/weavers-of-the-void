@@ -282,6 +282,7 @@ def outbreak_views(rows: list[OutbreakRow], names: dict[int, str], sources: dict
             started_epoch=row.started_epoch,
             ended_epoch=row.ended_epoch,
             quarantined=row.quarantined,
+            season_factor=row.season_factor,
             event_id=row.event_entity_id,
             locked=list(row.locked or []),
             unseen_pct=(unseen or {}).get(row.id, 0),
@@ -528,6 +529,8 @@ async def settlement_plan(services: ServicesDep, entity_id: int = Path(ge=1)) ->
                 warehouse_capacity=infrastructure.warehouse_capacity,
                 harbour_capacity=infrastructure.harbour_capacity,
                 towers=infrastructure.towers,
+                bridges=infrastructure.bridges,
+                irrigation=infrastructure.irrigation,
                 locked=list(infrastructure.locked),
             ),
             districts=[

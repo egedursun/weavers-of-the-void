@@ -71,3 +71,24 @@ class BeastTemper(StrEnum):
     ENRAGED = "enraged"
     BOUND = "bound"
     TAMED = "tamed"
+
+
+class YieldProduct(StrEnum):
+    MEAT = "meat"
+    HIDE = "hide"
+    BONE = "bone"
+    IVORY = "ivory"
+    CHITIN = "chitin"
+    VENOM = "venom"
+    SILK = "silk"
+    WOOL = "wool"
+    MILK = "milk"
+    FEATHERS = "feathers"
+    MAGIC_REAGENTS = "magic_reagents"
+    DRAGONBONE = "dragonbone"
+
+
+class FoodLink(StrEnum):
+    PINNED = "pinned"
+    BARRED = "barred"
+    DERIVED = "derived"

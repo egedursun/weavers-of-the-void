@@ -531,6 +531,7 @@ async def deposit_finding(ctx: TickContext) -> None:
     "table.community_stocks",
     "table.cosmos",
     "table.currencies",
+    "table.districts",
     "table.entities",
     "table.forced_weather",
     "table.holder_levels",

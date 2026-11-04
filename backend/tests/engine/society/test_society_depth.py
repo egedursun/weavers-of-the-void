@@ -422,7 +422,7 @@ async def test_member_loyalty_counts_grievances_benefits_and_satisfaction(realm:
     ctx = context(realm.session)
     held = Holding(crown, profile, {town.id: member})
     row = await member_loyalty(ctx, held, town, 2)
-    assert row.parts[LoyaltyPart.WEARINESS.value] > 0 and row.parts[LoyaltyPart.VICTORIES.value] == 2 * ctx.rules.loyalty.victory_benefit
+    assert row.parts[LoyaltyPart.WEARINESS.value] > 0 and row.parts[LoyaltyPart.VICTORIES.value] == 2 * ctx.rules.realm_loyalty.victory_benefit
     assert row.grievances > 0 and row.benefits > 0
     calm = row.loyalty
     society = await realm.session.get(CommunitySocietyRow, town.id)

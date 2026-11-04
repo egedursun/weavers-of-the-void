@@ -8,7 +8,10 @@ depends_on = None
 
 OLD_TREASURY_ENTRIES = ("tax", "tolls", "investment", "garrison", "walls", "building", "festival", "alms", "fire", "plunder", "grant", "loan")
 NEW_TREASURY_ENTRIES = (*OLD_TREASURY_ENTRIES, "upkeep")
-WIDENED = (("settlement_treasury", "entry", OLD_TREASURY_ENTRIES, NEW_TREASURY_ENTRIES, False),)
+WIDENED = (
+    ("settlement_treasury", "entry", OLD_TREASURY_ENTRIES, NEW_TREASURY_ENTRIES, False),
+    ("polity_treasury", "entry", OLD_TREASURY_ENTRIES, NEW_TREASURY_ENTRIES, False),
+)
 
 
 def enum_of(name: str, values: tuple[str, ...]) -> sa.Enum:

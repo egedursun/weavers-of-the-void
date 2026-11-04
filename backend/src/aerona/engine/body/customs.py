@@ -4,10 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.anatomy import SIGHT_PARTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import BodyCustomRow, ConditionRow, InjuryRow
+from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import CultureValueRow
 from aerona.domain.enums.body import LASTING_INJURY_STATES, OPEN_INJURY_STATES, BodyReading, ConditionKind, HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind, BondRole
+from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
@@ -23,6 +25,8 @@ from aerona.rules.registry import Rules
 PURITY_DOMAINS = frozenset({Domain.LIGHT, Domain.SUN, Domain.GLASS, Domain.SALT, Domain.OATH})
 SUFFERING_DOMAINS = frozenset({Domain.BLOOD, Domain.PLAGUE, Domain.HUNGER, Domain.BONE, Domain.MADNESS})
 MARTIAL_DOMAINS = frozenset({Domain.WAR, Domain.HUNT})
+SEER_DOMAINS = frozenset({Domain.DREAM, Domain.STAR, Domain.MOON, Domain.TIME, Domain.KNOWLEDGE, Domain.MEMORY})
+SEER_RITES = frozenset({TraditionKind.INITIATION, TraditionKind.SCAR_RITE, TraditionKind.OFFERING})
 HONOURED_CAUSES = frozenset({HarmCause.BATTLE, HarmCause.DUEL, HarmCause.MONSTER, HarmCause.QUEST})
 SHAMEFUL_CAUSES = frozenset({HarmCause.PUNISHMENT, HarmCause.TORTURE})
 CUSTOM_FIELDS = ("reading", "wholeness_required", "seer_eye", "scar_festivals", "pension")
@@ -90,8 +94,20 @@ async def derived_reading(session: AsyncSession, rules: Rules, people: EntityRow
     return reading, reading is BodyReading.PURITY and purity >= table.wholeness_value
 
 
+async def seer_tradition(session: AsyncSession, people: EntityRow) -> int | None:
+    patron = await living_patron(session, people)
+    if patron is None or not set(patron.domains) & SEER_DOMAINS:
+        return None
+    for bond in await active_bonds(session, [BondKind.CELEBRATES], sources=[people.id]):
+        profile = await session.get(TraditionProfileRow, bond.target_node_id)
+        if profile is not None and profile.kind in SEER_RITES:
+            return profile.tradition_entity_id
+    return None
+
+
 async def ensure_customs(session: AsyncSession, rules: Rules, people: EntityRow) -> BodyCustomRow:
     row = await session.get(BodyCustomRow, people.id)
+    seer = await seer_tradition(session, people)
     if row is not None:
         reading, wholeness = await derived_reading(session, rules, people)
         locked = set(row.locked or [])
@@ -99,9 +115,15 @@ async def ensure_customs(session: AsyncSession, rules: Rules, people: EntityRow)
             row.reading = reading
         if "wholeness_required" not in locked:
             row.wholeness_required = wholeness
+        if "seer_eye" not in locked:
+            row.seer_eye = seer is not None
+            if seer is not None and "tradition_entity_id" not in locked:
+                row.tradition_entity_id = seer
         return row
     reading, wholeness = await derived_reading(session, rules, people)
-    row = BodyCustomRow(people_entity_id=people.id, reading=reading, wholeness_required=wholeness, locked=[])
+    row = BodyCustomRow(
+        people_entity_id=people.id, reading=reading, wholeness_required=wholeness, seer_eye=seer is not None, tradition_entity_id=seer, locked=[]
+    )
     session.add(row)
     await session.flush()
     return row

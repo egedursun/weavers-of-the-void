@@ -1,4 +1,3 @@
-from collections import defaultdict
 from dataclasses import dataclass
 
 from sqlalchemy import or_, select
@@ -6,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import ChronicleRow
+from aerona.domain.enums.modifier import IncidentRole
 
 CHAIN_ARROW = " → "
 
@@ -67,14 +67,38 @@ async def recent_chain(session: AsyncSession, node_id: int, depth: int) -> Chain
     return chain if len(chain.incident_ids) > 1 else None
 
 
-async def causality_graph(session: AsyncSession, node_id: int) -> dict[int, list[int]]:
-    own = list(await session.scalars(select(IncidentParticipantRow.incident_id).where(IncidentParticipantRow.node_id == node_id)))
-    graph: dict[int, list[int]] = defaultdict(list)
-    for incident_id in own:
-        row = await session.get(IncidentRow, incident_id)
-        if row is not None and row.cause_incident_id is not None:
-            graph[row.cause_incident_id].append(row.id)
-    return dict(graph)
+@dataclass(frozen=True)
+class CausalGraph:
+    incidents: dict[int, IncidentRow]
+    roles: dict[int, IncidentRole]
+    texts: dict[int, str]
+    edges: tuple[tuple[int, int], ...]
+
+
+async def causality_graph(session: AsyncSession, node_id: int, depth: int) -> CausalGraph:
+    roles: dict[int, IncidentRole] = {}
+    for incident_id, role in await session.execute(
+        select(IncidentParticipantRow.incident_id, IncidentParticipantRow.role)
+        .where(IncidentParticipantRow.node_id == node_id)
+        .order_by(IncidentParticipantRow.incident_id)
+    ):
+        roles.setdefault(incident_id, role)
+    rows: dict[int, IncidentRow] = {row.id: row for row in await session.scalars(select(IncidentRow).where(IncidentRow.id.in_(list(roles))))} if roles else {}
+    for incident_id in list(rows):
+        current = rows[incident_id].cause_incident_id
+        steps = 0
+        while current is not None and current not in rows and steps < depth:
+            parent = await session.get(IncidentRow, current)
+            if parent is None:
+                break
+            rows[parent.id] = parent
+            current = parent.cause_incident_id
+            steps += 1
+    if roles:
+        for child in await session.scalars(select(IncidentRow).where(IncidentRow.cause_incident_id.in_(list(roles)))):
+            rows.setdefault(child.id, child)
+    edges = tuple(sorted((row.cause_incident_id, row.id) for row in rows.values() if row.cause_incident_id is not None and row.cause_incident_id in rows))
+    return CausalGraph(rows, roles, await _texts(session, rows), edges)
 
 
 async def last_incident(session: AsyncSession, node_id: int, templates: tuple[str, ...]) -> IncidentRow | None:

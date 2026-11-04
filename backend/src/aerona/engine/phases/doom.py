@@ -136,6 +136,8 @@ async def destroy_leakiest_world(ctx: TickContext) -> None:
     "table.war_sides",
     "table.wars",
 )
+@reads("people.martiality", "settlement.defense", "table.modifiers")
+@writes("people.martiality", "people.prosperity", "settlement.defense")
 @writes(
     "settlement.prosperity",
     "table.chronicle",

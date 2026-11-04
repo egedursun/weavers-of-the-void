@@ -140,6 +140,10 @@ async def tradition_card(session: AsyncSession, entity_id: int) -> TraditionCard
     return TraditionCard(
         kind=row.kind,
         calendar_slot=row.calendar_slot,
+        season_position=row.season_position,
+        calendar_entity_id=row.calendar_entity_id,
+        notable_year_id=row.notable_year_id,
+        in_season=row.in_season,
         cost=row.cost,
         effects=row.effects,
         taboo_target=row.taboo_target,

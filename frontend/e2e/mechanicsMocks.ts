@@ -37,6 +37,7 @@ export const NODE_MECHANICS: Schemas['NodeMechanicsView'] = {
       start_epoch: 12,
       end_epoch: null,
       decay_pct: null,
+    held: false,
     },
   ],
   effective: [{ key: 'strength', base: 60, value: 51, applied: [3], ignored: [] }],

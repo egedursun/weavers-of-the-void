@@ -50,6 +50,7 @@ import {
   labelTable,
 } from '../mind/labels'
 import { ControlPanel, MindCard, MindPicker } from '../mind/parts'
+import { StressCard } from '../mortal/MortalSections'
 
 const PERCENT = 100
 const VALUE_MIN = -100
@@ -567,6 +568,9 @@ export function MindSection({ nodeId }: { nodeId: number }) {
             <Temperament mind={mind} blocked={reason()} />
             <Needs mind={mind} />
             <Pressures mind={mind} />
+            {mind.holder === 'personal' && (
+              <StressCard mortalId={mind.node_id} />
+            )}
           </div>
           <MindControls mind={mind} />
         </div>

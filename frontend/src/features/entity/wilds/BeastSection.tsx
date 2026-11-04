@@ -55,6 +55,14 @@ import { COMMODITY } from '../economy/labels'
 import { PERCENT, busyOf } from '../lore/model'
 import { MindPicker } from '../mind/parts'
 import {
+  Abilities,
+  SlayControl,
+  TreasureControls,
+  Treasures,
+} from './BeastExtras'
+import { FoodWebGraph } from './FoodWebGraph'
+import { HerdDrop } from './WildControls'
+import {
   type BeastCard,
   type HerdView,
   useBeast,
@@ -533,6 +541,8 @@ function BeastControls({ id, card, blocked }: Blocked) {
             onSave={(next) => edit.mutate({ values: { hoard: next } })}
           />
         </Group>
+        <TreasureControls id={id} card={card} blocked={blocked} />
+        <SlayControl id={id} blocked={blocked} />
       </div>
       <AdjustStats
         id={`beast-${id}`}
@@ -586,6 +596,8 @@ function Body({ id, card, blocked }: Blocked) {
         <Domain card={card} />
         <Hoard card={card} />
         <Wounds card={card} />
+        <Abilities card={card} />
+        <Treasures card={card} />
       </div>
       <BeastControls id={id} card={card} blocked={blocked} />
     </div>
@@ -670,6 +682,12 @@ function HerdCard({
         <Badge size='sm' variant={BADGE_OF[spec.tone ?? 'gold']}>
           {spec.label}
         </Badge>
+        <HerdDrop
+          communityId={community}
+          speciesId={row.species?.id ?? 0}
+          name={row.species?.name ?? 'this kind'}
+          blocked={blocked}
+        />
       </div>
       <div className='grid min-w-0 grid-cols-2 gap-2'>
         <MiniStat
@@ -806,7 +824,6 @@ export function FoodWebSection({ regionId }: { regionId: number }) {
   const view = useFoodWeb(regionId)
   if (!view.data || view.data.nodes.length === 0) return null
   const web = view.data
-  const nodes = new Map(web.nodes.map((node) => [node.species.id, node]))
   const hunters = new Set(web.links.map((link) => link.hunter_id))
   const top = web.nodes.reduce((best, node) =>
     node.abundance > best.abundance ? node : best
@@ -814,22 +831,6 @@ export function FoodWebSection({ regionId }: { regionId: number }) {
   const grazers = web.nodes.filter((node) =>
     ['herbivore', 'filter', 'photosynthetic'].includes(node.diet)
   ).length
-  const glyph = (id: number) => {
-    const node = nodes.get(id)
-    const diet = named(DIET, node?.diet ?? 'omnivore')
-    return (
-      <span className='flex min-w-0 flex-1 basis-0 items-center gap-1.5'>
-        <Medallion icon={diet.icon} tone={diet.tone} size='sm' />
-        <span className='min-w-0 truncate'>
-          {node ? (
-            <Name item={node.species} />
-          ) : (
-            <Muted as='span'>A kind from elsewhere</Muted>
-          )}
-        </span>
-      </span>
-    )
-  }
   return (
     <Section
       id='section-food-web'
@@ -886,25 +887,7 @@ export function FoodWebSection({ regionId }: { regionId: number }) {
               light.
             </Muted>
           ) : (
-            <ul
-              data-surface='FoodWebLinks'
-              className='flex min-w-0 flex-col gap-2'
-            >
-              {web.links.map((link) => (
-                <li
-                  key={`${link.hunter_id}.${link.prey_id}`}
-                  className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
-                >
-                  {glyph(link.hunter_id)}
-                  <Badge size='sm' variant='destructive'>
-                    <Crosshair />
-                    hunts
-                    <ArrowRight />
-                  </Badge>
-                  {glyph(link.prey_id)}
-                </li>
-              ))}
-            </ul>
+            <FoodWebGraph web={web} />
           )}
         </Card>
         <ul

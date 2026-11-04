@@ -114,6 +114,7 @@ class QuoteView(ApiModel):
     demand: int
     imported: int
     exported: int
+    swing: int = 0
 
 
 class CommunityEconomyView(ApiModel):
@@ -185,6 +186,7 @@ class PricePoint(ApiModel):
     demand: int
     imported: int
     exported: int
+    swing: int = 0
 
 
 class PriceSeries(ApiModel):
@@ -340,7 +342,7 @@ class MarketSummary(ApiModel):
     entity_type: EntityType
 
 
-class SlotView(ApiModel):
+class MaterialSlotView(ApiModel):
     slot: MaterialSlot
     material: MaterialKind | None
     world_material_id: int | None
@@ -362,7 +364,7 @@ class NodeMaterialsView(ApiModel):
     node_id: int
     entity_type: EntityType
     world_id: int | None
-    slots: list[SlotView]
+    slots: list[MaterialSlotView]
     open_slots: list[MaterialSlot]
     foe_natures: list[FoeNature]
 

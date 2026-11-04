@@ -15,7 +15,7 @@ from tests.tools.factories import DESCRIPTION, Realm, seed_realm, son_toolkit
 from tests.tools.test_son_tools import entity, ok
 
 CASES: dict[str, tuple[EntityType, dict[str, Any]]] = {
-    "create_species": (EntityType.SPECIES, {"name": "Saltdrakes", "body_plan": "serpentine"}),
+    "create_species": (EntityType.SPECIES, {"name": "Saltdrakes", "body_plan": "serpentine", "size_class": "large", "diet": "carnivore"}),
     "create_mortal": (EntityType.MORTAL, {"name": "Orsa Venn", "title": "the Keeper"}),
     "found_tradition": (EntityType.TRADITION, {"name": "Brine Rite"}),
     "found_cult": (EntityType.CULT, {"name": "Order of the Tide"}),

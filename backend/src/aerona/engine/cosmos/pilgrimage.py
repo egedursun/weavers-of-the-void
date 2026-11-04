@@ -9,6 +9,7 @@ from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.engine.context import TickContext
+from aerona.engine.environment.places import holy_place_ids
 from aerona.engine.notes import note
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.queries import add_flag, canon, connect, flags_by_entity, living_entity
@@ -18,11 +19,13 @@ from aerona.rules.registry import Rules
 SITE_TYPES = frozenset({EntityType.PLACE, EntityType.STRUCTURE, EntityType.REGION})
 
 
-async def holy_sites(session: AsyncSession, world_id: int, son_id: int | None) -> list[EntityRow]:
+async def holy_sites(session: AsyncSession, world_id: int, son_id: int | None, rules: Rules) -> list[EntityRow]:
     marked = await flags_by_entity(session, EntityFlag.PILGRIMAGE_SITE)
+    sacred = await holy_place_ids(session, rules, world_id)
+    rank = {place_id: index for index, place_id in enumerate(sacred)}
     found: list[EntityRow] = []
     for entity in await canon(session, SITE_TYPES, world_id):
-        if entity.id in marked:
+        if entity.id in marked or entity.id in rank:
             found.append(entity)
             continue
         profile = await session.get(StructureProfileRow, entity.id) if entity.entity_type is EntityType.STRUCTURE else None
@@ -35,20 +38,20 @@ async def holy_sites(session: AsyncSession, world_id: int, son_id: int | None) -
         patron = await living_patron(session, home) if home is not None else None
         if patron is not None and patron.id == son_id:
             found.append(entity)
-    return sorted(found, key=lambda site: (site.id not in marked, site.id))
+    return sorted(found, key=lambda site: (site.id not in marked and site.id not in rank, rank.get(site.id, len(rank)), site.id))
 
 
-async def has_holy_site(session: AsyncSession, community: EntityRow, world_id: int) -> bool:
+async def has_holy_site(session: AsyncSession, community: EntityRow, world_id: int, rules: Rules) -> bool:
     patron = await living_patron(session, community)
     if patron is None:
-        return bool(await holy_sites(session, world_id, None))
+        return bool(await holy_sites(session, world_id, None, rules))
     world = await session.get(WorldRow, world_id)
-    return (world is not None and world.patron_son_id == patron.id) or bool(await holy_sites(session, world_id, patron.id))
+    return (world is not None and world.patron_son_id == patron.id) or bool(await holy_sites(session, world_id, patron.id, rules))
 
 
 async def reach_holy_site(ctx: TickContext, rules: Rules, pilgrims: EntityRow, world_id: int, landing: EntityRow) -> tuple[EntityRow, str]:
     patron = await living_patron(ctx.session, pilgrims)
-    sites = await holy_sites(ctx.session, world_id, patron.id if patron is not None else None)
+    sites = await holy_sites(ctx.session, world_id, patron.id if patron is not None else None, rules)
     site = sites[0] if sites else landing
     await add_flag(ctx.session, site.id, EntityFlag.PILGRIMAGE_SITE, ctx.epoch)
     if not await BondRepository(ctx.session).exists_between(pilgrims.id, site.id, BondKind.CELEBRATES):

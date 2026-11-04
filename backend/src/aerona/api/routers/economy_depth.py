@@ -3,7 +3,7 @@ from sqlalchemy import select
 
 from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.routers.economy import names_of, rules_of
-from aerona.api.schemas.economy import DebtLawView, MarketHoldsView, NodeMaterialsView, PremiumView, SlotView, WorkshopDesignView
+from aerona.api.schemas.economy import DebtLawView, MarketHoldsView, MaterialSlotView, NodeMaterialsView, PremiumView, WorkshopDesignView
 from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.laws import LAW_PARAMS
 from aerona.catalog.production import WORKSHOP_LABELS
@@ -66,13 +66,13 @@ async def node_materials(services: ServicesDep, node_id: int = Path(ge=1)) -> No
         rules, _ = await rules_of(session)
         book = await MaterialBook.load(session)
         rows = list(await session.scalars(select(NodeMaterialRow).where(NodeMaterialRow.node_id == node_id).order_by(NodeMaterialRow.slot)))
-        slots: list[SlotView] = []
+        slots: list[MaterialSlotView] = []
         for row in rows:
             props = book.props(entity.world_id, row.material, row.world_material_id)
             if props is None:
                 continue
             slots.append(
-                SlotView(
+                MaterialSlotView(
                     slot=row.slot,
                     material=row.material,
                     world_material_id=row.world_material_id,

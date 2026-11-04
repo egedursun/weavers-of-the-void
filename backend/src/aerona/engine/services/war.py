@@ -26,6 +26,7 @@ from aerona.engine.body.book import effective
 from aerona.engine.context import TickContext
 from aerona.engine.demography.labour import fighting_age, mobilisation
 from aerona.engine.economy.equipment import equip_army
+from aerona.engine.gods.incitement import held_incitement
 from aerona.engine.interconnect.flows import flowing
 from aerona.engine.mind.hooks import freed, taken_captive
 from aerona.engine.primitives.levies import levy, levy_category
@@ -294,6 +295,9 @@ async def open_war(
         cause = origin.war_cause
     if incited_by_son_id is None and origin is not None:
         incited_by_son_id = origin.incited_by_son_id
+    held, kept = await held_incitement(ctx.session, ctx.epoch, attacker.id, defender.id)
+    if held:
+        incited_by_son_id = kept
     location = defender.id if defender.entity_type is EntityType.SETTLEMENT else defender.location_id
     namer = Namer(ctx.session, ctx.rules)
     seed = seed_of(attacker.id, defender.id, ctx.epoch, "war")

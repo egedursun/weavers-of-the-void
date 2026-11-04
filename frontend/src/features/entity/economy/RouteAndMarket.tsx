@@ -5,6 +5,7 @@ import {
   ArrowUpFromLine,
   CalendarClock,
   CalendarRange,
+  CloudSun,
   Check,
   DoorClosed,
   DoorOpen,
@@ -80,6 +81,8 @@ const BASE = 100
 const PERCENT = 100
 const DEAR = 2
 const CHEAP = 2
+
+const SWING_WIDE = 20
 
 function priceTone(price: number): KpiTone {
   if (price > BASE * DEAR) return 'danger'
@@ -170,6 +173,14 @@ function PriceCard({ series }: { series: Series }) {
           label='Sold out to other markets'
           value={`${formatInteger(last.exported)} out`}
           tone='success'
+        />
+      </div>
+      <div data-surface='chart-market-swing' className='min-w-0'>
+        <IconStat
+          icon={CloudSun}
+          label='How far the sampled years swung the price'
+          value={`±${formatInteger(last.swing)}% across the years`}
+          tone={last.swing >= SWING_WIDE ? 'warning' : 'muted'}
         />
       </div>
     </li>

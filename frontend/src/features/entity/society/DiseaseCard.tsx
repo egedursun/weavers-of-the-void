@@ -3,6 +3,7 @@ import {
   Activity,
   Biohazard,
   CircleSlash,
+  CloudRain,
   Dna,
   EyeOff,
   FlaskConical,
@@ -195,6 +196,17 @@ function OutbreakItem({
             </Badge>
           )}
           <OutbreakHolds item={item} />
+          {item.season_factor !== 100 && (
+            <Badge
+              size='sm'
+              variant={item.season_factor > 100 ? 'warning' : 'secondary'}
+            >
+              <CloudRain />
+              {item.season_factor > 100
+                ? `Sickly season ×${(item.season_factor / 100).toFixed(1)}`
+                : `Kind season ×${(item.season_factor / 100).toFixed(1)}`}
+            </Badge>
+          )}
           <EntityLink kind='entity' id={String(item.region_id)} showIcon>
             Open the land
           </EntityLink>

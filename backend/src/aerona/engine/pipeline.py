@@ -49,6 +49,7 @@ from aerona.engine.phases import (
     god_death,
     god_power,
     grudges,
+    happenings,
     heroes,
     heroism,
     horror,
@@ -67,15 +68,18 @@ from aerona.engine.phases import (
     migration,
     mind,
     monsters,
+    mortal_life,
     mortals,
     native_faith,
     pantheon,
+    places,
     population,
     prisoners,
     production,
     prosperity,
     realms,
     refugees,
+    regions,
     religion_spread,
     remembrance,
     reputation,
@@ -110,6 +114,7 @@ Finalizer = Callable[[AsyncSession], Awaitable[None]]
 LOGGER = logging.getLogger(__name__)
 FAILED_COUNTER = "failed"
 DISABLED_COUNTER = "disabled"
+OVER_BUDGET_PHASE = "tick_over_budget"
 
 EXPORTED_PHASES: tuple[Phase, ...] = (
     records.PHASES
@@ -160,12 +165,14 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + language_death.PHASES
     + life_seed.PHASES
     + living_stats.PHASES
+    + places.PHASES
     + magic.PHASES
     + market.PHASES
     + mechanics_assignment.PHASES
     + migration.PHASES
     + monsters.PHASES
     + mortals.PHASES
+    + mortal_life.PHASES
     + native_faith.PHASES
     + pantheon.PHASES
     + population.PHASES
@@ -198,6 +205,8 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + settlement_life.PHASES
     + structures.PHASES
     + demography.PHASES
+    + happenings.PHASES
+    + regions.PHASES
 )
 PHASE_REGISTRY: dict[str, Phase] = {phase.name: phase for phase in EXPORTED_PHASES}
 
@@ -211,8 +220,11 @@ CLEANUP_STAGE = stage(
     "modifier_upkeep",
     "world_maps",
     "environment_survey",
+    "environment_modifiers",
+    "region_survey",
     "mind_survey",
     "body_survey",
+    "mortal_survey",
     "economy_survey",
     "structure_survey",
     "expire_truces",
@@ -233,6 +245,8 @@ SUB_ENGINE_STAGE = stage(
     "travel",
     "exploration",
     "geography",
+    "place_profiles",
+    "place_secrets",
     "resource_mechanics",
     "mechanics_assignment",
     "cosmic_economy",
@@ -275,6 +289,8 @@ SOCIETY_STAGE = stage(
     "knowledge_diffusion",
     "cultural_exchange",
     "natural_disasters",
+    "danger_harm",
+    "terrain_hazards",
     "famine_migration",
     "refugees",
     "disaster_casualties",
@@ -282,6 +298,7 @@ SOCIETY_STAGE = stage(
     "uprisings",
     "spirits_rest",
     "hauntings",
+    "sacred_pilgrims",
     "settlement_laws",
     "currency",
     "wizards",
@@ -331,17 +348,31 @@ SOCIETY_ENGINE_STAGE = stage(
     "ruins",
     "settlement_cycles",
     "land_use",
+    "geomorphology",
     "material_decay",
     "institution_cycles",
     "culture_cycles",
     "tradition_cycles",
     "people_cycles",
     "remembrance",
+    "event_phases",
     "item_cycles",
     "artwork_cycles",
 )
-AGING_STAGE = stage("body_healing", "mortal_wounds", "body_conditions", "body_society", "mortal_aging", "dead_bonds_closing")
-MIND_STAGE = stage("mind_values", "mind_skills", "mind_memories", "mind_needs", "famine_aid", "mind_opinion", "incident_threads")
+AGING_STAGE = stage("body_healing", "mortal_wounds", "body_conditions", "body_society", "mortal_life_course", "mortal_aging", "dead_bonds_closing")
+MIND_STAGE = stage(
+    "mind_values",
+    "mind_skills",
+    "mind_memories",
+    "mind_needs",
+    "mortal_kin",
+    "mortal_standing",
+    "mortal_minds",
+    "famine_aid",
+    "mind_opinion",
+    "ethnic_relations",
+    "incident_threads",
+)
 
 TICK_ORDER: tuple[Phase, ...] = (
     CLEANUP_STAGE + GRUDGE_STAGE + SUB_ENGINE_STAGE + RAID_STAGE + ECONOMY_STAGE + SOCIETY_STAGE + SOCIETY_ENGINE_STAGE + AGING_STAGE + MIND_STAGE
@@ -446,6 +477,15 @@ async def run_phases(
     return environment.stats
 
 
+def warn_over_budget(environment: TickEnvironment) -> float | None:
+    target = environment.rules.engine_budget.tick_target_seconds
+    seconds = environment.stats.over_budget(target)
+    if seconds is not None:
+        LOGGER.warning("Engine tick of epoch %s took %.1f s, over its %s s target", environment.epoch, seconds, target)
+        environment.publish(EventKind.ENGINE_PHASE, {"epoch": environment.epoch, "phase": OVER_BUDGET_PHASE, "seconds": seconds, "target": target})
+    return seconds
+
+
 async def run_tick(
     environment: TickEnvironment,
     database: Database,
@@ -457,6 +497,7 @@ async def run_tick(
     async with database.read() as session:
         since = await last_chronicle_id(session)
     await run_phases(environment, database, phases, disabled)
+    warn_over_budget(environment)
     async with database.write() as session:
         fold = await fold_tick_lines(session, environment.rules, environment.epoch, since)
         await store_tick_flows(session, environment.epoch, environment.stats.flows)

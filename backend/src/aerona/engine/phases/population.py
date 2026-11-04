@@ -21,6 +21,7 @@ from aerona.engine.primitives.capacity import GROWING_TYPES, LAND_COMMUNITY_TYPE
 from aerona.engine.primitives.faith import faith_dominance, faith_shares, has_unlocked_power, living_patron
 from aerona.engine.primitives.knowledge import LawBook
 from aerona.engine.primitives.ledger import LedgerKey, record
+from aerona.engine.primitives.modifiers import GROWTH_KEY, LIVE_MODIFIERS, virtual_value
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.society import supply_index
@@ -32,11 +33,16 @@ async def total_population(ctx: TickContext) -> int:
 
 
 @reads("people.population", "settlement.population")
+@writes(
+    "table.epoch_stats",
+)
 async def population_baseline(ctx: TickContext) -> None:
     record(ctx, LedgerKey.POPULATION_START, await total_population(ctx))
 
 
 async def bounty_multiplier(ctx: TickContext, community: EntityRow) -> float:
+    if LIVE_MODIFIERS.get() is not None:
+        return virtual_value(community.id, GROWTH_KEY)
     patron = await living_patron(ctx.session, community)
     if patron is not None and await has_unlocked_power(ctx.session, ctx.rules, patron, PowerEffect.BOUNTY_GIVER):
         return float(ctx.rules.world_epoch_transition.bounty_power_growth_mult)

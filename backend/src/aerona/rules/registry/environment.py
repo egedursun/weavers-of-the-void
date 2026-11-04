@@ -48,6 +48,7 @@ class EnvironmentRules:
     coast_moderation_pct: int = rule(30, 0, 100, RuleGroup.ENVIRONMENT, "Share of the gap to the sea temperature a coast closes (%)")
     rain_from_moisture_pct: int = rule(100, 0, 300, RuleGroup.ENVIRONMENT, "Rainfall per unit of map moisture (%)")
     coastal_rainfall: int = rule(8, 0, 100, RuleGroup.ENVIRONMENT, "Extra rainfall of coastal regions")
+    forest_rain_pct: int = rule(25, 0, 100, RuleGroup.ENVIRONMENT, "Rainfall a region loses per point of its forest cleared (%)")
     frozen_below: int = rule(15, 0, 100, RuleGroup.ENVIRONMENT, "Temperature below which a region is frozen")
     cold_below: int = rule(30, 0, 100, RuleGroup.ENVIRONMENT, "Temperature below which a region is cold")
     temperate_below: int = rule(50, 0, 100, RuleGroup.ENVIRONMENT, "Temperature below which a region is temperate")
@@ -86,9 +87,11 @@ class EnvironmentRules:
     stream_irrigation_pct: int = rule(4, 0, 100, RuleGroup.ENVIRONMENT, "Fertility a stream adds by watering the fields (%)")
     river_irrigation_pct: int = rule(8, 0, 100, RuleGroup.ENVIRONMENT, "Fertility a river adds by watering the fields (%)")
     great_river_irrigation_pct: int = rule(14, 0, 100, RuleGroup.ENVIRONMENT, "Fertility a great river adds by watering the fields (%)")
-    irrigation_works_pct: int = rule(5, 0, 100, RuleGroup.ENVIRONMENT, "Fertility each irrigating settlement adds by digging canals from a river (%)")
+    irrigation_works_pct: int = rule(5, 0, 100, RuleGroup.ENVIRONMENT, "Fertility each level of irrigation works adds by carrying water to the fields (%)")
     irrigation_works_cap_pct: int = rule(20, 0, 100, RuleGroup.ENVIRONMENT, "Most fertility irrigation works add to a region (%)")
-    irrigation_agriculture_level: int = rule(2, 0, 10, RuleGroup.ENVIRONMENT, "Agriculture level a settlement needs to dig irrigation canals")
+    irrigation_agriculture_level: int = rule(
+        2, 0, 10, RuleGroup.ENVIRONMENT, "Agriculture level that lets a settlement dig irrigation works without the irrigation technique"
+    )
     disease_warmth_pct: int = rule(30, 0, 200, RuleGroup.ENVIRONMENT, "Disease load per point of warmth (%)")
     disease_wetland_pct: int = rule(30, 0, 200, RuleGroup.ENVIRONMENT, "Disease load per point of wetland (%)")
     disease_density_pct: int = rule(30, 0, 200, RuleGroup.ENVIRONMENT, "Disease load per point of crowding and building (%)")
@@ -306,3 +309,4 @@ class CalendarsRules:
 @dataclass(frozen=True)
 class EngineBudgetRules:
     max_sub_steps_per_epoch: int = rule(400, 1, 1000000, RuleGroup.ENGINE_PHASES, "Most campaign seasons and sampled years the engine evaluates in one epoch")
+    tick_target_seconds: int = rule(20, 1, 3600, RuleGroup.ENGINE_PHASES, "Seconds one engine tick of the reference world should stay under")

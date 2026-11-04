@@ -27,7 +27,7 @@ import {
 import { iconTone, materialKey, materialRef, useBusy } from './model'
 import { HeldBadge, MaterialSelect, ReleaseButton } from './parts'
 
-type Slot = components['schemas']['SlotView']
+type Slot = components['schemas']['MaterialSlotView']
 
 const PERCENT = 100
 const SLOT_PROPERTIES = MATERIAL_PROPERTIES.filter(

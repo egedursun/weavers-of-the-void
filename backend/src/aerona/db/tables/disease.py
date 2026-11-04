@@ -50,6 +50,7 @@ class OutbreakRow(Base):
         at_least("dead", 0),
         at_least("started_epoch", 0),
         between("severity", PERCENT_MIN, PERCENT_MAX),
+        at_least("season_factor", 0),
         Index("ix_outbreaks_disease", "disease_entity_id", "status"),
         Index("ix_outbreaks_region", "region_entity_id", "status"),
     )
@@ -68,6 +69,7 @@ class OutbreakRow(Base):
     ended_epoch: Mapped[int | None]
     quarantined: Mapped[bool] = mapped_column(default=False)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+    season_factor: Mapped[int] = mapped_column(default=100)
 
 
 class ImmunityRow(Base):

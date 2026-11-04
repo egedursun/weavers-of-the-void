@@ -8,6 +8,7 @@ from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.schema import SINGLETON_ID
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.db.repositories.chronicle import CAUSE_SCOPE
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.celestial import WorldRow
@@ -20,6 +21,7 @@ from aerona.domain.enums.domain import DEATH_DOMAINS
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.faith import SpiritAlignment
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.models.entity_stats import SpiritStats, TraditionStats
 from aerona.engine.context import TickContext
@@ -27,10 +29,13 @@ from aerona.engine.demography.kinship import heirs_by_custom, inheritance_of
 from aerona.engine.demography.rites import mourning_factor, rite_of, spirit_factor
 from aerona.engine.demography.rites import restless as restless_by_rite
 from aerona.engine.faith.judgement import profile_for
+from aerona.engine.interconnect.causes import killing_incident
 from aerona.engine.lifecycle.aging import immortal, raise_lifespan_to_death_age
 from aerona.engine.lifecycle.succession import dynasty_root, pass_rule
 from aerona.engine.lore.items import record
 from aerona.engine.mind.memories import inherit_memories, mourn
+from aerona.engine.mortal.death import record_end
+from aerona.engine.mortal.kin import children_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, scaled_cap
@@ -64,6 +69,7 @@ async def die(
     mortal: EntityRow,
     *,
     cause: str = DEFAULT_CAUSE,
+    manner: DeathCause | None = None,
     killer_id: int | None = None,
     year: int | None = None,
     natural: bool = False,
@@ -94,6 +100,7 @@ async def die(
     killer_kind = await NodeRepository(session).kind_of(killer_id) if killer_id is not None else None
     if killer_id is not None and killer_kind is not None:
         await connect(session, killer_id, mortal.id, BondKind.KILLED, ctx.epoch, description=cause)
+    await record_end(ctx, mortal, manner or (DeathCause.OLD_AGE if natural else DeathCause.UNKNOWN))
     ctx.count("memories_inherited", await mourn(session, ctx.rules, mortal, killer_id, ctx.epoch))
     heir = await pass_rule(ctx, mortal)
     if heir is not None:
@@ -106,7 +113,9 @@ async def die(
     ids = [mortal.id] + ([heir.id] if heir is not None else []) + ([killer_id] if killer_id is not None and killer_kind is NodeKind.ENTITY else [])
     son_id = killer_id if killer_kind is NodeKind.SON else mortal.creator_son_id
     roles = {mortal.id: IncidentRole.TARGET, **({killer_id: IncidentRole.ACTOR} if killer_id is not None else {})}
-    await note(ctx, text, key="mortal.death.natural" if natural else "mortal.death.cause", ids=ids, son_id=son_id, roles=roles)
+    cause_id = None if natural or killer_id is None or CAUSE_SCOPE.get() is not None else await killing_incident(ctx.session, mortal.id, killer_id)
+    key = "mortal.death.natural" if natural else "mortal.death.cause"
+    await note(ctx, text, key=key, ids=ids, son_id=son_id, roles=roles, cause_incident_id=cause_id)
     await after_death(ctx, mortal)
     await sweep_dead_bonds(session, ctx.epoch, mortal.id)
     if await raise_lifespan_to_death_age(session, ctx.rules, mortal):
@@ -153,7 +162,7 @@ async def _bequeath(ctx: TickContext, mortal: EntityRow) -> None:
         return
     children = [
         child
-        for child in [await living_entity(session, bond.source_node_id) for bond in await active_bonds(session, [BondKind.DESCENDS_FROM], targets=[mortal.id])]
+        for child in [await living_entity(session, child_id) for child_id in await children_of(session, mortal.id)]
         if child is not None and child.entity_type is EntityType.MORTAL
     ]
     heirs = heirs_by_custom(await inheritance_of(session, mortal), children)
@@ -308,11 +317,11 @@ async def after_death(ctx: TickContext, mortal: EntityRow) -> None:
     await _start_mourning(ctx, mortal)
 
 
-async def force_death(ctx: TickContext, mortal_id: int, cause: str) -> DeathResult:
+async def force_death(ctx: TickContext, mortal_id: int, cause: str, manner: DeathCause = DeathCause.DIVINE) -> DeathResult:
     mortal = await living_entity(ctx.session, mortal_id)
     if mortal is None or mortal.entity_type is not EntityType.MORTAL:
         raise ValidationFailedError("Only a living, named mortal's life can be taken.")
-    result = await die(ctx, mortal, cause=cause, forced=True)
+    result = await die(ctx, mortal, cause=cause, manner=manner, forced=True)
     if result is None:
         raise ValidationFailedError("Only a living, named mortal's life can be taken.")
     return result

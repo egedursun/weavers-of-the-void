@@ -71,6 +71,12 @@ class RegionGround(ApiModel):
     land_use: str
     ley_lines: int
     nexus: bool
+    rainfall: int = 0
+    danger: int = 0
+    danger_source: str | None = None
+    sacredness: int = 0
+    scar: str | None = None
+    scar_depth: int = 0
 
 
 class RegionStocks(ApiModel):

@@ -29,3 +29,17 @@ def sampled_years(environment: TickEnvironment, world_id: int, count: int | None
     offsets = sorted(environment.rng(f"years.{world_id}").sample(list(range(years)), wanted))
     base = epoch_start_year(environment.epoch, years)
     return [SampledYear(offset, base + offset) for offset in offsets]
+
+
+def world_years(environment: TickEnvironment, world_id: int, system: str) -> list[SampledYear]:
+    years = sampled_years(environment, world_id)
+    key = f"{system}.{world_id}"
+    granted = environment.stats.grants.get(key)
+    if granted is None:
+        granted = max(1, grant_sub_steps(environment, len(years)))
+        environment.stats.grants[key] = granted
+    return years[:granted]
+
+
+def season_of_year(year: SampledYear, count: int) -> int:
+    return year.year % count if count > 0 else 0

@@ -4,6 +4,7 @@ import {
   BookOpen,
   Church,
   CloudFog,
+  CloudRain,
   Coins,
   Crown,
   Flag,
@@ -23,8 +24,10 @@ import {
   RefreshCw,
   Route,
   Shield,
+  ShieldAlert,
   Sparkles,
   Sprout,
+  Sun,
   Swords,
   Tag,
   Thermometer,
@@ -33,6 +36,7 @@ import {
   Wheat,
   Zap,
   type LucideIcon,
+  PawPrint,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -82,11 +86,16 @@ const LAYER_ICON: Record<LayerMode, LucideIcon> = {
   soil: Sprout,
   climate: Thermometer,
   land_use: Wheat,
+  rainfall: CloudRain,
+  danger: ShieldAlert,
+  scars: Swords,
+  sacred: Sun,
   ley: Sparkles,
   population: Users,
   followers: Flame,
   soldiers: Shield,
   wildlife: Leaf,
+  species_range: PawPrint,
 }
 
 const OVERLAY_ICON: Record<Overlay, LucideIcon> = {

@@ -8,11 +8,14 @@ from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.military import CommanderTraitRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, WarRow
 from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.chronicle import FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, HERO_ROLES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.military import CommanderTrait
+from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.domain.models.entity_stats import MortalStats
@@ -21,6 +24,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits, fatal_injury
+from aerona.engine.mortal.standing import add_renown
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import DISASTER_KINDS
@@ -39,6 +43,7 @@ from aerona.rules.registry import Rules
 
 FIGHTER_ROLES = HERO_ROLES | {MortalRole.CAPTAIN, MortalRole.BANDIT}
 COMMANDER_SUBTYPES = ("commander", "standard bearer", "raider captain", "guard captain")
+DECAPITATORS = frozenset({CommanderTrait.BRUTAL, CommanderTrait.AGGRESSIVE_ASSAULTER})
 HOLY_COMMANDER_SUBTYPE = "guard captain"
 KIND_OF_DISASTER = {kind: disaster for disaster, kind in DISASTER_KINDS.items()}
 STAT_KEYS = ("strength", "agility", "intellect", "charisma")
@@ -110,7 +115,7 @@ async def fall(ctx: TickContext, mortal: EntityRow, cause: str, killer_id: int |
     )
     if mortal.status is EntityStatus.CANON and flag not in BLOODLESS_FALLS:
         await fatal_injury(ctx, mortal, harm)
-    if not await death_path(ctx, mortal, cause, killer_id, cause, event_id=event.id if event is not None else None):
+    if not await death_path(ctx, mortal, cause, killer_id, cause, event_id=event.id if event is not None else None, manner=DeathCause.BATTLE):
         return False
     await add_flag(ctx.session, mortal.id, flag, ctx.epoch)
     if event is not None and event.id != killer_id:
@@ -168,6 +173,7 @@ async def _side_losses(ctx: TickContext, clash: Clash, sides: SideIndex, side_id
     enemy_id = clash.loser_id if victor else clash.winner_id
     side_commander = await commander_of_side(ctx, clash.war_id, side_id)
     rng = ctx.rng(seed_of("clash", clash.event.id, side_id))
+    hunted = await decapitation(ctx, clash.war_id, enemy_id)
     fallen = 0
     for mortal in sides.heroes_of(side_id):
         if fallen >= losses.clash_cap or count.dead >= losses.epoch_cap:
@@ -181,6 +187,8 @@ async def _side_losses(ctx: TickContext, clash: Clash, sides: SideIndex, side_id
         chance = death_chance(ctx.rules, clash, victor=victor, commander=commander, fighter=fighter)
         if chance is None:
             continue
+        if commander and hunted:
+            chance = min(100.0, chance * ctx.rules.standing.decapitation_exposure_pct / 100)
         killer = await _killer(ctx, clash, sides, enemy_id, marks)
         killer_id = killer.id if killer is not None else None
         against = f" facing {killer.name}" if killer is not None and fighter else ""
@@ -205,7 +213,17 @@ async def _side_losses(ctx: TickContext, clash: Clash, sides: SideIndex, side_id
                 count.dead += 1
             elif outcome is WoundOutcome.WOUNDED:
                 count.wounded += 1
+        elif fighter and victor:
+            await add_renown(ctx.session, mortal.id, ctx.rules.standing.glory_renown, ctx.epoch)
     return fallen
+
+
+async def decapitation(ctx: TickContext, war_id: int, enemy_id: int) -> bool:
+    commander = await commander_of_side(ctx, war_id, enemy_id)
+    if commander is None:
+        return False
+    traits = set(await ctx.session.scalars(select(CommanderTraitRow.trait).where(CommanderTraitRow.mortal_entity_id == commander.id)))
+    return bool(traits & DECAPITATORS)
 
 
 async def _captive_chaos(ctx: TickContext, clash: Clash, count: CasualtyCount) -> None:

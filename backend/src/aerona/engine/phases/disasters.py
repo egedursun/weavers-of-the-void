@@ -15,6 +15,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.happenings import RegionGeomorphRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
@@ -22,7 +23,9 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind
+from aerona.domain.enums.happening import EventPhase
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.settlement import DistrictHarm
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.structure import StructureKind
@@ -36,8 +39,10 @@ from aerona.engine.disease.harm import disease_harm, lasting_illness
 from aerona.engine.disease.outbreaks import STRIKING, disease_for, lethality_factor, open_outbreak, spread_factor, tally
 from aerona.engine.economy.routes import trade_links
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment
+from aerona.engine.environment.geomorph import erupted, eruption_chance, quaked, river_after_flood, shapes_by_region
 from aerona.engine.environment.notable import remember_event_year
 from aerona.engine.environment.profile import RIVER_RANK
+from aerona.engine.happenings.profile import add_footprint, derive_footprint, flow_of, open_profile, record_casualties
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits, fatal_injury
@@ -64,6 +69,8 @@ DISASTER_DAMAGE: dict[Disaster, DamageType] = {
     Disaster.PLAGUE: DamageType.VENOM,
     Disaster.DROUGHT: DamageType.VENOM,
     Disaster.STORM: DamageType.BLUNT,
+    Disaster.ERUPTION: DamageType.FIRE,
+    Disaster.VOLCANIC_QUAKE: DamageType.BLUNT,
 }
 
 DISASTER_KINDS: dict[Disaster, EngineKind] = {
@@ -72,7 +79,10 @@ DISASTER_KINDS: dict[Disaster, EngineKind] = {
     Disaster.PLAGUE: EngineKind.PLAGUE,
     Disaster.DROUGHT: EngineKind.DROUGHT,
     Disaster.STORM: EngineKind.STORM,
+    Disaster.ERUPTION: EngineKind.ERUPTION,
+    Disaster.VOLCANIC_QUAKE: EngineKind.EARTHQUAKE,
 }
+SHAKING = frozenset({Disaster.EARTHQUAKE, Disaster.VOLCANIC_QUAKE, Disaster.ERUPTION})
 STRUCK_TYPES = frozenset({*COMMUNITY_TYPES, EntityType.STRUCTURE})
 SPREAD_BOND_KINDS = (BondKind.PAYS_TRIBUTE, BondKind.RULES)
 HIGHLANDS = frozenset({ElevationClass.MOUNTAINOUS, ElevationClass.HILLY})
@@ -89,6 +99,8 @@ class DisasterImpact:
 DISTRICT_HARMS: Mapping[Disaster, DistrictHarm] = MappingProxyType(
     {
         Disaster.EARTHQUAKE: DistrictHarm.EARTHQUAKE,
+        Disaster.VOLCANIC_QUAKE: DistrictHarm.EARTHQUAKE,
+        Disaster.ERUPTION: DistrictHarm.EARTHQUAKE,
         Disaster.FLOOD: DistrictHarm.FLOOD,
         Disaster.STORM: DistrictHarm.STORM,
         Disaster.DROUGHT: DistrictHarm.DROUGHT,
@@ -144,6 +156,8 @@ async def _strike_mortal(ctx: TickContext, mortal: EntityRow, disaster: Disaster
         Disaster.PLAGUE: effects.plague_mortal_death_chance,
         Disaster.DROUGHT: effects.drought_mortal_death_chance,
         Disaster.STORM: effects.storm_mortal_death_chance,
+        Disaster.ERUPTION: ctx.rules.geomorphology.eruption_mortal_death_chance,
+        Disaster.VOLCANIC_QUAKE: effects.earthquake_mortal_death_chance * ctx.rules.geomorphology.volcanic_quake_pct / PERCENT,
     }
     medicine = knowledge.ratio(ctx.rules, mortal.id, KnowledgeBranch.MEDICINE, effects.medicine_plague_severity) if disaster is Disaster.PLAGUE else 1.0
     rng = ctx.rng(f"disaster_mortal.{mortal.id}")
@@ -155,7 +169,7 @@ async def _strike_mortal(ctx: TickContext, mortal: EntityRow, disaster: Disaster
     if rng.chance(death_chances[disaster] * scale * medicine):
         if disaster is not Disaster.PLAGUE:
             await fatal_injury(ctx, mortal, replace(harm, death_cause=phrase))
-        return await death_path(ctx, mortal, phrase)
+        return await death_path(ctx, mortal, phrase, manner=DeathCause.DISASTER)
     if not rng.chance(effects.disaster_injury_chance):
         return False
     profile = STRIKING.get() if disaster is Disaster.PLAGUE else None
@@ -168,13 +182,21 @@ async def _strike_mortal(ctx: TickContext, mortal: EntityRow, disaster: Disaster
     return wounding.outcome is WoundOutcome.DIED
 
 
-async def _quake_structure(ctx: TickContext, structure: EntityRow, scale: float, knowledge: KnowledgeMap) -> bool:
+def shaking_loss(rules: Rules, disaster: Disaster) -> float:
+    if disaster is Disaster.ERUPTION:
+        return float(rules.geomorphology.eruption_durability_loss)
+    strength = rules.geomorphology.volcanic_quake_pct / PERCENT if disaster is Disaster.VOLCANIC_QUAKE else 1.0
+    return rules.intervention_effects.earthquake_durability_loss * strength
+
+
+async def _quake_structure(ctx: TickContext, structure: EntityRow, scale: float, knowledge: KnowledgeMap, disaster: Disaster = Disaster.EARTHQUAKE) -> bool:
     effects = ctx.rules.intervention_effects
     sturdy = structure.maker_entity_id is not None and knowledge.knows(structure.maker_entity_id, KnowledgeBranch.ARCHITECTURE)
-    loss = await quake_loss(ctx, structure, effects.earthquake_durability_loss * (fraction(effects.architecture_quake_severity) if sturdy else 1.0) * scale)
+    label = DISASTERS[disaster].label.lower()
+    loss = await quake_loss(ctx, structure, shaking_loss(ctx.rules, disaster) * (fraction(effects.architecture_quake_severity) if sturdy else 1.0) * scale)
     profile = await ctx.session.get(StructureProfileRow, structure.id)
     if profile is not None:
-        if not await harm(ctx, structure, profile, loss, cause="the earthquake", quiet=True):
+        if not await harm(ctx, structure, profile, loss, cause=f"the {label}", quiet=True):
             return False
     else:
         durability = stat(structure, "durability")
@@ -184,7 +206,7 @@ async def _quake_structure(ctx: TickContext, structure: EntityRow, scale: float,
         set_stats(structure, durability=remaining)
         if remaining > 0:
             return False
-    await EntityRepository(ctx.session).set_status(structure, EntityStatus.DESTROYED, ctx.epoch, "Collapsed in the earthquake.")
+    await EntityRepository(ctx.session).set_status(structure, EntityStatus.DESTROYED, ctx.epoch, f"Collapsed in the {label}.")
     return True
 
 
@@ -192,6 +214,11 @@ def _strike_stats(rules: Rules, entity: EntityRow, disaster: Disaster, scale: fl
     effects = rules.intervention_effects
     if disaster is Disaster.EARTHQUAKE:
         _reduce(rules, entity, POPULATION_KEY, fraction(effects.earthquake_population_loss) * scale)
+    elif disaster is Disaster.VOLCANIC_QUAKE:
+        _reduce(rules, entity, POPULATION_KEY, fraction(effects.earthquake_population_loss) * scale * rules.geomorphology.volcanic_quake_pct / PERCENT)
+    elif disaster is Disaster.ERUPTION:
+        _reduce(rules, entity, POPULATION_KEY, fraction(rules.geomorphology.eruption_population_loss) * scale)
+        _drop(entity, "prosperity", rules.geomorphology.eruption_prosperity_loss * scale)
     elif disaster is Disaster.FLOOD:
         _drop(entity, "prosperity", effects.flood_prosperity_loss * scale)
         _reduce(rules, entity, POPULATION_KEY, fraction(effects.flood_population_loss) * scale)
@@ -230,7 +257,7 @@ async def apply_disaster(ctx: TickContext, target: EntityRow, disaster: Disaster
         if disaster is Disaster.FLOOD:
             scale *= 1 - await strength_at(ctx.session, entity.id, [StructureKind.DAM]) * ctx.rules.structure_functions.dam_flood_cut_pct / PERCENT
         before = headcount_value(entity)
-        if disaster is Disaster.EARTHQUAKE and entity.entity_type is EntityType.STRUCTURE and await _quake_structure(ctx, entity, scale, knowledge):
+        if disaster in SHAKING and entity.entity_type is EntityType.STRUCTURE and await _quake_structure(ctx, entity, scale, knowledge, disaster):
             impact.destroyed.append(entity)
             continue
         _strike_stats(ctx.rules, entity, disaster, scale, knowledge)
@@ -277,7 +304,19 @@ async def record_disaster_event(ctx: TickContext, target: EntityRow, disaster: D
             await bonds.connect(BondDraft(event.id, mortal.id, BondKind.CAUSED, ctx.epoch, "died there"))
         for structure in impact.destroyed:
             await bonds.connect(BondDraft(event.id, structure.id, BondKind.CAUSED, ctx.epoch, "was destroyed"))
+        await record_impact(ctx, event, impact)
     return event
+
+
+async def record_impact(ctx: TickContext, event: EntityRow, impact: DisasterImpact) -> int:
+    await open_profile(ctx, event)
+    await derive_footprint(ctx.session, await RegionAtlas.load(ctx.session), event, ctx.epoch)
+    dead = 0
+    for entity_id, loss in sorted(impact.losses.items()):
+        community = await ctx.session.get(EntityRow, entity_id)
+        if community is not None and loss:
+            dead += await record_casualties(ctx, event.id, community, loss, category=flow_of(event.engine_kind), phase=EventPhase.ONSET)
+    return dead
 
 
 @dataclass
@@ -320,15 +359,27 @@ def flood_chance(rules: Rules, coastal: bool, ground: RegionEnvironmentRow | Non
 
 
 def region_candidates(
-    ctx: TickContext, region: EntityRow, atlas: RegionAtlas, population: int, laws: LawBook, *, ground: RegionEnvironmentRow | None = None, tidal: int = 0
+    ctx: TickContext,
+    region: EntityRow,
+    atlas: RegionAtlas,
+    population: int,
+    laws: LawBook,
+    *,
+    ground: RegionEnvironmentRow | None = None,
+    tidal: int = 0,
+    shape: RegionGeomorphRow | None = None,
 ) -> list[tuple[Disaster, float]]:
     settings = ctx.rules.disasters
     record = atlas.record(region.id)
     if record is None:
         return []
     candidates: list[tuple[Disaster, float]] = []
-    if record.elevation_class in HIGHLANDS:
-        candidates.append((Disaster.EARTHQUAKE, settings.earthquake_chance))
+    volcanic = shape is not None and shape.volcanic
+    if record.elevation_class in HIGHLANDS or volcanic:
+        candidates.append((Disaster.VOLCANIC_QUAKE if volcanic else Disaster.EARTHQUAKE, settings.earthquake_chance))
+    eruption = eruption_chance(ctx.rules, shape)
+    if eruption:
+        candidates.append((Disaster.ERUPTION, eruption))
     flood = flood_chance(ctx.rules, record.coastal, ground, tidal)
     if flood:
         candidates.append((Disaster.FLOOD, flood))
@@ -348,6 +399,7 @@ def region_candidates(
 SCARRING: dict[Disaster, tuple[ScarKind, str]] = {
     Disaster.PLAGUE: (ScarKind.PLAGUE_GROUND, "plague_scar_pct"),
     Disaster.EARTHQUAKE: (ScarKind.CRATER, "quake_crater_pct"),
+    Disaster.VOLCANIC_QUAKE: (ScarKind.CRATER, "quake_crater_pct"),
 }
 
 
@@ -411,7 +463,19 @@ async def strike(ctx: TickContext, target: EntityRow, disaster: Disaster, severi
     impact = await apply_disaster(ctx, target, disaster, severity / ctx.rules.disasters.scale_divisor)
     await scar_land(ctx, target, disaster, severity)
     event = await record_disaster_event(ctx, target, disaster, severity, impact)
+    await after_strike(ctx, target, disaster, severity, event, impact=impact)
     return event, impact
+
+
+async def after_strike(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: int, event: EntityRow, *, impact: DisasterImpact) -> None:
+    if disaster is Disaster.FLOOD and await river_after_flood(ctx, target, severity, event) is not None:
+        impact.notes.append("the river left its bed")
+    elif disaster is Disaster.ERUPTION:
+        await erupted(ctx, target, severity)
+        impact.notes.append("ash buried the fields")
+    elif disaster is Disaster.VOLCANIC_QUAKE and await quaked(ctx, target):
+        woken, _ = await strike(ctx, target, Disaster.ERUPTION, severity)
+        impact.notes.append(f"the shaking woke {woken.name}")
 
 
 def _sentence(impact: DisasterImpact) -> str:
@@ -421,6 +485,7 @@ def _sentence(impact: DisasterImpact) -> str:
 async def _region_disasters(ctx: TickContext, world: DisasterWorld) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     grounds = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch, atlas)
+    shapes = await shapes_by_region(ctx.session)
     regional_population: dict[int, int] = {}
     for community in await canon(ctx.session, SOCIETY_TYPES):
         home = atlas.top_region(community.id)
@@ -435,7 +500,8 @@ async def _region_disasters(ctx: TickContext, world: DisasterWorld) -> None:
         ground = grounds.regions.get(region.id)
         planet = grounds.worlds.get(region.world_id)
         tidal = (planet.tidal_strength or 0) if planet is not None else 0
-        candidates = region_candidates(ctx, region, atlas, regional_population.get(region.id, 0), world.laws, ground=ground, tidal=tidal)
+        shape = shapes.get(region.id)
+        candidates = region_candidates(ctx, region, atlas, regional_population.get(region.id, 0), world.laws, ground=ground, tidal=tidal, shape=shape)
         for disaster, chance in candidates:
             climate = world.climate_mult(region.world_id) if disaster is Disaster.PLAGUE else 1.0
             if not rng.chance(chance * world.law_mult(ctx.rules, region.world_id) * climate * world.nature_mult(ctx.rules, region.world_id, disaster)):
@@ -565,6 +631,7 @@ async def _plague_spread(ctx: TickContext) -> int:
                 )
                 record_toll(ctx, book, disease, landed, struck=[partner], impact=impact)
             links.add(await BondRepository(session).connect(BondDraft(plague.id, partner.id, BondKind.CAUSED, ctx.epoch, "spread along the roads")))
+            await add_footprint(session, plague.id, target_region, ctx.epoch)
             spread += 1
             await note(
                 ctx,
@@ -619,10 +686,15 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.entity_tags",
     "table.entity_traits",
     "table.epoch_year_cursors",
+    "table.event_casualties",
+    "table.event_footprints",
+    "table.event_profiles",
     "table.forced_weather",
     "table.holder_levels",
     "table.holder_techniques",
     "table.immunities",
+    "table.incident_participants",
+    "table.incidents",
     "table.injuries",
     "table.item_profiles",
     "table.language_profiles",
@@ -637,7 +709,10 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.prostheses",
     "table.quarantines",
     "table.region_environment",
+    "table.region_geomorphology",
+    "table.river_shifts",
     "table.routes",
+    "table.sieges",
     "table.sky_events",
     "table.sons",
     "table.species_hosts",
@@ -671,13 +746,19 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.event_casualties",
+    "table.event_footprints",
+    "table.event_profiles",
     "table.incident_participants",
     "table.incidents",
     "table.injuries",
     "table.memories",
     "table.name_registry",
     "table.notable_years",
+    "table.place_environment",
     "table.region_environment",
+    "table.region_geomorphology",
+    "table.river_shifts",
     "table.sons",
 )
 async def natural_disasters(ctx: TickContext) -> None:

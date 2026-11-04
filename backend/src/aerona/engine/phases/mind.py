@@ -37,7 +37,7 @@ from aerona.engine.mind.book import (
     values_for,
     write_values,
 )
-from aerona.engine.mind.depth import apply_depth, backfill_depth
+from aerona.engine.mind.depth import backfill_depth
 from aerona.engine.mind.hooks import FIGHTING_ROLES
 from aerona.engine.mind.memories import forget_faded, kin_of, remember, strength_of
 from aerona.engine.mind.needs import update_needs, update_pressures
@@ -45,7 +45,7 @@ from aerona.engine.mind.opinion import OpinionContext
 from aerona.engine.mind.skills import choose_career, left_to_beg, practise_any, seed_skills, teach_apprentices, weather_skills
 from aerona.engine.mind.space import value_reading
 from aerona.engine.mind.traits import seed_traits
-from aerona.engine.mind.values import drift_body, drift_culture, drift_person, seed_values
+from aerona.engine.mind.values import drift_body, drift_culture, drift_divine, drift_person, seed_values
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.heroes import active_quest, start_quest
@@ -79,8 +79,6 @@ async def seed_mind(ctx: TickContext, node: Holder) -> bool:
     if kind is ValueHolder.PERSONAL or divine:
         culture_hint = await seed_values(ctx.session, ctx.rules, node, rng) or {}
         await seed_traits(ctx.session, ctx.rules, node.id, culture_hint, rng=rng, epoch=ctx.epoch, divine=divine)
-        if isinstance(node, EntityRow) and node.entity_type is EntityType.MORTAL:
-            await apply_depth(ctx.session, ctx.rules, node, ctx.epoch, shift_values=False)
     values = await seed_values(ctx.session, ctx.rules, node, rng)
     if values is not None and kind is not None and kind is not ValueHolder.COMMUNITY:
         await write_values(ctx.session, kind, node.id, values)
@@ -272,6 +270,8 @@ async def plagued_communities(ctx: TickContext) -> set[int]:
 
 
 @reads(
+    "table.injuries",
+    "table.war_sides",
     "table.bonds",
     "table.community_relations",
     "table.culture_drift_causes",
@@ -305,6 +305,10 @@ async def mind_values(ctx: TickContext) -> None:
             moved += 1 if await drift_person(ctx, entity, index, await traits_of(ctx.session, entity.id)) else 0
         elif entity.entity_type in (EntityType.FACTION, EntityType.CULT):
             moved += 1 if await drift_body(ctx, entity, index) else 0
+    for son in await ctx.session.scalars(select(SonRow).order_by(SonRow.id)):
+        moved += 1 if await drift_divine(ctx, son, index) else 0
+    for god in await ctx.session.scalars(select(ForeignGodRow).order_by(ForeignGodRow.id)):
+        moved += 1 if await drift_divine(ctx, god, index) else 0
     ctx.count("values_drifted", moved)
 
 
@@ -325,6 +329,7 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
 
 
 @reads(
+    "table.mortal_profiles",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
@@ -428,6 +433,17 @@ async def vengeance(ctx: TickContext) -> int:
 
 
 @reads("table.memories")
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.epoch_year_cursors",
+    "table.hero_quests",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+    "table.oaths",
+)
 async def mind_memories(ctx: TickContext) -> None:
     ctx.count("vengeance_sworn", await vengeance(ctx))
     ctx.count("memories_forgotten", await forget_faded(ctx.session, ctx.rules, ctx.epoch))

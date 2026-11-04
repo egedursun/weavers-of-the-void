@@ -92,6 +92,7 @@ WORLD_SOIL: dict[WorldType, SoilKind] = {
     WorldType.SHATTERED: SoilKind.THIN,
     WorldType.ICE_SHELL: SoilKind.THIN,
     WorldType.METHANE: SoilKind.THIN,
+    WorldType.HYCEAN: SoilKind.SALT,
 }
 
 WORLD_MINERALS: dict[WorldType, tuple[MaterialKind, ...]] = {
@@ -192,6 +193,7 @@ class Surroundings:
     chokepoints: int = 0
     star_heat: int = 0
     works: Works = field(default_factory=Works)
+    cleared: int = 0
 
 
 @dataclass(frozen=True)
@@ -242,6 +244,7 @@ def temperature_of(rules: Rules, geography: Geography, around: Surroundings) -> 
 def rainfall_of(rules: Rules, geography: Geography, around: Surroundings) -> int:
     settings = rules.environment
     value = geography.moisture * settings.rain_from_moisture_pct / PERCENT + (settings.coastal_rainfall if around.coastal else 0)
+    value -= geography.base_forest * around.cleared / PERCENT * settings.forest_rain_pct / PERCENT
     if around.era is not None:
         shift = climate_profile(rules, around.era).rain_shift
         if around.era is ClimateEra.DROUGHT and around.coastal:

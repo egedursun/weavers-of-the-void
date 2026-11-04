@@ -20,9 +20,10 @@ from aerona.engine.mind.book import stored_values, values_for, write_values
 from aerona.engine.mind.drives import closeness, cruelty_drive
 from aerona.engine.mind.hooks import judged, witnessed
 from aerona.engine.mind.memories import remember
+from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.prosperity import add_prosperity
-from aerona.engine.primitives.queries import active_bonds, living_entity
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.records import death_path
 from aerona.engine.services.community_relations import change_relation, relation, start_blood_feud
@@ -91,10 +92,7 @@ async def execute(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor:
 
 async def kin_of(ctx: TickContext, mortal: EntityRow) -> list[EntityRow]:
     found: list[EntityRow] = []
-    bonds = await active_bonds(ctx.session, [BondKind.DESCENDS_FROM], sources=[mortal.id])
-    bonds += await active_bonds(ctx.session, [BondKind.DESCENDS_FROM], targets=[mortal.id])
-    for bond in bonds:
-        other = bond.target_node_id if bond.source_node_id == mortal.id else bond.source_node_id
+    for other in await close_kin_of(ctx.session, mortal.id):
         relative = await living_entity(ctx.session, other)
         if relative is not None and relative.entity_type is EntityType.MORTAL:
             found.append(relative)

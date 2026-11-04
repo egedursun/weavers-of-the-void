@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.mind import AGENDA_VALUES, DOCTRINE_BASE, DOMAIN_VALUES, PASSION_VALUES, PEOPLE_STAT_VALUES, TRAITS, VALUE_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
+from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import MemoryRow
@@ -20,6 +21,7 @@ from aerona.domain.enums.mind import MemoryKind, TraitEffect, TraitKind, ValueAx
 from aerona.domain.enums.society_depth import DriftCause
 from aerona.domain.enums.son import Passion
 from aerona.engine.body.customs import people_of
+from aerona.engine.body.hits import TOTAL_LOSS_KINDS
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import (
     Holder,
@@ -33,6 +35,7 @@ from aerona.engine.mind.book import (
     stored_values,
     trait_effect,
     traits_of,
+    values_for,
     write_values,
 )
 from aerona.engine.mind.drift_causes import (
@@ -151,6 +154,20 @@ async def seed_personal(session: AsyncSession, rules: Rules, mortal: EntityRow, 
     for axis in ValueAxis:
         raw[axis] += rng.integer(-table.personal_deviation, table.personal_deviation)
     return finished(raw)
+
+
+async def drift_divine(ctx: TickContext, god: SonRow | ForeignGodRow, index: ValueIndex) -> bool:
+    mind = await mind_of(ctx.session, god.id)
+    if mind is None or is_locked(mind, VALUE_LOCK):
+        return False
+    current = index.of(god.id)
+    derived = seed_divine(ctx.rules, god, SeededRandom.for_epoch(god.id, 0, "divine_values"))
+    moved = blend(current, derived, ctx.rules.culture_drift.divine_drift_pct) if current else derived
+    if moved == current:
+        return False
+    await write_values(ctx.session, ValueHolder.DIVINE, god.id, moved)
+    index.vectors[god.id] = moved
+    return True
 
 
 def seed_divine(rules: Rules, god: SonRow | ForeignGodRow, rng: SeededRandom) -> Values:
@@ -362,6 +379,40 @@ async def drift_body(ctx: TickContext, body: EntityRow, index: ValueIndex) -> bo
     return True
 
 
+async def liege_of(session: AsyncSession, mortal: EntityRow) -> EntityRow | None:
+    if mortal.location_id is None:
+        return None
+    for bond in await active_bonds(session, [BondKind.RULES], targets=[mortal.location_id]):
+        ruler = await living_entity(session, bond.source_node_id)
+        if ruler is not None and ruler.id != mortal.id and ruler.entity_type is EntityType.MORTAL:
+            return ruler
+    return None
+
+
+async def experiences(ctx: TickContext, mortal: EntityRow) -> dict[ValueAxis, float]:
+    table = ctx.rules.culture_drift
+    shifts: dict[ValueAxis, float] = defaultdict(float)
+    maimed = await ctx.session.scalar(
+        select(InjuryRow.id).where(InjuryRow.bearer_node_id == mortal.id, InjuryRow.kind.in_(list(TOTAL_LOSS_KINDS)), InjuryRow.epoch >= ctx.epoch - 1).limit(1)
+    )
+    if maimed is not None:
+        shifts[ValueAxis.DEATH] += table.maimed_shift
+        shifts[ValueAxis.PIETY] += table.maimed_shift / 2
+    fighting = mortal.location_id is not None and await ctx.session.scalar(
+        select(WarSideRow.war_id).where(WarSideRow.entity_id == mortal.location_id, WarSideRow.left_epoch.is_(None)).limit(1)
+    )
+    if fighting:
+        shifts[ValueAxis.MARTIAL] += table.war_shift
+        shifts[ValueAxis.MERCY] -= table.war_shift / 2
+    converted = await ctx.session.scalar(
+        select(MemoryRow.id).where(MemoryRow.holder_node_id == mortal.id, MemoryRow.kind == MemoryKind.CONVERTED_ME, MemoryRow.epoch >= ctx.epoch - 1).limit(1)
+    )
+    if converted is not None:
+        shifts[ValueAxis.PIETY] += table.conversion_shift
+        shifts[ValueAxis.TRADITION] -= table.conversion_shift / 2
+    return shifts
+
+
 async def drift_person(ctx: TickContext, mortal: EntityRow, index: ValueIndex, traits: set[TraitKind]) -> bool:
     table = ctx.rules.culture_drift
     mind = await mind_of(ctx.session, mortal.id)
@@ -373,7 +424,16 @@ async def drift_person(ctx: TickContext, mortal: EntityRow, index: ValueIndex, t
     if not current or not culture:
         return False
     rate = table.mortal_pull_pct * scaled_by(trait_effect(traits, TraitEffect.DRIFT, ctx.rules.traits.effect_scale_pct))
-    moved = blend(current, culture, rate)
+    target: dict[ValueAxis, float] = {axis: float(culture.get(axis, 0)) for axis in ValueAxis}
+    liege = await liege_of(ctx.session, mortal)
+    if liege is not None:
+        pull_toward(target, culture, index.of(liege.id) or await values_for(ctx.session, liege.id), table.person_ruler_pct)
+    patron = await living_patron(ctx.session, mortal)
+    if patron is not None:
+        pull_toward(target, culture, index.of(patron.id) or await values_for(ctx.session, patron.id), table.person_god_pct)
+    for axis, shift in (await experiences(ctx, mortal)).items():
+        target[axis] = target.get(axis, 0.0) + shift
+    moved = blend(current, {axis: round(value) for axis, value in target.items()}, rate)
     if moved == current:
         return False
     await write_values(ctx.session, ValueHolder.PERSONAL, mortal.id, moved)

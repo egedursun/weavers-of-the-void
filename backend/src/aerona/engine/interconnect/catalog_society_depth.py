@@ -140,9 +140,9 @@ SOCIETY_DEPTH_MECHANICS = (
         tables=(PolityLoyaltyRow.__tablename__,),
         targets=(*COMMUNITIES, "polity"),
         couplings=(
-            Coupling(Subsystem.POLITY, "disloyal members drift toward autonomy and secession", EdgeKind.FLOW, "loyalty.autonomy_pct"),
-            Coupling(Subsystem.SOCIAL, "content classes keep their realm", EdgeKind.MODIFIER, "loyalty.satisfaction_pct"),
-            Coupling(Subsystem.CULTURE, "a ruler of strange values is less loved", EdgeKind.MODIFIER, "loyalty.distance_pct"),
+            Coupling(Subsystem.POLITY, "disloyal members drift toward autonomy and secession", EdgeKind.FLOW, "realm_loyalty.autonomy_pct"),
+            Coupling(Subsystem.SOCIAL, "content classes keep their realm", EdgeKind.MODIFIER, "realm_loyalty.satisfaction_pct"),
+            Coupling(Subsystem.CULTURE, "a ruler of strange values is less loved", EdgeKind.MODIFIER, "realm_loyalty.distance_pct"),
         ),
     ),
     Mechanic(

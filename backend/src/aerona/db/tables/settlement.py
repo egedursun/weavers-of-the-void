@@ -120,6 +120,8 @@ class SettlementInfrastructureRow(Base):
         between("roads", 0, 5),
         between("towers", 0, 20),
         between("gates", 0, 20),
+        between("bridges", 0, 5),
+        between("irrigation", 0, 5),
         at_least("granary_capacity", 0),
         at_least("warehouse_capacity", 0),
         at_least("harbour_capacity", 0),
@@ -137,6 +139,8 @@ class SettlementInfrastructureRow(Base):
     warehouse_capacity: Mapped[int] = mapped_column(default=0)
     harbour_capacity: Mapped[int] = mapped_column(default=0)
     towers: Mapped[int] = mapped_column(default=0)
+    bridges: Mapped[int] = mapped_column(default=0)
+    irrigation: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

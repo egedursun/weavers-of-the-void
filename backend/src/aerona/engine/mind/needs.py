@@ -6,7 +6,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.mind import MemoryRow, NeedRow
 from aerona.domain.enums.body import OPEN_INJURY_STATES
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType, MortalRole
@@ -19,10 +19,11 @@ from aerona.engine.gods.queries import community_of
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.mind.book import Values, best_skill, is_locked, mind_of, needs_of, pressures_of, write_needs, write_pressures
 from aerona.engine.mind.memories import strength_of
+from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.queries import active_bonds
+from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.society import class_shares, stock
 from aerona.engine.primitives.stats import stat
 from aerona.engine.services.war import ongoing_war_count
@@ -31,30 +32,40 @@ from aerona.rules.registry import Rules
 NEED_LOCK = "needs"
 FULL = PERCENT
 FERTILITY_KEY = "fertility"
-BELONGING_BONDS = (BondKind.LOVES, BondKind.COMPANION, BondKind.DESCENDS_FROM, BondKind.MEMBER_OF, BondKind.LIVES_IN)
+BELONGING_BONDS = (BondKind.LOVES, BondKind.COMPANION, BondKind.MEMBER_OF, BondKind.LIVES_IN)
 BEGGAR_TAG = "beggar"
-ROLE_STATUS = {
-    MortalRole.RULER: 95,
-    MortalRole.HERO: 85,
-    MortalRole.CHOSEN: 85,
-    MortalRole.SAINT: 80,
-    MortalRole.KNIGHT: 75,
-    MortalRole.PRIEST: 70,
-    MortalRole.SEER: 70,
-    MortalRole.CAPTAIN: 70,
-    MortalRole.SAGE: 65,
-    MortalRole.MERCHANT: 60,
-    MortalRole.HEALER: 60,
-    MortalRole.SCRIBE: 55,
-    MortalRole.ARTISAN: 50,
-    MortalRole.WARRIOR: 50,
-    MortalRole.EXPLORER: 50,
-    MortalRole.HUNTER: 45,
-    MortalRole.APPRENTICE: 40,
-    MortalRole.FARMER: 35,
-    MortalRole.COMMONER: 30,
-    MortalRole.BANDIT: 20,
-}
+
+
+def role_status(rules: Rules, role: MortalRole) -> int:
+    table = rules.needs
+    statuses = {
+        MortalRole.RULER: table.status_ruler,
+        MortalRole.HERO: table.status_hero,
+        MortalRole.CHOSEN: table.status_chosen,
+        MortalRole.SAINT: table.status_saint,
+        MortalRole.KNIGHT: table.status_knight,
+        MortalRole.PRIEST: table.status_priest,
+        MortalRole.SEER: table.status_seer,
+        MortalRole.CAPTAIN: table.status_captain,
+        MortalRole.SAGE: table.status_sage,
+        MortalRole.MERCHANT: table.status_merchant,
+        MortalRole.HEALER: table.status_healer,
+        MortalRole.SCRIBE: table.status_scribe,
+        MortalRole.ARTISAN: table.status_artisan,
+        MortalRole.WARRIOR: table.status_warrior,
+        MortalRole.EXPLORER: table.status_explorer,
+        MortalRole.HUNTER: table.status_hunter,
+        MortalRole.APPRENTICE: table.status_apprentice,
+        MortalRole.FARMER: table.status_farmer,
+        MortalRole.COMMONER: table.status_commoner,
+        MortalRole.BANDIT: table.status_bandit,
+    }
+    return statuses.get(role, table.unknown_pressure)
+
+
+async def sustenance_need(session: AsyncSession, mortal_id: int) -> float:
+    found = await session.get(NeedRow, (mortal_id, NeedKind.SUSTENANCE))
+    return found.value / FULL if found is not None else 1.0
 
 
 def pct(value: float) -> int:
@@ -140,15 +151,16 @@ async def mortal_needs(session: AsyncSession, rules: Rules, mortal: EntityRow, *
     captive = bool(await active_bonds(session, [BondKind.HOLDS_CAPTIVE], targets=[mortal.id]))
     safety = FULL - pressures.get(PressureKind.INSECURITY, table.unknown_pressure) - open_wounds * table.wound_safety - (table.captive_safety if captive else 0)
     ties = len(await active_bonds(session, BELONGING_BONDS, sources=[mortal.id])) + len(
-        await active_bonds(session, [BondKind.LOVES, BondKind.COMPANION, BondKind.DESCENDS_FROM], targets=[mortal.id])
+        await active_bonds(session, [BondKind.LOVES, BondKind.COMPANION], targets=[mortal.id])
     )
+    ties += len([kin for kin in await close_kin_of(session, mortal.id) if await living_entity(session, kin) is not None])
     belonging = table.belonging_base + ties * table.belonging_per_tie
     if TraitKind.GREGARIOUS in traits:
         belonging -= table.trait_demand
     if TraitKind.RECLUSIVE in traits:
         belonging += table.trait_demand
     rules_something = bool(await active_bonds(session, [BondKind.RULES], sources=[mortal.id]))
-    status = ROLE_STATUS.get(mortal.mortal_role or MortalRole.COMMONER, table.unknown_pressure) + (table.office_status if rules_something else 0)
+    status = role_status(rules, mortal.mortal_role or MortalRole.COMMONER) + (table.office_status if rules_something else 0)
     status -= table.trait_demand * len(traits & {TraitKind.PROUD, TraitKind.AMBITIOUS})
     if BEGGAR_TAG in await EntityRepository(session).tags(mortal.id):
         status -= table.beggar_status_loss

@@ -31,7 +31,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, EntityFl
 from aerona.domain.enums.intervention import Disaster, Miracle
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.gods.interventions import MiracleEffect, MiracleOutcome, apply_miracle
-from aerona.engine.phases.disasters import DISASTER_KINDS, apply_disaster, joined_names
+from aerona.engine.phases.disasters import DISASTER_KINDS, after_strike, apply_disaster, joined_names, record_impact
 from aerona.engine.primitives.renames import rewrite_name
 from aerona.engine.primitives.subtypes import normalized_subtype
 from aerona.prompts import SonToolId
@@ -178,6 +178,8 @@ async def send_disaster(call: SonCall, args: DisasterInput) -> str:
     )
     impact = await apply_disaster(call.tick, target, args.kind, severity / tools.disaster_scale_divisor)
     event = await _disaster_event(call, args, target, severity, [entity.id for entity in impact.dead])
+    await record_impact(call.tick, event, impact)
+    await after_strike(call.tick, target, args.kind, severity, event, impact=impact)
     call.remember_creation(event.id)
     patron_id = await BondRepository(call.session).patron(target.id)
     if patron_id is not None and patron_id != call.son.id and await call.session.get(SonRow, patron_id) is not None:

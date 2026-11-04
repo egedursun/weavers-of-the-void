@@ -65,7 +65,7 @@ async def loyalty_views(session: AsyncSession, rules: Rules, entity_id: int) -> 
                 polity_id=polity_id,
                 polity=names.get(polity_id, ""),
                 value_distance=distance,
-                distance_penalty=round_half_up(distance * rules.loyalty.distance_pct / PERCENT),
+                distance_penalty=round_half_up(distance * rules.realm_loyalty.distance_pct / PERCENT),
                 grievances=row.grievances if row is not None else 0,
                 benefits=row.benefits if row is not None else 0,
                 satisfaction=row.satisfaction if row is not None else 0,

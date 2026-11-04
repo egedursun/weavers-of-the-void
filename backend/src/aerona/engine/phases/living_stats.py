@@ -1,12 +1,17 @@
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
+from aerona.db.tables.place import PlaceSecretRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityType
+from aerona.domain.enums.place import DiscoveryMode
 from aerona.engine.context import TickContext
+from aerona.engine.environment.secrets import reveal
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -18,6 +23,21 @@ from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.rules.registry import Rules
 
 PIETY_KEY = "piety"
+
+
+async def reveal_by_mystery(ctx: TickContext, place: EntityRow, seeker: EntityRow) -> bool:
+    secret = await ctx.session.scalar(
+        select(PlaceSecretRow)
+        .where(PlaceSecretRow.place_entity_id == place.id, PlaceSecretRow.revealed_epoch.is_(None), PlaceSecretRow.held.is_(False))
+        .order_by(PlaceSecretRow.strength, PlaceSecretRow.id)
+        .limit(1)
+    )
+    if secret is None:
+        return False
+    ground = await ctx.session.get(PlaceEnvironmentRow, place.id)
+    region = await ctx.session.get(RegionEnvironmentRow, ground.region_entity_id) if ground is not None and ground.region_entity_id is not None else None
+    await reveal(ctx, secret, DiscoveryMode.MYSTERY, seeker, region)
+    return True
 
 
 async def solve_mysteries(ctx: TickContext) -> int:
@@ -38,6 +58,8 @@ async def solve_mysteries(ctx: TickContext) -> int:
         seeker = ctx.rng(f"seeker.{place.id}").pick(near)
         set_stats(place, mystery=clamp_int(mystery - table.mystery_solved_loss, 0, PERCENT))
         solved += 1
+        if await reveal_by_mystery(ctx, place, seeker):
+            continue
         found = next((item for item in lost_knowledge if item.world_id == place.world_id), None)
         if found is not None:
             await teach(ctx, seeker.id, found, f"found in the mystery of {place.name}")
@@ -116,6 +138,9 @@ async def _hold_piety(session: AsyncSession, rules: Rules, entity_id: int, floor
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.nodes",
+    "table.place_environment",
+    "table.place_secrets",
+    "table.region_environment",
 )
 @writes(
     "knowledge.spread",
@@ -130,6 +155,13 @@ async def _hold_piety(session: AsyncSession, rules: Rules, entity_id: int, floor
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.place_environment",
+    "table.place_profiles",
+    "table.place_secrets",
+    "table.region_environment",
+    "table.resource_profiles",
+    "table.rite_effects",
+    "table.rite_profiles",
     "table.sons",
 )
 async def living_stats(ctx: TickContext) -> None:

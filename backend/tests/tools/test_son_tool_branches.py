@@ -274,11 +274,11 @@ async def test_species_traits_are_capped_and_mighty_beasts_are_megafauna(databas
     rules = tuned_rules(son_tools={"creature_max_traits": 2, "megafauna_power": 3})
     toolkit = await son_toolkit(database, realm.son_id, action_points=4, rules=rules)
     traits = ["flying", "venomous", "soul_eater"]
-    await ok(toolkit, "create_species", creation("Skyfang", realm.people_id, power=3, traits=traits, body_plan="avian"))
+    await ok(toolkit, "create_species", creation("Skyfang", realm.people_id, power=3, traits=traits, body_plan="avian", size_class="large", diet="carnivore"))
     beast = toolkit.created_entity_ids[-1]
-    refused = await rejected(toolkit, "create_species", creation("Mudhopper", realm.people_id, power=1))
+    refused = await rejected(toolkit, "create_species", creation("Mudhopper", realm.people_id, power=1, size_class="small", diet="omnivore"))
     assert "body_plan" in refused
-    await ok(toolkit, "create_species", creation("Mudhopper", realm.people_id, power=1, body_plan="amorphous"))
+    await ok(toolkit, "create_species", creation("Mudhopper", realm.people_id, power=1, body_plan="amorphous", size_class="small", diet="omnivore"))
     small = toolkit.created_entity_ids[-1]
     async with database.read() as session:
         body = await session.get(BodyRow, small)

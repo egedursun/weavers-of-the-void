@@ -14,6 +14,8 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.mind import MemoryKind, TraitEffect
 from aerona.engine.mind.book import MEMORIES_KEY, effect_of, locked_for, scaled_by
+from aerona.engine.mortal.kin import children_of as typed_children
+from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.rules.registry import Rules
@@ -140,15 +142,7 @@ async def forget_faded(session: AsyncSession, rules: Rules, epoch: int) -> int:
 
 
 async def kin_of(session: AsyncSession, mortal_id: int) -> list[EntityRow]:
-    ids: list[int] = []
-    for bond in await active_bonds(session, [BondKind.DESCENDS_FROM], sources=[mortal_id]):
-        ids.append(bond.target_node_id)
-    for bond in await active_bonds(session, [BondKind.DESCENDS_FROM], targets=[mortal_id]):
-        ids.append(bond.source_node_id)
-    for bond in await active_bonds(session, [BondKind.LOVES], sources=[mortal_id]):
-        ids.append(bond.target_node_id)
-    for bond in await active_bonds(session, [BondKind.LOVES], targets=[mortal_id]):
-        ids.append(bond.source_node_id)
+    ids = await close_kin_of(session, mortal_id)
     kin: list[EntityRow] = []
     for node_id in dict.fromkeys(ids):
         found = await living_entity(session, node_id)
@@ -159,8 +153,8 @@ async def kin_of(session: AsyncSession, mortal_id: int) -> list[EntityRow]:
 
 async def children_of(session: AsyncSession, mortal_id: int) -> list[EntityRow]:
     children: list[EntityRow] = []
-    for bond in await active_bonds(session, [BondKind.DESCENDS_FROM], targets=[mortal_id]):
-        found = await living_entity(session, bond.source_node_id)
+    for child_id in await typed_children(session, mortal_id):
+        found = await living_entity(session, child_id)
         if found is not None and found.entity_type is EntityType.MORTAL:
             children.append(found)
     return children

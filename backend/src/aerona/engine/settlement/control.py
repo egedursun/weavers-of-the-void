@@ -40,6 +40,8 @@ INFRA_NUMBERS = {
     "granary_capacity": (0, 100000000),
     "warehouse_capacity": (0, 100000000),
     "harbour_capacity": (0, 100000000),
+    "bridges": (0, 5),
+    "irrigation": (0, 5),
 }
 PROFILE_KEYS = (*PROFILE_NUMBERS, *POSITIVE_NUMBERS, "admin_capacity", "size_tier", "free_city", "rationing", GARRISON_KEY, FOREIGNERS_KEY)
 INFRA_KEYS = (*INFRA_NUMBERS, "water", "walls_material", "sewers")

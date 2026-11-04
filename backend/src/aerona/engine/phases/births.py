@@ -5,31 +5,44 @@ from dataclasses import dataclass, field
 from aerona.catalog.society import SOCIAL_CLASSES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.body import Capacity
+from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole
+from aerona.domain.enums.demography import MarriageCustom
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityType, MortalRole
-from aerona.domain.enums.mind import TraitEffect
+from aerona.domain.enums.mind import MemoryKind, PressureKind, TraitEffect, ValueAxis
+from aerona.domain.enums.mortal import DeathCause, HarshnessScale, LifeStage, MortalSex
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import MortalStats, PeopleStats, SettlementStats
-from aerona.engine.body.book import factor
 from aerona.engine.body.cohorts import healer_demand
-from aerona.engine.body.customs import culture_of
+from aerona.engine.body.conditions import gain_condition
+from aerona.engine.body.customs import culture_of, people_of
+from aerona.engine.body.healing import HealingWorld, tier_index
 from aerona.engine.body.hits import weighted
 from aerona.engine.context import TickContext
 from aerona.engine.demography.urban import founding_factor
+from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.ruler_roles import ruler_role
-from aerona.engine.mind.book import effect_of, scaled_by
+from aerona.engine.mind.book import effect_of, pressures_of, scaled_by
+from aerona.engine.mind.memories import remember
+from aerona.engine.mind.needs import sustenance_need
 from aerona.engine.mind.space import value_distance
+from aerona.engine.mortal.kinship import add_parent
+from aerona.engine.mortal.life import adult, biology_of, fertility_window, inherited_abilities, refresh_life, sex_of_stats
+from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.settlements import resettle_ruin
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
+from aerona.engine.primitives.harshness import harsh_chance
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import (
@@ -54,7 +67,23 @@ from aerona.rules.registry import Rules
 
 Bias = Callable[[Rules], int]
 STAT_KEYS = ("strength", "agility", "intellect", "charisma")
-COUPLE_KINDS = (BondKind.LOVES, BondKind.ALLY)
+COUPLE_KINDS = (BondKind.SPOUSE_OF, BondKind.CONCUBINE_OF, BondKind.LOVES)
+PLURAL_CUSTOMS = frozenset({MarriageCustom.POLYGYNY, MarriageCustom.POLYANDRY, MarriageCustom.GROUP})
+CLASS_RANK = {
+    cls: index
+    for index, cls in enumerate(
+        (
+            SocialClass.NOBLE,
+            SocialClass.PRIEST,
+            SocialClass.WARRIOR,
+            SocialClass.SCRIBE,
+            SocialClass.MERCHANT,
+            SocialClass.ARTISAN,
+            SocialClass.FARMER,
+            SocialClass.SERF_OR_SLAVE,
+        )
+    )
+}
 CHILD_SUBTYPE = "child"
 VILLAGE_SUBTYPE = "village"
 HOMELAND_SUBTYPE = "homeland"
@@ -703,9 +732,22 @@ def inherited(rules: Rules, first: EntityRow, second: EntityRow, key: str) -> in
     return (stat(first, key) or default) + (stat(second, key) or default)
 
 
-async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, namer: Namer | None = None) -> EntityRow:
+def child_sex(rules: Rules, rng: SeededRandom) -> MortalSex:
+    if rng.chance(rules.fertility.other_sex_pct):
+        return MortalSex.OTHER
+    return MortalSex.FEMALE if rng.chance(PERCENT // 2) else MortalSex.MALE
+
+
+def child_class(first: EntityRow, second: EntityRow) -> SocialClass | None:
+    classes = [mortal.social_class for mortal in (first, second) if mortal.social_class is not None]
+    if not classes:
+        return None
+    return min(classes, key=lambda item: CLASS_RANK.get(item, len(CLASS_RANK)))
+
+
+async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, namer: Namer | None = None, *, twin: int = 0) -> EntityRow:
     effects = ctx.rules.world_effects
-    rng = ctx.rng(seed_of("child", first.id, second.id))
+    rng = ctx.rng(seed_of("child", first.id, second.id, twin))
     deviation = effects.inheritance_deviation
 
     def averaged(key: str) -> int:
@@ -714,9 +756,10 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
 
     lifespans = (stat(first, "lifespan") or effects.default_lifespan) + (stat(second, "lifespan") or effects.default_lifespan)
     child_namer = namer or Namer(ctx.session, ctx.rules)
-    name = await child_namer.person([first], seed_of(first.id, second.id, ctx.epoch, CHILD_SUBTYPE)) or await child_namer.person(
-        [second], seed_of(second.id, first.id, ctx.epoch, CHILD_SUBTYPE)
+    name = await child_namer.person([first], seed_of(first.id, second.id, ctx.epoch, CHILD_SUBTYPE, twin)) or await child_namer.person(
+        [second], seed_of(second.id, first.id, ctx.epoch, CHILD_SUBTYPE, twin)
     )
+    abilities = inherited_abilities(ctx.rules, first, second, rng)
     child = await open_record(
         ctx.session,
         ctx.epoch,
@@ -732,6 +775,8 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
                 charisma=averaged("charisma"),
                 age=0,
                 lifespan=clamp_int(lifespans / 2 + rng.integer(-deviation, deviation), effects.child_min_lifespan, ctx.rules.deep_life.lifespan_cap),
+                sex=child_sex(ctx.rules, rng).value,
+                **abilities,
             ),
             power=max(1, round_half_up((first.power_level + second.power_level) / 2) - 1),
             location_id=first.location_id,
@@ -741,8 +786,12 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
             flags=(EntityFlag.NAME_FROM_LANGUAGE,) if name else (),
         ),
     )
+    child.social_class = child_class(first, second)
     for parent in (first, second):
-        await connect(ctx.session, child.id, parent.id, BondKind.DESCENDS_FROM, ctx.epoch)
+        await add_parent(ctx.session, parent.id, child.id, ctx.epoch)
+    profile, _ = await ensure_profile(ctx.session, child.id, ctx.epoch)
+    profile.life_stage = LifeStage.INFANT
+    await bloodline_marks(ctx, child, (first, second))
     language = await spoken_language(ctx.session, first.id) or await spoken_language(ctx.session, second.id)
     if language is not None:
         await connect(ctx.session, child.id, language.id, BondKind.SPEAKS, ctx.epoch)
@@ -754,29 +803,165 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
     return child
 
 
+async def bloodline_marks(ctx: TickContext, child: EntityRow, parents: tuple[EntityRow, EntityRow]) -> None:
+    repository = EntityRepository(ctx.session)
+    for parent in parents:
+        flags = await repository.flags(parent.id)
+        if EntityFlag.BLOODLINE_CURSE in flags:
+            await add_flag(ctx.session, child.id, EntityFlag.BLOODLINE_CURSE, ctx.epoch)
+        if EntityFlag.CHOSEN in flags or parent.creator_son_id is not None:
+            await gain_condition(ctx, child, ConditionKind.CHOSEN_MARK, HarmCause.GOD, severity=1, source_node_id=parent.creator_son_id)
+
+
+def bond_rate(rules: Rules, kind: BondKind) -> int:
+    table = rules.fertility
+    return {BondKind.SPOUSE_OF: PERCENT, BondKind.CONCUBINE_OF: table.concubine_rate_pct, BondKind.LOVES: table.unwed_rate_pct}.get(kind, 0)
+
+
+async def couple_chance(ctx: TickContext, first: EntityRow, second: EntityRow, kind: BondKind) -> float:
+    rules = ctx.rules
+    table = rules.fertility
+    rate = bond_rate(rules, kind) / PERCENT
+    if kind is BondKind.CONCUBINE_OF and not await concubinage_allowed(ctx, first):
+        return 0.0
+    chance = rules.world_engine.birth_chance * rate
+    for parent in (first, second):
+        profile, created = await ensure_profile(ctx.session, parent.id, ctx.epoch)
+        if created:
+            await refresh_life(ctx.session, rules, parent, profile)
+        if profile.life_stage is LifeStage.YOUTH:
+            chance *= table.youth_rate_pct / PERCENT
+        elif not adult(profile.life_stage):
+            return 0.0
+        chance *= profile.fertility / PERCENT
+        chance *= max(0.0, 1 - profile.stress / table.stress_divisor)
+        chance *= await sustenance_need(ctx.session, parent.id)
+        chance *= scaled_by(await effect_of(ctx.session, parent.id, TraitEffect.FERTILITY, rules.traits.effect_scale_pct))
+    culture = await culture_of(ctx.session, first.location_id) if first.location_id is not None else {}
+    chance *= max(0.0, 1 + culture.get(ValueAxis.KINSHIP, 0) * table.kinship_pct / PERCENT / PERCENT)
+    return chance
+
+
+async def concubinage_allowed(ctx: TickContext, mortal: EntityRow) -> bool:
+    people = await people_of(ctx.session, mortal)
+    custom = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
+    return custom is not None and custom.marriage in PLURAL_CUSTOMS
+
+
+def bearer_of(first: EntityRow, second: EntityRow) -> EntityRow:
+    for mortal in (first, second):
+        if isinstance(mortal.stats, MortalStats) and mortal.stats.sex == MortalSex.FEMALE.value:
+            return mortal
+    return first
+
+
+async def birth_risk(ctx: TickContext, bearer: EntityRow) -> float:
+    table = ctx.rules.fertility
+    healing = await HealingWorld.load(ctx.session, ctx.rules)
+    care = await healing.care_for(ctx.session, bearer)
+    medicine = tier_index(care.tier) * ctx.rules.healing.lethal_medicine_cut_pct / PERCENT
+    profile, _ = await ensure_profile(ctx.session, bearer.id, ctx.epoch)
+    start, end = fertility_window(
+        ctx.rules, await biology_of(ctx.session, bearer), sex_of_stats(bearer), stat(bearer, "lifespan") or ctx.rules.world_effects.default_lifespan
+    )
+    age = stat(bearer, "age") or 0
+    late = age >= start + (end - start) * table.late_age_from_pct / PERCENT
+    risk = table.mortality_base_pct * max(0.0, 1 - medicine) * (table.late_age_risk_pct / PERCENT if late else 1.0)
+    risk *= 1 + (PERCENT - profile.health) / PERCENT
+    return harsh_chance(ctx.rules, HarshnessScale.CHILDBIRTH_DEATH, risk)
+
+
+async def hunger_of(ctx: TickContext, mortal: EntityRow) -> int:
+    community = await community_of(ctx.session, mortal)
+    return (await pressures_of(ctx.session, community.id)).get(PressureKind.HUNGER, 0) if community is not None else 0
+
+
+async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: Namer) -> list[EntityRow]:
+    table = ctx.rules.fertility
+    rng = ctx.rng(seed_of("delivery", first.id, second.id, ctx.epoch))
+    bearer = bearer_of(first, second)
+    stillborn = table.stillbirth_pct * (table.hunger_stillbirth_pct / PERCENT if await hunger_of(ctx, bearer) >= table.hunger_from else 1.0)
+    born: list[EntityRow] = []
+    if rng.chance(stillborn):
+        await note(ctx, f"The child of {first.name} and {second.name} was stillborn.", key="births.stillborn", ids=[first.id, second.id])
+        ctx.count("stillborn")
+    else:
+        count = table.twin_cap if rng.chance(table.twins_pct) else 1
+        for twin in range(count):
+            born.append(await bear_child(ctx, first, second, namer, twin=twin))
+        if count > 1:
+            await note(
+                ctx, f"{first.name} and {second.name} were blessed with twins.", key="births.twins", ids=[first.id, second.id, *(child.id for child in born)]
+            )
+            ctx.count("twins")
+    if rng.chance(await birth_risk(ctx, bearer)):
+        other = second if bearer is first else first
+        for child in born:
+            await remember(
+                ctx.session,
+                ctx.rules,
+                holder_id=child.id,
+                subject_id=bearer.id,
+                kind=MemoryKind.LAMENTED,
+                magnitude=ctx.rules.kinship.orphan_magnitude,
+                epoch=ctx.epoch,
+            )
+        await remember(
+            ctx.session,
+            ctx.rules,
+            holder_id=other.id,
+            subject_id=bearer.id,
+            kind=MemoryKind.LAMENTED,
+            magnitude=ctx.rules.kinship.widowed_magnitude,
+            epoch=ctx.epoch,
+        )
+        await die(ctx, bearer, cause="died in childbirth", manner=DeathCause.CHILDBIRTH)
+        ctx.count("childbirth_deaths")
+    return born
+
+
 @reads(
+    "mortal.age",
     "mortal.agility",
     "mortal.charisma",
     "mortal.intellect",
     "mortal.lifespan",
     "mortal.strength",
+    "mortal.endurance",
+    "mortal.willpower",
+    "mortal.perception",
+    "mortal.wisdom",
+    "mortal.creativity",
+    "mortal.beauty",
     "table.bodies",
     "table.bonds",
+    "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.holder_levels",
     "table.language_profiles",
     "table.lexemes",
+    "table.mortal_profiles",
     "table.name_registry",
+    "table.needs",
     "table.nodes",
+    "table.people_biology",
+    "table.people_culture",
+    "table.pressures",
+    "table.culture_values",
     "table.traits",
 )
 @writes(
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.conditions",
     "table.entities",
+    "table.entity_flags",
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.memories",
+    "table.mortal_profiles",
     "table.name_registry",
 )
 async def couples_bear_children(ctx: TickContext) -> None:
@@ -797,12 +982,9 @@ async def couples_bear_children(ctx: TickContext) -> None:
         second = await living_entity(ctx.session, bond.target_node_id)
         if first is None or second is None or first.entity_type is not EntityType.MORTAL or second.entity_type is not EntityType.MORTAL:
             continue
-        fertile = await factor(ctx.session, first.id, Capacity.FERTILITY) * await factor(ctx.session, second.id, Capacity.FERTILITY)
-        for parent in (first, second):
-            fertile *= scaled_by(await effect_of(ctx.session, parent.id, TraitEffect.FERTILITY, rules.traits.effect_scale_pct))
-        if not rng.chance(rules.world_engine.birth_chance * fertile):
+        if not rng.chance(await couple_chance(ctx, first, second, bond.kind)):
             continue
-        await bear_child(ctx, first, second, namer)
+        await deliver(ctx, first, second, namer)
         born += 1
 
 

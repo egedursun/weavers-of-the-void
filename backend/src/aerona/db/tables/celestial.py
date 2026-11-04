@@ -94,6 +94,7 @@ class WorldRow(NodeRow):
     day_length_hours: Mapped[int | None]
     moon_count: Mapped[int | None]
     tidal_strength: Mapped[int | None]
+    calendar_locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class WorldMapRow(TimestampMixin, Base):

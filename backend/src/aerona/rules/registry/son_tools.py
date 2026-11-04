@@ -7,6 +7,7 @@ from aerona.rules.model import rule
 @dataclass(frozen=True)
 class SonToolsRules:
     anchor_per_epoch: int = rule(1, 0, 20, RuleGroup.SON_TOOLS, "Maximum times a son can change his anchor in one epoch")
+    touch_amount: int = rule(15, 0, 100, RuleGroup.SON_TOOLS, "How far a son's touch moves a mortal's stress, renown, infamy or ability")
     gift_per_epoch: int = rule(1, 0, 20, RuleGroup.SON_TOOLS, "Maximum gifts a son can give in one epoch")
     prayer_per_epoch: int = rule(1, 0, 20, RuleGroup.SON_TOOLS, "Maximum prayers a son can make to his father in one epoch")
     holy_world_per_epoch: int = rule(1, 0, 20, RuleGroup.SON_TOOLS, "Maximum holy-world declarations a son can make in one epoch")
@@ -257,3 +258,7 @@ class SonToolsRules:
     design_district_ap: int = rule(1, 1, 10, RuleGroup.SON_TOOLS, "design_district action cost")
     loose_disease_essence: int = rule(40, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to forge and loose a sickness of its own design")
     forge_material_essence: int = rule(40, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to forge a new material into a world")
+    reshape_land_essence: int = rule(
+        35, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to move a river, parch or green a land, or salt or enrich its soil"
+    )
+    reshape_land_ap: int = rule(2, 1, 10, RuleGroup.SON_TOOLS, "reshape_land action cost")

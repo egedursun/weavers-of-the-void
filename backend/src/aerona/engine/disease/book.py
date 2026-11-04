@@ -82,6 +82,7 @@ class DiseaseBook:
     ranges: dict[tuple[int, int], int] = field(default_factory=dict)
     ley: set[int] = field(default_factory=set)
     living_sons: set[int] = field(default_factory=set)
+    seasonal: dict[int, float] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules, epoch: int) -> "DiseaseBook":
