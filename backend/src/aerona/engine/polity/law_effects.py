@@ -199,3 +199,24 @@ async def endogamous(session: AsyncSession, node_id: int | None) -> bool:
     if node_id is None:
         return False
     return bool(await law_param(session, node_id, LawKind.MARRIAGE_LAW, "endogamy"))
+
+
+async def may_coin(session: AsyncSession, rules: Rules, issuer_id: int) -> bool:
+    polity = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == issuer_id).limit(1))
+    profile = await session.get(PolityProfileRow, polity) if polity is not None else None
+    return profile is None or profile.tier >= rules.realm_tiers.coinage
+
+
+async def realm_coinage(ctx: TickContext, realm: Realm) -> int:
+    if realm.profile.tier < ctx.rules.realm_tiers.coinage or realm.profile.capital_entity_id is None:
+        return 0
+    capital = await ctx.session.get(CommunitySocietyRow, realm.profile.capital_entity_id)
+    if capital is None or capital.currency_id is None:
+        return 0
+    adopted = 0
+    for member_id in realm.members:
+        society = await ctx.session.get(CommunitySocietyRow, member_id)
+        if society is not None and society.currency_id is None:
+            society.currency_id = capital.currency_id
+            adopted += 1
+    return adopted

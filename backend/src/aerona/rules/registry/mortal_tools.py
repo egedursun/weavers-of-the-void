@@ -54,6 +54,9 @@ class MortalToolsRules:
     learn_per_epoch: int = rule(1, 0, 20, RuleGroup.MORTAL_AGENTS, "learn (ogren): maximum knowledge learned per epoch")
     prophesy_per_epoch: int = rule(1, 0, 20, RuleGroup.MORTAL_AGENTS, "prophesy (kehanet_et): maximum prophecies per epoch")
     appoint_commander_per_epoch: int = rule(1, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "appoint_commander (komutan_ata): maximum commander appointments per epoch")
+    enact_law_per_epoch: int = rule(1, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "enact_law: laws a ruling mortal may lay down per epoch")
+    appoint_officer_per_epoch: int = rule(2, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "appoint_officer: offices a ruling mortal may fill per epoch")
+    set_tax_per_epoch: int = rule(1, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "set_tax: times a ruling mortal may set the realm's tax per epoch")
     adopt_per_epoch: int = rule(1, 0, 20, RuleGroup.MORTAL_AGENTS, "adopt: maximum adoptions per epoch")
     unknown_world_per_epoch: int = rule(
         1,

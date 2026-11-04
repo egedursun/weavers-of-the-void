@@ -21,7 +21,7 @@ from aerona.constants.tool_inputs import (
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import LegendCategory
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.society import KnowledgeBranch, ResourceMechanic
 from aerona.domain.enums.travel import JourneyIntent
 from aerona.tools.framework.inputs import ToolInput
@@ -309,3 +309,18 @@ class RepayInput(ToolInput):
 class AdoptInput(ToolInput):
     child_id: int
     reason: Reason
+
+
+class EnactLawInput(ToolInput):
+    kind: LawKind
+    params: dict[str, int | str | bool] | None = None
+    name: Name | None = None
+
+
+class AppointOfficerInput(ToolInput):
+    office: OfficeKind
+    mortal_id: int | None = None
+
+
+class SetTaxInput(ToolInput):
+    rate: int

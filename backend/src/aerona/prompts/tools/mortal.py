@@ -280,6 +280,25 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "{{ " + M + ".appoint_commander_per_epoch }} per age.",
         {"mortal_id": "The named mortal's id"},
     ),
+    T.ENACT_LAW: ToolText(
+        "As ruler or regent you lay down a typed law for your whole realm: its kind decides what it rules and its terms decide how. "
+        "1 action, {{ " + M + ".enact_law_per_epoch }} per age.",
+        {
+            "kind": "What the law rules: succession_rule, inheritance_split, land_tenure, slavery, serfdom, tax_rate, tithe, tolls, debt_law, penal_code, levy_law, conscription, standing_army, veteran_pension, ransom_custom, marriage_law, sumptuary, guild_charter, foreigner_rights, religious_tolerance, worship_ban, blood_feud, quarantine, burial_law, sanitation, magic_ban, licensed_magic or rite_restrictions",
+            "params": "The law's terms by name, only those its kind has (rate, share, duration, theft, murder, treason, status, level, rite, split, tenure, labour_days...)",
+            "name": "The law's name, if it should have one of its own",
+        },
+    ),
+    T.APPOINT_OFFICER: ToolText(
+        "As ruler or regent you fill a seat of your realm (chancellor, marshal, treasurer, high_judge, spymaster, governor, ambassador) with a living named mortal, "
+        "or leave it empty. Free, {{ " + M + ".appoint_officer_per_epoch }} per age.",
+        {"office": "The office to fill", "mortal_id": "The mortal who takes the seat; empty to dismiss the holder"},
+    ),
+    T.SET_TAX: ToolText(
+        "As ruler or regent you set the tax your realm's cities pay (0 to 50%); high taxes fill the treasury and stir unrest. Free, "
+        "{{ " + M + ".set_tax_per_epoch }} per age.",
+        {"rate": "The share of the cities' output taken in tax (%)"},
+    ),
     T.BUILD_SPY_NETWORK: ToolText(
         "You build a spy network inside a nearby community: you learn its secrets and gain an advantage in war; if caught, relations sour and war may break out. 1 action.",
         {"target_id": "The community's id", "cover": "The spies' cover: merchant, pilgrim, apprentice…"},

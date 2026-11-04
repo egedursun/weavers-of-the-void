@@ -1,12 +1,27 @@
 from collections.abc import Mapping, Sequence
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.polity import ClaimRow, HouseMemberRow, LawJurisdictionRow, LawProfileRow, OathRow, OfficeRow, TreatyProfileRow
+from aerona.db.tables.lifecycle import DesignatedHeirRow
+from aerona.db.tables.polity import (
+    ClaimRow,
+    HouseMemberRow,
+    LawJurisdictionRow,
+    LawProfileRow,
+    MortalReputeRow,
+    OathRow,
+    OfficeRow,
+    PolityMemberRow,
+    PolityProfileRow,
+    PolityTerritoryRow,
+    TreatyProfileRow,
+)
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.polity import (
     LAW_AREAS,
@@ -18,6 +33,7 @@ from aerona.domain.enums.polity import (
     LegitimacyBasis,
     OathKind,
     OfficeKind,
+    OfficePower,
     PartyRole,
     RegionalStanding,
     TreatyKind,
@@ -26,19 +42,23 @@ from aerona.domain.enums.polity import (
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.succession import pass_rule
 from aerona.engine.polity.book import Realm, RealmBook
-from aerona.engine.polity.formation import refresh_realms
+from aerona.engine.polity.formation import found_polity, refresh_realms
 from aerona.engine.polity.houses import HouseBook, extinguish, found_house, join
 from aerona.engine.polity.laws import edit_law, enact, ensure_profile, jurisdiction_of, repeal, validate
 from aerona.engine.polity.oaths import break_oath, swear
-from aerona.engine.polity.offices import appoint
+from aerona.engine.polity.offices import DEFAULT_POWERS, appoint
+from aerona.engine.polity.repute import repute_of
 from aerona.engine.polity.treaties import Clause, breach, end_treaty, sign
 from aerona.engine.primitives.queries import active_bonds, add_flag, close, connect, living_entity, remove_flag
+from aerona.engine.primitives.records import retire_in
 
 LAW_LOCKS = ("repeal", "params", "enforcement", "basis")
 PROFILE_NUMBERS = ("legitimacy", "stability", "war_weariness")
 PROFILE_POSITIVE = ("treasury", "debt", "war_chest")
 PROFILE_CHOICES = {"government": GovernmentKind, "decision_rule": DecisionRule, "standing": RegionalStanding}
 PROFILE_LINKS = {"capital": "capital_entity_id", "state_religion": "state_religion_id", "ideology": "ideology_entity_id"}
+PROFILE_SCALARS = ("administration", "overextension", "tier", "tier_strain")
+EMBLEM_PARTS = ("emblem_field", "emblem_charge", "emblem_tincture", "emblem_motto")
 
 
 async def realm(ctx: TickContext, polity_id: int) -> tuple[RealmBook, Realm]:
@@ -57,30 +77,69 @@ async def edit_polity(ctx: TickContext, polity_id: int, values: Mapping[str, int
     _, found = await realm(ctx, polity_id)
     profile = found.profile
     for key, value in values.items():
-        if key in PROFILE_NUMBERS:
-            if not isinstance(value, int) or not 0 <= value <= PERCENT:
-                raise ValidationFailedError(f"{key.replace('_', ' ').capitalize()} runs from 0 to {PERCENT}.")
-            setattr(profile, key, value)
-        elif key in PROFILE_POSITIVE:
-            if not isinstance(value, int) or value < 0:
-                raise ValidationFailedError(f"{key.replace('_', ' ').capitalize()} cannot be negative.")
-            setattr(profile, key, value)
-        elif key in PROFILE_CHOICES:
-            try:
-                setattr(profile, key, PROFILE_CHOICES[key](str(value)))
-            except ValueError as error:
-                raise ValidationFailedError(f"{value} is not a known {key.replace('_', ' ')}.") from error
-        elif key in PROFILE_LINKS:
-            setattr(profile, PROFILE_LINKS[key], int(value) if isinstance(value, int) else None)
-        elif key == "name" and isinstance(value, str) and value.strip():
-            found.entity.name = value.strip()[:120]
-        else:
-            raise ValidationFailedError(f"Unknown realm field: {key}.")
+        await set_polity_value(ctx, found, key, value)
         profile.locked = lock(profile.locked, key)
     for key in release:
         profile.locked = [item for item in profile.locked if item != key]
     await ctx.session.flush()
     return found
+
+
+def counted(key: str, value: int | str | bool | None, *, cap: int | None) -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or value < 0 or (cap is not None and value > cap):
+        bound = f"runs from 0 to {cap}" if cap is not None else "cannot be negative"
+        raise ValidationFailedError(f"{key.replace('_', ' ').capitalize()} {bound}.")
+    return value
+
+
+async def set_polity_value(ctx: TickContext, found: Realm, key: str, value: int | str | bool | None) -> None:
+    profile = found.profile
+    if key in PROFILE_NUMBERS:
+        setattr(profile, key, counted(key, value, cap=PERCENT))
+    elif key in (*PROFILE_POSITIVE, *PROFILE_SCALARS):
+        setattr(profile, key, counted(key, value, cap=None))
+    elif key in PROFILE_CHOICES:
+        try:
+            setattr(profile, key, PROFILE_CHOICES[key](str(value)))
+        except ValueError as error:
+            raise ValidationFailedError(f"{value} is not a known {key.replace('_', ' ')}.") from error
+    elif key in PROFILE_LINKS:
+        setattr(profile, PROFILE_LINKS[key], int(value) if isinstance(value, int) else None)
+    elif key == "name" and isinstance(value, str) and value.strip():
+        found.entity.name = value.strip()[:120]
+    elif key == "heir":
+        await set_heir(ctx, found, int(value) if isinstance(value, int) else None)
+    elif key == "core":
+        if not isinstance(value, int) or value not in found.members:
+            raise ValidationFailedError("The heartland must be one of the realm's members.")
+        profile.core_entity_id = value
+    elif key == "patron":
+        profile.patron_son_id = int(value) if isinstance(value, int) else None
+    elif key in EMBLEM_PARTS:
+        profile.emblem = {**profile.emblem, key.removeprefix("emblem_"): str(value or "")[:40]}
+    else:
+        raise ValidationFailedError(f"Unknown realm field: {key}.")
+
+
+async def set_heir(ctx: TickContext, found: Realm, heir_id: int | None) -> None:
+    if found.ruler_id is None:
+        raise ValidationFailedError("The realm has no ruler to name an heir for.")
+    await ctx.session.execute(delete(DesignatedHeirRow).where(DesignatedHeirRow.ruler_entity_id == found.ruler_id))
+    designate = found.office(OfficeKind.HEIR_DESIGNATE)
+    if heir_id is None:
+        if designate is not None:
+            designate.holder_entity_id = None
+        return
+    heir = await living_entity(ctx.session, heir_id)
+    if heir is None or heir.entity_type is not EntityType.MORTAL or heir.id == found.ruler_id:
+        raise NotFoundError("No such living mortal to be heir.")
+    ctx.session.add(DesignatedHeirRow(ruler_entity_id=found.ruler_id, heir_entity_id=heir.id, epoch=ctx.epoch))
+    if designate is None:
+        designate = OfficeRow(polity_entity_id=found.entity.id, kind=OfficeKind.HEIR_DESIGNATE, since_epoch=ctx.epoch, powers=[], locked=[])
+        ctx.session.add(designate)
+        found.offices.append(designate)
+    designate.holder_entity_id = heir.id
+    designate.since_epoch = ctx.epoch
 
 
 async def appoint_office(ctx: TickContext, polity_id: int, kind: OfficeKind, mortal_id: int | None, *, region_id: int | None) -> OfficeRow:
@@ -294,7 +353,9 @@ async def end_house(ctx: TickContext, house_id: int) -> None:
     await extinguish(ctx, book, house_id, "the Creator struck its name")
 
 
-async def grant_claim(ctx: TickContext, claimant_id: int, polity_id: int, *, strength: int, basis: ClaimBasis) -> ClaimRow:
+async def grant_claim(
+    ctx: TickContext, claimant_id: int, polity_id: int, *, strength: int, basis: ClaimBasis, office: OfficeKind = OfficeKind.RULER
+) -> ClaimRow:
     claimant = await living_entity(ctx.session, claimant_id)
     if claimant is None or claimant.entity_type is not EntityType.MORTAL:
         raise NotFoundError("No such living mortal.")
@@ -306,7 +367,7 @@ async def grant_claim(ctx: TickContext, claimant_id: int, polity_id: int, *, str
         claimant_entity_id=claimant_id,
         house_entity_id=house,
         polity_entity_id=polity_id,
-        office=OfficeKind.RULER,
+        office=office,
         strength=strength,
         basis=basis,
         pressed=False,
@@ -376,3 +437,277 @@ async def break_oath_by_hand(ctx: TickContext, oath_id: int) -> OathRow:
         raise NotFoundError("No such oath.")
     await break_oath(ctx, oath, "the Creator released no one")
     return oath
+
+
+def release_keys(locked: list[str], keys: Sequence[str]) -> list[str]:
+    return [item for item in locked if item not in set(keys)]
+
+
+async def found_realm(ctx: TickContext, core_id: int, *, name: str | None, government: GovernmentKind | None) -> Realm:
+    core = await living_entity(ctx.session, core_id)
+    if core is None or core.entity_type not in {EntityType.SETTLEMENT, EntityType.PEOPLE}:
+        raise NotFoundError("A realm is founded on a living settlement or people.")
+    book = await RealmBook.load(ctx.session)
+    current = book.realm_of(core.id)
+    if current is not None and current.profile.core_entity_id == core.id:
+        raise ValidationFailedError(f"{core.name} already heads {current.entity.name}.")
+    for bond in await active_bonds(ctx.session, [BondKind.RULES], targets=[core.id]):
+        source = await living_entity(ctx.session, bond.source_node_id)
+        if source is not None and source.entity_type is not EntityType.MORTAL:
+            await close(ctx.session, bond, ctx.epoch, "a realm of its own by the Creator")
+    await add_flag(ctx.session, core.id, EntityFlag.INDEPENDENT, ctx.epoch)
+    found = await found_polity(ctx, book, core)
+    if name and name.strip():
+        found.entity.name = name.strip()[:120]
+        found.profile.locked = lock(found.profile.locked, "name")
+    if government is not None:
+        found.profile.government = government
+        found.profile.locked = lock(found.profile.locked, "government")
+    await refresh_realms(ctx, book)
+    await ctx.session.flush()
+    return found
+
+
+async def dissolve_realm(ctx: TickContext, polity_id: int) -> int:
+    book, found = await realm(ctx, polity_id)
+    freed = await split(ctx, polity_id, [member for member in found.members if member != found.profile.core_entity_id])
+    await retire_in(ctx, found.entity, "dissolved by the Creator", EntityStatus.DESTROYED)
+    await ctx.session.delete(found.profile)
+    book.realms.pop(polity_id, None)
+    await ctx.session.flush()
+    return freed
+
+
+async def edit_member(ctx: TickContext, polity_id: int, member_id: int, *, autonomy: int | None, release: Sequence[str]) -> PolityMemberRow:
+    _, found = await realm(ctx, polity_id)
+    row = found.members.get(member_id)
+    if row is None:
+        raise NotFoundError("That land is not part of the realm.")
+    if autonomy is not None:
+        row.autonomy = counted("autonomy", autonomy, cap=PERCENT)
+        row.locked = lock(row.locked, "autonomy")
+    row.locked = release_keys(row.locked, release)
+    await ctx.session.flush()
+    return row
+
+
+async def edit_territory(
+    ctx: TickContext, polity_id: int, region_id: int, *, control: int | None, province: str | None, release: Sequence[str]
+) -> PolityTerritoryRow:
+    _, found = await realm(ctx, polity_id)
+    row = found.territory.get(region_id)
+    if row is None:
+        raise NotFoundError("The realm holds no land there.")
+    if control is not None:
+        row.control = counted("control", control, cap=PERCENT)
+        row.locked = lock(row.locked, "control")
+    if province is not None:
+        row.province = province.strip()[:120] or None
+        row.locked = lock(row.locked, "province")
+    row.locked = release_keys(row.locked, release)
+    await ctx.session.flush()
+    return row
+
+
+def checked_powers(powers: Sequence[str]) -> list[str]:
+    known = {item.value for item in OfficePower}
+    unknown = [item for item in powers if item not in known]
+    if unknown:
+        raise ValidationFailedError(f"No such office power: {', '.join(unknown)}.")
+    return sorted(set(powers))
+
+
+async def create_office(
+    ctx: TickContext,
+    polity_id: int,
+    kind: OfficeKind,
+    *,
+    title: str | None,
+    powers: Sequence[str] | None,
+    region_id: int | None,
+    target_id: int | None,
+    holder_id: int | None,
+) -> OfficeRow:
+    _, found = await realm(ctx, polity_id)
+    if kind is OfficeKind.RULER:
+        raise ValidationFailedError("A realm has one throne; crown or depose its ruler instead.")
+    office = OfficeRow(
+        polity_entity_id=polity_id,
+        kind=kind,
+        region_entity_id=region_id,
+        target_entity_id=target_id,
+        title=title.strip()[:120] if title and title.strip() else None,
+        since_epoch=ctx.epoch,
+        powers=checked_powers(powers) if powers is not None else [power.value for power in DEFAULT_POWERS.get(kind, ())],
+        locked=["powers"] if powers is not None else [],
+    )
+    ctx.session.add(office)
+    found.offices.append(office)
+    await ctx.session.flush()
+    if holder_id is not None:
+        holder = await living_entity(ctx.session, holder_id)
+        if holder is None or holder.entity_type is not EntityType.MORTAL:
+            raise NotFoundError("No such living mortal.")
+        await appoint(ctx, found, office, holder, by_id=None, reason="appointed by the Creator")
+        office.locked = lock(office.locked, "holder")
+    await ctx.session.flush()
+    return office
+
+
+async def edit_office(
+    ctx: TickContext,
+    office_id: int,
+    *,
+    title: str | None,
+    powers: Sequence[str] | None,
+    holder_id: int | None,
+    vacate: bool,
+    region_id: int | None,
+    target_id: int | None,
+    release: Sequence[str],
+) -> OfficeRow:
+    office = await ctx.session.get(OfficeRow, office_id)
+    if office is None:
+        raise NotFoundError("No such office.")
+    _, found = await realm(ctx, office.polity_entity_id)
+    office = next(row for row in found.offices if row.id == office_id)
+    if title is not None:
+        office.title = title.strip()[:120] or None
+    if powers is not None:
+        office.powers = checked_powers(powers)
+        office.locked = lock(office.locked, "powers")
+    if region_id is not None:
+        office.region_entity_id = region_id
+        office.locked = lock(office.locked, "region")
+    if target_id is not None:
+        office.target_entity_id = target_id
+        office.locked = lock(office.locked, "target")
+    if vacate or holder_id is not None:
+        if office.kind is OfficeKind.RULER:
+            raise ValidationFailedError("A ruler is crowned or deposed, not appointed.")
+        holder = await living_entity(ctx.session, holder_id) if holder_id is not None else None
+        if holder_id is not None and (holder is None or holder.entity_type is not EntityType.MORTAL):
+            raise NotFoundError("No such living mortal.")
+        await appoint(ctx, found, office, holder, by_id=None, reason="appointed by the Creator")
+        office.locked = lock(office.locked, "holder")
+    office.locked = release_keys(office.locked, release)
+    await ctx.session.flush()
+    return office
+
+
+async def abolish_office(ctx: TickContext, office_id: int) -> OfficeRow:
+    office = await ctx.session.get(OfficeRow, office_id)
+    if office is None:
+        raise NotFoundError("No such office.")
+    if office.kind is OfficeKind.RULER:
+        raise ValidationFailedError("The throne itself cannot be abolished.")
+    _, found = await realm(ctx, office.polity_entity_id)
+    if office.holder_entity_id is not None:
+        await appoint(ctx, found, office, None, by_id=None, reason="the office was abolished")
+    found.profile.locked = lock(found.profile.locked, "offices")
+    await ctx.session.delete(office)
+    await ctx.session.flush()
+    return office
+
+
+async def edit_claim(
+    ctx: TickContext,
+    claim_id: int,
+    *,
+    strength: int | None,
+    basis: ClaimBasis | None,
+    pressed: bool | None,
+    office: OfficeKind | None,
+    backer_id: int | None,
+    release: Sequence[str],
+) -> ClaimRow:
+    row = await ctx.session.get(ClaimRow, claim_id)
+    if row is None:
+        raise NotFoundError("No such claim.")
+    if strength is not None:
+        row.strength = counted("strength", strength, cap=PERCENT)
+        row.locked = lock(row.locked, "strength")
+    if basis is not None:
+        row.basis = basis
+    if office is not None:
+        row.office = office
+    if pressed is not None:
+        row.pressed = pressed
+        row.locked = lock(row.locked, "pressed")
+    if backer_id is not None:
+        row.backer_entity_id = backer_id or None
+    row.locked = release_keys(row.locked, release)
+    await ctx.session.flush()
+    return row
+
+
+async def revoke_claim(ctx: TickContext, claim_id: int) -> ClaimRow:
+    row = await ctx.session.get(ClaimRow, claim_id)
+    if row is None or row.ended_epoch is not None:
+        raise NotFoundError("No standing claim.")
+    row.ended_epoch = ctx.epoch
+    await ctx.session.flush()
+    return row
+
+
+async def edit_repute(ctx: TickContext, mortal_id: int, *, honour: int | None, infamy: int | None, release: Sequence[str]) -> MortalReputeRow:
+    mortal = await ctx.session.get(EntityRow, mortal_id)
+    if mortal is None or mortal.entity_type is not EntityType.MORTAL:
+        raise NotFoundError("No such mortal.")
+    row = await repute_of(ctx.session, mortal_id)
+    if honour is not None:
+        row.honour = counted("honour", honour, cap=PERCENT)
+        row.locked = lock(row.locked, "honour")
+    if infamy is not None:
+        row.infamy = counted("infamy", infamy, cap=PERCENT)
+        row.locked = lock(row.locked, "infamy")
+    row.locked = release_keys(row.locked, release)
+    row.updated_epoch = ctx.epoch
+    await ctx.session.flush()
+    return row
+
+
+async def lend(ctx: TickContext, polity_id: int, lender_id: int, *, principal: int, interest_pct: int, epochs: int) -> LoanRow:
+    _, found = await realm(ctx, polity_id)
+    lender = await living_entity(ctx.session, lender_id)
+    if lender is None or lender.id == polity_id:
+        raise NotFoundError("No such lender.")
+    loan = LoanRow(
+        lender_entity_id=lender.id,
+        borrower_entity_id=polity_id,
+        principal=counted("principal", principal, cap=None) or 1,
+        interest_pct=counted("interest", interest_pct, cap=PERCENT),
+        repaid=0,
+        issued_epoch=ctx.epoch,
+        due_epoch=ctx.epoch + max(1, epochs),
+        status=LoanStatus.OPEN,
+        purpose="crown debt",
+    )
+    ctx.session.add(loan)
+    found.profile.treasury += loan.principal
+    found.profile.debt += round(loan.principal * (1 + loan.interest_pct / PERCENT))
+    await ctx.session.flush()
+    return loan
+
+
+async def edit_loan(
+    ctx: TickContext, loan_id: int, *, principal: int | None, interest_pct: int | None, due_epoch: int | None, status: LoanStatus | None
+) -> LoanRow:
+    loan = await ctx.session.get(LoanRow, loan_id)
+    if loan is None:
+        raise NotFoundError("No such loan.")
+    profile = await ctx.session.get(PolityProfileRow, loan.borrower_entity_id)
+    before = max(0, round(loan.principal * (1 + loan.interest_pct / PERCENT)) - loan.repaid) if loan.status is LoanStatus.OPEN else 0
+    if principal is not None:
+        loan.principal = max(1, counted("principal", principal, cap=None))
+    if interest_pct is not None:
+        loan.interest_pct = counted("interest", interest_pct, cap=PERCENT)
+    if due_epoch is not None:
+        loan.due_epoch = due_epoch
+    if status is not None:
+        loan.status = status
+    after = max(0, round(loan.principal * (1 + loan.interest_pct / PERCENT)) - loan.repaid) if loan.status is LoanStatus.OPEN else 0
+    if profile is not None:
+        profile.debt = max(0, profile.debt + after - before)
+    await ctx.session.flush()
+    return loan

@@ -1,7 +1,19 @@
 from pydantic import Field
 
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.polity import ClaimBasis, ClauseKind, LawKind, LegitimacyBasis, OathKind, OfficeKind, PartyRole, TreatyKind, TreatyStatus
+from aerona.domain.enums.economy import LoanStatus
+from aerona.domain.enums.polity import (
+    ClaimBasis,
+    ClauseKind,
+    GovernmentKind,
+    LawKind,
+    LegitimacyBasis,
+    OathKind,
+    OfficeKind,
+    PartyRole,
+    TreatyKind,
+    TreatyStatus,
+)
 from aerona.engine.polity import control
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -83,6 +95,7 @@ class GrantClaim(Command):
     polity_id: int
     strength: int = Field(default=50, ge=0, le=100)
     basis: ClaimBasis = ClaimBasis.DIVINE
+    office: OfficeKind = OfficeKind.RULER
 
 
 class TreatyParty(Command):
@@ -227,7 +240,9 @@ async def extinguish_house(scope: PlayerScope, command: HouseTarget) -> Effect:
 
 @player_action("claim:grant", ActionKind.OTHER)
 async def grant_claim(scope: PlayerScope, command: GrantClaim) -> Effect:
-    await control.grant_claim(await scope.context("claim_grant"), command.mortal_id, command.polity_id, strength=command.strength, basis=command.basis)
+    await control.grant_claim(
+        await scope.context("claim_grant"), command.mortal_id, command.polity_id, strength=command.strength, basis=command.basis, office=command.office
+    )
     return Effect("A claim to the throne is granted.", command.mortal_id)
 
 
@@ -265,3 +280,211 @@ async def swear_oath(scope: PlayerScope, command: SwearOath) -> Effect:
 async def break_oath(scope: PlayerScope, command: OathTarget) -> Effect:
     oath = await control.break_oath_by_hand(await scope.context("oath_break"), command.oath_id)
     return Effect("The oath is broken.", oath.swearer_entity_id)
+
+
+class FoundRealm(Command):
+    core_id: int
+    name: str | None = Field(default=None, max_length=120)
+    government: GovernmentKind | None = None
+
+
+class EditMember(Command):
+    polity_id: int
+    member_id: int
+    autonomy: int | None = Field(default=None, ge=0, le=100)
+    release: list[str] = Field(default_factory=list)
+
+
+class EditTerritory(Command):
+    polity_id: int
+    region_id: int
+    control: int | None = Field(default=None, ge=0, le=100)
+    province: str | None = Field(default=None, max_length=120)
+    release: list[str] = Field(default_factory=list)
+
+
+class CreateOffice(Command):
+    polity_id: int
+    kind: OfficeKind
+    title: str | None = Field(default=None, max_length=120)
+    powers: list[str] | None = None
+    region_id: int | None = None
+    target_id: int | None = None
+    holder_id: int | None = None
+
+
+class EditOffice(Command):
+    office_id: int
+    title: str | None = Field(default=None, max_length=120)
+    powers: list[str] | None = None
+    holder_id: int | None = None
+    vacate: bool = False
+    region_id: int | None = None
+    target_id: int | None = None
+    release: list[str] = Field(default_factory=list)
+
+
+class OfficeTarget(Command):
+    office_id: int
+
+
+class EditClaim(Command):
+    claim_id: int
+    strength: int | None = Field(default=None, ge=0, le=100)
+    basis: ClaimBasis | None = None
+    pressed: bool | None = None
+    office: OfficeKind | None = None
+    backer_id: int | None = None
+    release: list[str] = Field(default_factory=list)
+
+
+class ClaimTarget(Command):
+    claim_id: int
+
+
+class EditRepute(Command):
+    mortal_id: int
+    honour: int | None = Field(default=None, ge=0, le=100)
+    infamy: int | None = Field(default=None, ge=0, le=100)
+    release: list[str] = Field(default_factory=list)
+
+
+class Lend(Command):
+    polity_id: int
+    lender_id: int
+    principal: int = Field(ge=1, le=10**9)
+    interest_pct: int = Field(default=10, ge=0, le=100)
+    epochs: int = Field(default=5, ge=1, le=1000)
+
+
+class EditLoan(Command):
+    loan_id: int
+    principal: int | None = Field(default=None, ge=1, le=10**9)
+    interest_pct: int | None = Field(default=None, ge=0, le=100)
+    due_epoch: int | None = Field(default=None, ge=0)
+    status: LoanStatus | None = None
+
+
+@player_action("polity:found", ActionKind.CREATE_ENTITY)
+async def found_realm(scope: PlayerScope, command: FoundRealm) -> Effect:
+    found = await control.found_realm(await scope.context("polity_found"), command.core_id, name=command.name, government=command.government)
+    return Effect(f"{found.entity.name} is founded.", command.core_id, created_ids=(found.entity.id,))
+
+
+@player_action("polity:dissolve", ActionKind.DESTROY)
+async def dissolve_realm(scope: PlayerScope, command: PolityTarget) -> Effect:
+    freed = await control.dissolve_realm(await scope.context("polity_dissolve"), command.polity_id)
+    return Effect(f"The realm is no more; {freed} lands stand alone.", command.polity_id)
+
+
+@player_action("polity:member", ActionKind.EDIT_RECORD)
+async def edit_member(scope: PlayerScope, command: EditMember) -> Effect:
+    row = await control.edit_member(
+        await scope.context("polity_member"), command.polity_id, command.member_id, autonomy=command.autonomy, release=command.release
+    )
+    return Effect(f"The land now keeps {row.autonomy} autonomy.", command.member_id)
+
+
+@player_action("polity:territory", ActionKind.EDIT_RECORD)
+async def edit_territory(scope: PlayerScope, command: EditTerritory) -> Effect:
+    row = await control.edit_territory(
+        await scope.context("polity_territory"),
+        command.polity_id,
+        command.region_id,
+        control=command.control,
+        province=command.province,
+        release=command.release,
+    )
+    return Effect(f"The realm holds that land at {row.control} control.", command.region_id)
+
+
+@player_action("office:create", ActionKind.CREATE_ENTITY)
+async def create_office(scope: PlayerScope, command: CreateOffice) -> Effect:
+    office = await control.create_office(
+        await scope.context("office_create"),
+        command.polity_id,
+        command.kind,
+        title=command.title,
+        powers=command.powers,
+        region_id=command.region_id,
+        target_id=command.target_id,
+        holder_id=command.holder_id,
+    )
+    return Effect(f"The office of {office.title or office.kind.value.replace('_', ' ')} is created.", command.polity_id, values={"office_id": office.id})
+
+
+@player_action("office:edit", ActionKind.EDIT_RECORD)
+async def edit_office(scope: PlayerScope, command: EditOffice) -> Effect:
+    office = await control.edit_office(
+        await scope.context("office_edit"),
+        command.office_id,
+        title=command.title,
+        powers=command.powers,
+        holder_id=command.holder_id,
+        vacate=command.vacate,
+        region_id=command.region_id,
+        target_id=command.target_id,
+        release=command.release,
+    )
+    return Effect(f"The office of {office.title or office.kind.value.replace('_', ' ')} is set.", office.polity_entity_id)
+
+
+@player_action("office:abolish", ActionKind.DESTROY)
+async def abolish_office(scope: PlayerScope, command: OfficeTarget) -> Effect:
+    office = await control.abolish_office(await scope.context("office_abolish"), command.office_id)
+    return Effect(f"The office of {office.title or office.kind.value.replace('_', ' ')} is abolished.", office.polity_entity_id)
+
+
+@player_action("claim:edit", ActionKind.EDIT_RECORD)
+async def edit_claim(scope: PlayerScope, command: EditClaim) -> Effect:
+    row = await control.edit_claim(
+        await scope.context("claim_edit"),
+        command.claim_id,
+        strength=command.strength,
+        basis=command.basis,
+        pressed=command.pressed,
+        office=command.office,
+        backer_id=command.backer_id,
+        release=command.release,
+    )
+    return Effect(f"The claim stands at {row.strength}.", row.claimant_entity_id)
+
+
+@player_action("claim:revoke", ActionKind.DESTROY)
+async def revoke_claim(scope: PlayerScope, command: ClaimTarget) -> Effect:
+    row = await control.revoke_claim(await scope.context("claim_revoke"), command.claim_id)
+    return Effect("The claim is void.", row.claimant_entity_id)
+
+
+@player_action("mortal:repute", ActionKind.EDIT_RECORD)
+async def edit_repute(scope: PlayerScope, command: EditRepute) -> Effect:
+    row = await control.edit_repute(
+        await scope.context("mortal_repute"), command.mortal_id, honour=command.honour, infamy=command.infamy, release=command.release
+    )
+    return Effect(f"Honour {row.honour}, infamy {row.infamy}.", command.mortal_id)
+
+
+@player_action("polity:loan", ActionKind.CREATE_ENTITY)
+async def lend(scope: PlayerScope, command: Lend) -> Effect:
+    loan = await control.lend(
+        await scope.context("polity_loan"),
+        command.polity_id,
+        command.lender_id,
+        principal=command.principal,
+        interest_pct=command.interest_pct,
+        epochs=command.epochs,
+    )
+    return Effect(f"The realm borrowed {loan.principal}.", command.polity_id, values={"loan_id": loan.id})
+
+
+@player_action("loan:edit", ActionKind.EDIT_RECORD)
+async def edit_loan(scope: PlayerScope, command: EditLoan) -> Effect:
+    loan = await control.edit_loan(
+        await scope.context("loan_edit"),
+        command.loan_id,
+        principal=command.principal,
+        interest_pct=command.interest_pct,
+        due_epoch=command.due_epoch,
+        status=command.status,
+    )
+    return Effect(f"The loan is {loan.status.value}.", loan.borrower_entity_id)

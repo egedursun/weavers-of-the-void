@@ -22,6 +22,7 @@ from aerona.engine.mind.drives import unrest
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.community import CommunityBook
+from aerona.engine.polity.revolts import REVOLT_AIMS, seed_aims
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
@@ -111,7 +112,9 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
         ),
     )
     target = await uprising_target(ctx.session, settlement)
-    await declare_war(ctx, rebels.id, target.id, "uprising", cause=WarCause.UPRISING, world_cap=False)
+    cause = WarCause.INDEPENDENCE if kind is RevoltKind.SECESSION else WarCause.UPRISING
+    if await declare_war(ctx, rebels.id, target.id, f"{kind.value} revolt", cause=cause, world_cap=False):
+        await seed_aims(ctx, rebels.id, target.id, REVOLT_AIMS[kind])
     language = await spoken_language(ctx.session, settlement.id)
     if language is not None:
         await BondRepository(ctx.session).connect(BondDraft(rebels.id, language.id, BondKind.SPEAKS, ctx.epoch, "the tongue of the city"))

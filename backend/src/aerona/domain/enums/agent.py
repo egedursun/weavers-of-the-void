@@ -69,6 +69,12 @@ class TurnCounter(StrEnum):
     LANGUAGES_FOUNDED = "languages_founded"
     CULTURES_CREATED = "cultures_created"
     LAND_REWARDS = "land_rewards"
+    LAWS_ENACTED = "laws_enacted"
+    OFFICERS_APPOINTED = "officers_appointed"
+    TAXES_SET = "taxes_set"
+    TREATIES_PROPOSED = "treaties_proposed"
+    OATHS_SWORN = "oaths_sworn"
+    FACTION_ACTS = "faction_acts"
 
 
 class PendingJobKind(StrEnum):

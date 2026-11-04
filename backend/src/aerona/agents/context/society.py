@@ -2,6 +2,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.lore import lore_lines
+from aerona.agents.context.realm import statecraft
 from aerona.agents.context.wilds import wild_lines
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import PeopleCultureRow
@@ -72,6 +73,7 @@ async def home_for(session: AsyncSession, me: EntityRow) -> HomeLine | None:
     wars, command, occupied, captives = await war_lines(session, me, home, region)
     tenets, judgement, zeal = await faith_lines(session, home)
     lore = await lore_lines(session, me, home, realm_id, house_id)
+    state = await statecraft(session, me, home, realm_id)
     wildlife, herds, beasts = await wild_lines(session, home, region)
     return HomeLine(
         wildlife=wildlife,
@@ -96,6 +98,10 @@ async def home_for(session: AsyncSession, me: EntityRow) -> HomeLine | None:
         office=words(office.kind.value) if office is not None else "",
         house=house.name if house is not None else "",
         oaths=oaths,
+        treaties=state.treaties,
+        claims=state.claims,
+        succession=state.succession,
+        laws=state.laws,
         community=home.name,
         tier=town.size_tier.value if town is not None else "",
         order=town.public_order if town is not None else None,

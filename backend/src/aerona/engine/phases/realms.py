@@ -6,6 +6,7 @@ from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.formation import refresh_realms
 from aerona.engine.polity.governance import agenda, collect, conquest_conflict, cult_laws, enforce, law_effects, proposals, repeal_discord
 from aerona.engine.polity.houses import HouseBook, arrange_marriages, gather_kin, seed_houses, tend
+from aerona.engine.polity.law_effects import realm_coinage
 from aerona.engine.polity.laws import LawBook, backfill_kinds, ensure_profile
 from aerona.engine.polity.oaths import lapse, pledges
 from aerona.engine.polity.offices import coups, name_heir, office_effects, press_claims, purge, regency, staff, succession_line
@@ -18,10 +19,12 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 @reads(
     "army.size",
     "faction.strength",
+    "faction.wealth",
     "law.rigidity",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
+    "mortal.importance",
     "mortal.intellect",
     "mortal.lifespan",
     "mortal.strength",
@@ -32,21 +35,31 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "settlement.prosperity",
     "table.applied_fixups",
     "table.armies",
+    "table.army_profiles",
+    "table.artwork_profiles",
+    "table.body_customs",
     "table.bonds",
+    "table.claims",
+    "table.community_relations",
     "table.community_societies",
+    "table.conditions",
+    "table.cult_doctrines",
     "table.cult_tenets",
     "table.culture_values",
+    "table.districts",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.holder_levels",
     "table.holder_techniques",
     "table.house_members",
+    "table.house_profiles",
     "table.injuries",
     "table.item_profiles",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.loans",
     "table.maimed_cohorts",
+    "table.mortal_repute",
     "table.name_registry",
     "table.nodes",
     "table.oaths",
@@ -61,7 +74,10 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.settlement_profiles",
     "table.settlement_treasury",
     "table.skills",
+    "table.sons",
     "table.traits",
+    "table.treaty_parties",
+    "table.treaty_profiles",
     "table.vassalages",
     "table.war_sides",
     "table.wars",
@@ -70,6 +86,8 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 @writes(
     "army.size",
     "cult.followers",
+    "faction.sway",
+    "faction.wealth",
     "law.justice",
     "people.population",
     "people.prosperity",
@@ -80,10 +98,15 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "settlement.population",
     "settlement.prosperity",
     "table.applied_fixups",
+    "table.army_profiles",
+    "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.claims",
+    "table.community_relations",
     "table.community_societies",
     "table.designated_heirs",
+    "table.districts",
     "table.entities",
     "table.epoch_year_cursors",
     "table.incident_participants",
@@ -91,6 +114,8 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.loans",
+    "table.memories",
+    "table.mortal_repute",
     "table.name_registry",
     "table.oaths",
     "table.office_history",
@@ -102,6 +127,9 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.polity_treasury",
     "table.settlement_profiles",
     "table.settlement_treasury",
+    "table.war_aims",
+    "table.war_sides",
+    "table.wars",
 )
 async def polity_cycles(ctx: TickContext) -> None:
     book = await RealmBook.load(ctx.session)
@@ -141,6 +169,7 @@ async def polity_cycles(ctx: TickContext) -> None:
             ctx.count(f"proposal.{decision.replace(' ', '_')}")
         ctx.count("repealed", await repeal_discord(ctx, realm, laws))
         await law_effects(ctx, book, realm, laws)
+        ctx.count("realm_coinage", await realm_coinage(ctx, realm))
         ctx.count("law_unrest", await enforce(ctx, realm, laws))
         legit = await legitimacy(ctx, book, realm, laws)
         steady = await stability(ctx, book, realm, sum(legit.values()))
