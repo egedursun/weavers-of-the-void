@@ -76,6 +76,8 @@ class SonToolId(StrEnum):
     BIRTH_WORLD = "birth_world"
     BIND_MORTALS = "bind_mortals"
     TOUCH_MORTAL = "touch_mortal"
+    REVEAL_TENET = "reveal_tenet"
+    OPEN_REBIRTH_GATE = "open_rebirth_gate"
 
 
 class MortalToolId(StrEnum):

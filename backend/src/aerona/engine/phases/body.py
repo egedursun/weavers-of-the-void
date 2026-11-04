@@ -4,7 +4,7 @@ from aerona.catalog.body_plans import PLANS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
-from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow
+from aerona.db.tables.body import BodyRow, InjuryRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
@@ -330,28 +330,6 @@ async def _addiction(ctx: TickContext, mortal: EntityRow, addicted: dict[int, Ad
     await gain_condition(ctx, mortal, ConditionKind.ADDICTION, HarmCause.POISON, chance=table.addiction_chance, source_node_id=row.resource_entity_id)
 
 
-async def _possession(ctx: TickContext, atlas: RegionAtlas, mortals: list[EntityRow]) -> None:
-    table = ctx.rules.conditions
-    restless = [spirit for spirit in await canon(ctx.session, [EntityType.SPIRIT]) if (stat(spirit, "unrest") or 0) >= ctx.rules.apocalypse.restless_threshold]
-    for spirit in restless:
-        rng = ctx.rng(seed_of("possess", spirit.id))
-        if not rng.chance(table.possession_chance):
-            continue
-        near = [mortal for mortal in mortals if atlas.same_region(spirit.id, mortal.id)]
-        if near:
-            await gain_condition(ctx, rng.pick(near), ConditionKind.POSSESSION, HarmCause.CURSE, source_node_id=spirit.id)
-    for row in list(await ctx.session.scalars(select(ConditionRow).where(ConditionRow.kind == ConditionKind.POSSESSION, ConditionRow.ended_epoch.is_(None)))):
-        bearer = await ctx.session.get(EntityRow, row.bearer_node_id)
-        if bearer is None or bearer.status is not EntityStatus.CANON:
-            continue
-        haunter = await living_entity(ctx.session, row.source_node_id)
-        community = await community_of(ctx.session, bearer)
-        piety = (stat(community, "piety") or 0) if community is not None else 0
-        chance = table.exorcism_chance * (1 + piety * table.exorcism_piety_pct / PERCENT / PERCENT)
-        if haunter is None or ctx.rng(seed_of("exorcism", row.id)).chance(chance):
-            await end_condition(ctx, bearer, ConditionKind.POSSESSION)
-
-
 async def _marks(ctx: TickContext, mortal: EntityRow, flags: set[EntityFlag]) -> None:
     table = ctx.rules.conditions
     chosen = await condition_of(ctx, mortal.id, ConditionKind.CHOSEN_MARK)
@@ -424,8 +402,6 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
     "mortal.intellect",
     "mortal.lifespan",
     "mortal.strength",
-    "settlement.piety",
-    "spirit.unrest",
     "table.addictions",
     "table.bodies",
     "table.body_customs",
@@ -443,7 +419,6 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
     "table.nodes",
     "table.prostheses",
     "table.traits",
-    "table.world_maps",
 )
 @writes(
     "table.bodies",
@@ -474,7 +449,6 @@ async def body_conditions(ctx: TickContext) -> None:
         await _marks(ctx, mortal, flags)
         if is_notable(ctx.rules, mortal, flags):
             await _addiction(ctx, mortal, addicted)
-    await _possession(ctx, atlas, mortals)
     ctx.count("weather_wounds", exposed)
 
 

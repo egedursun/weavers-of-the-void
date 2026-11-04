@@ -21,6 +21,7 @@ from aerona.domain.enums.culture import (
     Technique,
     TraditionKind,
 )
+from aerona.domain.enums.faith import FuneralRite
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.society import KnowledgeBranch
 
@@ -86,6 +87,7 @@ class TraditionProfileRow(Base):
     cost: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
     effects: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
     taboo_target: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    funeral_rite: Mapped[FuneralRite | None] = mapped_column(enum_type(FuneralRite, "funeral_rite"))
     origin_incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
     origin_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     updated_epoch: Mapped[int] = mapped_column(default=0)

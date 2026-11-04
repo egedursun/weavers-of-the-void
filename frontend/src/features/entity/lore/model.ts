@@ -93,6 +93,8 @@ import {
   Wrench,
   Zap,
   type LucideIcon,
+  Lock,
+  LockOpen,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -346,6 +348,9 @@ export const EFFECTS: Record<Schemas['RiteEffectKind'], LoreNamed> = {
   raise_dead: { label: 'Raises the dead', icon: Bone, tone: 'danger' },
   fertility: { label: 'Fertility', icon: Baby, tone: 'success' },
   harvest_blessing: { label: 'Blesses the harvest', icon: Wheat, tone: 'gold' },
+  seal_soul: { label: 'Seals a soul', icon: Lock, tone: 'warning' },
+  unseal_soul: { label: 'Breaks a seal', icon: LockOpen, tone: 'info' },
+  exorcise: { label: 'Exorcism', icon: Ban, tone: 'gold' },
 }
 
 export const PREDICATES: Record<Schemas['ProphecyPredicate'], LoreNamed> = {

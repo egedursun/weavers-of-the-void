@@ -2,25 +2,29 @@ from collections import defaultdict
 
 from sqlalchemy import select
 
+from aerona.catalog.lore import LEGEND_MORALS
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.culture import LegendProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import SpiritProfileRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityType
+from aerona.domain.enums.culture import LegendArchetype
+from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.world import Discovery
+from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.queries import add_flag, canon, living_entity
-from aerona.engine.primitives.records import retire
+from aerona.engine.primitives.queries import add_flag, canon, connect, living_entity
+from aerona.engine.primitives.records import RecordSpec, create_record, retire
 from aerona.engine.primitives.stats import set_stats, stat
 
 
@@ -90,13 +94,26 @@ async def spirits_rest(ctx: TickContext) -> None:
     ctx.count("crossed", crossed)
 
 
-@reads("settlement.prosperity", "spirit.unrest", "table.bonds", "table.epoch_year_cursors", "table.spirit_profiles", "table.world_maps")
+@reads(
+    "settlement.prosperity",
+    "spirit.unrest",
+    "table.bonds",
+    "table.epoch_year_cursors",
+    "table.legend_profiles",
+    "table.name_registry",
+    "table.nodes",
+    "table.spirit_profiles",
+    "table.world_maps",
+)
 @writes(
     "settlement.prosperity",
     "spirit.unrest",
+    "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
+    "table.legend_profiles",
+    "table.name_registry",
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
@@ -125,6 +142,67 @@ async def hauntings(ctx: TickContext) -> None:
         await note(
             ctx, f"{spirit.name} haunted {haunted.name}; no one goes out into the streets at night.", key="spirits.haunting", ids=[spirit.id, haunted.id]
         )
+        legend, born = await ghost_legend(ctx, spirit, haunted)
+        if born:
+            await note(
+                ctx,
+                f"In {haunted.name} they began to tell of {spirit.name}: {legend.name}.",
+                key="spirits.ghost_legend",
+                ids=[legend.id, spirit.id, haunted.id],
+            )
+
+
+async def ghost_legend(ctx: TickContext, spirit: EntityRow, haunted: EntityRow) -> tuple[EntityRow, bool]:
+    table = ctx.rules.spirits
+    row = await ctx.session.scalar(
+        select(LegendProfileRow)
+        .join(EntityRow, EntityRow.id == LegendProfileRow.legend_entity_id)
+        .where(
+            LegendProfileRow.archetype == LegendArchetype.HAUNTED_PLACE,
+            LegendProfileRow.subject_node_id == spirit.id,
+            EntityRow.status == EntityStatus.CANON,
+        )
+        .order_by(LegendProfileRow.legend_entity_id)
+        .limit(1)
+    )
+    if row is not None:
+        if "credence" not in row.locked:
+            row.credence = clamp_int(row.credence + table.haunt_legend_gain, 0, PERCENT)
+        if haunted.id not in row.tellers:
+            row.tellers = [*row.tellers, haunted.id]
+            await connect(ctx.session, haunted.id, row.legend_entity_id, BondKind.CELEBRATES, ctx.epoch, description="tells the ghost story")
+        legend = await ctx.session.get(EntityRow, row.legend_entity_id)
+        if legend is not None:
+            return legend, False
+    legend = await create_record(
+        ctx,
+        RecordSpec(
+            name=f"The Haunting of {haunted.name}"[:200],
+            entity_type=EntityType.LEGEND,
+            stats=LegendStats(spread=table.haunt_legend_credence),
+            body=f"The people of {haunted.name} tell how {spirit.name} walks their streets at night.",
+            power=max(1, spirit.power_level),
+            world_id=haunted.world_id,
+            location_id=haunted.id,
+        ),
+    )
+    await connect(ctx.session, legend.id, spirit.id, BondKind.TELLS_OF, ctx.epoch, description="a ghost story")
+    await connect(ctx.session, haunted.id, legend.id, BondKind.CELEBRATES, ctx.epoch, description="tells the ghost story")
+    ctx.session.add(
+        LegendProfileRow(
+            legend_entity_id=legend.id,
+            archetype=LegendArchetype.HAUNTED_PLACE,
+            credence=table.haunt_legend_credence,
+            distortion=0,
+            subject_node_id=spirit.id,
+            moral={axis.value: value for axis, value in LEGEND_MORALS[LegendArchetype.HAUNTED_PLACE].items()},
+            tellers=[haunted.id],
+            updated_epoch=ctx.epoch,
+            locked=[],
+        )
+    )
+    await ctx.session.flush()
+    return legend, True
 
 
 async def killers_home(ctx: TickContext, spirit: EntityRow) -> int | None:

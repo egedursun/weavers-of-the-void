@@ -20,6 +20,7 @@ from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.ecology import BeastTemper, Diet, SizeClass, Sociality, YieldProduct
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType, LegendCategory
+from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPath, TenetKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.mortal import MortalSex
@@ -29,6 +30,7 @@ from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.shared_inputs import LinkInput, WordInput
 
 Tag = Annotated[str, Field(min_length=1, max_length=TAG_MAX)]
+TENETS_MAX = 12
 WORSHIPPING_TYPES = frozenset({EntityType.CULT, EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.FACTION})
 
 
@@ -100,6 +102,12 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
         },
         EntityType.EVENT: {"effects": (list[EventEffectInput] | None, None)},
         EntityType.LEGEND: {"legend_category": (LegendCategory | None, None)},
+        EntityType.CULT: {
+            "tenets": (Annotated[list[TenetKind], Field(max_length=TENETS_MAX)] | None, None),
+            "judgement": (JudgementDoctrine | None, None),
+            "rebirth_path": (RebirthPath | None, None),
+        },
+        EntityType.TRADITION: {"funeral_rite": (FuneralRite | None, None)},
         EntityType.RESOURCE: {
             "commodity": (CommodityKind | None, None),
             "material": (MaterialKind | None, None),

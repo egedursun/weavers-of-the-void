@@ -1,3 +1,5 @@
+from typing import Any
+
 from sqlalchemy import JSON, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -12,6 +14,7 @@ from aerona.domain.enums.faith import (
     FuneralRite,
     HoldingKind,
     JudgementDoctrine,
+    RebirthPath,
     ReincarnationGate,
     SpiritAlignment,
     StratumKind,
@@ -44,6 +47,7 @@ class CultDoctrineRow(Base):
     fanaticism: Mapped[FanaticismKind | None] = mapped_column(enum_type(FanaticismKind, "fanaticism"))
     fanaticism_epoch: Mapped[int | None]
     excommunicated: Mapped[list[int]] = mapped_column(JSON, default=list)
+    rebirth_path: Mapped[RebirthPath] = mapped_column(enum_type(RebirthPath, "rebirth_path"), default=RebirthPath.PEOPLE)
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
@@ -53,6 +57,7 @@ class CultTenetRow(Base):
 
     cult_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     tenet: Mapped[TenetKind] = mapped_column(enum_type(TenetKind, "tenet"), primary_key=True)
+    name: Mapped[str | None] = mapped_column(String(NAME_MAX_LENGTH))
     target: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
     since_epoch: Mapped[int] = mapped_column(default=0)
     revealed_by_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
@@ -77,6 +82,7 @@ class CultOfficeRow(Base):
     kind: Mapped[ClergyOffice] = mapped_column(enum_type(ClergyOffice, "kind"))
     holder_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     since_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[bool] = mapped_column(default=False)
 
 
 class HeresyRow(Base):
@@ -89,6 +95,7 @@ class HeresyRow(Base):
     declared_epoch: Mapped[int]
     suppressed: Mapped[bool] = mapped_column(default=False)
     tolerated: Mapped[bool] = mapped_column(default=False)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class RelicRow(Base):
@@ -102,11 +109,16 @@ class RelicRow(Base):
     sanctity: Mapped[int] = mapped_column(default=50)
     pilgrims: Mapped[int] = mapped_column(default=0)
     canonised_epoch: Mapped[int]
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class SpiritProfileRow(Base):
     __tablename__ = "spirit_profiles"
-    __table_args__ = (between("memory_strength", PERCENT_MIN, PERCENT_MAX), between("veneration", PERCENT_MIN, PERCENT_MAX))
+    __table_args__ = (
+        between("memory_strength", PERCENT_MIN, PERCENT_MAX),
+        between("veneration", PERCENT_MIN, PERCENT_MAX),
+        between("seal_strength", PERCENT_MIN, PERCENT_MAX),
+    )
 
     spirit_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     origin_mortal_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"), index=True)
@@ -123,6 +135,7 @@ class SpiritProfileRow(Base):
     rite: Mapped[FuneralRite] = mapped_column(enum_type(FuneralRite, "rite"), default=FuneralRite.NONE)
     patron_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
     sealed: Mapped[bool] = mapped_column(default=False)
+    seal_strength: Mapped[int] = mapped_column(default=0)
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
@@ -135,8 +148,9 @@ class AfterlifeStratumRow(Base):
     realm_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     kind: Mapped[StratumKind] = mapped_column(enum_type(StratumKind, "kind"))
     name: Mapped[str] = mapped_column(String(NAME_MAX_LENGTH))
-    criteria: Mapped[dict[str, int | str]] = mapped_column(JSON, default=dict)
+    criteria: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     population: Mapped[int] = mapped_column(default=0)
+    closed: Mapped[bool] = mapped_column(default=False)
     cult_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
 
@@ -164,6 +178,8 @@ class PossessionRow(Base):
     spirit_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), index=True)
     since_epoch: Mapped[int]
     stress: Mapped[int] = mapped_column(default=0)
+    host_values: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class ReincarnationRow(Base):

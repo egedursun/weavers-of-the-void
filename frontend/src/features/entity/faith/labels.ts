@@ -202,7 +202,47 @@ export const RITES: Record<string, Named> = {
   burial: { label: 'Buried', icon: Shovel, tone: 'muted' },
   burning: { label: 'Burned', icon: Flame, tone: 'warning' },
   exposure: { label: 'Given to the sky', icon: Wind, tone: 'info' },
+  nameless: { label: 'Buried nameless', icon: EyeOff, tone: 'warning' },
   none: { label: 'Unburied', icon: CircleOff, tone: 'danger' },
+}
+
+export const REBIRTH_PATHS: Record<string, Named & { hint: string }> = {
+  people: {
+    label: 'Among its people',
+    icon: Users,
+    tone: 'verdigris',
+    hint: 'Born again where it lived',
+  },
+  house: {
+    label: 'Into its house',
+    icon: Castle,
+    tone: 'gold',
+    hint: 'Born again to its own blood',
+  },
+  merit: {
+    label: 'By merit',
+    icon: Scale,
+    tone: 'info',
+    hint: 'The worthy to the rich, the wicked to the poor',
+  },
+}
+
+export const LIVING_STATES: Record<string, Named> = {
+  wandering: { label: 'Wandering', icon: Footprints, tone: 'warning' },
+  judged: { label: 'Judged, unplaced', icon: Scale, tone: 'info' },
+  in_realm: { label: 'At rest', icon: Moon, tone: 'verdigris' },
+}
+
+export const CRITERIA_FLOORS: Record<string, Named> = {
+  renown_at_least: { label: 'Renown at least', icon: Trophy, tone: 'gold' },
+  honour_at_least: { label: 'Honour at least', icon: Shield, tone: 'success' },
+  faith_at_least: { label: 'Faith at least', icon: HandHeart, tone: 'info' },
+  violence_at_least: {
+    label: 'Violence at least',
+    icon: Swords,
+    tone: 'danger',
+  },
+  infamy_at_least: { label: 'Infamy at least', icon: Skull, tone: 'danger' },
 }
 
 export const BINDINGS: Record<string, Named> = {
@@ -233,6 +273,15 @@ export const SOUL_FIELDS: Record<string, string> = {
   memory_strength: 'Memory of the living',
   veneration: 'Veneration',
   alignment: 'Temper',
+  deeds: 'Deeds',
+  imprint: 'Imprint',
+  traits: 'Traits',
+  rite: 'Funeral rite',
+  state: 'State',
+  patron_son_id: 'Patron god',
+  sealed: 'Seal',
+  seal_strength: 'Seal strength',
+  binding: 'Binding',
 }
 
 export const DOCTRINE_FIELDS: Record<string, string> = {
@@ -244,12 +293,49 @@ export const DOCTRINE_FIELDS: Record<string, string> = {
   zeal: 'Zeal',
   doctrinal_distance: 'Drift from the founding',
   judgement: 'Judgement of the dead',
+  rebirth_path: 'Path of rebirth',
+  devotion: 'Devotion',
+  liturgical_language_id: 'Liturgy',
+  parent_cult_id: 'Mother church',
+  fanaticism: 'Fanaticism',
+  excommunicated: 'The cast out',
+  zeal_parts: 'Forces on the zeal',
 }
 
-export function criterion(key: string, value: number | string): string {
-  if (key === 'score_at_least') return `Deeds score ${value} or more`
-  if (key === 'score_below') return `Deeds score below ${value}`
-  if (key === 'score_between') return `Deeds score ${value}`
-  if (key === 'no_god') return 'Souls with no god'
-  return `${key.replaceAll('_', ' ').replace(/^./, (first) => first.toUpperCase())} ${value}`
+type Criteria = {
+  priority?: number
+  no_god?: boolean
+  needs_rite?: boolean
+  score_at_least?: number | null
+  score_below?: number | null
+  renown_at_least?: number | null
+  honour_at_least?: number | null
+  faith_at_least?: number | null
+  violence_at_least?: number | null
+  infamy_at_least?: number | null
+  rites?: readonly string[]
+  tenets_any?: readonly string[]
+}
+
+export function criteriaText(criteria: Criteria): string[] {
+  const lines: string[] = []
+  if (criteria.no_god) lines.push('Souls with no god')
+  if (criteria.score_at_least != null)
+    lines.push(`Score ${criteria.score_at_least} or more`)
+  if (criteria.score_below != null)
+    lines.push(`Score below ${criteria.score_below}`)
+  for (const [key, spec] of Object.entries(CRITERIA_FLOORS)) {
+    const value = criteria[key as keyof Criteria]
+    if (typeof value === 'number') lines.push(`${spec.label} ${value}`)
+  }
+  if (criteria.needs_rite) lines.push('Given its rites')
+  if (criteria.rites && criteria.rites.length > 0)
+    lines.push(
+      `Rite: ${criteria.rites.map((rite) => RITES[rite]?.label ?? rite).join(', ')}`
+    )
+  if (criteria.tenets_any && criteria.tenets_any.length > 0)
+    lines.push(
+      `Faith holds ${criteria.tenets_any.map((tenet) => TENETS[tenet]?.label ?? tenet).join(' or ')}`
+    )
+  return lines.length > 0 ? lines : ['Any soul with a god']
 }

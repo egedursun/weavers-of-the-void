@@ -138,6 +138,9 @@ class RiteEffectKind(StrEnum):
     RAISE_DEAD = "raise_dead"
     FERTILITY = "fertility"
     HARVEST_BLESSING = "harvest_blessing"
+    SEAL_SOUL = "seal_soul"
+    UNSEAL_SOUL = "unseal_soul"
+    EXORCISE = "exorcise"
 
 
 class BacklashKind(StrEnum):

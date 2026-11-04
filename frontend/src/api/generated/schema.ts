@@ -4767,6 +4767,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/entities/{entity_id}/possession': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['possession_api_entities__entity_id__possession_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/entities/{entity_id}/soul': {
     parameters: {
       query?: never
@@ -9807,6 +9823,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/cult:reset_doctrine': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cult_reset_doctrine_api_actions_cult_reset_doctrine_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/cult:tenet': {
     parameters: {
       query?: never
@@ -9817,6 +9849,38 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_cult_tenet_api_actions_cult_tenet_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cult:office': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cult_office_api_actions_cult_office_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cult:holding': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cult_holding_api_actions_cult_holding_post']
     delete?: never
     options?: never
     head?: never
@@ -9855,6 +9919,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/cult:edit_heresy': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cult_edit_heresy_api_actions_cult_edit_heresy_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cult:undeclare_heresy': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cult_undeclare_heresy_api_actions_cult_undeclare_heresy_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/cult:canonise': {
     parameters: {
       query?: never
@@ -9865,6 +9961,54 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_cult_canonise_api_actions_cult_canonise_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/relic:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_relic_edit_api_actions_relic_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/relic:remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_relic_remove_api_actions_relic_remove_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/soul:raise': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_soul_raise_api_actions_soul_raise_post']
     delete?: never
     options?: never
     head?: never
@@ -9961,6 +10105,70 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_soul_edit_api_actions_soul_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/soul:reread_deeds': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_soul_reread_deeds_api_actions_soul_reread_deeds_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/soul:possess': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_soul_possess_api_actions_soul_possess_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/soul:possession': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_soul_possession_api_actions_soul_possession_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/soul:exorcise': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_soul_exorcise_api_actions_soul_exorcise_post']
     delete?: never
     options?: never
     head?: never
@@ -11112,10 +11320,13 @@ export interface components {
     AfterlifeStratumInput: {
       realm_id: number
       kind: components['schemas']['StratumKind']
+      stratum_id?: number | null
       name?: string | null
-      criteria?: {
-        [key: string]: number | string
-      } | null
+      criteria?: components['schemas']['StratumCriteria'] | null
+      son_id?: number | null
+      cult_id?: number | null
+      closed?: boolean | null
+      clear_links: boolean
       remove: boolean
     }
     AgeBand: 'child' | 'adult' | 'elder'
@@ -12393,6 +12604,7 @@ export interface components {
       kind: components['schemas']['ClergyOffice']
       holder: components['schemas']['NodeRef'] | null
       since_epoch: number
+      locked: boolean
     }
     ClimateAffinity: 'warm' | 'wet' | 'cold' | 'dry' | 'any'
     ClimateAgeView: {
@@ -12865,13 +13077,26 @@ export interface components {
     CultDoctrineInput: {
       cult_id: number
       values?: {
-        [key: string]: number | string | boolean | null
+        [key: string]: unknown
+      }
+      release?: string[]
+    }
+    CultEditHeresyInput: {
+      heresy_id: number
+      values?: {
+        [key: string]: unknown
       }
       release?: string[]
     }
     CultHeresyInput: {
       heresy_id: number
       parent_id: number
+    }
+    CultHoldingInput: {
+      cult_id: number
+      entity_id: number
+      kind: components['schemas']['HoldingKind']
+      remove: boolean
     }
     CultJudgeHeresyInput: {
       heresy_id: number
@@ -12880,6 +13105,17 @@ export interface components {
     CultMergeInput: {
       source_id: number
       into_id: number
+    }
+    CultOfficeInput: {
+      cult_id: number
+      kind: components['schemas']['ClergyOffice']
+      holder_id?: number | null
+      locked?: boolean | null
+      vacate: boolean
+      remove: boolean
+    }
+    CultResetDoctrineInput: {
+      cult_id: number
     }
     CultSchismInput: {
       cult_id: number
@@ -12898,6 +13134,10 @@ export interface components {
       held: boolean
       target?: string | null
       son_id?: number | null
+      name?: string | null
+    }
+    CultUndeclareHeresyInput: {
+      heresy_id: number
     }
     CultureView: {
       cohesion: number
@@ -13214,6 +13454,16 @@ export interface components {
       heresies: components['schemas']['HeresyView'][]
       mother: components['schemas']['HeresyView'] | null
       relics: components['schemas']['RelicView'][]
+      rebirth_path: components['schemas']['RebirthPath']
+      liturgical_language: components['schemas']['NodeRef'] | null
+      liturgy_reach: number
+      parent_cult: components['schemas']['NodeRef'] | null
+      devotion: number
+      state_realm: components['schemas']['NodeRef'] | null
+      clergy_sway: number
+      god_king: components['schemas']['NodeRef'] | null
+      tithe_base: components['schemas']['NodeRef'][]
+      realm_population: number
     }
     Domain:
       | 'sea'
@@ -14468,7 +14718,7 @@ export interface components {
       key: components['schemas']['BodyFunction']
       level: number
     }
-    FuneralRite: 'burial' | 'burning' | 'exposure' | 'none'
+    FuneralRite: 'burial' | 'burning' | 'exposure' | 'nameless' | 'none'
     GateNeed: {
       branch: components['schemas']['KnowledgeBranch']
       level: number
@@ -14717,6 +14967,7 @@ export interface components {
       declared_epoch: number
       suppressed: boolean
       tolerated: boolean
+      locked: string[]
     }
     HeroApprenticeInput: {
       hero_id: number
@@ -17672,6 +17923,16 @@ export interface components {
       x: number
       y: number
     }
+    PossessionView: {
+      host: components['schemas']['NodeRef'] | null
+      spirit: components['schemas']['NodeRef'] | null
+      since_epoch: number
+      stress: number
+      host_values: {
+        [key: string]: number
+      }
+      locked: string[]
+    }
     PostCheatsEssenceBody: {
       amount: number
     }
@@ -18316,6 +18577,13 @@ export interface components {
     RealmOfDeadView: {
       realm: components['schemas']['NodeRef'] | null
       strata: components['schemas']['StratumView'][]
+      realms: components['schemas']['NodeRef'][]
+      gods: components['schemas']['RealmPopulation'][]
+    }
+    RealmPopulation: {
+      son_id: number
+      name: string
+      souls: number
     }
     RealmView: {
       id: number
@@ -18353,6 +18621,7 @@ export interface components {
       overlord: components['schemas']['NamedNode'] | null
       vassals: components['schemas']['NamedNode'][]
     }
+    RebirthPath: 'people' | 'house' | 'merit'
     RecordEnd:
       'repeal' | 'abandon' | 'forget' | 'disband' | 'lose' | 'assimilate'
     RecordEndInput: {
@@ -18520,6 +18789,16 @@ export interface components {
       history: components['schemas']['RelationEventView'][]
       opinions: components['schemas']['OpinionView'][]
     }
+    RelicEditInput: {
+      item_id: number
+      values?: {
+        [key: string]: unknown
+      }
+      release?: string[]
+    }
+    RelicRemoveInput: {
+      item_id: number
+    }
     RelicView: {
       item: components['schemas']['NodeRef'] | null
       saint: components['schemas']['NodeRef'] | null
@@ -18527,6 +18806,8 @@ export interface components {
       sanctity: number
       pilgrims: number
       canonised_epoch: number
+      cult: components['schemas']['NodeRef'] | null
+      locked: string[]
     }
     RenamedNode: {
       old_name: string
@@ -18739,6 +19020,9 @@ export interface components {
       | 'raise_dead'
       | 'fertility'
       | 'harvest_blessing'
+      | 'seal_soul'
+      | 'unseal_soul'
+      | 'exorcise'
     RiteEffectView: {
       effect: components['schemas']['RiteEffectKind']
       magnitude: number
@@ -19689,6 +19973,8 @@ export interface components {
       | 'birth_world'
       | 'bind_mortals'
       | 'touch_mortal'
+      | 'reveal_tenet'
+      | 'open_rebirth_gate'
     SonToolsView: {
       son_id: number
       rarity: components['schemas']['Rarity']
@@ -19783,6 +20069,10 @@ export interface components {
       reborn_as: components['schemas']['NodeRef'] | null
       gate: components['schemas']['ReincarnationGate'] | null
       locked: string[]
+      seal_strength: number
+      unrest: number
+      possession: components['schemas']['PossessionView'] | null
+      patron_name: string | null
     }
     SoulDescendInput: {
       mortal_id: number
@@ -19790,8 +20080,12 @@ export interface components {
     SoulEditInput: {
       spirit_id: number
       values?: {
-        [key: string]: number | string | boolean | null
+        [key: string]: unknown
       }
+      release?: string[]
+    }
+    SoulExorciseInput: {
+      host_id: number
     }
     SoulHarvestInput: {
       cult_id: number
@@ -19805,6 +20099,22 @@ export interface components {
     SoulMirrorInput: {
       mortal_id: number
     }
+    SoulPossessInput: {
+      spirit_id: number
+      host_id: number
+    }
+    SoulPossessionInput: {
+      host_id: number
+      values?: {
+        [key: string]: unknown
+      }
+      release?: string[]
+    }
+    SoulRaiseInput: {
+      mortal_id: number
+      alignment: components['schemas']['SpiritAlignment']
+      place_id?: number | null
+    }
     SoulReincarnateInput: {
       spirit_id: number
       community_id?: number | null
@@ -19812,9 +20122,13 @@ export interface components {
     SoulReleaseInput: {
       spirit_id: number
     }
+    SoulRereadDeedsInput: {
+      spirit_id: number
+    }
     SoulSealInput: {
       spirit_id: number
       sealed: boolean
+      strength?: number | null
     }
     SpeakerKind: 'native' | 'second' | 'liturgical'
     SpeakerView: {
@@ -20252,6 +20566,20 @@ export interface components {
       virulence: number
       lethality: number
     }
+    StratumCriteria: {
+      priority: number
+      no_god: boolean
+      needs_rite: boolean
+      score_at_least?: number | null
+      score_below?: number | null
+      renown_at_least?: number | null
+      honour_at_least?: number | null
+      faith_at_least?: number | null
+      violence_at_least?: number | null
+      infamy_at_least?: number | null
+      rites: components['schemas']['FuneralRite'][]
+      tenets_any: components['schemas']['TenetKind'][]
+    }
     StratumKind:
       | 'paradise'
       | 'plain'
@@ -20263,11 +20591,14 @@ export interface components {
       id: number
       kind: components['schemas']['StratumKind']
       name: string
-      criteria: {
-        [key: string]: number | string
-      }
+      criteria: components['schemas']['StratumCriteria']
       population: number
       souls: components['schemas']['NodeRef'][]
+      realm: components['schemas']['NodeRef'] | null
+      closed: boolean
+      son_id: number | null
+      son_name: string | null
+      cult: components['schemas']['NodeRef'] | null
     }
     StreamHelloEvent: {
       id: number
@@ -20455,6 +20786,7 @@ export interface components {
     }
     TenetView: {
       tenet: components['schemas']['TenetKind']
+      name: string | null
       effect: string
       target: string | null
       target_name: string | null
@@ -30789,6 +31121,35 @@ export interface operations {
       }
     }
   }
+  possession_api_entities__entity_id__possession_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        entity_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PossessionView'] | null
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   soul_card_api_entities__entity_id__soul_get: {
     parameters: {
       query?: never
@@ -40294,6 +40655,37 @@ export interface operations {
       }
     }
   }
+  action_cult_reset_doctrine_api_actions_cult_reset_doctrine_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CultResetDoctrineInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   action_cult_tenet_api_actions_cult_tenet_post: {
     parameters: {
       query?: never
@@ -40304,6 +40696,68 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['CultTenetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_cult_office_api_actions_cult_office_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CultOfficeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_cult_holding_api_actions_cult_holding_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CultHoldingInput']
       }
     }
     responses: {
@@ -40387,6 +40841,68 @@ export interface operations {
       }
     }
   }
+  action_cult_edit_heresy_api_actions_cult_edit_heresy_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CultEditHeresyInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_cult_undeclare_heresy_api_actions_cult_undeclare_heresy_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CultUndeclareHeresyInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   action_cult_canonise_api_actions_cult_canonise_post: {
     parameters: {
       query?: never
@@ -40397,6 +40913,99 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['CultCanoniseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_relic_edit_api_actions_relic_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RelicEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_relic_remove_api_actions_relic_remove_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RelicRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_soul_raise_api_actions_soul_raise_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SoulRaiseInput']
       }
     }
     responses: {
@@ -40583,6 +41192,130 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['SoulEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_soul_reread_deeds_api_actions_soul_reread_deeds_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SoulRereadDeedsInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_soul_possess_api_actions_soul_possess_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SoulPossessInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_soul_possession_api_actions_soul_possession_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SoulPossessionInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_soul_exorcise_api_actions_soul_exorcise_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SoulExorciseInput']
       }
     }
     responses: {
@@ -43618,7 +44351,7 @@ export const foreignGodStatusValues: ReadonlyArray<
 > = ['awake', 'asleep', 'defeated', 'dead']
 export const funeralRiteValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FuneralRite']
-> = ['burial', 'burning', 'exposure', 'none']
+> = ['burial', 'burning', 'exposure', 'nameless', 'none']
 export const genesisFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GenesisFinishedEvent']['kind']
 > = ['genesis.finished']
@@ -44754,6 +45487,9 @@ export const rangeTrendValues: ReadonlyArray<
 export const rarityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Rarity']
 > = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic']
+export const rebirthPathValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RebirthPath']
+> = ['people', 'house', 'merit']
 export const recordEndValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RecordEnd']
 > = ['repeal', 'abandon', 'forget', 'disband', 'lose', 'assimilate']
@@ -44801,6 +45537,9 @@ export const riteEffectKindValues: ReadonlyArray<
   'raise_dead',
   'fertility',
   'harvest_blessing',
+  'seal_soul',
+  'unseal_soul',
+  'exorcise',
 ]
 export const riteKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RiteKind']
@@ -45128,6 +45867,8 @@ export const sonToolIdValues: ReadonlyArray<
   'birth_world',
   'bind_mortals',
   'touch_mortal',
+  'reveal_tenet',
+  'open_rebirth_gate',
 ]
 export const sonTurnFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonTurnFinishedEvent']['kind']
