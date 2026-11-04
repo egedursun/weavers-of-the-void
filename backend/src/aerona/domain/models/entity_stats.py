@@ -68,10 +68,16 @@ class MortalStats(ValueObject):
     agility: Percent | None = None
     intellect: Percent | None = None
     charisma: Percent | None = None
+    endurance: Percent | None = None
+    willpower: Percent | None = None
+    perception: Percent | None = None
+    wisdom: Percent | None = None
+    creativity: Percent | None = None
+    beauty: Percent | None = None
     age: Count | None = None
     lifespan: Count | None = None
     death_year: int | None = None
-    sex: Literal["female", "male"] | None = None
+    sex: Literal["female", "male", "other"] | None = None
 
 
 class ItemStats(ValueObject):
