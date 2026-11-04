@@ -3,7 +3,7 @@
   "run": "scripts/balance_sim.py --epochs 100 (LLM-free, seeded rich cosmos)",
   "bands": [
     {"metric": "wars_per_epoch", "low": 0.2, "high": 6, "meaning": "wars break out, but the world is not at war with itself every epoch"},
-    {"metric": "mean_age_at_death", "low": 25, "high": 110, "meaning": "mortals neither die as children nor outlive their lifespans en masse"},
+    {"metric": "mean_age_at_death", "low": 25, "high": 130, "meaning": "mortals neither die as children nor outlive their lifespans en masse; the ceiling leaves room for notable, medicine and long-lived house lifespans"},
     {"metric": "maimed_share_pct", "low": 0.5, "high": 35, "meaning": "the maimed are visible but do not become the majority"},
     {"metric": "community_growth_per_epoch_pct", "low": -5, "high": 40, "meaning": "communities neither collapse nor multiply without bound"},
     {"metric": "hostile_pair_share_pct", "low": 0, "high": 60, "meaning": "hatred exists but most pairs are not blood enemies"},
