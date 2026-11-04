@@ -7,37 +7,38 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 
 | from ↓ / to → | core | body | mind | social | household | demography | economy | polity | law | intrigue | communication | war | faith | magic | knowledge | culture | language | ecology | environment | gods | cosmos |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| core | — | 41 | 40 | 18 | · | 20 | 44 | 29 | 14 | 6 | · | 39 | 19 | 36 | 12 | 43 | 37 | 15 | 40 | 12 | 12 |
-| body | 46 | — | 53 | 19 | · | 31 | 57 | 38 | 21 | 7 | · | 50 | 28 | 45 | 16 | 55 | 47 | 29 | 53 | 13 | 15 |
-| mind | 59 | 66 | — | 33 | · | 35 | 75 | 55 | 33 | 10 | · | 71 | 38 | 57 | 21 | 67 | 67 | 27 | 67 | 18 | 16 |
-| social | 16 | 16 | 21 | — | · | 13 | 23 | 18 | 12 | 3 | · | 21 | 11 | 15 | 8 | 18 | 17 | 6 | 16 | 9 | 9 |
-| household | · | · | · | · | — | · | · | · | · | · | · | · | · | · | · | · | · | · | · | · | · |
-| demography | 13 | 18 | 17 | 10 | · | — | 24 | 11 | 9 | 3 | · | 16 | 11 | 13 | 11 | 17 | 14 | 7 | 13 | 8 | 8 |
-| economy | 81 | 132 | 157 | 85 | · | 93 | — | 134 | 59 | 22 | · | 165 | 101 | 90 | 59 | 158 | 120 | 58 | 135 | 34 | 34 |
-| polity | 29 | 37 | 46 | 17 | · | 15 | 60 | — | 27 | 8 | · | 50 | 20 | 28 | 19 | 45 | 45 | 12 | 38 | 10 | 10 |
-| law | 15 | 16 | 20 | 10 | · | 10 | 20 | 17 | — | 2 | · | 20 | 11 | 14 | 5 | 16 | 20 | 6 | 17 | 5 | 6 |
-| intrigue | 4 | 4 | 4 | 3 | · | 2 | 5 | 5 | 3 | — | · | 4 | 3 | 3 | 4 | 4 | 4 | 2 | 4 | 2 | 2 |
-| communication | · | · | · | · | · | · | · | · | · | · | — | · | · | · | · | · | · | · | · | · | · |
-| war | 50 | 60 | 68 | 29 | · | 31 | 79 | 63 | 32 | 9 | · | — | 27 | 51 | 21 | 67 | 66 | 20 | 62 | 13 | 12 |
-| faith | 17 | 22 | 24 | 9 | · | 13 | 34 | 13 | 11 | 4 | · | 18 | — | 19 | 7 | 32 | 20 | 16 | 19 | 15 | 12 |
-| magic | 39 | 41 | 41 | 17 | · | 22 | 49 | 31 | 16 | 6 | · | 41 | 20 | — | 12 | 44 | 39 | 15 | 42 | 13 | 14 |
-| knowledge | 7 | 7 | 7 | 3 | · | 5 | 10 | 7 | 5 | 5 | · | 7 | 5 | 6 | — | 10 | 8 | 4 | 7 | 2 | 4 |
-| culture | 57 | 68 | 74 | 29 | · | 40 | 101 | 63 | 28 | 10 | · | 75 | 47 | 57 | 30 | — | 80 | 29 | 68 | 17 | 19 |
-| language | 51 | 59 | 66 | 28 | · | 30 | 80 | 60 | 30 | 6 | · | 68 | 30 | 52 | 23 | 70 | — | 23 | 62 | 12 | 15 |
-| ecology | 17 | 20 | 20 | 5 | · | 12 | 35 | 13 | 6 | 3 | · | 19 | 13 | 16 | 7 | 22 | 17 | — | 23 | 6 | 8 |
-| environment | 52 | 55 | 60 | 19 | · | 37 | 71 | 43 | 18 | 7 | · | 56 | 33 | 50 | 18 | 63 | 55 | 28 | — | 16 | 24 |
-| gods | 3 | 3 | 3 | 1 | · | 2 | 3 | 2 | 2 | 1 | · | 3 | 3 | 3 | 2 | 3 | 3 | 2 | 3 | — | 3 |
-| cosmos | 9 | 9 | 9 | 6 | · | 9 | 9 | 9 | 8 | 1 | · | 9 | 9 | 9 | 8 | 9 | 9 | 9 | 9 | 7 | — |
+| core | — | 95 | 90 | 91 | 17 | 98 | 107 | 90 | 82 | 37 | 5 | 93 | 42 | 80 | 85 | 103 | 91 | 33 | 102 | 86 | 26 |
+| body | 102 | — | 102 | 102 | 27 | 113 | 118 | 99 | 82 | 37 | 5 | 103 | 58 | 100 | 96 | 115 | 95 | 47 | 106 | 102 | 31 |
+| mind | 108 | 113 | — | 114 | 34 | 113 | 123 | 119 | 98 | 43 | 7 | 113 | 66 | 101 | 100 | 122 | 110 | 46 | 109 | 114 | 34 |
+| social | 87 | 93 | 99 | — | 22 | 90 | 106 | 95 | 81 | 36 | 6 | 92 | 47 | 86 | 79 | 100 | 85 | 31 | 90 | 90 | 23 |
+| household | 19 | 29 | 29 | 28 | — | 26 | 25 | 21 | 23 | 4 | 2 | 29 | 15 | 21 | 25 | 23 | 20 | 20 | 21 | 19 | 8 |
+| demography | 103 | 114 | 103 | 100 | 24 | — | 123 | 102 | 85 | 38 | 6 | 103 | 61 | 96 | 92 | 115 | 94 | 41 | 105 | 105 | 28 |
+| economy | 155 | 195 | 218 | 196 | 34 | 210 | — | 214 | 146 | 57 | 11 | 222 | 138 | 142 | 174 | 231 | 167 | 80 | 211 | 172 | 60 |
+| polity | 106 | 106 | 118 | 104 | 22 | 109 | 131 | — | 103 | 43 | 8 | 121 | 57 | 93 | 97 | 127 | 110 | 37 | 109 | 106 | 25 |
+| law | 85 | 83 | 85 | 83 | 18 | 84 | 98 | 92 | — | 38 | 6 | 92 | 38 | 74 | 79 | 92 | 89 | 28 | 90 | 80 | 24 |
+| intrigue | 31 | 32 | 31 | 30 | 5 | 31 | 33 | 33 | 31 | — | 2 | 33 | 9 | 31 | 31 | 31 | 31 | 7 | 32 | 31 | 7 |
+| communication | 4 | 4 | 7 | 5 | 2 | 4 | 6 | 5 | 5 | 3 | — | 6 | 3 | 4 | 4 | 7 | 7 | 4 | 5 | 4 | 4 |
+| war | 107 | 113 | 119 | 113 | 34 | 114 | 128 | 122 | 109 | 39 | 6 | — | 52 | 95 | 106 | 121 | 109 | 43 | 118 | 101 | 29 |
+| faith | 41 | 53 | 53 | 46 | 16 | 56 | 64 | 51 | 39 | 16 | 1 | 39 | — | 49 | 40 | 62 | 41 | 24 | 45 | 60 | 23 |
+| magic | 86 | 93 | 84 | 86 | 18 | 91 | 99 | 87 | 76 | 36 | 4 | 83 | 49 | — | 81 | 94 | 78 | 31 | 86 | 92 | 27 |
+| knowledge | 88 | 89 | 90 | 91 | 30 | 91 | 95 | 88 | 84 | 34 | 4 | 93 | 42 | 82 | — | 91 | 87 | 35 | 91 | 84 | 25 |
+| culture | 128 | 134 | 141 | 132 | 30 | 139 | 169 | 141 | 112 | 45 | 7 | 131 | 85 | 117 | 120 | — | 135 | 49 | 138 | 129 | 37 |
+| language | 94 | 92 | 98 | 92 | 22 | 96 | 113 | 108 | 91 | 36 | 8 | 103 | 46 | 83 | 93 | 108 | — | 36 | 100 | 91 | 23 |
+| ecology | 34 | 33 | 33 | 33 | 11 | 36 | 50 | 31 | 24 | 8 | 2 | 35 | 24 | 28 | 33 | 38 | 32 | — | 37 | 31 | 16 |
+| environment | 123 | 121 | 117 | 115 | 21 | 134 | 157 | 118 | 99 | 37 | 8 | 127 | 90 | 107 | 113 | 137 | 118 | 49 | — | 112 | 47 |
+| gods | 98 | 106 | 105 | 101 | 26 | 108 | 117 | 105 | 89 | 38 | 4 | 97 | 65 | 99 | 92 | 111 | 95 | 41 | 102 | — | 30 |
+| cosmos | 20 | 21 | 23 | 19 | 8 | 22 | 24 | 20 | 15 | 6 | 3 | 19 | 17 | 21 | 17 | 22 | 21 | 14 | 25 | 21 | — |
 
 ## Edges by kind
 
-- modifier: 2565
-- rule_switch: 1237
-- flow: 3093987
-- trigger: 35
+- modifier: 19915
+- rule_switch: 1721
+- flow: 11453803
+- trigger: 82
 
 ## Feedback cycles between subsystems (length ≤ 3 listed)
 
+- body → communication → body
 - body → core → body
 - body → cosmos → body
 - body → culture → body
@@ -47,6 +48,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → environment → body
 - body → faith → body
 - body → gods → body
+- body → household → body
 - body → intrigue → body
 - body → knowledge → body
 - body → language → body
@@ -56,6 +58,25 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → polity → body
 - body → social → body
 - body → war → body
+- communication → core → communication
+- communication → cosmos → communication
+- communication → culture → communication
+- communication → demography → communication
+- communication → ecology → communication
+- communication → economy → communication
+- communication → environment → communication
+- communication → faith → communication
+- communication → gods → communication
+- communication → household → communication
+- communication → intrigue → communication
+- communication → knowledge → communication
+- communication → language → communication
+- communication → law → communication
+- communication → magic → communication
+- communication → mind → communication
+- communication → polity → communication
+- communication → social → communication
+- communication → war → communication
 - core → cosmos → core
 - core → culture → core
 - core → demography → core
@@ -64,6 +85,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → environment → core
 - core → faith → core
 - core → gods → core
+- core → household → core
 - core → intrigue → core
 - core → knowledge → core
 - core → language → core
@@ -80,6 +102,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → environment → cosmos
 - cosmos → faith → cosmos
 - cosmos → gods → cosmos
+- cosmos → household → cosmos
 - cosmos → intrigue → cosmos
 - cosmos → knowledge → cosmos
 - cosmos → language → cosmos
@@ -95,6 +118,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - culture → environment → culture
 - culture → faith → culture
 - culture → gods → culture
+- culture → household → culture
 - culture → intrigue → culture
 - culture → knowledge → culture
 - culture → language → culture
@@ -109,6 +133,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - demography → environment → demography
 - demography → faith → demography
 - demography → gods → demography
+- demography → household → demography
 - demography → intrigue → demography
 - demography → knowledge → demography
 - demography → language → demography
@@ -122,6 +147,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - ecology → environment → ecology
 - ecology → faith → ecology
 - ecology → gods → ecology
+- ecology → household → ecology
 - ecology → intrigue → ecology
 - ecology → knowledge → ecology
 - ecology → language → ecology
@@ -134,6 +160,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - economy → environment → economy
 - economy → faith → economy
 - economy → gods → economy
+- economy → household → economy
 - economy → intrigue → economy
 - economy → knowledge → economy
 - economy → language → economy
@@ -145,6 +172,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - economy → war → economy
 - environment → faith → environment
 - environment → gods → environment
+- environment → household → environment
 - environment → intrigue → environment
 - environment → knowledge → environment
 - environment → language → environment
@@ -155,6 +183,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - environment → social → environment
 - environment → war → environment
 - faith → gods → faith
+- faith → household → faith
 - faith → intrigue → faith
 - faith → knowledge → faith
 - faith → language → faith
@@ -164,6 +193,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - faith → polity → faith
 - faith → social → faith
 - faith → war → faith
+- gods → household → gods
 - gods → intrigue → gods
 - gods → knowledge → gods
 - gods → language → gods
@@ -173,6 +203,15 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - gods → polity → gods
 - gods → social → gods
 - gods → war → gods
+- household → intrigue → household
+- household → knowledge → household
+- household → language → household
+- household → law → household
+- household → magic → household
+- household → mind → household
+- household → polity → household
+- household → social → household
+- household → war → household
 - intrigue → knowledge → intrigue
 - intrigue → language → intrigue
 - intrigue → law → intrigue
@@ -209,6 +248,26 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - polity → social → polity
 - polity → war → polity
 - social → war → social
+- body → communication → core → body
+- body → communication → cosmos → body
+- body → communication → culture → body
+- body → communication → demography → body
+- body → communication → ecology → body
+- body → communication → economy → body
+- body → communication → environment → body
+- body → communication → faith → body
+- body → communication → gods → body
+- body → communication → household → body
+- body → communication → intrigue → body
+- body → communication → knowledge → body
+- body → communication → language → body
+- body → communication → law → body
+- body → communication → magic → body
+- body → communication → mind → body
+- body → communication → polity → body
+- body → communication → social → body
+- body → communication → war → body
+- body → core → communication → body
 - body → core → cosmos → body
 - body → core → culture → body
 - body → core → demography → body
@@ -217,6 +276,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → core → environment → body
 - body → core → faith → body
 - body → core → gods → body
+- body → core → household → body
 - body → core → intrigue → body
 - body → core → knowledge → body
 - body → core → language → body
@@ -226,6 +286,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → core → polity → body
 - body → core → social → body
 - body → core → war → body
+- body → cosmos → communication → body
 - body → cosmos → core → body
 - body → cosmos → culture → body
 - body → cosmos → demography → body
@@ -234,6 +295,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → cosmos → environment → body
 - body → cosmos → faith → body
 - body → cosmos → gods → body
+- body → cosmos → household → body
 - body → cosmos → intrigue → body
 - body → cosmos → knowledge → body
 - body → cosmos → language → body
@@ -243,6 +305,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → cosmos → polity → body
 - body → cosmos → social → body
 - body → cosmos → war → body
+- body → culture → communication → body
 - body → culture → core → body
 - body → culture → cosmos → body
 - body → culture → demography → body
@@ -251,6 +314,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → culture → environment → body
 - body → culture → faith → body
 - body → culture → gods → body
+- body → culture → household → body
 - body → culture → intrigue → body
 - body → culture → knowledge → body
 - body → culture → language → body
@@ -260,6 +324,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → culture → polity → body
 - body → culture → social → body
 - body → culture → war → body
+- body → demography → communication → body
 - body → demography → core → body
 - body → demography → cosmos → body
 - body → demography → culture → body
@@ -268,6 +333,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → demography → environment → body
 - body → demography → faith → body
 - body → demography → gods → body
+- body → demography → household → body
 - body → demography → intrigue → body
 - body → demography → knowledge → body
 - body → demography → language → body
@@ -277,6 +343,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → demography → polity → body
 - body → demography → social → body
 - body → demography → war → body
+- body → ecology → communication → body
 - body → ecology → core → body
 - body → ecology → cosmos → body
 - body → ecology → culture → body
@@ -285,6 +352,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → ecology → environment → body
 - body → ecology → faith → body
 - body → ecology → gods → body
+- body → ecology → household → body
 - body → ecology → intrigue → body
 - body → ecology → knowledge → body
 - body → ecology → language → body
@@ -294,6 +362,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → ecology → polity → body
 - body → ecology → social → body
 - body → ecology → war → body
+- body → economy → communication → body
 - body → economy → core → body
 - body → economy → cosmos → body
 - body → economy → culture → body
@@ -302,6 +371,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → economy → environment → body
 - body → economy → faith → body
 - body → economy → gods → body
+- body → economy → household → body
 - body → economy → intrigue → body
 - body → economy → knowledge → body
 - body → economy → language → body
@@ -311,6 +381,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → economy → polity → body
 - body → economy → social → body
 - body → economy → war → body
+- body → environment → communication → body
 - body → environment → core → body
 - body → environment → cosmos → body
 - body → environment → culture → body
@@ -319,6 +390,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → environment → economy → body
 - body → environment → faith → body
 - body → environment → gods → body
+- body → environment → household → body
 - body → environment → intrigue → body
 - body → environment → knowledge → body
 - body → environment → language → body
@@ -328,6 +400,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → environment → polity → body
 - body → environment → social → body
 - body → environment → war → body
+- body → faith → communication → body
 - body → faith → core → body
 - body → faith → cosmos → body
 - body → faith → culture → body
@@ -336,6 +409,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → faith → economy → body
 - body → faith → environment → body
 - body → faith → gods → body
+- body → faith → household → body
 - body → faith → intrigue → body
 - body → faith → knowledge → body
 - body → faith → language → body
@@ -345,6 +419,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → faith → polity → body
 - body → faith → social → body
 - body → faith → war → body
+- body → gods → communication → body
 - body → gods → core → body
 - body → gods → cosmos → body
 - body → gods → culture → body
@@ -353,6 +428,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → gods → economy → body
 - body → gods → environment → body
 - body → gods → faith → body
+- body → gods → household → body
 - body → gods → intrigue → body
 - body → gods → knowledge → body
 - body → gods → language → body
@@ -362,6 +438,26 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → gods → polity → body
 - body → gods → social → body
 - body → gods → war → body
+- body → household → communication → body
+- body → household → core → body
+- body → household → cosmos → body
+- body → household → culture → body
+- body → household → demography → body
+- body → household → ecology → body
+- body → household → economy → body
+- body → household → environment → body
+- body → household → faith → body
+- body → household → gods → body
+- body → household → intrigue → body
+- body → household → knowledge → body
+- body → household → language → body
+- body → household → law → body
+- body → household → magic → body
+- body → household → mind → body
+- body → household → polity → body
+- body → household → social → body
+- body → household → war → body
+- body → intrigue → communication → body
 - body → intrigue → core → body
 - body → intrigue → cosmos → body
 - body → intrigue → culture → body
@@ -371,6 +467,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → intrigue → environment → body
 - body → intrigue → faith → body
 - body → intrigue → gods → body
+- body → intrigue → household → body
 - body → intrigue → knowledge → body
 - body → intrigue → language → body
 - body → intrigue → law → body
@@ -379,6 +476,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → intrigue → polity → body
 - body → intrigue → social → body
 - body → intrigue → war → body
+- body → knowledge → communication → body
 - body → knowledge → core → body
 - body → knowledge → cosmos → body
 - body → knowledge → culture → body
@@ -388,6 +486,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → knowledge → environment → body
 - body → knowledge → faith → body
 - body → knowledge → gods → body
+- body → knowledge → household → body
 - body → knowledge → intrigue → body
 - body → knowledge → language → body
 - body → knowledge → law → body
@@ -396,6 +495,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → knowledge → polity → body
 - body → knowledge → social → body
 - body → knowledge → war → body
+- body → language → communication → body
 - body → language → core → body
 - body → language → cosmos → body
 - body → language → culture → body
@@ -405,6 +505,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → language → environment → body
 - body → language → faith → body
 - body → language → gods → body
+- body → language → household → body
 - body → language → intrigue → body
 - body → language → knowledge → body
 - body → language → law → body
@@ -413,6 +514,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → language → polity → body
 - body → language → social → body
 - body → language → war → body
+- body → law → communication → body
 - body → law → core → body
 - body → law → cosmos → body
 - body → law → culture → body
@@ -422,6 +524,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → law → environment → body
 - body → law → faith → body
 - body → law → gods → body
+- body → law → household → body
 - body → law → intrigue → body
 - body → law → knowledge → body
 - body → law → language → body
@@ -430,6 +533,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → law → polity → body
 - body → law → social → body
 - body → law → war → body
+- body → magic → communication → body
 - body → magic → core → body
 - body → magic → cosmos → body
 - body → magic → culture → body
@@ -439,6 +543,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → magic → environment → body
 - body → magic → faith → body
 - body → magic → gods → body
+- body → magic → household → body
 - body → magic → intrigue → body
 - body → magic → knowledge → body
 - body → magic → language → body
@@ -447,6 +552,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → magic → polity → body
 - body → magic → social → body
 - body → magic → war → body
+- body → mind → communication → body
 - body → mind → core → body
 - body → mind → cosmos → body
 - body → mind → culture → body
@@ -456,6 +562,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → mind → environment → body
 - body → mind → faith → body
 - body → mind → gods → body
+- body → mind → household → body
 - body → mind → intrigue → body
 - body → mind → knowledge → body
 - body → mind → language → body
@@ -464,6 +571,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → mind → polity → body
 - body → mind → social → body
 - body → mind → war → body
+- body → polity → communication → body
 - body → polity → core → body
 - body → polity → cosmos → body
 - body → polity → culture → body
@@ -473,6 +581,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → polity → environment → body
 - body → polity → faith → body
 - body → polity → gods → body
+- body → polity → household → body
 - body → polity → intrigue → body
 - body → polity → knowledge → body
 - body → polity → language → body
@@ -481,6 +590,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → polity → mind → body
 - body → polity → social → body
 - body → polity → war → body
+- body → social → communication → body
 - body → social → core → body
 - body → social → cosmos → body
 - body → social → culture → body
@@ -490,6 +600,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → social → environment → body
 - body → social → faith → body
 - body → social → gods → body
+- body → social → household → body
 - body → social → intrigue → body
 - body → social → knowledge → body
 - body → social → language → body
@@ -498,6 +609,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → social → mind → body
 - body → social → polity → body
 - body → social → war → body
+- body → war → communication → body
 - body → war → core → body
 - body → war → cosmos → body
 - body → war → culture → body
@@ -507,6 +619,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → war → environment → body
 - body → war → faith → body
 - body → war → gods → body
+- body → war → household → body
 - body → war → intrigue → body
 - body → war → knowledge → body
 - body → war → language → body
@@ -515,6 +628,348 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - body → war → mind → body
 - body → war → polity → body
 - body → war → social → body
+- communication → core → cosmos → communication
+- communication → core → culture → communication
+- communication → core → demography → communication
+- communication → core → ecology → communication
+- communication → core → economy → communication
+- communication → core → environment → communication
+- communication → core → faith → communication
+- communication → core → gods → communication
+- communication → core → household → communication
+- communication → core → intrigue → communication
+- communication → core → knowledge → communication
+- communication → core → language → communication
+- communication → core → law → communication
+- communication → core → magic → communication
+- communication → core → mind → communication
+- communication → core → polity → communication
+- communication → core → social → communication
+- communication → core → war → communication
+- communication → cosmos → core → communication
+- communication → cosmos → culture → communication
+- communication → cosmos → demography → communication
+- communication → cosmos → ecology → communication
+- communication → cosmos → economy → communication
+- communication → cosmos → environment → communication
+- communication → cosmos → faith → communication
+- communication → cosmos → gods → communication
+- communication → cosmos → household → communication
+- communication → cosmos → intrigue → communication
+- communication → cosmos → knowledge → communication
+- communication → cosmos → language → communication
+- communication → cosmos → law → communication
+- communication → cosmos → magic → communication
+- communication → cosmos → mind → communication
+- communication → cosmos → polity → communication
+- communication → cosmos → social → communication
+- communication → cosmos → war → communication
+- communication → culture → core → communication
+- communication → culture → cosmos → communication
+- communication → culture → demography → communication
+- communication → culture → ecology → communication
+- communication → culture → economy → communication
+- communication → culture → environment → communication
+- communication → culture → faith → communication
+- communication → culture → gods → communication
+- communication → culture → household → communication
+- communication → culture → intrigue → communication
+- communication → culture → knowledge → communication
+- communication → culture → language → communication
+- communication → culture → law → communication
+- communication → culture → magic → communication
+- communication → culture → mind → communication
+- communication → culture → polity → communication
+- communication → culture → social → communication
+- communication → culture → war → communication
+- communication → demography → core → communication
+- communication → demography → cosmos → communication
+- communication → demography → culture → communication
+- communication → demography → ecology → communication
+- communication → demography → economy → communication
+- communication → demography → environment → communication
+- communication → demography → faith → communication
+- communication → demography → gods → communication
+- communication → demography → household → communication
+- communication → demography → intrigue → communication
+- communication → demography → knowledge → communication
+- communication → demography → language → communication
+- communication → demography → law → communication
+- communication → demography → magic → communication
+- communication → demography → mind → communication
+- communication → demography → polity → communication
+- communication → demography → social → communication
+- communication → demography → war → communication
+- communication → ecology → core → communication
+- communication → ecology → cosmos → communication
+- communication → ecology → culture → communication
+- communication → ecology → demography → communication
+- communication → ecology → economy → communication
+- communication → ecology → environment → communication
+- communication → ecology → faith → communication
+- communication → ecology → gods → communication
+- communication → ecology → household → communication
+- communication → ecology → intrigue → communication
+- communication → ecology → knowledge → communication
+- communication → ecology → language → communication
+- communication → ecology → law → communication
+- communication → ecology → magic → communication
+- communication → ecology → mind → communication
+- communication → ecology → polity → communication
+- communication → ecology → social → communication
+- communication → ecology → war → communication
+- communication → economy → core → communication
+- communication → economy → cosmos → communication
+- communication → economy → culture → communication
+- communication → economy → demography → communication
+- communication → economy → ecology → communication
+- communication → economy → environment → communication
+- communication → economy → faith → communication
+- communication → economy → gods → communication
+- communication → economy → household → communication
+- communication → economy → intrigue → communication
+- communication → economy → knowledge → communication
+- communication → economy → language → communication
+- communication → economy → law → communication
+- communication → economy → magic → communication
+- communication → economy → mind → communication
+- communication → economy → polity → communication
+- communication → economy → social → communication
+- communication → economy → war → communication
+- communication → environment → core → communication
+- communication → environment → cosmos → communication
+- communication → environment → culture → communication
+- communication → environment → demography → communication
+- communication → environment → ecology → communication
+- communication → environment → economy → communication
+- communication → environment → faith → communication
+- communication → environment → gods → communication
+- communication → environment → household → communication
+- communication → environment → intrigue → communication
+- communication → environment → knowledge → communication
+- communication → environment → language → communication
+- communication → environment → law → communication
+- communication → environment → magic → communication
+- communication → environment → mind → communication
+- communication → environment → polity → communication
+- communication → environment → social → communication
+- communication → environment → war → communication
+- communication → faith → core → communication
+- communication → faith → cosmos → communication
+- communication → faith → culture → communication
+- communication → faith → demography → communication
+- communication → faith → ecology → communication
+- communication → faith → economy → communication
+- communication → faith → environment → communication
+- communication → faith → gods → communication
+- communication → faith → household → communication
+- communication → faith → intrigue → communication
+- communication → faith → knowledge → communication
+- communication → faith → language → communication
+- communication → faith → law → communication
+- communication → faith → magic → communication
+- communication → faith → mind → communication
+- communication → faith → polity → communication
+- communication → faith → social → communication
+- communication → faith → war → communication
+- communication → gods → core → communication
+- communication → gods → cosmos → communication
+- communication → gods → culture → communication
+- communication → gods → demography → communication
+- communication → gods → ecology → communication
+- communication → gods → economy → communication
+- communication → gods → environment → communication
+- communication → gods → faith → communication
+- communication → gods → household → communication
+- communication → gods → intrigue → communication
+- communication → gods → knowledge → communication
+- communication → gods → language → communication
+- communication → gods → law → communication
+- communication → gods → magic → communication
+- communication → gods → mind → communication
+- communication → gods → polity → communication
+- communication → gods → social → communication
+- communication → gods → war → communication
+- communication → household → core → communication
+- communication → household → cosmos → communication
+- communication → household → culture → communication
+- communication → household → demography → communication
+- communication → household → ecology → communication
+- communication → household → economy → communication
+- communication → household → environment → communication
+- communication → household → faith → communication
+- communication → household → gods → communication
+- communication → household → intrigue → communication
+- communication → household → knowledge → communication
+- communication → household → language → communication
+- communication → household → law → communication
+- communication → household → magic → communication
+- communication → household → mind → communication
+- communication → household → polity → communication
+- communication → household → social → communication
+- communication → household → war → communication
+- communication → intrigue → core → communication
+- communication → intrigue → cosmos → communication
+- communication → intrigue → culture → communication
+- communication → intrigue → demography → communication
+- communication → intrigue → ecology → communication
+- communication → intrigue → economy → communication
+- communication → intrigue → environment → communication
+- communication → intrigue → faith → communication
+- communication → intrigue → gods → communication
+- communication → intrigue → household → communication
+- communication → intrigue → knowledge → communication
+- communication → intrigue → language → communication
+- communication → intrigue → law → communication
+- communication → intrigue → magic → communication
+- communication → intrigue → mind → communication
+- communication → intrigue → polity → communication
+- communication → intrigue → social → communication
+- communication → intrigue → war → communication
+- communication → knowledge → core → communication
+- communication → knowledge → cosmos → communication
+- communication → knowledge → culture → communication
+- communication → knowledge → demography → communication
+- communication → knowledge → ecology → communication
+- communication → knowledge → economy → communication
+- communication → knowledge → environment → communication
+- communication → knowledge → faith → communication
+- communication → knowledge → gods → communication
+- communication → knowledge → household → communication
+- communication → knowledge → intrigue → communication
+- communication → knowledge → language → communication
+- communication → knowledge → law → communication
+- communication → knowledge → magic → communication
+- communication → knowledge → mind → communication
+- communication → knowledge → polity → communication
+- communication → knowledge → social → communication
+- communication → knowledge → war → communication
+- communication → language → core → communication
+- communication → language → cosmos → communication
+- communication → language → culture → communication
+- communication → language → demography → communication
+- communication → language → ecology → communication
+- communication → language → economy → communication
+- communication → language → environment → communication
+- communication → language → faith → communication
+- communication → language → gods → communication
+- communication → language → household → communication
+- communication → language → intrigue → communication
+- communication → language → knowledge → communication
+- communication → language → law → communication
+- communication → language → magic → communication
+- communication → language → mind → communication
+- communication → language → polity → communication
+- communication → language → social → communication
+- communication → language → war → communication
+- communication → law → core → communication
+- communication → law → cosmos → communication
+- communication → law → culture → communication
+- communication → law → demography → communication
+- communication → law → ecology → communication
+- communication → law → economy → communication
+- communication → law → environment → communication
+- communication → law → faith → communication
+- communication → law → gods → communication
+- communication → law → household → communication
+- communication → law → intrigue → communication
+- communication → law → knowledge → communication
+- communication → law → language → communication
+- communication → law → magic → communication
+- communication → law → mind → communication
+- communication → law → polity → communication
+- communication → law → social → communication
+- communication → law → war → communication
+- communication → magic → core → communication
+- communication → magic → cosmos → communication
+- communication → magic → culture → communication
+- communication → magic → demography → communication
+- communication → magic → ecology → communication
+- communication → magic → economy → communication
+- communication → magic → environment → communication
+- communication → magic → faith → communication
+- communication → magic → gods → communication
+- communication → magic → household → communication
+- communication → magic → intrigue → communication
+- communication → magic → knowledge → communication
+- communication → magic → language → communication
+- communication → magic → law → communication
+- communication → magic → mind → communication
+- communication → magic → polity → communication
+- communication → magic → social → communication
+- communication → magic → war → communication
+- communication → mind → core → communication
+- communication → mind → cosmos → communication
+- communication → mind → culture → communication
+- communication → mind → demography → communication
+- communication → mind → ecology → communication
+- communication → mind → economy → communication
+- communication → mind → environment → communication
+- communication → mind → faith → communication
+- communication → mind → gods → communication
+- communication → mind → household → communication
+- communication → mind → intrigue → communication
+- communication → mind → knowledge → communication
+- communication → mind → language → communication
+- communication → mind → law → communication
+- communication → mind → magic → communication
+- communication → mind → polity → communication
+- communication → mind → social → communication
+- communication → mind → war → communication
+- communication → polity → core → communication
+- communication → polity → cosmos → communication
+- communication → polity → culture → communication
+- communication → polity → demography → communication
+- communication → polity → ecology → communication
+- communication → polity → economy → communication
+- communication → polity → environment → communication
+- communication → polity → faith → communication
+- communication → polity → gods → communication
+- communication → polity → household → communication
+- communication → polity → intrigue → communication
+- communication → polity → knowledge → communication
+- communication → polity → language → communication
+- communication → polity → law → communication
+- communication → polity → magic → communication
+- communication → polity → mind → communication
+- communication → polity → social → communication
+- communication → polity → war → communication
+- communication → social → core → communication
+- communication → social → cosmos → communication
+- communication → social → culture → communication
+- communication → social → demography → communication
+- communication → social → ecology → communication
+- communication → social → economy → communication
+- communication → social → environment → communication
+- communication → social → faith → communication
+- communication → social → gods → communication
+- communication → social → household → communication
+- communication → social → intrigue → communication
+- communication → social → knowledge → communication
+- communication → social → language → communication
+- communication → social → law → communication
+- communication → social → magic → communication
+- communication → social → mind → communication
+- communication → social → polity → communication
+- communication → social → war → communication
+- communication → war → core → communication
+- communication → war → cosmos → communication
+- communication → war → culture → communication
+- communication → war → demography → communication
+- communication → war → ecology → communication
+- communication → war → economy → communication
+- communication → war → environment → communication
+- communication → war → faith → communication
+- communication → war → gods → communication
+- communication → war → household → communication
+- communication → war → intrigue → communication
+- communication → war → knowledge → communication
+- communication → war → language → communication
+- communication → war → law → communication
+- communication → war → magic → communication
+- communication → war → mind → communication
+- communication → war → polity → communication
+- communication → war → social → communication
 - core → cosmos → culture → core
 - core → cosmos → demography → core
 - core → cosmos → ecology → core
@@ -522,6 +977,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → cosmos → environment → core
 - core → cosmos → faith → core
 - core → cosmos → gods → core
+- core → cosmos → household → core
 - core → cosmos → intrigue → core
 - core → cosmos → knowledge → core
 - core → cosmos → language → core
@@ -538,6 +994,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → culture → environment → core
 - core → culture → faith → core
 - core → culture → gods → core
+- core → culture → household → core
 - core → culture → intrigue → core
 - core → culture → knowledge → core
 - core → culture → language → core
@@ -554,6 +1011,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → demography → environment → core
 - core → demography → faith → core
 - core → demography → gods → core
+- core → demography → household → core
 - core → demography → intrigue → core
 - core → demography → knowledge → core
 - core → demography → language → core
@@ -570,6 +1028,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → ecology → environment → core
 - core → ecology → faith → core
 - core → ecology → gods → core
+- core → ecology → household → core
 - core → ecology → intrigue → core
 - core → ecology → knowledge → core
 - core → ecology → language → core
@@ -586,6 +1045,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → economy → environment → core
 - core → economy → faith → core
 - core → economy → gods → core
+- core → economy → household → core
 - core → economy → intrigue → core
 - core → economy → knowledge → core
 - core → economy → language → core
@@ -602,6 +1062,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → environment → economy → core
 - core → environment → faith → core
 - core → environment → gods → core
+- core → environment → household → core
 - core → environment → intrigue → core
 - core → environment → knowledge → core
 - core → environment → language → core
@@ -618,6 +1079,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → faith → economy → core
 - core → faith → environment → core
 - core → faith → gods → core
+- core → faith → household → core
 - core → faith → intrigue → core
 - core → faith → knowledge → core
 - core → faith → language → core
@@ -634,6 +1096,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → gods → economy → core
 - core → gods → environment → core
 - core → gods → faith → core
+- core → gods → household → core
 - core → gods → intrigue → core
 - core → gods → knowledge → core
 - core → gods → language → core
@@ -643,6 +1106,23 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → gods → polity → core
 - core → gods → social → core
 - core → gods → war → core
+- core → household → cosmos → core
+- core → household → culture → core
+- core → household → demography → core
+- core → household → ecology → core
+- core → household → economy → core
+- core → household → environment → core
+- core → household → faith → core
+- core → household → gods → core
+- core → household → intrigue → core
+- core → household → knowledge → core
+- core → household → language → core
+- core → household → law → core
+- core → household → magic → core
+- core → household → mind → core
+- core → household → polity → core
+- core → household → social → core
+- core → household → war → core
 - core → intrigue → cosmos → core
 - core → intrigue → culture → core
 - core → intrigue → demography → core
@@ -651,6 +1131,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → intrigue → environment → core
 - core → intrigue → faith → core
 - core → intrigue → gods → core
+- core → intrigue → household → core
 - core → intrigue → knowledge → core
 - core → intrigue → language → core
 - core → intrigue → law → core
@@ -667,6 +1148,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → knowledge → environment → core
 - core → knowledge → faith → core
 - core → knowledge → gods → core
+- core → knowledge → household → core
 - core → knowledge → intrigue → core
 - core → knowledge → language → core
 - core → knowledge → law → core
@@ -683,6 +1165,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → language → environment → core
 - core → language → faith → core
 - core → language → gods → core
+- core → language → household → core
 - core → language → intrigue → core
 - core → language → knowledge → core
 - core → language → law → core
@@ -699,6 +1182,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → law → environment → core
 - core → law → faith → core
 - core → law → gods → core
+- core → law → household → core
 - core → law → intrigue → core
 - core → law → knowledge → core
 - core → law → language → core
@@ -715,6 +1199,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → magic → environment → core
 - core → magic → faith → core
 - core → magic → gods → core
+- core → magic → household → core
 - core → magic → intrigue → core
 - core → magic → knowledge → core
 - core → magic → language → core
@@ -731,6 +1216,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → mind → environment → core
 - core → mind → faith → core
 - core → mind → gods → core
+- core → mind → household → core
 - core → mind → intrigue → core
 - core → mind → knowledge → core
 - core → mind → language → core
@@ -747,6 +1233,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → polity → environment → core
 - core → polity → faith → core
 - core → polity → gods → core
+- core → polity → household → core
 - core → polity → intrigue → core
 - core → polity → knowledge → core
 - core → polity → language → core
@@ -763,6 +1250,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → social → environment → core
 - core → social → faith → core
 - core → social → gods → core
+- core → social → household → core
 - core → social → intrigue → core
 - core → social → knowledge → core
 - core → social → language → core
@@ -779,6 +1267,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - core → war → environment → core
 - core → war → faith → core
 - core → war → gods → core
+- core → war → household → core
 - core → war → intrigue → core
 - core → war → knowledge → core
 - core → war → language → core
@@ -793,6 +1282,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → culture → environment → cosmos
 - cosmos → culture → faith → cosmos
 - cosmos → culture → gods → cosmos
+- cosmos → culture → household → cosmos
 - cosmos → culture → intrigue → cosmos
 - cosmos → culture → knowledge → cosmos
 - cosmos → culture → language → cosmos
@@ -808,6 +1298,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → demography → environment → cosmos
 - cosmos → demography → faith → cosmos
 - cosmos → demography → gods → cosmos
+- cosmos → demography → household → cosmos
 - cosmos → demography → intrigue → cosmos
 - cosmos → demography → knowledge → cosmos
 - cosmos → demography → language → cosmos
@@ -823,6 +1314,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → ecology → environment → cosmos
 - cosmos → ecology → faith → cosmos
 - cosmos → ecology → gods → cosmos
+- cosmos → ecology → household → cosmos
 - cosmos → ecology → intrigue → cosmos
 - cosmos → ecology → knowledge → cosmos
 - cosmos → ecology → language → cosmos
@@ -838,6 +1330,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → economy → environment → cosmos
 - cosmos → economy → faith → cosmos
 - cosmos → economy → gods → cosmos
+- cosmos → economy → household → cosmos
 - cosmos → economy → intrigue → cosmos
 - cosmos → economy → knowledge → cosmos
 - cosmos → economy → language → cosmos
@@ -853,6 +1346,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → environment → economy → cosmos
 - cosmos → environment → faith → cosmos
 - cosmos → environment → gods → cosmos
+- cosmos → environment → household → cosmos
 - cosmos → environment → intrigue → cosmos
 - cosmos → environment → knowledge → cosmos
 - cosmos → environment → language → cosmos
@@ -868,6 +1362,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → faith → economy → cosmos
 - cosmos → faith → environment → cosmos
 - cosmos → faith → gods → cosmos
+- cosmos → faith → household → cosmos
 - cosmos → faith → intrigue → cosmos
 - cosmos → faith → knowledge → cosmos
 - cosmos → faith → language → cosmos
@@ -883,6 +1378,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → gods → economy → cosmos
 - cosmos → gods → environment → cosmos
 - cosmos → gods → faith → cosmos
+- cosmos → gods → household → cosmos
 - cosmos → gods → intrigue → cosmos
 - cosmos → gods → knowledge → cosmos
 - cosmos → gods → language → cosmos
@@ -892,6 +1388,22 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → gods → polity → cosmos
 - cosmos → gods → social → cosmos
 - cosmos → gods → war → cosmos
+- cosmos → household → culture → cosmos
+- cosmos → household → demography → cosmos
+- cosmos → household → ecology → cosmos
+- cosmos → household → economy → cosmos
+- cosmos → household → environment → cosmos
+- cosmos → household → faith → cosmos
+- cosmos → household → gods → cosmos
+- cosmos → household → intrigue → cosmos
+- cosmos → household → knowledge → cosmos
+- cosmos → household → language → cosmos
+- cosmos → household → law → cosmos
+- cosmos → household → magic → cosmos
+- cosmos → household → mind → cosmos
+- cosmos → household → polity → cosmos
+- cosmos → household → social → cosmos
+- cosmos → household → war → cosmos
 - cosmos → intrigue → culture → cosmos
 - cosmos → intrigue → demography → cosmos
 - cosmos → intrigue → ecology → cosmos
@@ -899,6 +1411,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → intrigue → environment → cosmos
 - cosmos → intrigue → faith → cosmos
 - cosmos → intrigue → gods → cosmos
+- cosmos → intrigue → household → cosmos
 - cosmos → intrigue → knowledge → cosmos
 - cosmos → intrigue → language → cosmos
 - cosmos → intrigue → law → cosmos
@@ -914,6 +1427,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → knowledge → environment → cosmos
 - cosmos → knowledge → faith → cosmos
 - cosmos → knowledge → gods → cosmos
+- cosmos → knowledge → household → cosmos
 - cosmos → knowledge → intrigue → cosmos
 - cosmos → knowledge → language → cosmos
 - cosmos → knowledge → law → cosmos
@@ -929,6 +1443,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → language → environment → cosmos
 - cosmos → language → faith → cosmos
 - cosmos → language → gods → cosmos
+- cosmos → language → household → cosmos
 - cosmos → language → intrigue → cosmos
 - cosmos → language → knowledge → cosmos
 - cosmos → language → law → cosmos
@@ -944,6 +1459,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → law → environment → cosmos
 - cosmos → law → faith → cosmos
 - cosmos → law → gods → cosmos
+- cosmos → law → household → cosmos
 - cosmos → law → intrigue → cosmos
 - cosmos → law → knowledge → cosmos
 - cosmos → law → language → cosmos
@@ -959,6 +1475,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → magic → environment → cosmos
 - cosmos → magic → faith → cosmos
 - cosmos → magic → gods → cosmos
+- cosmos → magic → household → cosmos
 - cosmos → magic → intrigue → cosmos
 - cosmos → magic → knowledge → cosmos
 - cosmos → magic → language → cosmos
@@ -974,6 +1491,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → mind → environment → cosmos
 - cosmos → mind → faith → cosmos
 - cosmos → mind → gods → cosmos
+- cosmos → mind → household → cosmos
 - cosmos → mind → intrigue → cosmos
 - cosmos → mind → knowledge → cosmos
 - cosmos → mind → language → cosmos
@@ -989,6 +1507,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → polity → environment → cosmos
 - cosmos → polity → faith → cosmos
 - cosmos → polity → gods → cosmos
+- cosmos → polity → household → cosmos
 - cosmos → polity → intrigue → cosmos
 - cosmos → polity → knowledge → cosmos
 - cosmos → polity → language → cosmos
@@ -1004,6 +1523,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → social → environment → cosmos
 - cosmos → social → faith → cosmos
 - cosmos → social → gods → cosmos
+- cosmos → social → household → cosmos
 - cosmos → social → intrigue → cosmos
 - cosmos → social → knowledge → cosmos
 - cosmos → social → language → cosmos
@@ -1019,6 +1539,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - cosmos → war → environment → cosmos
 - cosmos → war → faith → cosmos
 - cosmos → war → gods → cosmos
+- cosmos → war → household → cosmos
 - cosmos → war → intrigue → cosmos
 - cosmos → war → knowledge → cosmos
 - cosmos → war → language → cosmos
@@ -1032,6 +1553,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - culture → demography → environment → culture
 - culture → demography → faith → culture
 - culture → demography → gods → culture
+- culture → demography → household → culture
 - culture → demography → intrigue → culture
 - culture → demography → knowledge → culture
 - culture → demography → language → culture
@@ -1046,6 +1568,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - culture → ecology → environment → culture
 - culture → ecology → faith → culture
 - culture → ecology → gods → culture
+- culture → ecology → household → culture
 - culture → ecology → intrigue → culture
 - culture → ecology → knowledge → culture
 - culture → ecology → language → culture
@@ -1060,6 +1583,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - culture → economy → environment → culture
 - culture → economy → faith → culture
 - culture → economy → gods → culture
+- culture → economy → household → culture
 - culture → economy → intrigue → culture
 - culture → economy → knowledge → culture
 - culture → economy → language → culture
@@ -1074,6 +1598,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - culture → environment → economy → culture
 - culture → environment → faith → culture
 - culture → environment → gods → culture
+- culture → environment → household → culture
 - culture → environment → intrigue → culture
 - culture → environment → knowledge → culture
 - culture → environment → language → culture
@@ -1088,6 +1613,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - culture → faith → economy → culture
 - culture → faith → environment → culture
 - culture → faith → gods → culture
+- culture → faith → household → culture
 - culture → faith → intrigue → culture
 - culture → faith → knowledge → culture
 - culture → faith → language → culture
@@ -1102,6 +1628,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - culture → gods → economy → culture
 - culture → gods → environment → culture
 - culture → gods → faith → culture
+- culture → gods → household → culture
 - culture → gods → intrigue → culture
 - culture → gods → knowledge → culture
 - culture → gods → language → culture
@@ -1111,12 +1638,28 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - culture → gods → polity → culture
 - culture → gods → social → culture
 - culture → gods → war → culture
+- culture → household → demography → culture
+- culture → household → ecology → culture
+- culture → household → economy → culture
+- culture → household → environment → culture
+- culture → household → faith → culture
+- culture → household → gods → culture
+- culture → household → intrigue → culture
+- culture → household → knowledge → culture
+- culture → household → language → culture
+- culture → household → law → culture
+- culture → household → magic → culture
+- culture → household → mind → culture
+- culture → household → polity → culture
+- culture → household → social → culture
+- culture → household → war → culture
 - culture → intrigue → demography → culture
 - culture → intrigue → ecology → culture
 - culture → intrigue → economy → culture
 - culture → intrigue → environment → culture
 - culture → intrigue → faith → culture
 - culture → intrigue → gods → culture
+- culture → intrigue → household → culture
 - culture → intrigue → knowledge → culture
 - culture → intrigue → language → culture
 - culture → intrigue → law → culture
@@ -1131,6 +1674,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - culture → knowledge → environment → culture
 - culture → knowledge → faith → culture
 - culture → knowledge → gods → culture
+- culture → knowledge → household → culture
 - culture → knowledge → intrigue → culture
 - culture → knowledge → language → culture
 - culture → knowledge → law → culture
@@ -1145,6 +1689,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - culture → language → environment → culture
 - culture → language → faith → culture
 - culture → language → gods → culture
+- culture → language → household → culture
 - culture → language → intrigue → culture
 - culture → language → knowledge → culture
 - culture → language → law → culture
@@ -1159,6 +1704,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - culture → law → environment → culture
 - culture → law → faith → culture
 - culture → law → gods → culture
+- culture → law → household → culture
 - culture → law → intrigue → culture
 - culture → law → knowledge → culture
 - culture → law → language → culture
@@ -1173,6 +1719,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - culture → magic → environment → culture
 - culture → magic → faith → culture
 - culture → magic → gods → culture
+- culture → magic → household → culture
 - culture → magic → intrigue → culture
 - culture → magic → knowledge → culture
 - culture → magic → language → culture
@@ -1187,6 +1734,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - culture → mind → environment → culture
 - culture → mind → faith → culture
 - culture → mind → gods → culture
+- culture → mind → household → culture
 - culture → mind → intrigue → culture
 - culture → mind → knowledge → culture
 - culture → mind → language → culture
@@ -1201,6 +1749,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - culture → polity → environment → culture
 - culture → polity → faith → culture
 - culture → polity → gods → culture
+- culture → polity → household → culture
 - culture → polity → intrigue → culture
 - culture → polity → knowledge → culture
 - culture → polity → language → culture
@@ -1215,6 +1764,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - culture → social → environment → culture
 - culture → social → faith → culture
 - culture → social → gods → culture
+- culture → social → household → culture
 - culture → social → intrigue → culture
 - culture → social → knowledge → culture
 - culture → social → language → culture
@@ -1229,6 +1779,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - culture → war → environment → culture
 - culture → war → faith → culture
 - culture → war → gods → culture
+- culture → war → household → culture
 - culture → war → intrigue → culture
 - culture → war → knowledge → culture
 - culture → war → language → culture
@@ -1241,6 +1792,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - demography → ecology → environment → demography
 - demography → ecology → faith → demography
 - demography → ecology → gods → demography
+- demography → ecology → household → demography
 - demography → ecology → intrigue → demography
 - demography → ecology → knowledge → demography
 - demography → ecology → language → demography
@@ -1254,6 +1806,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - demography → economy → environment → demography
 - demography → economy → faith → demography
 - demography → economy → gods → demography
+- demography → economy → household → demography
 - demography → economy → intrigue → demography
 - demography → economy → knowledge → demography
 - demography → economy → language → demography
@@ -1267,6 +1820,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - demography → environment → economy → demography
 - demography → environment → faith → demography
 - demography → environment → gods → demography
+- demography → environment → household → demography
 - demography → environment → intrigue → demography
 - demography → environment → knowledge → demography
 - demography → environment → language → demography
@@ -1280,6 +1834,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - demography → faith → economy → demography
 - demography → faith → environment → demography
 - demography → faith → gods → demography
+- demography → faith → household → demography
 - demography → faith → intrigue → demography
 - demography → faith → knowledge → demography
 - demography → faith → language → demography
@@ -1293,6 +1848,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - demography → gods → economy → demography
 - demography → gods → environment → demography
 - demography → gods → faith → demography
+- demography → gods → household → demography
 - demography → gods → intrigue → demography
 - demography → gods → knowledge → demography
 - demography → gods → language → demography
@@ -1302,11 +1858,26 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - demography → gods → polity → demography
 - demography → gods → social → demography
 - demography → gods → war → demography
+- demography → household → ecology → demography
+- demography → household → economy → demography
+- demography → household → environment → demography
+- demography → household → faith → demography
+- demography → household → gods → demography
+- demography → household → intrigue → demography
+- demography → household → knowledge → demography
+- demography → household → language → demography
+- demography → household → law → demography
+- demography → household → magic → demography
+- demography → household → mind → demography
+- demography → household → polity → demography
+- demography → household → social → demography
+- demography → household → war → demography
 - demography → intrigue → ecology → demography
 - demography → intrigue → economy → demography
 - demography → intrigue → environment → demography
 - demography → intrigue → faith → demography
 - demography → intrigue → gods → demography
+- demography → intrigue → household → demography
 - demography → intrigue → knowledge → demography
 - demography → intrigue → language → demography
 - demography → intrigue → law → demography
@@ -1320,6 +1891,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - demography → knowledge → environment → demography
 - demography → knowledge → faith → demography
 - demography → knowledge → gods → demography
+- demography → knowledge → household → demography
 - demography → knowledge → intrigue → demography
 - demography → knowledge → language → demography
 - demography → knowledge → law → demography
@@ -1333,6 +1905,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - demography → language → environment → demography
 - demography → language → faith → demography
 - demography → language → gods → demography
+- demography → language → household → demography
 - demography → language → intrigue → demography
 - demography → language → knowledge → demography
 - demography → language → law → demography
@@ -1346,6 +1919,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - demography → law → environment → demography
 - demography → law → faith → demography
 - demography → law → gods → demography
+- demography → law → household → demography
 - demography → law → intrigue → demography
 - demography → law → knowledge → demography
 - demography → law → language → demography
@@ -1359,6 +1933,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - demography → magic → environment → demography
 - demography → magic → faith → demography
 - demography → magic → gods → demography
+- demography → magic → household → demography
 - demography → magic → intrigue → demography
 - demography → magic → knowledge → demography
 - demography → magic → language → demography
@@ -1372,6 +1947,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - demography → mind → environment → demography
 - demography → mind → faith → demography
 - demography → mind → gods → demography
+- demography → mind → household → demography
 - demography → mind → intrigue → demography
 - demography → mind → knowledge → demography
 - demography → mind → language → demography
@@ -1385,6 +1961,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - demography → polity → environment → demography
 - demography → polity → faith → demography
 - demography → polity → gods → demography
+- demography → polity → household → demography
 - demography → polity → intrigue → demography
 - demography → polity → knowledge → demography
 - demography → polity → language → demography
@@ -1398,6 +1975,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - demography → social → environment → demography
 - demography → social → faith → demography
 - demography → social → gods → demography
+- demography → social → household → demography
 - demography → social → intrigue → demography
 - demography → social → knowledge → demography
 - demography → social → language → demography
@@ -1411,6 +1989,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - demography → war → environment → demography
 - demography → war → faith → demography
 - demography → war → gods → demography
+- demography → war → household → demography
 - demography → war → intrigue → demography
 - demography → war → knowledge → demography
 - demography → war → language → demography
@@ -1422,6 +2001,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - ecology → economy → environment → ecology
 - ecology → economy → faith → ecology
 - ecology → economy → gods → ecology
+- ecology → economy → household → ecology
 - ecology → economy → intrigue → ecology
 - ecology → economy → knowledge → ecology
 - ecology → economy → language → ecology
@@ -1434,6 +2014,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - ecology → environment → economy → ecology
 - ecology → environment → faith → ecology
 - ecology → environment → gods → ecology
+- ecology → environment → household → ecology
 - ecology → environment → intrigue → ecology
 - ecology → environment → knowledge → ecology
 - ecology → environment → language → ecology
@@ -1446,6 +2027,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - ecology → faith → economy → ecology
 - ecology → faith → environment → ecology
 - ecology → faith → gods → ecology
+- ecology → faith → household → ecology
 - ecology → faith → intrigue → ecology
 - ecology → faith → knowledge → ecology
 - ecology → faith → language → ecology
@@ -1458,6 +2040,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - ecology → gods → economy → ecology
 - ecology → gods → environment → ecology
 - ecology → gods → faith → ecology
+- ecology → gods → household → ecology
 - ecology → gods → intrigue → ecology
 - ecology → gods → knowledge → ecology
 - ecology → gods → language → ecology
@@ -1467,10 +2050,24 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - ecology → gods → polity → ecology
 - ecology → gods → social → ecology
 - ecology → gods → war → ecology
+- ecology → household → economy → ecology
+- ecology → household → environment → ecology
+- ecology → household → faith → ecology
+- ecology → household → gods → ecology
+- ecology → household → intrigue → ecology
+- ecology → household → knowledge → ecology
+- ecology → household → language → ecology
+- ecology → household → law → ecology
+- ecology → household → magic → ecology
+- ecology → household → mind → ecology
+- ecology → household → polity → ecology
+- ecology → household → social → ecology
+- ecology → household → war → ecology
 - ecology → intrigue → economy → ecology
 - ecology → intrigue → environment → ecology
 - ecology → intrigue → faith → ecology
 - ecology → intrigue → gods → ecology
+- ecology → intrigue → household → ecology
 - ecology → intrigue → knowledge → ecology
 - ecology → intrigue → language → ecology
 - ecology → intrigue → law → ecology
@@ -1483,6 +2080,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - ecology → knowledge → environment → ecology
 - ecology → knowledge → faith → ecology
 - ecology → knowledge → gods → ecology
+- ecology → knowledge → household → ecology
 - ecology → knowledge → intrigue → ecology
 - ecology → knowledge → language → ecology
 - ecology → knowledge → law → ecology
@@ -1495,6 +2093,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - ecology → language → environment → ecology
 - ecology → language → faith → ecology
 - ecology → language → gods → ecology
+- ecology → language → household → ecology
 - ecology → language → intrigue → ecology
 - ecology → language → knowledge → ecology
 - ecology → language → law → ecology
@@ -1507,6 +2106,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - ecology → law → environment → ecology
 - ecology → law → faith → ecology
 - ecology → law → gods → ecology
+- ecology → law → household → ecology
 - ecology → law → intrigue → ecology
 - ecology → law → knowledge → ecology
 - ecology → law → language → ecology
@@ -1519,6 +2119,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - ecology → magic → environment → ecology
 - ecology → magic → faith → ecology
 - ecology → magic → gods → ecology
+- ecology → magic → household → ecology
 - ecology → magic → intrigue → ecology
 - ecology → magic → knowledge → ecology
 - ecology → magic → language → ecology
@@ -1531,6 +2132,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - ecology → mind → environment → ecology
 - ecology → mind → faith → ecology
 - ecology → mind → gods → ecology
+- ecology → mind → household → ecology
 - ecology → mind → intrigue → ecology
 - ecology → mind → knowledge → ecology
 - ecology → mind → language → ecology
@@ -1543,6 +2145,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - ecology → polity → environment → ecology
 - ecology → polity → faith → ecology
 - ecology → polity → gods → ecology
+- ecology → polity → household → ecology
 - ecology → polity → intrigue → ecology
 - ecology → polity → knowledge → ecology
 - ecology → polity → language → ecology
@@ -1555,6 +2158,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - ecology → social → environment → ecology
 - ecology → social → faith → ecology
 - ecology → social → gods → ecology
+- ecology → social → household → ecology
 - ecology → social → intrigue → ecology
 - ecology → social → knowledge → ecology
 - ecology → social → language → ecology
@@ -1567,6 +2171,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - ecology → war → environment → ecology
 - ecology → war → faith → ecology
 - ecology → war → gods → ecology
+- ecology → war → household → ecology
 - ecology → war → intrigue → ecology
 - ecology → war → knowledge → ecology
 - ecology → war → language → ecology
@@ -1577,6 +2182,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - ecology → war → social → ecology
 - economy → environment → faith → economy
 - economy → environment → gods → economy
+- economy → environment → household → economy
 - economy → environment → intrigue → economy
 - economy → environment → knowledge → economy
 - economy → environment → language → economy
@@ -1588,6 +2194,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - economy → environment → war → economy
 - economy → faith → environment → economy
 - economy → faith → gods → economy
+- economy → faith → household → economy
 - economy → faith → intrigue → economy
 - economy → faith → knowledge → economy
 - economy → faith → language → economy
@@ -1599,6 +2206,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - economy → faith → war → economy
 - economy → gods → environment → economy
 - economy → gods → faith → economy
+- economy → gods → household → economy
 - economy → gods → intrigue → economy
 - economy → gods → knowledge → economy
 - economy → gods → language → economy
@@ -1608,9 +2216,22 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - economy → gods → polity → economy
 - economy → gods → social → economy
 - economy → gods → war → economy
+- economy → household → environment → economy
+- economy → household → faith → economy
+- economy → household → gods → economy
+- economy → household → intrigue → economy
+- economy → household → knowledge → economy
+- economy → household → language → economy
+- economy → household → law → economy
+- economy → household → magic → economy
+- economy → household → mind → economy
+- economy → household → polity → economy
+- economy → household → social → economy
+- economy → household → war → economy
 - economy → intrigue → environment → economy
 - economy → intrigue → faith → economy
 - economy → intrigue → gods → economy
+- economy → intrigue → household → economy
 - economy → intrigue → knowledge → economy
 - economy → intrigue → language → economy
 - economy → intrigue → law → economy
@@ -1622,6 +2243,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - economy → knowledge → environment → economy
 - economy → knowledge → faith → economy
 - economy → knowledge → gods → economy
+- economy → knowledge → household → economy
 - economy → knowledge → intrigue → economy
 - economy → knowledge → language → economy
 - economy → knowledge → law → economy
@@ -1633,6 +2255,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - economy → language → environment → economy
 - economy → language → faith → economy
 - economy → language → gods → economy
+- economy → language → household → economy
 - economy → language → intrigue → economy
 - economy → language → knowledge → economy
 - economy → language → law → economy
@@ -1644,6 +2267,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - economy → law → environment → economy
 - economy → law → faith → economy
 - economy → law → gods → economy
+- economy → law → household → economy
 - economy → law → intrigue → economy
 - economy → law → knowledge → economy
 - economy → law → language → economy
@@ -1655,6 +2279,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - economy → magic → environment → economy
 - economy → magic → faith → economy
 - economy → magic → gods → economy
+- economy → magic → household → economy
 - economy → magic → intrigue → economy
 - economy → magic → knowledge → economy
 - economy → magic → language → economy
@@ -1666,6 +2291,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - economy → mind → environment → economy
 - economy → mind → faith → economy
 - economy → mind → gods → economy
+- economy → mind → household → economy
 - economy → mind → intrigue → economy
 - economy → mind → knowledge → economy
 - economy → mind → language → economy
@@ -1677,6 +2303,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - economy → polity → environment → economy
 - economy → polity → faith → economy
 - economy → polity → gods → economy
+- economy → polity → household → economy
 - economy → polity → intrigue → economy
 - economy → polity → knowledge → economy
 - economy → polity → language → economy
@@ -1688,6 +2315,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - economy → social → environment → economy
 - economy → social → faith → economy
 - economy → social → gods → economy
+- economy → social → household → economy
 - economy → social → intrigue → economy
 - economy → social → knowledge → economy
 - economy → social → language → economy
@@ -1699,6 +2327,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - economy → war → environment → economy
 - economy → war → faith → economy
 - economy → war → gods → economy
+- economy → war → household → economy
 - economy → war → intrigue → economy
 - economy → war → knowledge → economy
 - economy → war → language → economy
@@ -1708,6 +2337,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - economy → war → polity → economy
 - economy → war → social → economy
 - environment → faith → gods → environment
+- environment → faith → household → environment
 - environment → faith → intrigue → environment
 - environment → faith → knowledge → environment
 - environment → faith → language → environment
@@ -1718,6 +2348,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - environment → faith → social → environment
 - environment → faith → war → environment
 - environment → gods → faith → environment
+- environment → gods → household → environment
 - environment → gods → intrigue → environment
 - environment → gods → knowledge → environment
 - environment → gods → language → environment
@@ -1727,8 +2358,20 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - environment → gods → polity → environment
 - environment → gods → social → environment
 - environment → gods → war → environment
+- environment → household → faith → environment
+- environment → household → gods → environment
+- environment → household → intrigue → environment
+- environment → household → knowledge → environment
+- environment → household → language → environment
+- environment → household → law → environment
+- environment → household → magic → environment
+- environment → household → mind → environment
+- environment → household → polity → environment
+- environment → household → social → environment
+- environment → household → war → environment
 - environment → intrigue → faith → environment
 - environment → intrigue → gods → environment
+- environment → intrigue → household → environment
 - environment → intrigue → knowledge → environment
 - environment → intrigue → language → environment
 - environment → intrigue → law → environment
@@ -1739,6 +2382,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - environment → intrigue → war → environment
 - environment → knowledge → faith → environment
 - environment → knowledge → gods → environment
+- environment → knowledge → household → environment
 - environment → knowledge → intrigue → environment
 - environment → knowledge → language → environment
 - environment → knowledge → law → environment
@@ -1749,6 +2393,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - environment → knowledge → war → environment
 - environment → language → faith → environment
 - environment → language → gods → environment
+- environment → language → household → environment
 - environment → language → intrigue → environment
 - environment → language → knowledge → environment
 - environment → language → law → environment
@@ -1759,6 +2404,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - environment → language → war → environment
 - environment → law → faith → environment
 - environment → law → gods → environment
+- environment → law → household → environment
 - environment → law → intrigue → environment
 - environment → law → knowledge → environment
 - environment → law → language → environment
@@ -1769,6 +2415,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - environment → law → war → environment
 - environment → magic → faith → environment
 - environment → magic → gods → environment
+- environment → magic → household → environment
 - environment → magic → intrigue → environment
 - environment → magic → knowledge → environment
 - environment → magic → language → environment
@@ -1779,6 +2426,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - environment → magic → war → environment
 - environment → mind → faith → environment
 - environment → mind → gods → environment
+- environment → mind → household → environment
 - environment → mind → intrigue → environment
 - environment → mind → knowledge → environment
 - environment → mind → language → environment
@@ -1789,6 +2437,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - environment → mind → war → environment
 - environment → polity → faith → environment
 - environment → polity → gods → environment
+- environment → polity → household → environment
 - environment → polity → intrigue → environment
 - environment → polity → knowledge → environment
 - environment → polity → language → environment
@@ -1799,6 +2448,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - environment → polity → war → environment
 - environment → social → faith → environment
 - environment → social → gods → environment
+- environment → social → household → environment
 - environment → social → intrigue → environment
 - environment → social → knowledge → environment
 - environment → social → language → environment
@@ -1809,6 +2459,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - environment → social → war → environment
 - environment → war → faith → environment
 - environment → war → gods → environment
+- environment → war → household → environment
 - environment → war → intrigue → environment
 - environment → war → knowledge → environment
 - environment → war → language → environment
@@ -1817,6 +2468,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - environment → war → mind → environment
 - environment → war → polity → environment
 - environment → war → social → environment
+- faith → gods → household → faith
 - faith → gods → intrigue → faith
 - faith → gods → knowledge → faith
 - faith → gods → language → faith
@@ -1826,7 +2478,18 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - faith → gods → polity → faith
 - faith → gods → social → faith
 - faith → gods → war → faith
+- faith → household → gods → faith
+- faith → household → intrigue → faith
+- faith → household → knowledge → faith
+- faith → household → language → faith
+- faith → household → law → faith
+- faith → household → magic → faith
+- faith → household → mind → faith
+- faith → household → polity → faith
+- faith → household → social → faith
+- faith → household → war → faith
 - faith → intrigue → gods → faith
+- faith → intrigue → household → faith
 - faith → intrigue → knowledge → faith
 - faith → intrigue → language → faith
 - faith → intrigue → law → faith
@@ -1836,6 +2499,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - faith → intrigue → social → faith
 - faith → intrigue → war → faith
 - faith → knowledge → gods → faith
+- faith → knowledge → household → faith
 - faith → knowledge → intrigue → faith
 - faith → knowledge → language → faith
 - faith → knowledge → law → faith
@@ -1845,6 +2509,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - faith → knowledge → social → faith
 - faith → knowledge → war → faith
 - faith → language → gods → faith
+- faith → language → household → faith
 - faith → language → intrigue → faith
 - faith → language → knowledge → faith
 - faith → language → law → faith
@@ -1854,6 +2519,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - faith → language → social → faith
 - faith → language → war → faith
 - faith → law → gods → faith
+- faith → law → household → faith
 - faith → law → intrigue → faith
 - faith → law → knowledge → faith
 - faith → law → language → faith
@@ -1863,6 +2529,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - faith → law → social → faith
 - faith → law → war → faith
 - faith → magic → gods → faith
+- faith → magic → household → faith
 - faith → magic → intrigue → faith
 - faith → magic → knowledge → faith
 - faith → magic → language → faith
@@ -1872,6 +2539,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - faith → magic → social → faith
 - faith → magic → war → faith
 - faith → mind → gods → faith
+- faith → mind → household → faith
 - faith → mind → intrigue → faith
 - faith → mind → knowledge → faith
 - faith → mind → language → faith
@@ -1881,6 +2549,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - faith → mind → social → faith
 - faith → mind → war → faith
 - faith → polity → gods → faith
+- faith → polity → household → faith
 - faith → polity → intrigue → faith
 - faith → polity → knowledge → faith
 - faith → polity → language → faith
@@ -1890,6 +2559,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - faith → polity → social → faith
 - faith → polity → war → faith
 - faith → social → gods → faith
+- faith → social → household → faith
 - faith → social → intrigue → faith
 - faith → social → knowledge → faith
 - faith → social → language → faith
@@ -1899,6 +2569,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - faith → social → polity → faith
 - faith → social → war → faith
 - faith → war → gods → faith
+- faith → war → household → faith
 - faith → war → intrigue → faith
 - faith → war → knowledge → faith
 - faith → war → language → faith
@@ -1907,6 +2578,16 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - faith → war → mind → faith
 - faith → war → polity → faith
 - faith → war → social → faith
+- gods → household → intrigue → gods
+- gods → household → knowledge → gods
+- gods → household → language → gods
+- gods → household → law → gods
+- gods → household → magic → gods
+- gods → household → mind → gods
+- gods → household → polity → gods
+- gods → household → social → gods
+- gods → household → war → gods
+- gods → intrigue → household → gods
 - gods → intrigue → knowledge → gods
 - gods → intrigue → language → gods
 - gods → intrigue → law → gods
@@ -1915,6 +2596,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - gods → intrigue → polity → gods
 - gods → intrigue → social → gods
 - gods → intrigue → war → gods
+- gods → knowledge → household → gods
 - gods → knowledge → intrigue → gods
 - gods → knowledge → language → gods
 - gods → knowledge → law → gods
@@ -1923,6 +2605,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - gods → knowledge → polity → gods
 - gods → knowledge → social → gods
 - gods → knowledge → war → gods
+- gods → language → household → gods
 - gods → language → intrigue → gods
 - gods → language → knowledge → gods
 - gods → language → law → gods
@@ -1931,6 +2614,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - gods → language → polity → gods
 - gods → language → social → gods
 - gods → language → war → gods
+- gods → law → household → gods
 - gods → law → intrigue → gods
 - gods → law → knowledge → gods
 - gods → law → language → gods
@@ -1939,6 +2623,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - gods → law → polity → gods
 - gods → law → social → gods
 - gods → law → war → gods
+- gods → magic → household → gods
 - gods → magic → intrigue → gods
 - gods → magic → knowledge → gods
 - gods → magic → language → gods
@@ -1947,6 +2632,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - gods → magic → polity → gods
 - gods → magic → social → gods
 - gods → magic → war → gods
+- gods → mind → household → gods
 - gods → mind → intrigue → gods
 - gods → mind → knowledge → gods
 - gods → mind → language → gods
@@ -1955,6 +2641,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - gods → mind → polity → gods
 - gods → mind → social → gods
 - gods → mind → war → gods
+- gods → polity → household → gods
 - gods → polity → intrigue → gods
 - gods → polity → knowledge → gods
 - gods → polity → language → gods
@@ -1963,6 +2650,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - gods → polity → mind → gods
 - gods → polity → social → gods
 - gods → polity → war → gods
+- gods → social → household → gods
 - gods → social → intrigue → gods
 - gods → social → knowledge → gods
 - gods → social → language → gods
@@ -1971,6 +2659,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - gods → social → mind → gods
 - gods → social → polity → gods
 - gods → social → war → gods
+- gods → war → household → gods
 - gods → war → intrigue → gods
 - gods → war → knowledge → gods
 - gods → war → language → gods
@@ -1979,6 +2668,78 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 - gods → war → mind → gods
 - gods → war → polity → gods
 - gods → war → social → gods
+- household → intrigue → knowledge → household
+- household → intrigue → language → household
+- household → intrigue → law → household
+- household → intrigue → magic → household
+- household → intrigue → mind → household
+- household → intrigue → polity → household
+- household → intrigue → social → household
+- household → intrigue → war → household
+- household → knowledge → intrigue → household
+- household → knowledge → language → household
+- household → knowledge → law → household
+- household → knowledge → magic → household
+- household → knowledge → mind → household
+- household → knowledge → polity → household
+- household → knowledge → social → household
+- household → knowledge → war → household
+- household → language → intrigue → household
+- household → language → knowledge → household
+- household → language → law → household
+- household → language → magic → household
+- household → language → mind → household
+- household → language → polity → household
+- household → language → social → household
+- household → language → war → household
+- household → law → intrigue → household
+- household → law → knowledge → household
+- household → law → language → household
+- household → law → magic → household
+- household → law → mind → household
+- household → law → polity → household
+- household → law → social → household
+- household → law → war → household
+- household → magic → intrigue → household
+- household → magic → knowledge → household
+- household → magic → language → household
+- household → magic → law → household
+- household → magic → mind → household
+- household → magic → polity → household
+- household → magic → social → household
+- household → magic → war → household
+- household → mind → intrigue → household
+- household → mind → knowledge → household
+- household → mind → language → household
+- household → mind → law → household
+- household → mind → magic → household
+- household → mind → polity → household
+- household → mind → social → household
+- household → mind → war → household
+- household → polity → intrigue → household
+- household → polity → knowledge → household
+- household → polity → language → household
+- household → polity → law → household
+- household → polity → magic → household
+- household → polity → mind → household
+- household → polity → social → household
+- household → polity → war → household
+- household → social → intrigue → household
+- household → social → knowledge → household
+- household → social → language → household
+- household → social → law → household
+- household → social → magic → household
+- household → social → mind → household
+- household → social → polity → household
+- household → social → war → household
+- household → war → intrigue → household
+- household → war → knowledge → household
+- household → war → language → household
+- household → war → law → household
+- household → war → magic → household
+- household → war → mind → household
+- household → war → polity → household
+- household → war → social → household
 - intrigue → knowledge → language → intrigue
 - intrigue → knowledge → law → intrigue
 - intrigue → knowledge → magic → intrigue
@@ -2154,108 +2915,108 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 
 | Class | Covered by |
 |---|---|
-| tree: tree of life: domains and kingdoms | beast_lives, creature_migration, creature_rebellion, hunting_grounds, species_ranges |
-| life-history: life-history theory | hero_births, population_growth, species_ranges, spontaneous_births |
+| tree: tree of life: domains and kingdoms | beast_lives, creature_migration, creature_rebellion, hunting_grounds, species_goods, species_ranges |
+| life-history: life-history theory | hero_births, rebirth_paths, species_ranges |
 | symbiosis: symbiosis types | extinction_cascade, food_web, hunting_grounds, species_ranges |
 | ethology: ethology | beast_lives, creature_migration |
-| physiology: physiology and the senses | anatomy, conditions, injuries |
-| biogeography: biogeography | food_web, land_use, pests, region_environment, species_ranges |
+| physiology: physiology and the senses | anatomy, body_functions, conditions, injuries |
+| biogeography: biogeography | battle_tables, danger_on_the_road, environment_layers, food_web, land_use, people_climate_immunity, pests, place_kind_island, region_dangers, region_environment, river_course, species_ranges, terrain_hazards, weather_exposure |
 
 ### S-F Technology (IPC)
 
 | Class | Covered by |
 |---|---|
-| A: human necessities | carried_food, faith_tenet_diet, healing, lore_keep_harvest_rite, lore_relic_healing, lore_working_harvest_blessing, mobilisation, siege_famine, wilds_diet_filter, wilds_trait_crop_pest, wilds_use_food |
-| B: performing operations and transporting | coin_trust, faith_missions, forced_march, journey_contagion, lore_branch_trade, lore_lingua_franca, lore_road_tongue, lore_taboo_resentment, lore_trade_barrier, lore_trade_words, pursuit, route_capacity, route_closure, route_contagion, route_culture, route_danger, route_decay, route_formation, route_income, route_knowledge, route_missions, route_plague, route_wars, route_waystations, route_words, sea_seasons, toll_waiver, trade_rights, trade_routes, treaty_adoption, wilds_craft_feathers, wilds_craft_ivory, wilds_craft_silk |
-| C: chemistry and metallurgy | addiction_hook, debt_seizure, decaying_reserve, depleted_refill, depletion_doom, extraction, faith_tenet_monastic, fixed_reserve, forged_armour, lore_book_diffusion, lore_branch_metallurgy, lore_creed_anti_god, lore_creed_rationalism, lore_medium_book, ore_quality, prospecting, research_holders, resource_value, route_knowledge, sacred_wrath, sentient_leaving, typed_resource_mechanics, wilds_craft_chitin, wilds_craft_dragonbone |
-| D: textiles and paper | artwork_lives, church_works, earthwork_defence, earthworks, engine_works, extraction, extraction_labour, lore_art_copies, lore_crafting, lore_cult_rites, lore_curse_betrayal, lore_curse_bloodthirst, lore_curse_madness, lore_curse_misfortune, lore_curse_wasting, lore_keep_ancestor_feast, lore_keep_coming_of_age, lore_keep_duel_custom, lore_keep_fast, lore_keep_festival, lore_keep_funeral_rite, lore_keep_harvest_rite, lore_keep_hospitality_law, lore_keep_initiation, lore_keep_marriage_rite, lore_keep_mourning, lore_keep_offering, lore_keep_pilgrimage, lore_keep_scar_rite, lore_keep_taboo, lore_keep_war_dance, lore_licences, lore_masterworks, lore_propaganda, lore_rebirth_rite, lore_school_binding, lore_school_blood, lore_school_death, lore_school_divination, lore_school_earth, lore_school_elemental_fire, lore_school_elemental_water, lore_school_illusion, lore_school_life, lore_school_mind, lore_school_storm, lore_school_summoning, lore_school_void, lore_school_warding, lore_technique_siegecraft, lore_technique_skysteel, lore_translation, lore_working_bind, lore_working_bless, lore_working_curse, lore_working_damage, lore_working_fertility, lore_working_harvest_blessing, lore_working_heal, lore_working_raise_dead, lore_working_scry, lore_working_summon, lore_working_ward, lore_working_weather_change, refining, seam_wear, spy_assassins, spy_depth, spy_exposure, spy_quiet, town_prestige, wilds_craft_chitin, wilds_craft_dragonbone, wilds_craft_feathers, wilds_craft_ivory, wilds_craft_magic_reagents, wilds_craft_silk, wilds_craft_venom |
-| E: fixed constructions | bitter_emigration, church_works, earthwork_defence, earthworks, ethnogenesis_divergence, extraction, extraction_labour, lore_art_copies, lore_cult_rites, lore_curse_betrayal, lore_curse_bloodthirst, lore_curse_madness, lore_curse_misfortune, lore_curse_wasting, lore_keep_ancestor_feast, lore_keep_coming_of_age, lore_keep_duel_custom, lore_keep_fast, lore_keep_festival, lore_keep_funeral_rite, lore_keep_harvest_rite, lore_keep_hospitality_law, lore_keep_initiation, lore_keep_marriage_rite, lore_keep_mourning, lore_keep_offering, lore_keep_pilgrimage, lore_keep_scar_rite, lore_keep_taboo, lore_keep_war_dance, lore_licences, lore_masterworks, lore_propaganda, lore_rebirth_rite, lore_school_binding, lore_school_blood, lore_school_death, lore_school_divination, lore_school_earth, lore_school_elemental_fire, lore_school_elemental_water, lore_school_illusion, lore_school_life, lore_school_mind, lore_school_storm, lore_school_summoning, lore_school_void, lore_school_warding, lore_technique_skysteel, lore_translation, lore_working_bind, lore_working_bless, lore_working_curse, lore_working_damage, lore_working_fertility, lore_working_harvest_blessing, lore_working_heal, lore_working_raise_dead, lore_working_scry, lore_working_summon, lore_working_ward, lore_working_weather_change, refining, seam_wear, spy_assassins, spy_depth, spy_exposure, spy_quiet, town_prestige, town_tolls |
-| F: mechanical engineering, lighting, heating, weapons | army_stacks, campaign_logistics |
+| A: human necessities | carried_food, faith_tenet_diet, healing, lore_keep_harvest_rite, lore_relic_healing, lore_working_harvest_blessing, made_enchanted_harvest, made_enchanted_healing, made_limb_regrowth, made_relic_faith, mobilisation, siege_famine, structure_functions, wilds_diet_filter, wilds_plan_amorphous, wilds_trait_crop_pest, wilds_use_food |
+| B: performing operations and transporting | coin_trust, disease_incubation, faith_missions, forced_march, journey_contagion, lore_branch_trade, lore_lingua_franca, lore_road_tongue, lore_taboo_resentment, lore_trade_barrier, lore_trade_register, lore_trade_words, market_districts, pursuit, route_capacity, route_closure, route_contagion, route_culture, route_danger, route_dangers, route_decay, route_formation, route_holds, route_income, route_knowledge, route_missions, route_plague, route_volume_contagion, route_wars, route_waystations, route_words, sea_seasons, structure_functions, toll_waiver, trade_rights, trade_routes, treaty_adoption, wilds_craft_feathers, wilds_craft_ivory, wilds_craft_silk |
+| C: chemistry and metallurgy | addiction_hook, debt_seizure, decaying_reserve, depleted_refill, depletion_doom, economy_holds, extraction, faith_tenet_monastic, fixed_reserve, forged_armour, knowledge_gated_extraction, labour_reasons, lore_book_diffusion, lore_branch_metallurgy, lore_creed_anti_god, lore_creed_rationalism, lore_medium_book, made_craft_knowledge, made_knowledge_passion, map_knowledge, ore_quality, prospecting, research_holders, resource_value, route_knowledge, sacred_wrath, sentient_leaving, typed_resource_mechanics, wilds_craft_chitin, wilds_craft_dragonbone |
+| D: textiles and paper | artwork_lives, church_works, earthwork_defence, earthworks, economy_holds, extraction, extraction_labour, lore_art_copies, lore_crafting, lore_cult_rites, lore_curse_betrayal, lore_curse_bloodthirst, lore_curse_madness, lore_curse_misfortune, lore_curse_wasting, lore_fixed_in_art, lore_keep_ancestor_feast, lore_keep_coming_of_age, lore_keep_duel_custom, lore_keep_fast, lore_keep_festival, lore_keep_funeral_rite, lore_keep_harvest_rite, lore_keep_hospitality_law, lore_keep_initiation, lore_keep_marriage_rite, lore_keep_mourning, lore_keep_night_vigil, lore_keep_offering, lore_keep_pilgrimage, lore_keep_scar_rite, lore_keep_siesta, lore_keep_taboo, lore_keep_war_dance, lore_licences, lore_masterworks, lore_propaganda, lore_rebirth_rite, lore_school_binding, lore_school_blood, lore_school_death, lore_school_divination, lore_school_earth, lore_school_elemental_fire, lore_school_elemental_water, lore_school_illusion, lore_school_life, lore_school_mind, lore_school_storm, lore_school_summoning, lore_school_void, lore_school_warding, lore_technique_siegecraft, lore_technique_skysteel, lore_translation, lore_working_bind, lore_working_bless, lore_working_curse, lore_working_damage, lore_working_exorcise, lore_working_fertility, lore_working_harvest_blessing, lore_working_heal, lore_working_raise_dead, lore_working_scry, lore_working_seal_soul, lore_working_summon, lore_working_unseal_soul, lore_working_ward, lore_working_weather_change, made_bilingual_scribes, made_branch_masters, made_craft_knowledge, made_crafted_limbs, made_materials, made_performers, made_rite_requirements, made_spellcraft, made_translations, made_war_mages, polity_production, refining, seam_wear, sick_cohorts, spy_assassins, spy_depth, spy_exposure, spy_quiet, structure_upkeep, town_prestige, unified_storage, wilds_craft_chitin, wilds_craft_dragonbone, wilds_craft_feathers, wilds_craft_ivory, wilds_craft_magic_reagents, wilds_craft_silk, wilds_craft_venom, wilds_domestic_size, wilds_keeping_kinds, workshop_designs |
+| E: fixed constructions | bitter_emigration, church_works, earthwork_defence, earthworks, economy_holds, ethnogenesis_divergence, extraction, extraction_labour, labour_reasons, lore_art_copies, lore_cult_rites, lore_curse_betrayal, lore_curse_bloodthirst, lore_curse_madness, lore_curse_misfortune, lore_curse_wasting, lore_fixed_in_art, lore_keep_ancestor_feast, lore_keep_coming_of_age, lore_keep_duel_custom, lore_keep_fast, lore_keep_festival, lore_keep_funeral_rite, lore_keep_harvest_rite, lore_keep_hospitality_law, lore_keep_initiation, lore_keep_marriage_rite, lore_keep_mourning, lore_keep_night_vigil, lore_keep_offering, lore_keep_pilgrimage, lore_keep_scar_rite, lore_keep_siesta, lore_keep_taboo, lore_keep_war_dance, lore_licences, lore_masterworks, lore_propaganda, lore_rebirth_rite, lore_remembered_years, lore_school_binding, lore_school_blood, lore_school_death, lore_school_divination, lore_school_earth, lore_school_elemental_fire, lore_school_elemental_water, lore_school_illusion, lore_school_life, lore_school_mind, lore_school_storm, lore_school_summoning, lore_school_void, lore_school_warding, lore_technique_skysteel, lore_translation, lore_working_bind, lore_working_bless, lore_working_curse, lore_working_damage, lore_working_exorcise, lore_working_fertility, lore_working_harvest_blessing, lore_working_heal, lore_working_raise_dead, lore_working_scry, lore_working_seal_soul, lore_working_summon, lore_working_unseal_soul, lore_working_ward, lore_working_weather_change, made_bilingual_scribes, made_materials, made_performers, made_rite_requirements, made_translations, made_war_mages, polity_production, refining, seam_wear, sick_cohorts, spy_assassins, spy_depth, spy_exposure, spy_quiet, structure_construction, structure_functions, structure_profiles, structure_upkeep, town_prestige, town_tolls, unified_storage, wilds_domestic_size, wilds_keeping_kinds, workshop_designs |
+| F: mechanical engineering, lighting, heating, weapons | army_stacks, campaign_depth, campaign_logistics |
 | G: physics and instruments | epoch_stars |
-| H: electricity | research_holders |
+| H: electricity | knowledge_gated_extraction, map_knowledge, research_holders |
 
 ### S-G Economics (JEL)
 
 | Class | Covered by |
 |---|---|
-| A: general economics | cosmic_economy |
-| B: history of economic thought | research_holders |
+| A: general economics | cosmic_economy, economy_holds |
+| B: history of economic thought | knowledge_gated_extraction, map_knowledge, research_holders |
 | C: mathematical and quantitative methods | epoch_statistics |
-| D: microeconomics | city_tiers, lore_practitioners, lore_research_need, lore_rite_techniques, lore_technique_banking, market, markets, misplaced_tactics, needs, route_waystations, urban_logistics, wilds_cavalry |
-| E: macroeconomics and money | debt_law, debt_seizure, lore_technique_banking, market, markets, realm_treasury, route_waystations, urban_logistics |
-| F: international economics | coin_trust, faith_missions, forced_march, lore_branch_trade, lore_lingua_franca, lore_road_tongue, lore_taboo_resentment, lore_trade_barrier, lore_trade_words, route_contagion, sea_seasons, toll_waiver, trade_rights, trade_routes, treaty_adoption, tribute_peace, wilds_craft_feathers, wilds_craft_ivory, wilds_craft_silk, wilds_tribute |
-| G: financial economics | debt_law, debt_seizure, lore_prestige_letters, lore_prestige_power, lore_technique_calendar, realm_treasury, wall_defence, wilds_trait_shapeshifter |
-| H: public economics | realm_autonomy, realm_taxes, realm_treasury, tax_law, taxation, treaty_adoption, tribute_peace, wilds_tribute |
-| I: health, education and welfare | healing, research_holders |
-| J: labour and demographic economics | cohorts, maimed_cohorts, population_baseline, population_growth |
-| K: law and economics | legislation |
-| L: industrial organisation | addiction_hook, church_works, debt_seizure, decaying_reserve, depleted_refill, depletion_doom, earthwork_defence, earthworks, extraction, extraction_labour, fixed_reserve, lore_art_copies, lore_cult_rites, lore_curse_betrayal, lore_curse_bloodthirst, lore_curse_madness, lore_curse_misfortune, lore_curse_wasting, lore_keep_ancestor_feast, lore_keep_coming_of_age, lore_keep_duel_custom, lore_keep_fast, lore_keep_festival, lore_keep_funeral_rite, lore_keep_harvest_rite, lore_keep_hospitality_law, lore_keep_initiation, lore_keep_marriage_rite, lore_keep_mourning, lore_keep_offering, lore_keep_pilgrimage, lore_keep_scar_rite, lore_keep_taboo, lore_keep_war_dance, lore_licences, lore_masterworks, lore_propaganda, lore_rebirth_rite, lore_school_binding, lore_school_blood, lore_school_death, lore_school_divination, lore_school_earth, lore_school_elemental_fire, lore_school_elemental_water, lore_school_illusion, lore_school_life, lore_school_mind, lore_school_storm, lore_school_summoning, lore_school_void, lore_school_warding, lore_technique_skysteel, lore_translation, lore_working_bind, lore_working_bless, lore_working_curse, lore_working_damage, lore_working_fertility, lore_working_harvest_blessing, lore_working_heal, lore_working_raise_dead, lore_working_scry, lore_working_summon, lore_working_ward, lore_working_weather_change, ore_quality, refining, resource_value, sacred_wrath, seam_wear, sentient_leaving, spy_assassins, spy_depth, spy_exposure, spy_quiet, town_prestige, typed_resource_mechanics |
-| M: business administration | lore_technique_banking, market, markets, route_waystations, urban_logistics |
-| N: economic history | legend_belief, remembrance, route_renown |
-| O: development, innovation and growth | city_tiers, disease_load_growth, faith_tenet_monastic, fixed_reserve, lore_book_diffusion, lore_creed_anti_god, lore_creed_rationalism, lore_medium_book, realm_tier, regrowth, research_holders, route_knowledge, wilds_seasons |
-| P: economic systems | cosmic_economy |
-| Q: agricultural, natural resource and environmental economics | addiction_hook, byproducts, camp_sickness, cession, debt_seizure, decaying_reserve, demilitarised, depleted_refill, depletion_doom, derived_environment, disease_choice, endemicity, extraction, fixed_reserve, flooded_shafts, foraging, land_use, legal_conflict, line_length, lore_haunted_lands, lore_keep_harvest_rite, lore_rust, lore_technique_fortress, lore_working_harvest_blessing, march_reach, mobilisation, occupation_resistance, occupation_score, ore_quality, over_supply, quarantine, quarantine_law, ransom_cohorts, resource_value, sacred_wrath, sentient_leaving, supply_limit, typed_resource_mechanics, weary_occupied, wilds_diet_carnivore, wilds_foul_land, wilds_hosts, wilds_hunting, wilds_hunting_links, wilds_overall, wilds_prey, wilds_spread, wilds_subspecies, wilds_temper_territorial, wilds_terrain_fit, wilds_thirst, wilds_totems, wilds_trait_burrowing, wilds_trait_crop_pest, wilds_woken_by_war |
-| R: urban, rural and regional economics | bitter_emigration, ethnogenesis_divergence, migration_pull, settlement_cycles, settlement_laws, town_tolls, wilds_migration |
-| Y: miscellaneous categories | advance_epoch, creator_essence, dead_bonds_closing, dead_bonds_opening, epoch_statistics, incidents, modifiers, sub_clocks |
-| Z: other special topics: cultural economics | artwork_lives, tradition_keeping |
+| D: microeconomics | city_tiers, lore_practitioners, lore_research_need, lore_rite_techniques, lore_technique_banking, lore_trade_register, market_districts, markets, material_worth, misplaced_tactics, mortal_stress, needs, route_waystations, temple_loot, urban_logistics, wilds_cavalry, wilds_hoard_price_shock |
+| E: macroeconomics and money | debt_law, debt_seizure, lore_technique_banking, lore_trade_register, market_districts, markets, material_worth, mercenaries_and_debt, realm_treasury, route_waystations, temple_loot, urban_logistics, wilds_hoard_price_shock |
+| F: international economics | coin_trust, faith_missions, forced_march, lore_branch_trade, lore_lingua_franca, lore_road_tongue, lore_taboo_resentment, lore_trade_barrier, lore_trade_register, lore_trade_words, market_districts, route_contagion, route_volume_contagion, sea_seasons, structure_functions, toll_waiver, trade_rights, trade_routes, treaty_adoption, tribute_peace, wilds_craft_feathers, wilds_craft_ivory, wilds_craft_silk, wilds_tribute, wilds_tribute_treaty |
+| G: financial economics | debt_law, debt_seizure, lore_calendar_feasts, lore_prestige_letters, lore_prestige_power, lore_technique_calendar, made_coin_hoard, made_treasure_prestige, mercenaries_and_debt, realm_treasury, wall_defence, wilds_trait_shapeshifter |
+| H: public economics | realm_autonomy, realm_taxes, realm_treasury, tax_law, taxation, treaty_adoption, tribute_peace, vassal_duties, wilds_tribute, wilds_tribute_treaty |
+| I: health, education and welfare | harshness_dial, healing, knowledge_gated_extraction, map_knowledge, research_holders |
+| J: labour and demographic economics | cohorts, maimed_cohorts, population_baseline |
+| K: law and economics | debt_settlement, law_effects, legislation |
+| L: industrial organisation | addiction_hook, church_works, debt_seizure, decaying_reserve, depleted_refill, depletion_doom, earthwork_defence, earthworks, economy_holds, extraction, extraction_labour, fixed_reserve, labour_reasons, lore_art_copies, lore_cult_rites, lore_curse_betrayal, lore_curse_bloodthirst, lore_curse_madness, lore_curse_misfortune, lore_curse_wasting, lore_fixed_in_art, lore_keep_ancestor_feast, lore_keep_coming_of_age, lore_keep_duel_custom, lore_keep_fast, lore_keep_festival, lore_keep_funeral_rite, lore_keep_harvest_rite, lore_keep_hospitality_law, lore_keep_initiation, lore_keep_marriage_rite, lore_keep_mourning, lore_keep_night_vigil, lore_keep_offering, lore_keep_pilgrimage, lore_keep_scar_rite, lore_keep_siesta, lore_keep_taboo, lore_keep_war_dance, lore_licences, lore_masterworks, lore_propaganda, lore_rebirth_rite, lore_school_binding, lore_school_blood, lore_school_death, lore_school_divination, lore_school_earth, lore_school_elemental_fire, lore_school_elemental_water, lore_school_illusion, lore_school_life, lore_school_mind, lore_school_storm, lore_school_summoning, lore_school_void, lore_school_warding, lore_technique_skysteel, lore_translation, lore_working_bind, lore_working_bless, lore_working_curse, lore_working_damage, lore_working_exorcise, lore_working_fertility, lore_working_harvest_blessing, lore_working_heal, lore_working_raise_dead, lore_working_scry, lore_working_seal_soul, lore_working_summon, lore_working_unseal_soul, lore_working_ward, lore_working_weather_change, made_bilingual_scribes, made_materials, made_performers, made_rite_requirements, made_translations, made_war_mages, ore_quality, polity_production, refining, resource_value, sacred_wrath, seam_wear, sentient_leaving, sick_cohorts, spy_assassins, spy_depth, spy_exposure, spy_quiet, structure_functions, structure_upkeep, town_prestige, typed_resource_mechanics, unified_storage, wilds_domestic_size, wilds_keeping_kinds, workshop_designs |
+| M: business administration | lore_technique_banking, lore_trade_register, market_districts, markets, material_worth, route_waystations, temple_loot, urban_logistics, wilds_hoard_price_shock |
+| N: economic history | ghost_legends, legend_belief, legend_memories, remembrance, route_renown |
+| O: development, innovation and growth | city_tiers, disease_load_growth, faith_tenet_monastic, fixed_reserve, knowledge_gated_extraction, lore_book_diffusion, lore_creed_anti_god, lore_creed_rationalism, lore_medium_book, made_craft_knowledge, made_knowledge_passion, made_limb_regrowth, map_knowledge, realm_tier, regrowth, research_holders, route_knowledge, wilds_seasons |
+| P: economic systems | cosmic_economy, economy_holds |
+| Q: agricultural, natural resource and environmental economics | addiction_hook, byproducts, camp_sickness, cession, danger_on_the_road, debt_seizure, decaying_reserve, demilitarised, depleted_refill, depletion_doom, derived_environment, disease_choice, economy_holds, endemicity, environment_layers, extraction, fixed_reserve, flooded_shafts, foraging, labour_reasons, land_use, legal_conflict, line_length, lore_haunted_lands, lore_keep_harvest_rite, lore_rust, lore_technique_fortress, lore_working_harvest_blessing, made_enchanted_harvest, march_reach, material_worth, mobilisation, occupation_resistance, occupation_score, ore_quality, over_supply, people_climate_immunity, place_kind_island, place_secret_hidden_resource, quarantine, quarantine_law, ransom_cohorts, region_dangers, resource_value, sacred_wrath, sentient_leaving, supply_limit, tithes_and_devotion, typed_resource_mechanics, weary_occupied, weather_exposure, wilds_derived_hunts, wilds_diet_carnivore, wilds_foul_land, wilds_hosts, wilds_hunting, wilds_hunting_links, wilds_isolated_subspecies, wilds_overall, wilds_prey, wilds_spread, wilds_subspecies, wilds_temper_territorial, wilds_terrain_fit, wilds_thirst, wilds_totems, wilds_trait_burrowing, wilds_trait_crop_pest, wilds_wilds_recover, wilds_woken_by_war |
+| R: urban, rural and regional economics | bitter_emigration, ethnogenesis_divergence, migration_pull, settlement_laws, town_tolls, wilds_migration |
+| Y: miscellaneous categories | advance_epoch, creator_essence, dead_bonds_closing, dead_bonds_opening, epoch_statistics, events, incidents, modifiers, sub_clocks, yearly_variance |
+| Z: other special topics: cultural economics | artwork_lives, season_traditions, tradition_keeping |
 
 ### S-H Narrative (Thompson and Propp)
 
 | Class | Covered by |
 |---|---|
-| A: mythological motifs | god_power, gods_fate, works_remember_gods |
+| A: mythological motifs | dedicated_anchor, god_power, gods_fate, realm_population, region_memory, revealed_doctrine, war_incitement |
 | B: animals | not yet covered |
 | C: tabu | tradition_keeping |
 | D: magic | item_lives |
-| E: the dead | death_engine |
+| E: the dead | death_engine, realm_population |
 | F: marvels | wonders |
 | G: ogres | not yet covered |
 | H: tests | tradition_keeping |
 | J: the wise and the foolish | artwork_lives, route_diffusion, tradition_keeping |
 | K: deceptions | not yet covered |
-| L: reversal of fortune | not yet covered |
+| L: reversal of fortune | golden_age_course |
 | M: ordaining the future | gods_fate |
 | N: chance and fate | gods_fate |
 | P: society | not yet covered |
 | Q: rewards and punishments | item_lives |
 | R: captives and fugitives | not yet covered |
 | S: unnatural cruelty | not yet covered |
-| T: sex | not yet covered |
+| T: sex | folk_customs |
 | U: the nature of life | not yet covered |
-| V: religion | cultural_exchange, people_profiles, route_diffusion, route_renown |
+| V: religion | cultural_exchange, culture_drift_causes, people_profiles, realm_population, revealed_doctrine, route_diffusion, route_renown |
 | W: traits of character | not yet covered |
-| X: humour | legend_belief, route_renown |
-| Z: miscellaneous groups of motifs | legend_belief, remembrance, route_renown |
+| X: humour | ghost_legends, legend_belief, legend_memories, route_renown |
+| Z: miscellaneous groups of motifs | ghost_legends, legend_belief, legend_memories, remembrance, route_renown |
 
 ### S-I Human universals (Brown)
 
 | Class | Covered by |
 |---|---|
 | language: language, naming and metaphor | dialect_divergence, language_contact, language_death |
-| kinship: kinship, marriage and family | hero_births, houses, spontaneous_births |
-| status: status, rank and leadership | not yet covered |
-| law: rules, sanctions and property | legislation |
-| conflict: conflict, violence and its mediation | blockades, captive_cohorts, duels, naval_war, resource_conflict, vendettas, war_aims, war_weariness |
-| religion: religion, magic and ritual | ley_lines, price_of_magic |
+| kinship: kinship, marriage and family | captive_depth, feuds, hero_births, houses, rebirth_paths |
+| status: status, rank and leadership | army_command, faction_recruitment, factions, mortal_acts, needs_basket, polity_loyalty |
+| law: rules, sanctions and property | debt_settlement, law_effects, legislation |
+| conflict: conflict, violence and its mediation | blockades, captive_cohorts, duels, martial_tradition, naval_war, resource_conflict, route_chokepoints, vendettas, war_aims, war_weariness |
+| religion: religion, magic and ritual | battle_magic, ley_lines, price_of_magic |
 | death: mourning and death practices | remembrance |
-| art: art, music and adornment | artwork_lives, engine_works, tradition_keeping |
-| exchange: reciprocity, gifts and trade | coin_trust, faith_missions, forced_march, lore_branch_trade, lore_lingua_franca, lore_road_tongue, lore_taboo_resentment, lore_trade_barrier, lore_trade_words, route_contagion, sea_seasons, toll_waiver, trade_rights, trade_routes, treaty_adoption, wilds_craft_feathers, wilds_craft_ivory, wilds_craft_silk |
-| identity: self-image and in-group identity | people_profiles, route_diffusion, route_renown, values |
-| emotion: emotions and their display | needs |
-| tools: tools, fire and shelter | faith_tenet_monastic, lore_book_diffusion, lore_crafting, lore_creed_anti_god, lore_creed_rationalism, lore_medium_book, lore_technique_siegecraft, research_holders, route_knowledge, wilds_craft_chitin, wilds_craft_dragonbone, wilds_craft_feathers, wilds_craft_ivory, wilds_craft_magic_reagents, wilds_craft_silk, wilds_craft_venom |
+| art: art, music and adornment | artwork_lives, season_traditions, tradition_keeping |
+| exchange: reciprocity, gifts and trade | coin_trust, faith_missions, forced_march, lore_branch_trade, lore_lingua_franca, lore_road_tongue, lore_taboo_resentment, lore_trade_barrier, lore_trade_register, lore_trade_words, market_districts, route_contagion, route_volume_contagion, sea_seasons, structure_functions, toll_waiver, trade_rights, trade_routes, treaty_adoption, wilds_craft_feathers, wilds_craft_ivory, wilds_craft_silk |
+| identity: self-image and in-group identity | culture_drift_causes, mortal_loyalty, people_profiles, route_diffusion, route_renown, values |
+| emotion: emotions and their display | mortal_stress, needs |
+| tools: tools, fire and shelter | faith_tenet_monastic, knowledge_gated_extraction, labour_reasons, lore_book_diffusion, lore_crafting, lore_creed_anti_god, lore_creed_rationalism, lore_medium_book, lore_technique_siegecraft, made_branch_masters, made_craft_knowledge, made_crafted_limbs, made_knowledge_passion, made_materials, made_spellcraft, map_knowledge, research_holders, route_knowledge, structure_construction, structure_functions, structure_profiles, structure_upkeep, wilds_craft_chitin, wilds_craft_dragonbone, wilds_craft_feathers, wilds_craft_ivory, wilds_craft_magic_reagents, wilds_craft_silk, wilds_craft_venom |
 | worldview: worldview, time and cosmology | epoch_stars |
 
 ### S-J Warfare
 
 | Class | Covered by |
 |---|---|
-| command: command and control | campaign_logistics |
-| intelligence: intelligence | spy_networks |
-| fires: fires | captive_cohorts, naval_war, phased_battles, war_aims |
-| manoeuvre: movement and manoeuvre | campaign_logistics, derived_environment |
-| protection: protection | duels, multi_season_sieges, war_aims |
-| sustainment: sustainment | campaign_logistics, levy_law, markets, mobilisation, over_supply, raided_lines, smallest_stack, supply_limit |
-| engineering: engineering | besiegers_sick, camp_disease, lore_technique_siegecraft, lore_wards, multi_season_sieges, sally_losses, siege_disease, siege_famine, siege_rations, siege_score, siege_terms, siege_treason, spy_walls, war_aims |
-| medical: medical | healing, hits, injuries |
-| civil: civil affairs | not yet covered |
-| culture: military culture | duels, tradition_keeping |
+| command: command and control | campaign_depth, campaign_logistics |
+| intelligence: intelligence | spy_agents, spy_networks |
+| fires: fires | battle_ground_record, battle_sites, captive_cohorts, naval_war, phased_battle_decides, phased_battles, war_aims |
+| manoeuvre: movement and manoeuvre | campaign_depth, campaign_logistics, danger_on_the_road, derived_environment, typed_works, weather_exposure |
+| protection: protection | duels, mortal_equipment, multi_season_sieges, siege_depth, war_aims |
+| sustainment: sustainment | campaign_logistics, levy_law, markets, mobilisation, over_supply, raided_lines, smallest_stack, structure_upkeep, supply_limit |
+| engineering: engineering | besiegers_sick, camp_disease, labour_reasons, lore_technique_siegecraft, lore_wards, made_materials, multi_season_sieges, sally_losses, siege_defences, siege_depth, siege_disease, siege_famine, siege_rations, siege_score, siege_terms, siege_treason, spy_walls, structure_construction, structure_functions, structure_profiles, structure_upkeep, war_aims |
+| medical: medical | duel_ordeals, healing, hits, injuries |
+| civil: civil affairs | vassal_duties |
+| culture: military culture | duel_ordeals, duels, tradition_keeping |
