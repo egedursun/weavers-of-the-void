@@ -87,6 +87,16 @@ class SonToolId(StrEnum):
     OPEN_REBIRTH_GATE = "open_rebirth_gate"
 
 
+    WAGE_WAR = "wage_war"
+    RAISE_HOST = "raise_host"
+    DISBAND_HOST = "disband_host"
+    LAY_SIEGE = "lay_siege"
+    OFFER_PEACE = "offer_peace"
+    COMMISSION_VESSEL = "commission_vessel"
+    DESIGN_UNIT = "design_unit"
+    PLANT_SPIES = "plant_spies"
+
+
 class MortalToolId(StrEnum):
     LOOK_AT_WORLD = "look_at_world"
     INSPECT_ENTITY = "inspect_entity"

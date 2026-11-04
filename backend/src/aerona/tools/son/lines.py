@@ -36,6 +36,14 @@ DISASTER = Line("tools.son.disaster", "{son} sent {disaster} upon {target}: {nam
 TRANSFORM = Line("tools.son.transform", "{son} transformed {old}{renamed}. ({reason})")
 DESTROY = Line("tools.son.destroy", "{son} destroyed {name}. ({reason})")
 INCITE = Line("tools.son.incite", "{son} sowed hostility between {first} and {second}: {pretext}")
+WAGE_WAR = Line("tools.son.wage_war", "By the will of {son}, {attacker} declared war on {defender}: {reason}")
+RAISE_HOST = Line("tools.son.raise_host", "At the call of {son}, {community} raised {army}.")
+DISBAND_HOST = Line("tools.son.disband_host", "{son} sent {army} home: {reason}")
+LAY_SIEGE = Line("tools.son.lay_siege", "{son} set {army} against the walls of {city}.")
+OFFER_PEACE = Line("tools.son.offer_peace", "{son} ended the war between {first} and {second}.")
+COMMISSION_VESSEL = Line("tools.son.commission_vessel", "{son} had {owner} lay down the {hull} {name}.")
+DESIGN_UNIT = Line("tools.son.design_unit", "{son} taught {owner} to field {name}.")
+PLANT_SPIES = Line("tools.son.plant_spies", "{son} planted the spies of {owner} inside {target}.")
 TREATY = Line(
     "tools.son.treaty",
     "{son} established an interworld {treaty} treaty between {first} in the {first_world} world and {second} in the {second_world} world: {terms}",

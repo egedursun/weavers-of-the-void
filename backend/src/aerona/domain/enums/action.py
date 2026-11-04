@@ -244,6 +244,9 @@ class ActionKind(StrEnum):
     REVEAL_SECRET = "reveal_secret"
     SANCTIFY_PLACE = "sanctify_place"
     RAISE_NEXUS = "raise_nexus"
+    LAY_SIEGE = "lay_siege"
+    OFFER_PEACE = "offer_peace"
+    DESIGN_UNIT = "design_unit"
     OTHER = "other"
 
 

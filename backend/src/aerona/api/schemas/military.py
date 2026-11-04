@@ -155,6 +155,8 @@ class AimView(ApiModel):
     kind: WarAimKind
     target: NodeRef | None
     achieved: int
+    params: dict[str, int | str | bool] = {}
+    locked: list[str] = []
 
 
 class OccupationView(ApiModel):

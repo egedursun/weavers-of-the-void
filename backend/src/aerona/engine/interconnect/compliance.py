@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.db.tables.body import ConditionRow, InjuryRow
+from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.culture import (
     ArtworkProfileRow,
     BookContentRow,
@@ -58,14 +59,23 @@ from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, Eve
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.military import (
     ArmyMovementRow,
+    ArmyOfficerRow,
     ArmyProfileRow,
     ArmyUnitRow,
+    BattleCasualtyRow,
     BattlePhaseRow,
+    BattleStackRow,
     CampaignFrontRow,
     CaptiveCohortRow,
     CommanderTraitRow,
+    FeudRow,
+    LearnedTacticRow,
+    MercenaryContractRow,
     OccupationRow,
+    PeaceTermRow,
+    SpyAgentRow,
     SpyNetworkRow,
+    UnitDesignRow,
     WarAimRow,
 )
 from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, PersonalityValueRow, PressureRow, SkillRow
@@ -592,6 +602,57 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (),
         ("espionage.",),
         ("espionage",),
+    ),
+    ComplianceRow(
+        "S5.11",
+        (BattleStackRow.__tablename__, BattleCasualtyRow.__tablename__, LearnedTacticRow.__tablename__, FeudRow.__tablename__, SpyAgentRow.__tablename__),
+        ("campaigns", "espionage", "vendetta_cycles", "prisoners"),
+        ("war:battle_at", "war:ordeal", "captive:take", "military:edit", "military:release"),
+        ("BattleDepth", "Vendettas", "SpyNetworks", "WarMap"),
+        ("mortal_context",),
+        ("plant_spies", "lay_siege"),
+        ("war.battle.", "tools.son.plant_spies", "tools.son.lay_siege"),
+        ("5b1d3f7a9c21",),
+    ),
+    ComplianceRow(
+        "S5.12",
+        (
+            UnitDesignRow.__tablename__,
+            ArmyOfficerRow.__tablename__,
+            MercenaryContractRow.__tablename__,
+            PeaceTermRow.__tablename__,
+            ArmyProfileRow.__tablename__,
+            SiegeRow.__tablename__,
+            WarRow.__tablename__,
+        ),
+        ("campaigns", "war_upkeep"),
+        (
+            "military:create",
+            "military:edit",
+            "military:release",
+            "military:delete",
+            "army:raise",
+            "army:assign",
+            "siege:start",
+            "war:declare",
+            "war:peace",
+        ),
+        ("WarOrders", "WarLedger", "SiegeDepth", "ArmyDepth", "UnitDesigns", "MercenaryContracts", "MilitaryDepth", "PeaceTreaty"),
+        ("mortal_context",),
+        ("wage_war", "raise_host", "disband_host", "offer_peace", "design_unit"),
+        ("tools.son.wage_war", "tools.son.raise_host", "tools.son.offer_peace", "tools.son.design_unit"),
+        ("5b1d3f7a9c21", "5b1d3f7a9c23"),
+    ),
+    ComplianceRow(
+        "S7.3",
+        (VesselProfileRow.__tablename__,),
+        ("seafaring",),
+        ("vessel:create", "vessel:refit", "vessel:repair", "military:edit", "military:release"),
+        ("VesselCard", "VesselSection", "LayDownVessel"),
+        ("mortal_context",),
+        ("commission_vessel", "create_vessel"),
+        ("seafaring.", "tools.son.commission_vessel"),
+        ("5b1d3f7a9c21",),
     ),
     ComplianceRow(
         "S4.4",

@@ -3,7 +3,7 @@ from math import sqrt
 from sqlalchemy import func, select
 
 from aerona.catalog.mind import COMBAT_SKILLS
-from aerona.catalog.units import UNITS, UnitSpec
+from aerona.catalog.units import UnitSpec
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
@@ -36,7 +36,7 @@ from aerona.engine.lore.items import standard_of
 from aerona.engine.lore.language import barrier
 from aerona.engine.military.aftermath import flaring_items
 from aerona.engine.military.battle import BattleResult, Field, Side, Stack, make_stacks, resolve
-from aerona.engine.military.units import muster, profile_of, sync
+from aerona.engine.military.units import design_spec, muster, profile_of, sync
 from aerona.engine.mind.book import effect_of, scaled_by, values_for
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -91,31 +91,6 @@ async def design_specs(ctx: TickContext, design_ids: set[int]) -> dict[int, Unit
         return {}
     rows = await ctx.session.scalars(select(UnitDesignRow).where(UnitDesignRow.id.in_(design_ids)))
     return {row.id: design_spec(row) for row in rows}
-
-
-def design_spec(row: UnitDesignRow) -> UnitSpec:
-    base = UNITS[row.base_kind]
-    return UnitSpec(
-        kind=row.base_kind,
-        family=row.family,
-        label=row.name,
-        melee=row.melee,
-        missile=row.missile,
-        defence=row.defence,
-        speed=row.speed,
-        mass=row.mass,
-        cost=row.cost,
-        upkeep=row.upkeep,
-        armour=row.armour,
-        shield=row.shield,
-        branch=base.branch,
-        level=base.level,
-        social_class=row.social_class,
-        counters_charge=row.counters_charge,
-        terror=row.terror,
-        terrain=dict(base.terrain),
-        flying=row.flying,
-    )
 
 
 async def hardness_of(ctx: TickContext, world_id: int, materials: set[str]) -> dict[str, int]:

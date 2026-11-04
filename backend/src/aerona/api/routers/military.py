@@ -237,7 +237,15 @@ def cohort_view(row: CaptiveCohortRow, refs: Refs) -> CaptiveCohortView:
 
 
 def aim_view(row: WarAimRow, refs: Refs) -> AimView:
-    return AimView(id=row.id, side=ref(refs, row.side_entity_id), kind=row.kind, target=ref(refs, row.target_entity_id), achieved=row.achieved)
+    return AimView(
+        id=row.id,
+        side=ref(refs, row.side_entity_id),
+        kind=row.kind,
+        target=ref(refs, row.target_entity_id),
+        achieved=row.achieved,
+        params=dict(row.params or {}),
+        locked=list(row.locked or []),
+    )
 
 
 def front_view(row: CampaignFrontRow, refs: Refs) -> FrontView:

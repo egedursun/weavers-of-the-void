@@ -90,6 +90,12 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
     EntityType.VESSEL: {
         "target_world_id": "If the gate, bridge or ship connects to another world, that world's id: a route is opened",
         "vessel_kind": "What it is: {{ vessel_kinds | join(', ') }}; a gate, ship, mount or bridge opens the matching kind of road",
+        "hull_class": "For a ship, its hull: raft, boat, galley, longship, cog, carrack, warship, light_sailer, bone_hull, generation_ship, skyship, living_ship",
+        "armament": "For a ship, what it fights with: rams, missiles, siege_engines, rites",
+        "hull_material": "For a ship, what its hull is made of: {{ materials | join(', ') }}",
+        "fabric_material": "For a ship, what its sails or skin are made of: {{ materials | join(', ') }}",
+        "home_port_id": "For a ship, the settlement it calls home; its shipyard mends it",
+        "captain_id": "For a ship, the living mortal who captains it",
     },
     EntityType.LEGEND: {"legend_category": LEGEND_CATEGORY_FIELD},
     EntityType.RESOURCE: {
@@ -504,5 +510,75 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "parent_world_id": "If it will be a moon of a world, that world's id",
             "new_star": "Only if no star in the list fits this world's light: a distant system with its own new sun",
         },
+    ),
+    T.WAGE_WAR: ToolText(
+        "You make one community declare war on another for a cause you name, with the aims it will fight for; the war then runs by its own course. "
+        "{{ rules.son_military.wage_war_cost }} essence, 1 action.",
+        {
+            "attacker_id": "The community that declares the war",
+            "defender_id": "The community it attacks",
+            "cause": "Why the war is fought: claim, holy_war, succession, raid, liberation, punitive, conquest_journey, tribute_revolt and the other causes",
+            "aims": "What the attackers fight for (at most {{ rules.son_military.max_aims }}): conquer_region, seize_settlement, tribute, convert, liberate and so on",
+            "reason": "The proclamation, one sentence",
+        },
+    ),
+    T.RAISE_HOST: ToolText(
+        "You call a community to arms: its warriors and nobles muster as a standing army, in war or in peace; its people grow fewer while they serve. "
+        "{{ rules.son_military.raise_host_cost }} essence, 1 action.",
+        {
+            "community_id": "The community that raises the army",
+            "soldiers": "How many it calls to arms (at most {{ rules.son_military.raise_host_max }})",
+            "commander_id": "A living mortal to lead it, if any",
+            "war_id": "The war it marches to, if any",
+        },
+    ),
+    T.DISBAND_HOST: ToolText(
+        "You send a standing army home: its soldiers return to their people and it leaves the field. {{ rules.son_military.disband_cost }} essence, 1 action.",
+        {"army_id": "The army to disband", "reason": "Why it goes home"},
+    ),
+    T.LAY_SIEGE: ToolText(
+        "You set an army of one side of a war against a settlement of the other: it encamps, digs its works and starves the walls. "
+        "{{ rules.son_military.siege_cost }} essence, 1 action.",
+        {"war_id": "The war", "army_id": "The besieging army", "settlement_id": "The settlement to besiege"},
+    ),
+    T.OFFER_PEACE: ToolText(
+        "You end a war on terms you set: name the victor and what the beaten must give (land, tribute, hostages, a throne), or no victor for a white peace. "
+        "{{ rules.son_military.peace_cost }} essence, 1 action.",
+        {
+            "war_id": "The war to end",
+            "victor_id": "The side that wins, or empty for a white peace",
+            "terms": "What the peace demands: cession, vassalage, hostage, reparations, tribute, liberty, throne, break_cult",
+        },
+    ),
+    T.COMMISSION_VESSEL: ToolText(
+        "You have a community lay down a ship of the hull you choose, armed as you wish, with a captain if you name one. "
+        "{{ rules.son_military.vessel_cost }} essence, 1 action.",
+        {
+            "owner_id": "The community or mortal that owns the ship",
+            "name": "The ship's proper name",
+            "hull": "raft, boat, galley, longship, cog, carrack, warship, light_sailer and the stranger hulls",
+            "armament": "What it carries to fight: rams, missiles, siege_engines, rites",
+            "captain_id": "A living mortal to captain it, if any",
+        },
+    ),
+    T.DESIGN_UNIT: ToolText(
+        "You teach a community a new kind of soldier built on a known unit: its armies muster it in place of the old kind when their doctrine and stores allow. "
+        "{{ rules.son_military.design_cost }} essence, 1 action.",
+        {
+            "owner_id": "The community that will field it",
+            "name": "What the soldiers are called",
+            "base_kind": "The known unit it grows from: levy, spearmen, archers, cavalry and the rest",
+            "melee": "Strength hand to hand, 0 to 100",
+            "missile": "Strength at range, 0 to 100",
+            "defence": "How well it holds, 0 to 100",
+            "armour": "none, hide, padded, mail, scale, plate or enchanted",
+            "shield": "none, small, large or tower",
+            "terror": "Fear it strikes, 0 to 100",
+        },
+    ),
+    T.PLANT_SPIES: ToolText(
+        "You plant a network of spies for one community inside another under a cover you choose; it gathers intel, steals secrets and stirs trouble. "
+        "{{ rules.son_military.spies_cost }} essence, 1 action.",
+        {"owner_id": "The community the spies serve", "target_id": "The community they watch", "cover": "merchant, priest, envoy or beggar"},
     ),
 }

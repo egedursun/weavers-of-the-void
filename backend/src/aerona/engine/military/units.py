@@ -9,7 +9,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
-from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
+from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, UnitDesignRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.culture import Technique
@@ -202,6 +202,66 @@ async def profile_of(ctx: TickContext, army: EntityRow, owner: EntityRow | None)
     return profile
 
 
+def design_spec(row: UnitDesignRow) -> UnitSpec:
+    base = UNITS[row.base_kind]
+    return UnitSpec(
+        kind=row.base_kind,
+        family=row.family,
+        label=row.name,
+        melee=row.melee,
+        missile=row.missile,
+        defence=row.defence,
+        speed=row.speed,
+        mass=row.mass,
+        cost=row.cost,
+        upkeep=row.upkeep,
+        armour=row.armour,
+        shield=row.shield,
+        branch=base.branch,
+        level=base.level,
+        social_class=row.social_class,
+        counters_charge=row.counters_charge,
+        terror=row.terror,
+        terrain=dict(base.terrain),
+        flying=row.flying,
+    )
+
+
+async def designs_of(session: AsyncSession, owner_id: int) -> list[UnitDesignRow]:
+    return list(
+        await session.scalars(
+            select(UnitDesignRow).where(UnitDesignRow.owner_entity_id == owner_id, UnitDesignRow.retired.is_(False)).order_by(UnitDesignRow.id)
+        )
+    )
+
+
+def design_worth(design: UnitDesignRow, style: str) -> int:
+    favoured = design.base_kind in STYLE_UNITS.get(style, ())
+    return design.melee + design.missile + design.defence + design.terror + (PERCENT if favoured else 0) + (PERCENT // 4 if design.counters_charge else 0)
+
+
+def armour_allowed(armour: ArmourType, metallurgy: int) -> bool:
+    if armour not in ARMOUR_BY_METAL:
+        return armour is not ArmourType.ENCHANTED or metallurgy >= len(ARMOUR_BY_METAL) - 1
+    return ARMOUR_BY_METAL.index(armour) <= min(len(ARMOUR_BY_METAL) - 1, metallurgy)
+
+
+async def choose_design(
+    ctx: TickContext, owner: EntityRow, kind: UnitKind, count: int, *, metallurgy: int, designs: Sequence[UnitDesignRow]
+) -> UnitDesignRow | None:
+    fitting = [design for design in designs if design.base_kind is kind and armour_allowed(design.armour, metallurgy)]
+    if not fitting:
+        return None
+    kits = count // max(1, ctx.rules.materials.soldiers_per_kit)
+    stocked = await holding(ctx.session, owner.id, CommodityKind.WEAPONS) >= kits
+    base = UNITS[kind].cost
+    affordable = [design for design in fitting if design.cost <= base or stocked]
+    if not affordable:
+        return None
+    style = await doctrine_of(ctx.session, owner)
+    return max(affordable, key=lambda design: (design_worth(design, style), -design.id))
+
+
 async def muster(ctx: TickContext, army: EntityRow, owner: EntityRow | None, knowledge: KnowledgeMap) -> list[ArmyUnitRow]:
     rows = await stacks_of(ctx.session, army.id)
     size = stat(army, "size") or 0
@@ -218,8 +278,10 @@ async def muster(ctx: TickContext, army: EntityRow, owner: EntityRow | None, kno
     issued = await node_material(ctx.session, army.id, MaterialSlot.WEAPONS)
     material = issued.material.value if issued is not None and issued.material is not None else None
     condition = clamp_int(PERCENT // 2 + equipment // 2, 0, PERCENT)
+    designs = await designs_of(ctx.session, owner.id)
     for kind, count in (await composition(ctx, owner, size, knowledge)).items():
-        spec = UNITS[kind]
+        design = await choose_design(ctx, owner, kind, count, metallurgy=metallurgy, designs=designs)
+        spec = design_spec(design) if design is not None else UNITS[kind]
         armour, shield, helmet = outfit(spec, metallurgy, equipment)
         row = ArmyUnitRow(
             army_entity_id=army.id,
@@ -238,6 +300,7 @@ async def muster(ctx: TickContext, army: EntityRow, owner: EntityRow | None, kno
             condition=condition,
             social_class=spec.social_class,
             origin_entity_id=owner.id,
+            design_id=design.id if design is not None else None,
             locked=[],
         )
         ctx.session.add(row)
