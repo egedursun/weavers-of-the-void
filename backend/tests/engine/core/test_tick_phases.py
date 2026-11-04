@@ -10,10 +10,13 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.mind import SkillKind, SkillSource
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw
 from aerona.domain.models.entity_stats import CultStats, ItemStats, LawStats, PeopleStats, ResourceStats, SpeciesStats
 from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.economy.stocks import holding
+from aerona.engine.lore.control import set_level
+from aerona.engine.mind.book import set_skill
 from aerona.engine.phases.curses import curse_decay, cursed_items, lift_curses
 from aerona.engine.phases.grudges import divine_grudges
 from aerona.engine.phases.heroism import EncounterOutcome, encounter, glory_hunts, send_hero_to_hunt, sworn_hunts
@@ -120,6 +123,10 @@ async def test_resources_feed_owners_and_regrow(session: AsyncSession, world: Co
         await bond(session, world.people.id, resource.id, BondKind.OWNS)
     reserve = seam.reserve
     ctx = await manual_context(session, "resources")
+    craft = await knowledge(session, world, "Ironcraft", KnowledgeBranch.METALLURGY)
+    set_stats(craft, level=seam.required_level)
+    await bond(session, world.people.id, craft.id, BondKind.KNOWS)
+    await set_level(ctx, world.people.id, KnowledgeBranch.METALLURGY, seam.required_level)
     await resource_economy(ctx)
     assert await holding(session, world.people.id, CommodityKind.ORE) > 0
     assert seam.reserve < reserve
@@ -156,6 +163,7 @@ async def test_magic_storms_wizards_and_price(session: AsyncSession, world: Core
     await bond(session, mage.id, lore.id, BondKind.KNOWS)
     dreamer = await SonRepository(session).create(son_draft("Morrow", world.world.id, (Domain.DREAM, Domain.SOUND)))
     await bond(session, mage.id, dreamer.id, BondKind.WORSHIPS)
+    await set_skill(session, mage.id, SkillKind.SPELLCRAFT, Rules().rites.wizard_skill, epoch=1, source=SkillSource.PLAYER)
     await wizards(ctx)
     assert await has_flag(session, mage.id, EntityFlag.WIZARD)
     assert await has_flag(session, foe.id, EntityFlag.CURSED)

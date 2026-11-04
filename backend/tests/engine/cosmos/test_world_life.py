@@ -3,12 +3,14 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import ValidationFailedError
-from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.routes import JourneyRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.environment import TerrainKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.enums.travel import JourneyIntent, JourneyStatus
 from aerona.domain.enums.world import WorldType
@@ -18,6 +20,7 @@ from aerona.engine.phases.creatures import creature_migration, creature_rebellio
 from aerona.engine.phases.exploration import exploration_summary
 from aerona.rules.registry import Rules
 from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, make_route, make_son, make_world, teach, tick, tuned
+from tests.engine.cosmos.test_wilds_typed import land
 
 
 async def test_creature_rebellion_and_speciation(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
@@ -35,7 +38,16 @@ async def test_creature_rebellion_and_speciation(session: AsyncSession, cosmos: 
     )
     assert await creature_rebellion(ctx) == 1
     assert son.existence == 60 - rules.creatures.creature_revolt_son_existence_loss
-    await BondRepository(session).connect(BondDraft(beast.id, region.id, BondKind.LIVES_IN, 1))
+    far = await make_region(session, "Ashwaste", cosmos.home.id)
+    await land(session, region.id, cosmos.home.id, TerrainKind.FOREST, 50)
+    await land(session, far.id, cosmos.home.id, TerrainKind.DESERT, 80)
+    session.add_all(
+        [
+            SpeciesRangeRow(species_entity_id=beast.id, region_entity_id=region.id, abundance=70, since_epoch=0),
+            SpeciesRangeRow(species_entity_id=beast.id, region_entity_id=far.id, abundance=30, since_epoch=0),
+        ]
+    )
+    await session.flush()
     assert await speciation(ctx) == 1
     child = await session.scalar(select(EntityRow).where(EntityRow.subtype.like("%subspecies")))
     assert child is not None and await BondRepository(session).exists_between(child.id, beast.id, BondKind.DESCENDS_FROM)

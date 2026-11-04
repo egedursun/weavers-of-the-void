@@ -13,9 +13,11 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.mind import SkillKind, SkillSource
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.lore.control import set_technique
+from aerona.engine.mind.book import set_skill
 from aerona.engine.phases.births import villages
 from aerona.engine.phases.doom import doom_clock
 from aerona.engine.phases.factions import eligible_kinds, factions
@@ -25,6 +27,7 @@ from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.naming import Namer
 from aerona.engine.primitives.queries import has_flag
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.rules.registry import Rules
 from tests.engine.core.factories import CoreWorld, add_flag, bond, knowledge, mortal, settlement, son_draft, tuned_rules
 from tests.engine.warfare.factories import society as seed_society
 
@@ -112,6 +115,7 @@ async def test_wizard_wards_a_home_with_protection_or_plenty(session: AsyncSessi
     await bond(session, mage.id, lore.id, BondKind.KNOWS)
     mason = await SonRepository(session).create(son_draft("Halden", world.world.id, (Domain.STONE, Domain.EARTH)))
     await bond(session, mage.id, mason.id, BondKind.WORSHIPS)
+    await set_skill(session, mage.id, SkillKind.SPELLCRAFT, Rules().rites.wizard_skill, epoch=1, source=SkillSource.PLAYER)
     set_stats(world.regions[0], magic=90)
     quiet = {"invention_chance": 100}
     protect = await manual_context(

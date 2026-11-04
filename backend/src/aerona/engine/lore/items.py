@@ -46,7 +46,6 @@ from aerona.engine.primitives.queries import active_bonds, close, connect, flags
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.primitives.threads import open_story
 
-WET = 60
 HALF = 2
 TEN = 10
 WORLD_PREFIX = WORLD_KEY_PREFIX
@@ -246,7 +245,7 @@ def fought_wear(ctx: TickContext, row: ItemProfileRow, props: MaterialProps | No
 
 async def decayed(ctx: TickContext, book: MaterialBook, item: EntityRow, row: ItemProfileRow, land: RegionEnvironmentRow | None) -> int:
     props = await body_props(ctx, book, item, row)
-    if land is None or land.moisture < WET or props is None or props.decay <= 0:
+    if land is None or land.moisture < ctx.rules.materials.rust_wet_moisture or props is None or props.decay <= 0:
         return 0
     return max(1, round_half_up(ctx.rules.item_wear.decay_wet * props.decay / (PERCENT // HALF)))
 

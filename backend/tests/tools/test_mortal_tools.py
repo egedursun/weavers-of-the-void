@@ -22,19 +22,20 @@ from aerona.rules.registry import Rules
 from aerona.rules.snapshot import with_value
 from aerona.tools.toolkit import TurnToolkit
 from tests.tools.factories import DESCRIPTION, Realm, connect, make_entity, mortal_toolkit, seed_realm
+from tests.tools.test_son_tools import typed
 
 LONG = DESCRIPTION
 REASON = "because the tide demands it"
 
 
 async def ok(toolkit: TurnToolkit, name: str, arguments: dict[str, Any]) -> str:
-    outcome = await toolkit.runtime.call(name, arguments)
+    outcome = await toolkit.runtime.call(name, typed(name, arguments))
     assert not outcome.is_error, outcome.text
     return outcome.text
 
 
 async def rejected(toolkit: TurnToolkit, name: str, arguments: dict[str, Any]) -> str:
-    outcome = await toolkit.runtime.call(name, arguments)
+    outcome = await toolkit.runtime.call(name, typed(name, arguments))
     assert outcome.is_error, outcome.text
     return outcome.text
 

@@ -29,14 +29,28 @@ LONG = DESCRIPTION
 REASON = "because the tide demands it"
 
 
+TYPED_DEFAULTS: dict[str, dict[str, str]] = {
+    "tell_legend": {"archetype": "monster"},
+    "create_artwork": {"medium": "song"},
+    "forge_item": {"item_class": "blade"},
+    "found_tradition": {"tradition_kind": "festival"},
+    "utter_prophecy": {"predicate": "sky_event"},
+    "prophesy": {"predicate": "sky_event"},
+}
+
+
+def typed(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+    return {**TYPED_DEFAULTS.get(name, {}), **arguments}
+
+
 async def ok(toolkit: TurnToolkit, name: str, arguments: dict[str, Any]) -> str:
-    outcome = await toolkit.runtime.call(name, arguments)
+    outcome = await toolkit.runtime.call(name, typed(name, arguments))
     assert not outcome.is_error, outcome.text
     return outcome.text
 
 
 async def rejected(toolkit: TurnToolkit, name: str, arguments: dict[str, Any]) -> str:
-    outcome = await toolkit.runtime.call(name, arguments)
+    outcome = await toolkit.runtime.call(name, typed(name, arguments))
     assert outcome.is_error, outcome.text
     return outcome.text
 

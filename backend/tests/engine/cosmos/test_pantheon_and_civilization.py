@@ -186,7 +186,7 @@ async def test_adoption_and_treaty(session: AsyncSession, cosmos: Cosmos, rules:
     elder = await make_entity(session, "Orrin", EntityType.MORTAL, MortalStats(age=50, lifespan=80), world_id=cosmos.home.id)
     child = await make_entity(session, "Pell", EntityType.MORTAL, MortalStats(age=8, lifespan=80), world_id=cosmos.home.id)
     await adopt(ctx, elder, child)
-    assert await BondRepository(session).exists_between(child.id, elder.id, BondKind.DESCENDS_FROM)
+    assert await BondRepository(session).exists_between(child.id, elder.id, BondKind.FOSTERED_BY)
     other = await make_world(session, "Velmor")
     await make_route(session, cosmos.home.id, other.id)
     first = await make_entity(session, "Tarn", EntityType.PEOPLE, PeopleStats(population=5000), world_id=cosmos.home.id)

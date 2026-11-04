@@ -3,7 +3,6 @@ from sqlalchemy import select
 
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
-from aerona.db.tables.society import CommunityRelationRow
 from aerona.db.tables.warfare import HeroQuestRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
@@ -22,6 +21,7 @@ from aerona.engine.phases.heroes import (
     success_chance,
 )
 from aerona.engine.primitives.stats import stat
+from aerona.engine.services.community_relations import start_blood_feud
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, bonded, chronicle_keys, context, knowledge, link, make, mortal, named, people, settlement, son, tuned
 
@@ -151,10 +151,8 @@ async def test_vengeance_quest_kills_the_feud_enemy(realm: Realm) -> None:
     victim = await mortal(realm, "Victim", location_id=foes.id)
     await link(realm.session, hero.id, home.id, BondKind.PROTECTS)
     await link(realm.session, victim.id, foes.id, BondKind.PROTECTS)
-    first, second = sorted((home.id, foes.id))
-    realm.session.add(CommunityRelationRow(entity_a_id=first, entity_b_id=second, value=-80, blood_feud_since_epoch=1))
-    await realm.session.flush()
     ctx = context(realm.session, tuned(heroes={"quest_success_min_pct": 100}), epoch=3)
+    await start_blood_feud(ctx, home.id, foes.id, "an old killing")
     quest = await send_on_quest(ctx, hero.id, kind=HeroQuestKind.VENGEANCE)
     assert quest.target_node_id == victim.id
     assert await resolve_quest(context(realm.session, ctx.rules, epoch=4), hero.id) is HeroQuestStatus.SUCCEEDED
