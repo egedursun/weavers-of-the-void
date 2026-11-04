@@ -27,7 +27,9 @@ import {
   KpiTile,
   Medallion,
   Section,
+  ShowMore,
   StatBar,
+  useShowMore,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
@@ -62,6 +64,7 @@ import {
 } from './labels'
 
 const PERCENT = 100
+const TOLL_SHOWN = 4
 const NO_SEASON = 'none'
 
 function yearsText(view: EventView): string {
@@ -147,6 +150,7 @@ function tallies(view: EventView): Tally[] {
 
 function TollPanel({ view }: { view: EventView }) {
   const rows = tallies(view)
+  const shown = useShowMore(rows, TOLL_SHOWN)
   return (
     <Panel
       title='The toll by cohort'
@@ -158,7 +162,7 @@ function TollPanel({ view }: { view: EventView }) {
         <Muted>No one is counted among its dead.</Muted>
       ) : (
         <ul className='flex min-w-0 flex-col gap-3'>
-          {rows.map((row) => (
+          {shown.visible.map((row) => (
             <li
               key={row.community_id}
               className='flex min-w-0 flex-col gap-1.5'
@@ -178,7 +182,7 @@ function TollPanel({ view }: { view: EventView }) {
                 return (
                   <StatBar
                     key={age}
-                    label={`${spec.label}: ${formatInteger(count)}`}
+                    label={spec.label}
                     icon={spec.icon}
                     value={count}
                     max={Math.max(1, row.total)}
@@ -190,6 +194,7 @@ function TollPanel({ view }: { view: EventView }) {
           ))}
         </ul>
       )}
+      <ShowMore state={shown} noun={['community', 'communities']} />
     </Panel>
   )
 }

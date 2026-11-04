@@ -23,6 +23,8 @@ import {
   Medallion,
   RangeField,
   Section,
+  ShowMore,
+  useShowMore,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
@@ -44,6 +46,7 @@ type EngineKind = components['schemas']['EngineKind']
 type Summary = components['schemas']['EventSummaryView']
 
 const PERCENT = 100
+const EVENTS_SHOWN = 8
 const NO_SEASON = 'none'
 const PAIRED = new Set(['wedding', 'schism_council', 'coronation'])
 const SEVERITY_LEVELS = [
@@ -313,6 +316,10 @@ export function EventsHereSection({
   const blocked = readOnlyReason ?? reason()
   const data = view.data
   const open = data ? data.events.filter((item) => !item.ended) : []
+  const ordered = data
+    ? [...open, ...data.events.filter((item) => item.ended)]
+    : []
+  const shown = useShowMore(ordered, EVENTS_SHOWN)
   return (
     <Section
       id='section-events-here'
@@ -347,11 +354,14 @@ export function EventsHereSection({
           {data.events.length === 0 ? (
             <Muted>Nothing of note has happened here yet.</Muted>
           ) : (
-            <ul className='flex min-w-0 flex-col gap-2'>
-              {data.events.map((item) => (
-                <EventRow key={item.entity_id} item={item} />
-              ))}
-            </ul>
+            <>
+              <ul className='flex min-w-0 flex-col gap-2'>
+                {shown.visible.map((item) => (
+                  <EventRow key={item.entity_id} item={item} />
+                ))}
+              </ul>
+              <ShowMore state={shown} noun={['event', 'events']} />
+            </>
           )}
           <AdjustPanel
             title='Make something happen'
