@@ -34,6 +34,18 @@ class OfficeKind(StrEnum):
     AMBASSADOR = "ambassador"
 
 
+class OfficePower(StrEnum):
+    RULE = "rule"
+    SUCCEED = "succeed"
+    NEGOTIATE = "negotiate"
+    COMMAND = "command"
+    TREASURY = "treasury"
+    JUDGE = "judge"
+    SPY = "spy"
+    GOVERN = "govern"
+    EMBASSY = "embassy"
+
+
 class RegionalStanding(StrEnum):
     HEGEMON = "hegemon"
     GREAT_POWER = "great_power"
@@ -177,6 +189,8 @@ class TreatyStatus(StrEnum):
     FULFILLED = "fulfilled"
     BROKEN = "broken"
     EXPIRED = "expired"
+    PROPOSED = "proposed"
+    REJECTED = "rejected"
 
 
 class ClauseKind(StrEnum):

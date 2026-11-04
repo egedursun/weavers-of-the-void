@@ -21,12 +21,14 @@ from aerona.domain.enums.culture import ArtMedium, CalendarSlot, ItemClass, Lege
 from aerona.domain.enums.ecology import BeastTemper, Diet, SizeClass, Sociality, YieldProduct
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, EntityType, LegendCategory
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPath, TenetKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import HullClass, VesselArmament
 from aerona.domain.enums.mind import ActKind, TraitKind
 from aerona.domain.enums.mortal import MortalSex
 from aerona.domain.enums.place import PlaceKind
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic
 from aerona.domain.enums.travel import VehicleKind
 from aerona.domain.enums.world import SkyEventKind
@@ -140,6 +142,8 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
             "consequence": (ProphecyConsequence | None, None),
             "consequence_id": (int | None, None),
         },
+        EntityType.FACTION: {"faction_kind": (FactionKind, ...)},
+        EntityType.LAW: {"law_kind": (LawKind, ...), "law_params": (dict[str, int | str | bool] | None, None)},
         EntityType.CULT: {
             "tenets": (Annotated[list[TenetKind], Field(max_length=TENETS_MAX)] | None, None),
             "judgement": (JudgementDoctrine | None, None),

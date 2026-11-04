@@ -67,6 +67,7 @@ from aerona.engine.lore.research import has_technique
 from aerona.engine.military.control import add_stack
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.hooks import judged
+from aerona.engine.mortal.learning import practise_subject, school_level
 from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.governance import spend
@@ -859,7 +860,9 @@ async def cast(
         succeeded=True,
         effect="",
     )
-    if rng.chance(row.backlash_chance):
+    mastery = await school_level(ctx.session, caster.id, rite.id)
+    await practise_subject(ctx.session, ctx.rules, caster.id, SkillKind.SPELLCRAFT, subject_id=rite.id, xp=ctx.rules.skills.spellcraft_xp, epoch=ctx.epoch)
+    if rng.chance(row.backlash_chance * (1 - mastery / PERCENT * ctx.rules.skills.school_backlash_pct / PERCENT)):
         casting.succeeded, casting.backlash = False, await backlash(ctx, caster, row)
         casting.effect = f"the rite turned on {caster.name} ({casting.backlash.value})"
     else:

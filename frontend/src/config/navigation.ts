@@ -168,6 +168,7 @@ export const NAV_GROUPS: NavGroup[] = [
         to: '/',
         icon: LayoutDashboard,
         description: 'The state of your cosmos at a glance.',
+        shortcut: '1',
       },
       {
         id: 'epoch',
@@ -175,6 +176,7 @@ export const NAV_GROUPS: NavGroup[] = [
         to: '/epoch',
         icon: Hourglass,
         description: 'Run, stop and resume the epoch, or let one son act.',
+        shortcut: '2',
       },
       {
         id: 'pantheon',
@@ -182,14 +184,15 @@ export const NAV_GROUPS: NavGroup[] = [
         to: '/pantheon',
         icon: Crown,
         description: 'Your sons, their cards, threads and rivalries.',
-        shortcut: '1',
+        shortcut: '3',
       },
       {
-        id: 'goals',
-        title: 'Goals',
-        to: '/goals',
-        icon: Target,
-        description: 'Scenario goals, score and achievements.',
+        id: 'prayers',
+        title: 'Prayers',
+        to: '/prayers',
+        icon: HandHeart,
+        description: 'Wishes from sons and mortals awaiting your answer.',
+        shortcut: '4',
       },
       {
         id: 'council',
@@ -199,12 +202,11 @@ export const NAV_GROUPS: NavGroup[] = [
         description: 'Councils of the brothers and their verdicts.',
       },
       {
-        id: 'prayers',
-        title: 'Prayers',
-        to: '/prayers',
-        icon: HandHeart,
-        description: 'Wishes from sons and mortals awaiting your answer.',
-        shortcut: '9',
+        id: 'goals',
+        title: 'Goals',
+        to: '/goals',
+        icon: Target,
+        description: 'Scenario goals, score and achievements.',
       },
     ],
   },
@@ -217,7 +219,7 @@ export const NAV_GROUPS: NavGroup[] = [
         to: '/cosmos',
         icon: Orbit,
         description: 'Stars, worlds, routes, voyages and foreign gods.',
-        shortcut: '2',
+        shortcut: '5',
       },
       {
         id: 'map',
@@ -225,7 +227,7 @@ export const NAV_GROUPS: NavGroup[] = [
         to: '/map',
         icon: MapIcon,
         description: 'Regions, settlements, peoples, roads and wars.',
-        shortcut: '3',
+        shortcut: '6',
       },
       {
         id: 'atlas',
@@ -233,7 +235,7 @@ export const NAV_GROUPS: NavGroup[] = [
         to: '/atlas',
         icon: BookOpen,
         description: 'Every record of the world, by type and family.',
-        shortcut: '4',
+        shortcut: '7',
       },
       {
         id: 'network',
@@ -241,7 +243,7 @@ export const NAV_GROUPS: NavGroup[] = [
         to: '/network',
         icon: Waypoints,
         description: 'The knowledge graph of records and their bonds.',
-        shortcut: '5',
+        shortcut: '8',
       },
       {
         id: 'interconnections',
@@ -277,7 +279,7 @@ export const NAV_GROUPS: NavGroup[] = [
         to: '/chronicle',
         icon: ScrollText,
         description: 'Epoch by epoch, the history Fate has written.',
-        shortcut: '6',
+        shortcut: '9',
       },
       {
         id: 'languages',
@@ -285,7 +287,7 @@ export const NAV_GROUPS: NavGroup[] = [
         to: '/languages',
         icon: Languages,
         description: 'Dictionaries, language families and knowledge.',
-        shortcut: '7',
+        shortcut: '0',
       },
       {
         id: 'gallery',
@@ -293,7 +295,6 @@ export const NAV_GROUPS: NavGroup[] = [
         to: '/gallery',
         icon: Images,
         description: 'Every image of the world and the missing ones.',
-        shortcut: '8',
       },
     ],
   },
@@ -355,10 +356,16 @@ export function allNavItems(): NavItem[] {
   ]
 }
 
+export const SHORTCUT_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+
 export function shortcutItems(): NavItem[] {
   return allNavItems()
     .filter((item) => item.shortcut !== undefined)
-    .sort((left, right) => Number(left.shortcut) - Number(right.shortcut))
+    .sort(
+      (left, right) =>
+        SHORTCUT_KEYS.indexOf(left.shortcut ?? '') -
+        SHORTCUT_KEYS.indexOf(right.shortcut ?? '')
+    )
 }
 
 export function navItem(id: string): NavItem {

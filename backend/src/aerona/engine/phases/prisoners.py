@@ -9,6 +9,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.mind import ActKind, MemoryKind, ValueAxis, ValueHolder
+from aerona.domain.enums.polity import OathKind
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.body.book import effective
 from aerona.engine.body.hits import Harm
@@ -24,6 +25,7 @@ from aerona.engine.mind.hooks import judged, witnessed
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.phase import Phase
+from aerona.engine.polity.oaths import break_on
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
@@ -102,6 +104,7 @@ async def kin_of(ctx: TickContext, mortal: EntityRow) -> list[EntityRow]:
 
 
 async def torture(ctx: TickContext, captive: EntityRow, captor: EntityRow, home: EntityRow) -> None:
+    await break_on(ctx, [captive.id], OathKind.SILENCE, f"the secrets were wrung out by {captor.name}")
     table = ctx.rules.captivity
     await apply_hits(ctx, captive, Harm(table.torture_hp, HarmCause.TORTURE, f"tortured by {captor.name}", killer_id=captor.id), lethal=False)
     await wring_intel(ctx, captor, home)
@@ -180,7 +183,10 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
     "table.captives",
     "table.culture_values",
     "table.epoch_year_cursors",
+    "table.house_members",
+    "table.house_profiles",
     "table.minds",
+    "table.oaths",
     "table.polity_members",
     "table.traits",
 )
@@ -191,8 +197,12 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
     "table.captives",
     "table.chronicle",
     "table.entities",
+    "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.house_profiles",
     "table.incidents",
+    "table.mortal_profiles",
+    "table.oaths",
 )
 @reads(
     "table.applied_fixups",

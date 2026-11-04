@@ -45,6 +45,7 @@ import {
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { HouseEditor, TreatyBuilder } from './Covenants'
 import { useHouse, useOaths, useTreaty } from './api'
 import {
   CLAIM_BASES,
@@ -233,6 +234,7 @@ export function HouseSection({
             polity_id: polity ?? 0,
             strength,
             basis: 'divine',
+            office: 'ruler',
           },
         })
       ),
@@ -307,6 +309,11 @@ export function HouseSection({
               />
             ))}
           </Hero>
+          <HouseEditor
+            key={JSON.stringify([house.locked, house.prestige, house.traits])}
+            house={house}
+            blocked={blocked}
+          />
           <div className='grid min-w-0 grid-cols-1 gap-3 @xs/realm:grid-cols-2 @xl/realm:grid-cols-4'>
             <KpiTile
               label='Prestige'
@@ -613,6 +620,7 @@ export function TreatySection({
               />
             )}
           </Hero>
+          <TreatyBuilder treaty={treaty} blocked={blocked} />
           <div className='grid min-w-0 grid-cols-1 gap-3 @xs/realm:grid-cols-3'>
             <KpiTile
               label='Signed'

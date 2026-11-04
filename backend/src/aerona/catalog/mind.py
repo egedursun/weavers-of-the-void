@@ -10,12 +10,14 @@ from aerona.domain.enums.mind import (
     NeedKind,
     OpinionComponent,
     PressureKind,
+    Profession,
     SkillFamily,
     SkillKind,
     TraitEffect,
     TraitKind,
     ValueAxis,
 )
+from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import Passion
 
 V = ValueAxis
@@ -672,5 +674,54 @@ DEPTH_WORDS: MappingProxyType[TraitKind, tuple[str, ...]] = MappingProxyType(
         T_.IMPRESSIONABLE: ("impressionable", "gullible", "easily swayed"),
         T_.CUNNING_TACTICIAN: ("tactician", "strategist", "cunning", "shrewd", "wily"),
         T_.RECKLESS: ("reckless", "rash", "impulsive", "foolhardy"),
+    }
+)
+
+
+@dataclass(frozen=True)
+class ProfessionSpec:
+    label: str
+    skills: tuple[SkillKind, ...]
+    role: MortalRole
+
+
+PROFESSIONS: MappingProxyType[Profession, ProfessionSpec] = MappingProxyType(
+    {
+        Profession.SOLDIER: ProfessionSpec("Soldier", (S.SPEAR, S.SHIELD, S.BLADE, S.AXE, S.BOW), MortalRole.WARRIOR),
+        Profession.RIDER: ProfessionSpec("Rider", (S.RIDING, S.MOUNTED_COMBAT, S.BEAST_HANDLING), MortalRole.KNIGHT),
+        Profession.SMITH: ProfessionSpec("Smith", (S.SMITHING, S.JEWELLING, S.ENGINEERING), MortalRole.ARTISAN),
+        Profession.BUILDER: ProfessionSpec("Builder", (S.MASONRY, S.CARPENTRY, S.ENGINEERING), MortalRole.ARTISAN),
+        Profession.WEAVER: ProfessionSpec("Weaver", (S.WEAVING, S.POTTERY), MortalRole.ARTISAN),
+        Profession.HEALER: ProfessionSpec("Healer", (S.MEDICINE, S.SURGERY, S.FORAGING), MortalRole.HEALER),
+        Profession.SCHOLAR: ProfessionSpec("Scholar", (S.LORE, S.WRITING, S.ASTRONOMY, S.LANGUAGES), MortalRole.SAGE),
+        Profession.PRIEST: ProfessionSpec("Priest", (S.THEOLOGY, S.RITUAL, S.ORATORY), MortalRole.PRIEST),
+        Profession.SORCERER: ProfessionSpec("Sorcerer", (S.SPELLCRAFT, S.ALCHEMY, S.SPIRIT_SPEAKING), MortalRole.SAGE),
+        Profession.MERCHANT: ProfessionSpec("Merchant", (S.ACCOUNTING, S.NEGOTIATION, S.SAILING), MortalRole.MERCHANT),
+        Profession.DIPLOMAT: ProfessionSpec("Diplomat", (S.NEGOTIATION, S.ETIQUETTE, S.LANGUAGES, S.ORATORY), MortalRole.SCRIBE),
+        Profession.HUNTER: ProfessionSpec("Hunter", (S.HUNTING, S.TRACKING, S.BOW), MortalRole.HUNTER),
+        Profession.SAILOR: ProfessionSpec("Sailor", (S.SAILING, S.NAVIGATION, S.SWIMMING), MortalRole.CAPTAIN),
+        Profession.COMMANDER: ProfessionSpec("Commander", (S.TACTICS, S.STRATEGY, S.LEADERSHIP, S.LOGISTICS), MortalRole.KNIGHT),
+    }
+)
+BRANCH_SKILLS: MappingProxyType[KnowledgeBranch, SkillKind] = MappingProxyType(
+    {
+        KnowledgeBranch.AGRICULTURE: S.FORAGING,
+        KnowledgeBranch.METALLURGY: S.SMITHING,
+        KnowledgeBranch.SEAFARING: S.SAILING,
+        KnowledgeBranch.WRITING: S.WRITING,
+        KnowledgeBranch.ARCHITECTURE: S.MASONRY,
+        KnowledgeBranch.MEDICINE: S.MEDICINE,
+        KnowledgeBranch.MAGIC: S.SPELLCRAFT,
+        KnowledgeBranch.WARFARE: S.TACTICS,
+        KnowledgeBranch.ASTRONOMY: S.ASTRONOMY,
+        KnowledgeBranch.TRADE: S.ACCOUNTING,
+        KnowledgeBranch.SKY_NAVIGATION: S.NAVIGATION,
+        KnowledgeBranch.SHIPBUILDING: S.SHIPWRIGHT,
+        KnowledgeBranch.GATE_LORE: S.LORE,
+        KnowledgeBranch.PATHFINDING: S.TRACKING,
+        KnowledgeBranch.VOID_LIVING: S.LORE,
+        KnowledgeBranch.IMMORTALITY: S.ALCHEMY,
+        KnowledgeBranch.BIOMANCY: S.MEDICINE,
+        KnowledgeBranch.FORBIDDEN: S.SPELLCRAFT,
     }
 )

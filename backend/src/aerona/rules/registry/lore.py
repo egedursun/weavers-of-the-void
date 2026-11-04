@@ -17,7 +17,7 @@ class InterpretersRules:
     assimilation_pct: int = rule(50, 0, 100, R, "Assimilation left between peoples who share no words (%)")
     shared_lexicon_pct: int = rule(60, 0, 100, R, "Weight of a shared lexicon in intelligibility (%)")
     phonology_pct: int = rule(20, 0, 100, R, "Intelligibility a shared sound system adds to tongues that already share words")
-    misread_grievance: int = rule(10, 0, 100, R, "Ill will a misread treaty clause breeds, counted as a breach")
+    misread_breach_chance: int = rule(25, 0, 100, R, "Chance each epoch that the party wronged by a misread treaty clause counts it a breach (%)")
     remeasure_epochs: int = rule(5, 0, 100, R, "Epochs between new measures of how well two tongues understand each other (0 never)")
 
 
@@ -50,6 +50,11 @@ class BeliefRules:
     distortion_rate: int = rule(3, 0, 100, R, "Distortion a legend gains each telling in an unlettered people")
     credence_per_teller: int = rule(2, 0, 100, R, "Credence each telling people adds to a legend")
     credence_decay: int = rule(2, 0, 100, R, "Credence a legend loses each epoch")
+    memory_distortion_pct: int = rule(50, 0, 200, R, "How far a distorted legend swells the memories its tellers hold (%)")
+    false_memory_credence: int = rule(60, 0, 100, R, "Credence at which a legend plants memories of what never happened")
+    false_memory_distortion: int = rule(40, 0, 100, R, "Distortion at which a legend plants memories of what never happened")
+    false_memory_chance: int = rule(25, 0, 100, R, "Chance each epoch a believed, distorted legend plants a false memory in a telling people (%)")
+    false_memory_magnitude: int = rule(30, 0, 100, R, "Strength of a memory a legend plants")
     confirmation: int = rule(15, 0, 100, R, "Credence a confirming event adds")
     moral_pressure_pct: int = rule(5, 0, 100, R, "Value pressure of a fully believed legend on its tellers (%)")
     return_king_claim: int = rule(15, 0, 100, R, "Claim strength a return-of-the-king legend lends the pretender who fits it")

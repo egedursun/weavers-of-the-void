@@ -5,7 +5,7 @@ from pydantic import Field
 
 from aerona.catalog.gates import Gate
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
-from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -17,7 +17,11 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.polity import ClauseKind
+from aerona.domain.enums.polity import TreatyKind as PolityTreatyKind
 from aerona.domain.enums.war import WarCause
+from aerona.engine.polity.accords import Clause
+from aerona.engine.polity.treaties import sign_derived
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.conflict import foreign_god_war
 from aerona.engine.services.war import can_open_war, declare_war, has_truce
@@ -113,7 +117,17 @@ async def make_interworld_treaty(call: SonCall, args: TreatyInput) -> str:
     if await bonds.exists_between(first.id, second.id, TREATY_BONDS[args.kind]):
         fail(SonResult.TREATY_EXISTS, label=label, first=first.name, second=second.name)
     require_essence(call, tools.treaty_cost)
-    await bonds.connect(BondDraft(first.id, second.id, TREATY_BONDS[args.kind], call.epoch, lines.TREATY_BOND.format(son=call.son.name, terms=args.terms)))
+    clauses = [Clause(ClauseKind.TRADE_RIGHTS, first.id, second.id), Clause(ClauseKind.NON_AGGRESSION, first.id, second.id)]
+    await sign_derived(call.tick, PolityTreatyKind.INTERWORLD, first.id, second.id, until=call.epoch + call.rules.treaties.alliance_epochs, clauses=clauses)
+    if args.kind is TreatyKind.ALLIANCE:
+        await sign_derived(
+            call.tick,
+            PolityTreatyKind.ALLIANCE_DEFENSIVE,
+            first.id,
+            second.id,
+            until=call.epoch + call.rules.treaties.alliance_epochs,
+            clauses=[Clause(ClauseKind.CALL_TO_ARMS, first.id, second.id), Clause(ClauseKind.CALL_TO_ARMS, second.id, first.id)],
+        )
     await change_relation(call.tick, first.id, second.id, tools.treaty_relation, MemoryKind.ALLIED_WITH, note=lines.TREATY_EVENT)
     call.spend_essence(tools.treaty_cost)
     call.target(first.id)

@@ -10,8 +10,11 @@ from aerona.catalog.backfill_words import LAW_WORDS
 from aerona.catalog.laws import LAW_PARAMS, LAW_TITLES, defaults_for, penal_cruelty
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import LawJurisdictionRow, LawProfileRow, PolityMemberRow
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LAW_AREAS, Jurisdiction, LawKind, LegitimacyBasis
@@ -23,6 +26,8 @@ from aerona.engine.primitives.stats import set_stats, stat
 
 ParamValue = int | str | bool
 LEAN = 25
+KIND_FIXUP = "law_kinds_from_text"
+CULT_FIRST = frozenset({LawKind.BURIAL_LAW, LawKind.MARRIAGE_LAW, LawKind.RITE_RESTRICTIONS, LawKind.WORSHIP_BAN, LawKind.MAGIC_BAN, LawKind.TITHE})
 KIND_VALUES: Mapping[LawKind, Mapping[ValueAxis, int]] = {
     LawKind.SLAVERY: {ValueAxis.MERCY: -1, ValueAxis.HIERARCHY: 1},
     LawKind.PENAL_CODE: {ValueAxis.MERCY: -1, ValueAxis.TRADITION: 1},
@@ -60,30 +65,69 @@ def validate(kind: LawKind, params: Mapping[str, ParamValue]) -> dict[str, Param
     return merged
 
 
-async def ensure_profile(session: AsyncSession, law: EntityRow, epoch: int) -> LawProfileRow:
-    found = await session.get(LawProfileRow, law.id)
-    if found is not None:
-        return found
-    kind = guess_kind(law)
+async def attach_profile(
+    session: AsyncSession,
+    law: EntityRow,
+    kind: LawKind,
+    params: Mapping[str, ParamValue] | None,
+    *,
+    holder: EntityRow | None,
+    epoch: int,
+    by_id: int | None = None,
+    basis: LegitimacyBasis | None = None,
+) -> LawProfileRow:
+    merged = validate(kind, params or {})
     rigidity = stat(law, "rigidity") or 50
     profile = LawProfileRow(
         law_entity_id=law.id,
         kind=kind,
         area=LAW_AREAS[kind],
-        params=defaults_for(kind),
+        params=merged,
         enforcement=50,
-        legitimacy_basis=LegitimacyBasis.CUSTOM if rigidity >= PERCENT // 2 else LegitimacyBasis.DECREE,
+        legitimacy_basis=basis or (LegitimacyBasis.CUSTOM if rigidity >= PERCENT // 2 else LegitimacyBasis.DECREE),
         conflict=0,
-        enacted_epoch=law.birth_epoch,
+        enacted_epoch=epoch,
+        enacted_by_entity_id=by_id,
         locked=[],
     )
     session.add(profile)
-    if law.location_id is not None:
-        place = await session.get(EntityRow, law.location_id)
-        jurisdiction = Jurisdiction.CULT if place is not None and place.entity_type is EntityType.CULT else Jurisdiction.SETTLEMENT
-        session.add(LawJurisdictionRow(law_entity_id=law.id, node_entity_id=law.location_id, jurisdiction=jurisdiction))
+    if holder is not None:
+        session.add(LawJurisdictionRow(law_entity_id=law.id, node_entity_id=holder.id, jurisdiction=jurisdiction_of(holder)))
     await session.flush()
     return profile
+
+
+def jurisdiction_of(holder: EntityRow) -> Jurisdiction:
+    if holder.entity_type is EntityType.POLITY:
+        return Jurisdiction.POLITY
+    if holder.entity_type is EntityType.CULT:
+        return Jurisdiction.CULT
+    return Jurisdiction.SETTLEMENT
+
+
+async def ensure_profile(session: AsyncSession, law: EntityRow, epoch: int, *, kind: LawKind = LawKind.CUSTOM) -> LawProfileRow:
+    found = await session.get(LawProfileRow, law.id)
+    if found is not None:
+        return found
+    holder = await session.get(EntityRow, law.location_id) if law.location_id is not None else None
+    profile = await attach_profile(session, law, kind, {}, holder=holder, epoch=law.birth_epoch if law.birth_epoch is not None else epoch)
+    return profile
+
+
+async def backfill_kinds(session: AsyncSession, epoch: int) -> int:
+    if await session.get(AppliedFixupRow, KIND_FIXUP) is not None:
+        return 0
+    laws = list(await session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.LAW, EntityRow.status == EntityStatus.CANON)))
+    known = set(await session.scalars(select(LawProfileRow.law_entity_id)))
+    made = 0
+    for law in laws:
+        if law.id in known:
+            continue
+        await ensure_profile(session, law, epoch, kind=guess_kind(law))
+        made += 1
+    session.add(AppliedFixupRow(key=KIND_FIXUP, result={"laws": made}))
+    await session.flush()
+    return made
 
 
 @dataclass
@@ -92,6 +136,7 @@ class LawBook:
     laws: dict[int, EntityRow]
     by_node: dict[int, list[int]] = field(default_factory=lambda: defaultdict(list))
     member_of: dict[int, int] = field(default_factory=dict)
+    cults_of: dict[int, list[int]] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, session: AsyncSession) -> "LawBook":
@@ -106,12 +151,17 @@ class LawBook:
                 book.by_node[row.node_entity_id].append(row.law_entity_id)
         for member in await session.scalars(select(PolityMemberRow)):
             book.member_of[member.member_entity_id] = member.polity_entity_id
+        book.cults_of = await faithful_cults(session)
         return book
 
+    def holders(self, node_id: int, kind: LawKind) -> list[int]:
+        polity = self.member_of.get(node_id)
+        cults = self.cults_of.get(node_id, [])
+        ordered = [node_id, *cults, polity] if kind in CULT_FIRST else [node_id, polity, *cults]
+        return [holder for holder in ordered if holder is not None]
+
     def in_force(self, node_id: int, kind: LawKind) -> LawProfileRow | None:
-        for holder in (node_id, self.member_of.get(node_id)):
-            if holder is None:
-                continue
+        for holder in self.holders(node_id, kind):
             found = [self.profiles[law_id] for law_id in self.by_node.get(holder, []) if law_id in self.profiles and self.profiles[law_id].kind is kind]
             if found:
                 return max(found, key=lambda row: (row.enacted_epoch, row.law_entity_id))
@@ -128,9 +178,38 @@ class LawBook:
         return row.enforcement / PERCENT if row is not None else 0.0
 
 
+async def faithful_cults(session: AsyncSession) -> dict[int, list[int]]:
+    cult_holders = set(await session.scalars(select(LawJurisdictionRow.node_entity_id).where(LawJurisdictionRow.jurisdiction == Jurisdiction.CULT)))
+    if not cult_holders:
+        return {}
+    gods: dict[int, list[int]] = defaultdict(list)
+    for source, target in await session.execute(
+        select(BondRow.source_node_id, BondRow.target_node_id).where(
+            BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE, BondRow.source_node_id.in_(list(cult_holders))
+        )
+    ):
+        gods[target].append(source)
+    if not gods:
+        return {}
+    found: dict[int, list[int]] = defaultdict(list)
+    for source, target in await session.execute(
+        select(BondRow.source_node_id, BondRow.target_node_id)
+        .where(BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE, BondRow.target_node_id.in_(list(gods)))
+        .order_by(BondRow.id)
+    ):
+        if source in cult_holders:
+            continue
+        for cult in gods[target]:
+            if cult not in found[source]:
+                found[source].append(cult)
+    return dict(found)
+
+
 async def law_param(session: AsyncSession, node_id: int, kind: LawKind, key: str) -> ParamValue | None:
     polity = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == node_id).limit(1))
-    for holder in (node_id, polity):
+    cults = (await faithful_cults(session)).get(node_id, [])
+    ordered = [node_id, *cults, polity] if kind in CULT_FIRST else [node_id, polity, *cults]
+    for holder in ordered:
         if holder is None:
             continue
         statement = (
@@ -179,14 +258,7 @@ async def enact(
     basis: LegitimacyBasis = LegitimacyBasis.DECREE,
     name: str | None = None,
 ) -> EntityRow:
-    merged = validate(kind, params or {})
-    jurisdiction = (
-        Jurisdiction.POLITY
-        if holder.entity_type is EntityType.POLITY
-        else Jurisdiction.CULT
-        if holder.entity_type is EntityType.CULT
-        else Jurisdiction.SETTLEMENT
-    )
+    validate(kind, params or {})
     title = name or f"{LAW_TITLES.get(kind, 'the ' + kind.value.replace('_', ' ') + ' law').capitalize()} of {holder.name}"
     law = await create_record(
         ctx,
@@ -202,22 +274,7 @@ async def enact(
             pending=False,
         ),
     )
-    ctx.session.add(
-        LawProfileRow(
-            law_entity_id=law.id,
-            kind=kind,
-            area=LAW_AREAS[kind],
-            params=merged,
-            enforcement=50,
-            legitimacy_basis=basis,
-            conflict=0,
-            enacted_epoch=ctx.epoch,
-            enacted_by_entity_id=by_id,
-            locked=[],
-        )
-    )
-    ctx.session.add(LawJurisdictionRow(law_entity_id=law.id, node_entity_id=holder.id, jurisdiction=jurisdiction))
-    await ctx.session.flush()
+    await attach_profile(ctx.session, law, kind, params, holder=holder, epoch=ctx.epoch, by_id=by_id, basis=basis)
     return law
 
 

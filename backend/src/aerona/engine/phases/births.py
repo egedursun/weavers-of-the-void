@@ -38,6 +38,7 @@ from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.settlements import resettle_ruin
+from aerona.engine.polity.houses import bloodline_fertility
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
@@ -934,6 +935,8 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.holder_levels",
+    "table.house_members",
+    "table.house_profiles",
     "table.language_profiles",
     "table.lexemes",
     "table.mortal_profiles",
@@ -978,7 +981,8 @@ async def couples_bear_children(ctx: TickContext) -> None:
         second = await living_entity(ctx.session, bond.target_node_id)
         if first is None or second is None or first.entity_type is not EntityType.MORTAL or second.entity_type is not EntityType.MORTAL:
             continue
-        if not rng.chance(await couple_chance(ctx, first, second, bond.kind)):
+        fertile = await bloodline_fertility(ctx.session, rules, first.id, second.id)
+        if not rng.chance(await couple_chance(ctx, first, second, bond.kind) * fertile):
             continue
         await deliver(ctx, first, second, namer)
         born += 1

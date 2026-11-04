@@ -11,12 +11,13 @@ from aerona.db.tables.military import SpyNetworkRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.military import SpyOwnerKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.stats import StatBlock
 from aerona.engine.phases.espionage import SpyOperation, espionage, order_spy_operation
-from aerona.engine.phases.factions import FactionKind, decree_faction, dissolve_faction, factions
+from aerona.engine.phases.factions import decree_faction, dissolve_faction, factions
 from aerona.engine.services.community_relations import relation, set_relation
 from aerona.engine.services.conflict import foreign_god_war
 from aerona.rules.registry import Rules
@@ -34,7 +35,7 @@ async def test_warrior_society_founds_a_brotherhood(session: AsyncSession, world
     assert faction.location_id == town.id
     assert await BondRepository(session).exists_between(faction.id, town.id, BondKind.DESCENDS_FROM)
     with pytest.raises(ConflictError):
-        await decree_faction(make_ctx(session, rules), town.id, FactionKind.BROTHERHOOD)
+        await decree_faction(make_ctx(session, rules), town.id, FactionKind.WARRIOR_ORDER)
 
 
 async def test_idle_uprisings_disband_and_factions_can_be_dissolved(session: AsyncSession, world_id: int) -> None:

@@ -112,6 +112,11 @@ class HomeLine(ContextItem):
     office: str = ""
     house: str = ""
     oaths: list[str] = Field(default_factory=list)
+    treaties: list[str] = Field(default_factory=list)
+    claims: list[str] = Field(default_factory=list)
+    succession: str = ""
+    laws: list[str] = Field(default_factory=list)
+    factions: list[str] = Field(default_factory=list)
     wars: list[str] = Field(default_factory=list)
     command: str = ""
     occupied_by: str = ""

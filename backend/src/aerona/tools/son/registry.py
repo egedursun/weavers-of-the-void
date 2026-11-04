@@ -13,6 +13,7 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.ports import ToolPorts
 from aerona.tools.framework.spec import ToolSpec
 from aerona.tools.son import (
+    bloodline,
     cosmos,
     death,
     faith,
@@ -30,6 +31,7 @@ from aerona.tools.son import (
     read,
     regions,
     resources,
+    treaties,
     war,
 )
 from aerona.tools.son.availability import SonWorldState, condition_holds, star_lines
@@ -50,6 +52,8 @@ FAMILIES: tuple[Callable[[], list[SonSpec]], ...] = (
     knowledge.specs,
     intervention.specs,
     war.specs,
+    treaties.specs,
+    bloodline.specs,
     death.specs,
     faith.specs,
     cosmos.specs,

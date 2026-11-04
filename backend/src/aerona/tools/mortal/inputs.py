@@ -23,6 +23,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, LegendCategory
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.society import KnowledgeBranch, ResourceMechanic
 from aerona.domain.enums.travel import JourneyIntent
 from aerona.domain.enums.world import SkyEventKind
@@ -114,6 +115,8 @@ class CultureInput(ToolInput):
     calendar_slot: CalendarSlot | None = None
     taboo_target: CommodityKind | None = None
     taboo_act: ActKind | None = None
+    law_kind: LawKind | None = None
+    law_params: dict[str, int | str | bool] | None = None
 
 
 class DiscoverInput(ToolInput):
@@ -324,3 +327,18 @@ class RepayInput(ToolInput):
 class AdoptInput(ToolInput):
     child_id: int
     reason: Reason
+
+
+class EnactLawInput(ToolInput):
+    kind: LawKind
+    params: dict[str, int | str | bool] | None = None
+    name: Name | None = None
+
+
+class AppointOfficerInput(ToolInput):
+    office: OfficeKind
+    mortal_id: int | None = None
+
+
+class SetTaxInput(ToolInput):
+    rate: int

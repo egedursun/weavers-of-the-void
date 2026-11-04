@@ -77,7 +77,7 @@ from aerona.rules.registry.espionage import EspionageRules
 from aerona.rules.registry.essence import EssenceRules
 from aerona.rules.registry.events import EventsRules
 from aerona.rules.registry.exploration import ExplorationRules
-from aerona.rules.registry.factions import FactionsRules
+from aerona.rules.registry.factions import BanditryRules, FactionsRules, IntrigueRules, MercenariesRules
 from aerona.rules.registry.faith import FaithRules
 from aerona.rules.registry.fate import FateRules
 from aerona.rules.registry.folk_belief import FolkBeliefRules
@@ -182,6 +182,7 @@ from aerona.rules.registry.polity import (
     LegitimacyRules,
     OathsRules,
     OverextensionRules,
+    RealmTierRules,
     RevoltsRules,
     SuccessionRules,
     TreatiesRules,
@@ -366,6 +367,7 @@ class Rules:
     houses: HousesRules = field(default_factory=HousesRules)
     oaths: OathsRules = field(default_factory=OathsRules)
     treaties: TreatiesRules = field(default_factory=TreatiesRules)
+    realm_tiers: RealmTierRules = field(default_factory=RealmTierRules)
     military_units: MilitaryUnitsRules = field(default_factory=MilitaryUnitsRules)
     logistics: LogisticsRules = field(default_factory=LogisticsRules)
     attrition: AttritionRules = field(default_factory=AttritionRules)
@@ -438,6 +440,9 @@ class Rules:
     fate: FateRules = field(default_factory=FateRules)
     folk_belief: FolkBeliefRules = field(default_factory=FolkBeliefRules)
     factions: FactionsRules = field(default_factory=FactionsRules)
+    intrigue: IntrigueRules = field(default_factory=IntrigueRules)
+    mercenaries: MercenariesRules = field(default_factory=MercenariesRules)
+    banditry: BanditryRules = field(default_factory=BanditryRules)
     foreign_gods: ForeignGodsRules = field(default_factory=ForeignGodsRules)
     genesis: GenesisRules = field(default_factory=GenesisRules)
     goals: GoalsRules = field(default_factory=GoalsRules)

@@ -133,6 +133,14 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "consequence": "What it means when it comes true: " + CONSEQUENCES,
         "consequence_id": "Whom the consequence touches (the one who will rule, the city that will fall)",
     },
+    EntityType.FACTION: {
+        **WORSHIPPED_SON_FIELD,
+        "faction_kind": "What it is: merchant_guild, craft_guild, priesthood, warrior_order, noble_council, peasant_league, rebels, bandits, pirates, assassins, scholars_academy, secret_society, mercenary_company, interworld_federation, wandering_market or void_pirates; its kind decides what it strives for and how it acts",
+    },
+    EntityType.LAW: {
+        "law_kind": "What the law rules: succession_rule, inheritance_split, land_tenure, slavery, serfdom, tax_rate, tithe, tolls, debt_law, penal_code, levy_law, conscription, standing_army, veteran_pension, ransom_custom, marriage_law, sumptuary, guild_charter, foreigner_rights, religious_tolerance, worship_ban, blood_feud, quarantine, burial_law, sanitation, magic_ban, licensed_magic, rite_restrictions or custom",
+        "law_params": "The law's terms by name, only those its kind has (e.g. rate, share, duration, theft, murder, treason, status, level, rite, split, tenure, labour_days)",
+    },
     EntityType.RESOURCE: {
         "commodity": COMMODITY_FIELD,
         "material": MATERIAL_FIELD,
@@ -524,6 +532,31 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You speak with the old or foreign god of another world: alliance, threat or bargain. The outcome depends on your charisma, their attitude and their power. "
         "At most {{ rules.son_tools.foreign_talk_per_god }} talk(s) with the same god per age. 1 action.",
         {"god_id": "The foreign god's id", "intent": "alliance, threat or bargain", "words": "What you say"},
+    ),
+    T.SEAL_TREATY: ToolText(
+        "You bind two or more parties (realms, communities, houses, cults, beasts) by a typed treaty sealed in your name: its kind decides how it behaves "
+        "and its clauses run every age (tribute, hostages, tolls waived, freedom of faith, call to arms...). Costs essence.",
+        {
+            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage, tribute, marriage_pact, trade_pact, condotta, guarantee or interworld",
+            "parties": "Each party's id and role (signatory, overlord, vassal, guarantor)",
+            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression), who owes it, who gains, and its terms (amount, commodity, epochs, region_id, mortal_id...)",
+            "epochs": "How many ages it holds; empty for ever",
+            "parties.party_id": "The party's id",
+            "parties.role": "Its role: signatory, overlord, vassal or guarantor",
+            "clauses.kind": "The clause's kind",
+            "clauses.obligor_id": "Who owes it",
+            "clauses.beneficiary_id": "Who gains by it",
+            "clauses.params": "Its terms by name (amount, commodity, epochs, region_id, mortal_id...)",
+        },
+    ),
+    T.BLESS_BLOODLINE: ToolText(
+        "You mark a noble house's blood with a lasting gift or curse (long_lived, giant_blooded, god_blooded, cursed, fertile, seer_gift); every child born to it carries it. "
+        "A god-blooded house anchors your existence while it lives. Costs essence.",
+        {"house_id": "The house", "trait": "The bloodline trait", "revoke": "True to lift it instead"},
+    ),
+    T.VOID_TREATY: ToolText(
+        "You make one party break a treaty in force: the breach is recorded, its oath is broken, guarantors may march and the breaker loses honour. Costs essence.",
+        {"treaty_id": "The treaty", "breaker_id": "The party that breaks it"},
     ),
     T.MAKE_INTERWORLD_TREATY: ToolText(
         "You establish an interworld treaty between two communities in separate worlds: alliance or trade. There must be a known, open road between the two worlds and one "

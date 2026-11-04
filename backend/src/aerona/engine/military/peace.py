@@ -13,7 +13,7 @@ from aerona.domain.enums.war import CaptiveStatus, WarCause, WarEnding
 from aerona.engine.context import TickContext
 from aerona.engine.military.captivity import settle_into
 from aerona.engine.mind.book import values_for
-from aerona.engine.polity.treaties import Clause, sign
+from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.services.war import release_captive
 

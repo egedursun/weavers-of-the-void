@@ -25,13 +25,16 @@ from aerona.tools.mortal import (
     knowledge,
     language,
     lore,
+    oaths,
     production,
     read,
     religion,
+    ruler,
     trade,
+    treaties,
     war,
 )
-from aerona.tools.mortal.support import civilization_tier, worships_dead_son
+from aerona.tools.mortal.support import civilization_tier, rules_a_realm, worships_dead_son
 
 T = MortalToolId
 MortalSpec = ToolSpec[MortalCall, Any]
@@ -53,6 +56,10 @@ ACTOR_TYPES: dict[MortalToolId, frozenset[EntityType]] = {
     T.CHALLENGE_GOD: NAMED,
     T.ESCAPE: NAMED,
     T.ADOPT: NAMED,
+    T.ENACT_LAW: NAMED,
+    T.SWEAR_OATH: NAMED,
+    T.APPOINT_OFFICER: NAMED,
+    T.SET_TAX: NAMED,
     T.EXPLORE_LAND: COMMUNITIES_AND_NAMED,
     T.RESURRECTION_RITE: COMMUNITIES_AND_NAMED,
     T.BUILD_SHIP: frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.FACTION}),
@@ -80,6 +87,7 @@ class MortalState:
     actor_type: EntityType
     tier: int
     worships_dead_son: bool
+    rules_realm: bool = False
 
 
 Condition = Callable[[Rules, MortalState], bool]
@@ -96,6 +104,11 @@ CONDITIONS: dict[MortalToolId, Condition] = {
     T.ADOPT: lambda rules, _state: rules.mortal_tools.adopt_per_epoch > 0,
     T.EXPLORE_LAND: lambda rules, _state: rules.exploration.tool_per_epoch > 0,
     T.RESURRECTION_RITE: lambda rules, state: rules.death.rite_per_epoch > 0 and state.worships_dead_son,
+    T.ENACT_LAW: lambda rules, state: rules.mortal_tools.enact_law_per_epoch > 0 and state.rules_realm,
+    T.APPOINT_OFFICER: lambda rules, state: rules.mortal_tools.appoint_officer_per_epoch > 0 and state.rules_realm,
+    T.SET_TAX: lambda rules, state: rules.mortal_tools.set_tax_per_epoch > 0 and state.rules_realm,
+    T.PROPOSE_TREATY: lambda rules, state: rules.mortal_tools.propose_treaty_per_epoch > 0 and (state.rules_realm or state.actor_type is not EntityType.MORTAL),
+    T.BREAK_TREATY: lambda _rules, state: state.rules_realm or state.actor_type is not EntityType.MORTAL,
 }
 
 FAMILIES: tuple[Callable[[], list[MortalSpec]], ...] = (
@@ -114,6 +127,9 @@ FAMILIES: tuple[Callable[[], list[MortalSpec]], ...] = (
     armies.specs,
     barter.specs,
     lore.specs,
+    ruler.specs,
+    treaties.specs,
+    oaths.specs,
 )
 
 
@@ -126,7 +142,7 @@ def mortal_specs() -> list[MortalSpec]:
 
 async def mortal_state(session: AsyncSession, rules: Rules, actor: EntityRow) -> MortalState:
     del rules
-    return MortalState(actor.entity_type, await civilization_tier(session, actor), await worships_dead_son(session, actor))
+    return MortalState(actor.entity_type, await civilization_tier(session, actor), await worships_dead_son(session, actor), await rules_a_realm(session, actor))
 
 
 def mortal_may_use(spec: MortalSpec, actor: EntityRow, rules: Rules, state: MortalState, ports: ToolPorts) -> bool:

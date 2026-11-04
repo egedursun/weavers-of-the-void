@@ -18,6 +18,7 @@ from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import cohorts_of, seed
+from aerona.engine.polity.law_effects import feudal_levy
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
@@ -166,6 +167,7 @@ async def mobilisation(session: AsyncSession, rules: Rules, community: EntityRow
         law *= 1 + (int(share) - LEVY_BASE) / LEVY_BASE * rules.legislation.levy_share_pct / PERCENT * laws.weight(community.id, LawKind.LEVY_LAW)
     if drafted is not None:
         law *= 1 + int(drafted) / PERCENT * laws.weight(community.id, LawKind.CONSCRIPTION)
+    law *= feudal_levy(laws, community.id, rules)
     return max(0.1, martial * cohesion * season * law)
 
 

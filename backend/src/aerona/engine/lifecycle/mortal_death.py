@@ -34,6 +34,7 @@ from aerona.engine.mind.memories import inherit_memories, mourn
 from aerona.engine.mortal.death import record_end
 from aerona.engine.mortal.kin import children_of
 from aerona.engine.notes import note
+from aerona.engine.polity.law_effects import bequest_order
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, scaled_cap
 from aerona.engine.primitives.queries import active_bonds, close, connect, count_communities, living_entity, living_sons
@@ -157,15 +158,18 @@ async def _bequeath(ctx: TickContext, mortal: EntityRow) -> None:
     items = await active_bonds(session, [BondKind.OWNS], sources=[mortal.id])
     if not items:
         return
-    receiver: EntityRow | None = None
+    children: list[EntityRow] = []
     for child_id in reversed(await children_of(session, mortal.id)):
-        receiver = await living_entity(session, child_id)
-        if receiver is not None:
-            break
+        child = await living_entity(session, child_id)
+        if child is not None:
+            children.append(child)
+    heirs = await bequest_order(session, mortal, children)
+    receiver: EntityRow | None = heirs[0] if heirs else None
     if receiver is None:
         place = await living_entity(session, mortal.location_id)
         receiver = place if place is not None and place.entity_type in COMMUNITY_TYPES else None
-    for bond in items:
+    for index, bond in enumerate(items):
+        receiver = heirs[index % len(heirs)] if len(heirs) > 1 else receiver
         await close(session, bond, ctx.epoch, "inheritance")
         if receiver is not None:
             await connect(session, receiver.id, bond.target_node_id, BondKind.OWNS, ctx.epoch, description=f"inherited from {mortal.name}")

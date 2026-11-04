@@ -29,6 +29,7 @@ import { RELATION_PAGE_MAX } from './constants'
 import { EntityEconomy } from './economy/EntityEconomy'
 import { ResourceProfile } from './economy/ResourceProfile'
 import { PriceBoard, TradeRouteSection } from './economy/RouteAndMarket'
+import { FactionSection } from './faction/Faction'
 import { AfterlifeSection, SoulSection } from './faith/Afterlife'
 import { DoctrineSection } from './faith/Doctrine'
 import { EventSection } from './happenings/EventCard'
@@ -394,6 +395,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       )}
       {entity.entity_type === 'treaty' && (
         <TreatySection treatyId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'faction' && (
+        <FactionSection factionId={entity.id} readOnlyReason={readOnly} />
       )}
       {entity.entity_type === 'mortal' && (
         <OathsSection entityId={entity.id} readOnlyReason={readOnly} />

@@ -92,6 +92,7 @@ from aerona.engine.mind.book import best_effective, values_for
 from aerona.engine.mind.hooks import duelled, fought, judged
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
+from aerona.engine.polity.law_effects import standing_floor
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap, LawBook
 from aerona.engine.primitives.levies import demobilise, stand_down
@@ -270,8 +271,12 @@ async def idle_armies(ctx: TickContext) -> int:
         size = stat(army, "size") or 0
         returning = min(size, max(1, round_half_up(size * campaigns.idle_army_return_pct / PERCENT)))
         owner = await living_entity(ctx.session, row.owner_entity_id)
+        floor = await standing_floor(ctx.session, ctx.rules, owner)
+        if floor >= size:
+            continue
+        returning = min(returning, size - floor)
         remaining = size - returning
-        if remaining < campaigns.idle_army_disband_below:
+        if remaining < campaigns.idle_army_disband_below and floor == 0:
             returning, remaining = size, 0
         await resize(ctx.session, ctx.rules, army, remaining)
         demobilise(ctx.rules, owner, returning)
@@ -1471,6 +1476,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.speaker_cohorts",
     "table.spy_networks",
     "table.traits",
+    "table.treaty_profiles",
     "table.tributes",
     "table.vassalages",
     "table.war_aims",
@@ -1599,6 +1605,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.offices",
     "table.peace_terms",
     "table.polity_profiles",
+    "table.polity_territories",
     "table.region_environment",
     "table.settlement_infrastructure",
     "table.settlement_profiles",

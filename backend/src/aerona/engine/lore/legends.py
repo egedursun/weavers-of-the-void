@@ -7,16 +7,18 @@ from aerona.db.tables.culture import ArtworkProfileRow, LegendProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
-from aerona.db.tables.mind import SkillRow
+from aerona.db.tables.mind import MemoryRow, SkillRow
 from aerona.db.tables.polity import ClaimRow, HouseMemberRow, HouseProfileRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import CustomCatalog, LegendArchetype
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, LegendCategory
-from aerona.domain.enums.mind import SkillKind, ValueAxis, ValueHolder
+from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
+from aerona.domain.enums.mind import MemoryKind, SkillKind, ValueAxis, ValueHolder
 from aerona.engine.context import TickContext
 from aerona.engine.lore.kinds import ArchetypeParams, kind_of, params_of
 from aerona.engine.lore.language import standardisation_of
 from aerona.engine.mind.book import stored_values, values_for, write_values
+from aerona.engine.mind.memories import remember
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity, spoken_language
 from aerona.engine.primitives.stats import stat
@@ -312,3 +314,57 @@ async def resonance(ctx: TickContext, archetypes: frozenset[LegendArchetype]) ->
         select(LegendProfileRow.legend_entity_id).where(LegendProfileRow.archetype.in_(list(archetypes)), LegendProfileRow.credence >= PERCENT // 2).limit(1)
     )
     return ctx.rules.belief.resonance_certainty if found is not None else 0
+
+
+ARCHETYPE_MEMORIES: dict[LegendArchetype, tuple[MemoryKind, int]] = {
+    LegendArchetype.BETRAYAL: (MemoryKind.BETRAYED_ME, -1),
+    LegendArchetype.MONSTER: (MemoryKind.HARMED_ME, -1),
+    LegendArchetype.CURSED_LINE: (MemoryKind.ILL_WILL, -1),
+    LegendArchetype.TRICKSTER: (MemoryKind.CHEATED_US, -1),
+    LegendArchetype.HERO_QUEST: (MemoryKind.SAVED_ME, 1),
+    LegendArchetype.CHOSEN_ONE: (MemoryKind.GOODWILL, 1),
+    LegendArchetype.RETURN_OF_THE_KING: (MemoryKind.GOODWILL, 1),
+}
+LEGEND_NOTE = "as the legend tells it"
+
+
+async def remember_legend(ctx: TickContext, legend: EntityRow, row: LegendProfileRow) -> int:
+    table = ctx.rules.belief
+    subject = row.subject_node_id
+    if subject is None or not row.tellers:
+        return 0
+    changed = 0
+    swell = 1 + row.distortion / PERCENT * table.memory_distortion_pct / PERCENT
+    planted = ARCHETYPE_MEMORIES.get(row.archetype)
+    for teller in row.tellers:
+        if teller == subject:
+            continue
+        held = list(await ctx.session.scalars(select(MemoryRow).where(MemoryRow.holder_node_id == teller, MemoryRow.subject_node_id == subject)))
+        for memory in held:
+            if memory.event_entity_id == legend.id or memory.note == LEGEND_NOTE:
+                continue
+            memory.magnitude = clamp_int(memory.magnitude * swell, RELATION_MIN, RELATION_MAX)
+            memory.note = LEGEND_NOTE
+            memory.event_entity_id = legend.id
+            changed += 1
+        if planted is None or row.credence < table.false_memory_credence or row.distortion < table.false_memory_distortion:
+            continue
+        kind, sign = planted
+        if any(memory.kind is kind for memory in held):
+            continue
+        if not ctx.rng(f"false_memory.{legend.id}.{teller}.{ctx.epoch}").chance(table.false_memory_chance):
+            continue
+        made = await remember(
+            ctx.session,
+            ctx.rules,
+            holder_id=teller,
+            subject_id=subject,
+            kind=kind,
+            magnitude=sign * table.false_memory_magnitude,
+            epoch=ctx.epoch,
+            note=LEGEND_NOTE,
+        )
+        if made is not None:
+            made.event_entity_id = legend.id
+            changed += 1
+    return changed

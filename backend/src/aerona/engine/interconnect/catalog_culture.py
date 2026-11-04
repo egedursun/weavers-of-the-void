@@ -14,7 +14,7 @@ CULTURE_RAW: tuple[Raw, ...] = (
         LORE,
         ("language", "polity", "treaty"),
         ("register", "misread"),
-        (S.POLITY, "interpreters.misread_grievance", "relations"),
+        (S.POLITY, "interpreters.misread_breach_chance", "relations"),
     ),
     (
         "trade_register",

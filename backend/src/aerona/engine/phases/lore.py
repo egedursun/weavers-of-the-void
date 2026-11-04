@@ -242,6 +242,8 @@ async def language_cycles(ctx: TickContext) -> None:
     "table.incidents",
     "table.language_standing",
     "table.legend_profiles",
+    "table.memories",
+    "table.minds",
     "table.people_culture",
     "table.skills",
     "table.tradition_effects",
@@ -250,10 +252,16 @@ async def language_cycles(ctx: TickContext) -> None:
 )
 @writes(
     "table.applied_fixups",
+    "table.chronicle",
+    "table.chronicle_entities",
     "table.claims",
     "table.culture_values",
+    "table.epoch_year_cursors",
     "table.house_profiles",
+    "table.incident_participants",
+    "table.incidents",
     "table.legend_profiles",
+    "table.memories",
     "table.tradition_effects",
     "table.tradition_profiles",
     "table.value_profiles",
@@ -272,6 +280,10 @@ async def legend_cycles(ctx: TickContext) -> None:
             row.credence = clamp_int(row.credence + table.confirmation, 0, PERCENT)
             ctx.count("legends_confirmed")
         ctx.count("legend_morals", await legends.press_morals(ctx, row))
+        remembered = await legends.remember_legend(ctx, legend, row)
+        if remembered:
+            ctx.count("legend_memories", remembered)
+            await note(ctx, f"The telling of {legend.name} reshaped what its peoples remember.", key="lore.legend_memory", ids=[legend.id])
         outcome = await legends.consequences(ctx, row)
         if outcome:
             ctx.count("legend_consequences")
@@ -551,6 +563,7 @@ async def ideology_cycles(ctx: TickContext) -> None:
     "table.bonds",
     "table.captive_cohorts",
     "table.castings",
+    "table.culture_values",
     "table.custom_kinds",
     "table.entity_flags",
     "table.holder_techniques",

@@ -22,6 +22,7 @@ from aerona.engine.mind.book import SKILLS_KEY, clamp_skill, effect_of, is_locke
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.space import blend
 from aerona.engine.mind.traits import teach_trait
+from aerona.engine.mortal.variants import learning, variants_by_id
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
@@ -88,6 +89,7 @@ async def practise(
     if row is None:
         row = await set_skill(session, node_id, skill, 0, epoch=epoch, source=source)
     rate = scaled_by(await effect_of(session, node_id, TraitEffect.LEARNING, rules.traits.effect_scale_pct))
+    rate *= learning(await variants_by_id(session, [row.variant_id]), row.variant_id)
     schooled = await session.get(MortalProfileRow, node_id)
     if schooled is not None:
         rate *= 1 + schooled.education / PERCENT * rules.education.education_skill_pct / PERCENT
@@ -132,6 +134,19 @@ async def weather_skills(ctx: TickContext, mortal: EntityRow) -> int:
     return changed
 
 
+async def shared_tongue(ctx: TickContext, master: EntityRow, student: EntityRow) -> float:
+    tongues = [bond.target_node_id for bond in await active_bonds(ctx.session, [BondKind.SPEAKS], sources=[student.id])]
+    if not tongues:
+        return 1.0
+    floor = ctx.rules.skills.foreign_teaching_pct / PERCENT
+    rows = await ctx.session.scalars(
+        select(SkillRow.level).where(SkillRow.holder_node_id == master.id, SkillRow.skill == SkillKind.LANGUAGES, SkillRow.subject_node_id.in_(tongues))
+    )
+    spoken = await active_bonds(ctx.session, [BondKind.SPEAKS], sources=[master.id], targets=tongues)
+    best = PERCENT if spoken else max(rows, default=0)
+    return floor + (1 - floor) * best / PERCENT
+
+
 async def teach_apprentices(ctx: TickContext) -> int:
     table = ctx.rules.skills
     taught = 0
@@ -143,6 +158,7 @@ async def teach_apprentices(ctx: TickContext) -> int:
         lessons = sorted((await skills_of(ctx.session, master.id)).values(), key=lambda row: (-row.level, row.skill))[: table.taught_skills]
         teaching = (await skills_of(ctx.session, master.id)).get(SkillKind.TEACHING)
         quality = (PERCENT + (teaching.level if teaching is not None else 0)) / PERCENT
+        quality *= await shared_tongue(ctx, master, student)
         for lesson in lessons:
             student_level = (await skills_of(ctx.session, student.id)).get(lesson.skill)
             if student_level is not None and student_level.level >= lesson.level:

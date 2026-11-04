@@ -5,11 +5,12 @@ from aerona.catalog.mind import MEMORIES, SKILLS, TRAITS, VALUE_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.mind import MIND_LOCKS, SKILL_MAX, SKILL_MIN, VALUE_MAX, VALUE_MIN, MemoryRow, SkillRow
+from aerona.db.tables.mind import MIND_LOCKS, SKILL_MAX, SKILL_MIN, VALUE_MAX, VALUE_MIN, MemoryRow, SkillRow, TraitRow
+from aerona.db.tables.mortal import KindVariantRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
-from aerona.domain.enums.mind import MemoryKind, NeedKind, PressureKind, SkillKind, SkillSource, TraitKind, TraitSource, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import KindFamily, MemoryKind, NeedKind, PressureKind, SkillKind, SkillSource, TraitKind, TraitSource, ValueAxis, ValueHolder
 from aerona.engine.mind.book import (
     PRESSURE_TYPES,
     Holder,
@@ -50,6 +51,7 @@ class LockMind(MindTarget):
 
 class TraitCommand(MindTarget):
     trait: TraitKind
+    variant_id: int | None = None
 
 
 class SetSkill(MindTarget):
@@ -170,8 +172,14 @@ async def unlock_mind(scope: PlayerScope, command: LockMind) -> Effect:
 async def give_trait(scope: PlayerScope, command: TraitCommand) -> Effect:
     node = await holder_of(scope, command.node_id)
     await mind_for(scope, node)
+    variant = await scope.session.get(KindVariantRow, command.variant_id) if command.variant_id is not None else None
+    if command.variant_id is not None and (variant is None or variant.family is not KindFamily.TRAIT or variant.base != command.trait.value):
+        raise ValidationFailedError(f"That is not a kind of {TRAITS[command.trait].label.lower()}.")
     if not await add_trait(scope.session, node.id, command.trait, TraitSource.PLAYER, await scope.epoch()):
         raise ValidationFailedError(f"{node.name} is already {TRAITS[command.trait].label.lower()}.")
+    held = await scope.session.get(TraitRow, (node.id, command.trait))
+    if held is not None and variant is not None:
+        held.variant_id = variant.id
     await hold(scope, node, TRAIT_LOCK, True)
     return Effect(f"{node.name} is now {TRAITS[command.trait].label.lower()}.", target_node_id=node.id)
 

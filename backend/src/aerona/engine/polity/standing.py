@@ -2,9 +2,9 @@ from sqlalchemy import func, select
 
 from aerona.catalog.mind import MEMORIES
 from aerona.constants.units import PERCENT
-from aerona.db.tables.body import BodyRow, InjuryRow
+from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.culture import ItemProfileRow
+from aerona.db.tables.culture import ArtworkProfileRow, ItemProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultDoctrineRow, CultTenetRow
@@ -20,9 +20,10 @@ from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import ValueAxis
-from aerona.domain.enums.polity import LawKind, RegionalStanding
+from aerona.domain.enums.polity import LawKind, OathKind, RegionalStanding
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import WarCause, WarStatus
+from aerona.engine.body.customs import customs_of, maimed_for_rule, presence_pct
 from aerona.engine.context import TickContext
 from aerona.engine.lore.items import regalia_holder
 from aerona.engine.lore.legends import foretold_return
@@ -31,12 +32,15 @@ from aerona.engine.mind.memories import strength_of
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook
+from aerona.engine.polity.oaths import break_on
+from aerona.engine.polity.repute import repute_of
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.modifiers import combine, live_contributions
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import bond_exists, connect, has_flag
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.services.war import declare_war
+from aerona.rules.registry import Rules
 
 RECENT_EPOCHS = 3
 HEIRLOOM_CLASSES = frozenset({ItemClass.PROSTHESIS, ItemClass.HOLY_RELIC})
@@ -69,18 +73,8 @@ async def legitimacy(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawB
     if ruler is None:
         parts["no ruler"] = -table.child
         return parts
-    if "usurper" in realm.profile.legitimacy_parts:
-        parts["usurper"] = -table.usurper
-        parts.update(await foretold_return(ctx, ruler))
-    else:
-        parts["rightful heir"] = table.rightful
-    if bool(laws.param(realm.entity.id, LawKind.SUCCESSION_RULE, "wholeness_required")):
-        maimed = await ctx.session.scalar(
-            select(InjuryRow.id).where(InjuryRow.bearer_node_id == ruler.id, InjuryRow.state.in_(list(LASTING_INJURY_STATES))).limit(1)
-        )
-        if maimed is not None:
-            parts["maimed where wholeness is law"] = -table.unwhole
-    parts["renown"] = round_half_up((ruler.importance or 0) / TEN * table.renown_per_10)
+    parts.update(await claim_to_rule(ctx, realm, ruler))
+    parts.update(await body_and_name(ctx, realm, ruler, laws))
     if await has_flag(ctx.session, ruler.id, EntityFlag.OATHBREAKER):
         parts["oathbreaker"] = -table.oathbreaker
     if realm.profile.state_religion_id is not None:
@@ -103,6 +97,67 @@ async def legitimacy(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawB
     parts.update(await fortunes(ctx, book, realm, ruler))
     parts.update(await bearing(ctx, realm, ruler))
     return parts
+
+
+async def claim_to_rule(ctx: TickContext, realm: Realm, ruler: EntityRow) -> dict[str, int]:
+    table = ctx.rules.legitimacy
+    mark = realm.profile.legitimacy_parts.get("usurper")
+    if mark is not None and mark > 1 and ctx.epoch - mark >= table.usurper_fade_epochs:
+        realm.profile.legitimacy_parts = {key: value for key, value in realm.profile.legitimacy_parts.items() if key != "usurper"}
+        await note(
+            ctx,
+            f"Men stopped calling {ruler.name} a usurper; the throne of {realm.entity.name} was theirs by right of years.",
+            key="polity.usurper_accepted",
+            ids=[ruler.id, realm.entity.id],
+            kind=ChronicleKind.CIVILIZATION,
+        )
+    if "usurper" in realm.profile.legitimacy_parts:
+        return {"usurper": -table.usurper, **await foretold_return(ctx, ruler)}
+    return {"rightful heir": table.rightful}
+
+
+async def body_and_name(ctx: TickContext, realm: Realm, ruler: EntityRow, laws: LawBook) -> dict[str, int]:
+    table = ctx.rules.legitimacy
+    parts: dict[str, int] = {}
+    injuries = list(await ctx.session.scalars(select(InjuryRow).where(InjuryRow.bearer_node_id == ruler.id)))
+    core = await ctx.session.get(EntityRow, realm.profile.core_entity_id) if realm.profile.core_entity_id is not None else None
+    custom = await customs_of(ctx.session, ctx.rules, core) if core is not None else None
+    wholeness = bool(laws.param(realm.entity.id, LawKind.SUCCESSION_RULE, "wholeness_required"))
+    if (wholeness and any(row.state in LASTING_INJURY_STATES for row in injuries)) or maimed_for_rule(custom, injuries):
+        parts["maimed where wholeness is law"] = -table.unwhole
+    conditions = list(await ctx.session.scalars(select(ConditionRow).where(ConditionRow.bearer_node_id == ruler.id)))
+    presence = presence_pct(ctx.rules, custom, injuries, conditions, role=ruler.mortal_role, patron_id=realm.profile.patron_son_id)
+    reading = round_half_up((presence - PERCENT) * table.body_reading_pct / PERCENT)
+    if reading:
+        parts["the people's reading of the ruler's body"] = reading
+    parts["renown"] = round_half_up((ruler.importance or 0) / TEN * table.renown_per_10)
+    repute = await repute_of(ctx.session, ruler.id)
+    honour = round_half_up((repute.honour - PERCENT // 2) * 2 * table.honour_pct / PERCENT)
+    if honour:
+        parts["honour"] = honour
+    if repute.infamy:
+        parts["infamy"] = -round_half_up(repute.infamy * table.infamy_pct / PERCENT)
+    emblem = await emblem_art(ctx, realm)
+    if emblem:
+        parts["the realm's emblem displayed"] = emblem
+    return parts
+
+
+async def emblem_art(ctx: TickContext, realm: Realm) -> int:
+    table = ctx.rules.government
+    if not realm.profile.emblem or not realm.members:
+        return 0
+    works = await ctx.session.scalar(
+        select(func.count(ArtworkProfileRow.artwork_entity_id))
+        .join(EntityRow, EntityRow.id == ArtworkProfileRow.artwork_entity_id)
+        .where(
+            ArtworkProfileRow.patron_entity_id == realm.entity.id,
+            ArtworkProfileRow.propaganda.is_(True),
+            EntityRow.status == EntityStatus.CANON,
+            EntityRow.location_id.in_(list(realm.members)),
+        )
+    )
+    return min(table.emblem_artwork_cap, int(works or 0) * table.emblem_artwork)
 
 
 async def bearing(ctx: TickContext, realm: Realm, ruler: EntityRow) -> dict[str, int]:
@@ -247,6 +302,15 @@ async def overreach(ctx: TickContext, book: RealmBook, realm: Realm, capacity: i
 
 
 async def secede(ctx: TickContext, book: RealmBook, realm: Realm, member: EntityRow) -> None:
+    if realm.ruler_id is not None:
+        sworn = list(
+            await ctx.session.scalars(
+                select(EntityRow.id).where(
+                    EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == member.id
+                )
+            )
+        )
+        await break_on(ctx, sworn, OathKind.FEALTY, f"{member.name} broke away", recipient_id=realm.ruler_id)
     row = realm.members.pop(member.id, None)
     if row is not None:
         await ctx.session.delete(row)
@@ -285,10 +349,44 @@ def rank(book: RealmBook) -> None:
                 realm.profile.standing = RegionalStanding.MINOR_POWER
 
 
-def realm_tier(book: RealmBook, realm: Realm) -> int:
-    tiers = [member.civ_tier or 0 for member in book.members(realm)]
-    provinces = 1 if len(realm.territory) >= TWENTY // 4 else 0
-    return max(tiers, default=0) + provinces
+def tier_score(book: RealmBook, realm: Realm, rules: Rules, knowledge: KnowledgeMap) -> int:
+    table = rules.realm_tiers
+    members = book.members(realm)
+    base = max((member.civ_tier or 0 for member in members), default=0)
+    land = len(realm.territory) // table.territory_per_tier
+    admin = realm.profile.administration // table.administration_per_tier
+    core = realm.profile.core_entity_id
+    writing = knowledge.level(core, KnowledgeBranch.WRITING) // table.knowledge_tier_level if core is not None else 0
+    worlds = len({member.world_id for member in members if member.world_id is not None})
+    over = 1 if realm.profile.overextension > PERCENT * 2 else 0
+    return max(0, base + min(land, 2) + min(admin, 2) + min(writing, 2) + max(0, worlds - 1) * table.worlds_tier - over)
+
+
+async def realm_tier(ctx: TickContext, book: RealmBook, realm: Realm, knowledge: KnowledgeMap) -> int:
+    table = ctx.rules.realm_tiers
+    profile = realm.profile
+    if "tier" in profile.locked:
+        return profile.tier
+    score = tier_score(book, realm, ctx.rules, knowledge)
+    if score >= profile.tier + 1 + table.rise_margin or (profile.tier == 0 and score > 0):
+        profile.tier_strain = 0
+        risen = min(score, profile.tier + 1) if profile.tier else score
+        if risen > profile.tier:
+            await note(
+                ctx, f"{realm.entity.name} rose to the {risen} tier of realms.", key="polity.tier_rose", ids=[realm.entity.id], kind=ChronicleKind.CIVILIZATION
+            )
+        return risen
+    if score < profile.tier:
+        profile.tier_strain += 1
+        if profile.tier_strain >= table.decline_epochs:
+            profile.tier_strain = 0
+            await note(
+                ctx, f"{realm.entity.name} fell from its standing among realms.", key="polity.tier_fell", ids=[realm.entity.id], kind=ChronicleKind.CIVILIZATION
+            )
+            return profile.tier - 1
+        return profile.tier
+    profile.tier_strain = 0
+    return profile.tier
 
 
 def settle(realm: Realm, legit: dict[str, int], steady: dict[str, int]) -> None:

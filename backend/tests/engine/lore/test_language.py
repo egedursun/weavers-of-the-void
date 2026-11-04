@@ -4,14 +4,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.tables.culture import LanguageRegisterRow, LanguageStandingRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.polity import TreatyBreachRow, TreatyProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import LanguageRegister
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.polity import ClauseKind
+from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind, TreatyStatus
 from aerona.domain.models.entity_stats import LanguageStats
 from aerona.domain.models.phonology import Phonology
 from aerona.engine.lore import language
-from aerona.engine.polity.treaties import Clause, misread
+from aerona.engine.polity.accords import Clause, misread, sign
+from aerona.engine.polity.book import RealmBook
+from aerona.engine.polity.treaties import keep_clauses
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, chronicle_keys, context, link, make, settlement, tuned
 
@@ -89,16 +92,21 @@ async def test_a_standardised_tongue_spreads_letters_faster(realm: Realm) -> Non
     assert await language.script_factor(session, rules, home.id) == plain * (1 + rules.prestige.standard_literacy_pct / 100)
 
 
-async def test_a_misread_clause_between_strangers_is_a_breach(realm: Realm) -> None:
+async def test_a_misread_clause_between_strangers_is_kept_short_and_counted_a_breach(realm: Realm) -> None:
     session = realm.session
     first, second = await tongue(realm, "Ossic"), await tongue(realm, "Varn", vowels=("u",), consonants=("z",))
     left, right = await settlement(realm, "Ashford"), await settlement(realm, "Brindle")
     await link(session, left.id, first.id, BondKind.SPEAKS)
     await link(session, right.id, second.id, BondKind.SPEAKS)
-    ctx = context(session, tuned(Rules(), interpreters={"misread_chance": 100}), epoch=4)
+    ctx = context(session, tuned(Rules(), interpreters={"misread_chance": 100, "misread_breach_chance": 100}), epoch=4)
     clause = await misread(ctx, Clause(ClauseKind.TRIBUTE, left.id, right.id, {"amount": 10}))
     assert clause.params["misread"] is True
     assert clause.params["amount"] == 5
+    treaty = await sign(ctx, TreatyKind.TRIBUTE, [(left.id, PartyRole.SIGNATORY), (right.id, PartyRole.SIGNATORY)], clauses=[clause], witnessed=False)
+    await keep_clauses(ctx, await RealmBook.load(session))
+    profile = await session.get_one(TreatyProfileRow, treaty.id)
+    assert profile.status is TreatyStatus.BROKEN
+    assert await session.scalar(select(TreatyBreachRow.breaker_node_id).where(TreatyBreachRow.treaty_entity_id == treaty.id)) == left.id
     assert "treaty.misread_breach" in await chronicle_keys(session)
     grudge = await session.scalar(select(MemoryRow).where(MemoryRow.holder_node_id == right.id, MemoryRow.subject_node_id == left.id))
     assert grudge is not None and grudge.magnitude < 0

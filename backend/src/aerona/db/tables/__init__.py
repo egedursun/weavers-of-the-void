@@ -85,6 +85,7 @@ from aerona.db.tables.epochs import (
     EpochStepRow,
     EpochWorldNarrativeRow,
 )
+from aerona.db.tables.factions import FactionActionRow, FactionGoalRow, FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.faith import (
     AfterlifeStratumRow,
     CultDoctrineRow,
@@ -151,7 +152,7 @@ from aerona.db.tables.mind import (
     SkillRow,
     TraitRow,
 )
-from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
+from aerona.db.tables.mortal import KindVariantRow, MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.db.tables.motifs import MotifOverrideRow
 from aerona.db.tables.node import NameRegistryRow, NodeRow
 from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
@@ -169,6 +170,7 @@ from aerona.db.tables.polity import (
     PolityProfileRow,
     PolityTerritoryRow,
     PolityTreasuryRow,
+    SentenceRow,
     TreatyBreachRow,
     TreatyClauseRow,
     TreatyPartyRow,
@@ -267,6 +269,10 @@ __all__ = [
     "EventCasualtyRow",
     "EventFootprintRow",
     "EventProfileRow",
+    "FactionActionRow",
+    "FactionGoalRow",
+    "FactionMembershipRow",
+    "FactionProfileRow",
     "FateRewardRow",
     "FeudRow",
     "FolkBeliefRow",
@@ -297,6 +303,7 @@ __all__ = [
     "ItemProfileRow",
     "JobRow",
     "JourneyRow",
+    "KindVariantRow",
     "LabourRow",
     "LanguageIntelligibilityRow",
     "LanguageProfileRow",
@@ -374,6 +381,7 @@ __all__ = [
     "RuleOverrideRow",
     "ScenarioRow",
     "ScoreRow",
+    "SentenceRow",
     "SettlementHistoryRow",
     "SettlementInfrastructureRow",
     "SettlementProfileRow",

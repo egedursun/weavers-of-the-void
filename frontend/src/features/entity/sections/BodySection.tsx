@@ -6,6 +6,7 @@ import {
   EyeOff,
   HeartPulse,
   Lock,
+  Minus,
   PersonStanding,
   Plus,
   RotateCcw,
@@ -45,6 +46,10 @@ import { Label, Muted, Text } from '@/components/typography'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import {
+  useVariants,
+  variantChoices,
+} from '@/features/world-rules/VariantForge'
 import { loreKeys } from '../api/keys'
 import { BodyDiagram } from '../body/BodyDiagram'
 import {
@@ -67,6 +72,7 @@ import {
   named,
   plain,
 } from '../body/labels'
+import { useWorldMaterials } from '../economy/api'
 
 type Body = components['schemas']['BodyView']
 type Injury = components['schemas']['InjuryView']
@@ -87,6 +93,8 @@ const FINGER_MAX = 10
 const SEVERITIES = ['1', '2', '3', '4', '5']
 const BY_BLOW = 'auto'
 const DEFAULT_QUALITY = 60
+const SEVERITY_CAP = 5
+const INJURY_HOLD = 'injuries'
 const WORKING = 'Working on it.'
 const LIFE_STATES = new Set(['permanent', 'healed_scar'])
 const OPEN_STATES = new Set(['fresh', 'infected', 'healing'])
@@ -353,7 +361,16 @@ function Conditions({ body, blocked }: { body: Body; blocked: string | null }) {
       ),
     success: 'The condition is lifted',
   })
-  const reason = blocked ?? (end.isPending ? WORKING : null)
+  const weigh = useGodAction({
+    run: (change: { id: number; severity: number }) =>
+      unwrap(
+        api.POST('/api/actions/body:condition_edit', {
+          body: { condition_id: change.id, severity: change.severity },
+        })
+      ),
+    success: 'The condition weighs differently now',
+  })
+  const reason = blocked ?? (end.isPending || weigh.isPending ? WORKING : null)
   if (body.conditions.length === 0)
     return (
       <Card title='Lives with' icon={Sparkles}>
@@ -409,6 +426,34 @@ function Conditions({ body, blocked }: { body: Body; blocked: string | null }) {
                 </div>
               </div>
               {row.ended_epoch === null && (
+                <div className='flex shrink-0 items-center gap-1'>
+                  <Button
+                    size='icon'
+                    variant='ghost'
+                    aria-label='Lighten it'
+                    disabled={reason !== null || row.severity <= 1}
+                    disabledReason={reason ?? 'It is as light as it can be.'}
+                    onClick={() =>
+                      weigh.mutate({ id: row.id, severity: row.severity - 1 })
+                    }
+                  >
+                    <Minus />
+                  </Button>
+                  <Button
+                    size='icon'
+                    variant='ghost'
+                    aria-label='Deepen it'
+                    disabled={reason !== null || row.severity >= SEVERITY_CAP}
+                    disabledReason={reason ?? 'It is as heavy as it can be.'}
+                    onClick={() =>
+                      weigh.mutate({ id: row.id, severity: row.severity + 1 })
+                    }
+                  >
+                    <Plus />
+                  </Button>
+                </div>
+              )}
+              {row.ended_epoch === null && (
                 <Button
                   size='sm'
                   variant='outline'
@@ -428,13 +473,111 @@ function Conditions({ body, blocked }: { body: Body; blocked: string | null }) {
   )
 }
 
+function useWorldMaterialChoices(worldId: number | null) {
+  const view = useWorldMaterials(worldId)
+  return Object.fromEntries(
+    (view.data?.materials ?? [])
+      .filter((item) => item.world_material_id !== null)
+      .map((item) => [String(item.world_material_id), item.label])
+  )
+}
+
+function ProsthesisRework({
+  prosthesis,
+  worldId,
+  blocked,
+}: {
+  prosthesis: NonNullable<Injury['prosthesis']>
+  worldId: number | null
+  blocked: string | null
+}) {
+  const [quality, setQuality] = useState(prosthesis.quality)
+  const [material, setMaterial] = useState<string>(prosthesis.material)
+  const [made, setMade] = useState(
+    prosthesis.world_material_id === null
+      ? ''
+      : String(prosthesis.world_material_id)
+  )
+  const worldMaterials = useWorldMaterialChoices(worldId)
+  const rework = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/body:prosthesis_edit', {
+          body: {
+            prosthesis_id: prosthesis.id,
+            quality,
+            material: material as MaterialKind,
+            world_material_id: made === '' ? null : Number(made),
+          },
+        })
+      ),
+    success: 'The prosthesis is reworked',
+  })
+  const reason = blocked ?? (rework.isPending ? WORKING : null)
+  return (
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border p-2'>
+      <Label variant='overline'>Rework the prosthesis</Label>
+      <div className='grid min-w-0 grid-cols-1 gap-2 @md/body:grid-cols-3'>
+        <Picker
+          label='Material'
+          value={material}
+          table={MATERIALS}
+          blocked={reason}
+          onPick={setMaterial}
+        />
+        {Object.keys(worldMaterials).length > 0 && (
+          <Picker
+            label='Or a material of this world'
+            value={made}
+            table={worldMaterials}
+            blocked={reason}
+            onPick={setMade}
+          />
+        )}
+        <div className='flex min-w-0 flex-col gap-1'>
+          <Label as='label' htmlFor={`rework-${prosthesis.id}`}>
+            Quality (0–100)
+          </Label>
+          <Input
+            id={`rework-${prosthesis.id}`}
+            type='number'
+            min={0}
+            max={PERCENT}
+            value={quality}
+            disabled={reason !== null}
+            onChange={(event) =>
+              setQuality(
+                Math.max(0, Math.min(PERCENT, Number(event.target.value) || 0))
+              )
+            }
+          />
+        </div>
+      </div>
+      <div className='flex justify-end'>
+        <Button
+          size='sm'
+          variant='outline'
+          disabled={reason !== null}
+          disabledReason={reason ?? undefined}
+          onClick={() => rework.mutate()}
+        >
+          <Wrench />
+          Rework it
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 function WoundItem({
   row,
   bearerId,
+  worldId,
   blocked,
 }: {
   row: Injury
   bearerId: number
+  worldId: number | null
   blocked: string | null
 }) {
   const open = OPEN_STATES.has(row.state)
@@ -606,6 +749,13 @@ function WoundItem({
             )}
           </div>
         )}
+        {row.prosthesis && reason === null && (
+          <ProsthesisRework
+            prosthesis={row.prosthesis}
+            worldId={worldId}
+            blocked={blocked}
+          />
+        )}
       </div>
     </TimelineItem>
   )
@@ -626,6 +776,7 @@ function Wounds({ body, blocked }: { body: Body; blocked: string | null }) {
             key={row.id}
             row={row}
             bearerId={body.node_id}
+            worldId={body.world_id ?? null}
             blocked={blocked}
           />
         ))}
@@ -803,6 +954,8 @@ function ConditionForm({
   body: Body
   blocked: string | null
 }) {
+  const variants = useVariants()
+  const [variant, setVariant] = useState('')
   const [kind, setKind] = useState('chronic_illness')
   const [severity, setSeverity] = useState('2')
   const give = useGodAction({
@@ -812,6 +965,7 @@ function ConditionForm({
           body: {
             bearer_id: body.node_id,
             kind: kind as ConditionKind,
+            variant_id: variant === '' ? null : Number(variant),
             severity: Number(severity),
           },
         })
@@ -838,6 +992,16 @@ function ConditionForm({
           blocked={reason}
           onPick={setSeverity}
         />
+        {Object.keys(variantChoices(variants.data, 'condition', kind)).length >
+          0 && (
+          <Picker
+            label='Of a kind made in this world'
+            value={variant}
+            table={variantChoices(variants.data, 'condition', kind)}
+            blocked={reason}
+            onPick={setVariant}
+          />
+        )}
       </div>
       <div className='flex justify-end'>
         <Button
@@ -872,7 +1036,9 @@ function ProsthesisForm({
   )
   const [injury, setInjury] = useState(lost[0] ? String(lost[0].id) : '')
   const [material, setMaterial] = useState('wood')
+  const [made, setMade] = useState('')
   const [quality, setQuality] = useState(DEFAULT_QUALITY)
+  const worldMaterials = useWorldMaterialChoices(body.world_id ?? null)
   const fit = useGodAction({
     run: () =>
       unwrap(
@@ -881,6 +1047,7 @@ function ProsthesisForm({
             injury_id: Number(injury),
             material: material as MaterialKind,
             quality,
+            world_material_id: made === '' ? null : Number(made),
           },
         })
       ),
@@ -905,6 +1072,15 @@ function ProsthesisForm({
           blocked={reason}
           onPick={setMaterial}
         />
+        {Object.keys(worldMaterials).length > 0 && (
+          <Picker
+            label='Or a material of this world'
+            value={made}
+            table={worldMaterials}
+            blocked={reason}
+            onPick={setMade}
+          />
+        )}
         <div className='flex min-w-0 flex-col gap-1'>
           <Label as='label' htmlFor={`quality-${body.node_id}`}>
             Quality (0–100)
@@ -992,6 +1168,15 @@ function BodyControls({ body }: { body: Body }) {
         })
       ),
   })
+  const holdWounds = useGodAction({
+    run: (held: boolean) =>
+      unwrap(
+        api.POST('/api/actions/body:injury_hold', {
+          body: { bearer_id: body.node_id, hold: held },
+        })
+      ),
+  })
+  const woundsHeld = body.locked.includes(INJURY_HOLD)
   const busy =
     reason() ??
     (release.isPending || plan.isPending || heal.isPending || frame.isPending
@@ -1020,6 +1205,20 @@ function BodyControls({ body }: { body: Body }) {
           />
           <Text as='span'>Hold what I set</Text>
         </label>
+      </div>
+      <div className='flex min-w-0 flex-wrap items-center gap-2'>
+        <Button
+          size='sm'
+          variant={woundsHeld ? 'outline' : 'ghost'}
+          disabled={busy !== null || holdWounds.isPending}
+          disabledReason={busy ?? undefined}
+          onClick={() => holdWounds.mutate(!woundsHeld)}
+        >
+          {woundsHeld ? <Unlock /> : <Lock />}
+          {woundsHeld
+            ? 'Let the wounds heal or fester again'
+            : 'Hold the wounds as they are'}
+        </Button>
       </div>
       {body.locked.length > 0 && (
         <div className='flex min-w-0 flex-wrap items-center gap-2'>

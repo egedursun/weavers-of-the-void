@@ -3,25 +3,31 @@ from typing import Any
 
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.catalog.tenets import OPPOSED
+from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.polity import LawProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.entity import AGENT_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.faith import FuneralRite, TenetKind
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.polity import LegitimacyBasis
 from aerona.domain.enums.travel import TravelMethod, VehicleKind
 from aerona.engine.cosmos.routes import RouteSpec, method_label, open_route
 from aerona.engine.cosmos.vessels import set_vessel_kind
 from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.environment.places import write_kind
+from aerona.engine.factions.book import new_profile
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.faith.doctrine import found_doctrine
 from aerona.engine.gods.queries import worshippers_of
 from aerona.engine.lore import art, items, legends, prophecy, traditions
 from aerona.engine.military.shipyard import Commission, commission
 from aerona.engine.phases.society_support.knowledge import teach
+from aerona.engine.polity.laws import attach_profile
 from aerona.engine.primitives.mechanics import assign_mechanics
 from aerona.engine.primitives.stats import set_stats
 from aerona.prompts.tools.results import SonResult, result
@@ -247,6 +253,24 @@ async def keep_rite(call: SonCall, created: EntityRow, rite: FuneralRite) -> Non
     profile.locked = [*profile.locked, "funeral_rite"] if "funeral_rite" not in profile.locked else profile.locked
 
 
+async def polity_extras(call: SonCall, args: CreationInput, created: EntityRow) -> list[str]:
+    notes: list[str] = []
+    faction_kind = args.option("faction_kind")
+    if created.entity_type is EntityType.FACTION and faction_kind is not None and await call.session.get(FactionProfileRow, created.id) is None:
+        new_profile(call.tick, created, faction_kind)
+    law_kind = args.option("law_kind")
+    if created.entity_type is EntityType.LAW and law_kind is not None and await call.session.get(LawProfileRow, created.id) is None:
+        holder = await call.session.get(EntityRow, created.location_id) if created.location_id is not None else None
+        try:
+            await attach_profile(
+                call.session, created, law_kind, args.option("law_params"), holder=holder, epoch=call.epoch, by_id=None, basis=LegitimacyBasis.DIVINE
+            )
+        except ValidationFailedError:
+            await attach_profile(call.session, created, law_kind, {}, holder=holder, epoch=call.epoch, by_id=None, basis=LegitimacyBasis.DIVINE)
+            notes.append(f"Its terms were set to the custom of {law_kind.value.replace('_', ' ')}.")
+    return notes
+
+
 async def finish_extras(call: SonCall, args: CreationInput, created: EntityRow) -> list[str]:
     notes: list[str] = []
     await seed_lore_kinds(call, args, created)
@@ -271,6 +295,7 @@ async def finish_extras(call: SonCall, args: CreationInput, created: EntityRow) 
     rite = args.option("funeral_rite")
     if created.entity_type is EntityType.TRADITION and rite is not None:
         await keep_rite(call, created, rite)
+    notes.extend(await polity_extras(call, args, created))
     learners = args.option("learner_ids") or []
     if created.entity_type is EntityType.KNOWLEDGE:
         for learner_id in learners[: call.rules.son_tools.knowledge_first_learners]:
