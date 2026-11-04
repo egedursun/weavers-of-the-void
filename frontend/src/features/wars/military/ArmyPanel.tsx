@@ -1,55 +1,83 @@
 import { useState } from 'react'
 import {
-  Footprints,
+  Activity,
+  Bandage,
+  Biohazard,
+  ChevronRight,
+  Coins,
+  Crown,
   Flag,
+  Flame,
+  Footprints,
+  Gauge,
+  HandCoins,
+  HardHat,
+  Hourglass,
+  Lock,
+  MapPin,
+  Medal,
+  Package,
   Plus,
+  Route,
   Save,
   Shield,
-  Swords,
-  Tent,
+  Shovel,
+  Target,
   Trash2,
+  Unlock,
+  Users,
   Wheat,
+  Wrench,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
-import {
-  armourTypeValues,
-  shieldTypeValues,
-  stanceValues,
-  unitKindValues,
-} from '@/api/generated/schema'
+import { unitKindValues } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
 import {
   EmptyState,
   EntityLink,
-  KpiTile,
+  Medallion,
+  MiniStat,
   StatBar,
   Timeline,
   TimelineItem,
 } from '@/components/domain'
-import { Label, Muted, Text } from '@/components/typography'
-import { MindPicker } from '@/features/entity/mind/parts'
+import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
-import { type ArmyCard, type Stack, table, useUnitKinds, words } from './api'
+import { type ArmyCard, type Stack, soldiersOf, useUnitKinds } from './api'
+import {
+  ARMOUR,
+  DOCTRINE,
+  FAMILY,
+  PERCENT,
+  SHIELD,
+  STANCE,
+  TRAIT,
+  UNIT_ICON,
+  WEAPON,
+  fieldLabel,
+  named,
+  percentTone,
+  busyOf,
+  whole,
+} from './labels'
+import {
+  Adjust,
+  ChoiceField,
+  FieldGrid,
+  NumberField,
+  Pips,
+  Plain,
+  Tag,
+  TableTag,
+  ToggleField,
+} from './parts'
 
-const PERCENT = 100
-const WORKING = 'Working…'
-const DOCTRINES = [
-  'shieldwall',
-  'horse_archer',
-  'skirmisher',
-  'chariot',
-  'phalanx',
-  'berserker',
-  'naval_raider',
-  'siege_engineer',
-  'war_magic',
-  'beast_war',
-] as const
+const SUPPLY_COMFORT = 90
+const SUPPLY_LOW = 20
 const PROFILE_NUMBERS = [
   'supply_days',
   'war_chest',
@@ -59,6 +87,7 @@ const PROFILE_NUMBERS = [
   'loot',
   'baggage',
 ] as const
+const PERCENT_PROFILE = new Set(['cohesion', 'disease', 'entrenchment'])
 const STACK_NUMBERS = [
   'count',
   'quality',
@@ -68,37 +97,35 @@ const STACK_NUMBERS = [
   'wounded',
   'condition',
 ] as const
+const UNBOUNDED_STACK = new Set(['count', 'wounded'])
+const NUMBER_ICON: Record<string, typeof Users> = {
+  supply_days: Wheat,
+  war_chest: Coins,
+  cohesion: Activity,
+  disease: Biohazard,
+  entrenchment: Shovel,
+  loot: HandCoins,
+  baggage: Package,
+  count: Users,
+  quality: Gauge,
+  experience: Medal,
+  morale: Flame,
+  fatigue: Hourglass,
+  wounded: Bandage,
+  condition: Wrench,
+}
+const ARMOUR_MAX = 6
+const SHIELD_MAX = 3
 
 type ProfileNumber = (typeof PROFILE_NUMBERS)[number]
 type StackNumber = (typeof STACK_NUMBERS)[number]
 
-export function NumberBox({
-  label,
-  value,
-  onChange,
-  max,
-}: {
-  label: string
-  value: string
-  onChange: (value: string) => void
-  max?: number
-}) {
-  return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label>{label}</Label>
-      <Input
-        type='number'
-        min={0}
-        max={max}
-        value={value}
-        aria-label={label}
-        onChange={(event) => onChange(event.target.value)}
-      />
-    </div>
-  )
+function unitOf(stack: { kind: string; family: string }) {
+  const family = named(FAMILY, stack.family)
+  return { icon: UNIT_ICON[stack.kind] ?? family.icon, family }
 }
 
-function StackRow({
+function StackEditor({
   stack,
   blocked,
 }: {
@@ -124,7 +151,10 @@ function StackRow({
               ...Object.fromEntries(
                 STACK_NUMBERS.map((key) => [
                   key,
-                  Math.max(0, Math.round(Number(values[key]) || 0)),
+                  whole(
+                    values[key],
+                    UNBOUNDED_STACK.has(key) ? undefined : PERCENT
+                  ),
                 ])
               ),
               armour,
@@ -143,69 +173,47 @@ function StackRow({
         })
       ),
   })
-  const busy = blocked ?? (save.isPending || remove.isPending ? WORKING : null)
+  const busy = busyOf(blocked, save.isPending, remove.isPending)
   return (
-    <li
-      data-surface='ArmyStack'
-      className='flex min-w-0 flex-col gap-3 rounded-lg border bg-muted/30 p-3'
+    <Adjust
+      title={`Shape the ${stack.label.toLowerCase()}`}
+      note='Set numbers, morale and gear. The stack keeps them until the next battle or march changes them.'
     >
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Text as='span' weight='semibold'>
-          {stack.label}
-        </Text>
-        <Badge variant='outline'>{words(stack.family)}</Badge>
-        <Badge variant='outline'>{formatInteger(stack.count)}</Badge>
-        {stack.weapons.map((weapon) => (
-          <Badge key={weapon} variant='outline'>
-            {weapon}
-          </Badge>
-        ))}
-      </div>
-      <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-3'>
-        <StatBar label='Morale' value={stack.morale} max={PERCENT} />
-        <StatBar label='Experience' value={stack.experience} max={PERCENT} />
-        <StatBar
-          label='Fatigue'
-          value={stack.fatigue}
-          max={PERCENT}
-          tone={stack.fatigue > PERCENT / 2 ? 'warning' : 'default'}
-        />
-      </div>
-      <div className='grid min-w-0 grid-cols-2 gap-3 md:grid-cols-4'>
+      <div className='grid min-w-0 grid-cols-1 gap-2 @sm/stack:grid-cols-2'>
         {STACK_NUMBERS.map((key) => (
-          <NumberBox
+          <NumberField
             key={key}
-            label={words(key)}
+            label={fieldLabel(key)}
+            icon={NUMBER_ICON[key]}
             value={values[key]}
-            max={key === 'count' || key === 'wounded' ? undefined : PERCENT}
+            max={UNBOUNDED_STACK.has(key) ? undefined : PERCENT}
             onChange={(value) =>
               setValues((current) => ({ ...current, [key]: value }))
             }
           />
         ))}
-        <MindPicker
+        <ChoiceField
           label='Armour'
+          icon={ARMOUR.plate.icon}
           value={armour}
-          table={table(armourTypeValues)}
+          table={ARMOUR}
           blocked={busy}
           onPick={setArmour}
         />
-        <MindPicker
+        <ChoiceField
           label='Shield'
+          icon={Shield}
           value={shield}
-          table={table(shieldTypeValues)}
+          table={SHIELD}
           blocked={busy}
           onPick={setShield}
         />
-        <label className='flex items-center gap-2'>
-          <Switch
-            checked={helmet}
-            disabled={busy !== null}
-            onCheckedChange={setHelmet}
-            aria-label='Helmet'
-          />
-          <Text as='span'>Helmet</Text>
-        </label>
+        <ToggleField
+          item={{ label: 'Helmets', icon: HardHat, tone: 'gold' }}
+          checked={helmet}
+          disabled={busy !== null}
+          onChange={setHelmet}
+        />
       </div>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
@@ -228,6 +236,122 @@ function StackRow({
           Strike it
         </Button>
       </div>
+    </Adjust>
+  )
+}
+
+function StackCard({
+  stack,
+  blocked,
+}: {
+  stack: Stack
+  blocked: string | null
+}) {
+  const { icon, family } = unitOf(stack)
+  const armour = named(ARMOUR, stack.armour) as (typeof ARMOUR)[string]
+  const shield = named(SHIELD, stack.shield) as (typeof SHIELD)[string]
+  const broken = stack.count === 0
+  return (
+    <li
+      data-surface='ArmyStack'
+      className={cn(
+        '@container/stack flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-3',
+        broken && 'border-dashed'
+      )}
+    >
+      <div className='flex min-w-0 items-center gap-3'>
+        <Medallion
+          icon={icon}
+          tone={broken ? 'muted' : (family.tone ?? 'gold')}
+        />
+        <div className='flex min-w-0 flex-1 flex-col gap-1'>
+          <Text as='span' weight='semibold' truncate>
+            {stack.label}
+          </Text>
+          <div className='flex min-w-0 flex-wrap gap-1'>
+            <Tag item={family} />
+            {broken && (
+              <Badge size='sm' variant='destructive'>
+                <Flag />
+                Broken
+              </Badge>
+            )}
+          </div>
+        </div>
+        <div className='flex shrink-0 flex-col items-end'>
+          <Stat value={formatInteger(stack.count)} size='kpi' />
+          <Label>Soldiers</Label>
+        </div>
+      </div>
+      <div className='grid min-w-0 grid-cols-1 gap-2 @xs/stack:grid-cols-2'>
+        <StatBar
+          label='Morale'
+          icon={Flame}
+          value={stack.morale}
+          max={PERCENT}
+          tone={percentTone(stack.morale)}
+        />
+        <StatBar
+          label='Gear condition'
+          icon={Wrench}
+          value={stack.condition}
+          max={PERCENT}
+          tone={percentTone(stack.condition)}
+        />
+        <StatBar
+          label='Experience'
+          icon={Medal}
+          value={stack.experience}
+          max={PERCENT}
+          tone='info'
+        />
+        <StatBar
+          label='Fatigue'
+          icon={Hourglass}
+          value={stack.fatigue}
+          max={PERCENT}
+          tone={percentTone(stack.fatigue, true)}
+        />
+      </div>
+      <div className='grid min-w-0 grid-cols-1 gap-2 rounded-lg border bg-muted/20 p-2 @xs/stack:grid-cols-2'>
+        <div className='flex min-w-0 items-center gap-2'>
+          <TableTag table={ARMOUR} value={stack.armour} />
+          <Pips
+            value={armour.rank ?? 0}
+            max={ARMOUR_MAX}
+            tone={armour.tone}
+            label={`Armour ${armour.label}`}
+          />
+        </div>
+        <div className='flex min-w-0 items-center gap-2'>
+          <TableTag table={SHIELD} value={stack.shield} />
+          <Pips
+            value={shield.rank ?? 0}
+            max={SHIELD_MAX}
+            tone={shield.tone}
+            label={`Shield ${shield.label}`}
+          />
+        </div>
+        <div className='flex min-w-0 flex-wrap items-center gap-1 @xs/stack:col-span-2'>
+          <Badge size='sm' variant={stack.helmet ? 'default' : 'outline'}>
+            <HardHat />
+            {stack.helmet ? 'Helmets' : 'Bare heads'}
+          </Badge>
+          {stack.weapons.map((weapon) => (
+            <TableTag key={weapon} table={WEAPON} value={weapon} />
+          ))}
+          <Plain icon={Gauge}>{`Quality ${stack.quality}`}</Plain>
+          {stack.wounded > 0 && (
+            <Badge size='sm' variant='warning'>
+              <Bandage />
+              {`${formatInteger(stack.wounded)} wounded`}
+            </Badge>
+          )}
+        </div>
+      </div>
+      <div className='mt-auto flex min-w-0 flex-col'>
+        <StackEditor stack={stack} blocked={blocked} />
+      </div>
     </li>
   )
 }
@@ -249,34 +373,60 @@ function AddStack({
           body: {
             army_id: armyId,
             kind: kind as (typeof unitKindValues)[number],
-            count: Math.max(1, Math.round(Number(count) || 1)),
+            count: whole(count, undefined, 1),
           },
         })
       ),
   })
-  const labels = Object.fromEntries(
-    (kinds.data ?? []).map((spec) => [spec.kind, spec.label])
+  const families = Object.fromEntries(
+    (kinds.data ?? []).map((spec) => [spec.kind, spec])
   )
-  const busy = blocked ?? (add.isPending ? WORKING : null)
+  const table = Object.fromEntries(
+    unitKindValues.map((value) => {
+      const spec = families[value]
+      const family = named(FAMILY, spec?.family ?? 'infantry')
+      return [
+        value,
+        {
+          label: spec?.label ?? named({}, value).label,
+          icon: UNIT_ICON[value] ?? family.icon,
+          tone: family.tone,
+        },
+      ]
+    })
+  )
+  const busy = busyOf(blocked, add.isPending)
   return (
-    <div className='flex min-w-0 flex-wrap items-end gap-2'>
-      <MindPicker
-        label='Unit'
-        value={kind}
-        table={Object.keys(labels).length ? labels : table(unitKindValues)}
-        blocked={busy}
-        onPick={setKind}
-      />
-      <NumberBox label='Soldiers' value={count} onChange={setCount} />
-      <Button
-        size='sm'
-        disabled={busy !== null}
-        disabledReason={busy ?? undefined}
-        onClick={() => add.mutate(undefined)}
-      >
-        <Plus />
-        Add the stack
-      </Button>
+    <div className='flex min-w-0 flex-col gap-2'>
+      <Label variant='overline'>Raise a stack</Label>
+      <FieldGrid>
+        <ChoiceField
+          label='Unit'
+          icon={Users}
+          value={kind}
+          table={table}
+          blocked={busy}
+          onPick={setKind}
+        />
+        <NumberField
+          label='Soldiers'
+          icon={Users}
+          value={count}
+          min={1}
+          onChange={setCount}
+        />
+      </FieldGrid>
+      <div>
+        <Button
+          size='sm'
+          disabled={busy !== null}
+          disabledReason={busy ?? undefined}
+          onClick={() => add.mutate(undefined)}
+        >
+          <Plus />
+          Add the stack
+        </Button>
+      </div>
     </div>
   )
 }
@@ -311,7 +461,10 @@ function ArmyOrders({
               ...Object.fromEntries(
                 PROFILE_NUMBERS.map((key) => [
                   key,
-                  Math.max(0, Math.round(Number(numbers[key]) || 0)),
+                  whole(
+                    numbers[key],
+                    PERCENT_PROFILE.has(key) ? PERCENT : undefined
+                  ),
                 ])
               ),
               stance,
@@ -331,80 +484,127 @@ function ArmyOrders({
         })
       ),
   })
-  const busy = blocked ?? (save.isPending || release.isPending ? WORKING : null)
+  const busy = busyOf(blocked, save.isPending, release.isPending)
   return (
-    <div data-surface='ArmyOrders' className='flex min-w-0 flex-col gap-3'>
-      <div className='grid min-w-0 grid-cols-2 gap-3 md:grid-cols-4'>
-        <MindPicker
-          label='Stance'
-          value={stance}
-          table={table(stanceValues)}
-          blocked={busy}
-          onPick={setStance}
-        />
-        <MindPicker
-          label='Way of war'
-          value={doctrine}
-          table={table(DOCTRINES)}
-          blocked={busy}
-          onPick={setDoctrine}
-        />
-        <NumberBox
-          label='March on region'
-          value={target}
-          onChange={setTarget}
-        />
-        <label className='flex items-center gap-2'>
-          <Switch
+    <Adjust
+      label='Command the army'
+      title='Orders and stores'
+      note='Orders you give are held: the army keeps them until you let it decide again. Every change goes into the ledger.'
+    >
+      <div data-surface='ArmyOrders' className='flex min-w-0 flex-col gap-3'>
+        <FieldGrid>
+          <ChoiceField
+            label='Stance'
+            icon={Footprints}
+            value={stance}
+            table={STANCE}
+            blocked={busy}
+            onPick={setStance}
+          />
+          <ChoiceField
+            label='Way of war'
+            icon={Shield}
+            value={doctrine}
+            table={DOCTRINE}
+            blocked={busy}
+            onPick={setDoctrine}
+          />
+          <NumberField
+            label={
+              army.target
+                ? `March on (now ${army.target.name})`
+                : 'March on region #'
+            }
+            icon={Target}
+            value={target}
+            onChange={setTarget}
+          />
+          <ToggleField
+            item={{ label: 'Forced march', icon: Footprints, tone: 'warning' }}
             checked={forced}
             disabled={busy !== null}
-            onCheckedChange={setForced}
-            aria-label='Forced march'
+            onChange={setForced}
           />
-          <Text as='span'>Forced march</Text>
-        </label>
-        {PROFILE_NUMBERS.map((key) => (
-          <NumberBox
-            key={key}
-            label={words(key)}
-            value={numbers[key]}
-            max={
-              ['cohesion', 'disease', 'entrenchment'].includes(key)
-                ? PERCENT
-                : undefined
-            }
-            onChange={(value) =>
-              setNumbers((current) => ({ ...current, [key]: value }))
-            }
-          />
-        ))}
-      </div>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Button
-          size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => save.mutate(undefined)}
-        >
-          <Save />
-          Give the orders
-        </Button>
-        {army.locked.length > 0 && (
+          {PROFILE_NUMBERS.map((key) => (
+            <NumberField
+              key={key}
+              label={fieldLabel(key)}
+              icon={NUMBER_ICON[key]}
+              value={numbers[key]}
+              max={PERCENT_PROFILE.has(key) ? PERCENT : undefined}
+              onChange={(value) =>
+                setNumbers((current) => ({ ...current, [key]: value }))
+              }
+            />
+          ))}
+        </FieldGrid>
+        <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
             size='sm'
-            variant='outline'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
-            onClick={() => release.mutate(undefined)}
+            onClick={() => save.mutate(undefined)}
           >
-            Let the army decide again
+            <Save />
+            Give the orders
           </Button>
-        )}
-        {army.locked.map((key) => (
-          <Badge key={key} variant='outline'>{`held: ${words(key)}`}</Badge>
-        ))}
+          {army.locked.length > 0 && (
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => release.mutate(undefined)}
+            >
+              <Unlock />
+              Let the army decide again
+            </Button>
+          )}
+          {army.locked.map((key) => (
+            <Badge key={key} size='sm' variant='default'>
+              <Lock />
+              {`Held: ${fieldLabel(key)}`}
+            </Badge>
+          ))}
+        </div>
+        <AddStack armyId={id} blocked={blocked} />
       </div>
-    </div>
+    </Adjust>
+  )
+}
+
+function Marches({ army }: { army: ArmyCard }) {
+  return (
+    <Timeline label='Marches by season'>
+      {army.movements.map((move, index) => {
+        const stance = named(STANCE, move.stance)
+        const from = move.from_region?.name ?? '—'
+        const to = move.to_region?.name ?? '—'
+        return (
+          <TimelineItem
+            key={`${move.epoch}.${move.season}`}
+            icon={stance.icon}
+            tone={move.attrition > 0 ? 'warning' : 'default'}
+            title={from === to ? `Held ${to}` : `${from} → ${to}`}
+            timestamp={`Epoch ${move.epoch} · season ${move.season + 1}`}
+            last={index === army.movements.length - 1}
+          >
+            <div className='flex min-w-0 flex-wrap gap-1'>
+              <Tag item={stance} />
+              <Plain icon={Wheat}>{`${move.supply_days} days of food`}</Plain>
+              <Badge
+                size='sm'
+                variant={move.attrition > 0 ? 'destructive' : 'outline'}
+              >
+                <Users />
+                {`${formatInteger(move.attrition)} lost`}
+              </Badge>
+              {move.note && <Plain icon={Flag}>{move.note}</Plain>}
+            </div>
+          </TimelineItem>
+        )
+      })}
+    </Timeline>
   )
 }
 
@@ -415,96 +615,197 @@ export function ArmyPanel({
   army: ArmyCard
   blocked: string | null
 }) {
-  const id = army.army?.id ?? 0
+  const stance = named(STANCE, army.stance)
+  const soldiers = soldiersOf(army)
+  const supplyTone =
+    army.supply_days <= 0
+      ? 'danger'
+      : army.supply_days < SUPPLY_LOW
+        ? 'warning'
+        : 'success'
   return (
-    <div data-surface='ArmyCard' className='flex min-w-0 flex-col gap-4'>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        {army.army && (
-          <EntityLink kind='entity' id={String(army.army.id)}>
-            {army.army.name}
-          </EntityLink>
-        )}
-        <Badge variant='info'>{words(army.stance)}</Badge>
-        <Badge variant='outline'>{words(army.doctrine)}</Badge>
-        {army.region && (
-          <Badge variant='outline'>{`In ${army.region.name}`}</Badge>
-        )}
-        {army.blockade && (
-          <Badge variant='warning'>{`Blockading ${army.blockade.name}`}</Badge>
-        )}
-        {army.commander && (
-          <Badge variant='outline'>{`Led by ${army.commander.name}`}</Badge>
-        )}
-        {army.commander_traits.map((trait) => (
-          <Badge key={trait} variant='outline'>
-            {words(trait)}
-          </Badge>
-        ))}
+    <div
+      data-surface='ArmyCard'
+      className='@container/mil flex min-w-0 flex-col gap-4 rounded-xl border bg-card p-4'
+    >
+      <div className='flex min-w-0 items-start gap-3'>
+        <Medallion icon={stance.icon} tone={stance.tone ?? 'gold'} />
+        <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
+          <div className='flex min-w-0 flex-wrap items-baseline gap-x-1.5'>
+            {army.army ? (
+              <EntityLink kind='entity' id={String(army.army.id)}>
+                {army.army.name}
+              </EntityLink>
+            ) : (
+              <Text as='span' weight='semibold'>
+                An army
+              </Text>
+            )}
+            {army.owner && (
+              <Muted as='span' variant='caption'>
+                {`of ${army.owner.name}`}
+              </Muted>
+            )}
+          </div>
+          <div className='flex min-w-0 flex-wrap gap-1'>
+            <Tag item={stance} />
+            <TableTag table={DOCTRINE} value={army.doctrine} />
+            {army.region && (
+              <Plain icon={MapPin}>{`In ${army.region.name}`}</Plain>
+            )}
+            {army.target && (
+              <Plain icon={Target}>{`Bound for ${army.target.name}`}</Plain>
+            )}
+            {army.blockade && (
+              <Badge size='sm' variant='warning'>
+                <Flag />
+                {`Blockading ${army.blockade.name}`}
+              </Badge>
+            )}
+            {army.forced_march && (
+              <Badge size='sm' variant='warning'>
+                <Footprints />
+                Forced march
+              </Badge>
+            )}
+          </div>
+        </div>
       </div>
-      <div className='grid min-w-0 grid-cols-2 gap-3 md:grid-cols-4'>
-        <KpiTile
-          label='Soldiers'
-          value={formatInteger(army.size)}
-          icon={Swords}
+      <div className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/20 p-2'>
+        <Crown
+          aria-hidden='true'
+          className='size-icon-sm shrink-0 text-primary'
         />
-        <KpiTile
+        {army.commander ? (
+          <EntityLink kind='entity' id={String(army.commander.id)}>
+            {army.commander.name}
+          </EntityLink>
+        ) : (
+          <Muted as='span'>No commander leads it</Muted>
+        )}
+        {army.commander_traits.length === 0
+          ? army.commander && (
+              <Muted as='span' variant='caption'>
+                No battle traits
+              </Muted>
+            )
+          : army.commander_traits.map((trait) => (
+              <TableTag key={trait} table={TRAIT} value={trait} />
+            ))}
+      </div>
+      <div className='grid min-w-0 grid-cols-2 gap-2 @2xl/mil:grid-cols-4'>
+        <MiniStat
+          icon={Users}
+          label='Soldiers'
+          value={formatInteger(soldiers)}
+          tone='gold'
+          hint={`Across ${army.stacks.length} ${army.stacks.length === 1 ? 'stack' : 'stacks'}`}
+        />
+        <MiniStat
+          icon={Wheat}
           label='Supplies'
           value={`${army.supply_days} days`}
-          icon={Wheat}
-          tone={army.supply_days <= 0 ? 'danger' : 'muted'}
+          tone={supplyTone}
+          hint={
+            army.supply_days >= SUPPLY_COMFORT
+              ? 'Well fed for the season'
+              : 'Days of food carried and foraged'
+          }
         />
-        <KpiTile
+        <MiniStat
+          icon={Coins}
           label='War chest'
           value={formatInteger(army.war_chest)}
-          icon={Flag}
+          tone='gold'
         />
-        <KpiTile
+        <MiniStat
+          icon={HandCoins}
+          label='Loot and baggage'
+          value={`${formatInteger(army.loot)} / ${formatInteger(army.baggage)}`}
+          tone='warning'
+          hint='Loot carried, then baggage weighing the march'
+        />
+      </div>
+      <div className='grid min-w-0 grid-cols-1 gap-3 @lg/mil:grid-cols-3'>
+        <StatBar
+          label='Cohesion'
+          icon={Activity}
+          value={army.cohesion}
+          max={PERCENT}
+          tone={percentTone(army.cohesion)}
+        />
+        <StatBar
           label='Earthworks'
-          value={`${army.entrenchment}%`}
-          icon={Tent}
-          hint={`Camp sickness ${army.disease}%`}
+          icon={Shovel}
+          value={army.entrenchment}
+          max={PERCENT}
+          tone='verdigris'
+        />
+        <StatBar
+          label='Camp sickness'
+          icon={Biohazard}
+          value={army.disease}
+          max={PERCENT}
+          tone={percentTone(army.disease, true)}
         />
       </div>
       {army.supply_line.length > 0 && (
-        <Muted>{`Supply line: ${army.supply_line.map((item) => item.name).join(' → ')}`}</Muted>
+        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+          <Route
+            aria-hidden='true'
+            className='size-icon-sm shrink-0 text-muted-foreground'
+          />
+          <Label>Supply line</Label>
+          {army.supply_line.map((item, index) => (
+            <span
+              key={`${item.id}.${index}`}
+              className='flex items-center gap-1.5'
+            >
+              {index > 0 && (
+                <ChevronRight
+                  aria-hidden='true'
+                  className='size-icon-xs text-muted-foreground'
+                />
+              )}
+              <Plain icon={MapPin}>{item.name}</Plain>
+            </span>
+          ))}
+        </div>
+      )}
+      <div className='flex min-w-0 flex-col gap-2'>
+        <div className='flex min-w-0 items-center gap-2'>
+          <Label variant='overline'>Unit stacks</Label>
+          <Badge size='sm' variant='secondary'>
+            {army.stacks.length}
+          </Badge>
+        </div>
+        {army.stacks.length === 0 ? (
+          <EmptyState
+            size='compact'
+            icon={Shield}
+            title='No stacks'
+            description='This army has no units on its rolls. Raise one from Command the army.'
+          />
+        ) : (
+          <ul className='grid min-w-0 grid-cols-1 gap-3 @xl/mil:grid-cols-2 @6xl/mil:grid-cols-3'>
+            {army.stacks.map((stack) => (
+              <StackCard key={stack.id} stack={stack} blocked={blocked} />
+            ))}
+          </ul>
+        )}
+      </div>
+      {army.movements.length > 0 && (
+        <div className='flex min-w-0 flex-col gap-2'>
+          <div className='flex min-w-0 items-center gap-2'>
+            <Label variant='overline'>Marches</Label>
+            <Badge size='sm' variant='secondary'>
+              {army.movements.length}
+            </Badge>
+          </div>
+          <Marches army={army} />
+        </div>
       )}
       <ArmyOrders army={army} blocked={blocked} />
-      <Label variant='overline'>Stacks</Label>
-      {army.stacks.length === 0 ? (
-        <EmptyState
-          icon={Shield}
-          title='No stacks'
-          description='This army has no units on its rolls.'
-        />
-      ) : (
-        <ul className='flex min-w-0 flex-col gap-2'>
-          {army.stacks.map((stack) => (
-            <StackRow key={stack.id} stack={stack} blocked={blocked} />
-          ))}
-        </ul>
-      )}
-      <AddStack armyId={id} blocked={blocked} />
-      {army.movements.length > 0 && (
-        <>
-          <Label variant='overline'>Marches</Label>
-          <Timeline label='Marches by season'>
-            {army.movements.map((move, index) => (
-              <TimelineItem
-                key={`${move.epoch}.${move.season}`}
-                icon={Footprints}
-                tone={move.attrition > 0 ? 'warning' : 'default'}
-                title={`${move.from_region?.name ?? '—'} → ${move.to_region?.name ?? '—'} (${words(move.stance)})`}
-                timestamp={`Epoch ${move.epoch}, season ${move.season + 1}`}
-                last={index === army.movements.length - 1}
-              >
-                <Muted variant='caption'>
-                  {`${move.supply_days} days of food, ${formatInteger(move.attrition)} lost${move.note ? `, ${move.note}` : ''}`}
-                </Muted>
-              </TimelineItem>
-            ))}
-          </Timeline>
-        </>
-      )}
     </div>
   )
 }
