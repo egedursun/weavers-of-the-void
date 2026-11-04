@@ -10762,8 +10762,8 @@ export interface components {
             injuries: components["schemas"]["BeastWound"][];
             body_plan: string | null;
             hp: number;
-            treasures?: components["schemas"]["NodeRef"][];
-            tributes?: components["schemas"]["BeastTributeView"][];
+            treasures: components["schemas"]["NodeRef"][];
+            tributes: components["schemas"]["BeastTributeView"][];
             reach: number;
             harm_taken_pct: number;
             wake_pct: number;
@@ -13236,7 +13236,7 @@ export interface components {
         HostView: {
             disease: components["schemas"]["NodeRef"] | null;
             immune: boolean;
-            locked?: string[];
+            locked: string[];
         };
         HouseExtinguishInput: {
             house_id: number;
@@ -17209,6 +17209,7 @@ export interface components {
         };
         SpeciesCard: {
             species_id: number;
+            world_id: number | null;
             body_plan: components["schemas"]["BodyPlan"];
             size_class: components["schemas"]["SizeClass"];
             lifespan_years: number;
@@ -17247,10 +17248,10 @@ export interface components {
             hunted_by: components["schemas"]["NodeRef"][];
             descendants: components["schemas"]["NodeRef"][];
             beasts: components["schemas"]["NodeRef"][];
-            pinned_prey?: components["schemas"]["NodeRef"][];
-            barred_prey?: components["schemas"]["NodeRef"][];
-            custom_uses?: components["schemas"]["CustomUseView"][];
-            totem_of?: components["schemas"]["NodeRef"][];
+            pinned_prey: components["schemas"]["NodeRef"][];
+            barred_prey: components["schemas"]["NodeRef"][];
+            custom_uses: components["schemas"]["CustomUseView"][];
+            totem_of: components["schemas"]["NodeRef"][];
             abundance: number;
             stage_epoch: number;
             locked: string[];
@@ -18545,8 +18546,8 @@ export interface components {
             product: string;
             commodity: components["schemas"]["CommodityKind"] | null;
             material: components["schemas"]["MaterialKind"] | null;
-            world_material_id?: number | null;
-            world_material?: string | null;
+            world_material_id: number | null;
+            world_material: string | null;
             rate: number;
         };
         aerona__api__schemas__depth_society__PressureView: {

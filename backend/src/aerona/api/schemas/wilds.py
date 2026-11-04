@@ -1,5 +1,3 @@
-from pydantic import Field
-
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.body import BodyPlan
@@ -23,15 +21,15 @@ class YieldView(ApiModel):
     product: str
     commodity: CommodityKind | None
     material: MaterialKind | None
-    world_material_id: int | None = None
-    world_material: str | None = None
+    world_material_id: int | None
+    world_material: str | None
     rate: int
 
 
 class HostView(ApiModel):
     disease: NodeRef | None
     immune: bool
-    locked: list[str] = Field(default_factory=list)
+    locked: list[str]
 
 
 class CustomUseView(ApiModel):
@@ -91,6 +89,7 @@ class HerdView(ApiModel):
 
 class SpeciesCard(ApiModel):
     species_id: int
+    world_id: int | None
     body_plan: BodyPlan
     size_class: SizeClass
     lifespan_years: int
@@ -127,12 +126,12 @@ class SpeciesCard(ApiModel):
     hunted_by: list[NodeRef]
     descendants: list[NodeRef]
     beasts: list[NodeRef]
-    pinned_prey: list[NodeRef] = Field(default_factory=list)
-    barred_prey: list[NodeRef] = Field(default_factory=list)
-    custom_uses: list[CustomUseView] = Field(default_factory=list)
-    totem_of: list[NodeRef] = Field(default_factory=list)
-    abundance: int = 0
-    stage_epoch: int = 0
+    pinned_prey: list[NodeRef]
+    barred_prey: list[NodeRef]
+    custom_uses: list[CustomUseView]
+    totem_of: list[NodeRef]
+    abundance: int
+    stage_epoch: int
     locked: list[str]
 
 
@@ -171,14 +170,14 @@ class BeastCard(ApiModel):
     injuries: list[BeastWound]
     body_plan: str | None
     hp: int
-    treasures: list[NodeRef] = Field(default_factory=list)
-    tributes: list[BeastTributeView] = Field(default_factory=list)
-    reach: int = 0
-    harm_taken_pct: int = 100
-    wake_pct: int = 0
-    tame_pct: int = 0
-    rest_pct: int = 0
-    rideable: bool = False
+    treasures: list[NodeRef]
+    tributes: list[BeastTributeView]
+    reach: int
+    harm_taken_pct: int
+    wake_pct: int
+    tame_pct: int
+    rest_pct: int
+    rideable: bool
     locked: list[str]
 
 
@@ -192,7 +191,7 @@ class WebNode(ApiModel):
 class WebLink(ApiModel):
     hunter_id: int
     prey_id: int
-    kind: FoodLink = FoodLink.DERIVED
+    kind: FoodLink
 
 
 class FoodWeb(ApiModel):

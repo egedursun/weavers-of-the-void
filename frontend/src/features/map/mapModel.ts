@@ -28,6 +28,7 @@ export const LAYER_MODES = [
   'followers',
   'soldiers',
   'wildlife',
+  'species_range',
 ] as const
 export type LayerMode = (typeof LAYER_MODES)[number]
 
@@ -48,6 +49,7 @@ export const LAYER_LABEL: Record<LayerMode, string> = {
   followers: 'Followers',
   soldiers: 'Soldiers',
   wildlife: 'Wildlife',
+  species_range: 'Species range',
 }
 
 export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
@@ -61,6 +63,7 @@ export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
   followers: 'map-layer-followers',
   soldiers: 'map-layer-soldiers',
   wildlife: 'map-layer-wildlife',
+  species_range: 'map-layer-species-range',
 }
 
 export const OVERLAY_SURFACE: Partial<Record<Overlay, string>> = {

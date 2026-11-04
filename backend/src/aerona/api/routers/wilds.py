@@ -7,6 +7,7 @@ from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.records import NodeRef
 from aerona.api.schemas.wilds import (
     BeastCard,
+    BeastTributeView,
     BeastWound,
     CustomUseView,
     FoodWeb,
@@ -17,7 +18,6 @@ from aerona.api.schemas.wilds import (
     SpeciesCard,
     SpeciesRangeMap,
     TotemView,
-    BeastTributeView,
     UseKindView,
     WebLink,
     WebNode,
@@ -127,6 +127,7 @@ async def species_card(entity_id: Id, services: ServicesDep) -> SpeciesCard:
         refs = await node_refs(session, ids)
         return SpeciesCard(
             species_id=entity_id,
+            world_id=species.world_id if species is not None else None,
             body_plan=row.body_plan,
             size_class=row.size_class,
             lifespan_years=row.lifespan_years,

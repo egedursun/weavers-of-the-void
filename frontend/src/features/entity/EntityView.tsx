@@ -82,7 +82,9 @@ import {
   FoodWebSection,
   HerdsSection,
 } from './wilds/BeastSection'
+import { WildsCreateBar } from './wilds/CreateWilds'
 import { SpeciesSection } from './wilds/SpeciesSection'
+import { TotemSection } from './wilds/TotemSection'
 
 const MIND_TYPES = new Set([
   'mortal',
@@ -378,6 +380,12 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       )}
       {entity.entity_type === 'region' && (
         <FoodWebSection regionId={entity.id} />
+      )}
+      {entity.entity_type === 'region' && !readOnly && (
+        <WildsCreateBar regionId={entity.id} />
+      )}
+      {entity.entity_type === 'people' && (
+        <TotemSection peopleId={entity.id} readOnlyReason={readOnly} />
       )}
       {entity.entity_type === 'spirit' && (
         <SoulSection spiritId={entity.id} readOnlyReason={readOnly} />

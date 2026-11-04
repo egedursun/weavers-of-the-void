@@ -6,6 +6,12 @@ import {
 import { type MapView } from './api'
 import { type CellKey } from './mapEdges'
 import { type LayerMode } from './mapModel'
+import {
+  type RangeShade,
+  rangeAlpha,
+  rangeBand,
+  rangeLabel,
+} from './speciesRange'
 
 export const SERIES_TOKENS: readonly ThemeColorName[] = [
   'chart-2',
@@ -70,6 +76,7 @@ const ALPHA: Record<LayerMode, number> = {
   followers: 0.45,
   soldiers: 0.45,
   wildlife: 0.45,
+  species_range: 0.3,
 }
 
 export const STOCK_BANDS = [
@@ -236,6 +243,7 @@ function labelFor(
     kind === 'land_use'
   )
     return words(raw)
+  if (kind === 'range') return rangeLabel(raw)
   if (kind === 'realm') {
     const held = Object.values(view.realms ?? {}).find(
       (item) => item.polity_id === id
@@ -271,11 +279,23 @@ function neighbourTokens(view: MapView): Map<string, ThemeColorName> {
   )
 }
 
+const RANGE_TOKEN: ThemeColorName = 'success'
+
+function rangeTint(
+  range: RangeShade | null,
+  regionId: number
+): RegionTint | null {
+  if (!range) return null
+  const band = rangeBand(range.cells.get(regionId) ?? 0, range.peak)
+  return band ? { key: `range:${band}`, alpha: rangeAlpha(band) } : null
+}
+
 export function buildLayerPalette(
   view: MapView,
   mode: LayerMode,
   names: PaletteNames,
-  tokens: ThemeColors
+  tokens: ThemeColors,
+  range: RangeShade | null = null
 ): LayerPalette {
   const tints = new Map<number, RegionTint>()
   const counts = new Map<string, number>()
@@ -288,7 +308,10 @@ export function buildLayerPalette(
   )
   if (mode !== 'terrain') {
     for (const region of view.geometry.regions) {
-      const tint = regionKey(view, mode, region.id, region.top_level_id)
+      const tint =
+        mode === 'species_range'
+          ? rangeTint(range, region.id)
+          : regionKey(view, mode, region.id, region.top_level_id)
       if (!tint) continue
       tints.set(region.id, tint)
       counts.set(tint.key, (counts.get(tint.key) ?? 0) + 1)
@@ -309,6 +332,7 @@ export function buildLayerPalette(
   const categories = sorted.map(([key, count]): LayerCategory => {
     let token: ThemeColorName
     if (key === CREATOR_KEY) token = CREATOR_TOKEN
+    else if (key.startsWith('range:')) token = RANGE_TOKEN
     else if (regionTokens) token = regionTokens.get(key) ?? SERIES_TOKENS[0]
     else if (series < SERIES_TOKENS.length) token = SERIES_TOKENS[series++]
     else token = EXTRA_TOKENS[extra++ % EXTRA_TOKENS.length]
@@ -352,10 +376,11 @@ export function useLayerPalette(
   view: MapView | undefined,
   mode: LayerMode,
   names: PaletteNames,
-  tokens: ThemeColors
+  tokens: ThemeColors,
+  range: RangeShade | null = null
 ): LayerPalette | null {
   return useMemo(
-    () => (view ? buildLayerPalette(view, mode, names, tokens) : null),
-    [view, mode, names, tokens]
+    () => (view ? buildLayerPalette(view, mode, names, tokens, range) : null),
+    [view, mode, names, tokens, range]
   )
 }
