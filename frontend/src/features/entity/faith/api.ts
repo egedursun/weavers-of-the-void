@@ -62,11 +62,3 @@ export function useTenetKinds() {
     queryFn: () => unwrap(api.GET('/api/tenets/kinds')),
   })
 }
-
-export function words(value: string): string {
-  return value.replaceAll('_', ' ')
-}
-
-export function table(values: readonly string[]): Record<string, string> {
-  return Object.fromEntries(values.map((value) => [value, words(value)]))
-}
