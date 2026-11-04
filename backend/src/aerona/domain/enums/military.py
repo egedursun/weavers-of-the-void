@@ -162,6 +162,7 @@ class WarAimKind(StrEnum):
     REVENGE = "revenge"
     LOOT = "loot"
     CHANGE_GOVERNMENT = "change_government"
+    SEIZE_ROUTE = "seize_route"
 
 
 class CaptiveFate(StrEnum):

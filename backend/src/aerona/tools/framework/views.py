@@ -32,12 +32,12 @@ from aerona.prompts.contexts.blocks import (
     EntityAuthor,
     EntityDetailContext,
     EntityLineContext,
-    Granary,
     SocietyLines,
     WarLine,
 )
 from aerona.prompts.contexts.common import EntityLineItem, LabelValue, LexiconWord, NamedRecord, WorldItem
 from aerona.rules.registry import Rules
+from aerona.tools.framework.economy_lines import economy_block
 from aerona.tools.framework.validation import label_of
 
 PERCENT = 100
@@ -141,16 +141,6 @@ async def society_lines(session: AsyncSession, rules: Rules, entity: EntityRow) 
         ]
         if society is not None
         else [],
-        granary=Granary(
-            food=society.stock_food,
-            ore=society.stock_ore,
-            goods=society.stock_goods,
-            bread_price=society.price_food,
-            ore_price=society.price_ore,
-            goods_price=society.price_goods,
-        )
-        if society is not None
-        else None,
         relations=[
             CommunityRelationLine(
                 id=other,
@@ -211,6 +201,7 @@ async def entity_detail(session: AsyncSession, rules: Rules, entity: EntityRow) 
         facts=await fact_lines(session, rules, entity),
         body=await body_lines(session, rules, entity),
         mind=await mind_lines(session, rules, entity, await cosmos_epoch(session)),
+        economy=await economy_block(session, rules, entity),
     )
     return render(PromptId.ENTITY_DETAIL, context)
 

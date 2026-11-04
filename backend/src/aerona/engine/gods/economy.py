@@ -29,6 +29,7 @@ from aerona.domain.models.entity_stats import FactionStats, ResourceStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.extraction import reconcile, write_reserve
 from aerona.engine.economy.stocks import goods_of, holding
+from aerona.engine.gods.pacts import Terms, bargained, keep_pact, pact_for, strike_pact, terms_of
 from aerona.engine.gods.queries import cosmos_row, owners_of, world_count
 from aerona.engine.gods.stats import Trait, add_trait, headcount_floor, headcount_trait, set_trait, trait, trait_or
 from aerona.engine.interconnect.annotations import reads, writes
@@ -127,37 +128,8 @@ async def _pay_demand(ctx: TickContext, owner: EntityRow, commodity: CommodityKi
     return True
 
 
-async def _sentient(ctx: TickContext, resource: EntityRow, owners: list[EntityRow], cost: int) -> None:
-    economy = ctx.rules.economy
-    rng = ctx.rng(f"sentient.{resource.id}")
-    if not owners or not rng.chance(economy.sentient_resource_choose_chance):
-        return
-    owner = rng.pick(owners)
-    demand, wanted, units = rng.pick(god_lines.SENTIENT_DEMANDS)
-    commodity = CommodityKind(wanted) if wanted is not None else None
-    if rng.chance(economy.sentient_resource_keep_chance) and await _pay_demand(ctx, owner, commodity, units, cost):
-        line = god_lines.ECONOMY_SENTIENT_PAID
-        await ctx.chronicle(
-            ChronicleKind.RESOURCE,
-            line.render(resource=resource.name, demand=demand, owner=owner.name),
-            template_key=line.key,
-            entity_ids=[resource.id, owner.id],
-        )
-        return
-    negotiator, skill = await best_negotiator(ctx.session, owner)
-    if (
-        negotiator is not None
-        and rng.chance(skill * economy.sentient_bargain_pct_per_level)
-        and await _pay_demand(ctx, owner, commodity, units // 2, cost // 2)
-    ):
-        line = god_lines.ECONOMY_SENTIENT_BARGAINED
-        await ctx.chronicle(
-            ChronicleKind.RESOURCE,
-            line.render(resource=resource.name, demand=demand, owner=owner.name, negotiator=negotiator.name),
-            template_key=line.key,
-            entity_ids=[resource.id, owner.id, negotiator.id],
-        )
-        return
+async def _abandon(ctx: TickContext, resource: EntityRow, owner: EntityRow, demand: str) -> None:
+    rng = ctx.rng(f"sentient.leave.{resource.id}")
     bonds = BondRepository(ctx.session)
     await bonds.close_between(owner.id, resource.id, [BondKind.OWNS], ctx.epoch, "abandoned")
     statement = select(EntityRow).where(
@@ -178,6 +150,42 @@ async def _sentient(ctx: TickContext, resource: EntityRow, owners: list[EntityRo
         template_key=line.key,
         entity_ids=[resource.id, owner.id] + ([chosen.id] if chosen is not None else []),
     )
+
+
+async def _sentient(ctx: TickContext, resource: EntityRow, owners: list[EntityRow], cost: int) -> None:
+    economy = ctx.rules.economy
+    pact = await pact_for(ctx.session, resource.id)
+    if pact is not None:
+        owner_id = pact[1].obligor_node_id
+        if await keep_pact(ctx, resource, pact, owners, pay=_pay_demand, shift=shift_reserve) == "broken":
+            breaker = next((item for item in owners if item.id == owner_id), None)
+            if breaker is not None:
+                await _abandon(ctx, resource, breaker, terms_of(pact[1], ctx.rules.sentient_pacts.every_epochs).demand)
+        return
+    rng = ctx.rng(f"sentient.{resource.id}")
+    if not owners or not rng.chance(economy.sentient_resource_choose_chance):
+        return
+    owner = rng.pick(owners)
+    demand, wanted, units = rng.pick(god_lines.SENTIENT_DEMANDS)
+    commodity = CommodityKind(wanted) if wanted is not None else None
+    if rng.chance(economy.sentient_resource_keep_chance) and await _pay_demand(ctx, owner, commodity, units, cost):
+        line = god_lines.ECONOMY_SENTIENT_PAID
+        await ctx.chronicle(
+            ChronicleKind.RESOURCE,
+            line.render(resource=resource.name, demand=demand, owner=owner.name),
+            template_key=line.key,
+            entity_ids=[resource.id, owner.id],
+        )
+        return
+    negotiator, skill = await best_negotiator(ctx.session, owner)
+    if negotiator is not None and rng.chance(skill * economy.sentient_bargain_pct_per_level):
+        terms = bargained(ctx, Terms(demand, commodity, units, cost, ctx.rules.sentient_pacts.every_epochs), skill)
+        await strike_pact(ctx, resource, owner, terms, negotiator=negotiator)
+        struck = await pact_for(ctx.session, resource.id)
+        if struck is not None and await keep_pact(ctx, resource, struck, owners, pay=_pay_demand, shift=shift_reserve) == "broken":
+            await _abandon(ctx, resource, owner, demand)
+        return
+    await _abandon(ctx, resource, owner, demand)
 
 
 async def best_negotiator(session: AsyncSession, owner: EntityRow) -> tuple[EntityRow | None, int]:

@@ -90,6 +90,11 @@ class StoresLine(ContextItem):
     materials: list[str] = Field(default_factory=list)
     short: list[str] = Field(default_factory=list)
     routes: list[str] = Field(default_factory=list)
+    prices: list[str] = Field(default_factory=list)
+    currency: str = ""
+    debts: list[str] = Field(default_factory=list)
+    loans: list[str] = Field(default_factory=list)
+    job: str = ""
 
 
 class HomeLine(ContextItem):

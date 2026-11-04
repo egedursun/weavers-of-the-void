@@ -4287,6 +4287,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/nodes/{node_id}/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["node_profiles_api_nodes__node_id__profiles_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/worlds/{world_id}/materials": {
         parameters: {
             query?: never;
@@ -4423,6 +4439,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["market_list_api_markets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/resources/{resource_id}/pacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["resource_pacts_api_resources__resource_id__pacts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/polities/{polity_id}/production": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["polity_production_api_polities__polity_id__production_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4873,6 +4921,134 @@ export interface paths {
         get: operations["list_actions_api_actions_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/trade_route:found": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_trade_route_found_api_actions_trade_route_found_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/trade_route:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_trade_route_edit_api_actions_trade_route_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/trade_route:delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_trade_route_delete_api_actions_trade_route_delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/trade_route:toll_stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_trade_route_toll_stop_api_actions_trade_route_toll_stop_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/trade_route:toll_remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_trade_route_toll_remove_api_actions_trade_route_toll_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resource:pact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resource_pact_api_actions_resource_pact_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resource:pact_terms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resource_pact_terms_api_actions_resource_pact_terms_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resource:pact_end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resource_pact_end_api_actions_resource_pact_end_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8207,6 +8383,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/profile:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_profile_set_api_actions_profile_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/profile:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_profile_release_api_actions_profile_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/ley:sever": {
         parameters: {
             query?: never;
@@ -11095,7 +11303,7 @@ export interface components {
             satisfaction: number;
         };
         ClaudeAuth: "token" | "login";
-        ClauseKind: "call_to_arms" | "tribute" | "cession" | "hostage" | "marriage" | "trade_rights" | "tolls_waived" | "religious_freedom" | "demilitarised" | "champion" | "extradition" | "wergild" | "non_aggression";
+        ClauseKind: "call_to_arms" | "tribute" | "cession" | "hostage" | "marriage" | "trade_rights" | "tolls_waived" | "religious_freedom" | "demilitarised" | "champion" | "extradition" | "wergild" | "non_aggression" | "route_control" | "resource_demand";
         ClauseView: {
             id: number;
             kind: components["schemas"]["ClauseKind"];
@@ -14097,6 +14305,14 @@ export interface components {
             couplings: components["schemas"]["Subsystem"][];
         };
         MedicineTier: "none" | "herbs" | "surgery" | "prosthetics" | "reattachment";
+        MemberOutputView: {
+            community_id: number;
+            name: string;
+            epoch: number | null;
+            made: number;
+            bottlenecks: number;
+            workshops: number;
+        };
         MemberView: {
             id: number;
             name: string;
@@ -14764,6 +14980,22 @@ export interface components {
             creator: string | null;
             date: string;
         };
+        PactView: {
+            treaty_id: number;
+            name: string;
+            status: string;
+            owner_id: number | null;
+            owner_name: string;
+            demand: string;
+            commodity: components["schemas"]["CommodityKind"] | null;
+            units: number;
+            cost: number;
+            every: number;
+            paid_epoch: number;
+            signed_epoch: number;
+            until_epoch: number | null;
+            misread: boolean;
+        };
         Page_ArmyView_: {
             items: components["schemas"]["ArmyView"][];
             total: number;
@@ -15086,6 +15318,23 @@ export interface components {
             mortal_id?: number | null;
             region_id?: number | null;
         };
+        PolityChainStepView: {
+            key: string;
+            label: string;
+            workshop: components["schemas"]["WorkshopKind"] | null;
+            inputs: {
+                [key: string]: number;
+            };
+            output: components["schemas"]["CommodityKind"];
+            output_qty: number;
+            made: number;
+            quality: number;
+            material: components["schemas"]["MaterialKind"] | null;
+            bottleneck: components["schemas"]["CommodityKind"] | null;
+            starved_ids: number[];
+            running_ids: number[];
+            able_ids: number[];
+        };
         PolityDeposeInput: {
             polity_id: number;
         };
@@ -15103,6 +15352,17 @@ export interface components {
             polity_id: number;
             into_id: number;
         };
+        PolityProductionView: {
+            polity_id: number;
+            name: string;
+            epoch: number;
+            members: components["schemas"]["MemberOutputView"][];
+            chain: components["schemas"]["PolityChainStepView"][];
+            stocks: components["schemas"]["PolityStockView"][];
+            workshops: {
+                [key: string]: number;
+            };
+        };
         PolitySplitInput: {
             polity_id: number;
             member_ids: number[];
@@ -15113,6 +15373,11 @@ export interface components {
             stability?: number | null;
             subjects?: number | null;
             territory?: number | null;
+        };
+        PolityStockView: {
+            commodity: components["schemas"]["CommodityKind"];
+            quantity: number;
+            quality: number;
         };
         PopulationCohortView: {
             age_band: components["schemas"]["AgeBand"];
@@ -15358,6 +15623,32 @@ export interface components {
         PriceSeries: {
             commodity: components["schemas"]["CommodityKind"];
             points: components["schemas"]["PricePoint"][];
+        };
+        ProfileColumnRecord: {
+            name: string;
+            kind: string;
+            value: number | string | boolean | null;
+            options: string[];
+            nullable: boolean;
+            held: boolean;
+            pinned: boolean;
+        };
+        ProfileReleaseInput: {
+            node_id: number;
+            table: string;
+            column: string;
+        };
+        ProfileSetInput: {
+            node_id: number;
+            table: string;
+            column: string;
+            value: number | string | boolean | null;
+            hold: boolean;
+        };
+        ProfileTableRecord: {
+            table: string;
+            lockable: boolean;
+            columns: components["schemas"]["ProfileColumnRecord"][];
         };
         PromptArea: "shared" | "context" | "genesis" | "son_turn" | "fate" | "chronicler" | "naming" | "voices" | "deepening" | "image_prompts" | "council" | "translation" | "world_birth" | "network_repair" | "mortal" | "opportunities" | "agent" | "chronicle" | "localisation";
         PromptCatalogue: {
@@ -15853,6 +16144,23 @@ export interface components {
             resource_id: number;
             owner_id?: number | null;
         };
+        ResourcePactEndInput: {
+            treaty_id: number;
+        };
+        ResourcePactInput: {
+            resource_id: number;
+            owner_id: number;
+            terms?: {
+                [key: string]: number | string | null;
+            };
+            epochs?: number | null;
+        };
+        ResourcePactTermsInput: {
+            treaty_id: number;
+            terms?: {
+                [key: string]: number | string | null;
+            };
+        };
         ResourceProfileView: {
             resource_id: number;
             commodity: components["schemas"]["CommodityKind"];
@@ -15989,6 +16297,12 @@ export interface components {
             route_id: number;
             danger: number;
         };
+        RouteDangerView: {
+            bandits: number;
+            beasts: number;
+            weather: number;
+            sea: number;
+        };
         RouteFlowView: {
             epoch: number;
             commodity: components["schemas"]["CommodityKind"];
@@ -16009,6 +16323,14 @@ export interface components {
             danger: number;
             active: boolean;
             known: boolean;
+        };
+        RouteLossView: {
+            epoch: number;
+            commodity: components["schemas"]["CommodityKind"];
+            cause: components["schemas"]["TradeLoss"];
+            units: number;
+            culprit_id: number | null;
+            culprit_name: string;
         };
         RouteRecord: {
             id: number;
@@ -16699,7 +17021,7 @@ export interface components {
             value: number;
         };
         SonStatus: "active" | "asleep" | "exiled" | "dead";
-        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_father" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "sever_ley" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world";
+        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_father" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "sever_ley" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world" | "open_trade_route" | "close_trade_route";
         SonToolsView: {
             son_id: number;
             rarity: components["schemas"]["Rarity"];
@@ -17273,6 +17595,9 @@ export interface components {
             controller_name: string;
             rate_pct: number;
             set_by_player: boolean;
+            controller_held: boolean;
+            polity_id: number | null;
+            polity_name: string;
         };
         TongueAtlas: {
             ranking: components["schemas"]["TongueRank"][];
@@ -17323,6 +17648,9 @@ export interface components {
         TradeRouteCloseInput: {
             route_id: number;
         };
+        TradeRouteDeleteInput: {
+            route_id: number;
+        };
         TradeRouteDetail: {
             route_id: number;
             name: string;
@@ -17346,7 +17674,32 @@ export interface components {
             last_traffic_epoch: number | null;
             volume: number;
             closed_by_player: boolean;
+            closed_by_son_id: number | null;
+            closed_by_son_name: string;
+            dangers: components["schemas"]["RouteDangerView"];
+            season_pct: number;
+            chokepoint: boolean;
+            locked: string[];
+            untolled: number[];
+            region_names: {
+                [key: string]: string;
+            };
             flows: components["schemas"]["RouteFlowView"][];
+            losses: components["schemas"]["RouteLossView"][];
+        };
+        TradeRouteEditInput: {
+            route_id: number;
+            values?: {
+                [key: string]: number | string | boolean | number[] | null;
+            };
+            release?: string[];
+        };
+        TradeRouteFoundInput: {
+            first_id: number;
+            second_id: number;
+            mode?: components["schemas"]["TradeMode"] | null;
+            controller_id?: number | null;
+            toll_pct?: number | null;
         };
         TradeRouteOpenInput: {
             route_id?: number | null;
@@ -17365,6 +17718,17 @@ export interface components {
             route_id: number;
             region_id: number;
             rate?: number | null;
+        };
+        TradeRouteTollRemoveInput: {
+            route_id: number;
+            region_id: number;
+        };
+        TradeRouteTollStopInput: {
+            route_id: number;
+            region_id: number;
+            controller_id?: number | null;
+            rate?: number | null;
+            release?: string[];
         };
         TradeRouteView: {
             route_id: number;
@@ -17389,6 +17753,16 @@ export interface components {
             last_traffic_epoch: number | null;
             volume: number;
             closed_by_player: boolean;
+            closed_by_son_id: number | null;
+            closed_by_son_name: string;
+            dangers: components["schemas"]["RouteDangerView"];
+            season_pct: number;
+            chokepoint: boolean;
+            locked: string[];
+            untolled: number[];
+            region_names: {
+                [key: string]: string;
+            };
         };
         TraditionCard: {
             kind: components["schemas"]["TraditionKind"];
@@ -17642,7 +18016,7 @@ export interface components {
             target_id?: number | null;
             achieved: number;
         };
-        WarAimKind: "conquer_region" | "seize_settlement" | "press_claim" | "convert" | "tribute" | "vassalise" | "liberate" | "destroy_cult" | "seize_resource" | "seize_nexus" | "humiliate" | "revenge" | "loot" | "change_government";
+        WarAimKind: "conquer_region" | "seize_settlement" | "press_claim" | "convert" | "tribute" | "vassalise" | "liberate" | "destroy_cult" | "seize_resource" | "seize_nexus" | "humiliate" | "revenge" | "loot" | "change_government" | "seize_route";
         WarArmyInput: {
             war_id: number;
             community_id: number;
@@ -26242,6 +26616,35 @@ export interface operations {
             };
         };
     };
+    node_profiles_api_nodes__node_id__profiles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileTableRecord"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     world_materials_api_worlds__world_id__materials_get: {
         parameters: {
             query?: never;
@@ -26471,6 +26874,64 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MarketSummary"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resource_pacts_api_resources__resource_id__pacts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resource_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PactView"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    polity_production_api_polities__polity_id__production_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                polity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolityProductionView"];
                 };
             };
             422: {
@@ -27241,6 +27702,254 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActionCatalogueItem"][];
+                };
+            };
+        };
+    };
+    action_trade_route_found_api_actions_trade_route_found_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeRouteFoundInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_trade_route_edit_api_actions_trade_route_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeRouteEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_trade_route_delete_api_actions_trade_route_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeRouteDeleteInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_trade_route_toll_stop_api_actions_trade_route_toll_stop_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeRouteTollStopInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_trade_route_toll_remove_api_actions_trade_route_toll_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeRouteTollRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resource_pact_api_actions_resource_pact_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResourcePactInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resource_pact_terms_api_actions_resource_pact_terms_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResourcePactTermsInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resource_pact_end_api_actions_resource_pact_end_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResourcePactEndInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -33489,6 +34198,68 @@ export interface operations {
             };
         };
     };
+    action_profile_set_api_actions_profile_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_profile_release_api_actions_profile_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_ley_sever_api_actions_ley_sever_post: {
         parameters: {
             query?: never;
@@ -37240,7 +38011,7 @@ export const chronicleAuditKindValues: ReadonlyArray<FlattenedDeepRequired<compo
 export const chronicleKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ChronicleKind"]> = ["creation", "speech", "challenge", "prayer", "order", "fate", "death", "birth", "system", "message", "creator_hand", "world", "engine_raw", "knowledge", "resource", "culture", "trade", "exploration", "diplomacy", "production", "language", "miracle", "civilization", "creator_reputation", "construction", "existence", "dream", "star", "divine_sign", "climate", "cosmic", "debt", "foreign_god", "world_age", "council", "previous_creation", "sky", "gift", "worship", "world_birth", "prophecy", "covenant", "army", "ascension", "migration", "legendary_quest", "war", "war_of_gods", "cosmic_law", "horror", "outer_being", "immortality", "rebellion", "apocalypse", "resurrection", "lineage", "disaster", "adventure", "intrigue", "rescue", "chimera", "escape", "domestication", "age_change", "expedition", "spirit", "curse", "denial", "ransom", "prohibition"];
 export const claimBasisValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClaimBasis"]> = ["inheritance", "marriage", "conquest", "divine", "fabricated"];
 export const claudeAuthValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClaudeAuth"]> = ["token", "login"];
-export const clauseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClauseKind"]> = ["call_to_arms", "tribute", "cession", "hostage", "marriage", "trade_rights", "tolls_waived", "religious_freedom", "demilitarised", "champion", "extradition", "wergild", "non_aggression"];
+export const clauseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClauseKind"]> = ["call_to_arms", "tribute", "cession", "hostage", "marriage", "trade_rights", "tolls_waived", "religious_freedom", "demilitarised", "champion", "extradition", "wergild", "non_aggression", "route_control", "resource_demand"];
 export const clergyOfficeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClergyOffice"]> = ["high_priest", "priest", "monk", "inquisitor"];
 export const climateAffinityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClimateAffinity"]> = ["warm", "wet", "cold", "dry", "any"];
 export const climateEraValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClimateEra"]> = ["temperate", "drought", "rain", "ice_age", "scorching"];
@@ -37491,7 +38262,7 @@ export const sonDistributedEventKindValues: ReadonlyArray<FlattenedDeepRequired<
 export const sonDistributionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonDistribution"]> = ["auto", "manual"];
 export const sonNewEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonNewEvent"]["kind"]> = ["son.new"];
 export const sonStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonStatus"]> = ["active", "asleep", "exiled", "dead"];
-export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_father", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "sever_ley", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world"];
+export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_father", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "sever_ley", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world", "open_trade_route", "close_trade_route"];
 export const sonTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnFinishedEvent"]["kind"]> = ["son.turn_finished"];
 export const sonTurnQueuedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnQueuedEvent"]["kind"]> = ["son.turn_queued"];
 export const sonTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnStartedEvent"]["kind"]> = ["son.turn_started"];
@@ -37546,7 +38317,7 @@ export const valueAxisValues: ReadonlyArray<FlattenedDeepRequired<components>["s
 export const valueHolderValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ValueHolder"]> = ["culture", "doctrine", "agenda", "personal", "divine", "community"];
 export const verdictChoiceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VerdictChoice"]> = ["accept", "reject"];
 export const vesselStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VesselStats"]["kind"]> = ["vessel"];
-export const warAimKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarAimKind"]> = ["conquer_region", "seize_settlement", "press_claim", "convert", "tribute", "vassalise", "liberate", "destroy_cult", "seize_resource", "seize_nexus", "humiliate", "revenge", "loot", "change_government"];
+export const warAimKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarAimKind"]> = ["conquer_region", "seize_settlement", "press_claim", "convert", "tribute", "vassalise", "liberate", "destroy_cult", "seize_resource", "seize_nexus", "humiliate", "revenge", "loot", "change_government", "seize_route"];
 export const warCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarCause"]> = ["hostility", "uprising", "tribute_revolt", "incited", "declared", "betrayal", "conquest_journey", "foreign_god", "independence", "vendetta", "grudge", "divine_grudge", "rivalry", "debt", "espionage", "sabotage", "envy", "schism", "beast", "resource", "ideology", "trade_route"];
 export const warEndingValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarEnding"]> = ["victory", "conquest", "tribute", "exhaustion", "peace", "white_peace", "betrayal", "same_front", "no_side_left", "miracle"];
 export const warSideValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarSide"]> = ["attacker", "defender"];

@@ -387,4 +387,20 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "new_star": "Only if no star in the list fits this world's light: a distant system with its own new sun",
         },
     ),
+    T.OPEN_TRADE_ROUTE: ToolText(
+        "You lay a trade route between two markets of the world you are on (peoples or settlements): merchants carry goods along it from this age, the cheap "
+        "market selling to the dear one, tolls fall to the masters of the lands it crosses. If you or a sibling closed the way between them before, it opens again. "
+        "{{ rules.son_routes.open_cost }} essence, {{ rules.son_routes.open_ap }} action.",
+        {
+            "first_id": "The first market (a people or settlement)",
+            "second_id": "The second market",
+            "mode": "How goods travel: road, river, sea, caravan or sky (leave empty to let the land decide)",
+            "reason": "Why you lay this road",
+        },
+    ),
+    T.CLOSE_TRADE_ROUTE: ToolText(
+        "You close a trade route: no caravan passes, and merchants found no new way between its two markets until a god opens it again. "
+        "{{ rules.son_routes.close_cost }} essence, {{ rules.son_routes.close_ap }} action.",
+        {"route_id": "The trade route to close", "reason": "Why you close it"},
+    ),
 }

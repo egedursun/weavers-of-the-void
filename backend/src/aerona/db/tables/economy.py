@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, CheckConstraint, ForeignKey, Index, String, Text, func, text
+from sqlalchemy import JSON, CheckConstraint, ForeignKey, Index, String, Text, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import NAME_MAX_LENGTH
@@ -20,6 +20,7 @@ from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
 
+ROUTE_DANGER_COLUMNS = ("danger_bandits", "danger_beasts", "danger_weather", "danger_sea")
 PROPERTY_COLUMNS = ("hardness", "toughness", "weight", "edge", "conductivity", "sanctity", "corruption", "rarity", "base_value", "decay")
 
 
@@ -75,8 +76,8 @@ class CommunityStockRow(Base):
             "ux_community_stocks_key",
             "community_entity_id",
             "commodity",
-            func.coalesce("material", ""),
-            func.coalesce("world_material_id", 0),
+            text("coalesce(material, '')"),
+            text("coalesce(world_material_id, 0)"),
             unique=True,
         ),
         Index("ix_community_stocks_commodity", "commodity"),
@@ -198,6 +199,8 @@ class TradeRouteProfileRow(Base):
         at_least("length", 1),
         at_least("traffic_epochs", 0),
         Index("ix_trade_route_markets", "first_market_id", "second_market_id"),
+        *(between(column, PERCENT_MIN, PERCENT_MAX) for column in ROUTE_DANGER_COLUMNS),
+        between("season_pct", PERCENT_MIN, PERCENT_MAX),
     )
 
     route_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
@@ -212,6 +215,14 @@ class TradeRouteProfileRow(Base):
     last_traffic_epoch: Mapped[int | None]
     traffic_epochs: Mapped[int] = mapped_column(default=0)
     closed_by_player: Mapped[bool] = mapped_column(default=False)
+    danger_bandits: Mapped[int] = mapped_column(default=0)
+    danger_beasts: Mapped[int] = mapped_column(default=0)
+    danger_weather: Mapped[int] = mapped_column(default=0)
+    danger_sea: Mapped[int] = mapped_column(default=0)
+    season_pct: Mapped[int] = mapped_column(default=100)
+    chokepoint: Mapped[bool] = mapped_column(default=False)
+    closed_by_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class TradeRouteRegionRow(Base):
@@ -231,6 +242,8 @@ class TradeRouteTollRow(Base):
     controller_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     rate_pct: Mapped[int]
     set_by_player: Mapped[bool] = mapped_column(default=False)
+    controller_held: Mapped[bool] = mapped_column(default=False)
+    polity_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
 
 
 class TradeFlowRow(Base):
@@ -255,6 +268,19 @@ class TradeFlowRow(Base):
     loss: Mapped[TradeLoss | None] = mapped_column(enum_type(TradeLoss, "loss"))
     value: Mapped[int] = mapped_column(default=0)
     toll_paid: Mapped[int] = mapped_column(default=0)
+
+
+class TradeRouteLossRow(Base):
+    __tablename__ = "trade_route_losses"
+    __table_args__ = (at_least("units", 0), Index("ix_trade_route_losses_route", "route_entity_id", "epoch"))
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    route_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
+    epoch: Mapped[int]
+    commodity: Mapped[CommodityKind] = mapped_column(enum_type(CommodityKind, "commodity"))
+    cause: Mapped[TradeLoss] = mapped_column(enum_type(TradeLoss, "cause"))
+    units: Mapped[int]
+    culprit_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
 
 
 class CurrencyRow(Base):

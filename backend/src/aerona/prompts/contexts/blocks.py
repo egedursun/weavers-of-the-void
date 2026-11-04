@@ -5,6 +5,7 @@ from pydantic import Field
 from aerona.domain.enums.node import NodeKind
 from aerona.prompts.contexts.base import ContextItem, PromptContext, RulesContext
 from aerona.prompts.contexts.common import ChronicleRow, EntityLineItem, LabelValue, LexiconWord, NamedRecord, NamingRuleItem, TiredImages, WorldItem
+from aerona.prompts.contexts.economy_depth import EconomyBlock
 
 
 class CreatorMood(ContextItem):
@@ -148,15 +149,6 @@ class ClassShare(ContextItem):
     satisfaction: int
 
 
-class Granary(ContextItem):
-    food: int
-    ore: int
-    goods: int
-    bread_price: int
-    ore_price: int
-    goods_price: int
-
-
 class CommunityRelationLine(ContextItem):
     id: int
     name: str
@@ -176,7 +168,6 @@ class SocietyLines(ContextItem):
     sanity: int | None = None
     clouded: bool = False
     classes: list[ClassShare] = Field(default_factory=list)
-    granary: Granary | None = None
     relations: list[CommunityRelationLine] = Field(default_factory=list)
     wars: list[WarLine] = Field(default_factory=list)
 
@@ -207,6 +198,7 @@ class EntityDetailContext(PromptContext):
     mind: list[str] = Field(default_factory=list)
     effects: list[str] = Field(default_factory=list)
     chain: str | None = None
+    economy: EconomyBlock | None = None
 
 
 class RecentChronicleContext(PromptContext):

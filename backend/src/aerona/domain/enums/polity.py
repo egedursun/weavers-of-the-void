@@ -193,6 +193,8 @@ class ClauseKind(StrEnum):
     EXTRADITION = "extradition"
     WERGILD = "wergild"
     NON_AGGRESSION = "non_aggression"
+    ROUTE_CONTROL = "route_control"
+    RESOURCE_DEMAND = "resource_demand"
 
 
 class PartyRole(StrEnum):

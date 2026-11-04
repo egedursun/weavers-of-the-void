@@ -35,6 +35,9 @@ const ROUTE = {
       controller_name: 'Ehmarael',
       rate_pct: 5,
       set_by_player: false,
+      controller_held: false,
+      polity_id: null,
+      polity_name: '',
     },
   ],
   controller_id: 346,
@@ -43,6 +46,14 @@ const ROUTE = {
   last_traffic_epoch: 50,
   volume: 17,
   closed_by_player: false,
+  closed_by_son_id: null,
+  closed_by_son_name: '',
+  dangers: { bandits: 18, beasts: 7, weather: 5, sea: 0 },
+  season_pct: 80,
+  chokepoint: false,
+  locked: [],
+  untolled: [],
+  region_names: { '30': 'Vehrael' },
 }
 
 function serve() {

@@ -191,6 +191,25 @@ class TollView(ApiModel):
     controller_name: str
     rate_pct: int
     set_by_player: bool
+    controller_held: bool
+    polity_id: int | None
+    polity_name: str
+
+
+class RouteDangerView(ApiModel):
+    bandits: int
+    beasts: int
+    weather: int
+    sea: int
+
+
+class RouteLossView(ApiModel):
+    epoch: int
+    commodity: CommodityKind
+    cause: TradeLoss
+    units: int
+    culprit_id: int | None
+    culprit_name: str
 
 
 class RouteFlowView(ApiModel):
@@ -229,10 +248,19 @@ class TradeRouteView(ApiModel):
     last_traffic_epoch: int | None
     volume: int
     closed_by_player: bool
+    closed_by_son_id: int | None
+    closed_by_son_name: str
+    dangers: RouteDangerView
+    season_pct: int
+    chokepoint: bool
+    locked: list[str]
+    untolled: list[int]
+    region_names: dict[int, str]
 
 
 class TradeRouteDetail(TradeRouteView):
     flows: list[RouteFlowView]
+    losses: list[RouteLossView]
 
 
 class CurrencyView(ApiModel):
