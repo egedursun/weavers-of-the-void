@@ -78,7 +78,7 @@ async def houses_of(ctx: TickContext, *entity_ids: int) -> list[HouseProfileRow]
 async def extra_terms(ctx: TickContext, war: WarRow, victor: EntityRow, loser: EntityRow, *, ending: WarEnding) -> list[PeaceTerm]:
     terms: list[PeaceTerm] = []
     values = await values_for(ctx.session, victor.id)
-    if ending in {WarEnding.WHITE_PEACE, WarEnding.EXHAUSTION, WarEnding.PEACE, WarEnding.MIRACLE} or values.get(ValueAxis.MERCY, 0) >= 0:
+    if ending in {WarEnding.WHITE_PEACE, WarEnding.EXHAUSTION, WarEnding.PEACE, WarEnding.MIRACLE} or values.get(ValueAxis.MERCY, 0) > 0:
         terms.append(PeaceTerm(K.CAPTIVE_RELEASE))
     if war.cause in TRADE_CAUSES:
         terms.append(PeaceTerm(K.TRADE_CONCESSION))

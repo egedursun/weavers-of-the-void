@@ -224,10 +224,11 @@ async def create_record(ctx: TickContext, key: str, values: Values) -> Any:
     row = kind.model()
     for column in columns(kind):
         default = mapper_of(kind).columns[column.name].default
+        argument = getattr(default, "arg", None)
         if default is not None and getattr(default, "is_scalar", False):
-            setattr(row, column.name, default.arg)
-        elif default is not None and getattr(default, "is_callable", False):
-            setattr(row, column.name, default.arg(None))
+            setattr(row, column.name, argument)
+        elif default is not None and getattr(default, "is_callable", False) and callable(argument):
+            setattr(row, column.name, argument(None))
     for epoch_column in ("since_epoch", "started_epoch", "taken_epoch", "created_epoch", "epoch"):
         if epoch_column in {column.name for column in columns(kind)} and epoch_column not in values:
             setattr(row, epoch_column, ctx.epoch)

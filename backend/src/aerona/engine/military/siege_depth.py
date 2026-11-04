@@ -254,7 +254,7 @@ async def mass_captives(ctx: TickContext, besieged: EntityRow, victor: EntityRow
     count = round_half_up(population * share_pct / PERCENT)
     if count <= 0:
         return 0
-    with flowing(FlowCategory.CAPTIVE):
+    with flowing(FlowCategory.CASUALTY):
         shift_stat(besieged, "population", -count)
     language = await spoken_language(ctx.session, besieged.id)
     ctx.session.add(
