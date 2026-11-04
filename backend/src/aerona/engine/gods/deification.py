@@ -19,6 +19,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.son import PowerEffect, Stat
 from aerona.domain.models.profiles import Personality
@@ -135,7 +136,7 @@ async def deify(ctx: TickContext, creator: CreatorRow, mortal: EntityRow) -> Dei
             select(BondRow.source_node_id).where(BondRow.target_node_id == mortal.id, BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE)
         )
     )
-    await die(ctx, mortal, cause=DEATH_CAUSE.format(creator=creator.name), forced=True)
+    await die(ctx, mortal, cause=DEATH_CAUSE.format(creator=creator.name), manner=DeathCause.DIVINE, forced=True)
     await EntityRepository(ctx.session).add_flag(mortal.id, EntityFlag.DEIFIED, ctx.epoch)
     await NameRepository(ctx.session).release(mortal.id)
     son = await SonRepository(ctx.session).create(

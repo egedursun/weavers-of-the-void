@@ -25,7 +25,6 @@ class AgingRules:
     hazard_base_pct: int = rule(25, 0, 100, G, "Chance of death each epoch at exactly the lifespan (%)")
     hazard_steepness: float = rule(4.0, 0.0, 50.0, G, "How steeply the chance of death climbs past the lifespan")
     hazard_start_pct: int = rule(85, 0, 200, G, "Share of the lifespan from which old age can kill (%)")
-    hazard_health_floor_pct: int = rule(50, 0, 100, G, "Least the death chance of a healthy old mortal is cut to (%)")
     hazard_medicine_pct: int = rule(70, 0, 100, G, "Death chance of the old where medicine is known (%)")
 
 
@@ -47,7 +46,8 @@ class FertilityRules:
     stillbirth_pct: float = rule(8.0, 0.0, 100.0, G, "Chance of a stillbirth (%)")
     hunger_stillbirth_pct: int = rule(200, 100, 1000, G, "Stillbirth chance in a starving community (%)")
     hunger_from: int = rule(50, 0, 100, G, "Hunger at which stillbirths grow more likely")
-    trait_pass_pct: int = rule(35, 0, 100, G, "Chance each heritable parental trait passes to a child (%)")
+    other_sex_pct: float = rule(0.0, 0.0, 100.0, G, "Chance a child is born neither female nor male, where the world allows it (%)")
+    kinship_pct: int = rule(40, 0, 200, G, "How much a culture that prizes kinship lifts the birth rate (%)")
     ability_deviation: int = rule(8, 0, 50, G, "How far a child's abilities stray from their parents' mean")
     twin_cap: int = rule(2, 1, 6, G, "Most children one birth can bring")
 

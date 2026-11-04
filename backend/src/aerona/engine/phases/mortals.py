@@ -10,6 +10,7 @@ from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import OPEN_INJURY_STATES, HarmCause, InjuryState
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -45,7 +46,7 @@ async def succumb(ctx: TickContext, mortal: EntityRow) -> None:
         open_wounds[0].state = InjuryState.LETHAL
     else:
         await fatal_injury(ctx, mortal, Harm(ctx.rules.casualties.wound_hp, HarmCause.ACCIDENT, WOUND_DEATH))
-    await die(ctx, mortal, cause=WOUND_DEATH)
+    await die(ctx, mortal, cause=WOUND_DEATH, manner=DeathCause.WOUNDS)
 
 
 @reads("mortal.hp")
@@ -108,7 +109,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
             son_id=mortal.creator_son_id,
         )
         return
-    await die(ctx, mortal, natural=True, year=death_year)
+    await die(ctx, mortal, natural=True, year=death_year, manner=DeathCause.OLD_AGE)
 
 
 @reads(

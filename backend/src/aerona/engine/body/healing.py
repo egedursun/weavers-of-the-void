@@ -29,7 +29,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass, Technique
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.mortal import HarshnessScale
+from aerona.domain.enums.mortal import DeathCause, HarshnessScale
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.body.book import Bearer, anatomy_for, bearer_stats, ensure_body, injuries_of, prostheses_of
@@ -305,7 +305,7 @@ async def _fester(ctx: TickContext, bearer: Bearer, body: BodyRow, row: InjuryRo
             await retire_in(ctx, bearer, FESTER_DEATH)
             return Tending(died=True, changed=True)
         if isinstance(bearer, EntityRow):
-            await die(ctx, bearer, cause=FESTER_DEATH, event_id=row.event_entity_id)
+            await die(ctx, bearer, cause=FESTER_DEATH, manner=DeathCause.WOUNDS, event_id=row.event_entity_id)
             return Tending(died=True, changed=True)
         row.state = InjuryState.PERMANENT
         return Tending(changed=True)

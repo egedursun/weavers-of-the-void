@@ -261,6 +261,10 @@ async def retire(
 
 
 async def heir_of(session: AsyncSession, dead: EntityRow) -> EntityRow | None:
+    for bond in reversed(await active_bonds(session, [BondKind.PARENT_OF], sources=[dead.id])):
+        candidate = await living_entity(session, bond.target_node_id)
+        if candidate is not None and candidate.entity_type in HEIR_TYPES:
+            return candidate
     for bond in reversed(await active_bonds(session, [BondKind.DESCENDS_FROM], targets=[dead.id])):
         candidate = await living_entity(session, bond.source_node_id)
         if candidate is not None and candidate.entity_type in HEIR_TYPES:

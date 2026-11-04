@@ -115,3 +115,11 @@ SYMMETRIC_BOND_KINDS = frozenset(
         BondKind.SWORN_KIN,
     }
 )
+KIN_BOND_KINDS = (
+    BondKind.PARENT_OF,
+    BondKind.SPOUSE_OF,
+    BondKind.CONCUBINE_OF,
+    BondKind.FOSTERED_BY,
+    BondKind.SWORN_KIN,
+    BondKind.BETROTHED_TO,
+)

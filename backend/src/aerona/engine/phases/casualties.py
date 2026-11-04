@@ -13,6 +13,7 @@ from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.chronicle import FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, HERO_ROLES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.domain.models.entity_stats import MortalStats
@@ -110,7 +111,7 @@ async def fall(ctx: TickContext, mortal: EntityRow, cause: str, killer_id: int |
     )
     if mortal.status is EntityStatus.CANON and flag not in BLOODLESS_FALLS:
         await fatal_injury(ctx, mortal, harm)
-    if not await death_path(ctx, mortal, cause, killer_id, cause, event_id=event.id if event is not None else None):
+    if not await death_path(ctx, mortal, cause, killer_id, cause, event_id=event.id if event is not None else None, manner=DeathCause.BATTLE):
         return False
     await add_flag(ctx.session, mortal.id, flag, ctx.epoch)
     if event is not None and event.id != killer_id:

@@ -18,6 +18,7 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.military import SabotageKind, SpyCover, SpyOperation
 from aerona.domain.enums.mind import MemoryKind, SkillKind
+from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import WarCause
@@ -154,7 +155,9 @@ async def assassinate(ctx: TickContext, spymaster: EntityRow, target: EntityRow,
     victim = await living_entity(ctx.session, rulers[0]) if rulers and network.depth >= ctx.rules.espionage.assassinate_depth else None
     if victim is None:
         return None
-    await death_path(ctx, victim, f"murdered by the agents of {spymaster.name}", spymaster.id, "assassination", forced=True, harm=HarmCause.POISON)
+    await death_path(
+        ctx, victim, f"murdered by the agents of {spymaster.name}", spymaster.id, "assassination", forced=True, harm=HarmCause.POISON, manner=DeathCause.MURDER
+    )
     text = f"Agents of {spymaster.name} reached {victim.name}, ruler of {target.name}, and killed them."
     await _note(ctx, text, "espionage.assassination", (spymaster.id, target.id, victim.id))
     return text

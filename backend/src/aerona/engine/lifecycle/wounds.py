@@ -23,6 +23,7 @@ from aerona.engine.lifecycle.aging import is_immortal, is_notable
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lore.arms import best_weapon, grip, held_profiles
 from aerona.engine.mind.hooks import wound_memories
+from aerona.engine.mortal.death import manner_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.naming import seed_of
@@ -229,7 +230,7 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
         return Wounding(WoundOutcome.DIED, rows, lost)
     if rows and not any(row.state is InjuryState.LETHAL for row in rows):
         max(rows, key=lambda row: row.severity).state = InjuryState.LETHAL
-    result = await die(ctx, bearer, cause=harm.death_cause, killer_id=harm.killer_id, event_id=harm.event_entity_id)
+    result = await die(ctx, bearer, cause=harm.death_cause, manner=manner_of(harm.cause), killer_id=harm.killer_id, event_id=harm.event_entity_id)
     return Wounding(WoundOutcome.DIED if result is not None else WoundOutcome.WOUNDED, rows, lost)
 
 
@@ -237,7 +238,7 @@ async def slay(ctx: TickContext, mortal: EntityRow, harm: Harm, *, forced: bool 
     if mortal.entity_type is not EntityType.MORTAL or mortal.status is not EntityStatus.CANON:
         return False
     await fatal_injury(ctx, mortal, replace(harm, event_entity_id=harm.event_entity_id or event_id))
-    return await die(ctx, mortal, cause=harm.death_cause, killer_id=harm.killer_id, forced=forced, event_id=event_id) is not None
+    return await die(ctx, mortal, cause=harm.death_cause, manner=manner_of(harm.cause), killer_id=harm.killer_id, forced=forced, event_id=event_id) is not None
 
 
 async def fatal_injury(ctx: TickContext, mortal: EntityRow, harm: Harm) -> InjuryRow | None:

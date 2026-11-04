@@ -8,6 +8,7 @@ from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.military import DuelContext, FeudAction
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
+from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.hits import Harm
@@ -89,7 +90,9 @@ async def assassinate(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) ->
     victim = await target_of(ctx, enemy)
     if victim is None:
         return None
-    await death_path(ctx, victim, f"murdered in the blood feud with {avenger.name}", avenger.id, "feud killing", forced=True, harm=HarmCause.BATTLE)
+    await death_path(
+        ctx, victim, f"murdered in the blood feud with {avenger.name}", avenger.id, "feud killing", forced=True, harm=HarmCause.BATTLE, manner=DeathCause.MURDER
+    )
     await start_blood_feud(ctx, enemy.id, avenger.id, f"the murder of {victim.name}")
     return f"An avenger of {avenger.name} murdered {victim.name} of {enemy.name}."
 

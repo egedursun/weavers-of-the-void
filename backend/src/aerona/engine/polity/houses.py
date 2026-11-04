@@ -11,6 +11,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import ClaimBasis, HouseTrait, OfficeKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import HouseStats
@@ -19,11 +20,13 @@ from aerona.engine.context import TickContext
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.lifecycle.succession import dynasty_root
 from aerona.engine.mind.space import value_distance
+from aerona.engine.mortal.kin import children_of, parents_of, spouses_of
+from aerona.engine.mortal.kinship import marry
 from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook, sex_of
 from aerona.engine.polity.offices import whole
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import active_bonds, add_flag, connect, living_entity
+from aerona.engine.primitives.queries import add_flag, connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import set_stats, stat
 
@@ -135,10 +138,9 @@ async def values_of(ctx: TickContext, mortal: EntityRow) -> dict[ValueAxis, int]
 
 
 async def kin_ids(ctx: TickContext, mortal_id: int) -> tuple[set[int], set[int], set[int]]:
-    up = {bond.target_node_id for bond in await active_bonds(ctx.session, [BondKind.DESCENDS_FROM], sources=[mortal_id])}
-    down = {bond.source_node_id for bond in await active_bonds(ctx.session, [BondKind.DESCENDS_FROM], targets=[mortal_id])}
-    spouses = {bond.other_end(mortal_id) for bond in await active_bonds(ctx.session, [BondKind.LOVES], sources=[mortal_id])}
-    spouses |= {bond.other_end(mortal_id) for bond in await active_bonds(ctx.session, [BondKind.LOVES], targets=[mortal_id])}
+    up = set(await parents_of(ctx.session, mortal_id))
+    down = set(await children_of(ctx.session, mortal_id))
+    spouses = set(await spouses_of(ctx.session, mortal_id))
     return up, down, spouses
 
 
@@ -382,7 +384,7 @@ async def arrange_marriages(ctx: TickContext, book: HouseBook, realms: RealmBook
         if best is None:
             continue
         spouse = best[1]
-        await connect(ctx.session, mortal.id, spouse.id, BondKind.LOVES, ctx.epoch, description="arranged marriage")
+        await marry(ctx.session, mortal, spouse, ctx.epoch, kind=MarriageKind.POLITICAL, description="arranged marriage")
         taken |= {mortal.id, spouse.id}
         made.append((mortal, spouse))
     return made

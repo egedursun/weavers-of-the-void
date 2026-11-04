@@ -17,6 +17,7 @@ from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import LegendStats
@@ -279,7 +280,7 @@ async def _hero_loses(ctx: TickContext, hero: EntityRow, monster: EntityRow, pat
         return EncounterResult(EncounterOutcome.WOUNDED)
     style = await strike_style(ctx.session, ctx.rules, monster, hero)
     await fatal_injury(ctx, hero, Harm(hunt.armor_save_hp_loss, HarmCause.MONSTER, f"fell before {monster.name}", style=style, killer_id=monster.id))
-    await die(ctx, hero, cause=f"fell before {monster.name}", killer_id=monster.id, forced=True)
+    await die(ctx, hero, cause=f"fell before {monster.name}", manner=DeathCause.MONSTER, killer_id=monster.id, forced=True)
     lament = await _legend(
         ctx,
         name=f"Lament for {hero.name}",

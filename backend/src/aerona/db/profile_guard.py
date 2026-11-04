@@ -3,8 +3,8 @@ from typing import Any
 
 from sqlalchemy import event
 from sqlalchemy.orm import Mapper, Session, UOWTransaction, object_mapper
-from sqlalchemy.orm.base import instance_state
 from sqlalchemy.orm.attributes import get_history, set_committed_value
+from sqlalchemy.orm.base import instance_state
 
 from aerona.db.base import Base
 from aerona.db.write_guard import WRITE_GUARD, write_blocked
