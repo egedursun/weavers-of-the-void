@@ -113,9 +113,10 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"plan": "Your goal spread over several ages and your next steps"},
     ),
     T.CHOOSE_ANCHOR: ToolText(
-        "You choose one of your own creations as the anchor of your existence. While your anchor lives your existence stays firm; if it is destroyed you begin to fade. "
+        "You choose one of your own creations, or a temple, shrine or other structure mortals dedicated to you, as the anchor of your existence. "
+        "While your anchor lives your existence stays firm; if it is destroyed you begin to fade. "
         "Free, {{ rules.son_tools.anchor_per_epoch }} per age.",
-        {"entity_id": "Your own canonical creation", "reason": "Why this creation holds your existence"},
+        {"entity_id": "Your own canonical creation or a structure dedicated to you", "reason": "Why this holds your existence"},
     ),
     T.COIN_WORDS: ToolText(
         "You add words to a language's dictionary: meaning, word class and origin (from which event, from which words it was born). Languages grow this way and new names "

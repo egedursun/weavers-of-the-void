@@ -10,3 +10,11 @@ class TickStats:
 
     def count(self, key: str, amount: int = 1) -> None:
         self.counters[key] += amount
+
+    @property
+    def tick_seconds(self) -> float:
+        return sum(self.phase_seconds.values())
+
+    def over_budget(self, target_seconds: float) -> float | None:
+        seconds = self.tick_seconds
+        return seconds if seconds > target_seconds else None

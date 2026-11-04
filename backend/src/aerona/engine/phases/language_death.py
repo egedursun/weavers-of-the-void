@@ -7,7 +7,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.engine.context import TickContext
-from aerona.engine.interconnect.annotations import reads
+from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.language_profile import has_script
@@ -46,6 +46,15 @@ async def liturgical(ctx: TickContext, language_id: int) -> bool:
 
 
 @reads("table.bonds", "table.entity_flags", "table.language_profiles", "table.language_standings", "table.people_culture")
+@writes(
+    "language.spread",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
 async def language_death(ctx: TickContext) -> None:
     rules = ctx.rules
     notes_written = 0

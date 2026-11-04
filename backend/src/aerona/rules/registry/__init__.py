@@ -89,6 +89,7 @@ from aerona.rules.registry.god_power import GodPowerRules
 from aerona.rules.registry.guide import GuideRules
 from aerona.rules.registry.heroes import HeroesRules
 from aerona.rules.registry.image_gen import ImageGenRules
+from aerona.rules.registry.incitement import IncitementRules
 from aerona.rules.registry.intervention_costs import InterventionCostsRules
 from aerona.rules.registry.intervention_effects import InterventionEffectsRules
 from aerona.rules.registry.knowledge import KnowledgeRules
@@ -364,6 +365,7 @@ class Rules:
     peoples: PeopleRules = field(default_factory=PeopleRules)
     mobility: MobilityRules = field(default_factory=MobilityRules)
     espionage: EspionageRules = field(default_factory=EspionageRules)
+    incitement: IncitementRules = field(default_factory=IncitementRules)
     empty_world: EmptyWorldRules = field(default_factory=EmptyWorldRules)
     engine_phases: EnginePhasesRules = field(default_factory=EnginePhasesRules)
     epoch_flow: EpochFlowRules = field(default_factory=EpochFlowRules)

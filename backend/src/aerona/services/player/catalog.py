@@ -31,6 +31,7 @@ from aerona.services.player import (
     faith,
     fate_controls,
     foreign_gods,
+    foundations,
     goals,
     god_power,
     heroes,
@@ -1298,7 +1299,32 @@ MECHANIC_ACTIONS = (
     _sync(Meta("modifier:remove", "Remove a modifier", G.SETTINGS), levers.remove_player_modifier, levers.RemoveModifier, free, ("F9", "J.16c")),
     _sync(Meta("incident:annotate", "Keep a note beside an incident", G.SETTINGS), levers.annotate_incident, levers.AnnotateIncident, free, ("F10",)),
 )
+FOUNDATION_ACTIONS = (
+    _sync(Meta("war:incite", "Lay a war at a god's feet, or clear the blame", G.WARFARE), foundations.set_incitement, foundations.WarIncitement, free, ("W0",)),
+    _sync(
+        Meta("world:date_golden_age", "Set when a world's golden age began", G.WORLDS),
+        foundations.set_golden_age_date,
+        foundations.GoldenAgeDate,
+        free,
+        ("W0",),
+    ),
+    _sync(Meta("structure:dedicate", "Dedicate a structure to a god", G.SONS), foundations.dedicate_structure, foundations.Dedicate, free, ("S7.2",)),
+    _sync(
+        Meta("structure:undedicate", "Lift a structure's dedication", G.SONS), foundations.undedicate_structure, foundations.StructureTarget, free, ("S7.2",)
+    ),
+    _sync(Meta("son:anchor", "Anchor a god's existence", G.SONS), foundations.set_anchor, foundations.SonAnchor, free, ("S7.2", "W0")),
+    _sync(Meta("son:clear_anchor", "Cut a god loose from their anchor", G.SONS), foundations.clear_anchor, foundations.SonTarget, free, ("W0",)),
+    _sync(
+        Meta("foundation:hold", "Hold or release a war's blame, a golden age, a dedication or an anchor", G.SETTINGS),
+        foundations.hold_foundation,
+        foundations.HoldFoundation,
+        free,
+        ("J.16c",),
+    ),
+)
+
 ACTIONS: tuple[ActionSpec, ...] = (
+    *FOUNDATION_ACTIONS,
     *WILDS_ACTIONS,
     *LORE_ACTIONS,
     *CREATOR_ACTIONS,

@@ -326,6 +326,7 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.world_seasons",
 )
 @writes("table.occupations", "table.war_sides")
+@writes("table.memories", "table.sons")
 async def war_upkeep(ctx: TickContext) -> None:
     ctx.count("armies_stood_down", await idle_armies(ctx))
     ctx.count("heat_losses", await heat_toll(ctx))

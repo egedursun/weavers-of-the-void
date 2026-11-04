@@ -109,6 +109,7 @@ Finalizer = Callable[[AsyncSession], Awaitable[None]]
 LOGGER = logging.getLogger(__name__)
 FAILED_COUNTER = "failed"
 DISABLED_COUNTER = "disabled"
+OVER_BUDGET_PHASE = "tick_over_budget"
 
 EXPORTED_PHASES: tuple[Phase, ...] = (
     records.PHASES
@@ -441,6 +442,15 @@ async def run_phases(
     return environment.stats
 
 
+def warn_over_budget(environment: TickEnvironment) -> float | None:
+    target = environment.rules.engine_budget.tick_target_seconds
+    seconds = environment.stats.over_budget(target)
+    if seconds is not None:
+        LOGGER.warning("Engine tick of epoch %s took %.1f s, over its %s s target", environment.epoch, seconds, target)
+        environment.publish(EventKind.ENGINE_PHASE, {"epoch": environment.epoch, "phase": OVER_BUDGET_PHASE, "seconds": seconds, "target": target})
+    return seconds
+
+
 async def run_tick(
     environment: TickEnvironment,
     database: Database,
@@ -452,6 +462,7 @@ async def run_tick(
     async with database.read() as session:
         since = await last_chronicle_id(session)
     await run_phases(environment, database, phases, disabled)
+    warn_over_budget(environment)
     async with database.write() as session:
         fold = await fold_tick_lines(session, environment.rules, environment.epoch, since)
         await store_tick_flows(session, environment.epoch, environment.stats.flows)
