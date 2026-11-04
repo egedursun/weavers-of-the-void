@@ -96,6 +96,16 @@ WHITELISTED_TABLES = frozenset(
         "mobility_events",
         "house_profiles",
         "house_members",
+        "world_materials",
+        "node_materials",
+        "community_stocks",
+        "goods_flows",
+        "workshop_designs",
+        "resource_profiles",
+        "resource_workers",
+        "market_price_holds",
+        "currencies",
+        "loans",
     }
 )
 PERMANENT_BIRTH_TABLES = frozenset({"sons", "worlds"})

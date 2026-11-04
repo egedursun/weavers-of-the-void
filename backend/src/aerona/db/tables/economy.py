@@ -55,6 +55,7 @@ class WorldMaterialRow(Base):
     source_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     deposit_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     created_epoch: Mapped[int]
+    held: Mapped[bool] = mapped_column(default=False)
 
 
 class NodeMaterialRow(Base):
@@ -65,6 +66,7 @@ class NodeMaterialRow(Base):
     slot: Mapped[MaterialSlot] = mapped_column(enum_type(MaterialSlot, "slot"), primary_key=True)
     material: Mapped[MaterialKind | None] = mapped_column(enum_type(MaterialKind, "material"))
     world_material_id: Mapped[int | None] = mapped_column(ForeignKey("world_materials.id", ondelete="CASCADE"))
+    held: Mapped[bool] = mapped_column(default=False)
 
 
 class CommunityStockRow(Base):
@@ -90,6 +92,30 @@ class CommunityStockRow(Base):
     world_material_id: Mapped[int | None] = mapped_column(ForeignKey("world_materials.id", ondelete="CASCADE"))
     quantity: Mapped[int] = mapped_column(default=0)
     quality: Mapped[int] = mapped_column(default=50)
+    held: Mapped[bool] = mapped_column(default=False)
+
+
+class WorkshopDesignRow(Base):
+    __tablename__ = "workshop_designs"
+    __table_args__ = (
+        between("output_pct", 0, 500),
+        between("capacity_pct", 0, 500),
+        between("store_pct", 0, 500),
+        between("quality_bonus", PERCENT_MIN, PERCENT_MAX),
+        Index("ix_workshop_designs_world", "world_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    world_id: Mapped[int] = mapped_column(ForeignKey("worlds.id", ondelete="CASCADE"))
+    base_kind: Mapped[WorkshopKind] = mapped_column(enum_type(WorkshopKind, "base_kind"))
+    name: Mapped[str] = mapped_column(String(NAME_MAX_LENGTH))
+    description: Mapped[str | None] = mapped_column(Text)
+    output_pct: Mapped[int] = mapped_column(default=100)
+    capacity_pct: Mapped[int] = mapped_column(default=100)
+    store_pct: Mapped[int] = mapped_column(default=100)
+    quality_bonus: Mapped[int] = mapped_column(default=0)
+    held: Mapped[bool] = mapped_column(default=False)
+    created_epoch: Mapped[int]
 
 
 class WorkshopRow(Base):
@@ -109,6 +135,8 @@ class WorkshopRow(Base):
     built_epoch: Mapped[int]
     fleet: Mapped[int] = mapped_column(default=0)
     idle_epochs: Mapped[int] = mapped_column(default=0)
+    held: Mapped[bool] = mapped_column(default=False)
+    design_id: Mapped[int | None] = mapped_column(ForeignKey("workshop_designs.id", ondelete="SET NULL"))
 
 
 class ResourceProfileRow(Base):
@@ -143,6 +171,7 @@ class ResourceProfileRow(Base):
     revealed: Mapped[bool] = mapped_column(default=True)
     sealed_until_epoch: Mapped[int | None]
     last_output: Mapped[int] = mapped_column(default=0)
+    held: Mapped[bool] = mapped_column(default=False)
 
 
 class ResourceWorkerRow(Base):
@@ -152,6 +181,7 @@ class ResourceWorkerRow(Base):
     resource_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     community_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True, index=True)
     workers: Mapped[int] = mapped_column(default=0)
+    held: Mapped[bool] = mapped_column(default=False)
 
 
 class ProductionRunRow(Base):
@@ -190,6 +220,17 @@ class MarketPriceRow(Base):
     demand: Mapped[int]
     imported: Mapped[int] = mapped_column(default=0)
     exported: Mapped[int] = mapped_column(default=0)
+
+
+class MarketPriceHoldRow(Base):
+    __tablename__ = "market_price_holds"
+    __table_args__ = (at_least("price", 0), at_least("supply", 0))
+
+    market_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    commodity: Mapped[CommodityKind] = mapped_column(enum_type(CommodityKind, "commodity"), primary_key=True)
+    price: Mapped[int | None]
+    supply: Mapped[int | None]
+    set_epoch: Mapped[int]
 
 
 class TradeRouteProfileRow(Base):
@@ -297,6 +338,7 @@ class CurrencyRow(Base):
     trust: Mapped[int]
     minted_epoch: Mapped[int]
     debased_epoch: Mapped[int | None]
+    held: Mapped[bool] = mapped_column(default=False)
 
 
 class LoanRow(Base):
@@ -321,6 +363,7 @@ class LoanRow(Base):
     status: Mapped[LoanStatus] = mapped_column(enum_type(LoanStatus, "status"))
     purpose: Mapped[str] = mapped_column(String(64))
     war_id: Mapped[int | None] = mapped_column(ForeignKey("wars.id", ondelete="SET NULL"))
+    held: Mapped[bool] = mapped_column(default=False)
 
 
 class GoodsFlowRow(Base):

@@ -2,6 +2,7 @@ export const ECONOMY_TABS = [
   'routes',
   'markets',
   'materials',
+  'workshops',
   'currencies',
   'debts',
 ] as const

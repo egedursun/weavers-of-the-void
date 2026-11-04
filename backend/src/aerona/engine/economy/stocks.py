@@ -123,10 +123,13 @@ class GoodsLedger:
         material: MaterialKind | None = None,
         world_material_id: int | None = None,
         quality: int = DEFAULT_QUALITY,
+        force: bool = False,
     ) -> int:
         if quantity <= 0:
             return 0
         row = await self._lot(community_id, commodity, material, world_material_id)
+        if row is not None and row.held and not force:
+            return 0
         if row is None:
             row = CommunityStockRow(
                 community_entity_id=community_id, commodity=commodity, material=material, world_material_id=world_material_id, quantity=0, quality=quality
@@ -149,13 +152,17 @@ class GoodsLedger:
         material: MaterialKind | None = None,
         world_material_id: int | None = None,
         best_first: bool = True,
+        force: bool = False,
     ) -> list[Lot]:
         if quantity <= 0:
             return []
         rows = [
             row
             for row in await lots_of(self.session, community_id, commodity)
-            if row.quantity > 0 and (material is None or row.material == material) and (world_material_id is None or row.world_material_id == world_material_id)
+            if row.quantity > 0
+            and (force or not row.held)
+            and (material is None or row.material == material)
+            and (world_material_id is None or row.world_material_id == world_material_id)
         ]
         rows.sort(key=lambda row: (-row.quality if best_first else row.quality, row.id))
         taken: list[Lot] = []

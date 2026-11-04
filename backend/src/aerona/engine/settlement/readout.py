@@ -15,7 +15,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.settlement.book import Town
 from aerona.engine.settlement.districts import AdminParts, DistrictEffects, admin_parts, parameters_of
-from aerona.engine.settlement.storage import StorageParts, settlement_store, store_kind
+from aerona.engine.settlement.storage import StorageParts, design_for, settlement_store, store_kind
 from aerona.rules.registry import Rules
 
 
@@ -67,8 +67,10 @@ async def plan_readout(session: AsyncSession, rules: Rules, town: Town) -> PlanR
         )
     }
     designs = list(await session.scalars(select(DistrictDesignRow).where(DistrictDesignRow.world_id == entity.world_id).order_by(DistrictDesignRow.id)))
-    food = settlement_store(rules, effects.food_store, stores.get(store_kind(Commodity.FOOD)), Commodity.FOOD)
-    goods = settlement_store(rules, effects.goods_store, stores.get(store_kind(Commodity.GOODS)), Commodity.GOODS)
+    granary = stores.get(store_kind(Commodity.FOOD))
+    warehouse = stores.get(store_kind(Commodity.GOODS))
+    food = settlement_store(rules, effects.food_store, granary, Commodity.FOOD, design=await design_for(session, granary))
+    goods = settlement_store(rules, effects.goods_store, warehouse, Commodity.GOODS, design=await design_for(session, warehouse))
     return PlanReadout(
         admin=admin_parts(
             rules,

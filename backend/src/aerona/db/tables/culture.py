@@ -228,7 +228,6 @@ class ItemProfileRow(Base):
 
     item_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     item_class: Mapped[ItemClass] = mapped_column(enum_type(ItemClass, "item_class"))
-    material: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
     quality: Mapped[int] = mapped_column(default=50)
     condition: Mapped[int] = mapped_column(default=100)
     damage_type: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))

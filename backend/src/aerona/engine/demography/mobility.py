@@ -14,7 +14,7 @@ from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
-from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.polity import DebtRemedy, LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
@@ -29,6 +29,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.services.community_relations import change_relation
+from aerona.engine.services.war import held_captive, take_captive
 from aerona.rules.registry import Rules
 
 BOUND = SocialClass.SERF_OR_SLAVE
@@ -233,7 +234,12 @@ async def ruin_merchants(ctx: TickContext) -> int:
             if member.social_class is SocialClass.OUTCAST or not ctx.rng(f"ruin.{member.id}.{loan.id}").chance(table.ruin_chance):
                 continue
             remedy = await law_param(ctx.session, member.location_id or 0, LawKind.DEBT_LAW, "remedy")
-            member.social_class = SocialClass.SERF_OR_SLAVE if remedy == "bondage" else SocialClass.OUTCAST
+            if remedy == DebtRemedy.JUBILEE.value:
+                continue
+            member.social_class = SocialClass.SERF_OR_SLAVE if remedy == DebtRemedy.BONDAGE.value else SocialClass.OUTCAST
+            lender = await living_entity(ctx.session, loan.lender_entity_id)
+            if remedy == DebtRemedy.PRISON.value and lender is not None and await held_captive(ctx.session, member.id) is None:
+                await take_captive(ctx, lender, member, None, description="held in debtors' prison", home_id=member.location_id)
             fallen += 1
             await ruined(ctx, member, borrower)
     return fallen

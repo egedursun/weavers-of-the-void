@@ -35,6 +35,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.demography.biology import acclimatised, profiles_of
 from aerona.engine.economy.equipment import march_burden, siege_engines, suffer_heat
+from aerona.engine.economy.loot import loot_temples
 from aerona.engine.environment.battleground import BattleGround, attack_factor, defend_factor, night_chance, omen_morale, scar_battlefield, season_losses
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment, scar_region
 from aerona.engine.environment.years import grant_sub_steps
@@ -312,9 +313,13 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.armies",
     "table.army_profiles",
     "table.battles",
+    "table.beast_profiles",
+    "table.bodies",
     "table.bonds",
     "table.calendars",
     "table.culture_values",
+    "table.entities",
+    "table.entity_flags",
     "table.forced_weather",
     "table.node_materials",
     "table.occupations",
@@ -324,9 +329,13 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.war_sides",
     "table.wars",
     "table.world_maps",
+    "table.world_materials",
     "table.world_seasons",
 )
-@writes("table.occupations", "table.war_sides")
+@writes(
+    "table.occupations",
+    "table.war_sides",
+)
 async def war_upkeep(ctx: TickContext) -> None:
     ctx.count("armies_stood_down", await idle_armies(ctx))
     ctx.count("heat_losses", await heat_toll(ctx))
@@ -526,7 +535,7 @@ async def duel(
     if event is not None and war is not None:
         for hero in (first, second):
             await bonds.connect(BondDraft(event.id, hero.id, BondKind.PARTY_TO, ctx.epoch, "dueled", role=BondRole.DUELED, war_id=war.id))
-    result = bout(ctx.rules, ctx.rng(f"duel.{first.id}.{second.id}.{ctx.epoch}"), await fighter(ctx, first), await fighter(ctx, second), context)
+    result = bout(ctx.rules, ctx.rng(f"duel.{first.id}.{second.id}.{ctx.epoch}"), await fighter(ctx, first, second), await fighter(ctx, second, first), context)
     await duelled(ctx, first)
     await duelled(ctx, second)
     winner, loser = result.winner.entity, result.loser.entity
@@ -735,6 +744,7 @@ async def _sacked(ctx: TickContext, besieged: EntityRow, armies: dict[int, tuple
     profile = await profile_of(ctx, armies[attacker.id][0], attacker)
     homeward = [March(army, besieged, await profile_of(ctx, army, besieged), None, False) for owner, (army, _) in armies.items() if owner == besieged.id]
     ctx.count("sack_dead", await sack(ctx, besieged, profile, homeward=homeward))
+    ctx.count("temple_loot", await loot_temples(ctx, besieged, attacker))
 
 
 async def _spoils(
@@ -1147,9 +1157,11 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.cosmos",
     "table.cult_tenets",
     "table.culture_values",
+    "table.currencies",
     "table.designated_heirs",
     "table.districts",
     "table.disease_profiles",
+    "table.entities",
     "table.entity_flags",
     "table.entity_traits",
     "table.epoch_year_cursors",
@@ -1231,9 +1243,13 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.chronicle_entities",
     "table.community_relations",
     "table.districts",
+    "table.community_societies",
+    "table.community_stocks",
+    "table.currencies",
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
     "table.injuries",

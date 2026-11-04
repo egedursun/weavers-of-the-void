@@ -55,7 +55,7 @@ from aerona.engine.primitives.society import supply_index
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat
 from aerona.engine.settlement.book import Town, ledger, tier_for
 from aerona.engine.settlement.districts import AdminParts, admin_parts, culprit_weight, designs_for, unify_market, wound_district
-from aerona.engine.settlement.storage import settlement_store, storage_index, store_kind
+from aerona.engine.settlement.storage import design_for, settlement_store, storage_index, store_kind
 from aerona.rules.registry import Rules
 
 FOOD_INDEX = 100
@@ -365,9 +365,15 @@ async def store_up(ctx: TickContext, town: Town) -> None:
         )
     }
     if "granary_capacity" not in infrastructure.locked:
-        infrastructure.granary_capacity = settlement_store(ctx.rules, effects.food_store, stores.get(store_kind(Commodity.FOOD)), Commodity.FOOD).total
+        food = stores.get(store_kind(Commodity.FOOD))
+        infrastructure.granary_capacity = settlement_store(
+            ctx.rules, effects.food_store, food, Commodity.FOOD, design=await design_for(ctx.session, food)
+        ).total
     if "warehouse_capacity" not in infrastructure.locked:
-        infrastructure.warehouse_capacity = settlement_store(ctx.rules, effects.goods_store, stores.get(store_kind(Commodity.GOODS)), Commodity.GOODS).total
+        goods = stores.get(store_kind(Commodity.GOODS))
+        infrastructure.warehouse_capacity = settlement_store(
+            ctx.rules, effects.goods_store, goods, Commodity.GOODS, design=await design_for(ctx.session, goods)
+        ).total
     if "harbour_capacity" not in infrastructure.locked:
         infrastructure.harbour_capacity = effects.harbour
 

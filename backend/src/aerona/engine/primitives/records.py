@@ -27,6 +27,7 @@ from aerona.domain.enums.entity import (
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic, SocialClass
 from aerona.domain.models.entity_stats import EntityStats
 from aerona.engine.context import TickContext
+from aerona.engine.economy.provenance import ensure_materials
 from aerona.engine.interconnect.guards import CONSERVED_KEYS, record_flow
 from aerona.engine.primitives.queries import active_bonds, connect, living_entity
 
@@ -206,6 +207,7 @@ async def open_record(session: AsyncSession, epoch: int, spec: RecordSpec) -> En
         )
     )
     founded(created)
+    await ensure_materials(session, created)
     return created
 
 

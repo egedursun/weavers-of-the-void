@@ -63,7 +63,9 @@ from aerona.db.tables.culture import (
 )
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.engine.economy.materials import MaterialBook, node_material
 from aerona.engine.lore.research import gate_open
 
 router = APIRouter(tags=["lore"])
@@ -264,9 +266,12 @@ async def item_card(session: AsyncSession, entity_id: int) -> ItemCard | None:
             *contents,
         ],
     )
+    body = await node_material(session, entity_id, MaterialSlot.BODY)
+    item = await session.get(EntityRow, entity_id)
+    props = (await MaterialBook.load(session)).props(item.world_id if item is not None else None, body.material, body.world_material_id) if body else None
     return ItemCard(
         item_class=row.item_class,
-        material=row.material,
+        material=props.label if props is not None else None,
         quality=row.quality,
         condition=row.condition,
         damage_type=row.damage_type,

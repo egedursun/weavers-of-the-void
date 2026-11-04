@@ -60,3 +60,4 @@ class TreasuryEntry(StrEnum):
     FIRE = "fire"
     PLUNDER = "plunder"
     GRANT = "grant"
+    LOAN = "loan"

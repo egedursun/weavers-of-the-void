@@ -148,6 +148,7 @@ async def labour_allocation(ctx: TickContext) -> None:
     "table.battles",
     "table.bonds",
     "table.captive_cohorts",
+    "table.captives",
     "table.community_cohorts",
     "table.community_societies",
     "table.cult_tenets",
@@ -177,6 +178,11 @@ async def labour_allocation(ctx: TickContext) -> None:
     "table.mobility_events",
     "table.name_registry",
     "table.nodes",
+    "table.bonds",
+    "table.captives",
+    "table.community_cohorts",
+    "table.community_societies",
+    "table.entities",
     "table.people_culture",
 )
 async def society_mobility(ctx: TickContext) -> None:

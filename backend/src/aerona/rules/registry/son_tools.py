@@ -256,3 +256,4 @@ class SonToolsRules:
     design_district_essence: int = rule(35, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to devise a new kind of district for its world")
     design_district_ap: int = rule(1, 1, 10, RuleGroup.SON_TOOLS, "design_district action cost")
     loose_disease_essence: int = rule(40, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to forge and loose a sickness of its own design")
+    forge_material_essence: int = rule(40, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to forge a new material into a world")

@@ -13,19 +13,19 @@ from aerona.db.tables.polity import OfficeRow
 from aerona.domain.enums.body import ConditionKind
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import CurseKind, ItemClass, ItemDeed
+from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, SkillKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.body.conditions import end_condition
 from aerona.engine.context import TickContext
+from aerona.engine.economy.materials import MaterialBook, MaterialProps, battle_wear, node_material, rust_wear, worth_factor
 from aerona.engine.lore.arms import GUARDS
 from aerona.engine.mind.memories import remember
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat
 
-WET = 60
-IRON = frozenset({"iron", "steel"})
 HALF = 2
 CURABLE = frozenset({ConditionKind.CHRONIC_ILLNESS, ConditionKind.MELANCHOLY, ConditionKind.PARANOIA, ConditionKind.AGE_BLINDNESS, ConditionKind.WITHERED_LIMB})
 
@@ -75,7 +75,6 @@ async def profile_of(ctx: TickContext, item: EntityRow) -> ItemProfileRow:
     row = ItemProfileRow(
         item_entity_id=item.id,
         item_class=item_class,
-        material=(item.subtype or None),
         quality=quality,
         condition=PERCENT,
         damage_type=spec.damage_type,
@@ -121,14 +120,22 @@ async def regalia(ctx: TickContext, item: EntityRow, row: ItemProfileRow) -> str
     return None
 
 
-def wear(ctx: TickContext, row: ItemProfileRow, land: RegionEnvironmentRow | None, fought: bool) -> bool:
+def wear(ctx: TickContext, row: ItemProfileRow, land: RegionEnvironmentRow | None, fought: bool, props: MaterialProps | None = None) -> bool:
     table = ctx.rules.item_wear
     before = row.condition
     if fought and row.item_class in WEAPONS | {ItemClass.ARMOUR, ItemClass.SHIELD, ItemClass.HELMET}:
-        row.condition = clamp_int(row.condition - table.battle_wear, 0, PERCENT)
-    if land is not None and land.moisture >= WET and (row.material or "").lower() in IRON:
-        row.condition = clamp_int(row.condition - table.decay_wet, 0, PERCENT)
+        row.condition = clamp_int(row.condition - battle_wear(ctx.rules, props), 0, PERCENT)
+    if land is not None and props is not None and land.moisture >= ctx.rules.materials.rust_wet_moisture:
+        row.condition = clamp_int(row.condition - rust_wear(ctx.rules, props), 0, PERCENT)
     return before >= table.broken > row.condition
+
+
+async def material_of(ctx: TickContext, item: EntityRow, book: MaterialBook | None = None) -> MaterialProps | None:
+    node = await node_material(ctx.session, item.id, MaterialSlot.BODY)
+    if node is None:
+        return None
+    materials = book if book is not None else await MaterialBook.load(ctx.session)
+    return materials.props(item.world_id, node.material, node.world_material_id)
 
 
 async def fought_this_epoch(ctx: TickContext, owner: int | None) -> bool:
@@ -153,14 +160,15 @@ async def deeds(ctx: TickContext, item: EntityRow, row: ItemProfileRow, owner: i
     return count
 
 
-async def item_year(ctx: TickContext, atlas: RegionAtlas, item: EntityRow) -> dict[str, int]:
+async def item_year(ctx: TickContext, atlas: RegionAtlas, item: EntityRow, book: MaterialBook | None = None) -> dict[str, int]:
     row = await profile_of(ctx, item)
     owner = await owner_of(ctx, item.id)
     counts: dict[str, int] = {}
     region = atlas.top_region(owner) if owner is not None else atlas.top_region(item.id)
     land = await ctx.session.get(RegionEnvironmentRow, region) if region is not None else None
     fought = await fought_this_epoch(ctx, owner)
-    if "condition" not in row.locked and wear(ctx, row, land, fought):
+    props = await material_of(ctx, item, book)
+    if "condition" not in row.locked and wear(ctx, row, land, fought, props):
         record(ctx, item.id, ItemDeed.BROKEN, owner, "broken in use")
         counts["broken"] = 1
     counts["repaired"] = int(await repair(ctx, item, row, owner))
@@ -177,7 +185,8 @@ async def item_year(ctx: TickContext, atlas: RegionAtlas, item: EntityRow) -> di
     if not fought and "renown" not in row.locked:
         row.renown = clamp_int(row.renown - ctx.rules.item_renown.decay, 0, PERCENT)
     row.symbol = row.renown >= ctx.rules.item_renown.symbol
-    row.value = round_half_up(row.quality * (1 + row.renown / PERCENT) * (row.condition / PERCENT + HALF) / HALF)
+    if "value" not in row.locked:
+        row.value = round_half_up(row.quality * (1 + row.renown / PERCENT) * (row.condition / PERCENT + HALF) / HALF * worth_factor(ctx.rules, props))
     row.updated_epoch = ctx.epoch
     return counts
 

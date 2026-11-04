@@ -79,7 +79,7 @@ async def champions(ctx: TickContext) -> int:
         first, second = await champion(ctx, attacker), await champion(ctx, defender)
         if first is None or second is None:
             continue
-        result = bout(ctx.rules, ctx.rng(f"champions.{war.id}"), await fighter(ctx, first), await fighter(ctx, second), DuelContext.CHAMPION)
+        result = bout(ctx.rules, ctx.rng(f"champions.{war.id}"), await fighter(ctx, first, second), await fighter(ctx, second, first), DuelContext.CHAMPION)
         hero = result.winner.entity
         victor, loser = (attacker, defender) if hero.id == first.id else (defender, attacker)
         if result.killed:

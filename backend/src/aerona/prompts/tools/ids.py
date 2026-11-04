@@ -62,6 +62,7 @@ class SonToolId(StrEnum):
     SHAPE_FOLK = "shape_folk"
     SEVER_LEY = "sever_ley"
     LOOSE_DISEASE = "loose_disease"
+    FORGE_MATERIAL = "forge_material"
     DECLARE_HOLY_WORLD = "declare_holy_world"
     SEAL_GATE = "seal_gate"
     REKINDLE_STAR = "rekindle_star"

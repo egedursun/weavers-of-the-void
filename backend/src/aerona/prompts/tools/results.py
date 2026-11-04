@@ -203,6 +203,8 @@ class SonResult(StrEnum):
     FOLK_NOTHING = "Name at least one custom to set."
     WEATHER_NOT_REGION = "Weather is held over a region; {{ name }} is not one."
     LEY_SEVERED = "The ley line between {{ first }} and {{ second }} is cut for {{ epochs }} ages."
+    MATERIAL_FORGED = "{{ name }} (substance #{{ id }}) is forged into the world{% if vein %}; its vein is #{{ vein }}{% endif %}."
+    NO_FORGE_WORLD = "There is no world #{{ id }} within your reach to forge into."
     NO_SUCH_LEY = "There is no ley line #{{ id }}."
     DISEASE_TARGET = "A sickness can only be loosed on a region or a community."
     DISEASE_LOOSED = "#{{ id }} {{ name }} rose in {{ land }} and struck {{ target }} (severity {{ severity }})."

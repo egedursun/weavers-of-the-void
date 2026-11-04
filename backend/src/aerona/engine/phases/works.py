@@ -205,7 +205,10 @@ def can_build(rules: Rules, community: EntityRow) -> bool:
     "table.bonds",
     "table.community_societies",
     "table.community_stocks",
+    "table.cosmos",
     "table.culture_values",
+    "table.currencies",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.goods_flows",
     "table.holder_levels",
@@ -214,8 +217,13 @@ def can_build(rules: Rules, community: EntityRow) -> bool:
     "table.memories",
     "table.minds",
     "table.name_registry",
+    "table.node_materials",
     "table.nodes",
+    "table.region_environment",
+    "table.resource_profiles",
     "table.traits",
+    "table.vessel_profiles",
+    "table.world_materials",
 )
 @writes(
     "people.piety",
@@ -236,6 +244,7 @@ def can_build(rules: Rules, community: EntityRow) -> bool:
     "table.language_profiles",
     "table.memories",
     "table.name_registry",
+    "table.node_materials",
 )
 async def engine_works(ctx: TickContext) -> None:
     rules = ctx.rules

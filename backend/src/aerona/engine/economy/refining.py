@@ -4,7 +4,7 @@ from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.materials import ARMOUR_MATERIALS, LUXURY_MATERIALS, TOOL_MATERIALS, WEAPON_MATERIALS
 from aerona.catalog.production import CHAIN_STEPS, SHIP_INPUTS, WORKSHOP_LABELS, ChainStep
 from aerona.constants.units import PERCENT
-from aerona.db.tables.economy import ProductionRunRow, WorkshopRow
+from aerona.db.tables.economy import ProductionRunRow, WorkshopDesignRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
@@ -16,6 +16,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.materials import alloy_inputs, workable
 from aerona.engine.economy.stocks import epoch_need, goods_of, holding, lots_of
+from aerona.engine.economy.workshop_designs import capacity_scale, output_scale, quality_bonus
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount
@@ -55,11 +56,11 @@ def target_units(ctx: TickContext, community: EntityRow, commodity: CommodityKin
     return round_half_up(max(1, need) * ctx.rules.refining.target_index / ctx.rules.economy.supply_index_epoch)
 
 
-def capacity(ctx: TickContext, step: ChainStep, workshop: WorkshopRow | None) -> int:
+def capacity(ctx: TickContext, step: ChainStep, workshop: WorkshopRow | None, design: WorkshopDesignRow | None = None) -> int:
     table = ctx.rules.refining
     if step.workshop is None:
         return round_half_up(table.batches_per_level * table.household_batches_pct / PERCENT)
-    return workshop.level * table.batches_per_level if workshop is not None else 0
+    return round_half_up(workshop.level * table.batches_per_level * capacity_scale(design)) if workshop is not None else 0
 
 
 async def best_input(ctx: TickContext, book: EconomyBook, community: EntityRow, step: ChainStep) -> tuple[MaterialKind | None, int | None]:
@@ -178,7 +179,8 @@ async def note_bottleneck(ctx: TickContext, community: EntityRow, step: ChainSte
 async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, step: ChainStep, *, artisans: int, tally: RefiningTally) -> int:
     table = ctx.rules.refining
     workshop = book.workshop(community.id, step.workshop) if step.workshop is not None else None
-    room = capacity(ctx, step, workshop)
+    design = book.design_of(workshop)
+    room = capacity(ctx, step, workshop, design)
     if room <= 0 or (step.branch is not None and book.level(community.id, step.branch) < step.level):
         return 0
     wanted = target_units(ctx, community, step.output) - await holding(ctx.session, community.id, step.output)
@@ -206,15 +208,17 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
             )
         )
     if batches <= 0:
-        if workshop is not None:
+        if workshop is not None and not workshop.held:
             workshop.idle_epochs += 1
         return 0
     used, input_quality = await consume_inputs(ctx, community, step, batches, material=material, world_material=world_material)
     skill = book.skill(community.id, step.skill)
     quality = clamp_int(
-        round_half_up(input_quality * table.material_quality_pct / PERCENT) + skill * table.skill_quality_per_level + step.quality_gain, 0, PERCENT
+        round_half_up(input_quality * table.material_quality_pct / PERCENT) + skill * table.skill_quality_per_level + step.quality_gain + quality_bonus(design),
+        0,
+        PERCENT,
     )
-    made = batches * step.output_qty
+    made = round_half_up(batches * step.output_qty * output_scale(design))
     out_material = material if step.keeps_material is not None else step.material
     await goods_of(ctx.session, ctx.epoch).add(
         community.id, step.output, made, GoodsFlow.PRODUCTION, material=out_material, world_material_id=world_material, quality=quality
@@ -233,7 +237,7 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
             workers=batches * table.workers_per_batch,
         )
     )
-    if workshop is not None:
+    if workshop is not None and not workshop.held:
         workshop.idle_epochs = 0
         if batches >= room and workshop.level < table.max_level and ctx.rng(f"upgrade.{workshop.id}").chance(table.upgrade_chance):
             workshop.level += 1
@@ -283,7 +287,7 @@ async def build_workshops(ctx: TickContext, book: EconomyBook, community: Entity
 async def launch_ships(ctx: TickContext, book: EconomyBook, community: EntityRow, tally: RefiningTally) -> None:
     table = ctx.rules.refining
     yard = book.workshop(community.id, WorkshopKind.SHIPYARD)
-    if yard is None or yard.fleet >= table.fleet_cap or not ctx.rng(f"ship.{community.id}").chance(table.ship_chance):
+    if yard is None or yard.held or yard.fleet >= table.fleet_cap or not ctx.rng(f"ship.{community.id}").chance(table.ship_chance):
         return
     for commodity, amount in SHIP_INPUTS:
         if await holding(ctx.session, community.id, commodity) < amount:
@@ -297,7 +301,7 @@ async def launch_ships(ctx: TickContext, book: EconomyBook, community: EntityRow
 async def tend_workshops(ctx: TickContext, book: EconomyBook, community: EntityRow) -> None:
     limit = ctx.rules.refining.upgrade_idle_limit
     for workshop in book.workshops.get(community.id, {}).values():
-        if workshop.idle_epochs > limit and workshop.level > 1:
+        if not workshop.held and workshop.idle_epochs > limit and workshop.level > 1:
             workshop.level -= 1
             workshop.idle_epochs = 0
 

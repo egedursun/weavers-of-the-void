@@ -11,6 +11,7 @@ import {
   Save,
   Sparkles,
   Sprout,
+  Trash2,
   TriangleAlert,
   UserRoundCog,
   Users,
@@ -22,6 +23,7 @@ import { formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import {
   EmptyState,
   EntityLink,
@@ -43,21 +45,32 @@ import {
   NumberField,
   PartHeader,
 } from './EntityEconomy'
-import { useResourceProfile } from './api'
+import { ECONOMY_REFRESH, useResourceProfile } from './api'
 import {
   COMMODITY,
   type CommodityKind,
   GOODS_FAMILY,
+  type KnowledgeBranch,
   MATERIAL_KINDS,
   MATERIAL_LABEL,
   type MaterialKind,
   branch,
   qualityTier,
 } from './labels'
+import {
+  NONE,
+  WORKING,
+  branchChoices,
+  materialRef,
+  useBusy,
+  useKindChoices,
+  useMaterialChoices,
+  whole,
+} from './model'
+import { ChoiceSelect, ConfirmButton, HeldBadge, ReleaseButton } from './parts'
 
 type Profile = components['schemas']['ResourceProfileView']
 
-const WORKING = 'Working…'
 const PERCENT = 100
 const LOW = 4
 const OWNER_TYPES = new Set([
@@ -77,6 +90,8 @@ const FIELDS = [
   { key: 'initial_reserve', label: 'First reserve', max: undefined },
 ] as const
 const NO_MATERIAL = 'none'
+const MAX_LEVEL = 20
+const WORKER_TYPES = new Set(['people', 'settlement'])
 const COMMODITY_CHOICES = Object.fromEntries(
   Object.entries(COMMODITY).map(([key, item]) => [key, item.label])
 )
@@ -87,11 +102,262 @@ const MATERIAL_CHOICES = {
   ),
 }
 
+function WorkingForm({
+  profile,
+  worldId,
+  busy,
+}: {
+  profile: Profile
+  worldId: number | null
+  busy: string | null
+}) {
+  const [craft, setCraft] = useState<string>(profile.required_branch ?? NONE)
+  const [level, setLevel] = useState(String(profile.required_level))
+  const [byproduct, setByproduct] = useState<string>(
+    profile.byproduct_material ?? NONE
+  )
+  const [share, setShare] = useState(String(profile.byproduct_pct))
+  const [sealed, setSealed] = useState(
+    profile.sealed_until_epoch === null
+      ? ''
+      : String(profile.sealed_until_epoch)
+  )
+  const [substance, setSubstance] = useState<string>(
+    profile.world_material_id === null
+      ? NONE
+      : `sub:${profile.world_material_id}`
+  )
+  const [hold, setHold] = useState(profile.held)
+  const kinds = useKindChoices(worldId)
+  const substances = Object.fromEntries(
+    Object.entries(useMaterialChoices(worldId)).filter(([key]) =>
+      key.startsWith('sub:')
+    )
+  )
+  const edit = useGodAction({
+    invalidate: ECONOMY_REFRESH,
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/resource:edit', {
+          body: {
+            resource_id: profile.resource_id,
+            required_level: whole(level, MAX_LEVEL),
+            byproduct_pct: whole(share, PERCENT),
+            sealed_until_epoch: sealed.trim() === '' ? null : whole(sealed),
+            unseal: sealed.trim() === '' && profile.sealed_until_epoch !== null,
+            required_branch: craft === NONE ? null : (craft as KnowledgeBranch),
+            clear_branch: craft === NONE && profile.required_branch !== null,
+            byproduct_material:
+              byproduct === NONE ? null : (byproduct as MaterialKind),
+            clear_byproduct:
+              byproduct === NONE && profile.byproduct_material !== null,
+            world_material_id:
+              substance === NONE
+                ? profile.world_material_id === null
+                  ? null
+                  : 0
+                : materialRef(substance).world_material_id,
+            hold,
+          },
+        })
+      ),
+  })
+  const blocked = busy ?? (edit.isPending ? WORKING : null)
+  return (
+    <div className='flex min-w-0 flex-col gap-3'>
+      <div className='flex min-w-0 flex-wrap items-center justify-between gap-2'>
+        <Label variant='overline'>Craft, seal and by-product</Label>
+        <SwitchToggle
+          label='Hold what I set'
+          checked={hold}
+          disabled={blocked !== null}
+          onChange={setHold}
+        />
+      </div>
+      <div className={cn(FIELD_GRID, 'grid-cols-2 @lg/res:grid-cols-3')}>
+        <ChoiceSelect
+          label='Craft to work it'
+          value={craft}
+          table={branchChoices('Anyone can work it')}
+          blocked={blocked}
+          onPick={setCraft}
+        />
+        <NumberField
+          label='Level of that craft'
+          aria='Required level'
+          value={level}
+          max={MAX_LEVEL}
+          onChange={setLevel}
+        />
+        <ChoiceSelect
+          label='By-product'
+          value={byproduct}
+          table={{
+            [NONE]: { label: 'Nothing on the side', icon: Gem, tone: 'muted' },
+            ...kinds,
+          }}
+          blocked={blocked}
+          onPick={setByproduct}
+        />
+        <NumberField
+          label='By-product share %'
+          aria='By-product share'
+          value={share}
+          max={PERCENT}
+          onChange={setShare}
+        />
+        <NumberField
+          label='Sealed until epoch'
+          aria='Sealed until epoch'
+          value={sealed}
+          onChange={setSealed}
+        />
+        <ChoiceSelect
+          label='Substance of this world'
+          value={substance}
+          table={{
+            [NONE]: { label: 'A common material', icon: Gem, tone: 'muted' },
+            ...substances,
+          }}
+          blocked={blocked}
+          onPick={setSubstance}
+        />
+      </div>
+      <Muted variant='caption'>
+        Leave the seal empty to open the deposit; a craft and level keep it
+        closed to peoples who do not know them yet.
+      </Muted>
+      <Button
+        size='sm'
+        className='self-start'
+        disabled={blocked !== null}
+        disabledReason={blocked ?? undefined}
+        onClick={() => edit.mutate(undefined)}
+      >
+        <Save />
+        Set the working
+      </Button>
+    </div>
+  )
+}
+
+function WorkersForm({
+  profile,
+  busy,
+}: {
+  profile: Profile
+  busy: string | null
+}) {
+  const names = useNames()
+  const first = profile.workers.at(0)
+  const [community, setCommunity] = useState<string | null>(
+    first ? String(first.community_id) : null
+  )
+  const [workers, setWorkers] = useState(first ? String(first.workers) : '10')
+  const [hold, setHold] = useState(true)
+  const set = useGodAction({
+    invalidate: ECONOMY_REFRESH,
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/resource:workers', {
+          body: {
+            resource_id: profile.resource_id,
+            community_id: Number(community),
+            workers: whole(workers),
+            hold,
+          },
+        })
+      ),
+  })
+  const blocked =
+    busy ??
+    (set.isPending ? WORKING : null) ??
+    (community === null ? 'Choose who works it first.' : null)
+  const options = (names.data ?? [])
+    .filter((row) => row.kind === 'entity' && WORKER_TYPES.has(row.type))
+    .map((row) => ({
+      value: String(row.id),
+      label: row.name,
+      hint: row.type,
+    }))
+  return (
+    <div className='flex min-w-0 flex-col gap-3'>
+      <div className='flex min-w-0 flex-wrap items-center justify-between gap-2'>
+        <Label variant='overline'>Hands at work</Label>
+        <SwitchToggle
+          label='Hold the hands'
+          checked={hold}
+          disabled={busy !== null}
+          onChange={setHold}
+        />
+      </div>
+      <div className={cn(FIELD_GRID, '@lg/res:grid-cols-3')}>
+        <div className='flex min-w-0 flex-col gap-1'>
+          <Label>Community</Label>
+          <RecordCombobox
+            options={options}
+            value={community}
+            onChange={(next) => setCommunity(next)}
+            placeholder='Choose who works it'
+            maxShown={Math.max(1, options.length)}
+            disabled={busy !== null}
+            disabledReason={busy ?? undefined}
+            aria-label='Working community'
+          />
+        </div>
+        <NumberField
+          label='Workers'
+          aria='Workers'
+          value={workers}
+          onChange={setWorkers}
+        />
+        <Button
+          size='sm'
+          variant='outline'
+          className='justify-self-start'
+          disabled={blocked !== null}
+          disabledReason={blocked ?? undefined}
+          onClick={() => set.mutate(undefined)}
+        >
+          <Users />
+          Set the hands
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function SwitchToggle({
+  label,
+  checked,
+  disabled,
+  onChange,
+}: {
+  label: string
+  checked: boolean
+  disabled?: boolean
+  onChange: (value: boolean) => void
+}) {
+  return (
+    <label className='flex shrink-0 items-center gap-2'>
+      <Switch
+        checked={checked}
+        disabled={disabled}
+        onCheckedChange={onChange}
+        aria-label={label}
+      />
+      <Text as='span'>{label}</Text>
+    </label>
+  )
+}
+
 function ProfileForm({
   profile,
+  worldId,
   readOnlyReason,
 }: {
   profile: Profile
+  worldId: number | null
   readOnlyReason?: string | null
 }) {
   const { reason } = useGodGate()
@@ -243,6 +509,8 @@ function ProfileForm({
           </Button>
         </div>
       </div>
+      <WorkingForm profile={profile} worldId={worldId} busy={busy} />
+      <WorkersForm profile={profile} busy={busy} />
       <div className='flex min-w-0 flex-col gap-3'>
         <Label variant='overline'>Its master</Label>
         <div className={cn(FIELD_GRID, '@lg/res:grid-cols-2')}>
@@ -276,8 +544,53 @@ function ProfileForm({
   )
 }
 
-function Summary({ profile }: { profile: Profile }) {
+function Summary({
+  profile,
+  readOnlyReason,
+}: {
+  profile: Profile
+  readOnlyReason?: string | null
+}) {
   const names = useNames()
+  const release = useGodAction({
+    invalidate: ECONOMY_REFRESH,
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/resource:release', {
+          body: { resource_id: profile.resource_id },
+        })
+      ),
+  })
+  const remove = useGodAction({
+    invalidate: ECONOMY_REFRESH,
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/resource:delete', {
+          body: { resource_id: profile.resource_id },
+        })
+      ),
+  })
+  const freeWorker = useGodAction({
+    invalidate: ECONOMY_REFRESH,
+    run: (community: number) =>
+      unwrap(
+        api.POST('/api/actions/resource:workers', {
+          body: {
+            resource_id: profile.resource_id,
+            community_id: community,
+            workers: null,
+            hold: false,
+          },
+        })
+      ),
+  })
+  const busy = useBusy(
+    readOnlyReason,
+    release.isPending,
+    remove.isPending,
+    freeWorker.isPending
+  )
+  const gated = profile.knowledge_gated ?? []
   const spec = COMMODITY[profile.commodity]
   const family = GOODS_FAMILY[spec.family]
   const tier = qualityTier(profile.quality)
@@ -336,6 +649,7 @@ function Summary({ profile }: { profile: Profile }) {
                 {`Needs ${needs.label.toLowerCase()} ${profile.required_level}`}
               </Badge>
             )}
+            <HeldBadge held={profile.held} />
             {profile.byproduct_material && (
               <Badge size='sm' variant='default'>
                 <Gem />
@@ -344,7 +658,37 @@ function Summary({ profile }: { profile: Profile }) {
             )}
           </div>
         </div>
+        <div className='flex min-w-0 flex-wrap gap-2'>
+          <ReleaseButton
+            held={profile.held}
+            busy={busy}
+            onRelease={() => release.mutate(undefined)}
+          />
+          <ConfirmButton
+            icon={Trash2}
+            label='Unmake the deposit'
+            title='Unmake this deposit?'
+            description='It vanishes from the land: no one can work it again and what was left in it is lost.'
+            confirm='Unmake it'
+            busy={busy}
+            onConfirm={() => remove.mutate(undefined)}
+          />
+        </div>
       </div>
+      {gated.length > 0 && (
+        <div
+          role='status'
+          className='flex min-w-0 items-start gap-3 rounded-lg border border-warning/40 bg-warning/5 p-3'
+        >
+          <TriangleAlert
+            aria-hidden='true'
+            className='size-icon-md shrink-0 text-warning'
+          />
+          <Text tone='warning'>
+            {`${needs ? `Needs ${needs.label.toLowerCase()} ${profile.required_level}` : 'Needs a craft'} — the people of ${gated.map(ownerName).join(', ')} do not know it yet; it yields nothing to them.`}
+          </Text>
+        </div>
+      )}
       <div className='grid min-w-0 grid-cols-1 gap-3 @md/res:grid-cols-2 @xl/res:grid-cols-3'>
         <KpiTile
           label='Reserve left'
@@ -430,6 +774,12 @@ function Summary({ profile }: { profile: Profile }) {
                 value={`${formatInteger(row.workers)} workers`}
                 tone='info'
               />
+              <HeldBadge held={row.held} />
+              <ReleaseButton
+                held={row.held}
+                busy={busy}
+                onRelease={() => freeWorker.mutate(row.community_id)}
+              />
             </div>
           ))}
         </div>
@@ -463,9 +813,11 @@ function Summary({ profile }: { profile: Profile }) {
 
 export function ResourceProfile({
   resourceId,
+  worldId = null,
   readOnlyReason,
 }: {
   resourceId: number
+  worldId?: number | null
   readOnlyReason?: string | null
 }) {
   const view = useResourceProfile(resourceId)
@@ -489,7 +841,7 @@ export function ResourceProfile({
           data-surface='ResourceProfile'
           className='@container/res flex min-w-0 flex-col gap-5'
         >
-          <Summary profile={view.data} />
+          <Summary profile={view.data} readOnlyReason={readOnlyReason} />
           {view.data.runs.length > 1 ? (
             <LineChart
               title='Taken out per epoch'
@@ -513,8 +865,9 @@ export function ResourceProfile({
             </Muted>
           )}
           <ProfileForm
-            key={`${view.data.reserve}-${view.data.commodity}-${view.data.revealed}`}
+            key={`${view.data.reserve}-${view.data.commodity}-${view.data.revealed}-${view.data.held}-${view.data.required_level}-${view.data.required_branch}-${view.data.sealed_until_epoch}-${view.data.byproduct_material}-${view.data.world_material_id}`}
             profile={view.data}
+            worldId={worldId}
             readOnlyReason={readOnlyReason}
           />
         </div>

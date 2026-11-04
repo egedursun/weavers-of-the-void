@@ -163,7 +163,8 @@ async def enforce_storage(ctx: TickContext, book: EconomyBook, community: Entity
         family = {kind: quantity for kind, quantity in held.items() if COMMODITIES[kind].aggregate is aggregate and quantity > 0}
         stocked = sum(family.values())
         need = aggregate_need(ctx.rules, population, aggregate)
-        room = storage_room(ctx.rules, capacity_of(ctx.rules, infrastructure, book.workshop(community.id, store_kind(aggregate)), aggregate), need)
+        store = book.workshop(community.id, store_kind(aggregate))
+        room = storage_room(ctx.rules, capacity_of(ctx.rules, infrastructure, store, aggregate, book.design_of(store)), need)
         excess = stocked - room
         if excess <= 0:
             continue

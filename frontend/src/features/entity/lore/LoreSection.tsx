@@ -1016,6 +1016,12 @@ function ItemPanel({
       </div>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Badge variant='info'>{words(card.item_class)}</Badge>
+        {card.material && (
+          <Badge variant='outline'>
+            <Gem />
+            {`Made of ${card.material.toLowerCase()}`}
+          </Badge>
+        )}
         {card.curse !== 'none' && (
           <Badge variant='destructive'>{`cursed: ${words(card.curse)}`}</Badge>
         )}
@@ -1041,7 +1047,6 @@ function ItemPanel({
         fields={[
           { key: 'item_class', kind: 'enum', values: itemClassValues },
           { key: 'curse', kind: 'enum', values: curseKindValues },
-          { key: 'material', kind: 'text', nullable: true },
           { key: 'quality', kind: 'number', min: 0, max: PERCENT },
           { key: 'condition', kind: 'number', min: 0, max: PERCENT },
           { key: 'renown', kind: 'number', min: 0, max: PERCENT },

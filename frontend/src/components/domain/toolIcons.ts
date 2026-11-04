@@ -1,5 +1,6 @@
 import {
   Anchor,
+  Anvil,
   CalendarSync,
   Scissors,
   ArrowLeftRight,
@@ -169,6 +170,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   sever_ley: Scissors,
   loose_disease: Biohazard,
   shape_folk: Users,
+  forge_material: Anvil,
   declare_holy_world: Sun,
   seal_gate: Lock,
   rekindle_star: Flame,
