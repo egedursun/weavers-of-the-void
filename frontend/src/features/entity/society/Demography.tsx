@@ -1,13 +1,23 @@
 import { useMemo, useState } from 'react'
 import {
   ArrowRightLeft,
+  BookOpen,
+  Building,
+  Fingerprint,
   Gauge,
+  Hammer,
+  Ban,
+  Hourglass,
+  Link,
   Network,
-  Save,
+  Palette,
+  Scale,
+  Sprout,
+  Swords,
   TriangleAlert,
   Users,
-  Fingerprint,
-  Unlock,
+  Users2,
+  type LucideIcon,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -16,37 +26,83 @@ import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
+import { Label as FieldLabel } from '@/components/ui/label'
+import { Progress } from '@/components/ui/progress'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   EmptyState,
   KpiTile,
+  type KpiTone,
+  Medallion,
+  MiniStat,
   Section,
   StatBar,
   ValueRadar,
 } from '@/components/domain'
-import { Label, Muted, Text } from '@/components/typography'
+import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { COMMODITY, type CommodityKind } from '../economy/labels'
+import { BAND, named } from '../environment/labels'
+import { PRESSURE_ICONS, VALUE_ICONS } from '../mind/labels'
 import { MindPicker } from '../mind/parts'
 import { useDemography } from './api'
 import {
+  AESTHETIC_SPEC,
   AGE_ORDER,
   AGE_SPEC,
   CLASS_ORDER,
   CLASS_SPEC,
+  CONDITION_SPEC,
+  INHERITANCE_SPEC,
+  JOB_ORDER,
   JOB_SPEC,
-  choices,
-  words,
+  MARRIAGE_SPEC,
+  MARTIAL_SPEC,
+  PRESSURE_HINT,
+  SEX_SPEC,
   type AgeBand,
+  type CohortCondition,
   type Job,
+  type Sex,
   type SocialClass,
+  type Spec,
+  fieldLabel,
 } from './labels'
+import {
+  AdjustPanel,
+  ChoiceEditor,
+  EditorGroup,
+  FlagEditor,
+  HeldStrip,
+  IconPicker,
+  type NumberField,
+  NumberEditor,
+  Panel,
+} from './parts'
+import {
+  METER_TONE,
+  TONE_COLOR,
+  WORKING,
+  badTone,
+  goodTone,
+  useWidth,
+} from './tones'
 
 type Demography = components['schemas']['DemographyView']
 type Cohort = components['schemas']['PopulationCohortView']
+type Flow = components['schemas']['LabourFlowView']
+type Labour = components['schemas']['LabourView']
 
-const WORKING = 'Working…'
 const PERCENT = 100
+const OUTPUT_MAX = 200
+const FERTILITY_MAX = 500
+const ANY = 'any'
+const KEEP = 'keep'
 const PALETTE = [
   'var(--chart-1)',
   'var(--chart-2)',
@@ -59,150 +115,299 @@ const PALETTE = [
   'var(--color-destructive)',
   'var(--color-brand-verdigris)',
 ]
-const SANKEY_WIDTH = 640
-const SANKEY_ROW = 26
-const SANKEY_GAP = 6
+const SANKEY_ROW = 30
+const SANKEY_GAP = 8
 const SANKEY_NODE = 10
-const SANKEY_LEFT = 150
-const SANKEY_RIGHT = SANKEY_WIDTH - 150
-const ANY = 'any'
+const SANKEY_MIN_NODE = 16
+const SANKEY_ICON = 13
+const SANKEY_MIN = 360
+const SANKEY_SHARE = 0.4
+const SANKEY_PAD = 16
+const LABEL_SIZE = 12
+const PYRAMID_MIN = 320
+const PYRAMID_ROW = 34
+const PYRAMID_GAP = 6
+const PYRAMID_LABEL = 104
+const PYRAMID_COUNT = 52
+const PYRAMID_CHAR = 6.6
+const CONDITIONS: CohortCondition[] = ['veteran', 'sick', 'enslaved', 'captive']
 
 function classColor(socialClass: SocialClass): string {
   return PALETTE[CLASS_ORDER.indexOf(socialClass) % PALETTE.length]
 }
 
-const PYRAMID_WIDTH = 640
-const PYRAMID_ROW = 30
-const PYRAMID_LABEL = 96
-const PYRAMID_BAR = 22
-const LEGEND_DOT = 5
-const LABEL_SIZE = 11
+function sum<T>(items: T[], value: (item: T) => number): number {
+  return items.reduce((total, item) => total + value(item), 0)
+}
+
+function moodOf(satisfaction: number): { label: string; tone: KpiTone } {
+  if (satisfaction >= 65) return { label: 'Content', tone: 'success' }
+  if (satisfaction >= 50) return { label: 'Settled', tone: 'gold' }
+  if (satisfaction >= 35) return { label: 'Uneasy', tone: 'warning' }
+  return { label: 'Angry', tone: 'danger' }
+}
+
+function outputTone(pct: number): KpiTone {
+  if (pct >= 110) return 'success'
+  if (pct >= 90) return 'gold'
+  if (pct >= 60) return 'warning'
+  return 'danger'
+}
+
+const BADGE: Record<
+  KpiTone,
+  'success' | 'default' | 'warning' | 'destructive' | 'info' | 'secondary'
+> = {
+  success: 'success',
+  gold: 'default',
+  warning: 'warning',
+  danger: 'destructive',
+  info: 'info',
+  verdigris: 'info',
+  muted: 'secondary',
+}
+
+const TEXT_TONE: Record<KpiTone, string> = {
+  gold: 'text-primary',
+  verdigris: 'text-brand-verdigris',
+  info: 'text-info',
+  success: 'text-success',
+  warning: 'text-warning',
+  danger: 'text-destructive',
+  muted: 'text-muted-foreground',
+}
+
+function Swatch({ color }: { color: string }) {
+  return (
+    <svg
+      aria-hidden='true'
+      viewBox='0 0 10 10'
+      className='size-icon-xs shrink-0'
+    >
+      <circle cx={5} cy={5} r={4} fill={color} />
+    </svg>
+  )
+}
+
+type Part = { socialClass: SocialClass; count: number }
 
 function Pyramid({ cohorts }: { cohorts: Cohort[] }) {
+  const [ref, measured] = useWidth()
+  const width = Math.max(PYRAMID_MIN, measured)
   const rows = AGE_ORDER.map((band) => {
     const cells = cohorts.filter((cohort) => cohort.age_band === band)
-    const side = (sex: 'female' | 'male') =>
+    const side = (sex: Sex): Part[] =>
       CLASS_ORDER.map((socialClass) => ({
         socialClass,
-        count: cells
-          .filter(
+        count: sum(
+          cells.filter(
             (cell) => cell.sex === sex && cell.social_class === socialClass
-          )
-          .reduce((sum, cell) => sum + cell.count, 0),
+          ),
+          (cell) => cell.count
+        ),
       })).filter((part) => part.count > 0)
     return { band, male: side('male'), female: side('female') }
   })
   const widest = Math.max(
     1,
     ...rows.flatMap((row) => [
-      row.male.reduce((sum, part) => sum + part.count, 0),
-      row.female.reduce((sum, part) => sum + part.count, 0),
+      sum(row.male, (part) => part.count),
+      sum(row.female, (part) => part.count),
     ])
   )
-  const half = (PYRAMID_WIDTH - PYRAMID_LABEL) / 2
-  const centre = PYRAMID_WIDTH / 2
-  const present = CLASS_ORDER.filter((socialClass) =>
-    cohorts.some((cohort) => cohort.social_class === socialClass)
+  const total = Math.max(
+    1,
+    sum(cohorts, (cohort) => cohort.count)
   )
+  const present = CLASS_ORDER.map((socialClass) => ({
+    socialClass,
+    count: sum(
+      cohorts.filter((cohort) => cohort.social_class === socialClass),
+      (cohort) => cohort.count
+    ),
+  })).filter((item) => item.count > 0)
+  const bySex = (sex: Sex) =>
+    sum(
+      cohorts.filter((cohort) => cohort.sex === sex),
+      (cohort) => cohort.count
+    )
+  const centre = width / 2
+  const half = centre - PYRAMID_LABEL / 2 - PYRAMID_COUNT
+  const height = rows.length * (PYRAMID_ROW + PYRAMID_GAP) - PYRAMID_GAP
+  const bar = (parts: Part[], sex: Sex, top: number) => {
+    let cursor = 0
+    return parts.map((part) => {
+      const size = (part.count / widest) * half
+      const x =
+        sex === 'male'
+          ? centre - PYRAMID_LABEL / 2 - cursor - size
+          : centre + PYRAMID_LABEL / 2 + cursor
+      cursor += size
+      return (
+        <rect
+          key={`${sex}-${part.socialClass}`}
+          x={x}
+          y={top}
+          width={Math.max(1, size - 1)}
+          height={PYRAMID_ROW}
+          rx={3}
+          fill={classColor(part.socialClass)}
+        >
+          <title>{`${SEX_SPEC[sex].label}, ${CLASS_SPEC[part.socialClass].label.toLowerCase()}: ${formatInteger(part.count)}`}</title>
+        </rect>
+      )
+    })
+  }
   return (
     <div
       data-surface='PopulationPyramid'
-      className='flex min-w-0 flex-col gap-2'
+      className='flex min-w-0 flex-col gap-3'
     >
-      <svg
-        viewBox={`0 0 ${PYRAMID_WIDTH} ${rows.length * PYRAMID_ROW + PYRAMID_ROW}`}
-        className='w-full min-w-0'
-        role='img'
-        aria-label='Population by age, sex and class'
-      >
-        <text
-          x={centre - PYRAMID_LABEL / 2 - 4}
-          y={LABEL_SIZE + 2}
-          textAnchor='end'
-          fontSize={LABEL_SIZE}
-          className='fill-muted-foreground'
-        >
-          Men
-        </text>
-        <text
-          x={centre + PYRAMID_LABEL / 2 + 4}
-          y={LABEL_SIZE + 2}
-          fontSize={LABEL_SIZE}
-          className='fill-muted-foreground'
-        >
-          Women
-        </text>
-        {rows.map((row, index) => {
-          const y = PYRAMID_ROW + index * PYRAMID_ROW
-          let leftEdge = centre - PYRAMID_LABEL / 2
-          let rightEdge = centre + PYRAMID_LABEL / 2
+      <div className='flex min-w-0 items-center justify-between gap-3'>
+        {(['male', 'female'] as const).map((sex) => {
+          const spec = SEX_SPEC[sex]
           return (
-            <g key={row.band}>
-              {row.male.map((part) => {
-                const width = (part.count / widest) * half
-                leftEdge -= width
-                return (
-                  <rect
-                    key={`m-${part.socialClass}`}
-                    x={leftEdge}
-                    y={y}
-                    width={width}
-                    height={PYRAMID_BAR}
-                    fill={classColor(part.socialClass)}
-                  >
-                    <title>{`${CLASS_SPEC[part.socialClass].label}: ${formatInteger(part.count)}`}</title>
-                  </rect>
-                )
-              })}
-              <text
-                x={centre}
-                y={y + PYRAMID_BAR / 2}
-                textAnchor='middle'
-                dominantBaseline='middle'
-                fontSize={LABEL_SIZE}
-                className='fill-foreground'
-              >
-                {AGE_SPEC[row.band].label}
-              </text>
-              {row.female.map((part) => {
-                const width = (part.count / widest) * half
-                const x = rightEdge
-                rightEdge += width
-                return (
-                  <rect
-                    key={`f-${part.socialClass}`}
-                    x={x}
-                    y={y}
-                    width={width}
-                    height={PYRAMID_BAR}
-                    fill={classColor(part.socialClass)}
-                  >
-                    <title>{`${CLASS_SPEC[part.socialClass].label}: ${formatInteger(part.count)}`}</title>
-                  </rect>
-                )
-              })}
-            </g>
+            <div
+              key={sex}
+              className={
+                sex === 'male'
+                  ? 'flex min-w-0 items-center gap-1.5'
+                  : 'flex min-w-0 flex-row-reverse items-center gap-1.5'
+              }
+            >
+              <spec.icon
+                aria-hidden='true'
+                className={`size-icon-sm shrink-0 ${TEXT_TONE[spec.tone ?? 'muted']}`}
+              />
+              <Text as='span' weight='medium'>
+                {spec.label}
+              </Text>
+              <Muted as='span'>{formatInteger(bySex(sex))}</Muted>
+            </div>
           )
         })}
-      </svg>
-      <div className='flex min-w-0 flex-wrap gap-3'>
-        {present.map((socialClass) => (
-          <span key={socialClass} className='flex items-center gap-1'>
-            <svg
-              aria-hidden='true'
-              viewBox={`0 0 ${LEGEND_DOT * 2} ${LEGEND_DOT * 2}`}
-              className='size-icon-sm'
-            >
-              <circle
-                cx={LEGEND_DOT}
-                cy={LEGEND_DOT}
-                r={LEGEND_DOT}
-                fill={classColor(socialClass)}
-              />
-            </svg>
-            <Muted variant='caption'>{CLASS_SPEC[socialClass].label}</Muted>
+      </div>
+      <div ref={ref} className='min-w-0'>
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          width='100%'
+          className='block min-w-0'
+          role='img'
+          aria-label='Population by age, sex and class'
+        >
+          {rows.map((row, index) => {
+            const top = index * (PYRAMID_ROW + PYRAMID_GAP)
+            const middle = top + PYRAMID_ROW / 2
+            const spec = AGE_SPEC[row.band]
+            const male = sum(row.male, (part) => part.count)
+            const female = sum(row.female, (part) => part.count)
+            const reach = (count: number) => (count / widest) * half
+            const textWidth = spec.label.length * PYRAMID_CHAR
+            return (
+              <g key={row.band}>
+                <rect
+                  x={centre - PYRAMID_LABEL / 2 - half}
+                  y={top}
+                  width={half * 2 + PYRAMID_LABEL}
+                  height={PYRAMID_ROW}
+                  rx={4}
+                  className='fill-muted/40'
+                />
+                {bar(row.male, 'male', top)}
+                {bar(row.female, 'female', top)}
+                <text
+                  x={centre - PYRAMID_LABEL / 2 - reach(male) - 6}
+                  y={middle}
+                  textAnchor='end'
+                  dominantBaseline='middle'
+                  fontSize={LABEL_SIZE}
+                  className='fill-foreground tabular-nums'
+                >
+                  {formatInteger(male)}
+                </text>
+                <text
+                  x={centre + PYRAMID_LABEL / 2 + reach(female) + 6}
+                  y={middle}
+                  dominantBaseline='middle'
+                  fontSize={LABEL_SIZE}
+                  className='fill-foreground tabular-nums'
+                >
+                  {formatInteger(female)}
+                </text>
+                <spec.icon
+                  x={centre - (textWidth + SANKEY_ICON + 4) / 2}
+                  y={top + 3}
+                  width={SANKEY_ICON}
+                  height={SANKEY_ICON}
+                  className={TEXT_TONE[spec.tone ?? 'muted']}
+                  aria-hidden='true'
+                />
+                <text
+                  x={
+                    centre - (textWidth + SANKEY_ICON + 4) / 2 + SANKEY_ICON + 4
+                  }
+                  y={top + 3 + SANKEY_ICON / 2}
+                  dominantBaseline='middle'
+                  fontSize={LABEL_SIZE}
+                  className='fill-foreground'
+                >
+                  {spec.label}
+                </text>
+                <text
+                  x={centre}
+                  y={top + PYRAMID_ROW - 3}
+                  textAnchor='middle'
+                  fontSize={LABEL_SIZE - 1}
+                  className='fill-muted-foreground'
+                >
+                  {`${Math.round(((male + female) / total) * PERCENT)}% of all`}
+                </text>
+              </g>
+            )
+          })}
+        </svg>
+      </div>
+      <div className='flex min-w-0 flex-wrap gap-x-3 gap-y-1.5 border-t pt-3'>
+        {present.map((item) => (
+          <span
+            key={item.socialClass}
+            className='flex min-w-0 items-center gap-1.5'
+          >
+            <Swatch color={classColor(item.socialClass)} />
+            <Muted as='span' variant='caption'>
+              {`${CLASS_SPEC[item.socialClass].label} ${((item.count / total) * PERCENT).toFixed(1)}%`}
+            </Muted>
           </span>
         ))}
+      </div>
+    </div>
+  )
+}
+
+function ClassRow({ item }: { item: Demography['classes'][number] }) {
+  const spec = CLASS_SPEC[item.social_class]
+  const mood = moodOf(item.satisfaction)
+  return (
+    <div className='flex min-w-0 items-center gap-2.5'>
+      <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
+      <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
+        <div className='flex min-w-0 items-center gap-2'>
+          <Text as='span' weight='medium' truncate className='min-w-0 flex-1'>
+            {spec.label}
+          </Text>
+          <Muted as='span' variant='caption'>
+            {`${item.share.toFixed(1)}%`}
+          </Muted>
+          <Badge size='sm' variant={BADGE[mood.tone]}>
+            {`${mood.label} ${item.satisfaction}`}
+          </Badge>
+        </div>
+        <Progress
+          value={item.satisfaction}
+          size='sm'
+          tone={METER_TONE[mood.tone]}
+          aria-label={`${spec.label} satisfaction`}
+        />
       </div>
     </div>
   )
@@ -219,6 +424,7 @@ function MoveCohort({
   const [source, setSource] = useState<string>('farmer')
   const [target, setTarget] = useState<string>('serf_or_slave')
   const [band, setBand] = useState<string>(ANY)
+  const [condition, setCondition] = useState<string>(KEEP)
   const move = useGodAction({
     run: () =>
       unwrap(
@@ -229,68 +435,90 @@ function MoveCohort({
             source: source as SocialClass,
             target: target as SocialClass,
             band: band === ANY ? null : (band as AgeBand),
+            condition:
+              condition === KEEP ? null : (condition as CohortCondition),
           },
         })
       ),
   })
   const busy = blocked ?? (move.isPending ? WORKING : null)
-  const classes = Object.fromEntries(
-    CLASS_ORDER.map((item) => [item, CLASS_SPEC[item].label])
-  )
+  const ages: Record<string, Spec> = {
+    [ANY]: { label: 'Any age', icon: Users2 },
+    ...AGE_SPEC,
+  }
+  const states: Record<string, Spec> = {
+    [KEEP]: { label: 'As they are', icon: Users },
+    ...CONDITION_SPEC,
+  }
+  const parsed = Number(count)
+  const invalid = !Number.isInteger(parsed) || parsed < 1
   return (
-    <div className='flex min-w-0 flex-wrap items-end gap-3'>
-      <div className='flex w-28 flex-col gap-1'>
-        <Label>How many</Label>
-        <Input
-          type='number'
-          min={1}
-          value={count}
-          aria-label='How many'
-          onChange={(event) => setCount(event.target.value)}
-        />
-      </div>
-      <div className='min-w-36 flex-1'>
-        <MindPicker
+    <Panel
+      title='Move people between classes'
+      icon={ArrowRightLeft}
+      hint='Raise, lower or bind a share of the people; the largest groups move first.'
+    >
+      <div className='grid min-w-0 grid-cols-1 items-end gap-3 @md:grid-cols-2 @xl:grid-cols-3'>
+        <IconPicker
           label='From'
           value={source}
-          table={classes}
+          table={CLASS_SPEC}
           blocked={busy}
           onPick={setSource}
         />
-      </div>
-      <div className='min-w-36 flex-1'>
-        <MindPicker
+        <IconPicker
           label='Into'
           value={target}
-          table={classes}
+          table={CLASS_SPEC}
           blocked={busy}
           onPick={setTarget}
         />
-      </div>
-      <div className='min-w-32 flex-1'>
-        <MindPicker
+        <div className='flex min-w-0 flex-col gap-1.5'>
+          <FieldLabel htmlFor={`move-count-${view.entity_id}`}>
+            How many
+          </FieldLabel>
+          <Input
+            id={`move-count-${view.entity_id}`}
+            type='number'
+            min={1}
+            value={count}
+            disabled={busy !== null}
+            onChange={(event) => setCount(event.target.value)}
+          />
+        </div>
+        <IconPicker
           label='Of age'
           value={band}
-          table={{
-            [ANY]: 'Any age',
-            ...Object.fromEntries(
-              AGE_ORDER.map((item) => [item, AGE_SPEC[item].label])
-            ),
-          }}
+          table={ages}
           blocked={busy}
           onPick={setBand}
         />
+        <IconPicker
+          label='Mark them as'
+          value={condition}
+          table={states}
+          blocked={busy}
+          onPick={setCondition}
+        />
+        <div className='flex min-w-0 items-end'>
+          <Button
+            size='sm'
+            className='w-full'
+            disabled={busy !== null || invalid || source === target}
+            disabledReason={
+              busy ??
+              (invalid
+                ? 'Give a whole number of people.'
+                : 'Choose two different classes.')
+            }
+            onClick={() => move.mutate(undefined)}
+          >
+            <ArrowRightLeft />
+            Move them
+          </Button>
+        </div>
       </div>
-      <Button
-        size='sm'
-        disabled={busy !== null}
-        disabledReason={busy ?? undefined}
-        onClick={() => move.mutate(undefined)}
-      >
-        <ArrowRightLeft />
-        Move them
-      </Button>
-    </div>
+    </Panel>
   )
 }
 
@@ -304,8 +532,21 @@ export function DemographySection({
   const view = useDemography(communityId)
   const { reason } = useGodGate()
   const blocked = readOnlyReason ?? reason()
-  const total =
-    view.data?.cohorts.reduce((sum, cohort) => sum + cohort.count, 0) ?? 0
+  const data = view.data
+  const cohorts = data?.cohorts ?? []
+  const total = sum(cohorts, (cohort) => cohort.count)
+  const bound = sum(
+    cohorts.filter(
+      (cohort) =>
+        cohort.social_class === 'serf_or_slave' ||
+        cohort.condition === 'enslaved' ||
+        cohort.condition === 'captive'
+    ),
+    (cohort) => cohort.count
+  )
+  const worst = [...(data?.pressures ?? [])].sort(
+    (left, right) => right.value - left.value
+  )[0]
   return (
     <Section
       id='section-demography'
@@ -321,226 +562,392 @@ export function DemographySection({
           description={view.error.message}
         />
       )}
-      {view.data && view.data.cohorts.length === 0 && (
+      {data && cohorts.length === 0 && (
         <EmptyState
           icon={Users}
           title='Not counted yet'
           description='The people are counted at the end of the next epoch.'
         />
       )}
-      {view.data && view.data.cohorts.length > 0 && (
-        <div data-surface='Demography' className='flex min-w-0 flex-col gap-5'>
-          <div className='grid min-w-0 grid-cols-2 gap-3 md:grid-cols-4'>
+      {data && cohorts.length > 0 && (
+        <div
+          data-surface='Demography'
+          className='@container/demo flex min-w-0 flex-col gap-4'
+        >
+          <div className='grid min-w-0 grid-cols-2 gap-3 @xl/demo:grid-cols-4'>
             <KpiTile
-              label='Counted'
+              label='People'
               value={formatInteger(total)}
               icon={Users}
+              tone='gold'
+              hint={`${formatInteger(
+                sum(
+                  cohorts.filter((cohort) => cohort.age_band === 'child'),
+                  (cohort) => cohort.count
+                )
+              )} children`}
             />
             <KpiTile
               label='Inequality'
-              value={String(view.data.inequality)}
-              icon={Gauge}
-              tone={view.data.inequality > PERCENT / 2 ? 'danger' : 'muted'}
-              hint='The gap between the most and least content class'
+              value={data.inequality}
+              icon={Scale}
+              tone={badTone(data.inequality)}
+              hint='Gap between the happiest and the angriest class'
+              meter={{
+                value: data.inequality,
+                max: PERCENT,
+                label: 'Inequality',
+              }}
             />
             <KpiTile
-              label='Levy strength'
-              value={`${view.data.mobilisation_pct}%`}
-              icon={Gauge}
-              hint='Martial value and cohesion against an ordinary people'
+              label='Levy'
+              value={`${data.mobilisation_pct}%`}
+              icon={Swords}
+              tone={data.mobilisation_pct >= PERCENT ? 'success' : 'warning'}
+              change={
+                data.mobilisation_pct === PERCENT
+                  ? undefined
+                  : data.mobilisation_pct - PERCENT
+              }
+              hint='Fighting strength against an ordinary people'
             />
             <KpiTile
               label='Bound'
-              value={formatInteger(
-                view.data.cohorts
-                  .filter((cohort) => cohort.social_class === 'serf_or_slave')
-                  .reduce((sum, cohort) => sum + cohort.count, 0)
-              )}
-              icon={Users}
-              tone='warning'
+              value={formatInteger(bound)}
+              icon={Link}
+              tone={bound > 0 ? 'warning' : 'muted'}
+              hint={`${((bound / Math.max(1, total)) * PERCENT).toFixed(1)}% serfs, slaves or captives`}
+              meter={{ value: bound, max: total, label: 'In bondage' }}
             />
           </div>
-          <Pyramid cohorts={view.data.cohorts} />
-          {view.data.classes.length > 0 && (
-            <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'>
-              {view.data.classes
-                .filter((item) => item.share > 0)
-                .map((item) => (
-                  <StatBar
-                    key={item.social_class}
-                    label={`${CLASS_SPEC[item.social_class].label} (${item.share.toFixed(1)}%)`}
-                    icon={CLASS_SPEC[item.social_class].icon}
-                    value={item.satisfaction}
-                    max={PERCENT}
-                    tone={
-                      item.satisfaction < 30
-                        ? 'destructive'
-                        : item.satisfaction > 65
-                          ? 'success'
-                          : 'default'
-                    }
+          <Panel
+            title='Age and sex'
+            icon={Users}
+            hint='Each bar is split by class; hover a band to count it.'
+          >
+            <Pyramid cohorts={cohorts} />
+            <div className='grid min-w-0 grid-cols-2 gap-2 @xl/demo:grid-cols-4'>
+              {CONDITIONS.map((condition) => {
+                const spec = CONDITION_SPEC[condition]
+                const count = sum(
+                  cohorts.filter((cohort) => cohort.condition === condition),
+                  (cohort) => cohort.count
+                )
+                return (
+                  <MiniStat
+                    key={condition}
+                    icon={spec.icon}
+                    label={spec.label}
+                    value={formatInteger(count)}
+                    tone={count > 0 ? spec.tone : 'muted'}
+                    hint={spec.hint}
                   />
-                ))}
+                )
+              })}
             </div>
-          )}
-          {view.data.pressures.length > 0 && (
-            <div className='flex min-w-0 flex-col gap-2'>
-              <Label variant='overline'>Pressures</Label>
-              <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-3'>
-                {view.data.pressures.map((item) => (
-                  <StatBar
-                    key={item.kind}
-                    label={words(item.kind)}
-                    icon={Gauge}
-                    value={item.value}
-                    max={PERCENT}
-                    tone={
-                      item.value > 60
-                        ? 'destructive'
-                        : item.value > 30
-                          ? 'warning'
-                          : 'success'
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          <MoveCohort view={view.data} blocked={blocked} />
+          </Panel>
+          <div className='grid min-w-0 grid-cols-1 gap-3 @xl/demo:grid-cols-2'>
+            {data.classes.length > 0 && (
+              <Panel
+                title='How each class fares'
+                icon={Gauge}
+                hint='Share of the people and how content they are'
+              >
+                <div className='flex min-w-0 flex-col gap-3'>
+                  {data.classes
+                    .filter((item) => item.share > 0)
+                    .map((item) => (
+                      <ClassRow key={item.social_class} item={item} />
+                    ))}
+                </div>
+              </Panel>
+            )}
+            {data.pressures.length > 0 && (
+              <Panel
+                title='Pressures'
+                icon={TriangleAlert}
+                tone={
+                  worst && worst.value > 0 ? badTone(worst.value) : 'success'
+                }
+                hint={
+                  worst && worst.value > 0
+                    ? `${named(PRESSURE_ICONS, worst.kind).label} weighs heaviest`
+                    : 'Nothing presses on them'
+                }
+              >
+                <div className='flex min-w-0 flex-col gap-3'>
+                  {data.pressures.map((item) => {
+                    const spec = named(PRESSURE_ICONS, item.kind)
+                    return (
+                      <Tooltip key={item.kind}>
+                        <TooltipTrigger asChild>
+                          <div tabIndex={0} className='min-w-0'>
+                            <StatBar
+                              label={spec.label}
+                              icon={spec.icon}
+                              value={item.value}
+                              max={PERCENT}
+                              tone={METER_TONE[badTone(item.value)]}
+                            />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {PRESSURE_HINT[item.kind] ?? spec.label}
+                        </TooltipContent>
+                      </Tooltip>
+                    )
+                  })}
+                </div>
+              </Panel>
+            )}
+          </div>
+          <AdjustPanel
+            title='Shape the people'
+            note='Move people between classes, bind them or set them free. Every change goes into the ledger and can be undone.'
+          >
+            <MoveCohort view={data} blocked={blocked} />
+          </AdjustPanel>
         </div>
       )}
     </Section>
   )
 }
 
-type Flow = components['schemas']['LabourFlowView']
-
-function Sankey({
-  flows,
-  output,
+function SankeyLabel({
+  x,
+  y,
+  icon: Icon,
+  text,
+  align,
+  color,
 }: {
-  flows: Flow[]
-  output: Record<string, number>
+  x: number
+  y: number
+  icon: LucideIcon
+  text: string
+  align: 'start' | 'end'
+  color: string
 }) {
+  const iconX = align === 'end' ? x - SANKEY_ICON : x
+  const textX = align === 'end' ? x - SANKEY_ICON - 4 : x + SANKEY_ICON + 4
+  return (
+    <g>
+      <Icon
+        x={iconX}
+        y={y - SANKEY_ICON / 2}
+        width={SANKEY_ICON}
+        height={SANKEY_ICON}
+        color={color}
+        aria-hidden='true'
+      />
+      <text
+        x={textX}
+        y={y}
+        textAnchor={align}
+        dominantBaseline='middle'
+        fontSize={LABEL_SIZE}
+        className='fill-foreground'
+      >
+        {text}
+      </text>
+    </g>
+  )
+}
+
+function Sankey({ flows, output }: { flows: Flow[]; output: Labour[] }) {
+  const [ref, measured] = useWidth()
+  const width = Math.max(SANKEY_MIN, measured)
   const classes = CLASS_ORDER.filter((item) =>
     flows.some((flow) => flow.social_class === item)
   )
-  const jobs = (Object.keys(JOB_SPEC) as Job[]).filter((item) =>
+  const jobs = JOB_ORDER.filter((item) =>
     flows.some((flow) => flow.job === item)
   )
   const total = Math.max(
     1,
-    flows.reduce((sum, flow) => sum + flow.workers, 0)
+    sum(flows, (flow) => flow.workers)
   )
+  const pct = Object.fromEntries(output.map((row) => [row.job, row.output_pct]))
+  const jobText = (job: Job) =>
+    job === 'idle'
+      ? JOB_SPEC[job].label
+      : `${JOB_SPEC[job].label} ${pct[job] ?? PERCENT}%`
+  const reserve = (texts: string[]) =>
+    Math.min(
+      Math.round(width * SANKEY_SHARE),
+      Math.max(0, ...texts.map((text) => text.length)) * PYRAMID_CHAR +
+        SANKEY_ICON +
+        SANKEY_NODE +
+        SANKEY_PAD
+    )
+  const left = reserve(classes.map((item) => CLASS_SPEC[item].label))
+  const right = width - reserve(jobs.map(jobText))
   const rows = Math.max(classes.length, jobs.length)
-  const height = rows * (SANKEY_ROW + SANKEY_GAP)
-  const usable = height - SANKEY_GAP * rows
+  const usable = rows * SANKEY_ROW
+  const thickness = (value: number) => (value / total) * usable
+  const need = (keys: string[], weight: (key: string) => number) =>
+    sum(keys, (key) => Math.max(SANKEY_MIN_NODE, thickness(weight(key)))) +
+    SANKEY_GAP * Math.max(0, keys.length - 1)
+  const classWeight = (key: string) =>
+    sum(
+      flows.filter((flow) => flow.social_class === key),
+      (flow) => flow.workers
+    )
+  const jobWeight = (key: string) =>
+    sum(
+      flows.filter((flow) => flow.job === key),
+      (flow) => flow.workers
+    )
+  const height = Math.max(
+    rows * (SANKEY_ROW + SANKEY_GAP),
+    need(classes, classWeight),
+    need(jobs, jobWeight)
+  )
   const layout = (keys: string[], weight: (key: string) => number) => {
-    let cursor = 0
+    let cursor = (height - need(keys, weight)) / 2
     return Object.fromEntries(
       keys.map((key) => {
-        const size = Math.max(2, (weight(key) / total) * usable)
-        const placed = { top: cursor, size }
+        const band = thickness(weight(key))
+        const size = Math.max(SANKEY_MIN_NODE, band)
+        const placed = { top: cursor, size, pad: (size - band) / 2 }
         cursor += size + SANKEY_GAP
         return [key, placed]
       })
     )
   }
-  const left = layout(classes, (key) =>
-    flows
-      .filter((flow) => flow.social_class === key)
-      .reduce((sum, flow) => sum + flow.workers, 0)
-  )
-  const right = layout(jobs, (key) =>
-    flows
-      .filter((flow) => flow.job === key)
-      .reduce((sum, flow) => sum + flow.workers, 0)
-  )
+  const from = layout(classes, classWeight)
+  const to = layout(jobs, jobWeight)
   const leftUsed: Record<string, number> = {}
   const rightUsed: Record<string, number> = {}
+  const mid = (left + right) / 2
   return (
-    <svg
-      data-surface='LabourSankey'
-      viewBox={`0 0 ${SANKEY_WIDTH} ${height}`}
-      className='w-full min-w-0'
-      role='img'
-      aria-label='Workers of each class flowing into each kind of work'
-    >
-      {flows.map((flow) => {
-        const width = Math.max(1, (flow.workers / total) * usable)
-        const start = left[flow.social_class]
-        const end = right[flow.job]
-        const y1 = start.top + (leftUsed[flow.social_class] ?? 0) + width / 2
-        const y2 = end.top + (rightUsed[flow.job] ?? 0) + width / 2
-        leftUsed[flow.social_class] = (leftUsed[flow.social_class] ?? 0) + width
-        rightUsed[flow.job] = (rightUsed[flow.job] ?? 0) + width
-        const mid = (SANKEY_LEFT + SANKEY_RIGHT) / 2
-        return (
-          <path
-            key={`${flow.social_class}-${flow.job}`}
-            d={`M${SANKEY_LEFT},${y1} C${mid},${y1} ${mid},${y2} ${SANKEY_RIGHT},${y2}`}
-            fill='none'
-            stroke={classColor(flow.social_class)}
-            strokeOpacity={0.45}
-            strokeWidth={width}
-          >
-            <title>{`${CLASS_SPEC[flow.social_class].label} → ${JOB_SPEC[flow.job].label}: ${formatInteger(flow.workers)}`}</title>
-          </path>
-        )
-      })}
-      {classes.map((item) => (
-        <g key={item}>
-          <rect
-            x={SANKEY_LEFT - SANKEY_NODE}
-            y={left[item].top}
-            width={SANKEY_NODE}
-            height={left[item].size}
-            fill={classColor(item)}
-            rx={2}
-          />
-          <text
-            x={SANKEY_LEFT - SANKEY_NODE - 6}
-            y={left[item].top + left[item].size / 2}
-            textAnchor='end'
-            dominantBaseline='middle'
-            fontSize={LABEL_SIZE}
-            className='fill-foreground'
-          >
-            {CLASS_SPEC[item].label}
-          </text>
-        </g>
-      ))}
-      {jobs.map((item) => (
-        <g key={item}>
-          <rect
-            x={SANKEY_RIGHT}
-            y={right[item].top}
-            width={SANKEY_NODE}
-            height={right[item].size}
-            fill='var(--muted-foreground)'
-            rx={2}
-          />
-          <text
-            x={SANKEY_RIGHT + SANKEY_NODE + 6}
-            y={right[item].top + right[item].size / 2}
-            dominantBaseline='middle'
-            fontSize={LABEL_SIZE}
-            className='fill-foreground'
-          >
-            {`${JOB_SPEC[item].label} · ${output[item] ?? PERCENT}%`}
-          </text>
-        </g>
-      ))}
-    </svg>
+    <div ref={ref} className='min-w-0'>
+      <svg
+        data-surface='LabourSankey'
+        viewBox={`0 0 ${width} ${height}`}
+        width='100%'
+        className='block min-w-0'
+        role='img'
+        aria-label='Workers of each class flowing into each kind of work'
+      >
+        {flows.map((flow) => {
+          const thick = Math.max(1, thickness(flow.workers))
+          const start = from[flow.social_class]
+          const end = to[flow.job]
+          const y1 =
+            start.top +
+            start.pad +
+            (leftUsed[flow.social_class] ?? 0) +
+            thick / 2
+          const y2 = end.top + end.pad + (rightUsed[flow.job] ?? 0) + thick / 2
+          leftUsed[flow.social_class] =
+            (leftUsed[flow.social_class] ?? 0) + thick
+          rightUsed[flow.job] = (rightUsed[flow.job] ?? 0) + thick
+          return (
+            <path
+              key={`${flow.social_class}-${flow.job}`}
+              d={`M${left},${y1} C${mid},${y1} ${mid},${y2} ${right},${y2}`}
+              fill='none'
+              stroke={classColor(flow.social_class)}
+              strokeOpacity={0.4}
+              strokeWidth={thick}
+            >
+              <title>{`${CLASS_SPEC[flow.social_class].label} → ${JOB_SPEC[flow.job].label}: ${formatInteger(flow.workers)}`}</title>
+            </path>
+          )
+        })}
+        {classes.map((item) => (
+          <g key={item}>
+            <rect
+              x={left - SANKEY_NODE}
+              y={from[item].top}
+              width={SANKEY_NODE}
+              height={from[item].size}
+              fill={classColor(item)}
+              rx={3}
+            />
+            <SankeyLabel
+              x={left - SANKEY_NODE - 6}
+              y={from[item].top + from[item].size / 2}
+              icon={CLASS_SPEC[item].icon}
+              text={CLASS_SPEC[item].label}
+              align='end'
+              color={classColor(item)}
+            />
+          </g>
+        ))}
+        {jobs.map((item) => {
+          const tone =
+            item === 'idle' ? 'muted' : outputTone(pct[item] ?? PERCENT)
+          return (
+            <g key={item}>
+              <rect
+                x={right}
+                y={to[item].top}
+                width={SANKEY_NODE}
+                height={to[item].size}
+                fill={TONE_COLOR[tone]}
+                rx={3}
+              />
+              <SankeyLabel
+                x={right + SANKEY_NODE + 6}
+                y={to[item].top + to[item].size / 2}
+                icon={JOB_SPEC[item].icon}
+                text={jobText(item)}
+                align='start'
+                color={TONE_COLOR[tone]}
+              />
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
+}
+
+function JobTile({ row }: { row: Labour }) {
+  const spec = JOB_SPEC[row.job]
+  const tone = row.job === 'idle' ? 'muted' : outputTone(row.output_pct)
+  return (
+    <div className='flex h-full min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-2.5'>
+      <div className='flex min-w-0 items-center gap-2.5'>
+        <Medallion icon={spec.icon} tone={tone} size='sm' />
+        <div className='flex min-w-0 flex-1 flex-col'>
+          <Text as='span' weight='medium' truncate>
+            {spec.label}
+          </Text>
+          <Muted as='span' variant='caption' truncate>
+            {`${formatInteger(row.workers)} workers`}
+          </Muted>
+        </div>
+        <Stat value={`${row.output_pct}%`} />
+      </div>
+      <Progress
+        value={Math.min(PERCENT, (row.output_pct / OUTPUT_MAX) * PERCENT)}
+        size='sm'
+        tone={METER_TONE[tone]}
+        aria-label={`${spec.label} output`}
+      />
+    </div>
   )
 }
 
 export function LabourSection({ communityId }: { communityId: number }) {
   const view = useDemography(communityId)
   if (!view.data || view.data.labour.length === 0) return null
-  const output = Object.fromEntries(
-    view.data.labour.map((row) => [row.job, row.output_pct])
+  const working = view.data.labour.filter(
+    (row) => row.workers > 0 && row.job !== 'idle'
   )
+  const ranked = [...working].sort(
+    (left, right) => right.output_pct - left.output_pct
+  )
+  const best = ranked[0]
+  const weakest = ranked[ranked.length - 1]
+  const idle = sum(
+    view.data.flows.filter((flow) => flow.job === 'idle'),
+    (flow) => flow.workers
+  )
+  const workers = sum(working, (row) => row.workers)
   return (
     <Section
       id='section-labour'
@@ -548,74 +955,140 @@ export function LabourSection({ communityId }: { communityId: number }) {
       description='Which classes do which work, and how well: output against an ordinary worker, after satisfaction, bondage and seasonal sickness.'
       icon={Network}
     >
-      <Sankey flows={view.data.flows} output={output} />
-      <div className='grid min-w-0 grid-cols-2 gap-2 md:grid-cols-4'>
-        {view.data.labour
-          .filter((row) => row.workers > 0)
-          .map((row) => {
-            const Icon = JOB_SPEC[row.job].icon
-            return (
-              <div
-                key={row.job}
-                className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
-              >
-                <Icon
-                  aria-hidden='true'
-                  className='size-icon-sm shrink-0 text-muted-foreground'
-                />
-                <Text className='min-w-0 flex-1' truncate>
-                  {JOB_SPEC[row.job].label}
-                </Text>
-                <Muted variant='caption'>{`${formatInteger(row.workers)} · ${row.output_pct}%`}</Muted>
-              </div>
-            )
-          })}
+      <div className='@container/work flex min-w-0 flex-col gap-4'>
+        <div className='grid min-w-0 grid-cols-2 gap-3 @xl/work:grid-cols-4'>
+          <KpiTile
+            label='At work'
+            value={formatInteger(workers)}
+            icon={Hammer}
+            tone='gold'
+            hint={`Across ${working.length} trades`}
+          />
+          <KpiTile
+            label='Idle hands'
+            value={formatInteger(idle)}
+            icon={Hourglass}
+            tone={idle > 0 ? 'warning' : 'muted'}
+            hint='Nobles, outcasts and others who do no work'
+          />
+          {best && (
+            <KpiTile
+              label='Best trade'
+              value={`${best.output_pct}%`}
+              icon={JOB_SPEC[best.job].icon}
+              tone={outputTone(best.output_pct)}
+              hint={JOB_SPEC[best.job].label}
+            />
+          )}
+          {weakest && (
+            <KpiTile
+              label='Worst trade'
+              value={`${weakest.output_pct}%`}
+              icon={JOB_SPEC[weakest.job].icon}
+              tone={outputTone(weakest.output_pct)}
+              hint={JOB_SPEC[weakest.job].label}
+            />
+          )}
+        </div>
+        <Panel
+          title='Who does what'
+          icon={Network}
+          hint='Bands run from each class into its work; the percent is output against an ordinary worker.'
+        >
+          <Sankey flows={view.data.flows} output={view.data.labour} />
+        </Panel>
+        <div className='grid min-w-0 grid-cols-2 gap-2 @3xl/work:grid-cols-3'>
+          {view.data.labour
+            .filter((row) => row.workers > 0)
+            .map((row) => (
+              <JobTile key={row.job} row={row} />
+            ))}
+        </div>
       </div>
     </Section>
   )
 }
 
-const BIOLOGY_FIELDS = [
-  { key: 'maturity_years', label: 'Comes of age at' },
-  { key: 'adult_years', label: 'Years of adulthood' },
-  { key: 'elder_years', label: 'Years of old age' },
-  { key: 'fertility_pct', label: 'Fertility (%)' },
+const LIFE_FIELDS = [
+  { key: 'maturity_years', icon: Sprout, min: 1, max: 1000, unit: 'years' },
+  { key: 'adult_years', icon: Users, min: 1, max: 10000, unit: 'years' },
+  { key: 'elder_years', icon: Hourglass, min: 1, max: 10000, unit: 'years' },
+  { key: 'fertility_pct', icon: Sprout, min: 0, max: FERTILITY_MAX, unit: '%' },
 ] as const
-const CULTURE_FIELDS = [
-  { key: 'cohesion', label: 'Cohesion' },
-  { key: 'literacy', label: 'Literacy' },
-  { key: 'urbanisation', label: 'Urbanisation' },
-] as const
-const AESTHETICS = [
-  'austere',
-  'ornate',
-  'geometric',
-  'natural',
-  'macabre',
-  'celestial',
-] as const
-const MARTIAL = [
-  'shieldwall',
-  'horse_archer',
-  'skirmisher',
-  'chariot',
-  'phalanx',
-  'berserker',
-  'naval_raider',
-  'siege_engineer',
-  'war_magic',
-  'beast_war',
-] as const
-const MARRIAGE = ['monogamy', 'polygyny', 'polyandry', 'group'] as const
-const INHERITANCE = [
-  'primogeniture',
-  'gavelkind',
-  'elective',
-  'by_merit',
-  'matrilineal',
+const SOCIETY_FIELDS = [
+  { key: 'cohesion', icon: Users2, min: 0, max: PERCENT },
+  { key: 'literacy', icon: BookOpen, min: 0, max: PERCENT },
+  { key: 'urbanisation', icon: Building, min: 0, max: PERCENT },
 ] as const
 
-function ProfileForm({
+function LifeCourse({
+  biology,
+}: {
+  biology: NonNullable<Demography['biology']>
+}) {
+  const stages = [
+    {
+      key: 'child',
+      label: 'Childhood',
+      years: biology.maturity_years,
+      spec: AGE_SPEC.child,
+    },
+    {
+      key: 'adult',
+      label: 'Adulthood',
+      years: biology.adult_years,
+      spec: AGE_SPEC.adult,
+    },
+    {
+      key: 'elder',
+      label: 'Old age',
+      years: biology.elder_years,
+      spec: AGE_SPEC.elder,
+    },
+  ]
+  const span = Math.max(
+    1,
+    sum(stages, (stage) => stage.years)
+  )
+  return (
+    <div className='flex min-w-0 flex-col gap-3'>
+      <svg
+        viewBox={`0 0 ${PERCENT} 4`}
+        preserveAspectRatio='none'
+        className='h-meter-md w-full min-w-0'
+        role='img'
+        aria-label={`Childhood ${biology.maturity_years} years, adulthood ${biology.adult_years}, old age ${biology.elder_years}`}
+      >
+        {stages.map((stage, index) => {
+          const before = sum(stages.slice(0, index), (item) => item.years)
+          return (
+            <rect
+              key={stage.key}
+              x={(before / span) * PERCENT}
+              y={0}
+              width={Math.max(0, (stage.years / span) * PERCENT - 0.6)}
+              height={4}
+              fill={TONE_COLOR[stage.spec.tone ?? 'muted']}
+            />
+          )
+        })}
+      </svg>
+      <div className='grid min-w-0 grid-cols-1 gap-2 @md/folk:grid-cols-3'>
+        {stages.map((stage) => (
+          <MiniStat
+            key={stage.key}
+            icon={stage.spec.icon}
+            label={stage.label}
+            value={`${formatInteger(stage.years)} years`}
+            tone={stage.spec.tone}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ProfileControls({
   view,
   blocked,
 }: {
@@ -624,161 +1097,143 @@ function ProfileForm({
 }) {
   const biology = view.biology
   const culture = view.culture
-  const [numbers, setNumbers] = useState<Record<string, string>>(() => ({
-    ...Object.fromEntries(
-      BIOLOGY_FIELDS.map((field) => [
-        field.key,
-        String(biology?.[field.key] ?? ''),
-      ])
-    ),
-    ...Object.fromEntries(
-      CULTURE_FIELDS.map((field) => [
-        field.key,
-        String(culture?.[field.key] ?? ''),
-      ])
-    ),
-  }))
-  const [picks, setPicks] = useState<Record<string, string>>(() => ({
-    aesthetic: culture?.aesthetic ?? 'geometric',
-    martial_style: culture?.martial_style ?? 'shieldwall',
-    marriage: culture?.marriage ?? 'monogamy',
-    inheritance: culture?.inheritance ?? 'gavelkind',
-  }))
-  const [flags, setFlags] = useState({
-    endogamous: culture?.endogamous ?? false,
-    slavery_lawful: culture?.slavery_lawful ?? false,
-  })
   const locked = [...(biology?.locked ?? []), ...(culture?.locked ?? [])]
-  const save = useGodAction({
-    run: (release: string[]) =>
+  const peopleId = view.people_id ?? view.entity_id
+  const edit = useGodAction({
+    run: ({ key, value }: { key: string; value: number | string | boolean }) =>
       unwrap(
         api.POST('/api/actions/people:edit', {
-          body: {
-            people_id: view.people_id ?? view.entity_id,
-            values:
-              release.length > 0
-                ? {}
-                : {
-                    ...Object.fromEntries(
-                      Object.entries(numbers).map(([key, value]) => [
-                        key,
-                        Math.round(Number(value) || 0),
-                      ])
-                    ),
-                    ...picks,
-                    ...flags,
-                  },
-            release,
-          },
+          body: { people_id: peopleId, values: { [key]: value }, release: [] },
         })
       ),
+    success: (_result, change) => `${fieldLabel(change.key)} held`,
   })
-  const busy = blocked ?? (save.isPending ? WORKING : null)
+  const release = useGodAction({
+    run: (keys: string[]) =>
+      unwrap(
+        api.POST('/api/actions/people:edit', {
+          body: { people_id: peopleId, values: {}, release: keys },
+        })
+      ),
+    success: 'They drift with the world again',
+  })
+  const busy = blocked ?? (edit.isPending || release.isPending ? WORKING : null)
+  const numbers: NumberField[] = [
+    ...(biology
+      ? LIFE_FIELDS.map((field) => ({
+          key: field.key,
+          label: fieldLabel(field.key),
+          icon: field.icon,
+          value: biology[field.key],
+          min: field.min,
+          max: field.max,
+          unit: field.unit,
+        }))
+      : []),
+  ]
+  const society: NumberField[] = culture
+    ? SOCIETY_FIELDS.map((field) => ({
+        key: field.key,
+        label: fieldLabel(field.key),
+        icon: field.icon,
+        value: culture[field.key],
+        min: field.min,
+        max: field.max,
+      }))
+    : []
+  const editor = (field: NumberField) => (
+    <NumberEditor
+      key={`${field.key}-${field.value}`}
+      id={`people-${peopleId}`}
+      field={field}
+      held={locked.includes(field.key)}
+      blocked={blocked}
+      pending={edit.isPending && edit.variables?.key === field.key}
+      onSet={(value) => edit.mutate({ key: field.key, value })}
+    />
+  )
   return (
-    <div className='flex min-w-0 flex-col gap-4'>
-      <div className='grid min-w-0 grid-cols-2 gap-3 md:grid-cols-4'>
-        {[...BIOLOGY_FIELDS, ...CULTURE_FIELDS].map((field) => (
-          <div key={field.key} className='flex min-w-0 flex-col gap-1'>
-            <Label>{field.label}</Label>
-            <Input
-              type='number'
-              min={0}
-              value={numbers[field.key]}
-              aria-label={field.label}
-              onChange={(event) =>
-                setNumbers((current) => ({
-                  ...current,
-                  [field.key]: event.target.value,
-                }))
-              }
-            />
-          </div>
-        ))}
-      </div>
-      <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-4'>
-        <MindPicker
-          label='Aesthetic'
-          value={picks.aesthetic}
-          table={choices(AESTHETICS)}
-          blocked={busy}
-          onPick={(value) =>
-            setPicks((current) => ({ ...current, aesthetic: value }))
-          }
-        />
-        <MindPicker
-          label='Way of war'
-          value={picks.martial_style}
-          table={choices(MARTIAL)}
-          blocked={busy}
-          onPick={(value) =>
-            setPicks((current) => ({ ...current, martial_style: value }))
-          }
-        />
-        <MindPicker
-          label='Marriage'
-          value={picks.marriage}
-          table={choices(MARRIAGE)}
-          blocked={busy}
-          onPick={(value) =>
-            setPicks((current) => ({ ...current, marriage: value }))
-          }
-        />
-        <MindPicker
-          label='Inheritance'
-          value={picks.inheritance}
-          table={choices(INHERITANCE)}
-          blocked={busy}
-          onPick={(value) =>
-            setPicks((current) => ({ ...current, inheritance: value }))
-          }
-        />
-      </div>
-      <div className='flex min-w-0 flex-wrap gap-4'>
-        {(['endogamous', 'slavery_lawful'] as const).map((key) => (
-          <label key={key} className='flex items-center gap-2'>
-            <Switch
-              checked={flags[key]}
-              disabled={busy !== null}
-              onCheckedChange={(value) =>
-                setFlags((current) => ({ ...current, [key]: value }))
-              }
-              aria-label={words(key)}
-            />
-            <Text as='span'>
-              {key === 'endogamous'
-                ? 'Marry only among themselves'
-                : 'Slavery is lawful'}
-            </Text>
-          </label>
-        ))}
-      </div>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Button
-          size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => save.mutate([])}
-        >
-          <Save />
-          Hold these customs
-        </Button>
-        {locked.length > 0 && (
-          <Button
-            size='sm'
-            variant='outline'
-            disabled={busy !== null}
-            disabledReason={busy ?? undefined}
-            onClick={() => save.mutate(locked)}
-          >
-            <Unlock />
-            Let them drift again
-          </Button>
-        )}
-        {locked.map((key) => (
-          <Badge key={key} variant='outline'>{`held: ${words(key)}`}</Badge>
-        ))}
-      </div>
-    </div>
+    <AdjustPanel
+      title='Shape these folk'
+      note='Set how they age, breed, hold together and live. What you set is held against the drift of the world until you release it; every change can be undone from the ledger.'
+    >
+      <HeldStrip
+        keys={locked}
+        labelOf={fieldLabel}
+        blocked={busy}
+        onRelease={(keys) => release.mutate(keys)}
+      />
+      {numbers.length > 0 && (
+        <EditorGroup title='A life' icon={Hourglass} pairs>
+          {numbers.map(editor)}
+        </EditorGroup>
+      )}
+      {society.length > 0 && (
+        <EditorGroup title='Society' icon={Users2}>
+          {society.map(editor)}
+        </EditorGroup>
+      )}
+      {culture && (
+        <EditorGroup title='Customs' icon={Palette} pairs>
+          <ChoiceEditor
+            label='Art'
+            hint='What they find beautiful'
+            value={culture.aesthetic}
+            table={AESTHETIC_SPEC}
+            held={locked.includes('aesthetic')}
+            blocked={busy}
+            onPick={(value) => edit.mutate({ key: 'aesthetic', value })}
+          />
+          <ChoiceEditor
+            label='Way of war'
+            hint='How their levies fight'
+            value={culture.martial_style}
+            table={MARTIAL_SPEC}
+            held={locked.includes('martial_style')}
+            blocked={busy}
+            onPick={(value) => edit.mutate({ key: 'martial_style', value })}
+          />
+          <ChoiceEditor
+            label='Marriage'
+            hint='Who may wed whom'
+            value={culture.marriage}
+            table={MARRIAGE_SPEC}
+            held={locked.includes('marriage')}
+            blocked={busy}
+            onPick={(value) => edit.mutate({ key: 'marriage', value })}
+          />
+          <ChoiceEditor
+            label='Inheritance'
+            hint='Who takes what the dead leave'
+            value={culture.inheritance}
+            table={INHERITANCE_SPEC}
+            held={locked.includes('inheritance')}
+            blocked={busy}
+            onPick={(value) => edit.mutate({ key: 'inheritance', value })}
+          />
+          <FlagEditor
+            label='Marry within'
+            hint='Only their own people are taken as spouses'
+            icon={Fingerprint}
+            tone='verdigris'
+            checked={culture.endogamous}
+            held={locked.includes('endogamous')}
+            blocked={busy}
+            onToggle={(value) => edit.mutate({ key: 'endogamous', value })}
+          />
+          <FlagEditor
+            label='Slavery lawful'
+            hint='They may hold others in bondage'
+            icon={Link}
+            tone='warning'
+            checked={culture.slavery_lawful}
+            held={locked.includes('slavery_lawful')}
+            blocked={busy}
+            onToggle={(value) => edit.mutate({ key: 'slavery_lawful', value })}
+          />
+        </EditorGroup>
+      )}
+    </AdjustPanel>
   )
 }
 
@@ -808,23 +1263,31 @@ export function PeopleProfileSection({
       )
       return {
         key: point.axis,
-        label: words(point.axis),
+        label: named(VALUE_ICONS, point.axis).label,
         value: point.value,
         reference:
           others.length > 0
-            ? others.reduce((sum, value) => sum + value, 0) / others.length
+            ? others.reduce((total, value) => total + value, 0) / others.length
             : null,
       }
     })
   }, [view.data, neighbour])
   if (!view.data || (!view.data.biology && !view.data.culture)) return null
   const blocked = readOnlyReason ?? reason()
+  const { biology, culture } = view.data
   const neighbours = {
     all: 'All neighbours',
     ...Object.fromEntries(
       view.data.neighbours.map((item) => [String(item.entity_id), item.name])
     ),
   }
+  const strongest = [...view.data.values]
+    .sort((left, right) => Math.abs(right.value) - Math.abs(left.value))
+    .slice(0, 3)
+  const band = biology ? named(BAND, biology.acclimatised) : null
+  const staple = biology
+    ? (COMMODITY[biology.staple as CommodityKind] ?? null)
+    : null
   return (
     <Section
       id='section-people-profile'
@@ -832,51 +1295,211 @@ export function PeopleProfileSection({
       description='How this people lives, ages, marries, inherits, fights and sees beauty; its values against its neighbours.'
       icon={Fingerprint}
     >
-      <div data-surface='PeopleProfile' className='flex min-w-0 flex-col gap-5'>
-        <div className='flex min-w-0 flex-wrap gap-2'>
-          {view.data.biology && (
-            <>
-              <Badge variant='info'>{`Acclimatised to ${words(view.data.biology.acclimatised)} lands`}</Badge>
-              <Badge variant='outline'>{`Lives on ${words(view.data.biology.staple)}`}</Badge>
-            </>
+      <div
+        data-surface='PeopleProfile'
+        className='@container/folk flex min-w-0 flex-col gap-4'
+      >
+        <div className='grid min-w-0 grid-cols-2 gap-3 @xl/folk:grid-cols-3'>
+          {biology && (
+            <KpiTile
+              label='Lifespan'
+              value={`${formatInteger(biology.maturity_years + biology.adult_years + biology.elder_years)} years`}
+              icon={Hourglass}
+              tone='gold'
+              hint={`Of age at ${biology.maturity_years}, old at ${biology.maturity_years + biology.adult_years}`}
+            />
           )}
-          {view.data.culture && (
-            <>
-              <Badge variant='outline'>{`Fights as ${words(view.data.culture.martial_style)}`}</Badge>
-              <Badge variant='outline'>{`${words(view.data.culture.aesthetic)} art`}</Badge>
-              {view.data.culture.slavery_lawful && (
-                <Badge variant='warning'>Keeps slaves</Badge>
-              )}
-            </>
+          {biology && (
+            <KpiTile
+              label='Fertility'
+              value={`${biology.fertility_pct}%`}
+              icon={Sprout}
+              tone={biology.fertility_pct >= PERCENT ? 'success' : 'warning'}
+              change={
+                biology.fertility_pct === PERCENT
+                  ? undefined
+                  : biology.fertility_pct - PERCENT
+              }
+              hint='Births against an ordinary people'
+            />
+          )}
+          {biology && (
+            <KpiTile
+              label='Lives on'
+              value={staple?.label ?? fieldLabel(biology.staple)}
+              icon={staple?.icon ?? Sprout}
+              tone='success'
+              hint={`Born to ${band?.label.toLowerCase() ?? 'any'} lands`}
+            />
+          )}
+          {culture && (
+            <KpiTile
+              label='Cohesion'
+              value={culture.cohesion}
+              icon={Users2}
+              tone={goodTone(culture.cohesion)}
+              hint='How firmly they hold together'
+              meter={{
+                value: culture.cohesion,
+                max: PERCENT,
+                label: 'Cohesion',
+              }}
+            />
+          )}
+          {culture && (
+            <KpiTile
+              label='Literacy'
+              value={culture.literacy}
+              icon={BookOpen}
+              tone='info'
+              hint='How many read and write'
+              meter={{
+                value: culture.literacy,
+                max: PERCENT,
+                label: 'Literacy',
+              }}
+            />
+          )}
+          {culture && (
+            <KpiTile
+              label='Urbanisation'
+              value={culture.urbanisation}
+              icon={Building}
+              tone='verdigris'
+              hint='How many live in towns'
+              meter={{
+                value: culture.urbanisation,
+                max: PERCENT,
+                label: 'Urbanisation',
+              }}
+            />
+          )}
+        </div>
+        <div className='flex min-w-0 flex-col gap-3'>
+          {biology && (
+            <Panel
+              title='A life'
+              icon={Hourglass}
+              hint='How the years of one of them are spent'
+              aside={
+                band && (
+                  <Badge size='sm' variant='secondary'>
+                    <band.icon />
+                    {band.label}
+                  </Badge>
+                )
+              }
+            >
+              <LifeCourse biology={biology} />
+            </Panel>
+          )}
+          {culture && (
+            <Panel
+              title='Customs'
+              icon={Palette}
+              hint='Their ways at home and war'
+            >
+              <div className='grid min-w-0 grid-cols-1 gap-2 @md/folk:grid-cols-2 @xl/folk:grid-cols-3'>
+                {[
+                  { label: 'Art', spec: AESTHETIC_SPEC[culture.aesthetic] },
+                  {
+                    label: 'Way of war',
+                    spec: MARTIAL_SPEC[culture.martial_style],
+                  },
+                  { label: 'Marriage', spec: MARRIAGE_SPEC[culture.marriage] },
+                  {
+                    label: 'Inheritance',
+                    spec: INHERITANCE_SPEC[culture.inheritance],
+                  },
+                  {
+                    label: 'Spouses',
+                    spec: culture.endogamous
+                      ? {
+                          label: 'Only their own',
+                          icon: Fingerprint,
+                          tone: 'verdigris' as const,
+                        }
+                      : {
+                          label: 'From any people',
+                          icon: Users2,
+                          tone: 'muted' as const,
+                        },
+                  },
+                  {
+                    label: 'Slavery',
+                    spec: culture.slavery_lawful
+                      ? {
+                          label: 'Lawful',
+                          icon: Link,
+                          tone: 'warning' as const,
+                        }
+                      : {
+                          label: 'Forbidden',
+                          icon: Ban,
+                          tone: 'success' as const,
+                        },
+                  },
+                ].map((item) => (
+                  <MiniStat
+                    key={item.label}
+                    icon={item.spec.icon}
+                    label={item.label}
+                    value={item.spec.label}
+                    tone={item.spec.tone}
+                  />
+                ))}
+              </div>
+            </Panel>
           )}
         </div>
         {axes.length >= 3 && (
-          <div className='flex min-w-0 flex-col gap-2'>
-            {view.data.neighbours.length > 0 && (
-              <div className='max-w-64'>
-                <MindPicker
-                  label='Compared with'
-                  value={neighbour}
-                  table={neighbours}
-                  blocked={null}
-                  onPick={setNeighbour}
+          <Panel
+            title='Values'
+            icon={Scale}
+            hint={
+              view.data.neighbours.length > 0
+                ? 'Gold is this people; grey is the neighbours you compare with.'
+                : 'What this people holds dear and what it scorns.'
+            }
+          >
+            <div className='grid min-w-0 grid-cols-1 items-center gap-4 @xl/folk:grid-cols-3'>
+              <div className='min-w-0 @xl/folk:col-span-2'>
+                <ValueRadar
+                  axes={axes}
+                  label='Values'
+                  referenceLabel={
+                    view.data.neighbours.length > 0 ? 'Neighbours' : null
+                  }
                 />
               </div>
-            )}
-            <ValueRadar
-              axes={axes}
-              label='Values'
-              referenceLabel={
-                view.data.neighbours.length > 0 ? 'Neighbours' : null
-              }
-            />
-          </div>
+              <div className='flex min-w-0 flex-col gap-3'>
+                {view.data.neighbours.length > 0 && (
+                  <MindPicker
+                    label='Compared with'
+                    value={neighbour}
+                    table={neighbours}
+                    blocked={null}
+                    onPick={setNeighbour}
+                  />
+                )}
+                <Label variant='overline'>Held most strongly</Label>
+                {strongest.map((point) => {
+                  const spec = named(VALUE_ICONS, point.axis)
+                  return (
+                    <MiniStat
+                      key={point.axis}
+                      icon={spec.icon}
+                      label={spec.label}
+                      value={point.value > 0 ? `+${point.value}` : point.value}
+                      tone={point.value >= 0 ? (spec.tone ?? 'gold') : 'danger'}
+                    />
+                  )
+                })}
+              </div>
+            </div>
+          </Panel>
         )}
-        <ProfileForm
-          key={JSON.stringify([view.data.biology, view.data.culture])}
-          view={view.data}
-          blocked={blocked}
-        />
+        <ProfileControls view={view.data} blocked={blocked} />
       </div>
     </Section>
   )
