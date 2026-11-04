@@ -86,7 +86,7 @@ async def create_danger(scope: PlayerScope, command: CreateDanger) -> Effect:
     held = " and held there" if command.hold else ""
     label = DANGERS[command.source].label.lower()
     return Effect(
-        f"{label.capitalize()} now haunt {await _name(scope, row.region_entity_id)} at strength {row.strength}{held}.", target_node_id=row.region_entity_id
+        f"{await _name(scope, row.region_entity_id)} now suffers {label} at strength {row.strength}{held}.", target_node_id=row.region_entity_id
     )
 
 
