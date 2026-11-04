@@ -36,7 +36,9 @@ export function TotemSection({
       tone='success'
     >
       <div data-surface='TotemCard' className='flex min-w-0 flex-col gap-3'>
-        {totem ? (
+        {view.isPending ? (
+          <Muted>Reading the people’s emblem…</Muted>
+        ) : totem ? (
           <div className='flex min-w-0 flex-wrap items-center gap-3 rounded-lg border bg-background p-3'>
             <Medallion icon={PawPrint} tone='success' />
             <div className='flex min-w-0 flex-1 flex-col gap-1'>

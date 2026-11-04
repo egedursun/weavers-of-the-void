@@ -406,12 +406,15 @@ async def create_beast(ctx: TickContext, draft: NewBeast, *, world_id: int | Non
         raise NotFoundError("A lair is a place or a region.")
     home = lair.id if lair is not None else species.location_id if species is not None else None
     world = lair.world_id if lair is not None else species.world_id if species is not None else world_id
+    stats = draft.stats
+    if stats.hp is None:
+        stats = stats.model_copy(update={"hp": (stat(species, "hp") or PERCENT) * 2 if species is not None else PERCENT * 2})
     beast = await create_record(
         ctx,
         RecordSpec(
             name=draft.name,
             entity_type=EntityType.BEAST,
-            stats=draft.stats,
+            stats=stats,
             body=draft.description,
             power=draft.power,
             world_id=world,

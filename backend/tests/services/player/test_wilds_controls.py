@@ -197,6 +197,7 @@ async def test_a_beast_is_called_forth_given_treasure_and_slain(scope: PlayerSco
         66,
     )
     assert row.locked == [] and row.lair_place_id == world.region.id
+    assert (beast.stats.hp or 0) > 0
     cup = await thing(session, world, "Gold Cup", EntityType.ITEM, ItemStats())
     await wilds.move_treasure(scope, wilds.Treasure(beast_id=beast.id, item_id=cup.id, into_hoard=True))
     owner = select(BondRow.source_node_id).where(BondRow.target_node_id == cup.id, BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE)
