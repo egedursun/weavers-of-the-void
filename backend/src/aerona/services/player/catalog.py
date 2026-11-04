@@ -33,6 +33,7 @@ from aerona.services.player import (
     foreign_gods,
     goals,
     god_power,
+    happenings,
     heroes,
     horizon,
     interventions,
@@ -1276,6 +1277,37 @@ ENVIRONMENT_ACTIONS = (
         ("F2.2",),
     ),
 )
+HAPPENING_ACTIONS = (
+    _sync(Meta("event:create", "Set down an event of any kind in a land or town", G.WORLDS), happenings.create_event, happenings.CreateEvent, free, ("S8.8",)),
+    _sync(Meta("event:edit", "Edit an event's name, severity, years and seasons", G.WORLDS), happenings.edit_event, happenings.EditEvent, free, ("S8.8",)),
+    _sync(
+        Meta("event:phase", "Move an event to its beginning, height or aftermath, and hold it", G.WORLDS),
+        happenings.set_event_phase,
+        happenings.EventPhaseCommand,
+        free,
+        ("S8.8",),
+    ),
+    _sync(Meta("event:release", "Let a held event value follow the world again", G.WORLDS), happenings.release_event, happenings.EventRelease, free, ("S8.8",)),
+    _sync(
+        Meta("event:footprint", "Add or remove a land from an event's reach", G.WORLDS),
+        happenings.set_event_footprint,
+        happenings.EventFootprint,
+        free,
+        ("S8.8",),
+    ),
+    _sync(
+        Meta("event:casualties", "Set the toll of an event for one cohort", G.WORLDS),
+        happenings.set_event_casualties,
+        happenings.EventCasualties,
+        free,
+        ("S8.8",),
+    ),
+    _sync(Meta("event:end", "End an event now", G.WORLDS), happenings.end_event, happenings.EventTarget, free, ("S8.8",)),
+    _sync(Meta("land:stir", "Wake an eruption or a volcanic earthquake in a land", G.WORLDS), happenings.stir_land, happenings.StirLand, free, ("S6.1",)),
+    _sync(Meta("land:river", "Move a river into a neighbouring land", G.WORLDS), happenings.move_river, happenings.MoveRiver, free, ("S6.1",)),
+    _sync(Meta("land:shape", "Set and hold a land's desertification and volcanism", G.WORLDS), happenings.shape_land, happenings.ShapeLand, free, ("S6.1",)),
+    _sync(Meta("land:release", "Let a held land value follow the world again", G.WORLDS), happenings.release_land, happenings.ReleaseLand, free, ("S6.1",)),
+)
 MECHANIC_ACTIONS = (
     _sync(Meta("lever:pin", "Pin a field so that no mechanic can change it", G.SETTINGS), levers.pin_field, levers.PinField, free, ("J.16c",)),
     _sync(Meta("lever:unpin", "Release a pinned field", G.SETTINGS), levers.unpin_field, levers.UnpinField, free, ("J.16c",)),
@@ -1349,6 +1381,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *LIFE_CYCLE_ACTIONS,
     *MECHANIC_ACTIONS,
     *ENVIRONMENT_ACTIONS,
+    *HAPPENING_ACTIONS,
     *ECONOMY_ACTIONS,
     *BODY_ACTIONS,
     *MIND_ACTIONS,

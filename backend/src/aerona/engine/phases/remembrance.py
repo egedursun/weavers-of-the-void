@@ -1,4 +1,3 @@
-import re
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -18,6 +17,7 @@ from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.entity_stats import ArtworkStats, EntityStats, LegendStats, StructureStats, TraditionStats
 from aerona.engine.context import TickContext
 from aerona.engine.disease.outbreaks import disease_god
+from aerona.engine.happenings.profile import toll_of
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -29,12 +29,21 @@ from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat
 from aerona.engine.services.community_relations import change_relation
 
-EPOCH_SUFFIX = re.compile(r"\s*\(Epoch \d+\)\s*")
-LIVES_LOST = re.compile(r"(\d+) lives lost")
+EPOCH_MARK = " (Epoch "
 MEMORIAL_TYPES = frozenset({EntityType.ARTWORK, EntityType.LEGEND, EntityType.TRADITION, EntityType.STRUCTURE})
 WAR_KINDS = frozenset({EngineKind.WAR, EngineKind.BATTLE, EngineKind.SIEGE})
 DISASTER_KINDS = frozenset(
-    {EngineKind.EARTHQUAKE, EngineKind.FLOOD, EngineKind.PLAGUE, EngineKind.DROUGHT, EngineKind.STORM, EngineKind.MAGIC_STORM, EngineKind.FAMINE}
+    {
+        EngineKind.EARTHQUAKE,
+        EngineKind.FLOOD,
+        EngineKind.PLAGUE,
+        EngineKind.DROUGHT,
+        EngineKind.STORM,
+        EngineKind.MAGIC_STORM,
+        EngineKind.FAMINE,
+        EngineKind.ERUPTION,
+        EngineKind.FIRE,
+    }
 )
 PLAGUE_DOMAINS = DEATH_DOMAINS | {Domain.PLAGUE, Domain.LIFE}
 HERO_FLAGS = frozenset({EntityFlag.CHOSEN, EntityFlag.AGE_CHANGER, EntityFlag.PROPHET, EntityFlag.LEGENDARY})
@@ -58,7 +67,11 @@ class WarMemory:
 
 
 def plain_name(name: str) -> str:
-    return EPOCH_SUFFIX.sub(" ", name).strip()
+    head, mark, tail = name.partition(EPOCH_MARK)
+    number, close, rest = tail.partition(")")
+    if not mark or not close or not number.isdigit():
+        return name.strip()
+    return " ".join(f"{head} {rest}".split())
 
 
 async def is_remembered(ctx: TickContext, node_id: int) -> bool:
@@ -280,11 +293,9 @@ async def remember_war(ctx: TickContext, war: WarRow, form: MemorialForm | None 
 
 
 async def disaster_toll(ctx: TickContext, event: EntityRow) -> tuple[int, list[EntityRow]]:
-    total = 0
+    total = await toll_of(ctx.session, event.id)
     struck: list[EntityRow] = []
     for bond in await BondRepository(ctx.session).outgoing(event.id, BondKind.CAUSED, active_only=False):
-        match = LIVES_LOST.search(bond.description or "")
-        total += int(match.group(1)) if match else 0
         target = await living_entity(ctx.session, bond.target_node_id)
         if target is not None and target.entity_type in COMMUNITY_TYPES and target not in struck:
             struck.append(target)
@@ -584,6 +595,7 @@ async def plague_faith(ctx: TickContext) -> int:
     "table.culture_values",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.event_casualties",
     "table.memories",
     "table.minds",
     "table.name_registry",

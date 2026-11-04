@@ -146,6 +146,7 @@ class ActionKind(StrEnum):
     REORDER_SEASONS = "reorder_seasons"
     SHAPE_WEATHER = "shape_weather"
     SEVER_LEY = "sever_ley"
+    RESHAPE_LAND = "reshape_land"
     FOREIGN_GOD_TALK = "foreign_god_talk"
     WRITE_PLAN = "write_plan"
     ABANDON_SETTLEMENT = "abandon_settlement"

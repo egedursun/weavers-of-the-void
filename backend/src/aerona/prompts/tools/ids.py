@@ -60,6 +60,7 @@ class SonToolId(StrEnum):
     REORDER_SEASONS = "reorder_seasons"
     SHAPE_WEATHER = "shape_weather"
     SEVER_LEY = "sever_ley"
+    RESHAPE_LAND = "reshape_land"
     DECLARE_HOLY_WORLD = "declare_holy_world"
     SEAL_GATE = "seal_gate"
     REKINDLE_STAR = "rekindle_star"

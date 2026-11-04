@@ -128,6 +128,8 @@ class EnginePhasesRules:
     mind_opinion: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: community relations from opinion")
     environment_derive: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: environment derive")
     land_use: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: land use")
+    geomorphology: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: geomorphology")
+    event_phases: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: event phases")
     harvest: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: harvest")
     calendars: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: calendars")
     ley_lines: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: ley lines")

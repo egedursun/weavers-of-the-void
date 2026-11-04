@@ -64,6 +64,8 @@ REGION_NUMBERS = frozenset(
 )
 LOCKABLE = frozenset(
     {
+        "soil",
+        "soil_base",
         "dominant_terrain",
         "river_class",
         "coast_kind",

@@ -13,6 +13,7 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.happenings import RegionGeomorphRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
@@ -25,6 +26,7 @@ from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.star_types import star_heat
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.environment.geomorph import course_of, desert_rainfall, desert_terrain, shapes_by_region
 from aerona.engine.environment.ley import LeyWeb, candidate_lines, cut_by_land, pair
 from aerona.engine.environment.notable import backfill_notable_years
 from aerona.engine.environment.profile import (
@@ -157,7 +159,7 @@ def factor_of(rules: Rules, env: RegionEnvironmentRow, works: Works) -> float:
     return climate_factor(rules, temperature=env.temperature, rainfall=env.rainfall, river=env.river_class, scars=env.scars, works=works, mix=mix)
 
 
-def apply_geography(env: RegionEnvironmentRow, geography: Geography, coast: CoastKind) -> None:
+def apply_geography(env: RegionEnvironmentRow, geography: Geography, coast: CoastKind, course: RiverClass | None = None) -> None:
     locked = set(env.locked)
     values = {
         "biome_mix": geography.biome_mix,
@@ -167,7 +169,7 @@ def apply_geography(env: RegionEnvironmentRow, geography: Geography, coast: Coas
         "moisture": geography.moisture,
         "base_forest": geography.base_forest,
         "base_wetland": geography.base_wetland,
-        "river_class": geography.river_class,
+        "river_class": course or geography.river_class,
         "coast_kind": coast,
     }
     for key, value in values.items():
@@ -175,13 +177,16 @@ def apply_geography(env: RegionEnvironmentRow, geography: Geography, coast: Coas
             setattr(env, key, value)
 
 
-def refresh_climate(rules: Rules, env: RegionEnvironmentRow, around: Surroundings, axial_tilt: int, tides: int = 0) -> None:
+def refresh_climate(
+    rules: Rules, env: RegionEnvironmentRow, around: Surroundings, axial_tilt: int, tides: int = 0, *, shape: RegionGeomorphRow | None = None
+) -> None:
     locked = set(env.locked)
     geography = geography_of(env)
     if "temperature" not in locked:
         env.temperature = temperature_of(rules, geography, around)
     if "rainfall" not in locked:
         env.rainfall = rainfall_of(rules, geography, around)
+    desert_rainfall(rules, env, shape)
     env.temperature_band = band_of(rules, env.temperature)
     if "seasonality" not in locked:
         env.seasonality = seasonality_of(rules, env.latitude, axial_tilt)
@@ -192,6 +197,7 @@ def refresh_climate(rules: Rules, env: RegionEnvironmentRow, around: Surrounding
     if "dominant_terrain" not in locked:
         reading = TerrainReading(geography, around, env.temperature, env.rainfall, env.wetland, env.built)
         env.dominant_terrain = terrain_of(rules, reading)
+    desert_terrain(env, shape)
     held = {key.removeprefix("passability."): env.passability.get(key.removeprefix("passability.")) for key in locked if key.startswith("passability.")}
     ground = Ground(
         roughness=env.roughness,
@@ -396,6 +402,7 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
     "table.notable_years",
     "table.place_environment",
     "table.region_environment",
+    "table.region_geomorphology",
     "table.sky_events",
     "table.world_maps",
     "table.world_seasons",
@@ -412,6 +419,7 @@ async def environment_survey(ctx: TickContext) -> None:
     book = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch)
     regions = await canon(ctx.session, [EntityType.REGION])
     contexts = await region_contexts(ctx, book, regions)
+    shapes = await shapes_by_region(ctx.session)
     created = synced = 0
     fresh: list[RegionEnvironmentRow] = []
     for region in regions:
@@ -430,7 +438,7 @@ async def environment_survey(ctx: TickContext) -> None:
             fresh.append(env)
             created += 1
         elif mapped is not None:
-            apply_geography(env, mapped, coast)
+            apply_geography(env, mapped, coast, course_of(shapes, region.id))
             if not env.surveyed:
                 env.mineral_layers = mineral_layers(
                     ctx.rules, ctx.environment.rng(f"minerals.{region.id}"), mapped, context.world.world_type, env.dominant_terrain
@@ -520,6 +528,7 @@ async def sanitation_by_region(ctx: TickContext, book: EnvironmentBook, communit
     "table.holder_levels",
     "table.place_environment",
     "table.region_environment",
+    "table.region_geomorphology",
     "table.settlement_profiles",
     "table.sky_events",
     "table.world_maps",
@@ -535,6 +544,7 @@ async def environment_derive(ctx: TickContext) -> None:
     communities = await canon(ctx.session, LAND_COMMUNITY_TYPES)
     loads = capacity.build_loads(communities)
     sanitation = await sanitation_by_region(ctx, book, communities)
+    shapes = await shapes_by_region(ctx.session)
     derived = 0
     for region in regions:
         env = book.regions.get(region.id)
@@ -545,7 +555,7 @@ async def environment_derive(ctx: TickContext) -> None:
         if "magic_density" not in env.locked:
             env.magic_density = clamp_int(stat_or(region, "magic", env.magic_density), 0, PERCENT)
         around = context.surroundings(rules, env)
-        refresh_climate(rules, env, around, context.world.axial_tilt or 0, context.world.tidal_strength or 0)
+        refresh_climate(rules, env, around, context.world.axial_tilt or 0, context.world.tidal_strength or 0, shape=shapes.get(region.id))
         load = loads.get(("region", region.id))
         density = 0
         if load is not None and load.communities:

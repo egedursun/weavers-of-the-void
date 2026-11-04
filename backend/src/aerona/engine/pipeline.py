@@ -49,6 +49,7 @@ from aerona.engine.phases import (
     god_death,
     god_power,
     grudges,
+    happenings,
     heroes,
     heroism,
     horror,
@@ -196,6 +197,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + realms.PHASES
     + settlement_life.PHASES
     + demography.PHASES
+    + happenings.PHASES
 )
 PHASE_REGISTRY: dict[str, Phase] = {phase.name: phase for phase in EXPORTED_PHASES}
 
@@ -326,12 +328,14 @@ SOCIETY_ENGINE_STAGE = stage(
     "ruins",
     "settlement_cycles",
     "land_use",
+    "geomorphology",
     "material_decay",
     "institution_cycles",
     "culture_cycles",
     "tradition_cycles",
     "people_cycles",
     "remembrance",
+    "event_phases",
     "item_cycles",
     "artwork_cycles",
 )
