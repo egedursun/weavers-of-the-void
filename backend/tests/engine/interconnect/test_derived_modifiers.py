@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import cast
 
 import pytest
 from sqlalchemy import select
@@ -22,8 +23,10 @@ from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 from aerona.domain.enums.polity import ClauseKind, Jurisdiction, LawArea, LawKind, TreatyKind
 from aerona.domain.models.entity_stats import ArmyStats, LawStats, TraditionStats, TreatyStats
 from aerona.engine.body.book import effective, ensure_body
+from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.interconnect.derived import derive_tick_modifiers, environment_drafts
 from aerona.engine.phases.climate import law_fertility
+from aerona.engine.primitives.knowledge import LawBook
 from aerona.engine.primitives.modifiers import ModifierDraft, ModifierIndex, add_modifier, live_modifiers, virtual_value
 from aerona.engine.primitives.queries import add_flag
 from aerona.engine.primitives.stats import base_stat, stat
@@ -167,7 +170,7 @@ async def test_ground_seasons_and_weather_become_modifiers(session: AsyncSession
     army = await record(session, "Host", EntityType.ARMY, world_id, size=100, morale=60)
     region = StubRegion(entity_id=town.id, world_id=world_id, dominant_terrain=TerrainKind.MOUNTAINS, seasonality=50)
     weather = StubWeather(WeatherKind.BLIZZARD, {WeatherEffect.GROWTH: -40, WeatherEffect.MORALE: -20, WeatherEffect.COLD: 90})
-    drafts = environment_drafts(make_ctx(session, RULES), StubBook(region, weather), [town], [army])  # type: ignore[arg-type]
+    drafts = environment_drafts(make_ctx(session, RULES), cast(EnvironmentBook, StubBook(region, weather)), [town], [army])
     found = {(draft.target_node_id, draft.target_key, draft.source_kind): draft.magnitude for draft in drafts}
     assert found[(town.id, "defense", ModifierSource.TERRAIN)] == RULES.modifiers.terrain_rough_defense
     assert found[(town.id, "prosperity", ModifierSource.SEASON)] == pytest.approx(1 - 0.5 * RULES.modifiers.season_prosperity_pct / PERCENT)
@@ -183,7 +186,7 @@ class BountyLaws:
 async def test_natural_laws_multiply_fertility_without_drifting_its_base(session: AsyncSession, world_id: int) -> None:
     region = await make(session, "Vale", EntityType.REGION, world_id, fertility=60)
     ctx = make_ctx(session, RULES)
-    ctx._laws = BountyLaws()  # type: ignore[assignment]
+    ctx._laws = cast(LawBook, BountyLaws())
     await law_fertility(ctx)
     await law_fertility(ctx)
     rows = await _rows(session, ModifierSource.NATURAL_LAW)

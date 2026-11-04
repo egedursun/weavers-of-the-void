@@ -173,13 +173,19 @@ export function CausalityGraph({ nodeId }: { nodeId: number }) {
                   )}
                   strokeWidth={chosen === node.id ? 2.5 : 1}
                 />
-                <text x={x + 8} y={y + 18} className='fill-foreground text-xs'>
+                <text
+                  x={x + 8}
+                  y={y + 18}
+                  className='fill-foreground'
+                  fontSize={11}
+                >
                   {clip(node.text, 26)}
                 </text>
                 <text
                   x={x + 8}
                   y={y + 34}
-                  className='fill-muted-foreground text-xs'
+                  className='fill-muted-foreground'
+                  fontSize={11}
                 >
                   {`Epoch ${node.epoch}${node.role ? ` · ${named(INCIDENT_ROLE, node.role).label.toLowerCase()}` : ''}`}
                 </text>

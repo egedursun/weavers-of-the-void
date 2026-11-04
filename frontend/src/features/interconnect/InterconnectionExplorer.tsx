@@ -21,6 +21,7 @@ import {
 import { Label, Muted, Text } from '@/components/typography'
 import { named } from '@/features/entity/environment/labels'
 import { badgeVariant } from '@/features/entity/realm/labels'
+import { ChoiceCard } from '@/features/entity/realm/parts'
 import { DIRECTION, EDGE_KIND, SUBSYSTEM, heat } from './labels'
 
 type Graph = components['schemas']['MechanicsGraphView']
@@ -55,7 +56,9 @@ function RowHead({ value }: { value: string }) {
   return (
     <span className='flex items-center gap-1 whitespace-nowrap'>
       <Icon aria-hidden='true' className='size-icon-sm text-muted-foreground' />
-      <span className='text-xs'>{spec.label}</span>
+      <Muted as='span' variant='caption'>
+        {spec.label}
+      </Muted>
     </span>
   )
 }
@@ -100,13 +103,13 @@ export function SubsystemMatrix({
       data-surface='SubsystemMatrix'
       className='min-w-0 overflow-x-auto rounded-lg border'
     >
-      <table className='border-collapse text-xs'>
+      <table className='border-collapse'>
         <caption className='sr-only'>Which subsystem feeds which</caption>
         <thead>
           <tr>
             <th
               scope='col'
-              className='sticky left-0 z-10 bg-background p-1 text-left'
+              className='sticky left-0 bg-background p-1 text-left'
             >
               <Muted variant='caption'>From ↓</Muted>
             </th>
@@ -129,7 +132,7 @@ export function SubsystemMatrix({
             <tr key={source}>
               <th
                 scope='row'
-                className='sticky left-0 z-10 bg-background p-1 text-left'
+                className='sticky left-0 bg-background p-1 text-left'
                 title={named(SUBSYSTEM, source).label}
               >
                 <RowHead value={source} />
@@ -145,24 +148,23 @@ export function SubsystemMatrix({
                   chosen.target === link.target
                 return (
                   <td key={target} className='p-0.5'>
-                    <button
-                      type='button'
+                    <Button
+                      variant='outline'
+                      size='icon-sm'
                       disabled={!link}
+                      disabledReason={link ? undefined : 'Nothing flows here.'}
                       aria-label={`${named(SUBSYSTEM, source).label} to ${named(SUBSYSTEM, target).label}: ${link ? link.carriers.length : 0} carriers`}
                       aria-pressed={active}
                       onClick={() => link && onPick(link)}
                       className={cn(
-                        'flex size-control-sm items-center justify-center rounded border tabular-nums transition-colors',
+                        'tabular-nums',
                         HEAT[level],
-                        link
-                          ? 'cursor-pointer hover:border-primary'
-                          : 'border-transparent text-muted-foreground/30',
-                        active && 'border-primary ring-2 ring-primary/40',
+                        active && 'border-primary',
                         source === target && link && 'bg-muted'
                       )}
                     >
                       {link ? link.carriers.length : ''}
-                    </button>
+                    </Button>
                   </td>
                 )
               })}
@@ -447,36 +449,17 @@ export function InterconnectionExplorer() {
                   const spec = named(SUBSYSTEM, item.subsystem)
                   return (
                     <li key={item.key}>
-                      <button
-                        type='button'
-                        aria-pressed={mechanicKey === item.key}
-                        onClick={() => setMechanicKey(item.key)}
-                        className={cn(
-                          'flex w-full min-w-0 items-center gap-2 rounded-lg border p-2 text-left transition-colors hover:bg-accent/40',
-                          mechanicKey === item.key
-                            ? 'border-primary/50 bg-primary/8'
-                            : 'bg-background'
-                        )}
-                      >
-                        <Medallion
-                          icon={spec.icon}
-                          tone={spec.tone ?? 'gold'}
-                          size='sm'
-                        />
-                        <div className='flex min-w-0 flex-1 flex-col'>
-                          <Text as='span' weight='medium' truncate>
-                            {item.title}
-                          </Text>
-                          <Muted
-                            as='span'
-                            variant='caption'
-                            truncate
-                          >{`${spec.label} · ${item.spec_item}`}</Muted>
-                        </div>
-                        <Badge size='sm' variant='secondary'>
-                          {item.couplings.length}
-                        </Badge>
-                      </button>
+                      <ChoiceCard
+                        spec={{
+                          label: item.title,
+                          icon: spec.icon,
+                          tone: spec.tone,
+                        }}
+                        hint={`${spec.label} · ${item.spec_item}`}
+                        selected={mechanicKey === item.key}
+                        count={item.couplings.length}
+                        onSelect={() => setMechanicKey(item.key)}
+                      />
                     </li>
                   )
                 })}

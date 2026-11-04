@@ -15,10 +15,11 @@ from aerona.rules.registry import Rules
 from tests.engine.warfare.factories import make, make_ctx
 
 
-async def _line(session: AsyncSession, epoch: int, key: str, ids: list[int], **extra: object) -> int:
-    write = await ChronicleRepository(session).append(
-        ChronicleDraft(epoch=epoch, kind=ChronicleKind.WORLD, text=f"{key} happened.", entity_ids=ids, template_key=key, **extra)
-    )  # type: ignore[arg-type]
+async def _line(session: AsyncSession, epoch: int, key: str, ids: list[int], cause_incident_id: int | None = None) -> int:
+    draft = ChronicleDraft(
+        epoch=epoch, kind=ChronicleKind.WORLD, text=f"{key} happened.", entity_ids=ids, template_key=key, cause_incident_id=cause_incident_id
+    )
+    write = await ChronicleRepository(session).append(draft)
     assert write.incident_id is not None
     return write.incident_id
 
@@ -41,7 +42,8 @@ async def test_a_cause_scope_links_everything_written_inside_it(session: AsyncSe
     battle = await _line(session, 4, "war.battle.victory", [town.id, other.id])
     with caused_by(battle):
         ended = await _line(session, 4, "war.ended_conquest", [other.id])
-    assert (await session.get(IncidentRow, ended)).cause_incident_id == battle  # type: ignore[union-attr]
+    row = await session.get(IncidentRow, ended)
+    assert row is not None and row.cause_incident_id == battle
 
 
 async def test_war_causes_reach_back_across_epochs(session: AsyncSession, world_id: int) -> None:

@@ -1,14 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import {
-  Cog,
-  Lock,
-  Pause,
-  Play,
-  Plus,
-  Sigma,
-  Unlock,
-} from 'lucide-react'
+import { Cog, Lock, Pause, Play, Plus, Sigma, Unlock } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Button } from '@/components/ui/button'

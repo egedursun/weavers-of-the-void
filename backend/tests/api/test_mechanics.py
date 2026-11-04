@@ -47,7 +47,8 @@ async def test_the_registry_graph_and_a_mechanic_s_links_are_served(api: ApiWorl
 async def test_a_written_incident_shows_in_the_causality_graph(api: ApiWorld) -> None:
     region = seeded(api).core.regions[0]
     place = [{"node_id": region.id, "role": "place"}]
-    first = await api.http.post("/api/actions/incident:create", json={"text": "The river rose.", "kind": "player.history", "magnitude": 30, "participants": place})
+    opening = {"text": "The river rose.", "kind": "player.history", "magnitude": 30, "participants": place}
+    first = await api.http.post("/api/actions/incident:create", json=opening)
     assert first.status_code == 200, first.text
     root = first.json()["created_ids"][0]
     struck = [{"node_id": region.id, "role": "target"}]

@@ -123,6 +123,7 @@ export function ParticipantsEditor({
                   variant='ghost'
                   aria-label='Remove participant'
                   disabled={blocked !== null}
+                  disabledReason={blocked ?? undefined}
                   onClick={() =>
                     onChange(participants.filter((_, at) => at !== index))
                   }
