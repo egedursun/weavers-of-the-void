@@ -52,6 +52,7 @@ from aerona.services.player import (
     native_faith,
     pantheon,
     peoples,
+    profiles,
     realms,
     relations,
     settings,
@@ -1297,6 +1298,20 @@ MECHANIC_ACTIONS = (
     _sync(Meta("modifier:add", "Add a modifier to a record", G.SETTINGS), levers.add_player_modifier, levers.AddModifier, free, ("F9", "J.16c")),
     _sync(Meta("modifier:remove", "Remove a modifier", G.SETTINGS), levers.remove_player_modifier, levers.RemoveModifier, free, ("F9", "J.16c")),
     _sync(Meta("incident:annotate", "Keep a note beside an incident", G.SETTINGS), levers.annotate_incident, levers.AnnotateIncident, free, ("F10",)),
+    _sync(
+        Meta("profile:set", "Set and hold any value of a record's profile", G.SETTINGS),
+        profiles.set_profile_value,
+        profiles.SetProfileValue,
+        free,
+        ("J.16c",),
+    ),
+    _sync(
+        Meta("profile:release", "Let a held profile value follow the world again", G.SETTINGS),
+        profiles.release_profile_value,
+        profiles.ReleaseProfileValue,
+        free,
+        ("J.16c",),
+    ),
 )
 ACTIONS: tuple[ActionSpec, ...] = (
     *WILDS_ACTIONS,
