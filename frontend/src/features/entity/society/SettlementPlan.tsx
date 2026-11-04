@@ -474,7 +474,7 @@ function PlanControls({
   const [target, setTarget] = useState<string>(
     plan.districts[0] ? String(plan.districts[0].id) : ''
   )
-  const [retype, setRetype] = useState<string>('')
+  const [retype, setRetype] = useState<string>('kind:market')
   const designTable = Object.fromEntries(
     plan.designs.map((item) => [
       String(item.id),
