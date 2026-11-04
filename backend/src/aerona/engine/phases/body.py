@@ -419,6 +419,7 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
     "table.nodes",
     "table.prostheses",
     "table.traits",
+    "table.world_maps",
 )
 @writes(
     "table.bodies",

@@ -5,6 +5,7 @@ import {
   allNavItems,
   isNavItemActive,
   navItem,
+  SHORTCUT_KEYS,
   shortcutItems,
 } from './navigation'
 
@@ -14,7 +15,14 @@ describe('navigation', () => {
     expect(new Set(ids).size).toBe(ids.length)
     const shortcuts = shortcutItems().map((item) => item.shortcut)
     expect(new Set(shortcuts).size).toBe(shortcuts.length)
-    expect(shortcuts).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9'])
+    expect(shortcuts).toEqual(SHORTCUT_KEYS)
+  })
+
+  it('numbers the sidebar top to bottom without jumps', () => {
+    const inSidebarOrder = allNavItems()
+      .map((item) => item.shortcut)
+      .filter((shortcut) => shortcut !== undefined)
+    expect(inSidebarOrder).toEqual(SHORTCUT_KEYS)
   })
 
   it('points every item at a real route', () => {

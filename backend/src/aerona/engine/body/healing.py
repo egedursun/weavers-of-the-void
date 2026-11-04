@@ -10,6 +10,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow, InjuryRow, ProsthesisRow
 from aerona.db.tables.culture import ItemProfileRow
+from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import SkillRow
@@ -456,6 +457,14 @@ def workability(rules: ProstheticsRules, material: MaterialKind) -> int:
     return table.get(material, rules.other)
 
 
+def material_workability(rules: ProstheticsRules, material: MaterialKind, world_material: WorldMaterialRow | None) -> int:
+    if world_material is None:
+        return workability(rules, material)
+    if world_material.base_kind is not None:
+        return workability(rules, world_material.base_kind)
+    return clamp_int((world_material.toughness + world_material.hardness) / 2 + world_material.sanctity * rules.world_sanctity_pct / PERCENT, 0, PERCENT)
+
+
 async def fit_prosthesis(
     ctx: TickContext,
     bearer: EntityRow,
@@ -466,6 +475,7 @@ async def fit_prosthesis(
     maker: EntityRow | None,
     quality: int | None = None,
     item: EntityRow | None = None,
+    world_material: WorldMaterialRow | None = None,
 ) -> ProsthesisRow:
     table = ctx.rules.prosthetics
     if maker is not None and await lacks(ctx.session, maker.location_id, Technique.PROSTHETICS):
@@ -484,7 +494,7 @@ async def fit_prosthesis(
         if maker is not None:
             hands = await ctx.session.get(BodyRow, maker.id)
             quality = clamp_int(quality * (hands.craft if hands is not None else PERCENT) / PERCENT, 0, PERCENT)
-    restored = clamp_int(workability(table, material) * quality / PERCENT, 0, PERCENT)
+    restored = clamp_int(material_workability(table, material, world_material) * quality / PERCENT, 0, PERCENT)
     relic = material in PRECIOUS and quality >= table.relic_quality
     if item is None:
         made = material.value.replace("_", " ")
@@ -513,6 +523,7 @@ async def fit_prosthesis(
         restored_pct=restored,
         item_entity_id=item.id if item is not None else None,
         maker_node_id=maker.id if maker is not None else None,
+        world_material_id=world_material.id if world_material is not None else None,
         epoch=ctx.epoch,
     )
     ctx.session.add(prosthesis)

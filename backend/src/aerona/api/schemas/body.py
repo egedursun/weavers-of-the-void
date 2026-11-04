@@ -30,6 +30,7 @@ class ProsthesisView(ApiModel):
     maker_node_id: int | None
     maker_name: str | None
     epoch: int
+    world_material_id: int | None = None
 
 
 class InjuryView(ApiModel):
@@ -68,6 +69,7 @@ class ConditionView(ApiModel):
     source_link: str | None
     since_epoch: int
     ended_epoch: int | None
+    variant_id: int | None = None
     visible: bool
 
 
@@ -105,6 +107,7 @@ class ArmourView(ApiModel):
 
 class BodyView(ApiModel):
     node_id: int
+    world_id: int | None = None
     name: str
     bearer_kind: str
     alive: bool

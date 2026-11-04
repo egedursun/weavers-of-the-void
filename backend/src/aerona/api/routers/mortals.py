@@ -3,13 +3,13 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader, world_rules
-from aerona.api.schemas.mortals import AbilityView, FamilyTreeView, KinLink, MarriageView, MortalProfileView, SlotView, TreePerson
+from aerona.api.schemas.mortals import AbilityView, FamilyTreeView, KinLink, MarriageView, MortalProfileView, SlotView, TreePerson, VariantView
 from aerona.api.views.common import node_ref, node_refs
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import ModifierRow
-from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
+from aerona.db.tables.mortal import KindVariantRow, MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.modifier import ModifierSource
@@ -126,6 +126,7 @@ async def mortal_profile(services: ServicesDep, mortal_id: int = Path(ge=1)) -> 
             loyalty_community=profile.loyalty_community if profile.loyalty_community is not None else 50,
             loyalty_god=profile.loyalty_god if profile.loyalty_god is not None else 50,
             career=profile.career,
+            profession=profile.profession,
             last_break=profile.last_break,
             last_break_epoch=profile.last_break_epoch,
             cause_of_death=profile.cause_of_death,
@@ -196,3 +197,22 @@ async def family_tree(services: ServicesDep, mortal_id: int = Path(ge=1)) -> Fam
                 )
             )
         return FamilyTreeView(root=mortal_id, people=people)
+
+
+@router.get("/variants", response_model=list[VariantView])
+async def kind_variants(services: ServicesDep) -> list[VariantView]:
+    async with reader(services) as session:
+        rows = await session.scalars(select(KindVariantRow).order_by(KindVariantRow.family, KindVariantRow.base, KindVariantRow.id))
+        return [
+            VariantView(
+                id=row.id,
+                family=row.family,
+                base=row.base,
+                name=row.name,
+                description=row.description,
+                strength_pct=row.strength_pct,
+                learning_pct=row.learning_pct,
+                held=sorted(row.locked or []),
+            )
+            for row in rows
+        ]

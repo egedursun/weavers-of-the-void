@@ -69,6 +69,7 @@ from aerona.services.player import (
     society,
     son_tools,
     urban,
+    variants,
     warfare,
     wilds,
     world_edits,
@@ -1019,6 +1020,13 @@ MIND_ACTIONS = (
     _sync(Meta("mind:memory_remove", "Erase a memory", G.ENTITIES), mind.forget_memory, mind.MemoryTarget, free, ("F7",)),
     _sync(Meta("mind:need", "Set and hold a mortal's need", G.ENTITIES), mind.set_need, mind.SetNeed, free, ("F8",)),
     _sync(Meta("mind:pressure", "Set and hold a pressure on a community", G.SOCIETY), mind.set_pressure, mind.SetPressure, free, ("F8",)),
+    _sync(Meta("variant:create", "Forge a new kind of trait, skill or state", G.ENTITIES), variants.create_variant, variants.CreateVariant, free, ("F9",)),
+    _sync(Meta("variant:edit", "Reshape and hold a world-made kind", G.ENTITIES), variants.edit_variant, variants.EditVariant, free, ("F9",)),
+    _sync(
+        Meta("variant:release", "Let a held part of a world-made kind change again", G.ENTITIES), variants.release_variant, variants.VariantField, free, ("F9",)
+    ),
+    _sync(Meta("variant:delete", "Unmake a world-made kind", G.ENTITIES), variants.delete_variant, variants.VariantTarget, free, ("F9",)),
+    _sync(Meta("variant:assign", "Give a skill or condition a made kind", G.ENTITIES), variants.assign_variant, variants.AssignVariant, free, ("F9",)),
     _sync(Meta("mind:skill_edit", "Change a skill's subject, practice and peak", G.ENTITIES), mind.edit_skill, mind.EditSkill, free, ("F6",)),
     _sync(Meta("body:condition_edit", "Change how heavy a condition lies", G.ENTITIES), body.edit_condition, body.EditCondition, free, ("F4.5",)),
     _sync(Meta("body:prosthesis_edit", "Change a prosthesis's make and quality", G.ENTITIES), body.edit_prosthesis, body.EditProsthesis, free, ("F4.5",)),

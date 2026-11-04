@@ -28,6 +28,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import NeedKind, PressureKind, SkillKind, SkillSource, TraitEffect, TraitKind, TraitSource, ValueAxis, ValueHolder
 from aerona.engine.body.book import factor
 from aerona.engine.body.customs import people_of
+from aerona.engine.mortal.variants import strength, variants_by_id
 from aerona.engine.primitives.numbers import clamp_int
 
 Holder = EntityRow | SonRow | ForeignGodRow
@@ -207,7 +208,10 @@ def trait_capacity(traits: Iterable[TraitKind], capacity: Capacity, scale_pct: i
 
 
 async def effect_of(session: AsyncSession, node_id: int, effect: TraitEffect, scale_pct: int = PERCENT) -> int:
-    return trait_effect(await traits_of(session, node_id), effect, scale_pct)
+    rows = list(await session.scalars(select(TraitRow).where(TraitRow.node_id == node_id)))
+    variants = await variants_by_id(session, (row.variant_id for row in rows))
+    total = sum(TRAITS[row.trait].effects.get(effect, 0) * strength(variants, row.variant_id) for row in rows)
+    return round(total * scale_pct / PERCENT)
 
 
 def scaled_by(effect_pct: int) -> float:
