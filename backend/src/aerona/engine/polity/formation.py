@@ -160,7 +160,7 @@ async def found_polity(ctx: TickContext, book: RealmBook, core: EntityRow) -> Re
     return realm
 
 
-def set_ruler(ctx: TickContext, realm: Realm, ruler_id: int | None, reason: str) -> bool:
+def set_ruler(ctx: TickContext, realm: Realm, ruler_id: int | None, reason: str, *, usurped: bool = False) -> bool:
     office = realm.office(OfficeKind.RULER)
     if office is None:
         office = OfficeRow(polity_entity_id=realm.entity.id, kind=OfficeKind.RULER, since_epoch=ctx.epoch, powers=[])
@@ -176,6 +176,8 @@ def set_ruler(ctx: TickContext, realm: Realm, ruler_id: int | None, reason: str)
         )
     office.holder_entity_id = ruler_id
     office.since_epoch = ctx.epoch
+    if not usurped and "usurper" in realm.profile.legitimacy_parts:
+        realm.profile.legitimacy_parts = {key: value for key, value in realm.profile.legitimacy_parts.items() if key != "usurper"}
     return True
 
 

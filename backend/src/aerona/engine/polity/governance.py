@@ -9,6 +9,7 @@ from aerona.db.tables.body import MaimedCohortRow
 from aerona.db.tables.culture import IdeologyTenetRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.disease import OutbreakRow, QuarantineRow
+from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultTenetRow
 from aerona.db.tables.mind import PersonalityValueRow
@@ -20,12 +21,14 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import InheritanceCustom, MarriageCustom
 from aerona.domain.enums.disease import OutbreakStatus
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.economy import LoanStatus
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
-from aerona.domain.enums.mind import TraitKind, ValueAxis
-from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind
+from aerona.domain.enums.mind import MemoryKind, TraitKind, ValueAxis
+from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind, OfficePower
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, TreasuryEntry
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.war import WarCause
 from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
 from aerona.engine.lore.research import lacks
@@ -34,11 +37,14 @@ from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.law_effects import jubilee, levy_terms, standing_soldiers, tenure_and_serfdom
 from aerona.engine.polity.laws import LawBook, discord, enact, repeal, settle_justice, validate
+from aerona.engine.polity.offices import best_skill, powers_of
 from aerona.engine.polity.standing import war_record
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.services.community_relations import change_relation
+from aerona.engine.services.war import declare_war
 from aerona.engine.settlement.book import town_of
 from aerona.engine.settlement.life import add_district
 
@@ -46,6 +52,8 @@ CREED_SCALE = 10
 LEAN = 25
 BASELINE_LAWS = frozenset({LawKind.SUCCESSION_RULE, LawKind.SLAVERY, LawKind.RELIGIOUS_TOLERANCE, LawKind.TAX_RATE, LawKind.PENAL_CODE})
 COUNCIL_KINDS = 5
+SWAY_SCALE = 10
+COUNCIL_OFFICES = frozenset({OfficeKind.CHANCELLOR, OfficeKind.MARSHAL, OfficeKind.TREASURER, OfficeKind.HIGH_JUDGE, OfficeKind.SPYMASTER, OfficeKind.REGENT})
 T = TenetKind
 CHURCH_LAWS: dict[TenetKind, tuple[LawKind, dict[str, int | str | bool]]] = {
     T.ANTI_MAGIC: (LawKind.MAGIC_BAN, {"severity": 70}),
@@ -89,16 +97,35 @@ async def base_will(ctx: TickContext, realm: Realm) -> dict[ValueAxis, int]:
     if profile.decision_rule is DecisionRule.AUTOCRATIC and realm.ruler_id is not None:
         own = {row.axis: row.value for row in await ctx.session.scalars(select(PersonalityValueRow).where(PersonalityValueRow.node_id == realm.ruler_id))}
         if own:
-            return own
+            advisers = await counsel(ctx, realm, exclude=realm.ruler_id)
+            if not advisers:
+                return own
+            weight = ctx.rules.government.ruler_weight_pct / PERCENT
+            return {axis: round_half_up(own.get(axis, 0) * weight + advisers.get(axis, 0) * (1 - weight)) for axis in set(own) | set(advisers)}
     if profile.decision_rule is DecisionRule.COUNCIL:
-        holders = [office.holder_entity_id for office in realm.offices if office.holder_entity_id is not None][:COUNCIL_KINDS]
-        if holders:
-            sums: dict[ValueAxis, list[int]] = defaultdict(list)
-            for row in await ctx.session.scalars(select(PersonalityValueRow).where(PersonalityValueRow.node_id.in_(holders))):
-                sums[row.axis].append(row.value)
-            if sums:
-                return {axis: round_half_up(sum(values) / len(values)) for axis, values in sums.items()}
+        voted = await counsel(ctx, realm, exclude=None)
+        if voted:
+            return voted
     return await culture_of(ctx.session, core) if core is not None else {}
+
+
+async def counsel(ctx: TickContext, realm: Realm, *, exclude: int | None) -> dict[ValueAxis, int]:
+    seats = [
+        office for office in realm.offices if office.holder_entity_id is not None and office.holder_entity_id != exclude and office.kind in COUNCIL_OFFICES
+    ]
+    if not seats:
+        return {}
+    sway: dict[int, float] = {}
+    for office in seats:
+        holder = await living_entity(ctx.session, office.holder_entity_id)
+        if holder is not None and office.holder_entity_id is not None:
+            sway[office.holder_entity_id] = sway.get(office.holder_entity_id, 0.0) + 1 + (holder.importance or 0) / SWAY_SCALE + len(powers_of(office))
+    sums: dict[ValueAxis, float] = defaultdict(float)
+    weights: dict[ValueAxis, float] = defaultdict(float)
+    for row in await ctx.session.scalars(select(PersonalityValueRow).where(PersonalityValueRow.node_id.in_(list(sway)))):
+        sums[row.axis] += row.value * sway[row.node_id]
+        weights[row.axis] += sway[row.node_id]
+    return {axis: round_half_up(sums[axis] / weights[axis]) for axis in sums if weights[axis] > 0}
 
 
 async def will(ctx: TickContext, realm: Realm) -> dict[ValueAxis, int]:
@@ -199,7 +226,44 @@ async def agenda(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawBook)
         await note(ctx, f"{polity.name} laid down {law.name}.", key="polity.law_enacted", ids=[polity.id, law.id], kind=ChronicleKind.CIVILIZATION)
     taken.extend(await taxes(ctx, realm, laws, values))
     taken.extend(await temples(ctx, realm, values))
+    taken.extend(await works(ctx, realm, values, fighting=fighting))
     return taken
+
+
+async def works(ctx: TickContext, realm: Realm, values: dict[ValueAxis, int], *, fighting: bool) -> list[str]:
+    table = ctx.rules.government
+    if "works" in realm.profile.locked or realm.profile.treasury < table.build_cost * 2:
+        return []
+    if not ctx.rng(f"works.{realm.entity.id}.{ctx.epoch}").chance(table.build_chance):
+        return []
+    knowledge = await KnowledgeMap.load(ctx.session)
+    choices: list[tuple[int, int, DistrictKind]] = []
+    for member_id in sorted(realm.members):
+        place = await living_entity(ctx.session, member_id)
+        town_row = await ctx.session.get(SettlementProfileRow, member_id)
+        if place is None or town_row is None:
+            continue
+        need = DistrictKind.CITADEL if fighting or town_row.crime >= PERCENT // 2 else DistrictKind.MARKET
+        if not fighting and values.get(ValueAxis.WEALTH, 0) < LEAN and values.get(ValueAxis.HIERARCHY, 0) >= LEAN:
+            need = DistrictKind.PALACE if member_id == realm.profile.capital_entity_id else need
+        choices.append((town_row.unrest + town_row.crime, member_id, need))
+    if not choices:
+        return []
+    _, member_id, need = max(choices)
+    place = await living_entity(ctx.session, member_id)
+    if place is None:
+        return []
+    town = await town_of(ctx, place, knowledge)
+    await add_district(ctx, town, need, material=BuildMaterial.STONE, builder_id=realm.entity.id)
+    spend(ctx, realm, -table.build_cost, TreasuryEntry.BUILDING, f"{need.value.replace('_', ' ')} in {place.name}")
+    await note(
+        ctx,
+        f"{realm.entity.name} paid for a {need.value.replace('_', ' ')} in {place.name}.",
+        key="polity.works",
+        ids=[realm.entity.id, place.id],
+        kind=ChronicleKind.CONSTRUCTION,
+    )
+    return [f"built {need.value}"]
 
 
 async def consider(
@@ -400,7 +464,7 @@ def spend(ctx: TickContext, realm: Realm, amount: int, entry: TreasuryEntry, lab
 
 async def collect(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
     table = ctx.rules.government
-    leak = ctx.rules.overextension.tax_leak_pct / PERCENT
+    leak = ctx.rules.overextension.tax_leak_pct / PERCENT * (1 - table.treasurer_leak_pct / PERCENT * await best_skill(ctx, realm, OfficePower.TREASURY))
     gathered = 0
     for member_id, member in realm.members.items():
         income = await ctx.session.scalar(
@@ -437,7 +501,107 @@ async def collect(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
         paid = min(realm.profile.debt, realm.profile.treasury)
         realm.profile.debt -= paid
         realm.profile.treasury -= paid
+    await service_debt(ctx, book, realm)
     return gathered
+
+
+def owed(loan: LoanRow) -> int:
+    return max(0, round_half_up(loan.principal * (1 + loan.interest_pct / PERCENT)) - loan.repaid)
+
+
+async def lender_for(ctx: TickContext, book: RealmBook, realm: Realm) -> EntityRow | None:
+    guilds = list(
+        await ctx.session.scalars(
+            select(EntityRow).where(
+                EntityRow.entity_type == EntityType.FACTION,
+                EntityRow.status == EntityStatus.CANON,
+                EntityRow.engine_kind == EngineKind.MERCHANT_GUILD,
+                EntityRow.affiliated_entity_id.in_(list(realm.members) or [-1]),
+            )
+        )
+    )
+    if guilds:
+        return max(guilds, key=lambda guild: (stat(guild, "wealth") or 0, -guild.id))
+    rich = [
+        other
+        for other in book.realms.values()
+        if other.entity.id != realm.entity.id and other.entity.world_id == realm.entity.world_id and other.profile.treasury > realm.profile.debt
+    ]
+    if rich:
+        return max(rich, key=lambda other: (other.profile.treasury, -other.entity.id)).entity
+    return None
+
+
+async def service_debt(ctx: TickContext, book: RealmBook, realm: Realm) -> None:
+    table = ctx.rules.government
+    profile = realm.profile
+    loans = list(
+        await ctx.session.scalars(select(LoanRow).where(LoanRow.borrower_entity_id == realm.entity.id, LoanRow.status == LoanStatus.OPEN).order_by(LoanRow.id))
+    )
+    outstanding = sum(owed(loan) for loan in loans)
+    paid = outstanding - profile.debt
+    for loan in loans:
+        if paid <= 0:
+            break
+        share = min(paid, owed(loan))
+        loan.repaid += share
+        paid -= share
+        if owed(loan) == 0:
+            loan.status = LoanStatus.REPAID
+    covered = sum(owed(loan) for loan in loans if loan.status is LoanStatus.OPEN)
+    if profile.debt > covered and "debt" not in profile.locked:
+        lender = await lender_for(ctx, book, realm)
+        if lender is not None:
+            principal = profile.debt - covered
+            ctx.session.add(
+                LoanRow(
+                    lender_entity_id=lender.id,
+                    borrower_entity_id=realm.entity.id,
+                    principal=principal,
+                    interest_pct=table.loan_interest_pct,
+                    repaid=0,
+                    issued_epoch=ctx.epoch,
+                    due_epoch=ctx.epoch + table.loan_epochs,
+                    status=LoanStatus.OPEN,
+                    purpose="crown debt",
+                )
+            )
+            profile.debt += round_half_up(principal * table.loan_interest_pct / PERCENT)
+            if lender.entity_type is EntityType.POLITY:
+                other = book.realms.get(lender.id)
+                if other is not None:
+                    other.profile.treasury = max(0, other.profile.treasury - principal)
+            elif stat(lender, "wealth") is not None:
+                shift_stat(lender, "wealth", -principal // PERCENT, ctx.rules.society.default_stat)
+    for loan in loans:
+        if loan.status is LoanStatus.OPEN and loan.due_epoch < ctx.epoch and owed(loan) > 0:
+            await default(ctx, book, realm, loan)
+
+
+async def default(ctx: TickContext, book: RealmBook, realm: Realm, loan: LoanRow) -> None:
+    table = ctx.rules.government
+    loan.status = LoanStatus.DEFAULTED
+    realm.profile.debt = max(0, realm.profile.debt - owed(loan))
+    lender = await living_entity(ctx.session, loan.lender_entity_id)
+    core = realm.profile.core_entity_id
+    if lender is None or core is None:
+        return
+    lender_side = book.realms[lender.id].profile.core_entity_id if lender.id in book.realms else lender.id
+    if lender_side is not None:
+        target = await living_entity(ctx.session, lender_side)
+        if target is not None and target.entity_type in COMMUNITY_TYPES:
+            await change_relation(ctx, lender_side, core, -table.default_relation, MemoryKind.CHEATED_US, note="defaulted on the crown's debt")
+            if lender.entity_type is EntityType.POLITY and ctx.rng(f"debt_war.{loan.id}").chance(table.default_war_chance):
+                await declare_war(ctx, lender_side, core, f"{realm.entity.name} would not pay its debts", cause=WarCause.DEBT)
+    if lender.entity_type is EntityType.FACTION:
+        shift_stat(lender, "sway", table.default_relation // 5, ctx.rules.society.default_stat)
+    await note(
+        ctx,
+        f"{realm.entity.name} could not repay {lender.name}; the debt was left unpaid.",
+        key="polity.debt_default",
+        ids=[realm.entity.id, lender.id],
+        kind=ChronicleKind.DEBT,
+    )
 
 
 async def member_effects(ctx: TickContext, member_id: int, laws: LawBook, polity: int) -> None:
@@ -530,7 +694,7 @@ async def enforce(ctx: TickContext, realm: Realm, laws: LawBook) -> int:
         if town is not None:
             orders.append(town.public_order)
     order = sum(orders) / len(orders) if orders else PERCENT / 2
-    judge = next((office for office in realm.offices if office.kind is OfficeKind.HIGH_JUDGE and office.holder_entity_id is not None), None)
+    judge = next((office for office in realm.offices if OfficePower.JUDGE in powers_of(office) and office.holder_entity_id is not None), None)
     judge_skill = 0
     if judge is not None:
         mortal = await living_entity(ctx.session, judge.holder_entity_id)

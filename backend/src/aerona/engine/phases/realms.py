@@ -8,7 +8,7 @@ from aerona.engine.polity.governance import agenda, collect, conquest_conflict, 
 from aerona.engine.polity.houses import HouseBook, arrange_marriages, gather_kin, seed_houses, tend
 from aerona.engine.polity.laws import LawBook, backfill_kinds, ensure_profile
 from aerona.engine.polity.oaths import lapse, pledges
-from aerona.engine.polity.offices import name_heir, press_claims, purge, regency, staff, succession_line
+from aerona.engine.polity.offices import coups, name_heir, office_effects, press_claims, purge, regency, staff, succession_line
 from aerona.engine.polity.standing import administration, legitimacy, overreach, rank, realm_tier, secede, settle, stability
 from aerona.engine.polity.treaties import Clause, adopt_bonds, hostilities, keep_clauses, sign
 from aerona.engine.polity.wars import champions, join_wars
@@ -119,7 +119,7 @@ async def polity_cycles(ctx: TickContext) -> None:
     for realm in list(book.realms.values()):
         newcomers = [member for member in realm.members if before.get(member) not in {None, realm.entity.id}]
         ctx.count("legal_conflicts", await conquest_conflict(ctx, book, realm, laws, newcomers))
-        realm.profile.tier = realm_tier(book, realm)
+        realm.profile.tier = await realm_tier(ctx, book, realm, knowledge)
         capacity, need = await administration(ctx, book, realm, knowledge)
         for member in await overreach(ctx, book, realm, capacity, need):
             await secede(ctx, book, realm, member)
@@ -130,6 +130,9 @@ async def polity_cycles(ctx: TickContext) -> None:
             ctx.count(f"regency.{regent}")
         ctx.count("offices_filled", await staff(ctx, book, realm, held))
         ctx.count("purged", await purge(ctx, realm))
+        for key, value in (await office_effects(ctx, book, realm)).items():
+            ctx.count(f"office.{key}", value)
+        ctx.count("coups", await coups(ctx, realm))
         await name_heir(ctx, realm, await succession_line(ctx, realm, laws))
         ctx.count("taxed", await collect(ctx, book, realm))
         for decision in await agenda(ctx, book, realm, laws):

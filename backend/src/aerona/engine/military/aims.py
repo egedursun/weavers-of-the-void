@@ -1,4 +1,4 @@
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
@@ -61,7 +61,11 @@ async def aims_of(ctx: TickContext, war_id: int, side_id: int | None = None) -> 
 
 async def wanted(ctx: TickContext, war: WarRow, attacker: EntityRow, defender: EntityRow) -> list[WarAimKind]:
     kinds: list[WarAimKind] = []
-    claimed = await ctx.session.scalar(select(ClaimRow.id).where(ClaimRow.claimant_entity_id == attacker.id, ClaimRow.ended_epoch.is_(None)).limit(1))
+    claimed = await ctx.session.scalar(
+        select(ClaimRow.id)
+        .where(or_(ClaimRow.claimant_entity_id == attacker.id, ClaimRow.backer_entity_id == attacker.id), ClaimRow.ended_epoch.is_(None))
+        .limit(1)
+    )
     if claimed is not None:
         kinds.append(A.PRESS_CLAIM)
     region_id = (await RegionAtlas.load(ctx.session)).top_region(defender.id)
@@ -232,7 +236,13 @@ async def press(ctx: TickContext, victor: EntityRow, loser: EntityRow, book: Rea
     if realm is None:
         return None
     claim = await ctx.session.scalar(
-        select(ClaimRow).where(ClaimRow.claimant_entity_id == victor.id, ClaimRow.polity_entity_id == realm.entity.id, ClaimRow.ended_epoch.is_(None)).limit(1)
+        select(ClaimRow)
+        .where(
+            or_(ClaimRow.claimant_entity_id == victor.id, ClaimRow.backer_entity_id == victor.id),
+            ClaimRow.polity_entity_id == realm.entity.id,
+            ClaimRow.ended_epoch.is_(None),
+        )
+        .limit(1)
     )
     if claim is None or not set_ruler(ctx, realm, claim.claimant_entity_id, "claim won by war"):
         return None

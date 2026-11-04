@@ -52,6 +52,7 @@ class PolityProfileRow(Base):
     overextension: Mapped[int] = mapped_column(default=0)
     war_weariness: Mapped[int] = mapped_column(default=0)
     tier: Mapped[int] = mapped_column(default=0)
+    tier_strain: Mapped[int] = mapped_column(default=0)
     standing: Mapped[RegionalStanding] = mapped_column(enum_type(RegionalStanding, "standing"), default=RegionalStanding.MINOR_POWER)
     core_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"), index=True)
     capital_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
@@ -73,6 +74,7 @@ class PolityMemberRow(Base):
     member_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     joined_epoch: Mapped[int] = mapped_column(default=0)
     autonomy: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class PolityTerritoryRow(Base):
@@ -83,6 +85,7 @@ class PolityTerritoryRow(Base):
     region_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     control: Mapped[int] = mapped_column(default=0)
     province: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class OfficeRow(Base):
@@ -95,8 +98,11 @@ class OfficeRow(Base):
     holder_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     appointed_by_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     region_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    target_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    title: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
     since_epoch: Mapped[int] = mapped_column(default=0)
     powers: Mapped[list[str]] = mapped_column(JSON, default=list)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class OfficeHistoryRow(Base):
@@ -213,8 +219,10 @@ class ClaimRow(Base):
     strength: Mapped[int] = mapped_column(default=50)
     basis: Mapped[ClaimBasis] = mapped_column(enum_type(ClaimBasis, "basis"))
     pressed: Mapped[bool] = mapped_column(default=False)
+    backer_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"), index=True)
     since_epoch: Mapped[int] = mapped_column(default=0)
     ended_epoch: Mapped[int | None]
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class HeirloomRow(Base):
