@@ -33,7 +33,11 @@ function HudContent({
         )}
       />
       {label && (
-        <Muted as='span' variant='caption' className='hidden xl:inline'>
+        <Muted
+          as='span'
+          variant='caption'
+          className='hidden @6xl/header:inline'
+        >
           {label}
         </Muted>
       )}
@@ -56,7 +60,7 @@ export function HudChip({
       variant='outline'
       size='sm'
       data-hud-chip
-      className={cn('gap-1.5 bg-card/70', className)}
+      className={cn('max-w-none gap-1.5 bg-card/70', className)}
       {...props}
     >
       <HudContent icon={icon} tone={tone} label={label} spinning={spinning}>
@@ -82,7 +86,7 @@ export function HudLink({
       size='sm'
       asChild
       data-hud-chip
-      className={cn('gap-1.5 bg-card/70', className)}
+      className={cn('max-w-none gap-1.5 bg-card/70', className)}
     >
       <Link to={to} {...props}>
         <HudContent icon={icon} tone={tone} label={label} spinning={spinning}>

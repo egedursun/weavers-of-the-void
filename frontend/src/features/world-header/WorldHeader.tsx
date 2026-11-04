@@ -183,9 +183,9 @@ export function WorldHeader() {
   return (
     <div
       data-layout='world-header'
-      className='flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 border-b bg-linear-to-r from-primary/6 via-background to-background px-3 py-2 md:px-4'
+      className='@container/header flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 border-b bg-linear-to-r from-primary/6 via-background to-background px-3 py-2 md:px-4'
     >
-      <div className='flex min-w-0 flex-1 basis-56 items-center gap-2.5 lg:max-w-sm lg:flex-none'>
+      <div className='flex min-w-0 flex-1 basis-56 items-center gap-2.5 @5xl/header:max-w-sm @5xl/header:flex-none'>
         <Portrait
           name={world.name}
           src={mediaUrl(data.world_cover)}
@@ -220,7 +220,7 @@ export function WorldHeader() {
       {shown && (
         <div
           data-layout='world-hud'
-          className='flex min-w-0 flex-1 flex-wrap items-center gap-1.5'
+          className='flex min-w-0 flex-1 basis-3xl flex-wrap items-center gap-1.5'
         >
           <HudLink
             to='/epoch'
@@ -280,7 +280,7 @@ export function WorldHeader() {
         </div>
       )}
       {shown && (
-        <div className='ms-auto flex shrink-0 items-center gap-2'>
+        <div className='ms-auto flex shrink-0 flex-wrap items-center justify-end gap-2'>
           <RevelationDialog triggerLabel='Reveal' triggerSize='sm' />
           <SummonButton size='sm' />
         </div>
