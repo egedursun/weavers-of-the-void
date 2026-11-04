@@ -173,7 +173,8 @@ async def test_wild_herds_fish_and_silk_open_grounds(session: AsyncSession, worl
     await session.flush()
     await species_yields(await manual_context(session, "yields", Rules()))
     grounds = list(await session.scalars(select(EntityRow).where(EntityRow.maker_entity_id == beast.id, EntityRow.entity_type == EntityType.RESOURCE)))
-    kinds = {(await session.get(ResourceProfileRow, ground.id)).commodity for ground in grounds}  # type: ignore[union-attr]
+    profiles = list(await session.scalars(select(ResourceProfileRow).where(ResourceProfileRow.resource_entity_id.in_([ground.id for ground in grounds]))))
+    kinds = {profile.commodity for profile in profiles}
     assert {CommodityKind.LIVESTOCK, CommodityKind.MOUNTS} <= kinds
 
 

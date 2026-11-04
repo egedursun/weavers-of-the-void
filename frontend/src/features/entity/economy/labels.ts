@@ -30,9 +30,13 @@ import {
   Hourglass,
   Landmark,
   Leaf,
+  Link,
+  Lock,
   Mountain,
+  Orbit,
   Package,
   PackageMinus,
+  PartyPopper,
   PawPrint,
   Pickaxe,
   Route,
@@ -76,6 +80,9 @@ export type MaterialOrigin = Schemas['MaterialOrigin']
 export type KnowledgeBranch = Schemas['KnowledgeBranch']
 export type TradeLoss = Schemas['TradeLoss']
 export type LoanStatus = Schemas['LoanStatus']
+export type MaterialSlot = Schemas['MaterialSlot']
+export type DebtRemedy = Schemas['DebtRemedy']
+export type FoeNature = Schemas['FoeNature']
 export type GoodsFamily = 'subsistence' | 'industrial' | 'strategic' | 'luxury'
 export type StoreKind = 'food' | 'ore' | 'goods'
 
@@ -353,6 +360,7 @@ export const MATERIAL_ORIGIN: Record<MaterialOrigin, Named> = {
   beast: { label: 'From a great beast', icon: PawPrint, tone: 'gold' },
   leak_crystal: { label: 'From a leak', icon: Gem, tone: 'verdigris' },
   research: { label: 'Discovered', icon: FlaskConical, tone: 'info' },
+  divine: { label: 'Forged by a god', icon: Sparkles, tone: 'gold' },
 }
 
 export const MATERIAL_LABEL: Record<MaterialKind, string> = {
@@ -553,4 +561,180 @@ export function commodityLabel(kind: CommodityKind): string {
 
 export function materialLabel(kind: MaterialKind | null): string | null {
   return kind === null ? null : MATERIAL_LABEL[kind]
+}
+
+export const MATERIAL_SLOT: Record<MaterialSlot, Named & { note: string }> = {
+  body: {
+    label: 'Body',
+    icon: Box,
+    tone: 'gold',
+    note: 'What the thing itself is made of',
+  },
+  weapons: {
+    label: 'Weapons',
+    icon: Swords,
+    tone: 'danger',
+    note: 'What its blades and points are made of',
+  },
+  armour: {
+    label: 'Armour',
+    icon: Shield,
+    tone: 'info',
+    note: 'What its harness and shields are made of',
+  },
+  hull: {
+    label: 'Hull',
+    icon: Anchor,
+    tone: 'info',
+    note: 'What its hull is built from',
+  },
+  fabric: {
+    label: 'Sails and fabric',
+    icon: Wind,
+    tone: 'verdigris',
+    note: 'What its sails and rigging are woven from',
+  },
+}
+
+export const DEBT_REMEDY: Record<
+  DebtRemedy,
+  Named & { variant: BadgeVariant; law: string; note: string }
+> = {
+  bondage: {
+    label: 'Bondage law',
+    law: 'Bondage',
+    icon: Link,
+    tone: 'danger',
+    variant: 'destructive',
+    note: 'Defaulters are bound into serfdom to work off what they owe.',
+  },
+  prison: {
+    label: "Debtors' prison",
+    law: 'Prison',
+    icon: Lock,
+    tone: 'warning',
+    variant: 'warning',
+    note: 'A notable of the defaulter is jailed until the debt is ransomed.',
+  },
+  jubilee: {
+    label: 'Jubilee',
+    law: 'Jubilee',
+    icon: PartyPopper,
+    tone: 'verdigris',
+    variant: 'info',
+    note: 'Every debt is wiped clean after a set number of epochs.',
+  },
+}
+
+export const DEBT_REMEDIES = Object.keys(DEBT_REMEDY) as DebtRemedy[]
+
+export const FOE_NATURE: Record<FoeNature, Named> = {
+  undead: { label: 'Undead', icon: Skull, tone: 'danger' },
+  cursed: { label: 'Cursed', icon: Bug, tone: 'warning' },
+  void: { label: 'Of the void', icon: Orbit, tone: 'verdigris' },
+}
+
+export const LUXURY_METALS: readonly MaterialKind[] = [
+  'gold',
+  'silver',
+  'gems',
+  'ivory',
+  'amber',
+  'glass',
+  'crystal',
+]
+
+export const SLOT_EFFECT: Record<
+  string,
+  Named & { phrase: (value: number) => string }
+> = {
+  worth_pct: {
+    label: 'Worth',
+    icon: Coins,
+    tone: 'gold',
+    phrase: (value) => `Worth ${value}% of the plain make`,
+  },
+  price_pct: {
+    label: 'Market price',
+    icon: Store,
+    tone: 'gold',
+    phrase: (value) => `Sells at ${value}% of the base price`,
+  },
+  battle_wear: {
+    label: 'Battle wear',
+    icon: Swords,
+    tone: 'warning',
+    phrase: (value) => `Loses ${value} condition in each battle`,
+  },
+  wet_wear: {
+    label: 'Rust and rot',
+    icon: Waves,
+    tone: 'warning',
+    phrase: (value) => `Loses ${value} condition each wet epoch`,
+  },
+  damage: {
+    label: 'Damage',
+    icon: Slice,
+    tone: 'danger',
+    phrase: (value) => `Strikes for ${value} damage`,
+  },
+  protection: {
+    label: 'Protection',
+    icon: Shield,
+    tone: 'info',
+    phrase: (value) => `Wards off ${value} damage`,
+  },
+  holy_edge_pct: {
+    label: 'Holy edge',
+    icon: Sun,
+    tone: 'verdigris',
+    phrase: (value) =>
+      `Holy edge vs the undead, the cursed and the void ${value}%`,
+  },
+  risk_kept_pct: {
+    label: 'Storm and raider guard',
+    icon: Anchor,
+    tone: 'info',
+    phrase: (value) =>
+      `Turns aside ${Math.max(0, 100 - value)}% of storm and raider risk`,
+  },
+  armour_wear: {
+    label: 'Hull wear',
+    icon: ShieldAlert,
+    tone: 'warning',
+    phrase: (value) => `Loses ${value} armour on a hard voyage`,
+  },
+  wind_kept_pct: {
+    label: 'Wind guard',
+    icon: Wind,
+    tone: 'verdigris',
+    phrase: (value) =>
+      `Shrugs off ${Math.max(0, 100 - value)}% of the wind's damage`,
+  },
+  stage_saved: {
+    label: 'Light sails',
+    icon: Bird,
+    tone: 'success',
+    phrase: (value) =>
+      value > 0
+        ? 'Light enough to save a stage on every voyage'
+        : 'Too heavy to save a stage on a voyage',
+  },
+}
+
+export function slotEffect(key: string, value: number) {
+  const spec = SLOT_EFFECT[key]
+  if (spec) return { ...spec, text: spec.phrase(value) }
+  return {
+    label: key.replaceAll('_', ' '),
+    icon: Package,
+    tone: 'muted' as KpiTone,
+    text: `${key.replaceAll('_', ' ')} ${value}`,
+  }
+}
+
+export function premiumTone(pct: number): KpiTone {
+  if (pct > 100) return 'gold'
+  if (pct < 100) return 'muted'
+  return 'info'
 }

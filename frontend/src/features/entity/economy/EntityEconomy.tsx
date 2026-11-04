@@ -10,6 +10,7 @@ import {
   Hourglass,
   Minus,
   Package,
+  PencilRuler,
   Plus,
   Ship,
   SlidersHorizontal,
@@ -34,6 +35,7 @@ import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import {
   EmptyState,
+  EntityLink,
   IconStat,
   type KpiTone,
   Medallion,
@@ -44,13 +46,20 @@ import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { ControlPanel, MindPicker } from '../mind/parts'
-import { useCommunityEconomy, useCurrencies } from './api'
+import { HoardControl } from './HoardControl'
+import {
+  ECONOMY_REFRESH,
+  useCommunityEconomy,
+  useCurrencies,
+  useWorkshopDesigns,
+} from './api'
 import {
   COMMODITY,
   type CommodityKind,
   GOODS_FAMILY,
   type GoodsFamily,
   MATERIAL_LABEL,
+  type Named,
   STORE,
   STORE_KINDS,
   SPOILING_FLOWS,
@@ -59,17 +68,26 @@ import {
   type WorkshopKind,
   qualityTier,
 } from './labels'
+import { NONE, WORKING, materialRef, whole } from './model'
+import {
+  ChoiceSelect,
+  EntityChoice,
+  HeldBadge,
+  MaterialSelect,
+  ReleaseButton,
+} from './parts'
 
 type Economy = components['schemas']['CommunityEconomyView']
 type ChainStep = components['schemas']['ChainStepView']
 type Lot = components['schemas']['StockLotView']
 type Workshop = components['schemas']['WorkshopView']
+type Design = components['schemas']['WorkshopDesignView']
 
-const WORKING = 'Working…'
 const PERCENT = 100
 const SHORT = 50
 const PIPS = 5
 const NO_COIN = 'none'
+const STRUCTURE_TYPES = ['structure'] as const
 const FAMILIES = Object.keys(GOODS_FAMILY) as GoodsFamily[]
 const COMMODITY_CHOICES = Object.fromEntries(
   Object.entries(COMMODITY).map(([key, item]) => [key, item.label])
@@ -127,11 +145,15 @@ export function AdjustPanel({
   label,
   title,
   note,
+  hold,
+  onHold,
   children,
 }: {
   label: string
   title: string
   note: string
+  hold?: boolean
+  onHold?: (value: boolean) => void
   children: ReactNode
 }) {
   return (
@@ -143,7 +165,7 @@ export function AdjustPanel({
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent className='flex min-w-0 flex-col'>
-        <ControlPanel title={title} note={note}>
+        <ControlPanel title={title} note={note} hold={hold} onHold={onHold}>
           {children}
         </ControlPanel>
       </CollapsibleContent>
@@ -329,10 +351,93 @@ function StoreTile({
   )
 }
 
-function GoodTile({ lot }: { lot: Lot }) {
+function LotEditor({
+  communityId,
+  lot,
+  busy,
+}: {
+  communityId: number
+  lot: Lot
+  busy: string | null
+}) {
+  const [quantity, setQuantity] = useState(String(lot.quantity))
+  const [quality, setQuality] = useState(String(lot.quality))
+  const [hold, setHold] = useState(lot.held)
+  const set = useGodAction({
+    invalidate: ECONOMY_REFRESH,
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/stock:set', {
+          body: {
+            community_id: communityId,
+            commodity: lot.commodity,
+            material: lot.world_material_id === null ? lot.material : null,
+            world_material_id: lot.world_material_id,
+            quantity: whole(quantity),
+            quality: whole(quality, PERCENT),
+            hold,
+          },
+        })
+      ),
+  })
+  const blocked = busy ?? (set.isPending ? WORKING : null)
+  return (
+    <AdjustPanel
+      label='Set exactly'
+      title={`Set the ${lot.label.toLowerCase()}`}
+      note='Set how much lies in store and its quality. Held, the stores keep exactly this.'
+      hold={hold}
+      onHold={setHold}
+    >
+      <div className={cn(FIELD_GRID, 'grid-cols-2')}>
+        <NumberField
+          label='Amount'
+          aria={`${lot.label} amount`}
+          value={quantity}
+          onChange={setQuantity}
+        />
+        <NumberField
+          label='Quality'
+          aria={`${lot.label} quality`}
+          value={quality}
+          max={PERCENT}
+          onChange={setQuality}
+        />
+      </div>
+      <Button
+        size='sm'
+        className='self-start'
+        disabled={blocked !== null}
+        disabledReason={blocked ?? undefined}
+        onClick={() => set.mutate(undefined)}
+      >
+        <Check />
+        Set the lot
+      </Button>
+    </AdjustPanel>
+  )
+}
+
+function GoodTile({
+  communityId,
+  lot,
+  busy,
+}: {
+  communityId: number
+  lot: Lot
+  busy: string | null
+}) {
   const spec = COMMODITY[lot.commodity]
   const family = GOODS_FAMILY[spec.family]
   const tier = qualityTier(lot.quality)
+  const release = useGodAction({
+    invalidate: ECONOMY_REFRESH,
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/stock:release', { body: { lot_id: lot.id } })
+      ),
+  })
+  const blocked = busy ?? (release.isPending ? WORKING : null)
   return (
     <li
       data-commodity={lot.commodity}
@@ -348,6 +453,7 @@ function GoodTile({ lot }: { lot: Lot }) {
             {`${tier.label} · quality ${lot.quality}`}
           </Muted>
         </div>
+        <HeldBadge held={lot.held} />
         <Stat value={lot.quantity} />
       </div>
       <Progress
@@ -356,18 +462,32 @@ function GoodTile({ lot }: { lot: Lot }) {
         tone={tier.meter}
         aria-label={`${lot.label} quality`}
       />
+      <ReleaseButton
+        held={lot.held}
+        busy={blocked}
+        onRelease={() => release.mutate(undefined)}
+      />
+      <LotEditor
+        key={`${lot.quantity}-${lot.quality}-${lot.held}`}
+        communityId={communityId}
+        lot={lot}
+        busy={blocked}
+      />
     </li>
   )
 }
 
 function StoreControls({
   economy,
+  worldId,
   busy,
 }: {
   economy: Economy
+  worldId: number | null
   busy: string | null
 }) {
   const [commodity, setCommodity] = useState<string>('grain')
+  const [material, setMaterial] = useState<string>(NONE)
   const [amount, setAmount] = useState('100')
   const [quality, setQuality] = useState('50')
   const grant = useGodAction({
@@ -377,6 +497,7 @@ function StoreControls({
           body: {
             community_id: economy.community_id,
             commodity: commodity as CommodityKind,
+            ...(material === NONE ? {} : materialRef(material)),
             quantity: sign * Math.max(0, Math.round(Number(amount) || 0)),
             quality: Math.min(
               PERCENT,
@@ -393,13 +514,21 @@ function StoreControls({
       title='Add or take goods'
       note='Fill the stores with a good of the quality you choose, or take some away. Goods above the room of the granaries and warehouses spoil at the next epoch.'
     >
-      <div className={cn(FIELD_GRID, '@md/econ:grid-cols-3')}>
+      <div className={cn(FIELD_GRID, '@md/econ:grid-cols-4')}>
         <MindPicker
           label='Good'
           value={commodity}
           table={COMMODITY_CHOICES}
           blocked={blocked}
           onPick={setCommodity}
+        />
+        <MaterialSelect
+          label='Of the material'
+          worldId={worldId}
+          value={material}
+          blocked={blocked}
+          none='No particular material'
+          onPick={setMaterial}
         />
         <NumberField label='Amount' value={amount} onChange={setAmount} />
         <NumberField
@@ -437,9 +566,11 @@ function StoreControls({
 
 export function StockTable({
   economy,
+  worldId = null,
   readOnlyReason,
 }: {
   economy: Economy
+  worldId?: number | null
   readOnlyReason?: string | null
 }) {
   const { reason } = useGodGate()
@@ -509,12 +640,17 @@ export function StockTable({
           </div>
           <ul className='grid min-w-0 grid-cols-1 gap-2 @sm/econ:grid-cols-2 @3xl/econ:grid-cols-3'>
             {lots.map((lot) => (
-              <GoodTile key={lot.id} lot={lot} />
+              <GoodTile
+                key={lot.id}
+                communityId={economy.community_id}
+                lot={lot}
+                busy={busy}
+              />
             ))}
           </ul>
         </>
       )}
-      <StoreControls economy={economy} busy={busy} />
+      <StoreControls economy={economy} worldId={worldId} busy={busy} />
     </div>
   )
 }
@@ -648,9 +784,139 @@ function StepRow({
   )
 }
 
-function WorkshopCard({ row }: { row: Workshop }) {
+function WorkshopEditor({
+  communityId,
+  worldId,
+  row,
+  designs,
+  busy,
+}: {
+  communityId: number
+  worldId: number | null
+  row: Workshop
+  designs: Design[]
+  busy: string | null
+}) {
+  const spec = WORKSHOP[row.kind]
+  const [fleet, setFleet] = useState(String(row.fleet))
+  const [idle, setIdle] = useState(String(row.idle_epochs))
+  const [structure, setStructure] = useState<string | null>(
+    row.structure_id === null ? null : String(row.structure_id)
+  )
+  const [design, setDesign] = useState<string>(
+    row.design_id ? String(row.design_id) : NONE
+  )
+  const [hold, setHold] = useState(row.held)
+  const edit = useGodAction({
+    invalidate: ECONOMY_REFRESH,
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/workshop:edit', {
+          body: {
+            community_id: communityId,
+            kind: row.kind,
+            fleet: whole(fleet),
+            idle_epochs: whole(idle),
+            structure_id: structure === null ? 0 : Number(structure),
+            design_id: design === NONE ? 0 : Number(design),
+            hold,
+          },
+        })
+      ),
+  })
+  const blocked = busy ?? (edit.isPending ? WORKING : null)
+  const fitting = designs.filter((item) => item.base_kind === row.kind)
+  const designTable: Record<string, Named> = {
+    [NONE]: {
+      label: `A plain ${spec.label.toLowerCase()}`,
+      icon: spec.icon,
+      tone: 'muted',
+    },
+    ...Object.fromEntries(
+      fitting.map((item) => [
+        String(item.id),
+        { label: item.name, icon: spec.icon, tone: spec.tone },
+      ])
+    ),
+  }
+  return (
+    <AdjustPanel
+      label='Adjust'
+      title={`The ${spec.label.toLowerCase()}`}
+      note='Set its ships, how long it has stood idle, the building it works from and the design it follows. Held, the people keep it as you set it.'
+      hold={hold}
+      onHold={setHold}
+    >
+      <div className={cn(FIELD_GRID, 'grid-cols-2')}>
+        <NumberField
+          label='Ships in its fleet'
+          aria={`${spec.label} fleet`}
+          value={fleet}
+          onChange={setFleet}
+        />
+        <NumberField
+          label='Epochs idle'
+          aria={`${spec.label} idle epochs`}
+          value={idle}
+          onChange={setIdle}
+        />
+      </div>
+      <ChoiceSelect
+        label='Design'
+        value={design}
+        table={designTable}
+        blocked={blocked}
+        onPick={setDesign}
+      />
+      <EntityChoice
+        label='Works from'
+        types={STRUCTURE_TYPES}
+        worldId={worldId}
+        value={structure}
+        blocked={blocked}
+        placeholder='No building of its own'
+        onChange={setStructure}
+      />
+      <Button
+        size='sm'
+        className='self-start'
+        disabled={blocked !== null}
+        disabledReason={blocked ?? undefined}
+        onClick={() => edit.mutate(undefined)}
+      >
+        <Check />
+        Set the workshop
+      </Button>
+    </AdjustPanel>
+  )
+}
+
+function WorkshopCard({
+  communityId,
+  worldId,
+  row,
+  designs,
+  busy,
+}: {
+  communityId: number
+  worldId: number | null
+  row: Workshop
+  designs: Design[]
+  busy: string | null
+}) {
   const spec = WORKSHOP[row.kind]
   const idle = row.idle_epochs > 0
+  const design = designs.find((item) => item.id === row.design_id)
+  const release = useGodAction({
+    invalidate: ECONOMY_REFRESH,
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/workshop:release', {
+          body: { community_id: communityId, kind: row.kind },
+        })
+      ),
+  })
+  const blocked = busy ?? (release.isPending ? WORKING : null)
   return (
     <li
       data-workshop={row.kind}
@@ -667,12 +933,13 @@ function WorkshopCard({ row }: { row: Workshop }) {
         />
         <div className='flex min-w-0 flex-1 flex-col gap-1'>
           <Text weight='medium' truncate>
-            {spec.label}
+            {design ? design.name : spec.label}
           </Text>
           <LevelPips level={row.level} tone={idle ? 'warning' : spec.tone} />
         </div>
+        <HeldBadge held={row.held} />
       </div>
-      <div className='mt-auto flex min-w-0 flex-wrap items-center gap-1.5'>
+      <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
         {idle ? (
           <Badge size='sm' variant='warning'>
             <CirclePause />
@@ -684,6 +951,12 @@ function WorkshopCard({ row }: { row: Workshop }) {
             Working
           </Badge>
         )}
+        {design && (
+          <Badge size='sm' variant='info'>
+            <PencilRuler />
+            {`${spec.label} of a new design`}
+          </Badge>
+        )}
         {row.fleet > 0 && (
           <IconStat
             icon={Ship}
@@ -692,7 +965,27 @@ function WorkshopCard({ row }: { row: Workshop }) {
             tone='info'
           />
         )}
+        {row.structure_id !== null && (
+          <EntityLink kind='entity' id={String(row.structure_id)}>
+            Its building
+          </EntityLink>
+        )}
         <Muted variant='caption'>{`Since epoch ${row.built_epoch}`}</Muted>
+      </div>
+      <div className='mt-auto flex min-w-0 flex-col gap-2'>
+        <ReleaseButton
+          held={row.held}
+          busy={blocked}
+          onRelease={() => release.mutate(undefined)}
+        />
+        <WorkshopEditor
+          key={`${row.fleet}-${row.idle_epochs}-${row.structure_id}-${row.design_id}-${row.held}`}
+          communityId={communityId}
+          worldId={worldId}
+          row={row}
+          designs={designs}
+          busy={blocked}
+        />
       </div>
     </li>
   )
@@ -770,13 +1063,16 @@ function WorkshopControls({
 
 export function ProductionChain({
   economy,
+  worldId = null,
   readOnlyReason,
 }: {
   economy: Economy
+  worldId?: number | null
   readOnlyReason?: string | null
 }) {
   const { reason } = useGodGate()
   const busy = readOnlyReason ?? reason()
+  const designs = useWorkshopDesigns(worldId).data ?? []
   const levels = new Map(economy.workshops.map((row) => [row.kind, row.level]))
   const order: Record<StepState, number> = { making: 0, short: 1, idle: 2 }
   const steps = economy.chain
@@ -884,7 +1180,14 @@ export function ProductionChain({
       ) : (
         <ul className='grid min-w-0 grid-cols-1 gap-2 @sm/econ:grid-cols-2 @xl/econ:grid-cols-3'>
           {workshops.map((row) => (
-            <WorkshopCard key={row.kind} row={row} />
+            <WorkshopCard
+              key={row.kind}
+              communityId={economy.community_id}
+              worldId={worldId}
+              row={row}
+              designs={designs}
+              busy={busy}
+            />
           ))}
         </ul>
       )}
@@ -973,9 +1276,11 @@ function CoinChoice({
 
 export function EntityEconomy({
   communityId,
+  worldId = null,
   readOnlyReason,
 }: {
   communityId: number
+  worldId?: number | null
   readOnlyReason?: string | null
 }) {
   const view = useCommunityEconomy(communityId)
@@ -996,12 +1301,24 @@ export function EntityEconomy({
       )}
       {view.data && (
         <div className='@container/econ flex min-w-0 flex-col gap-8'>
-          <StockTable economy={view.data} readOnlyReason={readOnlyReason} />
+          <StockTable
+            economy={view.data}
+            worldId={worldId}
+            readOnlyReason={readOnlyReason}
+          />
           <ProductionChain
             economy={view.data}
+            worldId={worldId}
             readOnlyReason={readOnlyReason}
           />
           <CoinChoice economy={view.data} readOnlyReason={readOnlyReason} />
+          {view.data.market && (
+            <HoardControl
+              communityId={communityId}
+              worldId={worldId}
+              readOnlyReason={readOnlyReason}
+            />
+          )}
         </div>
       )}
     </Section>

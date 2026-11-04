@@ -25,6 +25,7 @@ import {
 import { type EntityDetail } from './api/types'
 import { RELATION_PAGE_MAX } from './constants'
 import { EntityEconomy } from './economy/EntityEconomy'
+import { NodeMaterials } from './economy/NodeMaterials'
 import { ResourceProfile } from './economy/ResourceProfile'
 import { PriceBoard, TradeRouteSection } from './economy/RouteAndMarket'
 import { AfterlifeSection, SoulSection } from './faith/Afterlife'
@@ -397,14 +398,28 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       )}
       {(entity.entity_type === 'people' ||
         entity.entity_type === 'settlement') && (
-        <EntityEconomy communityId={entity.id} readOnlyReason={readOnly} />
+        <EntityEconomy
+          communityId={entity.id}
+          worldId={entity.world_id}
+          readOnlyReason={readOnly}
+        />
       )}
       {(entity.entity_type === 'people' ||
         entity.entity_type === 'settlement') && (
         <PriceBoard marketId={entity.id} />
       )}
+      {(entity.entity_type === 'item' ||
+        entity.entity_type === 'structure' ||
+        entity.entity_type === 'vessel' ||
+        entity.entity_type === 'army') && (
+        <NodeMaterials nodeId={entity.id} readOnlyReason={readOnly} />
+      )}
       {entity.entity_type === 'resource' && (
-        <ResourceProfile resourceId={entity.id} readOnlyReason={readOnly} />
+        <ResourceProfile
+          resourceId={entity.id}
+          worldId={entity.world_id}
+          readOnlyReason={readOnly}
+        />
       )}
       {entity.entity_type === 'trade_route' && (
         <TradeRouteSection routeId={entity.id} readOnlyReason={readOnly} />

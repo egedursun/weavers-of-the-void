@@ -29,7 +29,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.context import TickContext
-from aerona.engine.economy.control import community, resource
+from aerona.engine.economy.control import community, edit_material, resource
 from aerona.engine.economy.deposits import Deposit, describe, open_deposit
 from aerona.engine.economy.extraction import write_reserve
 from aerona.engine.economy.materials import set_node_material
@@ -133,9 +133,7 @@ async def hold_material(ctx: TickContext, world_id: int, material: MaterialKind 
                 WorldMaterialRow.world_id == world_id, WorldMaterialRow.origin == MaterialOrigin.CATALOG, WorldMaterialRow.base_kind == material
             )
         )
-        if from_catalog is None:
-            raise ValidationFailedError("Edit the material before holding it; the catalog version needs no hold.")
-        row = from_catalog
+        row = from_catalog if from_catalog is not None else await edit_material(ctx, world_id, material=material, world_material_id=None, values={}, name=None)
     else:
         raise ValidationFailedError("Choose a material or a substance.")
     row.held = held

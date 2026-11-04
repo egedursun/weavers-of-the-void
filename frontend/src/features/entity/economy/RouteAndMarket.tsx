@@ -49,6 +49,7 @@ import {
   NumberField,
   PartHeader,
 } from './EntityEconomy'
+import { PriceHolds } from './PriceHolds'
 import { useMarketPrices, useTradeRoute } from './api'
 import {
   COMMODITY,
@@ -204,6 +205,7 @@ export function PriceBoard({ marketId }: { marketId: number }) {
             <PriceCard key={row.commodity} series={row} />
           ))}
         </ul>
+        <PriceHolds marketId={marketId} />
       </div>
     </Section>
   )
