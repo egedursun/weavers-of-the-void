@@ -524,11 +524,13 @@ async def sanitation_by_region(ctx: TickContext, book: EnvironmentBook, communit
     "region.magic",
     "settlement.population",
     "table.calendars",
+    "table.districts",
     "table.entity_flags",
     "table.forced_weather",
     "table.holder_levels",
     "table.place_environment",
     "table.region_environment",
+    "table.settlement_infrastructure",
     "table.settlement_profiles",
     "table.sky_events",
     "table.world_maps",
@@ -944,6 +946,7 @@ async def harvest(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.applied_fixups",
     "table.bonds",
     "table.calendars",
     "table.epoch_year_cursors",
@@ -951,6 +954,7 @@ async def harvest(ctx: TickContext) -> None:
     "table.language_profiles",
     "table.lexemes",
     "table.name_registry",
+    "table.nodes",
     "table.notable_years",
     "table.place_environment",
     "table.region_environment",
@@ -969,6 +973,8 @@ async def harvest(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",
+    "table.name_registry",
+    "table.nodes",
     "table.tradition_profiles",
 )
 async def calendars(ctx: TickContext) -> None:
