@@ -50,15 +50,21 @@ export function SocietyEconomy({ detail }: { detail: EntityDetail }) {
       ])
     )
   )
+  const contentment = Object.values(society.satisfaction)
+  const unhappiest =
+    society.unhappiest &&
+    contentment.some(
+      (value) => value > (society.satisfaction[society.unhappiest ?? ''] ?? 0)
+    )
+      ? society.unhappiest
+      : null
   return (
     <Section
       id='section-society'
       title='Society and economy'
       description='Who does the work, how content each class is, and what the stores hold.'
     >
-      {(society.uprising_risk ||
-        society.bankruptcy_risk ||
-        society.unhappiest) && (
+      {(society.uprising_risk || society.bankruptcy_risk || unhappiest) && (
         <div className='flex min-w-0 flex-wrap gap-2'>
           {society.uprising_risk && (
             <Badge variant='destructive'>An uprising is near</Badge>
@@ -66,8 +72,8 @@ export function SocietyEconomy({ detail }: { detail: EntityDetail }) {
           {society.bankruptcy_risk && (
             <Badge variant='warning'>The treasury may fail</Badge>
           )}
-          {society.unhappiest && (
-            <Badge variant='outline'>{`Least content: ${humanize(society.unhappiest)}`}</Badge>
+          {unhappiest && (
+            <Badge variant='outline'>{`Least content: ${humanize(unhappiest)}`}</Badge>
           )}
         </div>
       )}
@@ -86,10 +92,13 @@ export function SocietyEconomy({ detail }: { detail: EntityDetail }) {
                     <Label className='flex-1' truncate>
                       {humanize(name)}
                     </Label>
-                    <Stat value={share} format='percent' />
+                    <Stat
+                      value={`${formatDecimal(share, 1)}%`}
+                      tone={share > 0 ? 'inherit' : 'muted'}
+                    />
                   </div>
                   <Progress
-                    value={share * PERCENT_MAX}
+                    value={Math.min(PERCENT_MAX, share)}
                     size='sm'
                     aria-label={`${humanize(name)} share`}
                   />
@@ -106,7 +115,7 @@ export function SocietyEconomy({ detail }: { detail: EntityDetail }) {
                       tone={
                         content >= HALF
                           ? 'success'
-                          : society.unhappiest === name
+                          : unhappiest === name
                             ? 'destructive'
                             : 'warning'
                       }
