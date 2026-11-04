@@ -23,6 +23,7 @@ from aerona.engine.primitives.stats import base_stat
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import EntityAuthor, EntityDetailContext
 from aerona.prompts.contexts.common import LabelValue, LexiconWord, NamedRecord, WorldItem
+from aerona.tools.framework.economy_lines import economy_block
 from aerona.tools.framework.views import fact_lines, society_lines
 
 STAT_SKIP = frozenset({"kind"})
@@ -88,6 +89,7 @@ async def entity_detail_context(scope: Scope, entity: EntityRow, *, private: boo
             *await mechanic_lines(session, entity, scope.epoch, scope.rules.context.mechanic_window_epochs),
         ],
         chain=chain.line if (chain := await recent_chain(session, entity.id, scope.rules.incidents.chain_depth)) is not None else None,
+        economy=await economy_block(session, scope.rules, entity),
     )
 
 

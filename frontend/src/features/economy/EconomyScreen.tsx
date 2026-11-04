@@ -4,6 +4,7 @@ import { navItem } from '@/config/navigation'
 import {
   ArrowRight,
   CalendarClock,
+  CalendarRange,
   Coins,
   Flag,
   Gem,
@@ -18,6 +19,7 @@ import {
   Swords,
   TrendingDown,
   Users,
+  Mountain,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -57,6 +59,7 @@ import {
   PartHeader,
 } from '@/features/entity/economy/EntityEconomy'
 import { PriceBoard } from '@/features/entity/economy/RouteAndMarket'
+import { FoundRouteDialog } from '@/features/entity/economy/RouteControls'
 import {
   useCurrencies,
   useDebtsLedger,
@@ -77,6 +80,11 @@ import {
   type TradeRouteStatus,
   branch,
 } from '@/features/entity/economy/labels'
+import {
+  DANGERS,
+  DANGER_KEYS,
+  seasonTone,
+} from '@/features/entity/economy/routeLabels'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -793,12 +801,38 @@ function RouteCard({ route }: { route: TradeRoute }) {
           value={`${route.danger} danger`}
           tone={route.danger > HALF ? 'danger' : 'warning'}
         />
+        {DANGER_KEYS.filter((key) => route.dangers[key] > 0).map((key) => {
+          const spec = DANGERS[key]
+          return (
+            <IconStat
+              key={key}
+              icon={spec.icon}
+              label={spec.hint}
+              value={`${spec.label} ${route.dangers[key]}`}
+              tone={spec.tone}
+            />
+          )
+        })}
+        <IconStat
+          icon={CalendarRange}
+          label='Share of cargo still moving in the worst season'
+          value={`${route.season_pct}% worst season`}
+          tone={seasonTone(route.season_pct)}
+        />
         <IconStat
           icon={Percent}
           label='Tolls taken in all'
           value={`${tolls}% tolls`}
           tone='gold'
         />
+        {route.chokepoint && (
+          <IconStat
+            icon={Mountain}
+            label='Strategic goods pass here and no other way leads between its markets'
+            value='Chokepoint'
+            tone='warning'
+          />
+        )}
         <IconStat
           icon={Flag}
           label='Renown'
@@ -821,11 +855,16 @@ function RoutesList({ routes }: { routes: TradeRoute[] | undefined }) {
   if (!routes) return <Muted>Loading the routes…</Muted>
   if (routes.length === 0)
     return (
-      <EmptyState
-        icon={Route}
-        title='No trade routes yet'
-        description='Merchants open a way between markets once goods are dearer at one end.'
-      />
+      <div className='flex min-w-0 flex-col gap-4'>
+        <div className='flex min-w-0 justify-end'>
+          <FoundRouteDialog />
+        </div>
+        <EmptyState
+          icon={Route}
+          title='No trade routes yet'
+          description='Merchants open a way between markets once goods are dearer at one end, or lay one out yourself.'
+        />
+      </div>
     )
   const shown =
     status === ALL ? routes : routes.filter((route) => route.status === status)
@@ -836,6 +875,13 @@ function RoutesList({ routes }: { routes: TradeRoute[] | undefined }) {
   )
   return (
     <div data-surface='RoutesList' className='flex min-w-0 flex-col gap-4'>
+      <div className='flex min-w-0 flex-wrap items-center justify-between gap-3'>
+        <Muted variant='caption'>
+          Every route, its dangers by source and its worst season. Open one to
+          command it.
+        </Muted>
+        <FoundRouteDialog />
+      </div>
       <ToggleGroup
         type='single'
         variant='outline'

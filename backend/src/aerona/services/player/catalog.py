@@ -55,6 +55,7 @@ from aerona.services.player import (
     profiles,
     realms,
     relations,
+    routes,
     settings,
     settlements,
     society,
@@ -1319,7 +1320,24 @@ MECHANIC_ACTIONS = (
         ("J.16c",),
     ),
 )
+ROUTE_ACTIONS = (
+    _sync(
+        Meta("trade_route:found", "Lay out a new trade route: its ends, way of travel, master and toll", G.SOCIETY),
+        routes.found_route,
+        routes.FoundRoute,
+        free,
+        ("S6.4",),
+    ),
+    _sync(Meta("trade_route:edit", "Set and hold any value of a trade route", G.SOCIETY), routes.edit_route, routes.EditRoute, free, ("S6.4",)),
+    _sync(Meta("trade_route:delete", "Strike a trade route from the world", G.SOCIETY), routes.delete_route, routes.RouteTarget, free, ("S6.4",)),
+    _sync(Meta("trade_route:toll_stop", "Raise or hold a toll in a land on a route", G.SOCIETY), routes.toll_stop, routes.TollStop, free, ("S6.4",)),
+    _sync(Meta("trade_route:toll_remove", "Forbid any toll in a land on a route", G.SOCIETY), routes.toll_remove, routes.TollTarget, free, ("S6.4",)),
+    _sync(Meta("resource:pact", "Bind a sentient resource and its keeper by a pact", G.SOCIETY), routes.strike_pact, routes.StrikePact, free, ("S6.3",)),
+    _sync(Meta("resource:pact_terms", "Change what a sentient resource's pact asks", G.SOCIETY), routes.pact_terms, routes.PactTerms, free, ("S6.3",)),
+    _sync(Meta("resource:pact_end", "Release a sentient resource's pact", G.SOCIETY), routes.end_pact, routes.PactTarget, free, ("S6.3",)),
+)
 ACTIONS: tuple[ActionSpec, ...] = (
+    *ROUTE_ACTIONS,
     *WILDS_ACTIONS,
     *LORE_ACTIONS,
     *CREATOR_ACTIONS,

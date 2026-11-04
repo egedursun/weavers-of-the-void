@@ -165,6 +165,7 @@ async def open_route(ctx: TickContext, *, route_id: int | None, first_id: int | 
             raise NotFoundError("No such trade route.")
         profile.status = TradeRouteStatus.OPEN
         profile.closed_by_player = False
+        profile.closed_by_son_id = None
         profile.last_traffic_epoch = ctx.epoch
         entity.status = EntityStatus.CANON
         await ctx.session.flush()
@@ -175,6 +176,16 @@ async def open_route(ctx: TickContext, *, route_id: int | None, first_id: int | 
     first, second = await community(ctx, first_id), await community(ctx, second_id)
     if any(frozenset(route.ends) == frozenset((first.id, second.id)) for route in await load_routes(ctx)):
         raise ValidationFailedError(f"{first.name} and {second.name} are already joined by a route.")
+    closed = next(
+        (
+            route
+            for route in await load_routes(ctx, live_only=False)
+            if route.profile.closed_by_player and frozenset(route.ends) == frozenset((first.id, second.id))
+        ),
+        None,
+    )
+    if closed is not None:
+        return await open_route(ctx, route_id=closed.entity.id, first_id=None, second_id=None)
     path = book.ground.atlas.region_path(book.ground.atlas.top_region(first.id), book.ground.atlas.top_region(second.id))
     if path is None:
         raise ValidationFailedError(f"No way leads from {first.name} to {second.name}.")

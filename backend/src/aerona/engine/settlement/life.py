@@ -36,7 +36,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import cohorts_of
 from aerona.engine.demography.mobility import bound_revolt, inequality_pressure
-from aerona.engine.economy.routes import BANDIT_KINDS
+from aerona.engine.economy.route_dangers import BANDIT_KINDS
 from aerona.engine.economy.stocks import aggregate_need
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits

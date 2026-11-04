@@ -12,7 +12,7 @@ from aerona.rules.registry import Rules
 from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.ports import ToolPorts
 from aerona.tools.framework.spec import ToolSpec
-from aerona.tools.son import cosmos, death, influence, intervention, kin, knowledge, language, memory, prayer, read, resources, urban, war
+from aerona.tools.son import cosmos, death, influence, intervention, kin, knowledge, language, memory, prayer, read, resources, trade, urban, war
 from aerona.tools.son.availability import SonWorldState, condition_holds, star_lines
 from aerona.tools.son.creation import creation_specs, example_cost
 from aerona.tools.son.creation_rules import cheap_creation
@@ -26,6 +26,7 @@ FAMILIES: tuple[Callable[[], list[SonSpec]], ...] = (
     prayer.specs,
     creation_specs,
     resources.specs,
+    trade.specs,
     influence.specs,
     knowledge.specs,
     intervention.specs,

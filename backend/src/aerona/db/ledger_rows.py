@@ -66,6 +66,15 @@ WHITELISTED_TABLES = frozenset(
         "settlement_treasury",
         "districts",
         "district_designs",
+        "trade_route_profiles",
+        "trade_route_regions",
+        "trade_route_tolls",
+        "trade_route_losses",
+        "treaty_profiles",
+        "treaty_parties",
+        "treaty_clauses",
+        "oaths",
+        "workshops",
     }
 )
 PERMANENT_BIRTH_TABLES = frozenset({"sons", "worlds"})

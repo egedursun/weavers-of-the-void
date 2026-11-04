@@ -184,6 +184,7 @@ from aerona.rules.registry.record_schema import RecordSchemaRules
 from aerona.rules.registry.religion import ReligionRules
 from aerona.rules.registry.remembrance import RemembranceRules
 from aerona.rules.registry.reputation import ReputationRules
+from aerona.rules.registry.routes import ChokepointsRules, RouteDangersRules, RouteSeasonsRules, SentientPactsRules, SonRoutesRules
 from aerona.rules.registry.server import ServerRules
 from aerona.rules.registry.settlement import CrimeRules, DistrictRules, FireRules, SanitationRules, TaxationRules, UrbanRules
 from aerona.rules.registry.setup_wizard import SetupWizardRules
@@ -297,6 +298,11 @@ class Rules:
     trade_routes: TradeRoutesRules = field(default_factory=TradeRoutesRules)
     banking: BankingRules = field(default_factory=BankingRules)
     tolls: TollsRules = field(default_factory=TollsRules)
+    route_dangers: RouteDangersRules = field(default_factory=RouteDangersRules)
+    route_seasons: RouteSeasonsRules = field(default_factory=RouteSeasonsRules)
+    chokepoints: ChokepointsRules = field(default_factory=ChokepointsRules)
+    sentient_pacts: SentientPactsRules = field(default_factory=SentientPactsRules)
+    son_routes: SonRoutesRules = field(default_factory=SonRoutesRules)
     cohorts: CohortsRules = field(default_factory=CohortsRules)
     demography: DemographyRules = field(default_factory=DemographyRules)
     epidemiology: EpidemiologyRules = field(default_factory=EpidemiologyRules)

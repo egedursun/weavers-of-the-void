@@ -23,7 +23,9 @@ from aerona.api.schemas.economy import (
     PriceSeries,
     QuoteView,
     ResourceProfileView,
+    RouteDangerView,
     RouteFlowView,
+    RouteLossView,
     RunView,
     StockLotView,
     TollView,
@@ -49,6 +51,7 @@ from aerona.db.tables.economy import (
     ResourceProfileRow,
     ResourceWorkerRow,
     TradeFlowRow,
+    TradeRouteLossRow,
     TradeRouteProfileRow,
     TradeRouteRegionRow,
     TradeRouteTollRow,
@@ -57,12 +60,14 @@ from aerona.db.tables.economy import (
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import MaterialOrigin, WorkshopKind
 from aerona.domain.enums.entity import SOCIETY_TYPES
 from aerona.domain.enums.society import Commodity
 from aerona.engine.economy.materials import MaterialBook, MaterialProps
 from aerona.engine.economy.money import owed
+from aerona.engine.economy.route_control import UNTOLLED
 from aerona.engine.economy.stocks import aggregate_index, aggregate_need
 from aerona.engine.primitives.stats import headcount, stat
 from aerona.engine.settlement.storage import capacity_of, storage_index, store_kind
@@ -327,6 +332,10 @@ async def market_prices(services: ServicesDep, market_id: int = Path(ge=1)) -> M
         )
 
 
+def untolled_of(locked: list[str] | None) -> list[int]:
+    return sorted(int(key.removeprefix(UNTOLLED)) for key in locked or [] if key.startswith(UNTOLLED) and key.removeprefix(UNTOLLED).isdigit())
+
+
 async def route_views(session: AsyncSession, profiles: list[TradeRouteProfileRow]) -> list[TradeRouteView]:
     ids = [row.route_entity_id for row in profiles]
     if not ids:
@@ -347,7 +356,11 @@ async def route_views(session: AsyncSession, profiles: list[TradeRouteProfileRow
             volumes[route_id] += volume
     wanted = {row.first_market_id for row in profiles} | {row.second_market_id for row in profiles}
     wanted |= {toll.region_entity_id for items in tolls.values() for toll in items} | {toll.controller_entity_id for items in tolls.values() for toll in items}
+    wanted |= {toll.polity_entity_id for items in tolls.values() for toll in items if toll.polity_entity_id is not None}
+    wanted |= {region for steps in paths.values() for _, region in steps}
     names = await names_of(session, wanted)
+    son_ids = [row.closed_by_son_id for row in profiles if row.closed_by_son_id is not None]
+    sons = {son_id: name for son_id, name in await session.execute(select(SonRow.id, SonRow.name).where(SonRow.id.in_(son_ids)))} if son_ids else {}
     views: list[TradeRouteView] = []
     for row in profiles:
         entity = entities.get(row.route_entity_id)
@@ -378,6 +391,9 @@ async def route_views(session: AsyncSession, profiles: list[TradeRouteProfileRow
                         controller_name=names.get(toll.controller_entity_id, ""),
                         rate_pct=toll.rate_pct,
                         set_by_player=toll.set_by_player,
+                        controller_held=toll.controller_held,
+                        polity_id=toll.polity_entity_id,
+                        polity_name=names.get(toll.polity_entity_id, "") if toll.polity_entity_id is not None else "",
                     )
                     for toll in sorted(tolls[row.route_entity_id], key=lambda item: item.region_entity_id)
                 ],
@@ -387,6 +403,14 @@ async def route_views(session: AsyncSession, profiles: list[TradeRouteProfileRow
                 last_traffic_epoch=row.last_traffic_epoch,
                 volume=volumes.get(row.route_entity_id, 0),
                 closed_by_player=row.closed_by_player,
+                closed_by_son_id=row.closed_by_son_id,
+                closed_by_son_name=sons.get(row.closed_by_son_id, "") if row.closed_by_son_id is not None else "",
+                dangers=RouteDangerView(bandits=row.danger_bandits, beasts=row.danger_beasts, weather=row.danger_weather, sea=row.danger_sea),
+                season_pct=row.season_pct,
+                chokepoint=row.chokepoint,
+                locked=[key for key in row.locked or [] if not key.startswith(UNTOLLED)],
+                untolled=untolled_of(row.locked),
+                region_names={region: names.get(region, "") for _, region in paths[row.route_entity_id]},
             )
         )
     return views
@@ -425,7 +449,27 @@ async def trade_route(services: ServicesDep, route_id: int = Path(ge=1)) -> Trad
             )
             for row in await session.scalars(select(TradeFlowRow).where(TradeFlowRow.route_entity_id == route_id).order_by(TradeFlowRow.epoch, TradeFlowRow.id))
         ]
-        return TradeRouteDetail(**views[0].model_dump(), flows=flows)
+        losses = list(
+            await session.scalars(
+                select(TradeRouteLossRow).where(TradeRouteLossRow.route_entity_id == route_id).order_by(TradeRouteLossRow.epoch, TradeRouteLossRow.id)
+            )
+        )
+        culprits = await names_of(session, {row.culprit_entity_id for row in losses if row.culprit_entity_id is not None})
+        return TradeRouteDetail(
+            **views[0].model_dump(),
+            flows=flows,
+            losses=[
+                RouteLossView(
+                    epoch=row.epoch,
+                    commodity=row.commodity,
+                    cause=row.cause,
+                    units=row.units,
+                    culprit_id=row.culprit_entity_id,
+                    culprit_name=culprits.get(row.culprit_entity_id, "") if row.culprit_entity_id is not None else "",
+                )
+                for row in losses
+            ],
+        )
 
 
 @router.get("/currencies", response_model=list[CurrencyView])

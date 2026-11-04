@@ -4,12 +4,15 @@ import {
   ArrowLeftRight,
   ArrowUpFromLine,
   CalendarClock,
+  CalendarRange,
   Check,
   DoorClosed,
   DoorOpen,
   Flag,
   Landmark,
+  Lock,
   Map as MapIcon,
+  Mountain,
   Package,
   Percent,
   Route,
@@ -49,6 +52,13 @@ import {
   NumberField,
   PartHeader,
 } from './EntityEconomy'
+import {
+  RouteDangers,
+  RouteEditor,
+  StrikeRoute,
+  TollControls,
+  TollDestination,
+} from './RouteControls'
 import { useMarketPrices, useTradeRoute } from './api'
 import {
   COMMODITY,
@@ -58,6 +68,7 @@ import {
   ROUTE_STATUS,
   TRADE_LOSS,
 } from './labels'
+import { seasonTone } from './routeLabels'
 
 type Toll = components['schemas']['TollView']
 type Series = components['schemas']['PriceSeries']
@@ -211,31 +222,38 @@ export function PriceBoard({ marketId }: { marketId: number }) {
 
 function TollStop({ toll }: { toll: Toll }) {
   return (
-    <li className='flex min-w-0 items-center gap-2.5 rounded-lg border bg-background p-2.5'>
-      <Medallion icon={Landmark} tone='gold' size='sm' />
-      <div className='flex min-w-0 flex-1 flex-col'>
-        <EntityLink kind='entity' id={String(toll.region_id)}>
-          {toll.region_name}
-        </EntityLink>
-        <Muted variant='caption' truncate>
-          {'Taken by '}
-          <EntityLink kind='entity' id={String(toll.controller_id)}>
-            {toll.controller_name}
+    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'>
+      <div className='flex min-w-0 items-center gap-2.5'>
+        <Medallion icon={Landmark} tone='gold' size='sm' />
+        <div className='flex min-w-0 flex-1 flex-col'>
+          <EntityLink kind='entity' id={String(toll.region_id)}>
+            {toll.region_name}
           </EntityLink>
-        </Muted>
+          <Muted variant='caption'>
+            {'Taken by '}
+            <EntityLink kind='entity' id={String(toll.controller_id)}>
+              {toll.controller_name}
+            </EntityLink>
+          </Muted>
+        </div>
+        <IconStat
+          icon={Percent}
+          label='Toll on every load'
+          value={`${toll.rate_pct}% toll`}
+          tone='gold'
+        />
       </div>
-      {toll.set_by_player && (
-        <Badge size='sm' variant='info'>
-          <Check />
-          Held by you
-        </Badge>
+      {(toll.polity_id !== null || toll.set_by_player) && (
+        <div className='flex min-w-0 flex-wrap items-center gap-1.5 border-t pt-2'>
+          <TollDestination toll={toll} />
+          {toll.set_by_player && (
+            <Badge size='sm' variant='info'>
+              <Check />
+              Rate held by you
+            </Badge>
+          )}
+        </div>
       )}
-      <IconStat
-        icon={Percent}
-        label='Toll on every load'
-        value={`${toll.rate_pct}% toll`}
-        tone='gold'
-      />
     </li>
   )
 }
@@ -398,7 +416,7 @@ export function TradeRouteSection({
     <Section
       id='section-trade-route'
       title='The route'
-      description='Where it runs, what it carries, who takes a toll on the way and what it lost to bandits and the sea.'
+      description='Where it runs, what it carries, who takes a toll and for which treasury, and what it lost to bandits, beasts, weather and the sea.'
       icon={Route}
     >
       {view.isPending && <Muted>Loading the route…</Muted>}
@@ -434,7 +452,7 @@ export function TradeRouteSection({
               icon={Swords}
               tone={route.danger > BASE / 2 ? 'danger' : 'warning'}
               meter={{ value: route.danger, max: BASE, label: 'Danger' }}
-              hint='Bandits, beasts, storms and the sea'
+              hint={`Bandits ${route.dangers.bandits}, beasts ${route.dangers.beasts}, weather ${route.dangers.weather}, sea ${route.dangers.sea}`}
             />
             <KpiTile
               label='Renown'
@@ -453,6 +471,7 @@ export function TradeRouteSection({
               hint='Words, gods and customs that travel with it'
             />
           </div>
+          <RouteDangers route={route} />
           <div className='flex min-w-0 flex-col gap-3'>
             <PartHeader
               icon={Landmark}
@@ -499,8 +518,13 @@ export function TradeRouteSection({
           <AdjustPanel
             label='Adjust the route'
             title='Command the route'
-            note='Close it to all merchants or open it again, and hold the toll of any land on the way. Every change goes into the ledger.'
+            note='Close it or open it, set and hold any value the world reads (way of travel, master, blockade, every danger, the worst season, capacity), raise or forbid tolls, or strike it from the world. Every change goes into the ledger.'
           >
+            <RouteEditor
+              key={`${route.route_id}-${route.locked.join('.')}`}
+              route={route}
+              busy={busy}
+            />
             <div className='flex min-w-0 flex-wrap gap-2'>
               {route.status === 'closed' || route.status === 'decayed' ? (
                 <Button
@@ -539,6 +563,10 @@ export function TradeRouteSection({
                 ))}
               </div>
             )}
+            <TollControls route={route} busy={busy} />
+            <div className='flex min-w-0 flex-wrap gap-2 border-t pt-3'>
+              <StrikeRoute route={route} busy={busy} />
+            </div>
           </AdjustPanel>
         </div>
       )}
@@ -627,6 +655,30 @@ export function RouteBanner({ route }: { route: RouteView }) {
           <Badge variant='warning'>
             <DoorClosed />
             Closed by your hand
+          </Badge>
+        )}
+        {route.closed_by_son_id !== null && (
+          <Badge variant='warning'>
+            <DoorClosed />
+            {`Closed by ${route.closed_by_son_name || 'a son'}`}
+          </Badge>
+        )}
+        <IconStat
+          icon={CalendarRange}
+          label='Share of cargo still moving in the worst season'
+          value={`${route.season_pct}% in the worst season`}
+          tone={seasonTone(route.season_pct)}
+        />
+        {route.chokepoint && (
+          <Badge variant='warning'>
+            <Mountain />
+            Chokepoint
+          </Badge>
+        )}
+        {route.locked.length > 0 && (
+          <Badge variant='default'>
+            <Lock />
+            {`${route.locked.length} held by you`}
           </Badge>
         )}
       </div>

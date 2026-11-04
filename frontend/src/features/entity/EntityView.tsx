@@ -25,8 +25,11 @@ import {
 import { type EntityDetail } from './api/types'
 import { RELATION_PAGE_MAX } from './constants'
 import { EntityEconomy } from './economy/EntityEconomy'
+import { PolityProduction } from './economy/PolityProduction'
 import { ResourceProfile } from './economy/ResourceProfile'
 import { PriceBoard, TradeRouteSection } from './economy/RouteAndMarket'
+import { CommunityRoutes } from './economy/RouteControls'
+import { SentientPacts } from './economy/SentientPact'
 import { AfterlifeSection, SoulSection } from './faith/Afterlife'
 import { DoctrineSection } from './faith/Doctrine'
 import { LearningSection } from './lore/LearningSection'
@@ -403,8 +406,18 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         entity.entity_type === 'settlement') && (
         <PriceBoard marketId={entity.id} />
       )}
+      {(entity.entity_type === 'people' ||
+        entity.entity_type === 'settlement') && (
+        <CommunityRoutes communityId={entity.id} />
+      )}
       {entity.entity_type === 'resource' && (
         <ResourceProfile resourceId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'resource' && (
+        <SentientPacts resourceId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'polity' && (
+        <PolityProduction polityId={entity.id} />
       )}
       {entity.entity_type === 'trade_route' && (
         <TradeRouteSection routeId={entity.id} readOnlyReason={readOnly} />

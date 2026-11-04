@@ -75,6 +75,8 @@ class SonToolId(StrEnum):
     BIRTH_WORLD = "birth_world"
     RAISE_DISTRICT = "raise_district"
     DESIGN_DISTRICT = "design_district"
+    OPEN_TRADE_ROUTE = "open_trade_route"
+    CLOSE_TRADE_ROUTE = "close_trade_route"
 
 
 class MortalToolId(StrEnum):

@@ -216,6 +216,13 @@ SENTIENT_DEMANDS = (
 ECONOMY_SENTIENT_BARGAINED = Line(
     "gods.economy.sentient_bargained", "{resource} demanded {demand} from {owner}; {negotiator} talked it down to half, and {owner} paid."
 )
+ECONOMY_SENTIENT_PACT = Line(
+    "gods.economy.sentient_pact", "{negotiator} struck a pact with {resource} for {owner}: {demand}, owed on a set term, in return for its gifts."
+)
+ECONOMY_SENTIENT_PACT_KEPT = Line("gods.economy.sentient_pact_kept", "{owner} gave {resource} {demand} as the pact bids; the resource gave of itself in turn.")
+ECONOMY_SENTIENT_PACT_BROKEN = Line(
+    "gods.economy.sentient_pact_broken", "{owner} broke the pact with {resource} and withheld {demand}; the resource turned its wrath on them."
+)
 ECONOMY_SACRED_CURSE = Line("gods.economy.sacred_curse", "{son} cursed {owner} for digging the sacred {resource}.")
 ECONOMY_SACRED_BOND = "for the sacred {resource}"
 ECONOMY_DEPLETED = Line("gods.economy.depleted", "The last drop of {resource} was drawn;{place} the doomsday clock advanced.")

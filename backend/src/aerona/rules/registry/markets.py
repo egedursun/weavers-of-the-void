@@ -98,3 +98,5 @@ class TollsRules:
     greed_rate_pct: int = rule(10, 0, 100, G, "Extra toll taken by a greedy master (%)")
     divert_total_pct: int = rule(30, 0, 100, G, "Total toll along a route at which merchants seek another way (%)")
     revenue_wealth_per_value: int = rule(5, 0, 100, G, "Prosperity or wealth a toll-taker gains per thousand of tolls")
+    polity_share_pct: int = rule(40, 0, 100, G, "Share of a member's tolls that goes to the treasury of its realm (%)")
+    territory_control_pct: int = rule(50, 0, 100, G, "Control a realm needs over a land to take the tolls on it itself")

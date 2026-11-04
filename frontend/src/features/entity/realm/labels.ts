@@ -313,6 +313,16 @@ export const CLAUSES: Record<string, Named> = {
   extradition: { label: 'Extradition', icon: Gavel, tone: 'info' },
   wergild: { label: 'Wergild', icon: HandCoins, tone: 'gold' },
   non_aggression: { label: 'Non-aggression', icon: Ban, tone: 'muted' },
+  route_control: {
+    label: 'Road and tolls ceded',
+    icon: Signpost,
+    tone: 'gold',
+  },
+  resource_demand: {
+    label: 'Tribute to a living resource',
+    icon: Gem,
+    tone: 'verdigris',
+  },
 }
 
 export const OATHS: Record<string, Named> = {
