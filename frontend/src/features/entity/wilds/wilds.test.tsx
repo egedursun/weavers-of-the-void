@@ -8,122 +8,15 @@ import {
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { BeastSection, FoodWebSection, HerdsSection } from './BeastSection'
 import { SpeciesSection } from './SpeciesSection'
+import { BEAST, FOLK, KIN, KIND, SPECIES, serveBasics } from './wildsFixtures'
 
 vi.mock('@/api/client', async () => {
   const { createFakeClient } = await import('@/test-utils/fakeApi')
   return { api: createFakeClient() }
 })
 
-const LAND = { id: 30, kind: 'entity', name: 'Saltreach' }
-const KIN = { id: 40, kind: 'entity', name: 'Dune Hare' }
-const FOLK = { id: 50, kind: 'entity', name: 'Reed Folk' }
-const KIND = { id: 7, kind: 'entity', name: 'Sand Crawler' }
-
-const SPECIES = {
-  species_id: 7,
-  body_plan: 'quadruped',
-  size_class: 'small',
-  lifespan_years: 6,
-  maturity_years: 1,
-  litter_size: 5,
-  breeding_seasons: 2,
-  diet: 'omnivore',
-  metabolism: 65,
-  habitat: { desert: 100 },
-  temperature_min: 48,
-  temperature_max: 78,
-  water_need: 50,
-  altitude_min: 0,
-  altitude_max: 1523,
-  nocturnal: false,
-  migratory: false,
-  migration_path: [],
-  aggression: 65,
-  territoriality: 47,
-  sociality: 'herd',
-  cunning: 67,
-  fear_of_people: 45,
-  tameability: 60,
-  stage: 'wild',
-  domesticated_from: null,
-  sacred_to: null,
-  traits: ['mind_reader', 'stoneskin'],
-  uses: ['food', 'companion'],
-  yields: [
-    { product: 'meat', commodity: 'livestock', material: null, rate: 2 },
-  ],
-  hosts: [],
-  ranges: [
-    {
-      region: LAND,
-      abundance: 68,
-      trend: 'falling',
-      fit: 76,
-      hunted: 1,
-      since_epoch: 50,
-      locked: [],
-    },
-  ],
-  herds: [
-    {
-      community: FOLK,
-      species: null,
-      head: 11,
-      stage: 'tamed',
-      since_epoch: 50,
-      fed_epochs: 1,
-      locked: [],
-    },
-  ],
-  hunts: [KIN],
-  hunted_by: [],
-  descendants: [],
-  beasts: [],
-  locked: ['diet'],
-}
-
-const BEAST = {
-  beast_id: 9,
-  species: KIND,
-  endurance: 72,
-  perception: 55,
-  willpower: 64,
-  intelligence: 38,
-  age: 140,
-  lifespan: 400,
-  size_class: 'huge',
-  lair: LAND,
-  temper: 'territorial',
-  bound_to: null,
-  hoard: { luxuries: 40 },
-  raids: 7,
-  woke_epoch: 44,
-  terror: 78,
-  renown: 62,
-  wounds: [{ by: FOLK, epoch: 48 }],
-  injuries: [
-    {
-      part: 'left_foreleg',
-      kind: 'deep_cut',
-      severity: 60,
-      state: 'healing',
-      function_loss: 30,
-    },
-  ],
-  body_plan: 'quadruped',
-  hp: 320,
-  locked: ['temper'],
-}
-
 function serve() {
-  onApi('GET', '/api/state', {
-    creator: { essence: 500 },
-    epoch_running: false,
-    read_only: false,
-    world: { epoch: 51 },
-  })
-  onApi('GET', '/api/names', [])
-  onApi('GET', '/api/sons', [])
+  serveBasics()
 }
 
 describe('wilds sections', () => {
@@ -220,11 +113,15 @@ describe('wilds sections', () => {
         },
         { species: KIN, abundance: 70, diet: 'herbivore', size_class: 'small' },
       ],
-      links: [{ hunter_id: 7, prey_id: 40 }],
+      links: [{ hunter_id: 7, prey_id: 40, kind: 'derived' }],
     })
     const { screen } = await renderApp(<FoodWebSection regionId={30} />)
     await expect
-      .element(screen.getByText('hunts', { exact: true }))
+      .element(
+        screen.getByRole('img', {
+          name: /Food web of 2 kinds in 2 tiers, 1 hunts/,
+        })
+      )
       .toBeVisible()
     await expect.element(screen.getByText('1 hunt between kinds')).toBeVisible()
     await expect.element(screen.getByText('Large hunter')).toBeVisible()

@@ -29,6 +29,8 @@ from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.models.phonology import Phonology
 from aerona.engine.body.book import ensure_species_body
+from aerona.engine.ecology.beasts import profile_beast
+from aerona.engine.ecology.profiles import SpeciesSpec, profile_of
 from aerona.engine.gods.progress import power_ceiling
 from aerona.engine.gods.rewards import RewardDraft, creation_gains, creation_value, fade_pct, record_reward
 from aerona.engine.phases.exploration import land_measure
@@ -252,6 +254,36 @@ def _traits(call: SonCall, args: CreationInput) -> list[CreatureTrait]:
     return list(dict.fromkeys(traits))[: call.rules.son_tools.creature_max_traits]
 
 
+BEAST_ABILITIES = ("endurance", "perception", "willpower", "intelligence")
+
+
+async def shape_beast(call: SonCall, args: CreationInput, created: EntityRow) -> None:
+    kind_id = args.option("species_id")
+    kind = await call.session.get(EntityRow, kind_id) if kind_id is not None else None
+    species = kind if kind is not None and kind.entity_type is EntityType.SPECIES and kind.status is EntityStatus.CANON else None
+    row = await profile_beast(call.tick, created, species, args.option("size_class"))
+    if args.option("temper") is not None:
+        row.temper = args.option("temper")
+    for key in BEAST_ABILITIES:
+        value = args.option(key)
+        if value is not None:
+            setattr(row, key, value)
+    if species is not None:
+        await BondRepository(call.session).connect(BondDraft(created.id, species.id, BondKind.DESCENDS_FROM, call.epoch, "the greatest of its kind"))
+
+
+def species_spec(args: CreationInput) -> SpeciesSpec:
+    return SpeciesSpec(
+        body_plan=args.option("body_plan"),
+        size_class=args.option("size_class"),
+        diet=args.option("diet"),
+        sociality=args.option("sociality"),
+        nocturnal=args.option("nocturnal"),
+        migratory=args.option("migratory"),
+        products=tuple(dict.fromkeys(args.option("products") or [])),
+    )
+
+
 async def _insert(call: SonCall, plan: CreationPlan) -> EntityRow:
     args = plan.args
     entity_type = plan.spec.type
@@ -410,6 +442,9 @@ async def create_entity(call: SonCall, args: CreationInput, entity_type: EntityT
     call.target(created.id)
     if entity_type is EntityType.SPECIES:
         await ensure_species_body(call.session, created, args.option("body_plan"))
+        await profile_of(call.tick, created, species_spec(args))
+    if entity_type is EntityType.BEAST:
+        await shape_beast(call, args, created)
     await _bonds(call, plan, created)
     effect_notes = await apply_effects(call, created, plan.effects)
     if plan.effects is not None:

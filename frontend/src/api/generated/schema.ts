@@ -4287,6 +4287,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/nodes/{node_id}/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["node_profiles_api_nodes__node_id__profiles_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/worlds/{world_id}/materials": {
         parameters: {
             query?: never;
@@ -4863,6 +4879,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/species/{species_id}/range-map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["range_map_api_species__species_id__range_map_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/use-kinds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["use_kinds_api_use_kinds_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/totem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["totem_api_entities__entity_id__totem_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions": {
         parameters: {
             query?: never;
@@ -5113,6 +5177,182 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["action_beast_spawn_api_actions_beast_spawn_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/species:create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_species_create_api_actions_species_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/species:prey": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_species_prey_api_actions_species_prey_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/species:custom_use": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_species_custom_use_api_actions_species_custom_use_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/use_kind:create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_use_kind_create_api_actions_use_kind_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/use_kind:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_use_kind_edit_api_actions_use_kind_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/use_kind:drop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_use_kind_drop_api_actions_use_kind_drop_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/herd:drop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_herd_drop_api_actions_herd_drop_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/people:totem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_people_totem_api_actions_people_totem_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/beast:create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_beast_create_api_actions_beast_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/beast:slay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_beast_slay_api_actions_beast_slay_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/beast:treasure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_beast_treasure_api_actions_beast_treasure_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8207,6 +8447,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/profile:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_profile_set_api_actions_profile_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/profile:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_profile_release_api_actions_profile_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/ley:sever": {
         parameters: {
             query?: never;
@@ -10490,7 +10762,36 @@ export interface components {
             injuries: components["schemas"]["BeastWound"][];
             body_plan: string | null;
             hp: number;
+            treasures: components["schemas"]["NodeRef"][];
+            tributes: components["schemas"]["BeastTributeView"][];
+            reach: number;
+            harm_taken_pct: number;
+            wake_pct: number;
+            tame_pct: number;
+            rest_pct: number;
+            rideable: boolean;
             locked: string[];
+        };
+        BeastCreateInput: {
+            name: string;
+            description: string;
+            species_id?: number | null;
+            lair_id?: number | null;
+            world_id?: number | null;
+            size_class?: components["schemas"]["SizeClass"] | null;
+            temper?: components["schemas"]["BeastTemper"] | null;
+            hp?: number | null;
+            strength?: number | null;
+            agility?: number | null;
+            danger?: number | null;
+            cunning?: number | null;
+            renown?: number | null;
+            terror?: number | null;
+            endurance?: number | null;
+            perception?: number | null;
+            willpower?: number | null;
+            intelligence?: number | null;
+            power: number;
         };
         BeastEditInput: {
             beast_id: number;
@@ -10509,6 +10810,10 @@ export interface components {
             beast_id: number;
             awake: boolean;
         };
+        BeastSlayInput: {
+            beast_id: number;
+            slayer_id?: number | null;
+        };
         BeastSpawnInput: {
             species_id: number;
         };
@@ -10523,6 +10828,19 @@ export interface components {
             terror?: number | null;
         };
         BeastTemper: "hungry" | "territorial" | "sleeping" | "enraged" | "bound" | "tamed";
+        BeastTreasureInput: {
+            beast_id: number;
+            item_id: number;
+            into_hoard: boolean;
+            receiver_id?: number | null;
+        };
+        BeastTributeView: {
+            town: components["schemas"]["NodeRef"] | null;
+            treaty: components["schemas"]["NodeRef"] | null;
+            commodity: components["schemas"]["CommodityKind"];
+            units: number;
+            last_kept_epoch: number | null;
+        };
         BeastWound: {
             part: string;
             kind: string;
@@ -11545,6 +11863,12 @@ export interface components {
             users: number[];
         };
         CurseKind: "none" | "bloodthirst" | "misfortune" | "wasting" | "madness" | "betrayal";
+        CustomUseView: {
+            kind_id: number;
+            name: string;
+            base_use: components["schemas"]["SpeciesUse"];
+            output_pct: number;
+        };
         DamageType: "cut" | "pierce" | "blunt" | "fire" | "cold" | "venom" | "magic" | "void" | "holy";
         Danger: {
             id: number | null;
@@ -12483,6 +12807,7 @@ export interface components {
             misconception: string | null;
             epoch: number;
         };
+        FoodLink: "pinned" | "barred" | "derived";
         FoodWeb: {
             region_id: number;
             nodes: components["schemas"]["WebNode"][];
@@ -12801,6 +13126,10 @@ export interface components {
             name: string;
             since_epoch: number;
         };
+        HerdDropInput: {
+            community_id: number;
+            species_id: number;
+        };
         HerdEditInput: {
             community_id: number;
             species_id: number;
@@ -12907,6 +13236,7 @@ export interface components {
         HostView: {
             disease: components["schemas"]["NodeRef"] | null;
             immune: boolean;
+            locked: string[];
         };
         HouseExtinguishInput: {
             house_id: number;
@@ -14987,6 +15317,10 @@ export interface components {
             prosperity?: number | null;
             wealth?: number | null;
         };
+        PeopleTotemInput: {
+            people_id: number;
+            species_id?: number | null;
+        };
         PeopleUniteInput: {
             source_id: number;
             into_id: number;
@@ -15359,6 +15693,32 @@ export interface components {
             commodity: components["schemas"]["CommodityKind"];
             points: components["schemas"]["PricePoint"][];
         };
+        ProfileColumnRecord: {
+            name: string;
+            kind: string;
+            value: number | string | boolean | null;
+            options: string[];
+            nullable: boolean;
+            held: boolean;
+            pinned: boolean;
+        };
+        ProfileReleaseInput: {
+            node_id: number;
+            table: string;
+            column: string;
+        };
+        ProfileSetInput: {
+            node_id: number;
+            table: string;
+            column: string;
+            value: number | string | boolean | null;
+            hold: boolean;
+        };
+        ProfileTableRecord: {
+            table: string;
+            lockable: boolean;
+            columns: components["schemas"]["ProfileColumnRecord"][];
+        };
         PromptArea: "shared" | "context" | "genesis" | "son_turn" | "fate" | "chronicler" | "naming" | "voices" | "deepening" | "image_prompts" | "council" | "translation" | "world_birth" | "network_repair" | "mortal" | "opportunities" | "agent" | "chronicle" | "localisation";
         PromptCatalogue: {
             prompts: components["schemas"]["PromptEntry"][];
@@ -15547,6 +15907,12 @@ export interface components {
             demand: number;
             imported: number;
             exported: number;
+        };
+        RangeCell: {
+            region: components["schemas"]["NodeRef"];
+            abundance: number;
+            trend: components["schemas"]["RangeTrend"];
+            fit: number;
         };
         RangeTrend: "rising" | "steady" | "falling";
         RangeView: {
@@ -16699,7 +17065,7 @@ export interface components {
             value: number;
         };
         SonStatus: "active" | "asleep" | "exiled" | "dead";
-        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_father" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "sever_ley" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world";
+        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_father" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "raise_beast" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "sever_ley" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world";
         SonToolsView: {
             son_id: number;
             rarity: components["schemas"]["Rarity"];
@@ -16843,7 +17209,8 @@ export interface components {
         };
         SpeciesCard: {
             species_id: number;
-            body_plan: string;
+            world_id: number | null;
+            body_plan: components["schemas"]["BodyPlan"];
             size_class: components["schemas"]["SizeClass"];
             lifespan_years: number;
             maturity_years: number;
@@ -16881,6 +17248,12 @@ export interface components {
             hunted_by: components["schemas"]["NodeRef"][];
             descendants: components["schemas"]["NodeRef"][];
             beasts: components["schemas"]["NodeRef"][];
+            pinned_prey: components["schemas"]["NodeRef"][];
+            barred_prey: components["schemas"]["NodeRef"][];
+            custom_uses: components["schemas"]["CustomUseView"][];
+            totem_of: components["schemas"]["NodeRef"][];
+            abundance: number;
+            stage_epoch: number;
             locked: string[];
         };
         SpeciesChimeraInput: {
@@ -16888,9 +17261,35 @@ export interface components {
             second_id: number;
             weaver_id?: number | null;
         };
+        SpeciesCreateInput: {
+            name: string;
+            description: string;
+            region_id: number;
+            body_plan: components["schemas"]["BodyPlan"];
+            size_class: components["schemas"]["SizeClass"];
+            diet: components["schemas"]["Diet"];
+            sociality?: components["schemas"]["Sociality"] | null;
+            nocturnal?: boolean | null;
+            migratory?: boolean | null;
+            products?: components["schemas"]["YieldProduct"][];
+            traits?: components["schemas"]["CreatureTrait"][];
+            hp?: number | null;
+            strength?: number | null;
+            agility?: number | null;
+            intelligence?: number | null;
+            danger?: number | null;
+            might?: number | null;
+            abundance?: number | null;
+            power: number;
+        };
         SpeciesCullInput: {
             species_id: number;
             reason: string;
+        };
+        SpeciesCustomUseInput: {
+            species_id: number;
+            kind_id: number;
+            held: boolean;
         };
         SpeciesDomesticateInput: {
             species_id: number;
@@ -16918,6 +17317,7 @@ export interface components {
             disease_id: number;
             carried: boolean;
             immune: boolean;
+            release: boolean;
         };
         SpeciesIntroduceInput: {
             species_id: number;
@@ -16931,6 +17331,11 @@ export interface components {
         SpeciesMutateInput: {
             species_id: number;
         };
+        SpeciesPreyInput: {
+            hunter_id: number;
+            prey_id: number;
+            link: components["schemas"]["FoodLink"];
+        };
         SpeciesRangeInput: {
             species_id: number;
             region_id: number;
@@ -16940,6 +17345,12 @@ export interface components {
                 } | number[] | null;
             };
             release?: string[];
+        };
+        SpeciesRangeMap: {
+            species_id: number;
+            world_id: number | null;
+            peak: number;
+            cells: components["schemas"]["RangeCell"][];
         };
         SpeciesSacredInput: {
             species_id: number;
@@ -16976,6 +17387,7 @@ export interface components {
             product: string;
             commodity?: components["schemas"]["CommodityKind"] | null;
             material?: components["schemas"]["MaterialKind"] | null;
+            world_material_id?: number | null;
             rate: number;
         };
         SpiritAlignment: "guardian" | "neutral" | "vengeful";
@@ -17318,6 +17730,11 @@ export interface components {
             input_tokens: number;
             output_tokens: number;
         };
+        TotemView: {
+            people_id: number;
+            species: components["schemas"]["NodeRef"] | null;
+            tradition: components["schemas"]["NodeRef"] | null;
+        };
         TradeLoss: "bandits" | "sea" | "beasts" | "weather";
         TradeMode: "road" | "river" | "sea" | "caravan" | "sky";
         TradeRouteCloseInput: {
@@ -17599,6 +18016,33 @@ export interface components {
             shield: components["schemas"]["ShieldType"];
             terror: number;
         };
+        UseKindCreateInput: {
+            name: string;
+            base_use: components["schemas"]["SpeciesUse"];
+            output_pct: number;
+            description?: string | null;
+        };
+        UseKindDropInput: {
+            kind_id: number;
+        };
+        UseKindEditInput: {
+            kind_id: number;
+            values?: {
+                [key: string]: number | string | boolean | {
+                    [key: string]: number;
+                } | number[] | null;
+            };
+            release?: string[];
+        };
+        UseKindView: {
+            id: number;
+            name: string;
+            base_use: components["schemas"]["SpeciesUse"];
+            output_pct: number;
+            description: string | null;
+            locked: string[];
+            species: components["schemas"]["NodeRef"][];
+        };
         ValidationError: {
             loc: (string | number)[];
             msg: string;
@@ -17755,6 +18199,7 @@ export interface components {
         WebLink: {
             hunter_id: number;
             prey_id: number;
+            kind: components["schemas"]["FoodLink"];
         };
         WebNode: {
             species: components["schemas"]["NodeRef"];
@@ -18096,10 +18541,13 @@ export interface components {
             name?: string | null;
             weather?: components["schemas"]["WeatherKind"] | null;
         };
+        YieldProduct: "meat" | "hide" | "bone" | "ivory" | "chitin" | "venom" | "silk" | "wool" | "milk" | "feathers" | "magic_reagents" | "dragonbone";
         YieldView: {
             product: string;
             commodity: components["schemas"]["CommodityKind"] | null;
             material: components["schemas"]["MaterialKind"] | null;
+            world_material_id: number | null;
+            world_material: string | null;
             rate: number;
         };
         aerona__api__schemas__depth_society__PressureView: {
@@ -26242,6 +26690,35 @@ export interface operations {
             };
         };
     };
+    node_profiles_api_nodes__node_id__profiles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileTableRecord"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     world_materials_api_worlds__world_id__materials_get: {
         parameters: {
             query?: never;
@@ -27226,6 +27703,83 @@ export interface operations {
             };
         };
     };
+    range_map_api_species__species_id__range_map_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                species_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpeciesRangeMap"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    use_kinds_api_use_kinds_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UseKindView"][];
+                };
+            };
+        };
+    };
+    totem_api_entities__entity_id__totem_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TotemView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_actions_api_actions_get: {
         parameters: {
             query?: never;
@@ -27689,6 +28243,347 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["BeastSpawnInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_species_create_api_actions_species_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpeciesCreateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_species_prey_api_actions_species_prey_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpeciesPreyInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_species_custom_use_api_actions_species_custom_use_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpeciesCustomUseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_use_kind_create_api_actions_use_kind_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UseKindCreateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_use_kind_edit_api_actions_use_kind_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UseKindEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_use_kind_drop_api_actions_use_kind_drop_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UseKindDropInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_herd_drop_api_actions_herd_drop_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HerdDropInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_people_totem_api_actions_people_totem_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeopleTotemInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_beast_create_api_actions_beast_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BeastCreateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_beast_slay_api_actions_beast_slay_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BeastSlayInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_beast_treasure_api_actions_beast_treasure_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BeastTreasureInput"];
             };
         };
         responses: {
@@ -33489,6 +34384,68 @@ export interface operations {
             };
         };
     };
+    action_profile_set_api_actions_profile_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_profile_release_api_actions_profile_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_ley_sever_api_actions_ley_sever_post: {
         parameters: {
             query?: never;
@@ -37316,6 +38273,7 @@ export const fateStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<com
 export const fateStepEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FateStepEvent"]["kind"]> = ["fate.step"];
 export const fateWritValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FateWrit"]> = ["doom", "shield", "clear"];
 export const feedCategoryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FeedCategory"]> = ["voyage", "gate", "leak", "war", "disaster", "sky", "life", "civilization", "world"];
+export const foodLinkValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FoodLink"]> = ["pinned", "barred", "derived"];
 export const foreignGodDeepenedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodDeepenedEvent"]["kind"]> = ["foreign_god.deepened"];
 export const foreignGodPowerEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodPowerEffect"]> = ["shield", "caller", "thief", "destroyer", "fertile", "reviving", "deathless", "sharp_tongued"];
 export const foreignGodStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodStatus"]> = ["awake", "asleep", "defeated", "dead"];
@@ -37491,7 +38449,7 @@ export const sonDistributedEventKindValues: ReadonlyArray<FlattenedDeepRequired<
 export const sonDistributionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonDistribution"]> = ["auto", "manual"];
 export const sonNewEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonNewEvent"]["kind"]> = ["son.new"];
 export const sonStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonStatus"]> = ["active", "asleep", "exiled", "dead"];
-export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_father", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "sever_ley", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world"];
+export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_father", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "raise_beast", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "sever_ley", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world"];
 export const sonTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnFinishedEvent"]["kind"]> = ["son.turn_finished"];
 export const sonTurnQueuedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnQueuedEvent"]["kind"]> = ["son.turn_queued"];
 export const sonTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnStartedEvent"]["kind"]> = ["son.turn_started"];
@@ -37563,3 +38521,4 @@ export const worldChangesEventKindValues: ReadonlyArray<FlattenedDeepRequired<co
 export const worldReplacedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorldReplacedEvent"]["kind"]> = ["world.replaced"];
 export const worldTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorldType"]> = ["ordinary", "ocean", "sand", "ice", "lava", "crystal", "living", "dead", "dream", "mirror", "gas", "ringed", "asteroid_belt", "tidally_locked", "void_pocket", "gods_palace", "generation_ship", "corpse_world", "super_earth", "ice_giant", "hot_giant", "iron", "carbon", "greenhouse", "dwarf_planet", "chthonian", "hycean", "jungle", "forge", "fungal", "shattered", "hollow", "ice_shell", "methane"];
 export const writingSystemValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WritingSystem"]> = ["alphabet", "syllabary", "pictographic", "knot", "notch"];
+export const yieldProductValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["YieldProduct"]> = ["meat", "hide", "bone", "ivory", "chitin", "venom", "silk", "wool", "milk", "feathers", "magic_reagents", "dragonbone"];

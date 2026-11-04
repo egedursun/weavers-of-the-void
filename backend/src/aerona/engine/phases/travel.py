@@ -49,6 +49,7 @@ from aerona.engine.cosmos.routes import (
     touches,
     world_name,
 )
+from aerona.engine.ecology.beasts import mount_of
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.book import pressures_of
@@ -534,6 +535,8 @@ async def advance_journey(ctx: TickContext, scene: JourneyScene, journey: Journe
     if not await road_event(ctx, scene, journey, traveller, route):
         return
     journey.epochs_left = max(0, journey.epochs_left - 1)
+    if journey.epochs_left > 0 and await mount_of(ctx, traveller.id) is not None:
+        journey.epochs_left = max(0, journey.epochs_left - ctx.rules.beasts.mount_travel_epochs)
     if journey.epochs_left > 0:
         return
     result = await arrive(ctx, journey, traveller, route)
@@ -829,6 +832,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "settlement.piety",
     "settlement.population",
     "species.danger",
+    "table.beast_profiles",
     "table.bonds",
     "table.calendars",
     "table.community_relations",

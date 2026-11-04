@@ -14,7 +14,7 @@ from aerona.domain.enums.military import CaptiveFate, CommanderTrait, OutcomeCla
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
-from aerona.engine.ecology.beasts import beast_dread
+from aerona.engine.ecology.beasts import beast_dread, mounted_edge
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import guardians_of
 from aerona.engine.lore.items import standard_of
@@ -67,7 +67,7 @@ async def side_of(
         army=army,
         profile=profile,
         stacks=stacks,
-        edge=edge,
+        edge=edge * await mounted_edge(ctx, row.commander_entity_id),
         defending=defending,
         skill=await skill_level(ctx, row.commander_entity_id, SkillKind.TACTICS),
         traits=await traits_of(ctx, row.commander_entity_id),

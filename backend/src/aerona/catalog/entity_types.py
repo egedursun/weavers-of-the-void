@@ -527,7 +527,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             "Beast",
             "Beasts",
             "beast",
-            None,
+            "raise_beast",
             LAND,
             False,
             (

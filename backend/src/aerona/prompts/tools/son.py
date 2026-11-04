@@ -60,6 +60,21 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
     EntityType.SPECIES: {
         "traits": "The creature's traits (at most {{ rules.son_tools.creature_max_traits }}): {{ creature_traits }}",
         "body_plan": "The creature's body: {{ body_plans }}; its wounds, armour and fighting follow this body",
+        "size_class": "How big one of them stands: {{ size_classes | join(', ') }}; it sets what it can hunt, its lifespan, litters and whether it can be ridden",
+        "diet": "What it feeds on: {{ diets | join(', ') }}; soul eaters swallow the dead, mineral eaters gnaw ore, void eaters need nothing living",
+        "sociality": "How it lives with its kind: {{ socialities | join(', ') }}; packs hunt harder, herds and hives shield their numbers",
+        "nocturnal": "True if it wakes at night; night kinds escape hunters more often",
+        "migratory": "True if its herds move between lands with the seasons",
+        "products": "What it yields beyond meat, hide and bone, if anything: {{ yield_products | join(', ') }}; silk and venom feed crafts, dragonbone feeds forges",
+    },
+    EntityType.BEAST: {
+        "species_id": "The kind it is the greatest of (species id), if any; it takes that kind's body, yields and lifespan",
+        "size_class": "How big it stands: {{ size_classes | join(', ') }}; huge and colossal beasts take more in their raids and can carry a rider",
+        "temper": "Its mood when it wakes in the world: {{ beast_tempers | join(', ') }}; a sleeping beast waits, a hungry one raids",
+        "endurance": "0-100: how far it ranges on its raids and how much harm it shrugs off",
+        "perception": "0-100: how easily disturbance wakes it and how little thieves take from its hoard",
+        "willpower": "0-100: how hard it is to tame and how seldom it rests after a hunt",
+        "intelligence": "0-100: at {{ rules.mortal_agents.creature_min_intelligence }} or more it speaks, bargains and acts by itself",
     },
     EntityType.VESSEL: {
         "target_world_id": "If the gate, bridge or ship connects to another world, that world's id: a route is opened",

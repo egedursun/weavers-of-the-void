@@ -33,6 +33,7 @@ import {
   Wheat,
   Zap,
   type LucideIcon,
+  PawPrint,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -87,6 +88,7 @@ const LAYER_ICON: Record<LayerMode, LucideIcon> = {
   followers: Flame,
   soldiers: Shield,
   wildlife: Leaf,
+  species_range: PawPrint,
 }
 
 const OVERLAY_ICON: Record<Overlay, LucideIcon> = {

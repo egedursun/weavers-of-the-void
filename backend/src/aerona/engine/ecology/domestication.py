@@ -1,14 +1,23 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
-from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesProfileRow, SpeciesUseRow, SpeciesYieldRow
+from aerona.db.tables.ecology import (
+    BeastProfileRow,
+    HerdRow,
+    SpeciesCustomUseRow,
+    SpeciesProfileRow,
+    SpeciesUseKindRow,
+    SpeciesUseRow,
+    SpeciesYieldRow,
+)
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.ecology import BeastTemper, DomesticationStage, SpeciesUse
+from aerona.domain.enums.ecology import SIZE_ORDER, STAGE_ORDER, BeastTemper, DomesticationStage, SizeClass, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
@@ -77,6 +86,21 @@ async def feed(ctx: TickContext, herd: HerdRow) -> bool:
     return fed
 
 
+BRED_BIG = frozenset({SpeciesUse.MOUNT, SpeciesUse.LABOUR, SpeciesUse.WAR})
+BRED_SMALL = frozenset({SpeciesUse.COMPANION})
+
+
+def drifted_size(size: SizeClass, kinds: set[SpeciesUse], rng: SeededRandom, chance: int) -> SizeClass:
+    index = SIZE_ORDER.index(size)
+    if kinds & BRED_BIG:
+        index += 1
+    elif kinds & BRED_SMALL:
+        index -= 1
+    elif rng.chance(chance):
+        index += 1 if rng.chance(PERCENT // 2) else -1
+    return SIZE_ORDER[max(0, min(len(SIZE_ORDER) - 1, index))]
+
+
 async def offspring(ctx: TickContext, parent: EntityRow, keeper: EntityRow, *, stage: DomesticationStage) -> EntityRow:
     table = ctx.rules.domestication
     word = "Domestic" if stage is S.DOMESTICATED else keeper.name
@@ -97,10 +121,13 @@ async def offspring(ctx: TickContext, parent: EntityRow, keeper: EntityRow, *, s
             engine_kind=EngineKind.DOMESTICATED,
         ),
     )
+    await BondRepository(ctx.session).connect(BondDraft(child.id, parent.id, BondKind.DESCENDS_FROM, ctx.epoch, "bred by herders"))
     source = await profile_of(ctx, parent)
     row = await profile_of(ctx, child)
-    for key in ("body_plan", "size_class", "lifespan_years", "maturity_years", "litter_size", "breeding_seasons", "diet", "metabolism", "habitat"):
+    for key in ("body_plan", "lifespan_years", "maturity_years", "litter_size", "breeding_seasons", "diet", "metabolism", "habitat"):
         setattr(row, key, getattr(source, key))
+    kinds = set(await ctx.session.scalars(select(SpeciesUseRow.use).where(SpeciesUseRow.species_entity_id == parent.id)))
+    row.size_class = drifted_size(source.size_class, kinds, ctx.rng(f"domestic_size.{child.id}"), table.size_drift_chance)
     row.aggression = clamp_int(source.aggression - table.tame_drift, 0, PERCENT)
     row.fear_of_people = clamp_int(source.fear_of_people - table.tame_drift, 0, PERCENT)
     row.tameability = clamp_int(source.tameability + table.tame_gain, 0, PERCENT)
@@ -114,7 +141,6 @@ async def offspring(ctx: TickContext, parent: EntityRow, keeper: EntityRow, *, s
     for trait in await traits_of(ctx.session, parent.id):
         if trait is not CreatureTrait.SACRED_ANIMAL and trait not in inherited:
             await EntityRepository(ctx.session).add_trait(child.id, trait)
-    await BondRepository(ctx.session).connect(BondDraft(child.id, parent.id, BondKind.DESCENDS_FROM, ctx.epoch, "bred by herders"))
     return child
 
 
@@ -173,30 +199,71 @@ async def rehome(ctx: TickContext, herd: HerdRow, child: EntityRow, stage: Domes
     await ctx.session.flush()
 
 
+async def use_boosts(ctx: TickContext, species_id: int) -> dict[SpeciesUse, int]:
+    rows = await ctx.session.execute(
+        select(SpeciesUseKindRow.base_use, SpeciesUseKindRow.output_pct)
+        .join(SpeciesCustomUseRow, SpeciesCustomUseRow.kind_id == SpeciesUseKindRow.id)
+        .where(SpeciesCustomUseRow.species_entity_id == species_id)
+    )
+    found: dict[SpeciesUse, int] = {}
+    for use, output in rows:
+        found[use] = max(found.get(use, 0), output)
+    return found
+
+
 async def produce(ctx: TickContext, herd: HerdRow) -> int:
     if herd.stage not in KEPT or herd.head <= 0:
         return 0
     table = ctx.rules.domestication
     kinds = set(await ctx.session.scalars(select(SpeciesUseRow.use).where(SpeciesUseRow.species_entity_id == herd.species_entity_id)))
+    boost = await use_boosts(ctx, herd.species_entity_id)
     ledger = GoodsLedger(ctx.session, ctx.epoch)
     tens = herd.head / TEN
     made = 0
-    if SpeciesUse.FOOD in kinds:
-        made += await ledger.add(herd.community_entity_id, CommodityKind.LIVESTOCK, round_half_up(tens * table.livestock_per_head), GoodsFlow.PRODUCTION)
-    if kinds & {SpeciesUse.MOUNT, SpeciesUse.WAR}:
-        made += await ledger.add(herd.community_entity_id, CommodityKind.MOUNTS, round_half_up(tens * table.mounts_per_head), GoodsFlow.PRODUCTION)
-    if SpeciesUse.SACRIFICE in kinds:
-        made += await ledger.add(herd.community_entity_id, CommodityKind.SACRED_GOODS, round_half_up(tens * table.sacred_per_head), GoodsFlow.PRODUCTION)
-    if SpeciesUse.MAGIC in kinds:
-        made += await ledger.add(herd.community_entity_id, CommodityKind.MAGICAL_REAGENTS, round_half_up(tens * table.reagents_per_head), GoodsFlow.PRODUCTION)
+    outputs = (
+        ((SpeciesUse.FOOD,), CommodityKind.LIVESTOCK, table.livestock_per_head),
+        ((SpeciesUse.MOUNT, SpeciesUse.WAR), CommodityKind.MOUNTS, table.mounts_per_head),
+        ((SpeciesUse.SACRIFICE,), CommodityKind.SACRED_GOODS, table.sacred_per_head),
+        ((SpeciesUse.MAGIC,), CommodityKind.MAGICAL_REAGENTS, table.reagents_per_head),
+    )
+    for wanted, commodity, rate in outputs:
+        held = [use for use in wanted if use in kinds]
+        if held:
+            scale = max(boost.get(use, PERCENT) for use in held) / PERCENT
+            made += await ledger.add(herd.community_entity_id, commodity, round_half_up(tens * rate * scale), GoodsFlow.PRODUCTION)
     if SpeciesUse.COMPANION in kinds:
         town = await ctx.session.get(SettlementProfileRow, herd.community_entity_id)
         if town is not None and "unrest" not in town.locked:
             town.unrest = clamp_int(town.unrest - table.companion_calm, 0, PERCENT)
     for item in await ctx.session.scalars(select(SpeciesYieldRow).where(SpeciesYieldRow.species_entity_id == herd.species_entity_id)):
         if item.product in HERD_PRODUCTS and item.commodity is not None:
-            made += await ledger.add(herd.community_entity_id, item.commodity, round_half_up(tens * item.rate), GoodsFlow.PRODUCTION, material=item.material)
+            made += await ledger.add(
+                herd.community_entity_id,
+                item.commodity,
+                round_half_up(tens * item.rate),
+                GoodsFlow.PRODUCTION,
+                material=item.material,
+                world_material_id=item.world_material_id,
+            )
     return made
+
+
+WILDISH = frozenset({S.WILD, S.TAMED, S.HERDED})
+
+
+async def stage_from_herds(ctx: TickContext) -> int:
+    kept: dict[int, DomesticationStage] = {}
+    for species_id, stage in await ctx.session.execute(select(HerdRow.species_entity_id, HerdRow.stage).where(HerdRow.head > 0)):
+        if stage in WILDISH and STAGE_ORDER.index(stage) > STAGE_ORDER.index(kept.get(species_id, S.WILD)):
+            kept[species_id] = stage
+    changed = 0
+    for profile in list(await ctx.session.scalars(select(SpeciesProfileRow).where(SpeciesProfileRow.stage.in_(list(WILDISH))))):
+        stage = kept.get(profile.species_entity_id, S.WILD)
+        if profile.stage is stage or "stage" in profile.locked:
+            continue
+        profile.stage, profile.stage_epoch = stage, ctx.epoch
+        changed += 1
+    return changed
 
 
 async def husbandry(ctx: TickContext) -> dict[str, int]:
@@ -218,6 +285,7 @@ async def husbandry(ctx: TickContext) -> dict[str, int]:
             made += 1
             await note(ctx, f"{text[0].upper()}{text[1:]}.", key="ecology.domestication", ids=[herd.community_entity_id, herd.species_entity_id])
     await ctx.session.flush()
+    counts["stages"] = await stage_from_herds(ctx)
     return counts
 
 
