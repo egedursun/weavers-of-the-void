@@ -1,10 +1,10 @@
-import json
 from dataclasses import dataclass
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.schema import LEDGER_SUMMARY_MAX_LENGTH
+from aerona.core.action_text import ELLIPSIS, describe_arguments
 from aerona.db.ledger_capture import LEDGER_TABLES, TURN_TABLES, ChangeCapture, LedgerDraft, RowChange, jsonable, write_entry
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.ledger import LedgerEntryRow
@@ -21,8 +21,8 @@ def change_capture(session: AsyncSession) -> ChangeCapture:
 
 
 def summarize(arguments: dict[str, Any]) -> str:
-    text = json.dumps(jsonable(arguments), ensure_ascii=False, sort_keys=True)
-    return text[:LEDGER_SUMMARY_MAX_LENGTH]
+    text = describe_arguments(jsonable(arguments))
+    return text if len(text) <= LEDGER_SUMMARY_MAX_LENGTH else text[: LEDGER_SUMMARY_MAX_LENGTH - 1].rstrip() + ELLIPSIS
 
 
 @dataclass(frozen=True)

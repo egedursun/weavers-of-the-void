@@ -1,43 +1,64 @@
 import { useState } from 'react'
 import {
-  Castle,
+  Biohazard,
+  BrickWall,
+  CalendarDays,
+  ChevronDown,
+  ChevronUp,
+  Crown,
+  Droplets,
   Flag,
   Handshake,
+  Lock,
   Map as MapIcon,
+  MapPin,
   Megaphone,
   Moon,
   Save,
+  Shield,
   Skull,
   Swords,
   Target,
   Trash2,
   Users,
+  Wheat,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
-import {
-  captiveFateValues,
-  siegeStatusValues,
-  starvationStageValues,
-  warAimKindValues,
-} from '@/api/generated/schema'
+import { warAimKindValues } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Switch } from '@/components/ui/switch'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   EmptyState,
   EntityLink,
+  type KpiTone,
+  Medallion,
+  MiniStat,
   StatBar,
   Timeline,
   TimelineItem,
+  type TimelineTone,
 } from '@/components/domain'
-import { Label, Muted, Text } from '@/components/typography'
-import { MindPicker } from '@/features/entity/mind/parts'
+import { Label, Muted, Stat, Text } from '@/components/typography'
+import { TERRAIN, WEATHER } from '@/features/entity/environment/labels'
+import { CLASS_SPEC } from '@/features/entity/society/labels'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
-import { ArmyPanel, NumberBox } from './ArmyPanel'
+import { ArmyPanel } from './ArmyPanel'
 import {
   type BattleReport,
   type CaptiveCohort,
@@ -45,13 +66,56 @@ import {
   type SiegeTracker,
   type WarAimKind,
   type WarRoom as Room,
-  table,
+  soldiersOf,
   useWarRoom,
-  words,
 } from './api'
+import {
+  AIM,
+  DEFENCE,
+  FATE,
+  OUTCOME,
+  OUTCOME_CLASS,
+  PERCENT,
+  PHASE,
+  PHASE_DETAIL,
+  PROGRESS_TONE,
+  SIDE,
+  SIEGE_ACTION,
+  SIEGE_STATUS,
+  STARVATION,
+  TACTIC,
+  UNIT_ICON,
+  WORKS,
+  fieldLabel,
+  named,
+  percentTone,
+  wearinessLevel,
+  busyOf,
+  cardGrid,
+  frameTone,
+  iconTone,
+  whole,
+} from './labels'
+import {
+  Adjust,
+  ChoiceField,
+  FieldGrid,
+  NumberField,
+  Panel,
+  Pips,
+  Plain,
+  Quiet,
+  Steps,
+  TableTag,
+  Tag,
+  ToggleField,
+  TugBar,
+} from './parts'
 
-const PERCENT = 100
-const WORKING = 'Working…'
+const SCORE_SCALE_MIN = 5
+const FOOD_SCALE = 180
+const WATER_SCALE = 120
+const WALLS_MAX = 5
 const SIEGE_NUMBERS = [
   'supplies',
   'water',
@@ -61,51 +125,78 @@ const SIEGE_NUMBERS = [
   'disease_outside',
   'sallies',
 ] as const
+const SIEGE_MAX: Partial<Record<SiegeNumber, number>> = {
+  walls_level: WALLS_MAX,
+  disease_inside: PERCENT,
+  disease_outside: PERCENT,
+}
+const SIEGE_ICON: Record<SiegeNumber, typeof Wheat> = {
+  supplies: Wheat,
+  water: Droplets,
+  breaches: BrickWall,
+  walls_level: BrickWall,
+  disease_inside: Biohazard,
+  disease_outside: Biohazard,
+  sallies: Swords,
+}
+const TIMELINE_TONE: Record<KpiTone, TimelineTone> = {
+  gold: 'primary',
+  verdigris: 'success',
+  info: 'default',
+  success: 'success',
+  warning: 'warning',
+  danger: 'destructive',
+  muted: 'default',
+}
 type SiegeNumber = (typeof SIEGE_NUMBERS)[number]
-
-function busyOf(blocked: string | null, ...pending: boolean[]): string | null {
-  return blocked ?? (pending.some(Boolean) ? WORKING : null)
+type SideEntry = {
+  id: number
+  name: string
+  side: string
+  weariness: number
+  left: number | null
 }
 
-function Weariness({ room, blocked }: { room: Room; blocked: string | null }) {
-  return (
-    <div
-      data-surface='WarWeariness'
-      className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'
-    >
-      {room.weariness.map((side) => (
-        <WearinessRow
-          key={side.entity?.id ?? side.side}
-          warId={room.war.id}
-          side={side}
-          blocked={blocked}
-        />
-      ))}
-    </div>
+function sideEntries(room: Room): SideEntry[] {
+  const weariness = new Map(
+    room.weariness.map((item) => [item.entity?.id ?? 0, item.weariness])
+  )
+  return room.war.sides.map((side) => ({
+    id: side.entity?.id ?? 0,
+    name: side.entity?.name ?? 'A people',
+    side: side.side,
+    weariness: weariness.get(side.entity?.id ?? 0) ?? 0,
+    left: side.left_epoch,
+  }))
+}
+
+function sideTable(room: Room) {
+  return Object.fromEntries(
+    sideEntries(room).map((entry) => [
+      String(entry.id),
+      { ...named(SIDE, entry.side), label: entry.name },
+    ])
   )
 }
 
-function WearinessRow({
+function WearinessEditor({
   warId,
-  side,
+  entry,
   blocked,
 }: {
   warId: number
-  side: Room['weariness'][number]
+  entry: SideEntry
   blocked: string | null
 }) {
-  const [value, setValue] = useState(String(side.weariness))
+  const [value, setValue] = useState(String(entry.weariness))
   const save = useGodAction({
     run: () =>
       unwrap(
         api.POST('/api/actions/war:weariness', {
           body: {
             war_id: warId,
-            side_id: side.entity?.id ?? 0,
-            weariness: Math.max(
-              0,
-              Math.min(PERCENT, Math.round(Number(value) || 0))
-            ),
+            side_id: entry.id,
+            weariness: whole(value, PERCENT),
           },
         })
       ),
@@ -114,32 +205,35 @@ function WearinessRow({
     run: () =>
       unwrap(
         api.POST('/api/actions/war:call_allies', {
-          body: { war_id: warId, side_id: side.entity?.id ?? 0 },
+          body: { war_id: warId, side_id: entry.id },
         })
       ),
   })
   const busy = busyOf(blocked, save.isPending, allies.isPending)
+  const side = named(SIDE, entry.side)
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'>
-      <StatBar
-        label={`${side.entity?.name ?? 'A side'} (${side.side})`}
-        value={side.weariness}
-        max={PERCENT}
-        tone={
-          side.weariness >= 70
-            ? 'destructive'
-            : side.weariness >= 40
-              ? 'warning'
-              : 'default'
-        }
-      />
-      <div className='flex min-w-0 flex-wrap items-end gap-2'>
-        <NumberBox
-          label='Weariness'
-          value={value}
-          max={PERCENT}
-          onChange={setValue}
+    <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'>
+      <div className='flex min-w-0 items-center gap-2'>
+        <side.icon
+          aria-hidden='true'
+          className={cn('size-icon-sm shrink-0', iconTone(side.tone))}
         />
+        <Text as='span' weight='medium' truncate className='min-w-0 flex-1'>
+          {entry.name}
+        </Text>
+        <Tag item={side} />
+      </div>
+      <div className='flex min-w-0 flex-wrap items-end gap-2'>
+        <div className='min-w-0 flex-1 basis-32'>
+          <NumberField
+            label='Weariness'
+            icon={wearinessLevel(entry.weariness).icon}
+            value={value}
+            max={PERCENT}
+            framed={false}
+            onChange={setValue}
+          />
+        </div>
         <Button
           size='sm'
           disabled={busy !== null}
@@ -164,7 +258,7 @@ function WearinessRow({
   )
 }
 
-function AimRow({
+function AimEditor({
   warId,
   aim,
   blocked,
@@ -183,10 +277,7 @@ function AimRow({
             side_id: aim.side?.id ?? 0,
             kind: aim.kind,
             target_id: aim.target?.id ?? null,
-            achieved: Math.max(
-              0,
-              Math.min(PERCENT, Math.round(Number(achieved) || 0))
-            ),
+            achieved: whole(achieved, PERCENT),
           },
         })
       ),
@@ -198,26 +289,26 @@ function AimRow({
       ),
   })
   const busy = busyOf(blocked, save.isPending, drop.isPending)
+  const item = named(AIM, aim.kind)
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Badge variant='info'>{words(aim.kind)}</Badge>
-        <Text as='span'>{aim.side?.name ?? ''}</Text>
-        {aim.target && <Muted as='span'>{`→ ${aim.target.name}`}</Muted>}
+    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'>
+      <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+        <Tag item={item} />
+        <Muted as='span' variant='caption' truncate>
+          {`${aim.side?.name ?? ''}${aim.target ? ` → ${aim.target.name}` : ''}`}
+        </Muted>
       </div>
-      <StatBar
-        label='Achieved'
-        value={aim.achieved}
-        max={PERCENT}
-        tone='success'
-      />
       <div className='flex min-w-0 flex-wrap items-end gap-2'>
-        <NumberBox
-          label='Achieved'
-          value={achieved}
-          max={PERCENT}
-          onChange={setAchieved}
-        />
+        <div className='min-w-0 flex-1 basis-32'>
+          <NumberField
+            label='Achieved'
+            icon={Target}
+            value={achieved}
+            max={PERCENT}
+            framed={false}
+            onChange={setAchieved}
+          />
+        </div>
         <Button
           size='sm'
           disabled={busy !== null}
@@ -242,13 +333,8 @@ function AimRow({
   )
 }
 
-function Aims({ room, blocked }: { room: Room; blocked: string | null }) {
-  const sides = Object.fromEntries(
-    room.weariness.map((side) => [
-      String(side.entity?.id ?? 0),
-      side.entity?.name ?? side.side,
-    ])
-  )
+function AddAim({ room, blocked }: { room: Room; blocked: string | null }) {
+  const sides = sideTable(room)
   const [side, setSide] = useState(Object.keys(sides)[0] ?? '0')
   const [kind, setKind] = useState<string>('conquer_region')
   const add = useGodAction({
@@ -267,36 +353,26 @@ function Aims({ room, blocked }: { room: Room; blocked: string | null }) {
   })
   const busy = busyOf(blocked, add.isPending)
   return (
-    <div data-surface='WarAims' className='flex min-w-0 flex-col gap-2'>
-      {room.aims.length === 0 ? (
-        <Muted>No side has named its aims yet.</Muted>
-      ) : (
-        <ul className='grid min-w-0 grid-cols-1 gap-2 md:grid-cols-2'>
-          {room.aims.map((aim) => (
-            <AimRow
-              key={aim.id}
-              warId={room.war.id}
-              aim={aim}
-              blocked={blocked}
-            />
-          ))}
-        </ul>
-      )}
-      <div className='flex min-w-0 flex-wrap items-end gap-2'>
-        <MindPicker
+    <div className='flex min-w-0 flex-col gap-2'>
+      <FieldGrid>
+        <ChoiceField
           label='Side'
+          icon={Flag}
           value={side}
           table={sides}
           blocked={busy}
           onPick={setSide}
         />
-        <MindPicker
+        <ChoiceField
           label='Aim'
+          icon={Target}
           value={kind}
-          table={table(warAimKindValues)}
+          table={AIM}
           blocked={busy}
           onPick={setKind}
         />
+      </FieldGrid>
+      <div>
         <Button
           size='sm'
           disabled={busy !== null}
@@ -318,12 +394,7 @@ function PeaceBuilder({
   room: Room
   blocked: string | null
 }) {
-  const sides = Object.fromEntries(
-    room.weariness.map((side) => [
-      String(side.entity?.id ?? 0),
-      side.entity?.name ?? side.side,
-    ])
-  )
+  const sides = sideTable(room)
   const [victor, setVictor] = useState(Object.keys(sides)[0] ?? '0')
   const [terms, setTerms] = useState<WarAimKind[]>([])
   const impose = useGodAction({
@@ -338,31 +409,32 @@ function PeaceBuilder({
     busyOf(blocked, impose.isPending) ??
     (room.war.status === 'ended' ? 'This war is over.' : null)
   return (
-    <div data-surface='PeaceBuilder' className='flex min-w-0 flex-col gap-3'>
-      <MindPicker
-        label='The victor'
-        value={victor}
-        table={sides}
-        blocked={busy}
-        onPick={setVictor}
-      />
-      <div className='grid min-w-0 grid-cols-2 gap-2 md:grid-cols-4'>
+    <div data-surface='PeaceBuilder' className='flex min-w-0 flex-col gap-2'>
+      <FieldGrid>
+        <ChoiceField
+          label='The victor'
+          icon={Crown}
+          value={victor}
+          table={sides}
+          blocked={busy}
+          onPick={setVictor}
+        />
+      </FieldGrid>
+      <div className='grid min-w-0 grid-cols-1 gap-2 @sm/mil:grid-cols-2 @3xl/mil:grid-cols-4'>
         {warAimKindValues.map((kind) => (
-          <label key={kind} className='flex items-center gap-2'>
-            <Switch
-              checked={terms.includes(kind)}
-              disabled={busy !== null}
-              aria-label={words(kind)}
-              onCheckedChange={(checked) =>
-                setTerms((current) =>
-                  checked
-                    ? [...current, kind]
-                    : current.filter((item) => item !== kind)
-                )
-              }
-            />
-            <Text as='span'>{words(kind)}</Text>
-          </label>
+          <ToggleField
+            key={kind}
+            item={named(AIM, kind)}
+            checked={terms.includes(kind)}
+            disabled={busy !== null}
+            onChange={(checked) =>
+              setTerms((current) =>
+                checked
+                  ? [...current, kind]
+                  : current.filter((item) => item !== kind)
+              )
+            }
+          />
         ))}
       </div>
       <div>
@@ -380,7 +452,263 @@ function PeaceBuilder({
   )
 }
 
-function SiegeCard({
+function WarControls({
+  room,
+  blocked,
+}: {
+  room: Room
+  blocked: string | null
+}) {
+  return (
+    <Adjust
+      label='Command the war'
+      title='Weariness, aims and peace'
+      note='Every value of this war can be set here. Every change goes into the ledger and can be undone.'
+    >
+      <div className='flex min-w-0 flex-col gap-2'>
+        <Label variant='overline'>War weariness</Label>
+        <div
+          data-surface='WarWeariness'
+          className='grid min-w-0 grid-cols-1 gap-2 @xl/mil:grid-cols-2'
+        >
+          {sideEntries(room).map((entry) => (
+            <WearinessEditor
+              key={entry.id}
+              warId={room.war.id}
+              entry={entry}
+              blocked={blocked}
+            />
+          ))}
+        </div>
+      </div>
+      <div data-surface='WarAims' className='flex min-w-0 flex-col gap-2'>
+        <Label variant='overline'>War aims</Label>
+        {room.aims.length > 0 && (
+          <ul className='grid min-w-0 grid-cols-1 gap-2 @xl/mil:grid-cols-2 @5xl/mil:grid-cols-4'>
+            {room.aims.map((aim) => (
+              <AimEditor
+                key={aim.id}
+                warId={room.war.id}
+                aim={aim}
+                blocked={blocked}
+              />
+            ))}
+          </ul>
+        )}
+        <AddAim room={room} blocked={blocked} />
+      </div>
+      <div className='flex min-w-0 flex-col gap-2'>
+        <Label variant='overline'>Impose the peace</Label>
+        <PeaceBuilder room={room} blocked={blocked} />
+      </div>
+    </Adjust>
+  )
+}
+
+function AimLine({ aim }: { aim: Room['aims'][number] }) {
+  const item = named(AIM, aim.kind)
+  const done = aim.achieved >= PERCENT
+  return (
+    <li className='flex min-w-0 items-center gap-2.5 rounded-lg border bg-background/70 p-2'>
+      <Medallion icon={item.icon} tone={item.tone} size='sm' />
+      <div className='flex min-w-0 flex-1 flex-col gap-1'>
+        <div className='flex min-w-0 items-center gap-2'>
+          <Text as='span' weight='medium' truncate className='min-w-0 flex-1'>
+            {item.label}
+          </Text>
+          <Stat value={aim.achieved} unit='%' className='shrink-0' />
+        </div>
+        <Progress
+          size='sm'
+          value={aim.achieved}
+          tone={done ? 'success' : 'default'}
+          aria-label={`${item.label} achieved`}
+        />
+        {aim.target && (
+          <Muted as='span' variant='caption' truncate>
+            {`Against ${aim.target.name}`}
+          </Muted>
+        )}
+      </div>
+    </li>
+  )
+}
+
+function SideCard({
+  room,
+  side,
+}: {
+  room: Room
+  side: 'attacker' | 'defender'
+}) {
+  const item = named(SIDE, side)
+  const entries = sideEntries(room).filter((entry) => entry.side === side)
+  const ids = new Set(entries.map((entry) => entry.id))
+  const aims = room.aims.filter((aim) => ids.has(aim.side?.id ?? 0))
+  const victor = room.war.victor?.id ?? null
+  return (
+    <div
+      className={cn(
+        'flex min-w-0 flex-1 flex-col gap-3 rounded-xl border p-3',
+        frameTone(item.tone)
+      )}
+    >
+      <div className='flex min-w-0 items-center gap-2.5'>
+        <Medallion icon={item.icon} tone={item.tone} />
+        <div className='flex min-w-0 flex-1 flex-col'>
+          <Label variant='overline'>{item.label}</Label>
+          <Muted as='span' variant='caption'>
+            {`${entries.length} ${entries.length === 1 ? 'member' : 'members'} · ${aims.length} ${aims.length === 1 ? 'aim' : 'aims'}`}
+          </Muted>
+        </div>
+        {entries.some((entry) => entry.id === victor) && (
+          <Badge variant='default'>
+            <Crown />
+            Victor
+          </Badge>
+        )}
+      </div>
+      {entries.length === 0 ? (
+        <Muted variant='caption'>No one stands here.</Muted>
+      ) : (
+        <ul className='flex min-w-0 flex-col gap-2'>
+          {entries.map((entry) => {
+            const level = wearinessLevel(entry.weariness)
+            return (
+              <li
+                key={entry.id}
+                className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-background/70 p-2'
+              >
+                <div className='flex min-w-0 items-center gap-2'>
+                  {entry.id === victor && (
+                    <Crown
+                      aria-label='Victor'
+                      className='size-icon-sm shrink-0 text-primary'
+                    />
+                  )}
+                  <span className='min-w-0 flex-1 truncate'>
+                    <EntityLink kind='entity' id={String(entry.id)}>
+                      {entry.name}
+                    </EntityLink>
+                  </span>
+                  {entry.left !== null && (
+                    <Plain icon={Flag}>{`Left ${entry.left}`}</Plain>
+                  )}
+                  <Tag item={level} />
+                </div>
+                <div className='flex min-w-0 items-center gap-2'>
+                  <Label className='shrink-0'>Weariness</Label>
+                  <Progress
+                    size='sm'
+                    value={entry.weariness}
+                    tone={PROGRESS_TONE[level.tone ?? 'muted']}
+                    aria-label={`${entry.name} weariness`}
+                    className='flex-1'
+                  />
+                  <Stat value={entry.weariness} unit='%' className='shrink-0' />
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      {aims.length > 0 && (
+        <div className='flex min-w-0 flex-col gap-1.5'>
+          <Label>War aims</Label>
+          <ul className='grid min-w-0 grid-cols-1 gap-1.5 @5xl/mil:grid-cols-2'>
+            {aims.map((aim) => (
+              <AimLine key={aim.id} aim={aim} />
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Versus({ room }: { room: Room }) {
+  const score = room.war.score
+  return (
+    <div
+      data-surface='WarVersus'
+      className='flex min-w-0 flex-col gap-3 rounded-xl border bg-card p-3'
+    >
+      <div className='flex min-w-0 flex-col items-stretch gap-2 @xl/mil:flex-row'>
+        <SideCard room={room} side='attacker' />
+        <span className='flex shrink-0 items-center justify-center'>
+          <Medallion icon={Swords} tone='gold' />
+        </span>
+        <SideCard room={room} side='defender' />
+      </div>
+      <TugBar
+        left='Attackers push'
+        right='Defenders push'
+        value={score}
+        scale={Math.max(SCORE_SCALE_MIN, Math.abs(score))}
+        label={
+          score === 0
+            ? 'momentum, even'
+            : `momentum, ${score > 0 ? 'attackers' : 'defenders'} ahead`
+        }
+      />
+    </div>
+  )
+}
+
+function RoomStats({ room }: { room: Room }) {
+  const fallen = room.battles.reduce(
+    (sum, battle) => sum + battle.winner_losses + battle.loser_losses,
+    0
+  )
+  const soldiers = room.armies.reduce((sum, army) => sum + soldiersOf(army), 0)
+  const ongoing = room.sieges.filter((siege) => siege.status === 'ongoing')
+  const captives = room.captives.reduce((sum, cohort) => sum + cohort.count, 0)
+  return (
+    <div className='grid min-w-0 grid-cols-2 gap-2 @xl/mil:grid-cols-3 @5xl/mil:grid-cols-6'>
+      <MiniStat
+        icon={Swords}
+        label='Battles fought'
+        value={formatInteger(room.war.battles)}
+        tone='danger'
+      />
+      <MiniStat
+        icon={Skull}
+        label='Fallen in battle'
+        value={formatInteger(fallen)}
+        tone='danger'
+        hint='Both sides, every reported battle'
+      />
+      <MiniStat
+        icon={Users}
+        label='Soldiers in the field'
+        value={formatInteger(soldiers)}
+        tone='gold'
+        hint={`${room.armies.length} ${room.armies.length === 1 ? 'army' : 'armies'}`}
+      />
+      <MiniStat
+        icon={SIEGE_STATUS.ongoing.icon}
+        label='Sieges'
+        value={`${ongoing.length} / ${room.sieges.length}`}
+        tone='warning'
+        hint='Still under siege, then all sieges'
+      />
+      <MiniStat
+        icon={Flag}
+        label='Lands occupied'
+        value={formatInteger(room.occupations.length)}
+        tone='warning'
+      />
+      <MiniStat
+        icon={Lock}
+        label='Captives taken'
+        value={formatInteger(captives)}
+        tone='muted'
+      />
+    </div>
+  )
+}
+
+function SiegeEditor({
   siege,
   blocked,
 }: {
@@ -405,7 +733,7 @@ function SiegeCard({
               ...Object.fromEntries(
                 SIEGE_NUMBERS.map((key) => [
                   key,
-                  Math.max(0, Math.round(Number(numbers[key]) || 0)),
+                  whole(numbers[key], SIEGE_MAX[key]),
                 ])
               ),
               starvation,
@@ -417,81 +745,36 @@ function SiegeCard({
   })
   const busy = busyOf(blocked, save.isPending)
   return (
-    <li
-      data-surface='SiegeTracker'
-      className='flex min-w-0 flex-col gap-3 rounded-lg border bg-muted/30 p-3'
+    <Adjust
+      title='Shape the siege'
+      note='Stores, walls and sickness on both sides of the walls. The next season goes on from what you set.'
     >
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Castle
-          aria-hidden='true'
-          className='size-icon-sm text-muted-foreground'
-        />
-        <Text as='span' weight='semibold'>
-          {siege.besieged?.name ?? 'A city'}
-        </Text>
-        <Muted as='span'>{`besieged by ${siege.besieger?.name ?? 'an enemy'}`}</Muted>
-        <Badge variant={siege.status === 'ongoing' ? 'warning' : 'outline'}>
-          {words(siege.status)}
-        </Badge>
-        <Badge variant='outline'>{`${siege.rounds} seasons`}</Badge>
-        {siege.starvation !== 'none' && (
-          <Badge variant='destructive'>{words(siege.starvation)}</Badge>
-        )}
-        {siege.last_action && (
-          <Badge variant='outline'>{`Besiegers: ${words(siege.last_action)}`}</Badge>
-        )}
-        {siege.last_defence && (
-          <Badge variant='outline'>{`Defenders: ${words(siege.last_defence)}`}</Badge>
-        )}
-      </div>
-      <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-4'>
-        <StatBar
-          label='Food (days)'
-          value={siege.supplies}
-          max={Math.max(siege.supplies, 180)}
-          tone={siege.supplies <= 0 ? 'destructive' : 'default'}
-        />
-        <StatBar
-          label='Water (days)'
-          value={siege.water}
-          max={Math.max(siege.water, 120)}
-          tone={siege.water <= 0 ? 'destructive' : 'info'}
-        />
-        <StatBar
-          label='Sickness inside'
-          value={siege.disease_inside}
-          max={PERCENT}
-          tone='warning'
-        />
-        <StatBar
-          label='Sickness outside'
-          value={siege.disease_outside}
-          max={PERCENT}
-          tone='warning'
-        />
-      </div>
-      <div className='grid min-w-0 grid-cols-2 gap-3 md:grid-cols-4'>
+      <div className='grid min-w-0 grid-cols-1 gap-2 @sm/siege:grid-cols-2'>
         {SIEGE_NUMBERS.map((key) => (
-          <NumberBox
+          <NumberField
             key={key}
-            label={words(key)}
+            label={fieldLabel(key)}
+            icon={SIEGE_ICON[key]}
             value={numbers[key]}
+            max={SIEGE_MAX[key]}
             onChange={(value) =>
               setNumbers((current) => ({ ...current, [key]: value }))
             }
           />
         ))}
-        <MindPicker
+        <ChoiceField
           label='Hunger'
+          icon={Wheat}
           value={starvation}
-          table={table(starvationStageValues)}
+          table={STARVATION}
           blocked={busy}
           onPick={setStarvation}
         />
-        <MindPicker
+        <ChoiceField
           label='Standing'
+          icon={Flag}
           value={status}
-          table={table(siegeStatusValues)}
+          table={SIEGE_STATUS}
           blocked={busy}
           onPick={setStatus}
         />
@@ -507,16 +790,144 @@ function SiegeCard({
           Save the siege
         </Button>
       </div>
+    </Adjust>
+  )
+}
+
+function SiegeCard({
+  siege,
+  blocked,
+}: {
+  siege: SiegeTracker
+  blocked: string | null
+}) {
+  const status = named(SIEGE_STATUS, siege.status)
+  const works = Object.entries(siege.works).filter(([, value]) => value > 0)
+  return (
+    <li
+      data-surface='SiegeTracker'
+      className='@container/siege flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-3'
+    >
+      <div className='flex min-w-0 items-center gap-3'>
+        <Medallion icon={status.icon} tone={status.tone} />
+        <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
+          {siege.besieged ? (
+            <EntityLink kind='entity' id={String(siege.besieged.id)}>
+              {siege.besieged.name}
+            </EntityLink>
+          ) : (
+            <Text as='span' weight='semibold'>
+              A city
+            </Text>
+          )}
+          <Muted as='span' variant='caption' truncate>
+            {`Besieged by ${siege.besieger?.name ?? 'an enemy'}`}
+          </Muted>
+        </div>
+        <div className='flex shrink-0 flex-col items-end'>
+          <Stat value={siege.rounds} size='kpi' />
+          <Label>{siege.rounds === 1 ? 'Season' : 'Seasons'}</Label>
+        </div>
+      </div>
+      <div className='flex min-w-0 flex-wrap gap-1'>
+        <Tag item={status} />
+        <Plain icon={CalendarDays}>
+          {siege.ended_epoch !== null
+            ? `Epoch ${siege.started_epoch}–${siege.ended_epoch}`
+            : `Since epoch ${siege.started_epoch}`}
+        </Plain>
+        {siege.last_action && (
+          <TableTag
+            table={SIEGE_ACTION}
+            value={siege.last_action}
+            text={`Besiegers: ${named(SIEGE_ACTION, siege.last_action).label}`}
+          />
+        )}
+        {siege.last_defence && (
+          <TableTag
+            table={DEFENCE}
+            value={siege.last_defence}
+            text={`Defenders: ${named(DEFENCE, siege.last_defence).label}`}
+          />
+        )}
+      </div>
+      <div className='flex min-w-0 flex-col gap-1.5'>
+        <Label>Hunger inside the walls</Label>
+        <Steps table={STARVATION} value={siege.starvation} label='Hunger' />
+      </div>
+      <div className='grid min-w-0 grid-cols-1 gap-2 @sm/siege:grid-cols-2'>
+        <StatBar
+          label='Food (days)'
+          icon={Wheat}
+          value={siege.supplies}
+          max={Math.max(siege.supplies, FOOD_SCALE)}
+          tone={siege.supplies <= 0 ? 'destructive' : 'success'}
+        />
+        <StatBar
+          label='Water (days)'
+          icon={Droplets}
+          value={siege.water}
+          max={Math.max(siege.water, WATER_SCALE)}
+          tone={siege.water <= 0 ? 'destructive' : 'info'}
+        />
+        <StatBar
+          label='Sickness inside'
+          icon={Biohazard}
+          value={siege.disease_inside}
+          max={PERCENT}
+          tone={percentTone(siege.disease_inside, true)}
+        />
+        <StatBar
+          label='Sickness outside'
+          icon={Biohazard}
+          value={siege.disease_outside}
+          max={PERCENT}
+          tone={percentTone(siege.disease_outside, true)}
+        />
+      </div>
+      <div className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/20 p-2'>
+        <Label>Walls</Label>
+        <Pips
+          value={siege.walls_level}
+          max={WALLS_MAX}
+          tone='info'
+          label='Wall strength'
+        />
+        <Stat value={siege.walls_level} unit={`/ ${WALLS_MAX}`} />
+        <Badge
+          size='sm'
+          variant={siege.breaches > 0 ? 'destructive' : 'outline'}
+        >
+          <BrickWall />
+          {`${siege.breaches} ${siege.breaches === 1 ? 'breach' : 'breaches'}`}
+        </Badge>
+        <Plain icon={Swords}>
+          {`${siege.sallies} ${siege.sallies === 1 ? 'sally' : 'sallies'}`}
+        </Plain>
+        {works.map(([key, value]) => (
+          <TableTag
+            key={key}
+            table={WORKS}
+            value={key}
+            text={`${named(WORKS, key).label} ${value}`}
+          />
+        ))}
+      </div>
+      <div className='mt-auto flex min-w-0 flex-col'>
+        <SiegeEditor siege={siege} blocked={blocked} />
+      </div>
     </li>
   )
 }
 
-export function OccupationRow({
+export function OccupationCard({
   occupation,
   blocked,
+  perspective,
 }: {
   occupation: Occupation
   blocked: string | null
+  perspective?: string
 }) {
   const [control, setControl] = useState(String(occupation.control))
   const [resistance, setResistance] = useState(String(occupation.resistance))
@@ -527,14 +938,8 @@ export function OccupationRow({
         api.POST('/api/actions/occupation:edit', {
           body: {
             region_id: region,
-            control: Math.max(
-              0,
-              Math.min(PERCENT, Math.round(Number(control) || 0))
-            ),
-            resistance: Math.max(
-              0,
-              Math.min(PERCENT, Math.round(Number(resistance) || 0))
-            ),
+            control: whole(control, PERCENT),
+            resistance: whole(resistance, PERCENT),
             end: false,
           },
         })
@@ -552,61 +957,103 @@ export function OccupationRow({
   return (
     <li
       data-surface='Occupation'
-      className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'
+      className='@container/occ flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-3'
     >
-      <Text as='span'>{`${occupation.region?.name ?? 'A land'} held by ${occupation.occupier?.name ?? 'an enemy'} since epoch ${occupation.since_epoch}`}</Text>
-      <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'>
-        <StatBar label='Control' value={occupation.control} max={PERCENT} />
+      <div className='flex min-w-0 items-center gap-3'>
+        <Medallion icon={Flag} tone='warning' />
+        <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
+          {occupation.region ? (
+            <EntityLink kind='entity' id={String(occupation.region.id)}>
+              {occupation.region.name}
+            </EntityLink>
+          ) : (
+            <Text as='span' weight='semibold'>
+              A land
+            </Text>
+          )}
+          <Muted as='span' variant='caption' truncate>
+            {`Held by ${occupation.occupier?.name ?? 'an enemy'}`}
+          </Muted>
+        </div>
+        <Plain icon={CalendarDays}>{`Since ${occupation.since_epoch}`}</Plain>
+      </div>
+      {perspective && (
+        <div className='flex min-w-0 flex-wrap gap-1'>
+          <Plain icon={MapPin}>{perspective}</Plain>
+        </div>
+      )}
+      <div className='grid min-w-0 grid-cols-1 gap-2 @xs/occ:grid-cols-2'>
+        <StatBar
+          label='Control'
+          icon={Crown}
+          value={occupation.control}
+          max={PERCENT}
+          tone='success'
+        />
         <StatBar
           label='Resistance'
+          icon={Swords}
           value={occupation.resistance}
           max={PERCENT}
           tone='destructive'
         />
       </div>
-      <div className='flex min-w-0 flex-wrap items-end gap-2'>
-        <NumberBox
-          label='Control'
-          value={control}
-          max={PERCENT}
-          onChange={setControl}
-        />
-        <NumberBox
-          label='Resistance'
-          value={resistance}
-          max={PERCENT}
-          onChange={setResistance}
-        />
-        <Button
-          size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => save.mutate(undefined)}
+      <div className='mt-auto flex min-w-0 flex-col'>
+        <Adjust
+          title='Shape the occupation'
+          note='Control and resistance decide whether the land rises, submits or is given back.'
         >
-          <Save />
-          Set
-        </Button>
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => end.mutate(undefined)}
-        >
-          <Flag />
-          End the occupation
-        </Button>
+          <div className='grid min-w-0 grid-cols-1 gap-2 @sm/occ:grid-cols-2'>
+            <NumberField
+              label='Control'
+              icon={Crown}
+              value={control}
+              max={PERCENT}
+              onChange={setControl}
+            />
+            <NumberField
+              label='Resistance'
+              icon={Swords}
+              value={resistance}
+              max={PERCENT}
+              onChange={setResistance}
+            />
+          </div>
+          <div className='flex min-w-0 flex-wrap gap-2'>
+            <Button
+              size='sm'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => save.mutate(undefined)}
+            >
+              <Save />
+              Set
+            </Button>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => end.mutate(undefined)}
+            >
+              <Flag />
+              End the occupation
+            </Button>
+          </div>
+        </Adjust>
       </div>
     </li>
   )
 }
 
-export function CohortRow({
+export function CohortCard({
   cohort,
   blocked,
+  perspective,
 }: {
   cohort: CaptiveCohort
   blocked: string | null
+  perspective?: string
 }) {
   const [fate, setFate] = useState<string>(cohort.fate)
   const [count, setCount] = useState(String(cohort.count))
@@ -617,144 +1064,308 @@ export function CohortRow({
           body: {
             cohort_id: cohort.id,
             fate: fate as CaptiveCohort['fate'],
-            count: Math.max(0, Math.round(Number(count) || 0)),
+            count: whole(count),
           },
         })
       ),
   })
   const busy = busyOf(blocked, settle.isPending)
+  const item = named(FATE, cohort.fate)
+  const people = CLASS_SPEC[cohort.social_class] ?? {
+    label: named({}, cohort.social_class).label,
+    icon: Users,
+  }
   return (
     <li
       data-surface='CaptiveCohort'
-      className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'
+      className='@container/cohort flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-3'
     >
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Users
-          aria-hidden='true'
-          className='size-icon-sm text-muted-foreground'
-        />
-        <Text as='span'>{`${formatInteger(cohort.count)} ${words(cohort.social_class)} of ${cohort.origin?.name ?? 'the enemy'}`}</Text>
-        <Muted as='span'>{`held by ${cohort.captor?.name ?? ''}`}</Muted>
-        <Badge variant={cohort.fate === 'held' ? 'warning' : 'outline'}>
-          {words(cohort.fate)}
-        </Badge>
+      <div className='flex min-w-0 items-center gap-3'>
+        <Medallion icon={item.icon} tone={item.tone} />
+        <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
+          <Text as='span' weight='semibold' truncate>
+            {`${people.label} of ${cohort.origin?.name ?? 'the enemy'}`}
+          </Text>
+          <Muted as='span' variant='caption' truncate>
+            {`Captured by ${cohort.captor?.name ?? 'an enemy'}`}
+          </Muted>
+        </div>
+        <div className='flex shrink-0 flex-col items-end'>
+          <Stat value={formatInteger(cohort.count)} size='kpi' />
+          <Label>Captives</Label>
+        </div>
       </div>
-      <div className='flex min-w-0 flex-wrap items-end gap-2'>
-        <MindPicker
-          label='Fate'
-          value={fate}
-          table={table(captiveFateValues)}
-          blocked={busy}
-          onPick={setFate}
-        />
-        <NumberBox label='Captives' value={count} onChange={setCount} />
-        <Button
-          size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => settle.mutate(undefined)}
+      <div className='flex min-w-0 flex-wrap gap-1'>
+        <Tag item={item} />
+        <Plain icon={people.icon}>{people.label}</Plain>
+        <Plain icon={CalendarDays}>
+          {cohort.settled_epoch !== null
+            ? `Epoch ${cohort.since_epoch}–${cohort.settled_epoch}`
+            : `Since epoch ${cohort.since_epoch}`}
+        </Plain>
+        {perspective && <Plain icon={Lock}>{perspective}</Plain>}
+      </div>
+      <div className='mt-auto flex min-w-0 flex-col'>
+        <Adjust
+          label='Decide their fate'
+          title='Their fate'
+          note='Ransom, enslave, sacrifice, set to labour, exchange or release any number of them.'
         >
-          <Save />
-          Decide
-        </Button>
+          <div className='grid min-w-0 grid-cols-1 gap-2 @sm/cohort:grid-cols-2'>
+            <ChoiceField
+              label='Fate'
+              icon={item.icon}
+              value={fate}
+              table={FATE}
+              blocked={busy}
+              onPick={setFate}
+            />
+            <NumberField
+              label='Captives'
+              icon={Users}
+              value={count}
+              onChange={setCount}
+            />
+          </div>
+          <div>
+            <Button
+              size='sm'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => settle.mutate(undefined)}
+            >
+              <Save />
+              Decide
+            </Button>
+          </div>
+        </Adjust>
       </div>
     </li>
   )
 }
 
-export function BattleReportView({ battle }: { battle: BattleReport }) {
-  const kinds = Object.entries(battle.casualties_by_kind).sort(
-    (first, second) => second[1] - first[1]
-  )
-  const worst = Math.max(1, ...kinds.map(([, value]) => value))
+function PhaseChip({ phase }: { phase: BattleReport['phases'][number] }) {
+  const item = named(PHASE, phase.phase)
+  const fallen = phase.attacker_losses + phase.defender_losses
   return (
-    <article
-      data-surface='BattleReport'
-      className='flex min-w-0 flex-col gap-3 rounded-lg border bg-card p-4'
+    <li>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            tabIndex={0}
+            className={cn(
+              'flex h-badge-md min-w-0 items-center gap-1 rounded-md border px-2',
+              fallen > 0 ? frameTone(item.tone) : 'bg-muted/30'
+            )}
+          >
+            <item.icon
+              aria-hidden='true'
+              className={cn('size-icon-xs shrink-0', iconTone(item.tone))}
+            />
+            <Text as='span' variant='caption' weight='medium'>
+              {item.label}
+            </Text>
+            {fallen > 0 && (
+              <Text as='span' variant='caption' tone='destructive'>
+                {`${formatInteger(fallen)} fell`}
+              </Text>
+            )}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent className='flex flex-col gap-0.5'>
+          <Text as='span' weight='medium'>
+            {phase.summary ?? item.label}
+          </Text>
+          <Muted variant='caption'>
+            {`Attackers lost ${formatInteger(phase.attacker_losses)}, defenders lost ${formatInteger(phase.defender_losses)}`}
+          </Muted>
+        </TooltipContent>
+      </Tooltip>
+    </li>
+  )
+}
+
+function detailText(key: string, value: number | string): string {
+  const label = PHASE_DETAIL[key] ?? named({}, key).label
+  const text =
+    typeof value === 'number'
+      ? formatInteger(value)
+      : (TACTIC[value]?.label ?? named({}, value).label)
+  return `${label}: ${text}`
+}
+
+function PhaseTimeline({ battle }: { battle: BattleReport }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className='flex min-w-0 flex-col gap-2'
     >
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Swords
-          aria-hidden='true'
-          className='size-icon-sm text-muted-foreground'
-        />
-        {battle.record ? (
+      <CollapsibleTrigger asChild>
+        <Button variant='ghost' size='sm' className='self-start'>
+          {open ? <ChevronUp /> : <ChevronDown />}
+          {open ? 'Hide the phases' : 'Phase by phase'}
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className='min-w-0'>
+        <Timeline label='Phases of the battle'>
+          {battle.phases.map((phase, index) => {
+            const item = named(PHASE, phase.phase)
+            const fallen = phase.attacker_losses + phase.defender_losses
+            return (
+              <TimelineItem
+                key={phase.position}
+                icon={item.icon}
+                tone={fallen > 0 ? 'destructive' : 'default'}
+                title={item.label}
+                last={index === battle.phases.length - 1}
+              >
+                {phase.summary && (
+                  <Muted variant='caption'>
+                    {phase.summary.charAt(0).toUpperCase() +
+                      phase.summary.slice(1)}
+                  </Muted>
+                )}
+                <div className='flex min-w-0 flex-wrap gap-1'>
+                  <Plain icon={Swords}>
+                    {`Attackers lost ${formatInteger(phase.attacker_losses)}`}
+                  </Plain>
+                  <Plain icon={Shield}>
+                    {`Defenders lost ${formatInteger(phase.defender_losses)}`}
+                  </Plain>
+                  {Object.entries(phase.details).map(([key, value]) => (
+                    <Badge key={key} size='sm' variant='secondary'>
+                      {detailText(key, value)}
+                    </Badge>
+                  ))}
+                </div>
+              </TimelineItem>
+            )
+          })}
+        </Timeline>
+      </CollapsibleContent>
+    </Collapsible>
+  )
+}
+
+function BattleItem({ battle, last }: { battle: BattleReport; last: boolean }) {
+  const outcome = named(OUTCOME, battle.outcome)
+  const kinds = Object.entries(battle.casualties_by_kind)
+    .filter(([, value]) => value > 0)
+    .sort((first, second) => second[1] - first[1])
+  const when = [
+    `Epoch ${battle.epoch}`,
+    battle.season_name,
+    battle.year !== null ? String(battle.year) : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+  return (
+    <TimelineItem
+      icon={outcome.icon}
+      tone={TIMELINE_TONE[outcome.tone ?? 'muted']}
+      framed
+      last={last}
+      timestamp={when}
+      title={
+        battle.record ? (
           <EntityLink kind='entity' id={String(battle.record.id)}>
             {battle.record.name}
           </EntityLink>
         ) : (
-          <Text as='span' weight='semibold'>{`Clash #${battle.sequence}`}</Text>
-        )}
-        {battle.outcome_class && (
-          <Badge variant='info'>{words(battle.outcome_class)}</Badge>
-        )}
-        <Badge variant='outline'>{words(battle.outcome)}</Badge>
-        {battle.terrain && (
-          <Badge variant='outline'>{words(battle.terrain)}</Badge>
-        )}
-        {battle.weather && (
-          <Badge variant='outline'>{words(battle.weather)}</Badge>
-        )}
-        {battle.night && (
-          <Badge variant='outline'>
-            <Moon />
-            Night
-          </Badge>
-        )}
-      </div>
-      <Muted>
-        {`${battle.winner?.name ?? 'One side'} beat ${battle.loser?.name ?? 'the other'}: ${formatInteger(battle.winner_losses)} against ${formatInteger(battle.loser_losses)} fallen.`}
-        {battle.tactics_attacker && battle.tactics_defender
-          ? ` ${words(battle.tactics_attacker)} against ${words(battle.tactics_defender)}.`
-          : ''}
-      </Muted>
-      {battle.phases.length > 0 && (
-        <Timeline label='Phases of the battle'>
-          {battle.phases.map((phase, index) => (
-            <TimelineItem
-              key={phase.position}
-              icon={phase.phase === 'aftermath' ? Skull : Swords}
-              tone={
-                phase.attacker_losses + phase.defender_losses > 0
-                  ? 'destructive'
-                  : 'default'
-              }
-              title={`${words(phase.phase)}: ${phase.summary ?? ''}`}
-              timestamp={`${formatInteger(phase.attacker_losses)} / ${formatInteger(phase.defender_losses)}`}
-              last={index === battle.phases.length - 1}
-            />
-          ))}
-        </Timeline>
-      )}
-      {kinds.length > 0 && (
-        <div className='grid min-w-0 grid-cols-1 gap-2 md:grid-cols-3'>
-          {kinds.map(([kind, value]) => (
-            <StatBar
-              key={kind}
-              label={words(kind)}
-              value={value}
-              max={worst}
-              tone='destructive'
-              showMax={false}
-            />
-          ))}
+          `Clash #${battle.sequence}`
+        )
+      }
+    >
+      <div
+        data-surface='BattleReport'
+        className='flex min-w-0 flex-col gap-2.5'
+      >
+        <div className='flex min-w-0 flex-wrap gap-1'>
+          <Tag item={outcome} />
+          {battle.outcome_class && (
+            <TableTag table={OUTCOME_CLASS} value={battle.outcome_class} />
+          )}
+          {battle.place && <Plain icon={MapPin}>{battle.place.name}</Plain>}
+          {battle.terrain && (
+            <TableTag table={TERRAIN} value={battle.terrain} />
+          )}
+          {battle.weather && (
+            <TableTag table={WEATHER} value={battle.weather} />
+          )}
+          {battle.night && (
+            <Badge size='sm' variant='info'>
+              <Moon />
+              At night
+            </Badge>
+          )}
         </div>
-      )}
-    </article>
+        <div className='grid min-w-0 grid-cols-1 gap-2 @lg/mil:grid-cols-2'>
+          <MiniStat
+            icon={Crown}
+            label={`${battle.winner?.name ?? 'The victor'} lost`}
+            value={formatInteger(battle.winner_losses)}
+            tone='success'
+          />
+          <MiniStat
+            icon={Skull}
+            label={`${battle.loser?.name ?? 'The beaten'} lost`}
+            value={formatInteger(battle.loser_losses)}
+            tone='danger'
+          />
+        </div>
+        {battle.tactics_attacker && battle.tactics_defender && (
+          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+            <Label>Plans</Label>
+            <TableTag table={TACTIC} value={battle.tactics_attacker} />
+            <Muted as='span' variant='caption'>
+              against
+            </Muted>
+            <TableTag table={TACTIC} value={battle.tactics_defender} />
+          </div>
+        )}
+        {battle.phases.length > 0 && (
+          <ol
+            aria-label='Phases'
+            className='flex min-w-0 flex-wrap items-center gap-1'
+          >
+            {battle.phases.map((phase) => (
+              <PhaseChip key={phase.position} phase={phase} />
+            ))}
+          </ol>
+        )}
+        {kinds.length > 0 && (
+          <div className='flex min-w-0 flex-wrap items-center gap-1'>
+            <Label>Fallen by unit</Label>
+            {kinds.map(([kind, value]) => (
+              <Plain key={kind} icon={UNIT_ICON[kind] ?? Users}>
+                {`${named({}, kind).label} ${formatInteger(value)}`}
+              </Plain>
+            ))}
+          </div>
+        )}
+        {battle.phases.length > 0 && <PhaseTimeline battle={battle} />}
+      </div>
+    </TimelineItem>
   )
 }
 
-function Block({
-  title,
-  children,
-}: {
-  title: string
-  children: React.ReactNode
-}) {
+function Fronts({ room }: { room: Room }) {
   return (
-    <div className='flex min-w-0 flex-col gap-2'>
-      <Label variant='overline'>{title}</Label>
-      {children}
-    </div>
+    <ul className='flex min-w-0 flex-wrap gap-1.5'>
+      {room.fronts.map((front) => {
+        const first = front.first_region?.name ?? '?'
+        const second = front.second_region?.name ?? '?'
+        return (
+          <li key={`${front.first_region?.id}.${front.second_region?.id}`}>
+            <Plain icon={MapIcon}>
+              {`${first === second ? first : `${first} – ${second}`} · epoch ${front.since_epoch === front.last_epoch ? front.since_epoch : `${front.since_epoch}–${front.last_epoch}`}`}
+            </Plain>
+          </li>
+        )
+      })}
+    </ul>
   )
 }
 
@@ -772,88 +1383,122 @@ export function WarRoom({ warId }: { warId: number }) {
       />
     )
   const data = room.data
+  const quiet = [
+    data.battles.length === 0 && { icon: Swords, text: 'No battle fought' },
+    data.armies.length === 0 && { icon: Users, text: 'No army marches' },
+    data.sieges.length === 0 && {
+      icon: SIEGE_STATUS.ongoing.icon,
+      text: 'No walls besieged',
+    },
+    data.occupations.length === 0 && { icon: Flag, text: 'No land occupied' },
+    data.captives.length === 0 && { icon: Lock, text: 'No one led away' },
+    data.fronts.length === 0 && { icon: MapIcon, text: 'No front yet' },
+  ].filter(
+    (item): item is { icon: typeof Swords; text: string } => item !== false
+  )
   return (
-    <div data-surface='WarRoom' className='flex min-w-0 flex-col gap-5'>
-      <Block title='War weariness'>
-        <Weariness room={data} blocked={blocked} />
-      </Block>
-      <Block title='War aims'>
-        <Aims room={data} blocked={blocked} />
-      </Block>
-      <Block title='Peace terms'>
-        <PeaceBuilder room={data} blocked={blocked} />
-      </Block>
-      <Block title='Fronts'>
-        {data.fronts.length === 0 ? (
-          <Muted>The armies have not met yet.</Muted>
-        ) : (
-          <ul className='flex min-w-0 flex-wrap gap-2'>
-            {data.fronts.map((front) => (
-              <li key={`${front.first_region?.id}.${front.second_region?.id}`}>
-                <Badge variant='outline'>
-                  <MapIcon />
-                  {`${front.first_region?.name ?? '?'} – ${front.second_region?.name ?? '?'} (${front.since_epoch}–${front.last_epoch})`}
-                </Badge>
-              </li>
+    <div
+      data-surface='WarRoom'
+      className='@container/mil flex min-w-0 flex-col gap-4'
+    >
+      <Versus room={data} />
+      <RoomStats room={data} />
+      <WarControls room={data} blocked={blocked} />
+      {data.fronts.length > 0 && (
+        <Panel
+          title='Fronts'
+          icon={MapIcon}
+          tone='warning'
+          count={data.fronts.length}
+          hint='Regions where the armies have met'
+        >
+          <Fronts room={data} />
+        </Panel>
+      )}
+      {data.battles.length > 0 && (
+        <Panel
+          title='Battles'
+          icon={Swords}
+          tone='danger'
+          count={data.battles.length}
+          hint='Every clash with its ground, plans, phases and dead'
+        >
+          <Timeline label='Battle reports'>
+            {data.battles.map((battle, index) => (
+              <BattleItem
+                key={battle.id}
+                battle={battle}
+                last={index === data.battles.length - 1}
+              />
             ))}
-          </ul>
-        )}
-      </Block>
-      <Block title='Armies'>
-        {data.armies.length === 0 ? (
-          <Muted>No army marches in this war.</Muted>
-        ) : (
-          data.armies.map((army) => (
-            <ArmyPanel key={army.army?.id} army={army} blocked={blocked} />
-          ))
-        )}
-      </Block>
-      <Block title='Sieges'>
-        {data.sieges.length === 0 ? (
-          <Muted>No walls are under siege.</Muted>
-        ) : (
-          <ul className='flex min-w-0 flex-col gap-2'>
+          </Timeline>
+        </Panel>
+      )}
+      {data.sieges.length > 0 && (
+        <Panel
+          title='Sieges'
+          icon={SIEGE_STATUS.ongoing.icon}
+          tone='warning'
+          count={data.sieges.length}
+          hint='Stores, water, walls and hunger behind them'
+        >
+          <ul className={cardGrid(data.sieges.length)}>
             {data.sieges.map((siege) => (
               <SiegeCard key={siege.id} siege={siege} blocked={blocked} />
             ))}
           </ul>
-        )}
-      </Block>
-      <Block title='Occupied lands'>
-        {data.occupations.length === 0 ? (
-          <Muted>No land is occupied.</Muted>
-        ) : (
-          <ul className='flex min-w-0 flex-col gap-2'>
+        </Panel>
+      )}
+      {data.armies.length > 0 && (
+        <Panel
+          title='Armies'
+          icon={Shield}
+          tone='gold'
+          count={data.armies.length}
+          hint='Stacks, stores and marches of every army in this war'
+        >
+          <div className='flex min-w-0 flex-col gap-3'>
+            {data.armies.map((army) => (
+              <ArmyPanel key={army.army?.id} army={army} blocked={blocked} />
+            ))}
+          </div>
+        </Panel>
+      )}
+      {data.occupations.length > 0 && (
+        <Panel
+          title='Occupied lands'
+          icon={Flag}
+          tone='warning'
+          count={data.occupations.length}
+          hint='Held by the sword, resisting or submitting'
+        >
+          <ul className={cardGrid(data.occupations.length)}>
             {data.occupations.map((item) => (
-              <OccupationRow
+              <OccupationCard
                 key={item.region?.id}
                 occupation={item}
                 blocked={blocked}
               />
             ))}
           </ul>
-        )}
-      </Block>
-      <Block title='Captives'>
-        {data.captives.length === 0 ? (
-          <Muted>No one was led away.</Muted>
-        ) : (
-          <ul className='flex min-w-0 flex-col gap-2'>
+        </Panel>
+      )}
+      {data.captives.length > 0 && (
+        <Panel
+          title='Captives'
+          icon={Lock}
+          tone='muted'
+          count={data.captives.length}
+          hint='Cohorts led away and what became of them'
+        >
+          <ul className={cardGrid(data.captives.length)}>
             {data.captives.map((cohort) => (
-              <CohortRow key={cohort.id} cohort={cohort} blocked={blocked} />
+              <CohortCard key={cohort.id} cohort={cohort} blocked={blocked} />
             ))}
           </ul>
-        )}
-      </Block>
-      <Block title='Battle reports'>
-        {data.battles.length === 0 ? (
-          <Muted>No battle has been fought.</Muted>
-        ) : (
-          data.battles.map((battle) => (
-            <BattleReportView key={battle.id} battle={battle} />
-          ))
-        )}
-      </Block>
+        </Panel>
+      )}
+      <Quiet items={quiet} />
     </div>
   )
 }

@@ -1,14 +1,24 @@
 import { useState } from 'react'
 import {
+  ArrowRight,
   Check,
+  Coins,
+  Crosshair,
+  Flame,
   Footprints,
   Gem,
-  Moon,
-  Network,
-  Sun,
-  TriangleAlert,
-  Users,
+  HeartPulse,
+  Hourglass,
   Link as LinkIcon,
+  MapPin,
+  Moon,
+  PawPrint,
+  ShieldAlert,
+  Sun,
+  Swords,
+  TriangleAlert,
+  Unlock,
+  Wheat,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -19,23 +29,29 @@ import {
 } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import { Progress } from '@/components/ui/progress'
 import {
   EmptyState,
-  EntityLink,
   KpiTile,
+  Medallion,
+  MiniStat,
   Section,
   StatBar,
   Timeline,
   TimelineItem,
 } from '@/components/domain'
-import { Label, Muted, Text } from '@/components/typography'
+import { Label, Muted, Stat, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
+import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
-import { DictField, type FieldSpec, LoreFields } from '../lore/LoreFields'
-import { table, words } from '../lore/api'
+import { INJURIES, PLANS, STATES } from '../body/labels'
+import { COMMODITY } from '../economy/labels'
 import { PERCENT, busyOf } from '../lore/model'
 import { MindPicker } from '../mind/parts'
 import {
@@ -46,39 +62,312 @@ import {
   useFoodWeb,
   useHerds,
 } from './api'
+import {
+  BADGE_OF,
+  BEAST_ICON,
+  DIET,
+  HERDS_ICON,
+  MIGHT,
+  SIZE,
+  STAGE,
+  TEMPER,
+  WEB_ICON,
+  barTone,
+  fieldLabel,
+  named,
+  titled,
+} from './labels'
+import {
+  AdjustPanel,
+  Card,
+  Group,
+  Held,
+  Name,
+  NumberField,
+  ShareEditor,
+  StageTrack,
+  SwitchField,
+} from './parts'
 
-type Ref = { id: number; name: string } | null | undefined
+type Blocked = { id: number; card: BeastCard; blocked: string | null }
 
-function Name({ item }: { item: Ref }) {
-  if (!item) return <Muted as='span'>none</Muted>
-  return (
-    <EntityLink kind='entity' id={String(item.id)}>
-      {item.name}
-    </EntityLink>
+const HOARD = COMMODITY as Record<string, (typeof COMMODITY)['grain']>
+const MASTERS = [
+  'mortal',
+  'settlement',
+  'people',
+  'cult',
+  'army',
+  'place',
+] as const
+
+function pickTable(
+  values: readonly string[],
+  table: Record<string, { label: string }>
+): Record<string, string> {
+  return Object.fromEntries(
+    values.map((key) => [key, table[key]?.label ?? titled(key)])
   )
 }
 
-const FIELDS: FieldSpec[] = [
-  { key: 'temper', kind: 'enum', values: beastTemperValues },
-  { key: 'size_class', kind: 'enum', values: sizeClassValues },
-  { key: 'endurance', kind: 'number', min: 0, max: PERCENT },
-  { key: 'perception', kind: 'number', min: 0, max: PERCENT },
-  { key: 'willpower', kind: 'number', min: 0, max: PERCENT },
-  { key: 'intelligence', kind: 'number', min: 0, max: PERCENT },
-  { key: 'age', kind: 'number', min: 0 },
-  { key: 'lifespan', kind: 'number', min: 1 },
-  { key: 'raids', kind: 'number', min: 0 },
-]
+function editBeast(id: number, key: string, value: number) {
+  return unwrap(
+    api.POST('/api/actions/beast:edit', {
+      body: {
+        beast_id: id,
+        values: { [key]: value } as Record<string, never>,
+        release: [],
+      },
+    })
+  )
+}
 
-function Controls({
-  id,
-  card,
-  blocked,
-}: {
-  id: number
-  card: BeastCard
-  blocked: string | null
-}) {
+function BeastHero({ card }: { card: BeastCard }) {
+  const temper = named(TEMPER, card.temper)
+  const size = named(SIZE, card.size_class)
+  const plan = card.body_plan ? named(PLANS, card.body_plan) : null
+  return (
+    <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+      <Medallion icon={temper.icon} tone={temper.tone ?? 'warning'} />
+      <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
+        <Text weight='semibold'>
+          {[size.label, plan?.label.toLowerCase(), 'great beast']
+            .filter(Boolean)
+            .join(' ')}
+        </Text>
+        <Muted variant='caption'>{TEMPER[card.temper]?.hint ?? ''}</Muted>
+        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+          <Badge size='sm' variant={BADGE_OF[temper.tone ?? 'warning']}>
+            <temper.icon />
+            {temper.label}
+          </Badge>
+          <Badge size='sm' variant='secondary'>
+            <size.icon />
+            {size.label}
+          </Badge>
+          <Badge size='sm' variant='destructive'>
+            <HeartPulse />
+            {`${card.hp} hit points`}
+          </Badge>
+          {card.woke_epoch !== null && card.temper !== 'sleeping' && (
+            <Badge size='sm' variant='warning'>
+              <Sun />
+              {`Awake since epoch ${card.woke_epoch}`}
+            </Badge>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function BeastVitals({ card }: { card: BeastCard }) {
+  const left = Math.max(0, card.lifespan - card.age)
+  return (
+    <div className='grid min-w-0 grid-cols-1 gap-3 @xs/wild:grid-cols-2 @lg/wild:grid-cols-4'>
+      <KpiTile
+        label='Terror'
+        value={card.terror}
+        icon={TriangleAlert}
+        tone='danger'
+        hint='How much the land fears it'
+        meter={{ value: card.terror, max: PERCENT, label: 'Terror' }}
+      />
+      <KpiTile
+        label='Renown'
+        value={card.renown}
+        icon={Gem}
+        tone='gold'
+        hint='How far its tale has spread'
+        meter={{ value: card.renown, max: PERCENT, label: 'Renown' }}
+      />
+      <KpiTile
+        label='Raids'
+        value={card.raids}
+        icon={Flame}
+        tone='warning'
+        hint='Times it has fallen on herds and towns'
+      />
+      <KpiTile
+        label='Age'
+        value={card.age}
+        icon={Hourglass}
+        tone='muted'
+        hint={`Of ${card.lifespan} years; ${left} left`}
+        meter={{
+          value: card.age,
+          max: Math.max(1, card.lifespan),
+          label: 'Age against its lifespan',
+        }}
+      />
+    </div>
+  )
+}
+
+function Might({ card }: { card: BeastCard }) {
+  return (
+    <Card title='Its might' icon={Swords} tone='danger'>
+      {MIGHT.map((item) => (
+        <StatBar
+          key={item.key}
+          label={item.label}
+          value={card[item.key]}
+          max={PERCENT}
+          icon={item.icon}
+          tone={item.tone}
+        />
+      ))}
+    </Card>
+  )
+}
+
+function Domain({ card }: { card: BeastCard }) {
+  const rows = [
+    { icon: PawPrint, label: 'Of the kind', item: card.species, empty: 'None' },
+    { icon: MapPin, label: 'Lairs at', item: card.lair, empty: 'Roams free' },
+    {
+      icon: LinkIcon,
+      label: 'Bound to',
+      item: card.bound_to,
+      empty: 'No master',
+    },
+  ]
+  return (
+    <Card title='Lair and masters' icon={MapPin} tone='info'>
+      <ul className='flex min-w-0 flex-col gap-2'>
+        {rows.map((row) => (
+          <li
+            key={row.label}
+            className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
+          >
+            <Medallion icon={row.icon} tone='info' size='sm' />
+            <div className='flex min-w-0 flex-1 flex-col'>
+              <Label truncate>{row.label}</Label>
+              <Name item={row.item} fallback={row.empty} />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  )
+}
+
+function Hoard({ card }: { card: BeastCard }) {
+  const rows = Object.entries(card.hoard).sort(([, a], [, b]) => b - a)
+  const total = rows.reduce((sum, [, amount]) => sum + amount, 0)
+  return (
+    <Card
+      title='Its hoard'
+      icon={Coins}
+      tone='gold'
+      hint={rows.length > 0 ? `${total} goods heaped in its lair` : undefined}
+      wide
+    >
+      {rows.length === 0 ? (
+        <Muted>It hoards nothing.</Muted>
+      ) : (
+        <div className='grid min-w-0 grid-cols-1 gap-2 @sm/card:grid-cols-2 @xl/card:grid-cols-3'>
+          {rows.map(([key, amount]) => {
+            const goods = named(HOARD, key)
+            return (
+              <MiniStat
+                key={key}
+                icon={goods.icon}
+                label={goods.label}
+                value={amount}
+                tone='gold'
+              />
+            )
+          })}
+        </div>
+      )}
+    </Card>
+  )
+}
+
+function Wounds({ card }: { card: BeastCard }) {
+  return (
+    <Card
+      title='Wounds and foes'
+      icon={HeartPulse}
+      tone='danger'
+      hint={`${card.injuries.length} ${card.injuries.length === 1 ? 'wound' : 'wounds'} on its body, ${card.wounds.length} ${card.wounds.length === 1 ? 'blow' : 'blows'} remembered`}
+      wide
+    >
+      <div className='grid min-w-0 grid-cols-1 gap-3 @lg/card:grid-cols-2'>
+        <div className='flex min-w-0 flex-col gap-2'>
+          <Label variant='overline'>On its body</Label>
+          {card.injuries.length === 0 ? (
+            <Muted>It bears no wounds.</Muted>
+          ) : (
+            <ul
+              data-surface='BeastBody'
+              className='flex min-w-0 flex-col gap-2'
+            >
+              {card.injuries.map((row, index) => {
+                const kind = named(INJURIES, row.kind)
+                const state = STATES[row.state]
+                return (
+                  <li
+                    key={`${row.part}.${index}`}
+                    className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-2'
+                  >
+                    <div className='flex min-w-0 items-center gap-2'>
+                      <Medallion
+                        icon={kind.icon}
+                        tone={kind.tone ?? 'danger'}
+                        size='sm'
+                      />
+                      <div className='flex min-w-0 flex-1 flex-col'>
+                        <Text as='span' weight='medium' truncate>
+                          {`${kind.label} on the ${titled(row.part).toLowerCase()}`}
+                        </Text>
+                        <Muted as='span' variant='caption'>
+                          {`Severity ${row.severity} of 100`}
+                        </Muted>
+                      </div>
+                      <Badge size='sm' variant={state?.badge ?? 'secondary'}>
+                        {state?.label ?? titled(row.state)}
+                      </Badge>
+                    </div>
+                    <StatBar
+                      label='Use lost'
+                      value={row.function_loss}
+                      max={PERCENT}
+                      tone='destructive'
+                    />
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+        <div data-surface='BeastWounds' className='flex min-w-0 flex-col gap-2'>
+          <Label variant='overline'>Who drew its blood</Label>
+          {card.wounds.length === 0 ? (
+            <Muted>No one has drawn its blood.</Muted>
+          ) : (
+            <Timeline label='Wounds'>
+              {card.wounds.map((row, index) => (
+                <TimelineItem
+                  key={`${row.epoch}.${index}`}
+                  icon={Swords}
+                  tone='destructive'
+                  title={row.by?.name ?? 'Someone unknown'}
+                  timestamp={`Epoch ${row.epoch}`}
+                  last={index === card.wounds.length - 1}
+                />
+              ))}
+            </Timeline>
+          )}
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+function BeastControls({ id, card, blocked }: Blocked) {
+  const edit = useBeastEdit(id)
   const [holder, setHolder] = useState<number | null>(null)
   const [tamed, setTamed] = useState(false)
   const [lair, setLair] = useState<number | null>(null)
@@ -104,211 +393,201 @@ function Controls({
         })
       ),
   })
-  const busy = busyOf(blocked, rouse.isPending, bind.isPending, move.isPending)
+  const busy = busyOf(
+    blocked,
+    edit.isPending,
+    rouse.isPending,
+    bind.isPending,
+    move.isPending
+  )
   return (
-    <div data-surface='BeastControls' className='flex min-w-0 flex-col gap-2'>
-      <div className='flex min-w-0 flex-wrap gap-2'>
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => rouse.mutate(true)}
-        >
-          <Sun />
-          Wake it
-        </Button>
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => rouse.mutate(false)}
-        >
-          <Moon />
-          Lull it
-        </Button>
-        {card.bound_to && (
-          <Button
-            size='sm'
-            variant='outline'
-            disabled={busy !== null}
-            disabledReason={busy ?? undefined}
-            onClick={() => bind.mutate(null)}
-          >
-            Loose it
-          </Button>
-        )}
-      </div>
-      <div className='flex min-w-0 flex-wrap items-end gap-2'>
-        <EntityPicker
-          types={['mortal', 'settlement', 'people', 'cult', 'army', 'place']}
-          value={holder}
-          onChange={setHolder}
-          placeholder='Bind it to…'
+    <AdjustPanel
+      title='Command the beast'
+      note='Wake or lull it, bind it to a master, move its lair, fill its hoard or set any of its values. What you set is held until you let the world decide again.'
+      head={
+        <Held
+          keys={card.locked}
+          label={fieldLabel}
+          busy={busy}
+          onRelease={() =>
+            edit.mutate({ values: {}, release: [...card.locked] })
+          }
         />
-        <label className='flex items-center gap-2'>
-          <Switch
-            checked={tamed}
-            aria-label='Tamed as a mount'
-            onCheckedChange={setTamed}
+      }
+    >
+      <div data-surface='BeastControls' className='flex min-w-0 flex-col gap-3'>
+        <Group title='Temper and size' icon={ShieldAlert}>
+          <div className='flex min-w-0 flex-wrap items-end gap-3'>
+            <MindPicker
+              label='Temper'
+              value={card.temper}
+              table={pickTable(beastTemperValues, TEMPER)}
+              blocked={busy}
+              onPick={(value) => edit.mutate({ values: { temper: value } })}
+            />
+            <MindPicker
+              label='Size'
+              value={card.size_class}
+              table={pickTable(sizeClassValues, SIZE)}
+              blocked={busy}
+              onPick={(value) => edit.mutate({ values: { size_class: value } })}
+            />
+          </div>
+          <div className='flex min-w-0 flex-wrap gap-2'>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => rouse.mutate(true)}
+            >
+              <Sun />
+              Wake it
+            </Button>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => rouse.mutate(false)}
+            >
+              <Moon />
+              Lull it
+            </Button>
+          </div>
+        </Group>
+        <Group title='Masters and lair' icon={LinkIcon}>
+          <div className='grid min-w-0 grid-cols-1 gap-3 @xl/wild:grid-cols-2'>
+            <div className='flex min-w-0 flex-col gap-2'>
+              <Label>Bind it to a master</Label>
+              <EntityPicker
+                types={MASTERS}
+                value={holder}
+                onChange={setHolder}
+                placeholder='Choose a master…'
+              />
+              <div className='flex min-w-0 flex-wrap items-end gap-3'>
+                <SwitchField
+                  label='Tamed as a mount'
+                  checked={tamed}
+                  onChange={setTamed}
+                />
+                <Button
+                  size='sm'
+                  variant='outline'
+                  disabled={busy !== null || holder === null}
+                  disabledReason={
+                    busy ?? (holder === null ? 'Choose a master' : undefined)
+                  }
+                  onClick={() => bind.mutate(holder)}
+                >
+                  <LinkIcon />
+                  Bind
+                </Button>
+                {card.bound_to && (
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    disabled={busy !== null}
+                    disabledReason={busy ?? undefined}
+                    onClick={() => bind.mutate(null)}
+                  >
+                    <Unlock />
+                    Loose it
+                  </Button>
+                )}
+              </div>
+            </div>
+            <div className='flex min-w-0 flex-col gap-2'>
+              <Label>Move its lair</Label>
+              <EntityPicker
+                types={['place', 'region']}
+                value={lair}
+                onChange={setLair}
+                placeholder='Choose a place…'
+              />
+              <Button
+                size='sm'
+                variant='outline'
+                className='self-start'
+                disabled={busy !== null || lair === null}
+                disabledReason={
+                  busy ?? (lair === null ? 'Choose a place' : undefined)
+                }
+                onClick={() => move.mutate(undefined)}
+              >
+                <Footprints />
+                Shift the lair
+              </Button>
+            </div>
+          </div>
+        </Group>
+        <Group title='Its hoard' icon={Coins}>
+          <ShareEditor
+            key={JSON.stringify(card.hoard)}
+            table={HOARD}
+            value={card.hoard}
+            amount='how many goods it heaps'
+            busy={busy}
+            addLabel='Add goods'
+            onSave={(next) => edit.mutate({ values: { hoard: next } })}
           />
-          <Text as='span'>as a mount</Text>
-        </label>
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== null || holder === null}
-          disabledReason={
-            busy ?? (holder === null ? 'Choose a master' : undefined)
-          }
-          onClick={() => bind.mutate(holder)}
-        >
-          <LinkIcon />
-          Bind
-        </Button>
-        <EntityPicker
-          types={['place', 'region']}
-          value={lair}
-          onChange={setLair}
-          placeholder='Move its lair to…'
-        />
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== null || lair === null}
-          disabledReason={
-            busy ?? (lair === null ? 'Choose a place' : undefined)
-          }
-          onClick={() => move.mutate(undefined)}
-        >
-          <Footprints />
-          Shift the lair
-        </Button>
+        </Group>
       </div>
-    </div>
+      <AdjustStats
+        id={`beast-${id}`}
+        groups={[
+          {
+            title: 'Might',
+            fields: MIGHT.map((item) => ({
+              key: item.key,
+              label: item.label,
+              value: card[item.key],
+              min: 0,
+              max: PERCENT,
+            })),
+          },
+          {
+            title: 'Life and deeds',
+            fields: [
+              { key: 'age', label: fieldLabel('age'), value: card.age, min: 0 },
+              {
+                key: 'lifespan',
+                label: fieldLabel('lifespan'),
+                value: card.lifespan,
+                min: 1,
+              },
+              {
+                key: 'raids',
+                label: fieldLabel('raids'),
+                value: card.raids,
+                min: 0,
+              },
+            ],
+          },
+        ]}
+        note='Might runs from 0 to 100. Terror and renown are stats: set them in the Stats section.'
+        run={({ key, value }) => editBeast(id, key, value)}
+      />
+    </AdjustPanel>
   )
 }
 
-function Body({
-  id,
-  card,
-  blocked,
-}: {
-  id: number
-  card: BeastCard
-  blocked: string | null
-}) {
-  const edit = useBeastEdit(id)
+function Body({ id, card, blocked }: Blocked) {
   return (
-    <div data-surface='BeastCard' className='flex min-w-0 flex-col gap-3'>
-      <div className='grid min-w-0 grid-cols-2 gap-3 md:grid-cols-4'>
-        <KpiTile
-          label='Terror'
-          value={card.terror}
-          icon={TriangleAlert}
-          tone='danger'
-          meter={{ value: card.terror, max: PERCENT, label: 'terror' }}
-        />
-        <KpiTile label='Renown' value={card.renown} icon={Gem} tone='gold' />
-        <KpiTile
-          label='Raids'
-          value={card.raids}
-          icon={Footprints}
-          tone='warning'
-        />
-        <KpiTile
-          label='Age'
-          value={`${card.age} / ${card.lifespan}`}
-          icon={Moon}
-          tone='muted'
-        />
+    <div
+      data-surface='BeastCard'
+      className='@container/wild flex min-w-0 flex-col gap-4'
+    >
+      <BeastHero card={card} />
+      <BeastVitals card={card} />
+      <div className='grid min-w-0 grid-cols-1 gap-3 @xl/wild:grid-cols-2'>
+        <Might card={card} />
+        <Domain card={card} />
+        <Hoard card={card} />
+        <Wounds card={card} />
       </div>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Badge variant='info'>{words(card.temper)}</Badge>
-        <Text as='span'>
-          of <Name item={card.species} />
-        </Text>
-        <Text as='span'>
-          lairs at <Name item={card.lair} />
-        </Text>
-        {card.bound_to && (
-          <Text as='span'>
-            bound to <Name item={card.bound_to} />
-          </Text>
-        )}
-      </div>
-      <LoreFields
-        entityId={id}
-        surface='BeastForm'
-        fields={FIELDS}
-        current={card}
-        locked={card.locked}
-        blocked={blocked}
-        editor={edit}
-      />
-      <DictField
-        entityId={id}
-        spec={{ key: 'hoard', label: 'Its hoard', value: card.hoard }}
-        blocked={blocked}
-        suggestions={[
-          'luxuries',
-          'livestock',
-          'grain',
-          'weapons',
-          'sacred_goods',
-        ]}
-        editor={edit}
-      />
-      <Controls id={id} card={card} blocked={blocked} />
-      <div data-surface='BeastBody' className='flex min-w-0 flex-col gap-2'>
-        <Label variant='overline'>{`Body${card.body_plan ? `: ${words(card.body_plan)}` : ''}, ${card.hp} hp`}</Label>
-        {card.injuries.length === 0 ? (
-          <Muted>It bears no wounds.</Muted>
-        ) : (
-          <ul className='flex min-w-0 flex-col gap-1'>
-            {card.injuries.map((row, index) => (
-              <li
-                key={`${row.part}.${index}`}
-                className='flex min-w-0 flex-wrap items-center gap-2'
-              >
-                <Badge
-                  variant={row.state === 'healed' ? 'outline' : 'destructive'}
-                >
-                  {words(row.kind)}
-                </Badge>
-                <Text as='span'>{words(row.part)}</Text>
-                <div className='min-w-0 flex-1'>
-                  <StatBar
-                    label={`${words(row.state)}, severity ${row.severity}`}
-                    value={row.function_loss}
-                    max={PERCENT}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-      <div data-surface='BeastWounds' className='flex min-w-0 flex-col gap-2'>
-        <Label variant='overline'>Who wounded it</Label>
-        {card.wounds.length === 0 ? (
-          <Muted>No one has drawn its blood.</Muted>
-        ) : (
-          <Timeline label='Wounds'>
-            {card.wounds.map((row, index) => (
-              <TimelineItem
-                key={`${row.epoch}.${index}`}
-                icon={TriangleAlert}
-                tone='destructive'
-                title={row.by?.name ?? 'someone'}
-                timestamp={`epoch ${row.epoch}`}
-                last={index === card.wounds.length - 1}
-              />
-            ))}
-          </Timeline>
-        )}
-      </div>
+      <BeastControls id={id} card={card} blocked={blocked} />
     </div>
   )
 }
@@ -327,8 +606,9 @@ export function BeastSection({
     <Section
       id='section-beast'
       title='The beast'
-      description='Its body, temper, lair, hoard and the wounds it remembers.'
-      icon={Footprints}
+      description='A named terror of the wilds: its might and temper, the lair it guards, the hoard it heaps and the wounds it remembers.'
+      icon={BEAST_ICON}
+      tone='danger'
     >
       {view.isPending && <Muted>Reading the beast…</Muted>}
       {view.isError && (
@@ -343,7 +623,7 @@ export function BeastSection({
   )
 }
 
-function HerdRow({
+function HerdCard({
   community,
   row,
   blocked,
@@ -353,55 +633,131 @@ function HerdRow({
   blocked: string | null
 }) {
   const [head, setHead] = useState(String(row.head))
+  const [fed, setFed] = useState(String(row.fed_epochs))
   const [stage, setStage] = useState<string>(row.stage)
-  const save = useGodAction({
-    run: () =>
+  const save = useGodAction<{
+    values: Record<string, unknown>
+    release?: string[]
+  }>({
+    run: ({ values, release }) =>
       unwrap(
         api.POST('/api/actions/herd:edit', {
           body: {
             community_id: community,
             species_id: row.species?.id ?? 0,
-            values: { head: Math.max(0, Math.round(Number(head) || 0)), stage },
+            values: values as Record<string, never>,
+            release: release ?? [],
           },
         })
       ),
   })
   const busy = busyOf(blocked, save.isPending)
+  const spec = named(STAGE, row.stage)
+  const whole = (value: string) => Math.max(0, Math.round(Number(value) || 0))
   return (
     <li
       data-surface='HerdRow'
-      className='flex min-w-0 flex-wrap items-end gap-2 rounded-lg border bg-muted/30 p-2'
+      className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'
     >
-      <Name item={row.species} />
-      <Muted
-        as='span'
-        variant='caption'
-      >{`kept since epoch ${row.since_epoch}, fed ${row.fed_epochs} epochs`}</Muted>
-      <MindPicker
-        label='Stage'
-        value={stage}
-        table={table(domesticationStageValues)}
-        blocked={busy}
-        onPick={setStage}
-      />
-      <Input
-        className='w-24'
-        type='number'
-        min={0}
-        value={head}
-        aria-label='head'
-        onChange={(event) => setHead(event.target.value)}
-      />
-      <Button
-        size='icon'
-        variant='ghost'
-        aria-label='Set the herd'
-        disabled={busy !== null}
-        disabledReason={busy ?? undefined}
-        onClick={() => save.mutate(undefined)}
-      >
-        <Check />
-      </Button>
+      <div className='flex min-w-0 items-center gap-2'>
+        <Medallion icon={spec.icon} tone={spec.tone ?? 'gold'} size='sm' />
+        <div className='flex min-w-0 flex-1 flex-col'>
+          <Name item={row.species} fallback='A lost kind' />
+          <Muted as='span' variant='caption' truncate>
+            {`Kept since epoch ${row.since_epoch}`}
+          </Muted>
+        </div>
+        <Badge size='sm' variant={BADGE_OF[spec.tone ?? 'gold']}>
+          {spec.label}
+        </Badge>
+      </div>
+      <div className='grid min-w-0 grid-cols-2 gap-2'>
+        <MiniStat
+          icon={PawPrint}
+          label='Head'
+          value={row.head}
+          tone='verdigris'
+        />
+        <MiniStat
+          icon={Wheat}
+          label={row.fed_epochs === 1 ? 'Epoch fed' : 'Epochs fed'}
+          value={row.fed_epochs}
+          tone='gold'
+        />
+      </div>
+      <StageTrack stage={row.stage} />
+      {row.locked.length > 0 && (
+        <Badge size='sm' variant='default'>
+          {`Held: ${row.locked.map(fieldLabel).join(', ').toLowerCase()}`}
+        </Badge>
+      )}
+      <Collapsible className='flex min-w-0 flex-col gap-3 border-t pt-3'>
+        <CollapsibleTrigger asChild>
+          <Button variant='ghost' size='sm' className='group self-start'>
+            <ArrowRight className='transition-transform group-aria-expanded:rotate-90' />
+            Adjust this herd
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className='flex min-w-0 flex-col gap-3'>
+          <div className='grid min-w-0 grid-cols-1 items-end gap-3 @sm/herd:grid-cols-3'>
+            <NumberField
+              label='Head count'
+              value={head}
+              min={0}
+              disabled={busy !== null}
+              onChange={setHead}
+            />
+            <MindPicker
+              label='Taming stage'
+              value={stage}
+              table={pickTable(domesticationStageValues, STAGE)}
+              blocked={busy}
+              onPick={setStage}
+            />
+            <NumberField
+              label='Epochs fed'
+              value={fed}
+              min={0}
+              disabled={busy !== null}
+              onChange={setFed}
+            />
+          </div>
+          <div className='flex min-w-0 flex-wrap gap-2'>
+            <Button
+              size='sm'
+              aria-label='Set the herd'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() =>
+                save.mutate({
+                  values: {
+                    head: whole(head),
+                    stage,
+                    fed_epochs: whole(fed),
+                  },
+                })
+              }
+            >
+              <Check />
+              Set it so
+            </Button>
+            {row.locked.length > 0 && (
+              <Button
+                size='sm'
+                variant='outline'
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() =>
+                  save.mutate({ values: {}, release: [...row.locked] })
+                }
+              >
+                <Unlock />
+                Let the world decide again
+              </Button>
+            )}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </li>
   )
 }
@@ -417,17 +773,25 @@ export function HerdsSection({
   const { reason } = useGodGate()
   const blocked = readOnlyReason ?? reason()
   if (!view.data || view.data.length === 0) return null
+  const heads = view.data.reduce((sum, row) => sum + row.head, 0)
   return (
     <Section
       id='section-herds'
       title='Herds'
-      description='The beasts this community keeps, feeds and breeds.'
-      icon={Users}
+      description='The beasts this community keeps, feeds and breeds, and how far each is tamed.'
+      icon={HERDS_ICON}
+      tone='verdigris'
+      actions={
+        <Badge variant='secondary'>
+          <PawPrint />
+          {`${heads} head in ${view.data.length} ${view.data.length === 1 ? 'herd' : 'herds'}`}
+        </Badge>
+      }
     >
-      <ul className='flex min-w-0 flex-col gap-2'>
+      <ul className='@container/herd grid min-w-0 grid-cols-1 gap-3 @2xl/herd:grid-cols-2'>
         {view.data.map((row) => (
-          <HerdRow
-            key={row.species?.id}
+          <HerdCard
+            key={`${row.species?.id}-${row.head}-${row.stage}-${row.fed_epochs}`}
             community={communityId}
             row={row}
             blocked={blocked}
@@ -441,40 +805,149 @@ export function HerdsSection({
 export function FoodWebSection({ regionId }: { regionId: number }) {
   const view = useFoodWeb(regionId)
   if (!view.data || view.data.nodes.length === 0) return null
-  const names = new Map(
-    view.data.nodes.map((node) => [node.species.id, node.species.name])
+  const web = view.data
+  const nodes = new Map(web.nodes.map((node) => [node.species.id, node]))
+  const hunters = new Set(web.links.map((link) => link.hunter_id))
+  const top = web.nodes.reduce((best, node) =>
+    node.abundance > best.abundance ? node : best
   )
+  const grazers = web.nodes.filter((node) =>
+    ['herbivore', 'filter', 'photosynthetic'].includes(node.diet)
+  ).length
+  const glyph = (id: number) => {
+    const node = nodes.get(id)
+    const diet = named(DIET, node?.diet ?? 'omnivore')
+    return (
+      <span className='flex min-w-0 flex-1 basis-0 items-center gap-1.5'>
+        <Medallion icon={diet.icon} tone={diet.tone} size='sm' />
+        <span className='min-w-0 truncate'>
+          {node ? (
+            <Name item={node.species} />
+          ) : (
+            <Muted as='span'>A kind from elsewhere</Muted>
+          )}
+        </span>
+      </span>
+    )
+  }
   return (
     <Section
       id='section-food-web'
       title='Food web'
-      description='The kinds of this land, how many, and who eats whom.'
-      icon={Network}
+      description='The kinds of this land, how many of each, and who eats whom.'
+      icon={WEB_ICON}
+      tone='success'
     >
-      <ul
-        data-surface='FoodWebNodes'
-        className='grid min-w-0 grid-cols-1 gap-2 md:grid-cols-2'
-      >
-        {view.data.nodes.map((node) => (
-          <li
-            key={node.species.id}
-            className='flex min-w-0 flex-col gap-1 rounded-lg border bg-muted/30 p-2'
-          >
-            <div className='flex min-w-0 flex-wrap items-center gap-2'>
-              <Name item={node.species} />
-              <Badge variant='outline'>{`${words(node.size_class)} ${words(node.diet)}`}</Badge>
-            </div>
-            <StatBar label='abundance' value={node.abundance} max={PERCENT} />
-          </li>
-        ))}
-      </ul>
-      <ul data-surface='FoodWebLinks' className='flex min-w-0 flex-col gap-1'>
-        {view.data.links.map((link) => (
-          <li key={`${link.hunter_id}.${link.prey_id}`}>
-            <Text as='span'>{`${names.get(link.hunter_id) ?? '?'} hunts ${names.get(link.prey_id) ?? '?'}`}</Text>
-          </li>
-        ))}
-      </ul>
+      <div className='@container/wild flex min-w-0 flex-col gap-4'>
+        <div className='grid min-w-0 grid-cols-1 gap-3 @xs/wild:grid-cols-2 @lg/wild:grid-cols-4'>
+          <KpiTile
+            label='Kinds'
+            value={web.nodes.length}
+            icon={PawPrint}
+            tone='success'
+            hint='Living in this land'
+          />
+          <KpiTile
+            label='Grazers'
+            value={grazers}
+            icon={DIET.herbivore.icon}
+            tone='verdigris'
+            hint='Feeding on plants, water and light'
+          />
+          <KpiTile
+            label='Hunters'
+            value={hunters.size}
+            icon={Crosshair}
+            tone='danger'
+            hint={`${web.links.length} ${web.links.length === 1 ? 'hunt' : 'hunts'} between kinds`}
+          />
+          <KpiTile
+            label='Most numerous'
+            value={top.abundance}
+            icon={Gem}
+            tone='gold'
+            hint={top.species.name}
+            meter={{ value: top.abundance, max: PERCENT, label: 'Abundance' }}
+          />
+        </div>
+        <Card
+          title='Who eats whom'
+          icon={Crosshair}
+          tone='danger'
+          aside={
+            <Badge size='sm' variant='secondary'>
+              {web.links.length}
+            </Badge>
+          }
+        >
+          {web.links.length === 0 ? (
+            <Muted>
+              No kind here hunts another: the land lives on grass, carrion and
+              light.
+            </Muted>
+          ) : (
+            <ul
+              data-surface='FoodWebLinks'
+              className='flex min-w-0 flex-col gap-2'
+            >
+              {web.links.map((link) => (
+                <li
+                  key={`${link.hunter_id}.${link.prey_id}`}
+                  className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
+                >
+                  {glyph(link.hunter_id)}
+                  <Badge size='sm' variant='destructive'>
+                    <Crosshair />
+                    hunts
+                    <ArrowRight />
+                  </Badge>
+                  {glyph(link.prey_id)}
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+        <ul
+          data-surface='FoodWebNodes'
+          className='grid min-w-0 grid-cols-1 gap-2 @xl/wild:grid-cols-2'
+        >
+          {web.nodes.map((node) => {
+            const diet = named(DIET, node.diet)
+            const size = named(SIZE, node.size_class)
+            return (
+              <li
+                key={node.species.id}
+                className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'
+              >
+                <div className='flex min-w-0 items-center gap-2'>
+                  <Medallion icon={diet.icon} tone={diet.tone} size='sm' />
+                  <div className='flex min-w-0 flex-1 flex-col'>
+                    <span className='min-w-0 truncate'>
+                      <Name item={node.species} />
+                    </span>
+                    <Muted as='span' variant='caption' truncate>
+                      {`${size.label} ${diet.label.toLowerCase()}`}
+                    </Muted>
+                  </div>
+                  {hunters.has(node.species.id) && (
+                    <Badge size='sm' variant='destructive'>
+                      <Crosshair />
+                      Hunter
+                    </Badge>
+                  )}
+                  <Stat value={node.abundance} unit='/ 100' />
+                </div>
+                <Progress
+                  size='sm'
+                  value={node.abundance}
+                  tone={barTone(node.abundance, 'success')}
+                  aria-label={`${node.species.name} abundance`}
+                />
+              </li>
+            )
+          })}
+        </ul>
+      </div>
     </Section>
   )
 }
