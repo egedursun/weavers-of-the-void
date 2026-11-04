@@ -220,3 +220,124 @@ class FeudAction(StrEnum):
     DEMAND_WERGILD = "demand_wergild"
     ESCALATE = "escalate"
     REST = "rest"
+
+
+class ArmyRole(StrEnum):
+    COMMANDER = "commander"
+    SUB_COMMANDER = "sub_commander"
+    QUARTERMASTER = "quartermaster"
+    STANDARD_BEARER = "standard_bearer"
+    SURGEON = "surgeon"
+
+
+class ContractStatus(StrEnum):
+    ACTIVE = "active"
+    UNPAID = "unpaid"
+    TURNED = "turned"
+    ENDED = "ended"
+
+
+class SackChoice(StrEnum):
+    MERCY = "mercy"
+    SACK = "sack"
+    RAZE = "raze"
+
+
+class SiegeWork(StrEnum):
+    CIRCUMVALLATION = "circumvallation"
+    TOWERS = "towers"
+    RAMS = "rams"
+    MINES = "mines"
+    COUNTERMINES = "countermines"
+    LADDERS = "ladders"
+
+
+class PeaceTermKind(StrEnum):
+    CESSION = "cession"
+    VASSALAGE = "vassalage"
+    HOSTAGE = "hostage"
+    REPARATIONS = "reparations"
+    TRIBUTE = "tribute"
+    LIBERTY = "liberty"
+    THRONE = "throne"
+    BREAK_CULT = "break_cult"
+    OPEN_TEMPLES = "open_temples"
+    GOVERNMENT = "government"
+    MARRIAGE = "marriage"
+    DEMILITARISED = "demilitarised"
+    TRADE_CONCESSION = "trade_concession"
+    CAPTIVE_RELEASE = "captive_release"
+    CHAMPION = "champion"
+    WHITE_PEACE = "white_peace"
+
+
+class CasualtyFate(StrEnum):
+    KILLED = "killed"
+    WOUNDED = "wounded"
+    MAIMED = "maimed"
+    CAPTURED = "captured"
+
+
+class SpyOwnerKind(StrEnum):
+    POLITY = "polity"
+    FACTION = "faction"
+    CULT = "cult"
+    COMMUNITY = "community"
+
+
+class AgentStatus(StrEnum):
+    ACTIVE = "active"
+    CAUGHT = "caught"
+    TURNED = "turned"
+    DEAD = "dead"
+    RETIRED = "retired"
+
+
+class FeudParty(StrEnum):
+    HOUSE = "house"
+    COMMUNITY = "community"
+
+
+class FeudStatus(StrEnum):
+    ACTIVE = "active"
+    MEDIATED = "mediated"
+    FADED = "faded"
+    ENDED = "ended"
+
+
+class MutinyOutcome(StrEnum):
+    GRUMBLING = "grumbling"
+    REFUSAL = "refusal"
+    DEPOSED = "deposed"
+    BANDITRY = "banditry"
+    TURNCOAT = "turncoat"
+
+
+class HullClass(StrEnum):
+    RAFT = "raft"
+    BOAT = "boat"
+    GALLEY = "galley"
+    LONGSHIP = "longship"
+    COG = "cog"
+    CARRACK = "carrack"
+    WARSHIP = "warship"
+    LIGHT_SAILER = "light_sailer"
+    BONE_HULL = "bone_hull"
+    GENERATION_SHIP = "generation_ship"
+    SKYSHIP = "skyship"
+    LIVING_SHIP = "living_ship"
+
+
+class VesselArmament(StrEnum):
+    RAMS = "rams"
+    MISSILES = "missiles"
+    SIEGE_ENGINES = "siege_engines"
+    RITES = "rites"
+
+
+class VesselStatus(StrEnum):
+    DOCKED = "docked"
+    AFLOAT = "afloat"
+    DAMAGED = "damaged"
+    WRECKED = "wrecked"
+    GHOST = "ghost"

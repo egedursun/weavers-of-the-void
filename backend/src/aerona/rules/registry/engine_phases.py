@@ -18,6 +18,7 @@ class EnginePhasesRules:
     campaigns: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: campaigns")
     prisoners: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: prisoners")
     travel: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: travel")
+    seafaring: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: seafaring")
     exploration: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: exploration")
     resource_mechanics: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: resource mechanics")
     cosmic_economy: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: cosmic economy")

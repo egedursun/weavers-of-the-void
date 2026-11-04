@@ -3,26 +3,42 @@ from math import sqrt
 from sqlalchemy import func, select
 
 from aerona.catalog.mind import COMBAT_SKILLS
+from aerona.catalog.units import UNITS, UnitSpec
 from aerona.constants.units import PERCENT
+from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.military import BattlePhaseRow, CaptiveCohortRow, CommanderTraitRow, SpyNetworkRow
+from aerona.db.tables.military import (
+    ArmyOfficerRow,
+    BattlePhaseRow,
+    CaptiveCohortRow,
+    CommanderTraitRow,
+    LearnedTacticRow,
+    SpyNetworkRow,
+    UnitDesignRow,
+)
 from aerona.db.tables.mind import SkillRow
+from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.faith import TenetKind
-from aerona.domain.enums.military import CaptiveFate, CommanderTrait, OutcomeClass, Tactic, UnitFamily
-from aerona.domain.enums.mind import SkillKind
-from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.military import ArmyRole, CaptiveFate, CommanderTrait, OutcomeClass, Tactic, UnitFamily
+from aerona.domain.enums.mind import SkillKind, TraitEffect, ValueAxis
+from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.beasts import beast_dread
+from aerona.engine.economy.materials import MaterialBook
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import guardians_of
 from aerona.engine.lore.items import standard_of
 from aerona.engine.lore.language import barrier
-from aerona.engine.military.battle import BattleResult, Field, Side, make_stacks, resolve
+from aerona.engine.military.aftermath import flaring_items
+from aerona.engine.military.battle import BattleResult, Field, Side, Stack, make_stacks, resolve
 from aerona.engine.military.units import muster, profile_of, sync
+from aerona.engine.mind.book import effect_of, scaled_by, values_for
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.primitives.knowledge import KnowledgeMap
+from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat
 
 EDGE_FLOOR, EDGE_CEILING = 0.5, 2.0
@@ -30,6 +46,7 @@ INSPIRING_CHARISMA = 70
 CAVALRY_SHARE = 0.4
 HILLS = frozenset({TerrainKind.HILLS, TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS})
 WINTER = frozenset({WeatherKind.SNOW, WeatherKind.BLIZZARD})
+Armies = list[tuple[EntityRow, ArmyRow]]
 
 
 async def skill_level(ctx: TickContext, mortal_id: int | None, skill: SkillKind) -> int:
@@ -45,33 +62,157 @@ async def traits_of(ctx: TickContext, mortal_id: int | None) -> set[CommanderTra
     return set(await ctx.session.scalars(select(CommanderTraitRow.trait).where(CommanderTraitRow.mortal_entity_id == mortal_id)))
 
 
+async def side_owners(ctx: TickContext, community_id: int) -> list[int]:
+    owners = [community_id]
+    owners.extend(await ctx.session.scalars(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == community_id)))
+    return owners
+
+
 async def intel_on(ctx: TickContext, owner_id: int, target_id: int) -> int:
-    query = select(func.max(SpyNetworkRow.intel)).where(SpyNetworkRow.owner_entity_id == owner_id, SpyNetworkRow.target_entity_id == target_id)
-    found = await ctx.session.scalar(query)
-    return int(found or 0)
+    owners = await side_owners(ctx, owner_id)
+    targets = await side_owners(ctx, target_id)
+    by_owner = select(func.max(SpyNetworkRow.intel)).where(SpyNetworkRow.owner_entity_id.in_(owners), SpyNetworkRow.target_entity_id.in_(targets))
+    by_side = select(func.max(SpyNetworkRow.intel)).where(SpyNetworkRow.side_entity_id == owner_id, SpyNetworkRow.target_entity_id.in_(targets))
+    return max(int(await ctx.session.scalar(by_owner) or 0), int(await ctx.session.scalar(by_side) or 0))
+
+
+async def warned(ctx: TickContext, owner_id: int, target_id: int) -> bool:
+    targets = await side_owners(ctx, target_id)
+    statement = select(SpyNetworkRow.id).where(
+        SpyNetworkRow.side_entity_id == owner_id, SpyNetworkRow.target_entity_id.in_(targets), SpyNetworkRow.warned_epoch >= ctx.epoch - 1
+    )
+    return await ctx.session.scalar(statement.limit(1)) is not None
+
+
+async def design_specs(ctx: TickContext, design_ids: set[int]) -> dict[int, UnitSpec]:
+    if not design_ids:
+        return {}
+    rows = await ctx.session.scalars(select(UnitDesignRow).where(UnitDesignRow.id.in_(design_ids)))
+    return {row.id: design_spec(row) for row in rows}
+
+
+def design_spec(row: UnitDesignRow) -> UnitSpec:
+    base = UNITS[row.base_kind]
+    return UnitSpec(
+        kind=row.base_kind,
+        family=row.family,
+        label=row.name,
+        melee=row.melee,
+        missile=row.missile,
+        defence=row.defence,
+        speed=row.speed,
+        mass=row.mass,
+        cost=row.cost,
+        upkeep=row.upkeep,
+        armour=row.armour,
+        shield=row.shield,
+        branch=base.branch,
+        level=base.level,
+        social_class=row.social_class,
+        counters_charge=row.counters_charge,
+        terror=row.terror,
+        terrain=dict(base.terrain),
+        flying=row.flying,
+    )
+
+
+async def hardness_of(ctx: TickContext, world_id: int, materials: set[str]) -> dict[str, int]:
+    book = await MaterialBook.load(ctx.session)
+    found: dict[str, int] = {}
+    for material in materials:
+        try:
+            props = book.props(world_id, MaterialKind(material))
+        except ValueError:
+            props = None
+        if props is not None:
+            found[material] = props.hardness
+    return found
+
+
+async def willpower_of(ctx: TickContext, community: EntityRow, commander_id: int | None) -> int:
+    values = await values_for(ctx.session, community.id)
+    grit = (values.get(ValueAxis.MARTIAL, 0) + values.get(ValueAxis.HONOUR, 0)) / 2
+    base = (grit + PERCENT) / 2
+    nerve = scaled_by(await effect_of(ctx.session, commander_id, TraitEffect.COURAGE, ctx.rules.traits.effect_scale_pct)) if commander_id is not None else 1.0
+    return clamp_int(round(base * nerve), 0, PERCENT)
+
+
+async def learned_of(ctx: TickContext, holders: list[int]) -> dict[Tactic, int]:
+    found: dict[Tactic, int] = {}
+    rows = await ctx.session.scalars(select(LearnedTacticRow).where(LearnedTacticRow.holder_entity_id.in_([item for item in holders if item])))
+    for row in rows:
+        found[row.tactic] = max(found.get(row.tactic, 0), row.wins)
+    return found
+
+
+async def sub_commander_bonus(ctx: TickContext, army_ids: list[int]) -> float:
+    rows = await ctx.session.scalars(
+        select(ArmyOfficerRow).where(
+            ArmyOfficerRow.army_entity_id.in_(army_ids), ArmyOfficerRow.role == ArmyRole.SUB_COMMANDER, ArmyOfficerRow.until_epoch.is_(None)
+        )
+    )
+    total = 0
+    for row in rows:
+        total += await skill_level(ctx, row.mortal_entity_id, SkillKind.LEADERSHIP)
+    return min(PERCENT, total) / PERCENT * ctx.rules.campaign_depth.sub_commander_pct / PERCENT
+
+
+async def surgeon_skill(ctx: TickContext, army_ids: list[int]) -> int:
+    rows = await ctx.session.scalars(
+        select(ArmyOfficerRow).where(ArmyOfficerRow.army_entity_id.in_(army_ids), ArmyOfficerRow.role == ArmyRole.SURGEON, ArmyOfficerRow.until_epoch.is_(None))
+    )
+    return max([await skill_level(ctx, row.mortal_entity_id, SkillKind.MEDICINE) for row in rows] or [0])
 
 
 async def side_of(
-    ctx: TickContext, community: EntityRow, army: EntityRow, row: ArmyRow, *, edge: float, defending: bool, enemy: EntityRow, knowledge: KnowledgeMap
+    ctx: TickContext,
+    community: EntityRow,
+    armies: Armies,
+    *,
+    edge: float,
+    defending: bool,
+    enemy: EntityRow,
+    knowledge: KnowledgeMap,
 ) -> Side:
-    stacks = make_stacks(await muster(ctx, army, community, knowledge))
+    army, row = armies[0]
+    rows = []
+    for item, owner_row in armies:
+        owner = community if owner_row.owner_entity_id == community.id else await ctx.session.get(EntityRow, owner_row.owner_entity_id)
+        rows.extend(await muster(ctx, item, owner, knowledge))
+    specs = await design_specs(ctx, {unit.design_id for unit in rows if unit.design_id})
+    hardness = await hardness_of(ctx, community.world_id, {unit.material for unit in rows if unit.material})
+    stacks = make_stacks(rows, specs, hardness)
     profile = await profile_of(ctx, army, community)
     table = ctx.rules
-    lead = await skill_level(ctx, row.commander_entity_id, SkillKind.LEADERSHIP)
-    veteran = max([await skill_level(ctx, row.commander_entity_id, skill) for skill in COMBAT_SKILLS] or [0])
-    spirit = await faith_spirit(ctx, community, enemy) - await babel(ctx, community) - await beast_dread(ctx, enemy.id)
+    commander = row.commander_entity_id
+    lead = await skill_level(ctx, commander, SkillKind.LEADERSHIP)
+    veteran = max([await skill_level(ctx, commander, skill) for skill in COMBAT_SKILLS] or [0])
+    parts = {
+        "leadership": round(PERCENT * table.morale.leadership_pct / PERCENT * lead / PERCENT),
+        "faith": await faith_spirit(ctx, community, enemy),
+        "babel": -await babel(ctx, community),
+        "beast_dread": -await beast_dread(ctx, enemy.id),
+        "warned": table.morale.warned_morale if await warned(ctx, community.id, enemy.id) else 0,
+    }
+    medicine = knowledge.level(community.id, KnowledgeBranch.MEDICINE) * PERCENT // max(1, table.morale.medicine_levels)
+    medicine += await surgeon_skill(ctx, [item.id for item, _ in armies]) * table.battle_magic.surgeon_pct // PERCENT
     return Side(
         veteran=table.military_units.veteran_skill_pct / PERCENT * veteran / PERCENT,
-        leadership=round(PERCENT * table.morale.leadership_pct / PERCENT * lead / PERCENT) + spirit,
+        leadership=sum(parts.values()),
         entity=community,
         army=army,
         profile=profile,
         stacks=stacks,
         edge=edge,
         defending=defending,
-        skill=await skill_level(ctx, row.commander_entity_id, SkillKind.TACTICS),
-        traits=await traits_of(ctx, row.commander_entity_id),
+        skill=await skill_level(ctx, commander, SkillKind.TACTICS),
+        traits=await traits_of(ctx, commander),
         intel=await intel_on(ctx, community.id, enemy.id),
+        willpower=await willpower_of(ctx, community, commander),
+        learned=await learned_of(ctx, [community.id, commander or 0]),
+        morale_parts=parts,
+        wing_bonus=await sub_commander_bonus(ctx, [item.id for item, _ in armies]),
+        medicine=clamp_int(medicine, 0, PERCENT),
     )
 
 
@@ -95,11 +236,34 @@ async def faith_spirit(ctx: TickContext, community: EntityRow, enemy: EntityRow)
     return lift + await standard_of(ctx, [community.id])
 
 
+async def leaders_of(ctx: TickContext, armies: Armies) -> list[EntityRow]:
+    ids = {row.commander_entity_id for _, row in armies if row.commander_entity_id}
+    officers = select(ArmyOfficerRow.mortal_entity_id).where(
+        ArmyOfficerRow.army_entity_id.in_([army.id for army, _ in armies]), ArmyOfficerRow.until_epoch.is_(None)
+    )
+    ids.update(await ctx.session.scalars(officers))
+    found = [await ctx.session.get(EntityRow, mortal_id) for mortal_id in sorted(ids)]
+    return [mortal for mortal in found if mortal is not None]
+
+
+def streams_for(ctx: TickContext, war_id: int, sequence: int) -> "StreamFactory":
+    return StreamFactory(ctx, f"battle.{war_id}.{sequence}")
+
+
+class StreamFactory:
+    def __init__(self, ctx: TickContext, root: str) -> None:
+        self.ctx = ctx
+        self.root = root
+
+    def __call__(self, key: str) -> SeededRandom:
+        return self.ctx.rng(f"{self.root}.{key}")
+
+
 async def clash(
     ctx: TickContext,
     war_id: int,
     sequence: int,
-    armies: dict[int, tuple[EntityRow, ArmyRow]],
+    armies: dict[int, Armies],
     sides: tuple[EntityRow, EntityRow],
     *,
     powers: tuple[float, float],
@@ -109,12 +273,22 @@ async def clash(
     knowledge = await KnowledgeMap.load(ctx.session)
     mean = max(1e-6, (powers[0] + powers[1]) / 2)
     edges = [max(EDGE_FLOOR, min(EDGE_CEILING, sqrt(max(0.0, power) / mean))) for power in powers]
-    first = await side_of(ctx, attacker, *armies[attacker.id], edge=edges[0], defending=False, enemy=defender, knowledge=knowledge)
-    second = await side_of(ctx, defender, *armies[defender.id], edge=edges[1], defending=True, enemy=attacker, knowledge=knowledge)
-    result = resolve(ctx.rules, ctx.rng(f"battle.{war_id}.{sequence}"), first, second, ground)
+    first = await side_of(ctx, attacker, armies[attacker.id], edge=edges[0], defending=False, enemy=defender, knowledge=knowledge)
+    second = await side_of(ctx, defender, armies[defender.id], edge=edges[1], defending=True, enemy=attacker, knowledge=knowledge)
     for side in (first, second):
-        sync(side.army, [stack.row for stack in side.stacks], ctx.rules)
+        ctx.count("items_flared", await flaring_items(ctx, ground.weather, side, await leaders_of(ctx, armies[side.entity.id])))
+    result = resolve(ctx.rules, streams_for(ctx, war_id, sequence), first, second, ground)
+    for side in (first, second):
+        for army, _ in armies[side.entity.id]:
+            sync(army, [stack.row for stack in side.stacks if stack.row.army_entity_id == army.id], ctx.rules)
     return result
+
+
+def stacks_by_army(side: Side) -> dict[int, list[Stack]]:
+    found: dict[int, list[Stack]] = {}
+    for stack in side.stacks:
+        found.setdefault(stack.row.army_entity_id, []).append(stack)
+    return found
 
 
 def captives_taken(ctx: TickContext, result: BattleResult, war_id: int) -> int:
@@ -183,6 +357,22 @@ async def earn_traits(ctx: TickContext, result: BattleResult, ground: Field, com
                 held.add(trait)
                 earned += 1
     return earned
+
+
+async def learn_tactic(ctx: TickContext, result: BattleResult, commander_id: int | None) -> int:
+    if result.winner is None or result.refused or result.outcome is OutcomeClass.STALEMATE:
+        return 0
+    learned = 0
+    for holder in (result.winner.entity.id, commander_id):
+        if holder is None:
+            continue
+        row = await ctx.session.get(LearnedTacticRow, (holder, result.winner.tactic))
+        if row is None:
+            row = LearnedTacticRow(holder_entity_id=holder, tactic=result.winner.tactic, wins=0, since_epoch=ctx.epoch)
+            ctx.session.add(row)
+        row.wins += 1
+        learned += 1
+    return learned
 
 
 async def cautious(ctx: TickContext, commander_id: int | None) -> None:

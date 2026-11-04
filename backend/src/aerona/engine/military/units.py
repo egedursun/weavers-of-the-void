@@ -4,22 +4,26 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.techniques import UNIT_TECHNIQUES
-from aerona.catalog.units import STYLE_UNITS, UNITS, UnitSpec
+from aerona.catalog.units import FAMILY_WEAPONS, KIND_WEAPONS, STYLE_UNITS, UNITS, UnitSpec
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialSlot
+from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.environment import CoastKind, ScarKind
-from aerona.domain.enums.military import ArmourType, ShieldType, Stance, UnitFamily, UnitKind
+from aerona.domain.enums.military import ArmourType, ShieldType, Stance, UnitKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.domestication import herd_uses
-from aerona.engine.economy.stocks import holding
+from aerona.engine.economy.materials import node_material
+from aerona.engine.economy.stocks import goods_of, holding
+from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import techniques_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -28,16 +32,7 @@ from aerona.engine.primitives.stats import set_stats, stat
 from aerona.rules.registry import Rules
 
 ARMOUR_BY_METAL = (ArmourType.HIDE, ArmourType.PADDED, ArmourType.MAIL, ArmourType.SCALE, ArmourType.PLATE)
-WEAPONS: dict[UnitFamily, tuple[str, ...]] = {
-    UnitFamily.INFANTRY: ("spear", "blade"),
-    UnitFamily.MISSILE: ("bow", "blade"),
-    UnitFamily.MOUNTED: ("spear", "blade"),
-    UnitFamily.BEAST: ("claw",),
-    UnitFamily.ENGINEER: ("blunt",),
-    UnitFamily.MAGIC: ("staff",),
-    UnitFamily.NAVAL: ("spear", "bow"),
-    UnitFamily.EXOTIC: ("claw",),
-}
+METAL_WEAPONS = frozenset({"crossbow", "blade", "pike"})
 FALLBACK = UnitKind.LEVY
 MOUNT_NEEDS = {
     UnitKind.LIGHT_CAVALRY: "mount",
@@ -141,6 +136,30 @@ async def composition(ctx: TickContext, community: EntityRow, size: int, knowled
     return {kind: count for kind, count in counts.items() if count > 0}
 
 
+def weapon_mix(spec: UnitSpec, metallurgy: int) -> list[str]:
+    mix = KIND_WEAPONS.get(spec.kind) or FAMILY_WEAPONS[spec.family]
+    allowed = [weapon for weapon in mix if metallurgy >= 1 or weapon not in METAL_WEAPONS]
+    return list(allowed or ("blunt",))
+
+
+async def rearm(ctx: TickContext, army: EntityRow, owner: EntityRow | None, rows: Sequence[ArmyUnitRow]) -> int:
+    table = ctx.rules.battle_magic
+    for row in rows:
+        if "condition" not in (row.locked or []):
+            row.condition = clamp_int(row.condition - table.wear_per_season, 0, PERCENT)
+    if owner is None:
+        return 0
+    worn = [row for row in rows if row.count > 0 and row.condition < PERCENT and "condition" not in (row.locked or [])]
+    wanted = sum(row.count for row in worn) // max(1, ctx.rules.materials.soldiers_per_kit)
+    if not worn or wanted <= 0 or await holding(ctx.session, owner.id, CommodityKind.WEAPONS) <= 0:
+        return 0
+    taken = await goods_of(ctx.session, ctx.epoch).take_units(owner.id, CommodityKind.WEAPONS, wanted, GoodsFlow.WAR)
+    share = min(1.0, taken / wanted)
+    for row in worn:
+        row.condition = clamp_int(row.condition + round_half_up(table.rearm_per_season * share), 0, PERCENT)
+    return taken
+
+
 def outfit(spec: UnitSpec, metallurgy: int, equipment: int) -> tuple[ArmourType, ShieldType, bool]:
     armour = spec.armour
     if armour in ARMOUR_BY_METAL:
@@ -196,6 +215,9 @@ async def muster(ctx: TickContext, army: EntityRow, owner: EntityRow | None, kno
     equipment = stat(army, "equipment") or 0
     experience = stat(army, "experience") or 0
     morale = stat(army, "morale") or ctx.rules.morale.base
+    issued = await node_material(ctx.session, army.id, MaterialSlot.WEAPONS)
+    material = issued.material.value if issued is not None and issued.material is not None else None
+    condition = clamp_int(PERCENT // 2 + equipment // 2, 0, PERCENT)
     for kind, count in (await composition(ctx, owner, size, knowledge)).items():
         spec = UNITS[kind]
         armour, shield, helmet = outfit(spec, metallurgy, equipment)
@@ -207,14 +229,16 @@ async def muster(ctx: TickContext, army: EntityRow, owner: EntityRow | None, kno
             armour=armour,
             shield=shield,
             helmet=helmet,
-            weapons=list(WEAPONS[spec.family]),
+            weapons=weapon_mix(spec, metallurgy),
+            material=material,
             experience=clamp_int(experience, 0, PERCENT),
             morale=clamp_int(morale, 0, PERCENT),
             fatigue=0,
             wounded=0,
-            condition=PERCENT,
+            condition=condition,
             social_class=spec.social_class,
             origin_entity_id=owner.id,
+            locked=[],
         )
         ctx.session.add(row)
         rows.append(row)
@@ -267,3 +291,50 @@ def align(army: EntityRow, rows: Sequence[ArmyUnitRow]) -> None:
         if wanted != current:
             for row in rows:
                 setattr(row, key, clamp_int(getattr(row, key) + wanted - current, 0, PERCENT))
+
+
+async def resize(session: AsyncSession, rules: Rules, army: EntityRow, size: int) -> int:
+    soldiers = clamp_int(size, 0, rules.limits.army_soldier_cap)
+    set_stats(army, size=soldiers)
+    rows = await stacks_of(session, army.id)
+    if rows:
+        align(army, rows)
+    return soldiers
+
+
+async def retire_stacks(session: AsyncSession, army_id: int) -> int:
+    cleared = 0
+    for row in await stacks_of(session, army_id):
+        cleared += row.count
+        row.count = 0
+        row.wounded = 0
+    return cleared
+
+
+async def reconcile_sizes(ctx: TickContext) -> dict[str, int]:
+    found = {"aligned": 0, "mustered": 0, "retired": 0}
+    knowledge: KnowledgeMap | None = None
+    for row in list(await ctx.session.scalars(select(ArmyRow).order_by(ArmyRow.entity_id))):
+        army = await ctx.session.get(EntityRow, row.entity_id)
+        if army is None:
+            continue
+        stacks = await stacks_of(ctx.session, army.id)
+        if army.status is not EntityStatus.CANON or row.disbanded_epoch is not None:
+            if any(stack.count for stack in stacks) or (stat(army, "size") or 0):
+                with flowing(FlowCategory.DEATH):
+                    set_stats(army, size=0)
+                await retire_stacks(ctx.session, army.id)
+                found["retired"] += 1
+            continue
+        size = stat(army, "size") or 0
+        if not stacks:
+            if size > 0:
+                knowledge = knowledge or await KnowledgeMap.load(ctx.session)
+                await muster(ctx, army, await ctx.session.get(EntityRow, row.owner_entity_id), knowledge)
+                found["mustered"] += 1
+            continue
+        if sum(stack.count for stack in stacks) != size:
+            align(army, stacks)
+            found["aligned"] += 1
+    await ctx.session.flush()
+    return found

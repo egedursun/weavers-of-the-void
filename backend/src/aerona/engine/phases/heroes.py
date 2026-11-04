@@ -424,6 +424,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.name_registry",
     "table.sons",
 )
+@reads("table.feuds")
 async def heroes(ctx: TickContext) -> None:
     world = await load_hero_world(ctx)
     counters = HeroCounters()

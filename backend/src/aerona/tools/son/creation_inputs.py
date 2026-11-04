@@ -20,6 +20,7 @@ from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType, LegendCategory
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.military import HullClass, VesselArmament
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic
 from aerona.domain.enums.travel import VehicleKind
 from aerona.tools.framework.inputs import ToolInput
@@ -67,7 +68,16 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
         EntityType.KNOWLEDGE: {"branch": (KnowledgeBranch, ...), "learner_ids": (list[int] | None, None)},
         EntityType.REGION: {"water": (bool | None, None)},
         EntityType.SPECIES: {"traits": (list[CreatureTrait] | None, None), "body_plan": (BodyPlan, ...)},
-        EntityType.VESSEL: {"target_world_id": (int | None, None), "vessel_kind": (VehicleKind | None, None)},
+        EntityType.VESSEL: {
+            "target_world_id": (int | None, None),
+            "vessel_kind": (VehicleKind | None, None),
+            "hull_class": (HullClass | None, None),
+            "armament": (list[VesselArmament] | None, None),
+            "hull_material": (MaterialKind | None, None),
+            "fabric_material": (MaterialKind | None, None),
+            "home_port_id": (int | None, None),
+            "captain_id": (int | None, None),
+        },
         EntityType.LANGUAGE: {"words": (Annotated[list[WordInput], Field(min_length=1)], ...)},
         EntityType.MORTAL: {"title": (Annotated[str, Field(max_length=TITLE_MAX)] | None, None)},
         EntityType.EVENT: {"effects": (list[EventEffectInput] | None, None)},

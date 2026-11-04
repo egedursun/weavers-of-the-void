@@ -129,6 +129,7 @@ SCAR_FERTILITY: dict[ScarKind, Callable[[Rules], int]] = {
     ScarKind.HAUNTED: lambda rules: rules.scars.haunted_fertility_pct,
     ScarKind.BLIGHTED: lambda rules: rules.scars.blighted_fertility_pct,
     ScarKind.LEAK_WOUND: lambda rules: rules.scars.leak_wound_fertility_pct,
+    ScarKind.PLUNDERED: lambda rules: rules.campaign_depth.plunder_harvest_pct,
 }
 
 RIVER_IRRIGATION: dict[RiverClass, Callable[[Rules], int]] = {

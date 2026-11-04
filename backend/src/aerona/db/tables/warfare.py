@@ -3,9 +3,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.db.base import Base, CreatedAtMixin
+from aerona.db.profile_guard import register_profile_table
 from aerona.db.columns import at_least, enum_type
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
-from aerona.domain.enums.military import DefenderAction, OutcomeClass, SiegeAction, StarvationStage, Tactic
+from aerona.domain.enums.military import DefenderAction, OutcomeClass, SackChoice, SiegeAction, StarvationStage, Tactic
 from aerona.domain.enums.war import (
     BattleOutcome,
     CaptiveStatus,
@@ -47,6 +48,7 @@ class WarRow(CreatedAtMixin, Base):
     victor_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     loser_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     incited_by_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class WarSideRow(Base):
@@ -95,6 +97,10 @@ class SiegeRow(Base):
     starvation: Mapped[StarvationStage] = mapped_column(enum_type(StarvationStage, "starvation"), default=StarvationStage.NONE)
     last_action: Mapped[SiegeAction | None] = mapped_column(enum_type(SiegeAction, "last_action"))
     last_defence: Mapped[DefenderAction | None] = mapped_column(enum_type(DefenderAction, "last_defence"))
+    wall_material: Mapped[str | None] = mapped_column(String(NAME_MAX_LENGTH))
+    relief_army_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    choice: Mapped[SackChoice | None] = mapped_column(enum_type(SackChoice, "choice"))
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class BattleRow(Base):
@@ -123,6 +129,9 @@ class BattleRow(Base):
     casualties_by_kind: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
     winner_losses: Mapped[int] = mapped_column(default=0)
     loser_losses: Mapped[int] = mapped_column(default=0)
+    tactic_factors: Mapped[dict[str, float]] = mapped_column(JSON, default=dict)
+    morale: Mapped[dict[str, dict[str, int]]] = mapped_column(JSON, default=dict)
+    magic: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
 
 
 class CaptiveRow(Base):
@@ -142,6 +151,9 @@ class CaptiveRow(Base):
     taken_epoch: Mapped[int]
     released_epoch: Mapped[int | None]
     ransom_paid: Mapped[int | None]
+    loyalty: Mapped[int] = mapped_column(default=0)
+    married_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class TributeRow(Base):
@@ -176,3 +188,7 @@ class HeroQuestRow(Base):
     status: Mapped[HeroQuestStatus] = mapped_column(enum_type(HeroQuestStatus, "status"), default=HeroQuestStatus.ACTIVE)
     started_epoch: Mapped[int]
     ended_epoch: Mapped[int | None]
+
+
+register_profile_table("sieges", "besieged_entity_id")
+register_profile_table("captives", "captive_entity_id")

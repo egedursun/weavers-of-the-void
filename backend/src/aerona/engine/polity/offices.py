@@ -16,9 +16,9 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind, TraitKind
 from aerona.domain.enums.polity import GenderRule, LawKind, OathKind, OfficeKind, SuccessionRule
-from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
+from aerona.engine.military.causes import press_claim_war
 from aerona.engine.mind.book import traits_of
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook, sex_of
@@ -29,7 +29,6 @@ from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import active_bonds, close, connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
-from aerona.engine.services.war import declare_war
 
 S = SkillKind
 OFFICE_SKILLS: Mapping[OfficeKind, tuple[tuple[SkillKind, ...], str]] = MappingProxyType(
@@ -353,7 +352,7 @@ async def press_claims(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
             ),
         )
         await connect(ctx.session, claimant.id, host.id, BondKind.MEMBER_OF, ctx.epoch, description="claimant")
-        await declare_war(ctx, host.id, core.id, f"{claimant.name} pressed a claim to {realm.entity.name}", cause=WarCause.UPRISING, world_cap=False)
+        await press_claim_war(ctx, host.id, core.id, claim_id=claim.id, succession=True, reason=f"{claimant.name} pressed a claim to {realm.entity.name}")
         wars += 1
         await note(
             ctx,

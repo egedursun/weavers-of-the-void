@@ -2,7 +2,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, ValidationFailedError
-from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.economy import CurrencyRow
 from aerona.db.tables.entities import EntityRow
@@ -11,7 +11,7 @@ from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.body import HarmCause
-from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.economy import GoodsFlow
@@ -24,6 +24,23 @@ from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.research import steal_technique
+from aerona.engine.military.feuds import house_feud
+from aerona.engine.military.spycraft import (
+    agents_of,
+    blackmail_office,
+    burn_district,
+    catch_agent,
+    cover_access,
+    cover_exposure,
+    cover_for,
+    migrate_bonds,
+    owner_kind,
+    plant_claimant,
+    recruit,
+    reveal_aims,
+    side_for,
+    wound_ruler,
+)
 from aerona.engine.mind.book import skill_level
 from aerona.engine.mind.drives import deceit_drive
 from aerona.engine.mind.opinion import mortal_rulers
@@ -61,24 +78,39 @@ async def _targets(ctx: TickContext, faction: EntityRow) -> list[tuple[bool, int
     return ranked
 
 
+async def would_spy(ctx: TickContext, owner: EntityRow) -> int | None:
+    rules = ctx.rules.espionage
+    if owner.entity_type is EntityType.FACTION:
+        return rules.spy_net_chance if (stat(owner, "sway") or 0) >= rules.spy_min_sway else None
+    if owner.entity_type is EntityType.POLITY:
+        return rules.polity_spy_chance if await spymaster_of(ctx, owner.id) is not None else None
+    if owner.entity_type is EntityType.CULT:
+        return rules.spy_net_chance if (stat(owner, "zeal") or 0) >= rules.cult_spy_zeal else None
+    return None
+
+
 async def found_networks(ctx: TickContext) -> int:
     rules = ctx.rules.espionage
     rng = ctx.rng("networks")
     founded = 0
-    for faction in await canon(ctx.session, [EntityType.FACTION]):
+    owned = set(await ctx.session.scalars(select(SpyNetworkRow.owner_entity_id)))
+    for owner in await canon(ctx.session, [EntityType.FACTION, EntityType.POLITY, EntityType.CULT]):
         if founded >= rules.spy_net_cap:
             break
-        if (stat(faction, "sway") or 0) < rules.spy_min_sway or await BondRepository(ctx.session).outgoing(faction.id, BondKind.SPY_NETWORK):
+        chance = await would_spy(ctx, owner)
+        if chance is None or owner.id in owned:
             continue
-        targets = await _targets(ctx, faction)
+        targets = await _targets(ctx, owner)
         if not targets:
             continue
         hostile, _, target = targets[0]
-        if not rng.chance(rules.spy_net_chance + (rules.spy_net_enemy_bonus_pct if hostile else 0)):
+        if not rng.chance(chance + (rules.spy_net_enemy_bonus_pct if hostile else 0)):
             continue
-        await BondRepository(ctx.session).connect(BondDraft(faction.id, target.id, BondKind.SPY_NETWORK, ctx.epoch, "agent network"))
+        network = await network_for(ctx, owner, target, None)
+        await ctx.session.flush()
+        await recruit(ctx, network)
         founded += 1
-        await _note(ctx, f"{faction.name} began weaving a secret agent network inside {target.name}.", "espionage.network_founded", (faction.id, target.id))
+        await _note(ctx, f"{owner.name} began weaving a secret agent network inside {target.name}.", "espionage.network_founded", (owner.id, target.id))
     return founded
 
 
@@ -131,6 +163,10 @@ async def sabotage(ctx: TickContext, spymaster: EntityRow, target: EntityRow, ne
     else:
         for key in SABOTAGED_STATS:
             shift_stat(target, key, -rules.spy_sabotage_damage)
+        line = await burn_district(ctx, target)
+        text = f"The agents of {spymaster.name} set fires in {target.name}: {line}."
+        await _note(ctx, text, f"espionage.sabotage.{kind.value}", (spymaster.id, target.id))
+        return text
     text = f"The agents of {spymaster.name} sabotaged {target.name}: {SABOTAGE_LINES[kind]}."
     await _note(ctx, text, f"espionage.sabotage.{kind.value}", (spymaster.id, target.id))
     return text
@@ -151,10 +187,19 @@ async def sabotage_kind(ctx: TickContext, target: EntityRow) -> SabotageKind:
 
 async def assassinate(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
     rulers = await mortal_rulers(ctx.session, target.id)
-    victim = await living_entity(ctx.session, rulers[0]) if rulers and network.depth >= ctx.rules.espionage.assassinate_depth else None
+    victim = await living_entity(ctx.session, rulers[0]) if rulers else None
     if victim is None:
         return None
+    if network.depth < ctx.rules.espionage.assassinate_depth:
+        await wound_ruler(ctx, victim, spymaster)
+        text = f"An assassin of {spymaster.name} struck at {victim.name}, ruler of {target.name}, and left them wounded."
+        await _note(ctx, text, "espionage.assassination_wounded", (spymaster.id, target.id, victim.id))
+        return text
     await death_path(ctx, victim, f"murdered by the agents of {spymaster.name}", spymaster.id, "assassination", forced=True, harm=HarmCause.POISON)
+    for agent in await agents_of(ctx, network):
+        if agent.mortal_entity_id is not None:
+            await house_feud(ctx, agent.mortal_entity_id, victim.id, f"the murder of {victim.name}")
+            break
     text = f"Agents of {spymaster.name} reached {victim.name}, ruler of {target.name}, and killed them."
     await _note(ctx, text, "espionage.assassination", (spymaster.id, target.id, victim.id))
     return text
@@ -167,7 +212,9 @@ async def incite(ctx: TickContext, spymaster: EntityRow, target: EntityRow, netw
         return None
     town.unrest = clamp_int(town.unrest + rules.incite_unrest, 0, PERCENT)
     risen = town.unrest >= rules.incite_uprising_unrest and await incite_uprising_quietly(ctx, target)
-    text = f"Agents of {spymaster.name} stirred the streets of {target.name}" + (" until the townsfolk rose against their rulers." if risen else ".")
+    claimant = await plant_claimant(ctx, spymaster, target)
+    planted = f"; they whispered that {claimant.name} was the rightful ruler" if claimant is not None else ""
+    text = f"Agents of {spymaster.name} stirred the streets of {target.name}{planted}" + (" until the townsfolk rose against their rulers." if risen else ".")
     await _note(ctx, text, "espionage.incite", (spymaster.id, target.id))
     return text
 
@@ -178,18 +225,22 @@ async def incite_uprising_quietly(ctx: TickContext, community: EntityRow) -> boo
 
 
 async def gather(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
-    network.intel = clamp_int(network.intel + ctx.rules.espionage.intel_gain, 0, PERCENT)
-    return f"The agents of {spymaster.name} learned the secrets of {target.name}."
+    network.intel = clamp_int(network.intel + cover_access(network, ctx.rules.espionage.intel_gain), 0, PERCENT)
+    aims = await reveal_aims(ctx, network, target)
+    tail = f"; {len(aims)} of its war aims lie open" if aims else ""
+    return f"The agents of {spymaster.name} learned the secrets of {target.name}{tail}."
 
 
 async def blackmail(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
     rules = ctx.rules.espionage
     if network.intel < rules.assassinate_depth // 2:
         return None
-    shift_stat(target, "wealth", -rules.blackmail_wealth)
-    shift_stat(spymaster, "wealth", rules.blackmail_wealth)
     network.intel = clamp_int(network.intel - rules.intel_gain, 0, PERCENT)
-    text = f"{spymaster.name} held the secrets of {target.name}'s rulers over them and was paid to keep quiet."
+    bent = await blackmail_office(ctx, spymaster, target, network)
+    if bent is None:
+        shift_stat(target, "wealth", -rules.blackmail_wealth)
+        shift_stat(spymaster, "wealth", rules.blackmail_wealth)
+    text = (bent + ".") if bent is not None else f"{spymaster.name} held the secrets of {target.name}'s rulers over them and was paid to keep quiet."
     await _note(ctx, text, "espionage.blackmail", (spymaster.id, target.id))
     return text
 
@@ -228,7 +279,10 @@ async def perform_operation(ctx: TickContext, spymaster: EntityRow, target: Enti
     text = await OPERATIONS[operation](ctx, spymaster, target, network)
     if text is None and operation is not SpyOperation.INTEL:
         text = await gather(ctx, spymaster, target, network)
-    network.exposure = clamp_int(network.exposure + ctx.rules.espionage.exposure_per_operation, 0, PERCENT)
+    if "exposure" not in network.locked:
+        network.exposure = clamp_int(network.exposure + cover_exposure(network, ctx.rules.espionage.exposure_per_operation), 0, PERCENT)
+    for agent in await agents_of(ctx, network):
+        agent.exposure = clamp_int(agent.exposure + cover_exposure(network, ctx.rules.espionage.exposure_per_operation), 0, PERCENT)
     network.last_operation, network.last_epoch = operation.value, ctx.epoch
     return text or ""
 
@@ -264,9 +318,15 @@ async def network_for(ctx: TickContext, owner: EntityRow, target: EntityRow, bon
             agent_ids=[],
             depth=0,
             exposure=0,
-            cover=COVERS.get(target.entity_type, SpyCover.BEGGAR),
+            cover=cover_for(owner)
+            if owner.entity_type in {EntityType.FACTION, EntityType.POLITY, EntityType.CULT}
+            else COVERS.get(target.entity_type, SpyCover.BEGGAR),
             since_epoch=ctx.epoch,
             intel=0,
+            owner_kind=owner_kind(owner),
+            side_entity_id=await side_for(ctx, owner),
+            revealed_aims=[],
+            locked=[],
         )
         ctx.session.add(found)
     if bond is not None:
@@ -278,8 +338,10 @@ async def network_for(ctx: TickContext, owner: EntityRow, target: EntityRow, bon
 async def deepen(ctx: TickContext, network: SpyNetworkRow) -> None:
     rules = ctx.rules.espionage
     skill = await skill_level(ctx.session, network.spymaster_entity_id, SkillKind.INTRIGUE) if network.spymaster_entity_id is not None else 0
-    network.depth = clamp_int(network.depth + round_half_up(rules.depth_gain * (1 + skill / PERCENT)), 0, PERCENT)
-    network.agents += 1
+    if "depth" not in network.locked:
+        network.depth = clamp_int(network.depth + cover_access(network, round_half_up(rules.depth_gain * (1 + skill / PERCENT))), 0, PERCENT)
+    if "agents" not in network.locked and await recruit(ctx, network) is not None:
+        network.agents += 1
     network.intel = clamp_int(network.intel + round_half_up(rules.intel_gain * network.depth / PERCENT), 0, PERCENT)
     network.exposure = clamp_int(network.exposure - rules.exposure_decay, 0, PERCENT)
 
@@ -293,27 +355,27 @@ async def caught_chance(ctx: TickContext, network: SpyNetworkRow, target: Entity
 async def run_networks(ctx: TickContext) -> None:
     rules = ctx.rules.espionage
     rng = ctx.rng("operations")
-    bonds = BondRepository(ctx.session)
-    networks = list(
-        await ctx.session.scalars(select(BondRow).where(BondRow.kind == BondKind.SPY_NETWORK, BondRow.state == BondState.ACTIVE).order_by(BondRow.id))
-    )
-    for bond in networks:
-        spymaster, target = await living_entity(ctx.session, bond.source_node_id), await living_entity(ctx.session, bond.target_node_id)
+    ctx.count("spy_bonds_migrated", await migrate_bonds(ctx))
+    for network in list(await ctx.session.scalars(select(SpyNetworkRow).order_by(SpyNetworkRow.id))):
+        spymaster, target = await living_entity(ctx.session, network.owner_entity_id), await living_entity(ctx.session, network.target_entity_id)
         if spymaster is None or target is None:
-            await bonds.deactivate(bond, ctx.epoch, "a side is gone")
+            await ctx.session.delete(network)
             continue
-        if bond.epoch == ctx.epoch:
+        if network.since_epoch == ctx.epoch:
             continue
         guile = await deceit_drive(ctx.session, ctx.rules, spymaster.id)
-        network = await network_for(ctx, spymaster, target, bond)
+        network.spymaster_entity_id = await spymaster_of(ctx, spymaster.id)
         await deepen(ctx, network)
         if rng.chance(await caught_chance(ctx, network, target) / max(guile, MIN_GUILE)):
-            await bonds.deactivate(bond, ctx.epoch, "spies caught")
-            await ctx.session.delete(network)
+            caught = await catch_agent(ctx, network, target)
             await change_relation(ctx, spymaster.id, target.id, -rules.spy_caught_relation_loss, MemoryKind.SPIED_ON_US, note="caught spies")
             war = rng.chance(rules.spy_war_chance) and await declare_war(ctx, target.id, spymaster.id, "espionage", cause=WarCause.ESPIONAGE)
-            tail = f"; {target.name} declared them its enemy" if war else "; the network was dismantled"
-            await _note(ctx, f"The spies of {spymaster.name} were caught in {target.name}{tail}.", "espionage.caught", (spymaster.id, target.id))
+            rolled = not await agents_of(ctx, network) and network.exposure >= rules.roll_up_exposure
+            if rolled:
+                await ctx.session.delete(network)
+            who = f"{caught.name}, a spy of {spymaster.name}," if caught is not None else f"The spies of {spymaster.name}"
+            tail = f"; {target.name} declared them its enemy" if war else "; the network was rolled up" if rolled else ""
+            await _note(ctx, f"{who} were caught in {target.name}{tail}.", "espionage.caught", (spymaster.id, target.id))
             ctx.count("spies_caught")
             continue
         if not rng.chance(rules.spy_action_chance * guile):
@@ -353,6 +415,78 @@ async def run_networks(ctx: TickContext) -> None:
     "table.incidents",
     "table.memories",
 )
+@reads(
+    "cult.zeal",
+    "table.applied_fixups",
+    "table.army_officers",
+    "table.claims",
+    "table.community_cohorts",
+    "table.community_stocks",
+    "table.currencies",
+    "table.districts",
+    "table.feuds",
+    "table.goods",
+    "table.house_members",
+    "table.house_profiles",
+    "table.injuries",
+    "table.law_profiles",
+    "table.learned_tactics",
+    "table.loans",
+    "table.memories",
+    "table.mercenary_contracts",
+    "table.offices",
+    "table.peace_terms",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.routes",
+    "table.settlement_infrastructure",
+    "table.settlement_profiles",
+    "table.spy_agents",
+    "table.spy_networks",
+    "table.treaty_clauses",
+    "table.treaty_profiles",
+    "table.unit_designs",
+    "table.vessel_profiles",
+    "table.war_aims",
+    "table.war_sides",
+    "table.workshops",
+)
+@writes(
+    "people.wealth",
+    "settlement.wealth",
+    "table.applied_fixups",
+    "table.army_officers",
+    "table.battle_casualties",
+    "table.battle_stacks",
+    "table.bonds",
+    "table.captive_cohorts",
+    "table.captives",
+    "table.claims",
+    "table.community_cohorts",
+    "table.community_stocks",
+    "table.currencies",
+    "table.districts",
+    "table.entities",
+    "table.feuds",
+    "table.goods",
+    "table.house_members",
+    "table.house_profiles",
+    "table.learned_tactics",
+    "table.loans",
+    "table.maimed_cohorts",
+    "table.memories",
+    "table.mercenary_contracts",
+    "table.offices",
+    "table.peace_terms",
+    "table.polity_profiles",
+    "table.region_environment",
+    "table.settlement_infrastructure",
+    "table.settlement_profiles",
+    "table.spy_agents",
+    "table.spy_networks",
+    "table.treaty_breaches",
+    "table.vessel_profiles",
+)
 async def espionage(ctx: TickContext) -> None:
     ctx.count("spy_networks_founded", await found_networks(ctx))
     await run_networks(ctx)
@@ -360,16 +494,20 @@ async def espionage(ctx: TickContext) -> None:
 
 async def order_spy_operation(ctx: TickContext, spymaster_id: int, target_id: int, operation: SpyOperation) -> str:
     spymaster, target = await living_entity(ctx.session, spymaster_id), await living_entity(ctx.session, target_id)
-    if spymaster is None or target is None or spymaster.entity_type is not EntityType.FACTION or target.entity_type not in COMMUNITY_TYPES:
-        raise ValidationFailedError("A living faction spies on a living community.")
+    if spymaster is None or target is None or spymaster.entity_type not in SPY_OWNERS or target.entity_type not in COMMUNITY_TYPES:
+        raise ValidationFailedError("A living realm, faction or cult spies on a living community.")
     if spymaster.id == target.id:
-        raise ConflictError("A faction cannot spy on itself.")
+        raise ConflictError("No one can spy on itself.")
     if spymaster.status is not EntityStatus.CANON:
         raise ConflictError(f"{spymaster.name} is gone.")
-    bonds = BondRepository(ctx.session)
-    if not await bonds.active_between(spymaster.id, target.id, [BondKind.SPY_NETWORK]):
-        await bonds.connect(BondDraft(spymaster.id, target.id, BondKind.SPY_NETWORK, ctx.epoch, "agent network by decree"))
+    network = await network_for(ctx, spymaster, target, None)
+    await ctx.session.flush()
+    if not await agents_of(ctx, network):
+        await recruit(ctx, network)
     return await perform_operation(ctx, spymaster, target, operation)
+
+
+SPY_OWNERS = frozenset({EntityType.FACTION, EntityType.POLITY, EntityType.CULT, *COMMUNITY_TYPES})
 
 
 PHASES = (Phase("espionage", espionage),)

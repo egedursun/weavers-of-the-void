@@ -12,6 +12,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.gods.progress import cap_gained_essence
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.military.ransom import carry_language, cohort_ransom, pay_from_treasury, release_by_opinion
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.hooks import judged
 from aerona.engine.polity.laws import law_param
@@ -62,8 +63,9 @@ async def sacrifice(ctx: TickContext, row: CaptiveCohortRow, captor: EntityRow) 
 
 
 async def ransom(ctx: TickContext, row: CaptiveCohortRow, captor: EntityRow, home: EntityRow) -> int:
-    cost = ctx.rules.campaigns.ransom_cost
-    shift_stat(home, "wealth", -cost)
+    cost = await pay_from_treasury(ctx, home, cohort_ransom(ctx, row))
+    if cost <= 0:
+        return 0
     shift_stat(captor, "wealth", cost)
     return settle_into(ctx, home, row.count)
 
@@ -77,10 +79,9 @@ async def decide(ctx: TickContext, row: CaptiveCohortRow) -> CaptiveFate:
         return CaptiveFate.RELEASED
     rng = ctx.rng(f"captive_cohort.{row.id}.{ctx.epoch}")
     values = await values_for(ctx.session, captor.id)
-    if home is not None and rich(ctx, home) and await ransom_lawful(ctx, captor) and rng.chance(table.ransom_pct):
-        await ransom(ctx, row, captor, home)
+    if home is not None and rich(ctx, home) and await ransom_lawful(ctx, captor) and rng.chance(table.ransom_pct) and await ransom(ctx, row, captor, home):
         return CaptiveFate.RANSOMED
-    if values.get(ValueAxis.MERCY, 0) >= table.release_mercy:
+    if values.get(ValueAxis.MERCY, 0) >= table.release_mercy or await release_by_opinion(ctx, captor, home):
         settle_into(ctx, home, row.count)
         return CaptiveFate.RELEASED
     sacrificial = values.get(ValueAxis.DEATH, 0) >= table.sacrifice_death or TenetKind.HUMAN_SACRIFICE in await faith_tenets(ctx.session, captor.id)
@@ -89,6 +90,7 @@ async def decide(ctx: TickContext, row: CaptiveCohortRow) -> CaptiveFate:
         return CaptiveFate.SACRIFICED
     if rng.chance(table.labour_pct) or ctx.epoch - row.since_epoch >= ctx.rules.campaigns.captive_defection_epochs:
         settle_into(ctx, captor, row.count)
+        await carry_language(ctx, row, captor)
         return CaptiveFate.ENSLAVED if await slavery_lawful(ctx, captor) else CaptiveFate.LABOUR
     return CaptiveFate.HELD
 

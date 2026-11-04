@@ -44,7 +44,7 @@ async def crusade(ctx: TickContext, church: Church, book: FaithBook, atlas: Regi
     if pair is None:
         return None
     member, infidel = pair
-    if not await declare_war(ctx, member.id, infidel.id, f"the holy war of {church.cult.name}", cause=WarCause.FOREIGN_GOD):
+    if not await declare_war(ctx, member.id, infidel.id, f"the holy war of {church.cult.name}", cause=WarCause.HOLY_WAR):
         return None
     doctrine = church.doctrine
     realm_id = await ctx.session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == member.id).limit(1))
