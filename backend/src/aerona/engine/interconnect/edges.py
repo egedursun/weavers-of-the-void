@@ -5,7 +5,7 @@ from aerona.domain.enums.modifier import ModifierSource
 from aerona.engine.interconnect.annotations import declared_reads, declared_writes
 from aerona.engine.interconnect.catalog import REGISTERED
 from aerona.engine.interconnect.registry import Edge, EdgeKind, Mechanic, Subsystem
-from aerona.engine.interconnect.sources import CONDITION_EFFECTS, SOURCE_SUBSYSTEMS
+from aerona.engine.interconnect.sources import CONDITION_EFFECTS, SOURCE_KEYS, SOURCE_SUBSYSTEMS, SOURCE_WRITERS
 from aerona.engine.phase import Phase
 from aerona.engine.pipeline import all_phases
 
@@ -70,17 +70,22 @@ def flow_edges() -> list[Edge]:
     return edges
 
 
-def modifier_edges() -> list[Edge]:
+def modifier_targets() -> dict[ModifierSource, set[str]]:
     targets: dict[ModifierSource, set[str]] = {ModifierSource.WONDER: set(WONDER_KEYS)}
     targets[ModifierSource.CONDITION] = {effect.key for effects in CONDITION_EFFECTS.values() for effect in effects}
+    for source, keys in SOURCE_KEYS.items():
+        targets[source] = set(keys)
+    return targets
+
+
+def modifier_edges() -> list[Edge]:
     edges: list[Edge] = []
-    for source, keys in targets.items():
+    for source, keys in modifier_targets().items():
+        writer = SOURCE_WRITERS.get(source, "modifier_upkeep")
         for mechanic in REGISTERED.values():
             read = {bare(key) for key in mechanic_reads(mechanic)}
             for key in sorted(keys & read):
-                edges.append(
-                    Edge(SOURCE_SUBSYSTEMS[source], mechanic.subsystem, key, f"modifiers.{source.value}", EdgeKind.MODIFIER, "modifier_upkeep", mechanic.key)
-                )
+                edges.append(Edge(SOURCE_SUBSYSTEMS[source], mechanic.subsystem, key, f"modifiers.{source.value}", EdgeKind.MODIFIER, writer, mechanic.key))
     return edges
 
 

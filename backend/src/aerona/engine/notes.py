@@ -34,8 +34,11 @@ async def note(
     feed: FeedCategory | None = None,
     world_id: int | None = None,
     roles: Mapping[int, IncidentRole] | None = None,
+    cause_incident_id: int | None = None,
 ) -> ChronicleRow:
-    write = await ctx.chronicle(kind, text, template_key=key, entity_ids=ids, son_id=son_id, feed_category=feed, world_id=world_id, roles=roles)
+    write = await ctx.chronicle(
+        kind, text, template_key=key, entity_ids=ids, son_id=son_id, feed_category=feed, world_id=world_id, roles=roles, cause_incident_id=cause_incident_id
+    )
     ctx.count("notes")
     ctx.publish(
         EventKind.ENGINE_NOTE,

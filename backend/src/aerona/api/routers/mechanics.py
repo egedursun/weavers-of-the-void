@@ -1,9 +1,26 @@
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, Path, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader
-from aerona.api.schemas.mechanics import ActingMechanic, EffectiveValue, GuardRecord, IncidentRecord, MechanicRecord, ModifierRecord, NodeMechanicsView
+from aerona.api.schemas.mechanics import (
+    ActingMechanic,
+    CausalEdge,
+    CausalityView,
+    CausalNode,
+    EffectiveValue,
+    GuardRecord,
+    IncidentParticipantRecord,
+    IncidentRecord,
+    MechanicDetailView,
+    MechanicLinkRecord,
+    MechanicRecord,
+    MechanicsGraphView,
+    ModifierRecord,
+    NodeMechanicsView,
+    SubsystemLink,
+    SubsystemSummary,
+)
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.entities import EntityRow
@@ -13,9 +30,11 @@ from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.modifier import ModifierSource
 from aerona.engine.interconnect.catalog import REGISTERED
 from aerona.engine.interconnect.edges import GENERIC_CARRIERS, all_edges, mechanic_reads, mechanic_writes
-from aerona.engine.interconnect.incidents import chain_to, last_incident
+from aerona.engine.interconnect.explorer import mechanic_links, subsystem_links
+from aerona.engine.interconnect.incidents import causality_graph, chain_to, last_incident
+from aerona.engine.interconnect.registry import Subsystem
 from aerona.engine.interconnect.sources import SOURCE_SUBSYSTEMS, reason_text
-from aerona.engine.primitives.modifiers import ModifierIndex
+from aerona.engine.primitives.modifiers import VIRTUAL_KEYS, ModifierIndex
 from aerona.engine.primitives.stats import base_stat
 
 router = APIRouter(tags=["mechanics"])
@@ -58,6 +77,7 @@ def modifier_record(row: ModifierRow, names: dict[int, str]) -> ModifierRecord:
         start_epoch=row.start_epoch,
         end_epoch=row.end_epoch,
         decay_pct=row.decay_pct,
+        held=row.held,
     )
 
 
@@ -138,7 +158,7 @@ async def node_mechanics(services: ServicesDep, node_id: int = Path(ge=1)) -> No
         keys = sorted({*index.keys_of(node_id), *(stat_keys(entity) if entity is not None else [])})
         for key in keys:
             base = base_stat(entity, key) if entity is not None else None
-            breakdown = index.breakdown(node_id, key, float(base or 0))
+            breakdown = index.breakdown(node_id, key, VIRTUAL_KEYS.get(key, float(base or 0)) if base is None else float(base))
             effective.append(
                 EffectiveValue(
                     key=key,
@@ -178,6 +198,8 @@ async def node_mechanics(services: ServicesDep, node_id: int = Path(ge=1)) -> No
                     thread_id=incident.thread_id,
                     causes=list(chain.texts[:-1]),
                     consequences=followed.get(incident.id, []),
+                    place_entity_id=incident.place_entity_id,
+                    participants=await participants_of(session, incident.id),
                 )
             )
         return NodeMechanicsView(
@@ -190,3 +212,92 @@ async def node_mechanics(services: ServicesDep, node_id: int = Path(ge=1)) -> No
             suppressions=guards[ModifierSource.SUPPRESSION],
             incidents=incidents,
         )
+
+
+async def participants_of(session: AsyncSession, incident_id: int) -> list[IncidentParticipantRecord]:
+    rows = list(
+        await session.scalars(select(IncidentParticipantRow).where(IncidentParticipantRow.incident_id == incident_id).order_by(IncidentParticipantRow.position))
+    )
+    found: list[IncidentParticipantRecord] = []
+    for row in rows:
+        entity = await session.get(EntityRow, row.node_id)
+        node = entity if entity is not None else await session.get(NodeRow, row.node_id)
+        found.append(IncidentParticipantRecord(node_id=row.node_id, name=getattr(node, "name", None), role=row.role))
+    return found
+
+
+@router.get("/nodes/{node_id}/causality", response_model=CausalityView)
+async def node_causality(services: ServicesDep, node_id: int = Path(ge=1), depth: int | None = Query(default=None, ge=1, le=200)) -> CausalityView:
+    async with reader(services) as session:
+        if await session.get(NodeRow, node_id) is None:
+            raise NotFoundError("No such record.")
+        graph = await causality_graph(session, node_id, depth or services.rules.current.incidents.chain_depth)
+        nodes = [
+            CausalNode(
+                id=row.id,
+                kind=row.kind,
+                epoch=row.epoch,
+                year=row.year,
+                magnitude=row.magnitude,
+                text=graph.texts.get(row.id, row.kind),
+                own=row.id in graph.roles,
+                role=graph.roles.get(row.id),
+                cause_incident_id=row.cause_incident_id,
+            )
+            for row in sorted(graph.incidents.values(), key=lambda item: (item.epoch, item.id))
+        ]
+        edges = [CausalEdge(cause=cause, effect=effect, span=graph.incidents[effect].epoch - graph.incidents[cause].epoch) for cause, effect in graph.edges]
+        return CausalityView(node_id=node_id, nodes=nodes, edges=edges)
+
+
+@router.get("/mechanics/graph", response_model=MechanicsGraphView)
+async def mechanics_graph() -> MechanicsGraphView:
+    links = subsystem_links()
+    counts: dict[Subsystem, int] = {}
+    for mechanic in REGISTERED.values():
+        counts[mechanic.subsystem] = counts.get(mechanic.subsystem, 0) + 1
+    summaries = [
+        SubsystemSummary(
+            key=subsystem,
+            mechanics=counts.get(subsystem, 0),
+            outgoing=len({link.target for link in links if link.source is subsystem and link.target is not subsystem}),
+            incoming=len({link.source for link in links if link.target is subsystem and link.source is not subsystem}),
+        )
+        for subsystem in Subsystem
+    ]
+    return MechanicsGraphView(
+        subsystems=summaries,
+        links=[
+            SubsystemLink(
+                source=link.source,
+                target=link.target,
+                kinds=list(link.kinds),
+                edges=link.edges,
+                carriers=list(link.carriers),
+                writers=list(link.writers),
+                readers=list(link.readers),
+            )
+            for link in links
+        ],
+        mechanics=[mechanic_record(key) for key in sorted(REGISTERED)],
+    )
+
+
+@router.get("/mechanics/{key}/links", response_model=MechanicDetailView)
+async def mechanic_detail(key: str = Path(min_length=1, max_length=120)) -> MechanicDetailView:
+    if key not in REGISTERED:
+        raise NotFoundError(f"No mechanic is called {key}.")
+    return MechanicDetailView(
+        mechanic=mechanic_record(key),
+        links=[
+            MechanicLinkRecord(
+                direction=link.direction,
+                other=link.other,
+                other_title=REGISTERED[link.other].title if link.other in REGISTERED else None,
+                other_subsystem=link.other_subsystem,
+                kind=link.kind,
+                carriers=list(link.carriers),
+            )
+            for link in mechanic_links().get(key, ())
+        ],
+    )

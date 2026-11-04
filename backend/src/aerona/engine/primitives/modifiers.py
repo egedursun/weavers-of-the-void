@@ -14,6 +14,8 @@ from aerona.rules.registry import Rules
 NEUTRAL_MULTIPLIER = 1.0
 GUARD_SOURCES = (ModifierSource.PIN, ModifierSource.SUPPRESSION)
 UNMODIFIABLE_KEYS = frozenset({"population", "followers", "size"})
+GROWTH_KEY = "growth"
+VIRTUAL_KEYS: dict[str, float] = {GROWTH_KEY: 1.0}
 
 
 @dataclass
@@ -153,6 +155,14 @@ class ModifierIndex:
             Contribution(row.id, row.op, row.magnitude, row.source_kind, row.source_node_id, row.reason_key, row.stacking_group)
         )
 
+    def discard(self, node_ids: Iterable[int], sources: Iterable[ModifierSource]) -> None:
+        nodes = set(node_ids)
+        dropped = set(sources)
+        for target in [target for target in self._by_target if target[0] in nodes]:
+            self._by_target[target] = [item for item in self._by_target[target] if item.source_kind not in dropped]
+            if not self._by_target[target]:
+                del self._by_target[target]
+
     def has(self, node_id: int, key: str) -> bool:
         return (node_id, key) in self._by_target
 
@@ -160,7 +170,52 @@ class ModifierIndex:
         return sorted(key for target, key in self._by_target if target == node_id)
 
 
-async def add_modifier(session: AsyncSession, draft: ModifierDraft) -> ModifierRow:
+def forget_live(node_ids: Iterable[int], sources: Iterable[ModifierSource]) -> None:
+    live = LIVE_MODIFIERS.get()
+    if live is not None:
+        live.index.discard(node_ids, sources)
+
+
+def virtual_value(node_id: int, key: str) -> float:
+    return combine(VIRTUAL_KEYS[key], live_contributions(node_id, key)).value
+
+
+def live_sources(node_id: int, key: str) -> frozenset[ModifierSource]:
+    return frozenset(item.source_kind for item in live_contributions(node_id, key))
+
+
+def row_of(draft: ModifierDraft, *, held: bool = False) -> ModifierRow:
+    return ModifierRow(
+        target_node_id=draft.target_node_id,
+        target_key=draft.target_key,
+        op=draft.op,
+        magnitude=draft.magnitude,
+        source_kind=draft.source_kind,
+        source_node_id=draft.source_node_id,
+        stacking_group=draft.stacking_group,
+        start_epoch=draft.start_epoch,
+        end_epoch=draft.end_epoch,
+        decay_pct=draft.decay_pct,
+        reason_key=draft.reason_key,
+        held=held,
+    )
+
+
+async def add_modifiers(session: AsyncSession, drafts: Iterable[ModifierDraft]) -> list[ModifierRow]:
+    rows = [row_of(draft) for draft in drafts if draft.target_key not in UNMODIFIABLE_KEYS or draft.source_kind in GUARD_SOURCES]
+    if not rows:
+        return []
+    session.add_all(rows)
+    await session.flush()
+    live = LIVE_MODIFIERS.get()
+    if live is not None:
+        for row in rows:
+            if row.start_epoch <= live.epoch and (row.end_epoch is None or row.end_epoch >= live.epoch):
+                live.index.add(row)
+    return rows
+
+
+async def add_modifier(session: AsyncSession, draft: ModifierDraft, *, held: bool = False) -> ModifierRow:
     row = ModifierRow(
         target_node_id=draft.target_node_id,
         target_key=draft.target_key,
@@ -173,6 +228,7 @@ async def add_modifier(session: AsyncSession, draft: ModifierDraft) -> ModifierR
         end_epoch=draft.end_epoch,
         decay_pct=draft.decay_pct,
         reason_key=draft.reason_key,
+        held=held,
     )
     if draft.target_key in UNMODIFIABLE_KEYS and draft.source_kind not in GUARD_SOURCES:
         raise ValueError(f"{draft.target_key} is a conserved count and cannot carry a modifier.")

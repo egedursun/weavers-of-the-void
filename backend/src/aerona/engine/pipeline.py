@@ -209,6 +209,7 @@ CLEANUP_STAGE = stage(
     "modifier_upkeep",
     "world_maps",
     "environment_survey",
+    "environment_modifiers",
     "mind_survey",
     "body_survey",
     "economy_survey",
