@@ -114,7 +114,7 @@ function FeudCard({
           tone='warning'
         />
       </div>
-      <div className='grid min-w-0 grid-cols-3 gap-2'>
+      <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3'>
         <MiniStat
           icon={Hourglass}
           label='Generations'

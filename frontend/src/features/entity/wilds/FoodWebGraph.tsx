@@ -131,7 +131,31 @@ export function FoodWebGraph({ web }: { web: FoodWeb }) {
           )
         })}
       </svg>
-      <figcaption className='flex min-w-0 flex-wrap items-center gap-3'>
+      <figcaption className='flex min-w-0 flex-col gap-1.5'>
+        <span className='flex min-w-0 flex-wrap gap-x-3 gap-y-1'>
+          {[...new Set(layout.nodes.map((node) => node.diet))].map((diet) => {
+            const spec = named(DIET, diet)
+            return (
+              <span key={diet} className='flex items-center gap-1.5'>
+                <svg
+                  viewBox='0 0 10 10'
+                  aria-hidden='true'
+                  className='size-icon-xs shrink-0'
+                >
+                  <circle
+                    cx={5}
+                    cy={5}
+                    r={4.5}
+                    className={FILL[spec.tone ?? 'gold']}
+                  />
+                </svg>
+                <Muted as='span' variant='caption'>
+                  {spec.label}
+                </Muted>
+              </span>
+            )
+          })}
+        </span>
         <Muted as='span' variant='caption'>
           Hunters stand above their prey. Bigger circles are more numerous.
           Dashed gold hunts are held by you.

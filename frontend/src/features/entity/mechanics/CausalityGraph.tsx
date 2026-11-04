@@ -80,6 +80,18 @@ function clip(text: string, size: number): string {
   return text.length > size ? `${text.slice(0, size - 1)}…` : text
 }
 
+const CAUSE_KEY = [
+  { label: 'This record', className: 'border-border bg-card' },
+  { label: 'Another record', className: 'border-border bg-muted' },
+  { label: 'It was struck', className: 'border-destructive bg-muted' },
+  { label: 'It acted', className: 'border-primary bg-muted' },
+  {
+    label: 'Cause across epochs',
+    className:
+      'h-0 border-dashed border-primary border-t-2 border-x-0 border-b-0 rounded-none',
+  },
+]
+
 export function CausalityGraph({ nodeId }: { nodeId: number }) {
   const query = useQuery({
     queryKey: [...loreKeys.entity(nodeId), 'causality'] as const,
@@ -194,9 +206,25 @@ export function CausalityGraph({ nodeId }: { nodeId: number }) {
           })}
         </svg>
       </div>
+      <div className='flex min-w-0 flex-wrap gap-x-3 gap-y-1'>
+        {CAUSE_KEY.map((entry) => (
+          <span key={entry.label} className='flex items-center gap-1.5'>
+            <span
+              aria-hidden='true'
+              className={cn(
+                'h-3 w-5 shrink-0 rounded-sm border-2',
+                entry.className
+              )}
+            />
+            <Muted as='span' variant='caption'>
+              {entry.label}
+            </Muted>
+          </span>
+        ))}
+      </div>
       <Muted variant='caption'>
-        Each column is one more step of cause; dashed lines reach across epochs.
-        Pick an incident to read it.
+        Each column is one more step of cause; dashed gold lines reach across
+        epochs. Pick an incident to read it.
       </Muted>
       {selected && (
         <div className='flex min-w-0 items-start gap-2 rounded-lg border bg-background p-2'>

@@ -142,7 +142,7 @@ export function ItemPanel({
           hint='Its price in trade'
         />
       </div>
-      <div className='grid min-w-0 grid-cols-3 gap-2'>
+      <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3'>
         <MiniStat icon={Ruler} label='Reach' value={card.reach} />
         <MiniStat icon={Shield} label='Coverage' value={card.coverage} />
         <MiniStat icon={Weight} label='Weight' value={card.weight} />

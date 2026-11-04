@@ -1161,7 +1161,7 @@ export function TreasurySection({ settlementId }: { settlementId: number }) {
         icon={Coins}
       >
         <div className='@container/coin flex min-w-0 flex-col gap-4'>
-          <div className='grid min-w-0 grid-cols-3 gap-3'>
+          <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3'>
             <KpiTile
               label='In the coffers'
               value={formatInteger(plan.treasury)}
