@@ -342,12 +342,15 @@ async def _close(ctx: TickContext, bearer: Bearer, row: InjuryRow, care: Care, r
 
 
 HEALING_KEY = "healing"
+INJURY_HOLD = "injuries"
 
 
 async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending:
     if blocked(bearer.id, HEALING_KEY):
         return Tending()
     body = await ensure_body(ctx.session, ctx.rules, bearer, ctx.epoch)
+    if INJURY_HOLD in body.locked:
+        return Tending()
     anatomy = anatomy_for(body)
     table = ctx.rules.healing
     care = await world.care_for(ctx.session, bearer)

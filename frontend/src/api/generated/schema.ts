@@ -4255,6 +4255,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mortals/{mortal_id}/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["mortal_profile_api_mortals__mortal_id__profile_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mortals/{mortal_id}/family": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["family_tree_api_mortals__mortal_id__family_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/mechanics": {
         parameters: {
             query?: never;
@@ -4279,6 +4311,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["node_mechanics_api_nodes__node_id__mechanics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/nodes/{node_id}/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["node_profiles_api_nodes__node_id__profiles_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8207,6 +8255,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/profile:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_profile_set_api_actions_profile_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/profile:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_profile_release_api_actions_profile_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/ley:sever": {
         parameters: {
             query?: never;
@@ -10111,10 +10191,336 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/mind:skill_edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mind_skill_edit_api_actions_mind_skill_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/body:condition_edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_body_condition_edit_api_actions_body_condition_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/body:prosthesis_edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_body_prosthesis_edit_api_actions_body_prosthesis_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/body:injury_hold": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_body_injury_hold_api_actions_body_injury_hold_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mortal:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mortal_set_api_actions_mortal_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mortal:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mortal_release_api_actions_mortal_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mortal:ability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mortal_ability_api_actions_mortal_ability_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mortal:ability_release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mortal_ability_release_api_actions_mortal_ability_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mortal:sex": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mortal_sex_api_actions_mortal_sex_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/kin:betroth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_kin_betroth_api_actions_kin_betroth_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/kin:marry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_kin_marry_api_actions_kin_marry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/kin:end_marriage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_kin_end_marriage_api_actions_kin_end_marriage_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/kin:edit_marriage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_kin_edit_marriage_api_actions_kin_edit_marriage_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/kin:delete_marriage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_kin_delete_marriage_api_actions_kin_delete_marriage_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/kin:bond": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_kin_bond_api_actions_kin_bond_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/kin:unbond": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_kin_unbond_api_actions_kin_unbond_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mortal:equip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mortal_equip_api_actions_mortal_equip_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mortal:equip_release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mortal_equip_release_api_actions_mortal_equip_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mortal:sentence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mortal_sentence_api_actions_mortal_sentence_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/mortal:pardon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_mortal_pardon_api_actions_mortal_pardon_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        Ability: "endurance" | "willpower" | "perception" | "wisdom" | "creativity" | "beauty";
+        AbilityView: {
+            ability: components["schemas"]["Ability"];
+            value: number;
+            held: boolean;
+        };
         AchievementKey: "second_sky" | "constellation" | "prophecy_fulfilled" | "return_from_death" | "fathers_hand" | "babel" | "crowded_world" | "first_prayer" | "creators_cult" | "interstellar_traveller" | "saga_completed" | "god_of_epochs" | "ancient" | "crowded_pantheon" | "first_explorers" | "sensed_world" | "weapons_silent";
         AchievementView: {
             key: components["schemas"]["AchievementKey"];
@@ -10559,6 +10965,12 @@ export interface components {
             count: number;
             veterans?: number | null;
         };
+        BodyConditionEditInput: {
+            condition_id: number;
+            severity?: number | null;
+            visible?: boolean | null;
+            part?: components["schemas"]["BodyPart"] | null;
+        };
         BodyConditionEndInput: {
             condition_id: number;
         };
@@ -10602,12 +11014,21 @@ export interface components {
             injury_id?: number | null;
             lasting: boolean;
         };
+        BodyInjuryHoldInput: {
+            bearer_id: number;
+            hold: boolean;
+        };
         BodyInjuryInput: {
             injury_id: number;
             state?: components["schemas"]["InjuryState"] | null;
             severity?: number | null;
             function_loss?: number | null;
             visible?: boolean | null;
+            part?: components["schemas"]["BodyPart"] | null;
+            kind?: components["schemas"]["InjuryKind"] | null;
+            damage_type?: components["schemas"]["DamageType"] | null;
+            cause?: components["schemas"]["HarmCause"] | null;
+            infected_epochs?: number | null;
         };
         BodyMaimInput: {
             bearer_id: number;
@@ -10618,11 +11039,18 @@ export interface components {
             cause: components["schemas"]["HarmCause"];
             lethal: boolean;
         };
+        BodyPart: "aura" | "core" | "eye" | "face" | "fingers" | "gills" | "groin" | "gut" | "head" | "heart" | "horn" | "jaw" | "left_antenna" | "left_arm" | "left_branch" | "left_ear" | "left_eye" | "left_fin" | "left_foot" | "left_foreleg" | "left_hand" | "left_hindleg" | "left_leg" | "left_midleg" | "left_wing" | "lungs" | "neck" | "nose" | "pseudopods" | "right_antenna" | "right_arm" | "right_branch" | "right_ear" | "right_eye" | "right_fin" | "right_foot" | "right_foreleg" | "right_hand" | "right_hindleg" | "right_leg" | "right_midleg" | "right_wing" | "roots" | "tail" | "tongue" | "torso" | "venom_gland" | "wings";
         BodyPlan: "humanoid" | "quadruped" | "avian" | "serpentine" | "insectoid" | "aquatic" | "amorphous" | "arboreal" | "incorporeal" | "colossal" | "construct" | "divine_manifest";
         BodyPlanInput: {
             bearer_id: number;
             plan: components["schemas"]["BodyPlan"];
             traits?: components["schemas"]["BodyFunction"][];
+        };
+        BodyProsthesisEditInput: {
+            prosthesis_id: number;
+            quality?: number | null;
+            restored_pct?: number | null;
+            material?: components["schemas"]["MaterialKind"] | null;
         };
         BodyProsthesisInput: {
             injury_id: number;
@@ -10679,7 +11107,7 @@ export interface components {
             wholeness_required: boolean;
             updated_epoch: number;
         };
-        BondKind: "inside" | "lives_in" | "worships" | "enemy" | "ally" | "descends_from" | "protects" | "rules" | "owns" | "beat" | "killed" | "cursed" | "blessed" | "source_of" | "tells_of" | "destroyed" | "loves" | "fears" | "hunts" | "trades_with" | "prophesies" | "caused" | "celebrates" | "forbids" | "speaks" | "produced" | "built" | "migrated_to" | "discovered" | "soul_descended_to" | "party_to" | "member_of" | "knows" | "pays_tribute" | "related" | "holds_captive" | "spy_network" | "pursues" | "companion" | "rival" | "apprentice_of" | "commands" | "part_of" | "passenger_of" | "captain_of" | "tamed" | "truce" | "owes" | "treated_by";
+        BondKind: "inside" | "lives_in" | "worships" | "enemy" | "ally" | "descends_from" | "protects" | "rules" | "owns" | "beat" | "killed" | "cursed" | "blessed" | "source_of" | "tells_of" | "destroyed" | "loves" | "fears" | "hunts" | "trades_with" | "prophesies" | "caused" | "celebrates" | "forbids" | "speaks" | "produced" | "built" | "migrated_to" | "discovered" | "soul_descended_to" | "party_to" | "member_of" | "knows" | "pays_tribute" | "related" | "holds_captive" | "spy_network" | "pursues" | "companion" | "rival" | "apprentice_of" | "commands" | "part_of" | "passenger_of" | "captain_of" | "tamed" | "truce" | "owes" | "treated_by" | "parent_of" | "spouse_of" | "betrothed_to" | "concubine_of" | "fostered_by" | "sworn_kin";
         BondKindInfo: {
             key: string;
             label: string;
@@ -10852,6 +11280,7 @@ export interface components {
             fate: components["schemas"]["CaptiveFate"];
             count?: number | null;
         };
+        CareerPath: "stay" | "army" | "office" | "apprentice" | "vows" | "trade" | "wander" | "bandit";
         CareerView: {
             role: components["schemas"]["MortalRole"] | null;
             ended_epoch: number | null;
@@ -11440,7 +11869,7 @@ export interface components {
             target_id?: number | null;
         };
         CreatorSignKind: "wrath" | "grace" | "silence" | "dream";
-        CreatureTrait: "flying" | "venomous" | "soul_eater" | "radiant" | "fissiparous" | "hive_mind" | "stoneskin" | "time_rewinder" | "shapeshifter" | "mind_reader" | "armoured" | "burrowing" | "aquatic" | "amphibious" | "pack_hunter" | "ambush_predator" | "regenerating" | "poisonous_flesh" | "fire_breathing" | "cold_breathing" | "echolocation" | "camouflage" | "swarm_breeder" | "long_lived" | "mimic" | "spirit_sight" | "iron_eating" | "crop_pest" | "plague_bearer" | "sacred_animal";
+        CreatureTrait: "flying" | "venomous" | "soul_eater" | "radiant" | "fissiparous" | "hive_mind" | "stoneskin" | "time_rewinder" | "shapeshifter" | "mind_reader" | "armoured" | "burrowing" | "aquatic" | "amphibious" | "pack_hunter" | "ambush_predator" | "regenerating" | "poisonous_flesh" | "fire_breathing" | "cold_breathing" | "echolocation" | "camouflage" | "swarm_breeder" | "long_lived" | "mimic" | "spirit_sight" | "iron_eating" | "crop_pest" | "plague_bearer" | "sacred_animal" | "horned" | "tailed";
         CreedAdherentInput: {
             ideology_id: number;
             community_id: number;
@@ -11455,6 +11884,7 @@ export interface components {
             tenet: components["schemas"]["IdeologyTenet"];
             held: boolean;
         };
+        CrimeKind: "theft" | "blasphemy" | "treason" | "murder" | "desertion";
         CultCanoniseInput: {
             cult_id: number;
             saint_id: number;
@@ -11570,6 +12000,7 @@ export interface components {
             orders: components["schemas"]["ResurrectionOrder"][];
             loyal_communities: components["schemas"]["EntitySummary"][];
         };
+        DeathCause: "old_age" | "wounds" | "battle" | "duel" | "execution" | "murder" | "monster" | "disease" | "childbirth" | "famine" | "accident" | "disaster" | "exposure" | "curse" | "magic" | "divine" | "poison" | "sacrifice" | "hardship" | "despair" | "unknown";
         DebtStatus: "open" | "overdue" | "repaid" | "forgiven";
         DebtView: {
             bond_id: number;
@@ -12310,6 +12741,7 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        EquipmentSlot: "wielded_main" | "wielded_off" | "armour_body" | "armour_head" | "mount" | "focus";
         ErrorCode: "invalid" | "not_found" | "conflict" | "busy" | "read_only" | "insufficient" | "forbidden" | "too_large" | "unavailable" | "internal";
         ErrorPayload: {
             epoch?: number | null;
@@ -12399,6 +12831,10 @@ export interface components {
         FaithSyncretizeInput: {
             entity_id: number;
             god_id: number;
+        };
+        FamilyTreeView: {
+            root: number;
+            people: components["schemas"]["TreePerson"][];
         };
         FanaticismKind: "inquisition" | "iconoclasm" | "crusade";
         FateControlsView: {
@@ -12769,7 +13205,7 @@ export interface components {
             phase: number;
             started: boolean;
         };
-        HarmCause: "battle" | "duel" | "punishment" | "torture" | "accident" | "monster" | "disaster" | "curse" | "magic_backlash" | "god" | "poison" | "quest" | "escape" | "sacrifice" | "age" | "player";
+        HarmCause: "battle" | "duel" | "punishment" | "torture" | "accident" | "monster" | "disaster" | "curse" | "magic_backlash" | "god" | "poison" | "quest" | "escape" | "sacrifice" | "age" | "player" | "exposure";
         HealthReport: {
             status: string;
             version: string;
@@ -13362,6 +13798,44 @@ export interface components {
             name: string;
             value: number;
         };
+        KinBetrothInput: {
+            first_id: number;
+            second_id: number;
+        };
+        KinBondInput: {
+            source_id: number;
+            target_id: number;
+            kind: "parent_of" | "spouse_of" | "betrothed_to" | "concubine_of" | "fostered_by" | "sworn_kin";
+        };
+        KinDeleteMarriageInput: {
+            marriage_id: number;
+        };
+        KinEditMarriageInput: {
+            marriage_id: number;
+            kind?: components["schemas"]["MarriageKind"] | null;
+            treaty_id?: number | null;
+            start_epoch?: number | null;
+        };
+        KinEndMarriageInput: {
+            marriage_id: number;
+            cause: components["schemas"]["MarriageEnd"];
+        };
+        KinLink: {
+            bond_id: number;
+            kind: components["schemas"]["BondKind"];
+            other: components["schemas"]["NodeRef"];
+            outgoing: boolean;
+            living: boolean;
+        };
+        KinMarryInput: {
+            first_id: number;
+            second_id: number;
+            kind: components["schemas"]["MarriageKind"];
+            forced: boolean;
+        };
+        KinUnbondInput: {
+            bond_id: number;
+        };
         KinView: {
             language: components["schemas"]["NodeRef"] | null;
             value: number;
@@ -13719,6 +14193,7 @@ export interface components {
             son_kill_cost: number;
             creator_kill_cost: number;
         };
+        LifeStage: "infant" | "child" | "youth" | "adult" | "elder" | "ancient";
         LimboRecord: {
             entity_id: number;
             name: string;
@@ -14036,6 +14511,18 @@ export interface components {
             bond_id: number;
         };
         MarriageCustom: "monogamy" | "polygyny" | "polyandry" | "group";
+        MarriageEnd: "death" | "divorce" | "annulment" | "war";
+        MarriageKind: "monogamous" | "plural" | "political";
+        MarriageView: {
+            id: number;
+            spouse: components["schemas"]["NodeRef"] | null;
+            kind: components["schemas"]["MarriageKind"];
+            treaty: components["schemas"]["NodeRef"] | null;
+            start_epoch: number;
+            end_epoch: number | null;
+            cause_end: components["schemas"]["MarriageEnd"] | null;
+            forced: boolean;
+        };
         MartialStyle: "shieldwall" | "horse_archer" | "skirmisher" | "chariot" | "phalanx" | "berserker" | "naval_raider" | "siege_engineer" | "war_magic" | "beast_war";
         MaterialEditInput: {
             world_id: number;
@@ -14206,15 +14693,25 @@ export interface components {
             role: components["schemas"]["MortalRole"];
             lock: boolean;
         };
+        MindSkillEditInput: {
+            skill_id: number;
+            level?: number | null;
+            xp?: number | null;
+            peak?: number | null;
+            subject_id?: number | null;
+            clear_subject: boolean;
+        };
         MindSkillInput: {
             node_id: number;
             skill: components["schemas"]["SkillKind"];
             level: number;
             lock: boolean;
+            subject_id?: number | null;
         };
         MindSkillRemoveInput: {
             node_id: number;
             skill: components["schemas"]["SkillKind"];
+            subject_id?: number | null;
         };
         MindTraitInput: {
             node_id: number;
@@ -14325,6 +14822,16 @@ export interface components {
             loneliness: number;
             label: components["schemas"]["CreatorMoodLabel"];
         };
+        MortalAbilityInput: {
+            mortal_id: number;
+            ability: components["schemas"]["Ability"];
+            value: number;
+            hold: boolean;
+        };
+        MortalAbilityReleaseInput: {
+            mortal_id: number;
+            ability: components["schemas"]["Ability"];
+        };
         MortalActInput: {
             entity_id: number;
         };
@@ -14348,6 +14855,16 @@ export interface components {
             first_id: number;
             second_id: number;
         };
+        MortalEquipInput: {
+            mortal_id: number;
+            slot: components["schemas"]["EquipmentSlot"];
+            item_id?: number | null;
+            hold: boolean;
+        };
+        MortalEquipReleaseInput: {
+            mortal_id: number;
+            slot: components["schemas"]["EquipmentSlot"];
+        };
         MortalFateInput: {
             mortal_id: number;
             fate: components["schemas"]["FateWrit"];
@@ -14356,11 +14873,66 @@ export interface components {
             mortal_id: number;
             immortal: boolean;
         };
+        MortalPardonInput: {
+            mortal_id: number;
+            return_to_id?: number | null;
+        };
+        MortalProfileView: {
+            mortal: components["schemas"]["NodeRef"];
+            sex: components["schemas"]["MortalSex"];
+            abilities: components["schemas"]["AbilityView"][];
+            life_stage: components["schemas"]["LifeStage"];
+            fertility: number;
+            health: number;
+            stress: number;
+            wealth: number;
+            renown: number;
+            honour: number;
+            infamy: number;
+            legitimacy: number | null;
+            education: number;
+            polity: components["schemas"]["NodeRef"] | null;
+            loyalty_liege: number;
+            loyalty_community: number;
+            loyalty_god: number;
+            career: components["schemas"]["CareerPath"] | null;
+            last_break: components["schemas"]["StressBreak"] | null;
+            last_break_epoch: number | null;
+            cause_of_death: components["schemas"]["DeathCause"] | null;
+            death_place: components["schemas"]["NodeRef"] | null;
+            social_class: string | null;
+            held: string[];
+            marriages: components["schemas"]["MarriageView"][];
+            kin: components["schemas"]["KinLink"][];
+            equipment: components["schemas"]["SlotView"][];
+            stress_threshold: number;
+        };
         MortalProtectInput: {
             entity_id: number;
             protected: boolean;
         };
+        MortalReleaseInput: {
+            mortal_id: number;
+            field: string;
+        };
         MortalRole: "ruler" | "hero" | "warrior" | "knight" | "hunter" | "chosen" | "seer" | "priest" | "sage" | "healer" | "artisan" | "merchant" | "scribe" | "farmer" | "explorer" | "captain" | "bandit" | "saint" | "apprentice" | "commoner";
+        MortalSentenceInput: {
+            mortal_id: number;
+            crime: components["schemas"]["CrimeKind"];
+            punishment: components["schemas"]["aerona__domain__enums__mortal__PunishmentKind"];
+            judge_id?: number | null;
+        };
+        MortalSetInput: {
+            mortal_id: number;
+            field: string;
+            value?: number | string | null;
+            hold: boolean;
+        };
+        MortalSex: "female" | "male" | "other";
+        MortalSexInput: {
+            mortal_id: number;
+            sex: components["schemas"]["MortalSex"];
+        };
         MortalStats: {
             kind: "mortal";
             hp?: number | null;
@@ -14368,10 +14940,16 @@ export interface components {
             agility?: number | null;
             intellect?: number | null;
             charisma?: number | null;
+            endurance?: number | null;
+            willpower?: number | null;
+            perception?: number | null;
+            wisdom?: number | null;
+            creativity?: number | null;
+            beauty?: number | null;
             age?: number | null;
             lifespan?: number | null;
             death_year?: number | null;
-            sex?: ("female" | "male") | null;
+            sex?: ("female" | "male" | "other") | null;
         };
         MortalToolId: "look_at_world" | "inspect_entity" | "search_entities" | "found_language" | "coin_words" | "produce_item" | "build_structure" | "create_culture" | "discover_resource" | "claim_resource" | "found_settlement" | "establish_trade" | "declare_war" | "worship" | "pray_to_creator" | "develop_knowledge" | "learn_knowledge" | "diplomacy" | "go_on_adventure" | "find_route" | "explore_land" | "resurrection_rite" | "build_ship" | "launch_expedition" | "tame_species" | "weave_chimera" | "bind_spirit" | "search_ruins" | "sabotage" | "preach" | "challenge_god" | "deny_god" | "prophesy" | "escape" | "pay_ransom" | "rescue_captive" | "raise_army" | "appoint_commander" | "build_spy_network" | "barter" | "lend" | "repay_debt" | "adopt";
         MortalTurnFinishedEvent: {
@@ -15298,7 +15876,7 @@ export interface components {
             reason: string;
         };
         PostSonsSonIdPunishBody: {
-            kind: components["schemas"]["PunishmentKind"];
+            kind: components["schemas"]["aerona__services__player__interventions__PunishmentKind"];
         };
         PostSonsSonIdRebellionBody: {
             manifesto: string;
@@ -15358,6 +15936,32 @@ export interface components {
         PriceSeries: {
             commodity: components["schemas"]["CommodityKind"];
             points: components["schemas"]["PricePoint"][];
+        };
+        ProfileColumnRecord: {
+            name: string;
+            kind: string;
+            value: number | string | boolean | null;
+            options: string[];
+            nullable: boolean;
+            held: boolean;
+            pinned: boolean;
+        };
+        ProfileReleaseInput: {
+            node_id: number;
+            table: string;
+            column: string;
+        };
+        ProfileSetInput: {
+            node_id: number;
+            table: string;
+            column: string;
+            value: number | string | boolean | null;
+            hold: boolean;
+        };
+        ProfileTableRecord: {
+            table: string;
+            lockable: boolean;
+            columns: components["schemas"]["ProfileColumnRecord"][];
         };
         PromptArea: "shared" | "context" | "genesis" | "son_turn" | "fate" | "chronicler" | "naming" | "voices" | "deepening" | "image_prompts" | "council" | "translation" | "world_birth" | "network_repair" | "mortal" | "opportunities" | "agent" | "chronicle" | "localisation";
         PromptCatalogue: {
@@ -15435,7 +16039,6 @@ export interface components {
             maker_name: string | null;
             epoch: number;
         };
-        PunishmentKind: "lightning" | "chain" | "exile" | "suppress" | "pardon";
         PutBeliefsBody: {
             people_id: number;
             son_id?: number | null;
@@ -16386,6 +16989,11 @@ export interface components {
         SkyTimeEchoInput: {
             thread_id: number;
         };
+        SlotView: {
+            slot: components["schemas"]["EquipmentSlot"];
+            item: components["schemas"]["NodeRef"] | null;
+            held: boolean;
+        };
         SocialClass: "farmer" | "artisan" | "merchant" | "priest" | "warrior" | "scribe" | "noble" | "serf_or_slave" | "outcast" | "monastic";
         Sociality: "solitary" | "pack" | "herd" | "hive";
         SocietyFamineInput: {
@@ -17151,6 +17759,7 @@ export interface components {
             payload: components["schemas"]["EventPayload"];
             at: string;
         };
+        StressBreak: "rage" | "flight" | "despair" | "zeal" | "vice" | "revelation";
         StructureRazeInput: {
             structure_id: number;
             reason: string;
@@ -17549,6 +18158,15 @@ export interface components {
             clauses: components["schemas"]["ClauseView"][];
             breaches: components["schemas"]["BreachView"][];
             locked: string[];
+        };
+        TreePerson: {
+            id: number;
+            name: string;
+            living: boolean;
+            sex: components["schemas"]["MortalSex"] | null;
+            parents: number[];
+            spouses: number[];
+            generation: number;
         };
         TributeForgiveInput: {
             bond_id: number;
@@ -18111,6 +18729,8 @@ export interface components {
             label: string;
             value: number;
         };
+        aerona__domain__enums__mortal__PunishmentKind: "fine" | "flogging" | "exile" | "branding" | "hand" | "tongue" | "eyes" | "death";
+        aerona__services__player__interventions__PunishmentKind: "lightning" | "chain" | "exile" | "suppress" | "pardon";
     };
     responses: never;
     parameters: never;
@@ -26194,6 +26814,64 @@ export interface operations {
             };
         };
     };
+    mortal_profile_api_mortals__mortal_id__profile_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                mortal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MortalProfileView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    family_tree_api_mortals__mortal_id__family_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                mortal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FamilyTreeView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_mechanics_api_mechanics_get: {
         parameters: {
             query?: never;
@@ -26230,6 +26908,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NodeMechanicsView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    node_profiles_api_nodes__node_id__profiles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileTableRecord"][];
                 };
             };
             422: {
@@ -33489,6 +34196,68 @@ export interface operations {
             };
         };
     };
+    action_profile_set_api_actions_profile_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_profile_release_api_actions_profile_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_ley_sever_api_actions_ley_sever_post: {
         parameters: {
             query?: never;
@@ -37178,6 +37947,626 @@ export interface operations {
             };
         };
     };
+    action_mind_skill_edit_api_actions_mind_skill_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MindSkillEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_body_condition_edit_api_actions_body_condition_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BodyConditionEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_body_prosthesis_edit_api_actions_body_prosthesis_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BodyProsthesisEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_body_injury_hold_api_actions_body_injury_hold_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BodyInjuryHoldInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mortal_set_api_actions_mortal_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MortalSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mortal_release_api_actions_mortal_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MortalReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mortal_ability_api_actions_mortal_ability_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MortalAbilityInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mortal_ability_release_api_actions_mortal_ability_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MortalAbilityReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mortal_sex_api_actions_mortal_sex_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MortalSexInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_kin_betroth_api_actions_kin_betroth_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KinBetrothInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_kin_marry_api_actions_kin_marry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KinMarryInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_kin_end_marriage_api_actions_kin_end_marriage_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KinEndMarriageInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_kin_edit_marriage_api_actions_kin_edit_marriage_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KinEditMarriageInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_kin_delete_marriage_api_actions_kin_delete_marriage_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KinDeleteMarriageInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_kin_bond_api_actions_kin_bond_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KinBondInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_kin_unbond_api_actions_kin_unbond_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KinUnbondInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mortal_equip_api_actions_mortal_equip_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MortalEquipInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mortal_equip_release_api_actions_mortal_equip_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MortalEquipReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mortal_sentence_api_actions_mortal_sentence_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MortalSentenceInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_mortal_pardon_api_actions_mortal_pardon_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MortalPardonInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
 }
 type FlattenedDeepRequired<T> = {
     [K in keyof T]-?: FlattenedDeepRequired<T[K] extends unknown[] | undefined | null ? Extract<T[K], unknown[]>[number] : T[K]>;
@@ -37187,6 +38576,7 @@ type ReadonlyArray<T> = [
 ] extends [
     unknown[]
 ] ? Readonly<Exclude<T, undefined>> : Readonly<Exclude<T, undefined>[]>;
+export const abilityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Ability"]> = ["endurance", "willpower", "perception", "wisdom", "creativity", "beauty"];
 export const achievementKeyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AchievementKey"]> = ["second_sky", "constellation", "prophecy_fulfilled", "return_from_death", "fathers_hand", "babel", "crowded_world", "first_prayer", "creators_cult", "interstellar_traveller", "saga_completed", "god_of_epochs", "ancient", "crowded_pantheon", "first_explorers", "sensed_world", "weapons_silent"];
 export const actionGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActionGroup"]> = ["creator", "sons", "god_power", "death", "messages", "interventions", "entities", "diplomacy", "canon", "cosmos", "worlds", "foreign_gods", "goals", "settings", "society", "warfare", "creatures", "beyond", "languages", "memory", "fate"];
 export const actionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActionKind"]> = ["create_entity", "revelation", "summon_son", "bear_child", "command", "absolute_command", "bless_essence", "bless_hp", "bless_stat", "bless_existence", "add_star", "ascend", "lightning", "chain", "exile_son", "suppress_rebellion", "suppress_failed", "forgive", "answer_prayer", "chat", "resurrect_son", "kill_son", "take_life", "resurrect_mortal", "deify", "demote", "grant_power", "choose_prophet", "manifestation", "lineage_curse", "lift_lineage_curse", "convert", "wrath", "world_wrath", "drain_essence", "devour", "harvest_community", "kill_foreign_god", "canon_restore", "canon_strike", "edit_record", "edit_creator", "merge_records", "archive_record", "create_world", "birth_world", "forget_world", "remember_world", "exile_entity", "pardon", "ignite_star", "hang_star", "extinguish_star", "rekindle_star", "seal_gate", "sever_route", "stitch_route", "reveal_route", "recall_journey", "cleanse_leak", "sky_event", "spirit_cloak", "legendary_quest", "miracle", "disaster", "teach_knowledge", "advance_knowledge", "set_knowledge_level", "assign_mechanics", "syncretize_faith", "birth_creole", "curse", "dream", "influence", "declare_chosen", "incite_war", "transform", "destroy", "covenant", "change_anchor", "challenge", "speak_to_sibling", "weave_bond", "pray_to_creator", "harvest_resource", "gift", "holy_world", "interworld_treaty", "foreign_god_war", "open_cosmic_bed", "stitch_leak", "outer_bargain", "rebel", "convene_council", "awaken_peoples", "set_passions", "push_reputation", "found_language", "coin_words", "produce", "build", "create_culture", "discover_resource", "claim", "found_settlement", "establish_trade", "declare_war", "worship", "develop_knowledge", "learn", "diplomacy", "adventure", "discover_route", "explore_land", "resurrection_rite", "build_ship", "set_out", "tame", "weave_chimera", "bind_spirit", "search_ruins", "sabotage", "preach", "defy_god", "deny_god", "prophesy", "escape", "pay_ransom", "rescue_captive", "raise_army", "appoint_commander", "build_spy_network", "barter", "lend", "repay", "adopt", "network_repair", "ledger_undo", "sibling_scheme", "scatter_bones", "move_to_world", "reorder_seasons", "shape_weather", "sever_ley", "foreign_god_talk", "write_plan", "abandon_settlement", "apocalypse", "awaken_species", "betrayal", "bless_army", "cosmic_archive", "cosmic_plague", "creator_sign", "crown_ruler", "cultural_contact", "designate_heir", "disband_army", "dissolve_faction", "end_blood_feud", "epoch_star", "ethnogenesis", "evaluate_goals", "force_battle", "foreign_god_land", "forget_legend", "forgive_debt", "forgive_tribute", "found_faction", "found_market", "fulfil_prophecy", "golden_age", "grant_independence", "grant_victory", "horror_event", "hunt", "impose_tribute", "incite_uprising", "introduce_species", "lay_spirit_to_rest", "megafauna_trail", "mint_coin", "mirror_birth", "mutate_species", "order_exodus", "order_feeding", "outer_cult", "planet_act", "pour_essence", "raise_hero", "raise_notable", "recall_hero", "reclaim_colony", "regenerate_map", "resettle_ruin", "reveal_previous_creation", "revive_legend", "set_doom_clock", "set_immortal", "set_route_danger", "set_sanity", "set_son_relation", "set_tier", "shape_society", "shelter_from_ruin", "soul_descent", "soul_harvest", "spare_prey", "spawn_pirates", "split_people", "summon_outer_being", "time_echo", "train_apprentice", "wake_foreign_god", "edit_language", "regenerate_signature", "add_epoch_words", "discard_intuition", "rejudge_fate", "retry_fate", "override_verdict", "retry_voices", "audit_chronicle", "retry_births", "edit_historian_view", "delete_historian_view", "maintenance", "dissolve_community", "raze_structure", "write_fate", "commemorate", "revive_world", "appoint_guardian", "set_abundance", "seed_place", "declare_pilgrimage_site", "order_end", "other"];
@@ -37222,10 +38612,11 @@ export const biomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schem
 export const blessingKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BlessingKind"]> = ["essence", "hp", "stat", "existence"];
 export const bodyBuildValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyBuild"]> = ["slight", "average", "heavy", "giant"];
 export const bodyFunctionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyFunction"]> = ["grasp", "fine_manipulation", "locomotion", "sight", "hearing", "speech", "breath", "vital", "cognition", "reproduction", "flight", "venom", "horn", "tail", "presence"];
+export const bodyPartValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyPart"]> = ["aura", "core", "eye", "face", "fingers", "gills", "groin", "gut", "head", "heart", "horn", "jaw", "left_antenna", "left_arm", "left_branch", "left_ear", "left_eye", "left_fin", "left_foot", "left_foreleg", "left_hand", "left_hindleg", "left_leg", "left_midleg", "left_wing", "lungs", "neck", "nose", "pseudopods", "right_antenna", "right_arm", "right_branch", "right_ear", "right_eye", "right_fin", "right_foot", "right_foreleg", "right_hand", "right_hindleg", "right_leg", "right_midleg", "right_wing", "roots", "tail", "tongue", "torso", "venom_gland", "wings"];
 export const bodyPlanValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyPlan"]> = ["humanoid", "quadruped", "avian", "serpentine", "insectoid", "aquatic", "amorphous", "arboreal", "incorporeal", "colossal", "construct", "divine_manifest"];
 export const bodyReadingValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyReading"]> = ["neutral", "martial_honour", "purity", "sanctified_suffering"];
 export const bodyRegionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyRegion"]> = ["head", "torso", "arms", "legs", "wings", "tail"];
-export const bondKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BondKind"]> = ["inside", "lives_in", "worships", "enemy", "ally", "descends_from", "protects", "rules", "owns", "beat", "killed", "cursed", "blessed", "source_of", "tells_of", "destroyed", "loves", "fears", "hunts", "trades_with", "prophesies", "caused", "celebrates", "forbids", "speaks", "produced", "built", "migrated_to", "discovered", "soul_descended_to", "party_to", "member_of", "knows", "pays_tribute", "related", "holds_captive", "spy_network", "pursues", "companion", "rival", "apprentice_of", "commands", "part_of", "passenger_of", "captain_of", "tamed", "truce", "owes", "treated_by"];
+export const bondKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BondKind"]> = ["inside", "lives_in", "worships", "enemy", "ally", "descends_from", "protects", "rules", "owns", "beat", "killed", "cursed", "blessed", "source_of", "tells_of", "destroyed", "loves", "fears", "hunts", "trades_with", "prophesies", "caused", "celebrates", "forbids", "speaks", "produced", "built", "migrated_to", "discovered", "soul_descended_to", "party_to", "member_of", "knows", "pays_tribute", "related", "holds_captive", "spy_network", "pursues", "companion", "rival", "apprentice_of", "commands", "part_of", "passenger_of", "captain_of", "tamed", "truce", "owes", "treated_by", "parent_of", "spouse_of", "betrothed_to", "concubine_of", "fostered_by", "sworn_kin"];
 export const bondRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BondRole"]> = ["side", "victor", "loser", "commander", "dueled", "spirit_binding", "homeland", "mentioned_in_fate", "fulfilled_prophecy"];
 export const bondStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BondState"]> = ["active", "past", "hidden_rejected", "hidden_closed"];
 export const borderKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BorderKind"]> = ["coast", "region", "sub_region"];
@@ -37234,6 +38625,7 @@ export const canonVerdictValues: ReadonlyArray<FlattenedDeepRequired<components>
 export const capacityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Capacity"]> = ["melee", "missile", "command", "craft", "scholarship", "presence", "mobility", "fertility"];
 export const captiveFateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CaptiveFate"]> = ["held", "ransomed", "enslaved", "sacrificed", "labour", "exchanged", "released"];
 export const captiveStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CaptiveStatus"]> = ["held", "ransomed", "escaped", "executed", "turncoat", "rescued", "released", "ward"];
+export const careerPathValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CareerPath"]> = ["stay", "army", "office", "apprentice", "vows", "trade", "wander", "bandit"];
 export const celestialStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CelestialStats"]["kind"]> = ["celestial"];
 export const chatAttitudeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ChatAttitude"]> = ["loyal", "distant", "rebellious", "afraid", "grateful", "mocking"];
 export const chronicleAuditKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ChronicleAuditKind"]> = ["rejected_mentioned", "son_skipped", "event_skipped", "verdict_skipped", "winner_as_loser", "active_as_silent", "deed_miscredited", "number_contradiction"];
@@ -37262,11 +38654,13 @@ export const creatorMoodLabelValues: ReadonlyArray<FlattenedDeepRequired<compone
 export const creatorPassionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatorPassion"]> = ["order", "chaos", "beauty", "knowledge", "war", "mercy", "creation", "silence"];
 export const creatorRevelationEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatorRevelationEvent"]["kind"]> = ["creator.revelation"];
 export const creatorSignKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatorSignKind"]> = ["wrath", "grace", "silence", "dream"];
-export const creatureTraitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatureTrait"]> = ["flying", "venomous", "soul_eater", "radiant", "fissiparous", "hive_mind", "stoneskin", "time_rewinder", "shapeshifter", "mind_reader", "armoured", "burrowing", "aquatic", "amphibious", "pack_hunter", "ambush_predator", "regenerating", "poisonous_flesh", "fire_breathing", "cold_breathing", "echolocation", "camouflage", "swarm_breeder", "long_lived", "mimic", "spirit_sight", "iron_eating", "crop_pest", "plague_bearer", "sacred_animal"];
+export const creatureTraitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatureTrait"]> = ["flying", "venomous", "soul_eater", "radiant", "fissiparous", "hive_mind", "stoneskin", "time_rewinder", "shapeshifter", "mind_reader", "armoured", "burrowing", "aquatic", "amphibious", "pack_hunter", "ambush_predator", "regenerating", "poisonous_flesh", "fire_breathing", "cold_breathing", "echolocation", "camouflage", "swarm_breeder", "long_lived", "mimic", "spirit_sight", "iron_eating", "crop_pest", "plague_bearer", "sacred_animal", "horned", "tailed"];
+export const crimeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CrimeKind"]> = ["theft", "blasphemy", "treason", "murder", "desertion"];
 export const cultStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CultStats"]["kind"]> = ["cult"];
 export const cureSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CureSource"]> = ["knowledge", "granted"];
 export const curseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CurseKind"]> = ["none", "bloodthirst", "misfortune", "wasting", "madness", "betrayal"];
 export const damageTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DamageType"]> = ["cut", "pierce", "blunt", "fire", "cold", "venom", "magic", "void", "holy"];
+export const deathCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DeathCause"]> = ["old_age", "wounds", "battle", "duel", "execution", "murder", "monster", "disease", "childbirth", "famine", "accident", "disaster", "exposure", "curse", "magic", "divine", "poison", "sacrifice", "hardship", "despair", "unknown"];
 export const debtStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DebtStatus"]> = ["open", "overdue", "repaid", "forgiven"];
 export const decisionRuleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DecisionRule"]> = ["autocratic", "council", "assembly", "divine"];
 export const decreeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DecreeKind"]> = ["war", "peace", "alliance", "marriage", "trade"];
@@ -37301,6 +38695,7 @@ export const epochStepKindValues: ReadonlyArray<FlattenedDeepRequired<components
 export const epochStepStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochStepStatus"]> = ["pending", "running", "done", "failed", "skipped"];
 export const epochStopRequestedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochStopRequestedEvent"]["kind"]> = ["epoch.stop_requested"];
 export const epochStoppedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochStoppedEvent"]["kind"]> = ["epoch.stopped"];
+export const equipmentSlotValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EquipmentSlot"]> = ["wielded_main", "wielded_off", "armour_body", "armour_head", "mount", "focus"];
 export const errorCodeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ErrorCode"]> = ["invalid", "not_found", "conflict", "busy", "read_only", "insufficient", "forbidden", "too_large", "unavailable", "internal"];
 export const eventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EventKind"]> = ["job.queued", "job.started", "job.progress", "job.finished", "job.failed", "job.cancelled", "world.changed", "rules.changed", "engine.note", "engine.phase", "system.note", "system.error", "agent.retry", "epoch.started", "epoch.resumed", "epoch.progress", "epoch.stop_requested", "epoch.stopped", "epoch.finished", "epoch.backup", "son.distributed", "son.turn_queued", "son.turn_started", "son.turn_finished", "mortals.started", "mortal.turn_started", "mortal.turn_finished", "engine.started", "engine.finished", "fate.started", "fate.step", "fate.finished", "council.held", "son.chat_replied", "son.new", "son.ascended", "creator.revelation", "world.born", "genesis.finished", "entity.deepened", "foreign_god.deepened", "epic.written", "network.repaired", "language.translated", "notification.created", "world.changes", "world.replaced", "ledger.undone", "backup.taken", "image.queued", "image.progress", "image.done", "image.failed", "image.status", "image.bulk_log", "batch_deepen.log", "stream.hello", "agent.stream", "agent.thought", "agent.tool_preparing", "agent.tool_writing", "agent.tool_called", "agent.tool_result", "agent.writing"];
 export const eventStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EventStats"]["kind"]> = ["event"];
@@ -37324,7 +38719,7 @@ export const genesisFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired
 export const genesisTemplateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisTemplate"]> = ["dark_fantasy", "mythic_age", "cosmic_horror", "fairy_tale", "star_myth", "sand_and_ash", "primordial_dawn", "crowns_and_knives", "drowned_world", "long_winter", "after_the_fall", "sky_islands", "age_of_engines"];
 export const governmentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GovernmentKind"]> = ["chiefdom", "monarchy", "theocracy", "oligarchy", "republic", "tribal_confederation", "empire", "hive_council", "god_kingdom", "occupation"];
 export const gravityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Gravity"]> = ["low", "normal", "high"];
-export const harmCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HarmCause"]> = ["battle", "duel", "punishment", "torture", "accident", "monster", "disaster", "curse", "magic_backlash", "god", "poison", "quest", "escape", "sacrifice", "age", "player"];
+export const harmCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HarmCause"]> = ["battle", "duel", "punishment", "torture", "accident", "monster", "disaster", "curse", "magic_backlash", "god", "poison", "quest", "escape", "sacrifice", "age", "player", "exposure"];
 export const heightClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HeightClass"]> = ["short", "average", "tall", "giant"];
 export const heroQuestKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HeroQuestKind"]> = ["hunt", "thread", "relic", "knowledge", "vengeance"];
 export const holdingKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HoldingKind"]> = ["temple", "land", "relic", "holy_place", "monastery"];
@@ -37365,6 +38760,7 @@ export const journeyEventKindValues: ReadonlyArray<FlattenedDeepRequired<compone
 export const journeyIntentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JourneyIntent"]> = ["colony", "trade", "exploration", "conquest", "pilgrimage"];
 export const journeyStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JourneyStatus"]> = ["underway", "waiting", "arrived", "lost", "recalled", "stranded"];
 export const judgementDoctrineValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JudgementDoctrine"]> = ["deeds", "faith", "rite", "favour", "none"];
+export const kinBondInputKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["KinBondInput"]["kind"]> = ["parent_of", "spouse_of", "betrothed_to", "concubine_of", "fostered_by", "sworn_kin"];
 export const knowledgeBranchValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["KnowledgeBranch"]> = ["agriculture", "metallurgy", "seafaring", "writing", "architecture", "medicine", "magic", "warfare", "astronomy", "trade", "sky_navigation", "shipbuilding", "gate_lore", "pathfinding", "void_living", "immortality", "biomancy", "forbidden"];
 export const knowledgeStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["KnowledgeStats"]["kind"]> = ["knowledge"];
 export const landKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LandKind"]> = ["region", "place"];
@@ -37381,6 +38777,7 @@ export const legendStatsKindValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const legendaryQuestKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LegendaryQuestKind"]> = ["dead_star", "sealed_gate", "archive", "expel_outer"];
 export const legendaryQuestOutcomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LegendaryQuestOutcome"]> = ["completed", "failed", "invalidated"];
 export const legitimacyBasisValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LegitimacyBasis"]> = ["custom", "decree", "divine", "council"];
+export const lifeStageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LifeStage"]> = ["infant", "child", "youth", "adult", "elder", "ancient"];
 export const linkGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LinkGroup"]> = ["all", "travel", "no_location", "conflict", "faith", "lineage", "knowledge"];
 export const llmCallKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LlmCallKind"]> = ["agent", "structured"];
 export const llmCallStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LlmCallStatus"]> = ["ok", "partial", "error"];
@@ -37393,6 +38790,8 @@ export const maimedKindValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const maintenanceTaskValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaintenanceTask"]> = ["completion", "network_rules", "loose_ends", "data_repairs", "history_repairs", "epoch_years", "mortal_ages", "importance", "endings", "narrative_sweep", "certain_facts", "intuitions", "mirror_pairs", "captions", "planner_statistics", "prune"];
 export const markerKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MarkerKind"]> = ["battle", "disaster", "ruin", "remnant", "event"];
 export const marriageCustomValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MarriageCustom"]> = ["monogamy", "polygyny", "polyandry", "group"];
+export const marriageEndValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MarriageEnd"]> = ["death", "divorce", "annulment", "war"];
+export const marriageKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MarriageKind"]> = ["monogamous", "plural", "political"];
 export const martialStyleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MartialStyle"]> = ["shieldwall", "horse_archer", "skirmisher", "chariot", "phalanx", "berserker", "naval_raider", "siege_engineer", "war_magic", "beast_war"];
 export const materialFamilyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaterialFamily"]> = ["organic", "stone", "metal", "precious", "exotic"];
 export const materialKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaterialKind"]> = ["wood", "bone", "hide", "leather", "cloth", "stone", "flint", "obsidian", "copper", "tin", "bronze", "iron", "steel", "silver", "gold", "glass", "crystal", "ivory", "chitin", "dragonbone", "star_metal", "void_glass", "godflesh", "living_wood", "salt", "amber", "lead", "skysteel", "sulfur", "clay", "gems"];
@@ -37405,8 +38804,9 @@ export const miracleValues: ReadonlyArray<FlattenedDeepRequired<components>["sch
 export const modifierOpValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ModifierOp"]> = ["add", "multiply"];
 export const modifierSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ModifierSource"]> = ["injury", "condition", "trait", "law", "tradition", "artwork", "doctrine", "treaty", "structure", "wonder", "terrain", "weather", "season", "natural_law", "god_power", "blessing", "curse", "dominion", "phenomenon", "god_death", "player", "suppression", "pin"];
 export const mortalRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalRole"]> = ["ruler", "hero", "warrior", "knight", "hunter", "chosen", "seer", "priest", "sage", "healer", "artisan", "merchant", "scribe", "farmer", "explorer", "captain", "bandit", "saint", "apprentice", "commoner"];
+export const mortalSexValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalSex"]> = ["female", "male", "other"];
 export const mortalStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalStats"]["kind"]> = ["mortal"];
-export const mortalStatsSexAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalStats"]["sex"]> = ["female", "male"];
+export const mortalStatsSexAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalStats"]["sex"]> = ["female", "male", "other"];
 export const mortalToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalToolId"]> = ["look_at_world", "inspect_entity", "search_entities", "found_language", "coin_words", "produce_item", "build_structure", "create_culture", "discover_resource", "claim_resource", "found_settlement", "establish_trade", "declare_war", "worship", "pray_to_creator", "develop_knowledge", "learn_knowledge", "diplomacy", "go_on_adventure", "find_route", "explore_land", "resurrection_rite", "build_ship", "launch_expedition", "tame_species", "weave_chimera", "bind_spirit", "search_ruins", "sabotage", "preach", "challenge_god", "deny_god", "prophesy", "escape", "pay_ransom", "rescue_captive", "raise_army", "appoint_commander", "build_spy_network", "barter", "lend", "repay_debt", "adopt"];
 export const mortalTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalTurnFinishedEvent"]["kind"]> = ["mortal.turn_finished"];
 export const mortalTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalTurnStartedEvent"]["kind"]> = ["mortal.turn_started"];
@@ -37444,7 +38844,6 @@ export const promptIdValues: ReadonlyArray<FlattenedDeepRequired<components>["sc
 export const prophecyPredicateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ProphecyPredicate"]> = ["dies", "falls", "born_in", "sky_event", "war_between", "ruler_of", "within_epochs"];
 export const prophecyStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ProphecyState"]> = ["pending", "fulfilled", "failed"];
 export const prophecyStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ProphecyStats"]["kind"]> = ["prophecy"];
-export const punishmentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PunishmentKind"]> = ["lightning", "chain", "exile", "suppress", "pardon"];
 export const rangeTrendValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RangeTrend"]> = ["rising", "steady", "falling"];
 export const rarityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Rarity"]> = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
 export const recordEndValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RecordEnd"]> = ["repeal", "abandon", "forget", "disband", "lose", "assimilate"];
@@ -37510,6 +38909,7 @@ export const starvationStageValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const statValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Stat"]> = ["strength", "endurance", "agility", "wisdom", "cunning", "will", "creativity", "charisma", "might"];
 export const stratumKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StratumKind"]> = ["paradise", "plain", "torment", "oblivion", "warrior_hall", "ancestor_hall"];
 export const streamHelloEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StreamHelloEvent"]["kind"]> = ["stream.hello"];
+export const stressBreakValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StressBreak"]> = ["rage", "flight", "despair", "zeal", "vice", "revelation"];
 export const structureStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StructureStats"]["kind"]> = ["structure"];
 export const subsystemValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Subsystem"]> = ["core", "body", "mind", "social", "household", "demography", "economy", "polity", "law", "intrigue", "communication", "war", "faith", "magic", "knowledge", "culture", "language", "ecology", "environment", "gods", "cosmos"];
 export const summarySectionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SummarySection"]> = ["pantheon", "threads", "events", "cosmos", "geography", "languages", "map", "legends"];
@@ -37563,3 +38963,5 @@ export const worldChangesEventKindValues: ReadonlyArray<FlattenedDeepRequired<co
 export const worldReplacedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorldReplacedEvent"]["kind"]> = ["world.replaced"];
 export const worldTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WorldType"]> = ["ordinary", "ocean", "sand", "ice", "lava", "crystal", "living", "dead", "dream", "mirror", "gas", "ringed", "asteroid_belt", "tidally_locked", "void_pocket", "gods_palace", "generation_ship", "corpse_world", "super_earth", "ice_giant", "hot_giant", "iron", "carbon", "greenhouse", "dwarf_planet", "chthonian", "hycean", "jungle", "forge", "fungal", "shattered", "hollow", "ice_shell", "methane"];
 export const writingSystemValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WritingSystem"]> = ["alphabet", "syllabary", "pictographic", "knot", "notch"];
+export const aerona__domain__enums__mortal__PunishmentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["aerona__domain__enums__mortal__PunishmentKind"]> = ["fine", "flogging", "exile", "branding", "hand", "tongue", "eyes", "death"];
+export const aerona__services__player__interventions__PunishmentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["aerona__services__player__interventions__PunishmentKind"]> = ["lightning", "chain", "exile", "suppress", "pardon"];
