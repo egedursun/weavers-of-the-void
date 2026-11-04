@@ -94,6 +94,7 @@ class BuildInput(ToolInput):
     location_id: int | None = None
     dedicated_son_id: int | None = None
     material: MaterialKind | None = None
+    channels_ley: bool = False
     image_prompt: ImagePrompt | None = None
 
 

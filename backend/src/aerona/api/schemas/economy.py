@@ -102,6 +102,7 @@ class QuoteView(ApiModel):
     demand: int
     imported: int
     exported: int
+    swing: int = 0
 
 
 class CommunityEconomyView(ApiModel):

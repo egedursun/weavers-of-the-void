@@ -190,6 +190,17 @@ class LeyLineRow(Base):
     forged: Mapped[bool] = mapped_column(default=False)
 
 
+class StructureLeyRow(Base):
+    __tablename__ = "structure_ley"
+
+    structure_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    attuned: Mapped[bool] = mapped_column(default=False)
+    on_ley_line: Mapped[bool] = mapped_column(default=False)
+    at_nexus: Mapped[bool] = mapped_column(default=False)
+    updated_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
 class ForcedWeatherRow(CreatedAtMixin, Base):
     __tablename__ = "forced_weather"
     __table_args__ = (

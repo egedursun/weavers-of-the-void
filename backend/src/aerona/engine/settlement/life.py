@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from sqlalchemy import func, select
 
 from aerona.catalog.laws import PENALTY_HARM
@@ -6,7 +8,7 @@ from aerona.db.tables.demography import CohortRow, LabourRow, PeopleCultureRow
 from aerona.db.tables.disease import QuarantineRow
 from aerona.db.tables.economy import TradeFlowRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
-from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.mind import CultureValueRow
 from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementTreasuryRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -18,6 +20,7 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import AgeBand, Job
 from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.environment import RiverClass, WeatherEffect
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.settlement import TIER_ORDER, WATER_ORDER, BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
@@ -29,6 +32,8 @@ from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import cohorts_of
 from aerona.engine.demography.mobility import bound_revolt, inequality_pressure
 from aerona.engine.economy.routes import BANDIT_KINDS
+from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.environment.years import world_years
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.research import lacks
@@ -157,7 +162,28 @@ async def permitted(ctx: TickContext, town: Town, wants: list[str]) -> list[str]
     return [want for want in wants if want not in barred and not (want == "walls" and town.infrastructure.walls_level >= walls_cap)]
 
 
-def wanted_works(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_war: bool, foreign: int) -> list[str]:
+@dataclass(frozen=True)
+class Waterside:
+    river: RiverClass = RiverClass.NONE
+    irrigators: bool = False
+
+
+def water_works(ctx: TickContext, town: Town, architecture: int, waterside: Waterside) -> list[str]:
+    table = ctx.rules.urban
+    people = stat(town.entity, "population") or 0
+    infrastructure = town.infrastructure
+    wants: list[str] = []
+    if waterside.river is RiverClass.NONE:
+        return wants
+    if people >= table.bridge_population and architecture >= table.bridge_level and infrastructure.bridges < table.works_cap:
+        wants.append("bridges")
+    farming = any(district.kind is DistrictKind.FARMLAND for district in town.districts)
+    if waterside.irrigators and farming and people >= table.irrigation_population and infrastructure.irrigation < table.works_cap:
+        wants.append("irrigation")
+    return wants
+
+
+def wanted_works(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_war: bool, foreign: int, waterside: Waterside | None = None) -> list[str]:
     table = ctx.rules.urban
     people = stat(town.entity, "population") or 0
     architecture = knowledge.level(town.entity.id, KnowledgeBranch.ARCHITECTURE)
@@ -165,6 +191,7 @@ def wanted_works(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_wa
     wants: list[str] = [f"repair:{district.id}" for district in town.districts if district.condition < PERCENT // HALF]
     if people >= table.town_population and infrastructure.roads < 1:
         wants.append("roads")
+    wants.extend(water_works(ctx, town, architecture, waterside or Waterside()))
     if (
         people >= table.city_population // HALF
         and WATER_ORDER.index(infrastructure.water) < WATER_ORDER.index(WaterSupply.CISTERN)
@@ -251,6 +278,10 @@ def improve(rules: Rules, town: Town, kind: str, material: BuildMaterial) -> Non
         return
     if kind == "roads":
         infrastructure.roads = min(5, infrastructure.roads + 1)
+    elif kind == "bridges":
+        infrastructure.bridges = min(5, infrastructure.bridges + 1)
+    elif kind == "irrigation":
+        infrastructure.irrigation = min(5, infrastructure.irrigation + 1)
     elif kind == "cistern":
         infrastructure.water = WaterSupply.CISTERN
     elif kind == "aqueduct":
@@ -266,12 +297,21 @@ def improve(rules: Rules, town: Town, kind: str, material: BuildMaterial) -> Non
         shift_stat(town.entity, "defense", rules.urban.walls_per_level, 0)
 
 
-async def build(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_war: bool, foreign: int) -> int:
+async def waterside_of(ctx: TickContext, town: Town, knowledge: KnowledgeMap, ground: RegionEnvironmentRow | None) -> Waterside:
+    if ground is None:
+        return Waterside()
+    skilled = knowledge.level(town.entity.id, KnowledgeBranch.AGRICULTURE) >= ctx.rules.environment.irrigation_agriculture_level
+    irrigators = skilled or not await lacks(ctx.session, town.entity.id, Technique.IRRIGATION)
+    return Waterside(river=ground.river_class, irrigators=irrigators)
+
+
+async def build(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_war: bool, foreign: int, ground: RegionEnvironmentRow | None = None) -> int:
     table = ctx.rules.urban
     architecture = knowledge.level(town.entity.id, KnowledgeBranch.ARCHITECTURE)
     material = BuildMaterial.STONE if architecture >= ctx.rules.fire.stone_level else BuildMaterial.TIMBER
     built = 0
-    for want in await permitted(ctx, town, wanted_works(ctx, town, knowledge, at_war=at_war, foreign=foreign)):
+    waterside = await waterside_of(ctx, town, knowledge, ground)
+    for want in await permitted(ctx, town, wanted_works(ctx, town, knowledge, at_war=at_war, foreign=foreign, waterside=waterside)):
         kind, _, detail = want.partition(":")
         if kind == "repair":
             district = next((item for item in town.districts if str(item.id) == detail), None)
@@ -422,7 +462,30 @@ def festivals_and_alms(ctx: TickContext, town: Town, society: CommunitySocietyRo
     return festival
 
 
-async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | None, knowledge: KnowledgeMap) -> int:
+@dataclass(frozen=True)
+class FireYear:
+    wet: int = 0
+    wind: int = 0
+
+
+def fire_season(book: EnvironmentBook, world_id: int) -> WorldSeasonRow | None:
+    seasons = book.seasons_of(world_id)
+    return min(seasons, key=lambda season: (season.rain_shift, season.position)) if seasons else None
+
+
+def fire_years(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | None, book: EnvironmentBook | None) -> list[FireYear]:
+    years = world_years(ctx.environment, town.entity.world_id or 0, "fires")
+    if ground is None or book is None:
+        return [FireYear() for _ in years]
+    season = fire_season(book, ground.world_id)
+    found: list[FireYear] = []
+    for year in years:
+        weather = book.weather(ctx.environment.world_seed, ctx.epoch, ground, season, f"fire.{town.entity.id}.{year.year}")
+        found.append(FireYear(wet=weather.effect(WeatherEffect.WET), wind=weather.effect(WeatherEffect.WIND)))
+    return found
+
+
+async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | None, knowledge: KnowledgeMap, book: EnvironmentBook | None = None) -> int:
     table = ctx.rules.fire
     people = stat(town.entity, "population") or 0
     crowd = min(1.0, people / max(1, housing_of(ctx.rules, town)))
@@ -430,14 +493,16 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
     dry = 1.0 if ground is None or ground.rainfall < table.dry_rainfall else DRY_OFF_PCT / PERCENT
     rng = ctx.rng(f"fire.{town.entity.id}")
     burned = 0
-    for _ in range(ctx.rules.demography.sampled_years):
-        if not rng.chance(table.chance_pct * town.profile.fire_risk / PERCENT * dry):
+    for year in fire_years(ctx, town, ground, book):
+        damp = 1 - year.wet / PERCENT * table.wet_damp_pct / PERCENT
+        if not rng.chance(table.chance_pct * town.profile.fire_risk / PERCENT * dry * max(0.0, damp)):
             continue
         timber = [district for district in town.districts if district.material is BuildMaterial.TIMBER] or town.districts
         if not timber:
             continue
+        gale = 1 + year.wind / PERCENT * table.wind_spread_pct / PERCENT
         district = max(timber, key=lambda item: (item.level, -item.id))
-        district.condition = max(0, district.condition - table.district_loss)
+        district.condition = max(0, district.condition - round_half_up(table.district_loss * gale))
         if district.condition == 0:
             district.level -= 1
             district.condition = PERCENT // HALF
@@ -448,15 +513,16 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
                 town.districts.remove(district)
         floor, _ = headcount_bounds(ctx.rules, town.entity)
         before = stat(town.entity, "population") or 0
-        dead = min(max(0, before - floor), round_half_up(before * table.death_pct / PERCENT))
+        dead = min(max(0, before - floor), round_half_up(before * table.death_pct * gale / PERCENT))
         with flowing(FlowCategory.DISASTER):
             set_stats(town.entity, population=before - dead)
         ledger(ctx, town, TreasuryEntry.FIRE, -table.treasury_loss, "great fire")
         burned += 1
+        driven = " Driven by the wind, it leapt from roof to roof." if year.wind >= PERCENT // HALF else ""
         await note(
             ctx,
-            f"A great fire swept through the {district.kind.value.replace('_', ' ')} of {town.entity.name}; {dead} died in the flames.",
-            key="settlement.fire",
+            f"A great fire swept through the {district.kind.value.replace('_', ' ')} of {town.entity.name}; {dead} died in the flames.{driven}",
+            key="settlement.fire_wind" if driven else "settlement.fire",
             ids=[town.entity.id],
             feed=FeedCategory.DISASTER,
             kind=ChronicleKind.WORLD,

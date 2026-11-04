@@ -195,7 +195,15 @@ async def community_economy(services: ServicesDep, community_id: int = Path(ge=1
         price_epoch = await session.scalar(select(func.max(MarketPriceRow.epoch)).where(MarketPriceRow.market_entity_id == community_id))
         quotes = (
             [
-                QuoteView(commodity=row.commodity, price=row.price, supply=row.supply, demand=row.demand, imported=row.imported, exported=row.exported)
+                QuoteView(
+                    commodity=row.commodity,
+                    price=row.price,
+                    supply=row.supply,
+                    demand=row.demand,
+                    imported=row.imported,
+                    exported=row.exported,
+                    swing=row.swing,
+                )
                 for row in await session.scalars(
                     select(MarketPriceRow).where(MarketPriceRow.market_entity_id == community_id, MarketPriceRow.epoch == price_epoch)
                 )

@@ -25,7 +25,7 @@ from aerona.engine.economy.materials import set_node_material
 from aerona.engine.economy.resources import default_material, ensure_profile
 from aerona.engine.economy.routes import found_route, load_routes
 from aerona.engine.economy.stocks import goods_of, lots_of
-from aerona.engine.phases.environment import works_by_region
+from aerona.engine.environment.works import works_by_region
 from aerona.engine.primitives.queries import active_bonds
 
 BACKFILL_FIXUP = "economy.w4_backfill"

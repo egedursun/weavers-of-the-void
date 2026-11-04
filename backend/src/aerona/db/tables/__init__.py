@@ -72,7 +72,7 @@ from aerona.db.tables.entities import (
     LanguageProfileRow,
     NetworkReviewRow,
 )
-from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, StructureLeyRow, WorldSeasonRow
 from aerona.db.tables.epochs import (
     DeferredStepRow,
     EpochEnginePhaseRow,
@@ -359,6 +359,7 @@ __all__ = [
     "SpiritProfileRow",
     "SpyNetworkRow",
     "StarRow",
+    "StructureLeyRow",
     "ThreadLinkRow",
     "ThreadRow",
     "TradeFlowRow",

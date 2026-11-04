@@ -5,6 +5,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import ValueAxis
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
+from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -59,7 +60,9 @@ JUSTICE_FULL = 100
     "table.culture_values",
     "table.districts",
     "table.entity_flags",
+    "table.calendars",
     "table.epoch_year_cursors",
+    "table.forced_weather",
     "table.holder_levels",
     "table.holder_techniques",
     "table.occupations",
@@ -69,13 +72,17 @@ JUSTICE_FULL = 100
     "table.region_environment",
     "table.settlement_infrastructure",
     "table.settlement_profiles",
+    "table.place_environment",
     "table.sieges",
+    "table.sky_events",
     "table.trade_flows",
     "table.traits",
     "table.tributes",
     "table.war_sides",
     "table.wars",
     "table.world_maps",
+    "table.world_seasons",
+    "table.worlds",
 )
 @writes(
     "faction.strength",
@@ -101,6 +108,7 @@ async def settlement_life(ctx: TickContext) -> None:
     knowledge = await KnowledgeMap.load(ctx.session)
     atlas = await RegionAtlas.load(ctx.session)
     community = await CommunityBook.load(ctx.session)
+    weather = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch, atlas)
     for settlement in await canon(ctx.session, [EntityType.SETTLEMENT]):
         town = await town_of(ctx, settlement, knowledge)
         region = atlas.top_region(settlement.id)
@@ -117,14 +125,14 @@ async def settlement_life(ctx: TickContext) -> None:
         await keep_walls(ctx, town)
         await wear(ctx, town)
         foreign = await foreigners(ctx, town)
-        ctx.count("built", await build(ctx, town, knowledge, at_war=at_war, foreign=foreign))
+        ctx.count("built", await build(ctx, town, knowledge, at_war=at_war, foreign=foreign, ground=ground))
         justice = max(community.justice_values(settlement.id), default=0) / JUSTICE_FULL
         await keep_order(ctx, town, justice=justice, bands=await bandits_near(ctx, atlas, town), hierarchy=values.get(ValueAxis.HIERARCHY, 0))
         ctx.count("punished", 1 if await punish(ctx, town) else 0)
         festival = festivals_and_alms(ctx, town, society)
         tension = await urban_drift(ctx, town)
         await stir_unrest(ctx, town, tension=tension, festival=festival, region=region)
-        ctx.count("fires", await fires(ctx, town, ground, knowledge))
+        ctx.count("fires", await fires(ctx, town, ground, knowledge, weather))
         sanitation(ctx, town, knowledge)
         await endure_siege(ctx, town, values)
         await prestige(ctx, town)

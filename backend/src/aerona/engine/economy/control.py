@@ -28,7 +28,7 @@ from aerona.engine.economy.extraction import write_reserve
 from aerona.engine.economy.money import debase, forgive_loan, inject_hoard
 from aerona.engine.economy.routes import found_route, load_routes
 from aerona.engine.economy.stocks import goods_of, holding, sync_aggregates
-from aerona.engine.phases.environment import works_by_region
+from aerona.engine.environment.works import works_by_region
 from aerona.engine.primitives.numbers import clamp_int
 
 PROFILE_FIELDS = ("richness", "extraction_difficulty", "quality", "regeneration", "byproduct_pct", "initial_reserve")

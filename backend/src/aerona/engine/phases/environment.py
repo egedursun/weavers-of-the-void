@@ -24,8 +24,10 @@ from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.star_types import star_heat
+from aerona.engine.environment.battles import backfill_battle_ground
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.ley import LeyWeb, candidate_lines, cut_by_land, pair
+from aerona.engine.environment.ley_works import backfill_attunement, empower_works
 from aerona.engine.environment.notable import backfill_notable_years
 from aerona.engine.environment.profile import (
     Geography,
@@ -50,8 +52,10 @@ from aerona.engine.environment.profile import (
     terrain_of,
 )
 from aerona.engine.environment.seasons import season_drafts, tidal_strength, world_calendar
-from aerona.engine.environment.years import SampledYear, grant_sub_steps, sampled_years
+from aerona.engine.environment.works import backfill_typed_works, works_by_region
+from aerona.engine.environment.years import SampledYear, world_years
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lore.calendar_rites import backfill_holy_days, hallow_holy_days
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.capacity import LAND_COMMUNITY_TYPES, CapacityModel, RegionKey, RegionLoad
 from aerona.engine.primitives.distance import RegionAtlas
@@ -149,6 +153,7 @@ class RegionContext:
             chokepoints=self.chokepoints,
             star_heat=star_heat(rules, self.star),
             works=self.works,
+            cleared=env.cleared,
         )
 
 
@@ -297,8 +302,10 @@ async def ensure_world_calendar(ctx: TickContext, world: WorldRow, moons: int) -
         world.day_length_hours = calendar.day_length_hours if world.day_length_hours is None else world.day_length_hours
         world.season_count = calendar.season_count if world.season_count is None else world.season_count
         created = True
-    world.moon_count = moons
-    world.tidal_strength = tidal_strength(rules, moons)
+    if "moon_count" not in world.calendar_locked:
+        world.moon_count = moons
+    if "tidal_strength" not in world.calendar_locked:
+        world.tidal_strength = tidal_strength(rules, world.moon_count or 0)
     existing = await ctx.session.scalar(select(func.count()).select_from(WorldSeasonRow).where(WorldSeasonRow.world_id == world.id))
     if not existing:
         await write_seasons(ctx, world)
@@ -307,9 +314,16 @@ async def ensure_world_calendar(ctx: TickContext, world: WorldRow, moons: int) -
 
 
 async def write_seasons(ctx: TickContext, world: WorldRow) -> list[WorldSeasonRow]:
-    await ctx.session.execute(delete(WorldSeasonRow).where(WorldSeasonRow.world_id == world.id))
+    count = world.season_count or 1
+    held = {
+        row.position: row
+        for row in await ctx.session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == world.id, WorldSeasonRow.edited.is_(True)))
+        if row.position < count
+    }
+    await ctx.session.execute(delete(WorldSeasonRow).where(WorldSeasonRow.world_id == world.id, WorldSeasonRow.id.not_in([row.id for row in held.values()])))
     rows = [
-        WorldSeasonRow(
+        held.get(draft.position)
+        or WorldSeasonRow(
             world_id=world.id,
             position=draft.position,
             name=draft.name,
@@ -320,36 +334,11 @@ async def write_seasons(ctx: TickContext, world: WorldRow) -> list[WorldSeasonRo
             campaign=draft.campaign,
             edited=False,
         )
-        for draft in season_drafts(ctx.rules, world.world_type, world.season_count or 1, world.axial_tilt or 0)
+        for draft in season_drafts(ctx.rules, world.world_type, count, world.axial_tilt or 0)
     ]
-    ctx.session.add_all(rows)
+    ctx.session.add_all([row for row in rows if row.id is None])
     await ctx.session.flush()
     return rows
-
-
-BRIDGE_SUBTYPE = "bridge"
-HARBOUR_SUBTYPE = "harbour"
-
-
-async def works_by_region(ctx: TickContext, book: EnvironmentBook) -> dict[int, Works]:
-    knowledge = await KnowledgeMap.load(ctx.session)
-    tallies: dict[int, Counter[str]] = {}
-    for entity in await canon(ctx.session, [EntityType.STRUCTURE, EntityType.SETTLEMENT]):
-        region_id = book.atlas.top_region(entity.id)
-        if region_id is None:
-            continue
-        tally = tallies.setdefault(region_id, Counter())
-        subtype = (entity.subtype or "").lower()
-        if entity.entity_type is EntityType.STRUCTURE:
-            tally["bridges"] += BRIDGE_SUBTYPE in subtype
-            tally["harbours"] += HARBOUR_SUBTYPE in subtype
-            continue
-        tally["roads"] += knowledge.knows(entity.id, KnowledgeBranch.ARCHITECTURE)
-        tally["irrigation"] += knowledge.level(entity.id, KnowledgeBranch.AGRICULTURE) >= ctx.rules.environment.irrigation_agriculture_level
-    return {
-        region_id: Works(roads=tally["roads"], bridges=tally["bridges"], harbours=tally["harbours"], irrigation=tally["irrigation"])
-        for region_id, tally in tallies.items()
-    }
 
 
 async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list[EntityRow]) -> dict[int, RegionContext]:
@@ -380,6 +369,12 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
     return contexts
 
 
+async def run_backfills(ctx: TickContext) -> None:
+    ctx.count("notable_years_backfilled", await backfill_notable_years(ctx))
+    ctx.count("typed_works_backfilled", await backfill_typed_works(ctx))
+    ctx.count("battles_grounded", await backfill_battle_ground(ctx))
+
+
 @reads(
     "event.severity",
     "people.population",
@@ -389,20 +384,34 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
     "region.magic",
     "settlement.population",
     "table.applied_fixups",
+    "table.battles",
     "table.calendars",
+    "table.districts",
     "table.entity_flags",
     "table.forced_weather",
     "table.holder_levels",
+    "table.holder_techniques",
     "table.notable_years",
     "table.place_environment",
     "table.region_environment",
+    "table.settlement_infrastructure",
     "table.sky_events",
     "table.world_maps",
     "table.world_seasons",
 )
-@writes("table.applied_fixups", "table.notable_years", "table.place_environment", "table.region_environment", "table.world_seasons", "table.worlds")
+@writes(
+    "table.applied_fixups",
+    "table.battles",
+    "table.districts",
+    "table.notable_years",
+    "table.place_environment",
+    "table.region_environment",
+    "table.settlement_infrastructure",
+    "table.world_seasons",
+    "table.worlds",
+)
 async def environment_survey(ctx: TickContext) -> None:
-    ctx.count("notable_years_backfilled", await backfill_notable_years(ctx))
+    await run_backfills(ctx)
     moons = await moons_by_world(ctx)
     worlds = list(await ctx.session.scalars(select(WorldRow).where(WorldRow.discovery != Discovery.FORGOTTEN).order_by(WorldRow.id)))
     calendars = 0
@@ -924,8 +933,7 @@ async def harvest(ctx: TickContext) -> None:
         regions = [env for env in book.regions.values() if env.world_id == world.id and ("region", env.entity_id) in loads]
         if not regions:
             continue
-        years = sampled_years(ctx.environment, world.id)
-        years = years[: grant_sub_steps(ctx.environment, len(years))] or years[:1]
+        years = world_years(ctx.environment, world.id, "harvest")
         season = HarvestSeason(book, loads, knowledge, planned, book.growing_season(world.id), years)
         for env in regions:
             notable += await region_harvest(ctx, world, season, env)
@@ -951,13 +959,17 @@ async def harvest(ctx: TickContext) -> None:
     "table.world_seasons",
 )
 @writes(
+    "table.applied_fixups",
+    "table.bonds",
     "table.calendars",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",
+    "table.tradition_profiles",
 )
 async def calendars(ctx: TickContext) -> None:
     rules = ctx.rules
@@ -965,6 +977,7 @@ async def calendars(ctx: TickContext) -> None:
     book = await EnvironmentBook.load(ctx.session, rules, ctx.epoch)
     records = [record for record in await canon(ctx.session, [EntityType.KNOWLEDGE]) if record.knowledge_branch is KnowledgeBranch.ASTRONOMY]
     adopted = commemorated = 0
+    hallowed = await backfill_holy_days(ctx)
     rng = ctx.rng("adopt")
     for record in records:
         knowers = [bond.source_node_id for bond in await active_bonds(ctx.session, [BondKind.KNOWS], targets=[record.id])]
@@ -977,8 +990,10 @@ async def calendars(ctx: TickContext) -> None:
             adopted += 1
         regions = {region for knower in knowers if (region := book.atlas.top_region(knower)) is not None}
         commemorated += await commemorate_hard_years(ctx, calendar, regions)
+        hallowed += await hallow_holy_days(ctx, calendar)
     ctx.count("calendars_adopted", adopted)
     ctx.count("holy_days_added", commemorated)
+    ctx.count("holy_day_traditions", hallowed)
     await ctx.session.flush()
 
 
@@ -1122,46 +1137,21 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
     return crowned
 
 
-LEY_WORK_KINDS = frozenset({EngineKind.TEMPLE, EngineKind.OBSERVATORY})
-LEY_WORK_SUBTYPES = ("gate", "tower", "temple", "observatory", "shrine")
-
-
-def ley_work(work: EntityRow) -> bool:
-    subtype = (work.subtype or "").lower()
-    return work.engine_kind in LEY_WORK_KINDS or any(word in subtype for word in LEY_WORK_SUBTYPES)
-
-
-async def empower_works(ctx: TickContext, web: LeyWeb) -> int:
-    settings = ctx.rules.environment
-    atlas = await RegionAtlas.load(ctx.session)
-    nexus = {place.entity_id for place in await ctx.session.scalars(select(PlaceEnvironmentRow).where(PlaceEnvironmentRow.nexus.is_(True)))}
-    degree = web.degree()
-    empowered = 0
-    for work in await canon(ctx.session, [EntityType.STRUCTURE]):
-        region_id = atlas.top_region(work.id)
-        if region_id is None or not degree[region_id] or not ley_work(work):
-            continue
-        gain = settings.ley_function_gain * (settings.nexus_function_mult if work.location_id in nexus else 1)
-        current = stat_or(work, "function", settings.ley_function_base)
-        if current >= settings.ley_function_cap:
-            continue
-        set_stats(work, function=clamp_int(current + gain, 0, settings.ley_function_cap))
-        empowered += 1
-    return empowered
-
-
 @reads(
     "place.mystery",
     "region.magic",
     "structure.function",
+    "table.applied_fixups",
     "table.epoch_year_cursors",
     "table.ley_lines",
     "table.place_environment",
     "table.region_environment",
+    "table.structure_ley",
     "table.world_maps",
 )
 @writes(
     "structure.function",
+    "table.applied_fixups",
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
@@ -1171,6 +1161,7 @@ async def empower_works(ctx: TickContext, web: LeyWeb) -> int:
     "table.ley_lines",
     "table.place_environment",
     "table.region_environment",
+    "table.structure_ley",
 )
 async def ley_lines(ctx: TickContext) -> None:
     web = await LeyWeb.load(ctx.session)
@@ -1179,6 +1170,7 @@ async def ley_lines(ctx: TickContext) -> None:
     formed = await weave_lines(ctx, web, regions, grounds)
     await ctx.session.flush()
     crowned = await crown_nexus(ctx, web, grounds)
+    ctx.count("works_attuned_backfilled", await backfill_attunement(ctx))
     empowered = await empower_works(ctx, web)
     await ctx.session.flush()
     ctx.count("ley_lines_formed", formed)

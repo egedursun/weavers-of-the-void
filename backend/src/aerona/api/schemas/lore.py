@@ -64,6 +64,10 @@ class KeeperView(ApiModel):
 class TraditionCard(ApiModel):
     kind: TraditionKind
     calendar_slot: str | None
+    season_position: int | None = None
+    calendar_entity_id: int | None = None
+    notable_year_id: int | None = None
+    in_season: bool | None = None
     cost: dict[str, int]
     effects: dict[str, int]
     taboo_target: str | None

@@ -79,10 +79,15 @@ class LegendProfileRow(Base):
 
 class TraditionProfileRow(Base):
     __tablename__ = "tradition_profiles"
+    __table_args__ = (at_least("season_position", 0),)
 
     tradition_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     kind: Mapped[TraditionKind] = mapped_column(enum_type(TraditionKind, "kind"))
     calendar_slot: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    season_position: Mapped[int | None]
+    calendar_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    notable_year_id: Mapped[int | None] = mapped_column(ForeignKey("notable_years.id", ondelete="SET NULL"))
+    in_season: Mapped[bool | None]
     cost: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
     effects: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
     taboo_target: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
