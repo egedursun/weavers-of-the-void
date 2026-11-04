@@ -18,7 +18,13 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
-import { EntityLink, MiniStat, Section, StatBar } from '@/components/domain'
+import {
+  EmptyState,
+  EntityLink,
+  MiniStat,
+  Section,
+  StatBar,
+} from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -250,7 +256,7 @@ export function VesselCard({
         api.POST('/api/actions/vessel:refit', {
           body: {
             vessel_id: vesselId,
-            hull_class: (hull || vessel?.hull.hull) as Hull,
+            hull_class: (hull || vessel?.hull.hull || 'boat') as Hull,
             armament: (arms ?? vessel?.armament ?? []) as Arm[],
           },
         })
@@ -266,6 +272,43 @@ export function VesselCard({
       ),
     invalidate,
   })
+  if (query.isError)
+    return (
+      <Panel title='Vessel' icon={Ship} tone='info'>
+        <EmptyState
+          icon={Anchor}
+          title='Not a ship'
+          description='This vessel is a gate, mount or bridge; it keeps no hull, crew or sea log.'
+        />
+        <Adjust
+          title='Fit it out as a ship'
+          note='Give it a hull and arms; the shipwrights make it seaworthy.'
+          label='Fit out as a ship'
+        >
+          <FieldGrid>
+            <ChoiceField
+              label='Hull'
+              icon={Gauge}
+              value={hull || 'boat'}
+              table={HULL}
+              blocked={blocked}
+              onPick={setHull}
+            />
+          </FieldGrid>
+          <Arms value={arms ?? []} onChange={setArms} blocked={blocked} />
+          <Button
+            size='sm'
+            className='self-start'
+            disabled={busyOf(blocked, refit.isPending) !== null}
+            disabledReason={busyOf(blocked, refit.isPending) ?? undefined}
+            onClick={() => refit.mutate()}
+          >
+            <Ship />
+            Fit out
+          </Button>
+        </Adjust>
+      </Panel>
+    )
   if (!vessel) return <Muted variant='caption'>Reading the ship's log…</Muted>
   const status = nameOf(VESSEL_STATUS, vessel.status)
   const busy = busyOf(blocked, refit.isPending, repair.isPending)

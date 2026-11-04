@@ -309,7 +309,7 @@ function AimEditor({
   const busy = busyOf(blocked, save.isPending, drop.isPending)
   const item = named(AIM, aim.kind)
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'>
+    <li className='@container/mil flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'>
       <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
         <Tag item={item} />
         <Muted as='span' variant='caption' truncate>

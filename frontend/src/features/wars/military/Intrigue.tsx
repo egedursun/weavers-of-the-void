@@ -54,7 +54,7 @@ function AgentCard({
   const status = nameOf(AGENT_STATUS, String(row.values.status))
   const mortal = row.refs.mortal_entity_id
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'>
+    <li className='@container/mil flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'>
       <div className='flex min-w-0 items-center gap-2.5'>
         <Medallion
           icon={nameOf(COVER, String(row.values.cover)).icon}
@@ -217,7 +217,7 @@ export function NetworkAgents({
   return (
     <div
       data-surface='SpyNetworks'
-      className='flex min-w-0 flex-col gap-2 border-t pt-3'
+      className='@container/mil flex min-w-0 flex-col gap-2 border-t pt-3'
     >
       <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
         <Label variant='overline'>Agents in the field</Label>

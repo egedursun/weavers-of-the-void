@@ -58,7 +58,7 @@ function FeudCard({
       : (feud as unknown as Record<string, unknown>)[key]
   const status = nameOf(FEUD_STATUS, feud.status)
   return (
-    <li className='flex min-w-0 flex-col gap-2.5 rounded-xl border bg-background p-3'>
+    <li className='@container/mil flex min-w-0 flex-col gap-2.5 rounded-xl border bg-background p-3'>
       <div className='flex min-w-0 items-center gap-3'>
         <Medallion
           icon={feud.intensity >= HOT ? Flame : Swords}

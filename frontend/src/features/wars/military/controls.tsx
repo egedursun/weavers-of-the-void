@@ -9,6 +9,21 @@ import { useNames } from '@/features/entity/api/queries'
 import { busyOf } from './labels'
 import { type Values, type useRecordActions } from './recordHooks'
 
+const PLURAL: Record<string, string> = {
+  region: 'regions',
+  mortal: 'mortals',
+  army: 'armies',
+  settlement: 'settlements',
+  house: 'houses',
+  place: 'places',
+  resource: 'resources',
+}
+
+function searchHint(types: string[]): string {
+  const known = [...new Set(types.map((type) => PLURAL[type] ?? 'communities'))]
+  return `Search ${known.slice(0, 2).join(' or ')}${known.length > 2 ? ' and more' : ''}…`
+}
+
 export function EntityPicker({
   label,
   types,
@@ -60,7 +75,7 @@ export function EntityPicker({
         options={options}
         value={value === null ? null : String(value)}
         onChange={(next) => onChange(next === null ? null : Number(next))}
-        placeholder={`Choose ${label.toLowerCase()}`}
+        placeholder={searchHint(types)}
         disabled={blocked !== null}
         disabledReason={blocked ?? undefined}
         clearable

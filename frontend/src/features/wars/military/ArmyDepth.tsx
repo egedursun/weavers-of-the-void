@@ -275,7 +275,7 @@ function OfficerCard({
   const ended =
     row.values.until_epoch !== null && row.values.until_epoch !== undefined
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'>
+    <li className='@container/mil flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'>
       <div className='flex min-w-0 items-center gap-2.5'>
         <Medallion
           icon={post.icon}
@@ -453,7 +453,7 @@ export function ArmyOrders({
               )}
               <Plain
                 icon={Route}
-              >{`${supplyLine(row.values.supply_line).length} waystations`}</Plain>
+              >{`${supplyLine(row.values.supply_line).length} ${supplyLine(row.values.supply_line).length === 1 ? 'waystation' : 'waystations'}`}</Plain>
               <Plain
                 icon={CalendarDays}
               >{`Orders of epoch ${String(row.values.updated_epoch ?? '—')}`}</Plain>

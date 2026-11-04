@@ -325,7 +325,7 @@ export function WarOrders({
       tone='danger'
       hint={sides.map((side) => side.name).join(' against ')}
     >
-      <div className='grid min-w-0 grid-cols-1 gap-2 @2xl/mil:grid-cols-2'>
+      <div className='flex min-w-0 flex-col gap-2'>
         <Adjust
           title='Force a battle'
           note='Fight now, where the armies meet, or in a land you choose.'
