@@ -17,6 +17,7 @@ from aerona.domain.enums.military import Stance
 from aerona.domain.enums.mortal import HarshnessScale
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.environment.perils import danger_toll, navigate
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import has_technique
 from aerona.engine.military.units import stacks_of, sync, take
@@ -199,13 +200,18 @@ async def campaign_season(ctx: TickContext, atlas: RegionAtlas, ground: Environm
         profile.stance = Stance.BESIEGE if march.attacking else Stance.GARRISON
     elif not march.attacking:
         profile.stance = Stance.ENTRENCH
+    wandering = await navigate(ctx, march.army, march.owner, profile.region_entity_id, origin, charted=charted)
+    if wandering.lost and "region_id" not in profile.locked:
+        profile.region_entity_id = origin
+        log.moved = 0
     tire(ctx.rules, rows, profile)
     entrench(ctx.rules, profile)
     region = ground.regions.get(profile.region_entity_id) if profile.region_entity_id is not None else None
     line = supply_line(atlas, march.owner, profile)
     profile.supply_line = line
     raid_line(ctx, march, line, log)
-    dead = feed(ctx, march, region, atlas.top_region(march.owner.id), log) + camp_sickness(ctx, march, region)
+    peril = await danger_toll(ctx, march.army, rows, profile.region_entity_id)
+    dead = feed(ctx, march, region, atlas.top_region(march.owner.id), log) + camp_sickness(ctx, march, region) + wandering.dead + peril.dead
     attrition = ctx.rules.attrition
     size = stat(march.army, "size") or 0
     if profile.supply_days <= 0:
@@ -230,7 +236,18 @@ async def campaign_season(ctx: TickContext, atlas: RegionAtlas, ground: Environm
             stance=profile.stance,
             supply_days=profile.supply_days,
             attrition=log.dead + log.deserted,
-            note=", ".join(word for word, hit in (("raided", log.raided), ("starving", log.starving), ("unpaid", log.unpaid)) if hit) or None,
+            note=", ".join(
+                word
+                for word, hit in (
+                    ("raided", log.raided),
+                    ("starving", log.starving),
+                    ("unpaid", log.unpaid),
+                    ("lost", wandering.lost),
+                    ("ambushed", peril.ambushed),
+                )
+                if hit
+            )
+            or None,
         )
     )
     return log

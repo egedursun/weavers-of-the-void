@@ -1,4 +1,5 @@
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass, replace
 
 from sqlalchemy import select
@@ -19,6 +20,8 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import OPEN_INJURY_STATES, BodyBuild, BodyFunction, BodyPlan, Capacity, HeightClass, InjuryState, StrikeStyle
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
+from aerona.domain.enums.mind import TraitKind
+from aerona.domain.enums.modifier import ModifierSource
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.engine.body.capacities import FUNCTION_LEVELS, BearerStats, BodyState, capacities, function_percents, perception_factor
 from aerona.engine.body.functions import Wound
@@ -27,8 +30,9 @@ from aerona.engine.lore.arms import guard_of, held_profiles
 from aerona.engine.mortal.equipment import worn_coverage
 from aerona.engine.mortal.variants import strength, variants_by_id
 from aerona.engine.primitives.knowledge import known_levels
+from aerona.engine.primitives.modifiers import combine, live_contributions
 from aerona.engine.primitives.queries import active_bonds, living_entity
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import base_stat, clamp_to_field, stat
 from aerona.rules.registry import Rules
 
 Bearer = EntityRow | SonRow | ForeignGodRow
@@ -387,6 +391,7 @@ def frame_style(rules: Rules, attacker_size: int, target: BodyRow) -> StrikeStyl
     return StrikeStyle.NORMAL
 
 
+BODY_SOURCES = frozenset({ModifierSource.INJURY, ModifierSource.TRAIT})
 STAT_CAPACITY: dict[str, Capacity] = {
     "strength": Capacity.MELEE,
     "agility": Capacity.MOBILITY,
@@ -395,11 +400,22 @@ STAT_CAPACITY: dict[str, Capacity] = {
 }
 
 
-async def temperament(session: AsyncSession, rules: Rules, node_id: int, capacity: Capacity) -> float:
-    held = list(await session.scalars(select(TraitRow).where(TraitRow.node_id == node_id)))
-    variants = await variants_by_id(session, (row.variant_id for row in held))
-    lift = sum(TRAITS[row.trait].capacities.get(capacity, 0) * strength(variants, row.variant_id) for row in held) * rules.traits.capacity_scale_pct / PERCENT
+def temperament_factor(rules: Rules, held: Iterable[tuple[TraitKind, float]], capacity: Capacity) -> float:
+    lift = sum(TRAITS[trait].capacities.get(capacity, 0) * scale for trait, scale in held) * rules.traits.capacity_scale_pct / PERCENT
     return max(0.0, (PERCENT + lift) / PERCENT)
+
+
+async def held_temperament(session: AsyncSession, node_ids: Iterable[int]) -> dict[int, list[tuple[TraitKind, float]]]:
+    rows = list(await session.scalars(select(TraitRow).where(TraitRow.node_id.in_(list(node_ids))).order_by(TraitRow.node_id, TraitRow.trait)))
+    variants = await variants_by_id(session, (row.variant_id for row in rows))
+    held: dict[int, list[tuple[TraitKind, float]]] = {}
+    for row in rows:
+        held.setdefault(row.node_id, []).append((row.trait, strength(variants, row.variant_id)))
+    return held
+
+
+async def temperament(session: AsyncSession, rules: Rules, node_id: int, capacity: Capacity) -> float:
+    return temperament_factor(rules, (await held_temperament(session, (node_id,))).get(node_id, []), capacity)
 
 
 async def training(session: AsyncSession, rules: Rules, node_id: int, capacity: Capacity) -> float:
@@ -415,10 +431,15 @@ async def training(session: AsyncSession, rules: Rules, node_id: int, capacity: 
 async def effective(
     session: AsyncSession, mortal: EntityRow, key: str, default: int = 0, capacity: Capacity | None = None, *, rules: Rules | None = None
 ) -> float:
-    value = stat(mortal, key)
+    contributions = live_contributions(mortal.id, key)
+    held = {item.source_kind for item in contributions if item.held and item.source_kind in BODY_SOURCES}
+    kept = [item for item in contributions if item.source_kind not in BODY_SOURCES or item.held]
+    raw = base_stat(mortal, key)
+    value = raw if raw is None or not contributions else clamp_to_field(mortal, key, combine(raw, kept).value)
     base = default if value is None else value
     use = capacity or STAT_CAPACITY[key]
-    result = base * await factor(session, mortal.id, use)
+    result = base if ModifierSource.INJURY in held else base * await factor(session, mortal.id, use)
     if rules is not None:
-        result *= await temperament(session, rules, mortal.id, use) * await training(session, rules, mortal.id, use)
+        mood = 1.0 if ModifierSource.TRAIT in held else await temperament(session, rules, mortal.id, use)
+        result *= mood * await training(session, rules, mortal.id, use)
     return result

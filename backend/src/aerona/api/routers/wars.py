@@ -19,8 +19,10 @@ from aerona.api.schemas.wars import (
 )
 from aerona.api.views.common import node_refs
 from aerona.core.errors import NotFoundError
+from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, SiegeRow, TributeRow, WarRow, WarSideRow
 from aerona.domain.enums.war import CaptiveStatus, TributeStatus, WarStatus
+from aerona.engine.primitives.holds import INCITEMENT_KEY, is_held
 from aerona.engine.services.sides import heroes_of
 from aerona.engine.services.war_geography import Neighbourhood
 
@@ -58,8 +60,11 @@ async def summaries(session: AsyncSession, wars: list[WarRow]) -> list[WarSummar
             *(war.victor_entity_id for war in wars if war.victor_entity_id is not None),
             *(war.loser_entity_id for war in wars if war.loser_entity_id is not None),
             *(side.entity_id for side in sides),
+            *(war.incited_by_son_id for war in wars if war.incited_by_son_id is not None),
         ],
     )
+    epoch = int(await session.scalar(select(CosmosRow.epoch).limit(1)) or 0)
+    held = {war.id for war in wars if await is_held(session, war.event_entity_id, INCITEMENT_KEY, epoch)}
     result: list[WarSummary] = []
     for war in wars:
         views = [
@@ -85,6 +90,8 @@ async def summaries(session: AsyncSession, wars: list[WarRow]) -> list[WarSummar
                 victor=refs.get(war.victor_entity_id) if war.victor_entity_id is not None else None,
                 loser=refs.get(war.loser_entity_id) if war.loser_entity_id is not None else None,
                 sides=views,
+                instigator=refs.get(war.incited_by_son_id) if war.incited_by_son_id is not None else None,
+                incitement_held=war.id in held,
             )
         )
     return result

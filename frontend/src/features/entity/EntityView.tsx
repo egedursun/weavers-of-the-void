@@ -7,6 +7,7 @@ import { MentionText } from '@/components/domain/MentionText'
 import { Text } from '@/components/typography'
 import { targetsOfRefs } from '@/features/chronicle/linkTargets'
 import { CommunityAddictions } from '@/features/cosmos/EconomyControls'
+import { DedicationSection } from '@/features/foundations/DedicationSection'
 import { Lightbox } from '@/features/images/Lightbox'
 import { useImageGenEvents } from '@/features/images/imageGenState'
 import { CommunityRelations } from '@/features/relations/CommunityRelations'
@@ -29,6 +30,9 @@ import { ResourceProfile } from './economy/ResourceProfile'
 import { PriceBoard, TradeRouteSection } from './economy/RouteAndMarket'
 import { AfterlifeSection, SoulSection } from './faith/Afterlife'
 import { DoctrineSection } from './faith/Doctrine'
+import { EventSection } from './happenings/EventCard'
+import { EventsHereSection } from './happenings/EventsHere'
+import { LandShapeSection } from './happenings/LandShape'
 import { LearningSection } from './lore/LearningSection'
 import { LoreSection } from './lore/LoreSection'
 import { isLoreKind } from './lore/model'
@@ -37,6 +41,8 @@ import {
   KinSection,
   LifeSection,
 } from './mortal/MortalSections'
+import { CreatePlace } from './place/CreatePlace'
+import { PlaceSection } from './place/PlaceSection'
 import { HouseSection, OathsSection, TreatySection } from './realm/HouseTreaty'
 import { RealmSection } from './realm/Realm'
 import { scrollToSection } from './scrollToSection'
@@ -87,7 +93,9 @@ import {
   FoodWebSection,
   HerdsSection,
 } from './wilds/BeastSection'
+import { WildsCreateBar } from './wilds/CreateWilds'
 import { SpeciesSection } from './wilds/SpeciesSection'
+import { TotemSection } from './wilds/TotemSection'
 
 const MIND_TYPES = new Set([
   'mortal',
@@ -111,6 +119,7 @@ const SECTION_LINKS = [
   { id: 'section-house', label: 'House' },
   { id: 'section-treaty', label: 'Terms' },
   { id: 'section-oaths', label: 'Oaths' },
+  { id: 'section-dedication', label: 'Dedication' },
   { id: 'section-economy', label: 'Stores' },
   { id: 'section-market', label: 'Market' },
   { id: 'section-resource-profile', label: 'Reserve' },
@@ -126,6 +135,9 @@ const SECTION_LINKS = [
   { id: 'section-images', label: 'Images' },
   { id: 'section-chronicle', label: 'Chronicle' },
   { id: 'section-environment', label: 'Environment' },
+  { id: 'section-land-shape', label: 'Land' },
+  { id: 'section-event', label: 'Event' },
+  { id: 'section-events-here', label: 'Events here' },
   { id: 'section-body', label: 'Body' },
   { id: 'section-body-customs', label: 'Wounds and bodies' },
   { id: 'section-maimed', label: 'The maimed' },
@@ -220,6 +232,7 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
   if (entity.entity_type !== 'house') present.delete('section-house')
   if (entity.entity_type !== 'treaty') present.delete('section-treaty')
   if (entity.entity_type !== 'mortal') present.delete('section-oaths')
+  if (entity.entity_type !== 'structure') present.delete('section-dedication')
   if (
     !trading &&
     entity.entity_type !== 'polity' &&
@@ -232,6 +245,13 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
     present.delete('section-trade-route')
   if (entity.entity_type !== 'region' && entity.entity_type !== 'place')
     present.delete('section-environment')
+  if (entity.entity_type !== 'region') present.delete('section-land-shape')
+  if (entity.entity_type !== 'event') present.delete('section-event')
+  const eventful =
+    entity.entity_type === 'region' ||
+    entity.entity_type === 'place' ||
+    entity.entity_type === 'settlement'
+  if (!eventful) present.delete('section-events-here')
   const embodied =
     entity.entity_type === 'mortal' || entity.entity_type === 'species'
   if (!embodied) present.delete('section-body')
@@ -332,6 +352,17 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         highlightEpoch={highlight}
       />
       <EntityEnvironment entityId={entity.id} entityType={entity.entity_type} />
+      {entity.entity_type === 'place' && <PlaceSection placeId={entity.id} />}
+      {entity.entity_type === 'region' && <CreatePlace regionId={entity.id} />}
+      {entity.entity_type === 'region' && (
+        <LandShapeSection regionId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'event' && (
+        <EventSection eventId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {eventful && (
+        <EventsHereSection locationId={entity.id} readOnlyReason={readOnly} />
+      )}
       {trading && (
         <DemographySection communityId={entity.id} readOnlyReason={readOnly} />
       )}
@@ -365,6 +396,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       {entity.entity_type === 'mortal' && (
         <OathsSection entityId={entity.id} readOnlyReason={readOnly} />
       )}
+      {entity.entity_type === 'structure' && (
+        <DedicationSection structureId={entity.id} readOnlyReason={readOnly} />
+      )}
       {entity.entity_type === 'cult' && (
         <DoctrineSection cultId={entity.id} readOnlyReason={readOnly} />
       )}
@@ -389,6 +423,12 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       )}
       {entity.entity_type === 'region' && (
         <FoodWebSection regionId={entity.id} />
+      )}
+      {entity.entity_type === 'region' && !readOnly && (
+        <WildsCreateBar regionId={entity.id} />
+      )}
+      {entity.entity_type === 'people' && (
+        <TotemSection peopleId={entity.id} readOnlyReason={readOnly} />
       )}
       {entity.entity_type === 'spirit' && (
         <SoulSection spiritId={entity.id} readOnlyReason={readOnly} />

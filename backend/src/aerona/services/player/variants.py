@@ -3,14 +3,11 @@ from sqlalchemy import update
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.body import ConditionRow
-from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.mind import SkillRow, TraitRow
 from aerona.db.tables.mortal import KindVariantRow
-from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.body import ConditionKind
 from aerona.domain.enums.mind import KindFamily, SkillKind, TraitKind
-from aerona.domain.enums.modifier import IncidentRole, ModifierOp
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 STRENGTH_MAX = 400
@@ -21,7 +18,6 @@ BASES: dict[KindFamily, frozenset[str]] = {
 }
 NAME_MAX = 200
 NOTE_MAX = 2000
-KEY_PATTERN = r"^[a-z][a-z0-9_.]*$"
 
 
 class CreateVariant(Command):
@@ -55,32 +51,6 @@ class AssignVariant(Command):
     family: KindFamily
     row_id: int
     variant_id: int | None = None
-
-
-class EditModifier(Command):
-    modifier_id: int
-    magnitude: float | None = None
-    op: ModifierOp | None = None
-    end_epoch: int | None = Field(default=None, ge=0)
-    forever: bool = False
-    decay_pct: int | None = Field(default=None, ge=0, le=100)
-
-
-class Participant(Command):
-    node_id: int
-    role: IncidentRole
-
-
-class CreateIncident(Command):
-    kind: str = Field(pattern=KEY_PATTERN, max_length=120)
-    note: str | None = Field(default=None, max_length=NOTE_MAX)
-    magnitude: int = Field(default=0, ge=0, le=100)
-    place_entity_id: int | None = None
-    participants: list[Participant] = Field(min_length=1)
-
-
-class IncidentTarget(Command):
-    incident_id: int
 
 
 async def variant_row(scope: PlayerScope, variant_id: int) -> KindVariantRow:
@@ -161,47 +131,3 @@ async def assign_variant(scope: PlayerScope, command: AssignVariant) -> Effect:
             raise ValidationFailedError(f"{variant.name} is not a kind of {base.replace('_', ' ')}.")
     found.variant_id = command.variant_id
     return Effect("The kind was set.", target_node_id=found.holder_node_id if isinstance(found, SkillRow) else found.bearer_node_id)
-
-
-@player_action("modifier:edit", ActionKind.OTHER)
-async def edit_modifier(scope: PlayerScope, command: EditModifier) -> Effect:
-    row = await scope.session.get(ModifierRow, command.modifier_id)
-    if row is None:
-        raise NotFoundError("No such modifier.")
-    if command.magnitude is not None:
-        row.magnitude = command.magnitude
-    if command.op is not None:
-        row.op = command.op
-    if command.forever:
-        row.end_epoch = None
-    elif command.end_epoch is not None:
-        if command.end_epoch < row.start_epoch:
-            raise ValidationFailedError("A modifier cannot end before it begins.")
-        row.end_epoch = command.end_epoch
-    if command.decay_pct is not None:
-        row.decay_pct = command.decay_pct
-    return Effect("The modifier was changed in place.", target_node_id=row.target_node_id)
-
-
-@player_action("incident:create", ActionKind.OTHER)
-async def create_incident(scope: PlayerScope, command: CreateIncident) -> Effect:
-    for participant in command.participants:
-        if await scope.session.get(NodeRow, participant.node_id) is None:
-            raise ValidationFailedError("Every participant must be a record that exists.")
-    row = IncidentRow(kind=command.kind, epoch=await scope.epoch(), note=command.note, magnitude=command.magnitude, place_entity_id=command.place_entity_id)
-    scope.session.add(row)
-    await scope.session.flush()
-    for position, participant in enumerate(command.participants):
-        scope.session.add(IncidentParticipantRow(incident_id=row.id, node_id=participant.node_id, role=participant.role, position=position))
-    await scope.session.flush()
-    return Effect("An incident was set into the record.", target_node_id=command.participants[0].node_id, values={"incident_id": row.id})
-
-
-@player_action("incident:remove", ActionKind.OTHER)
-async def remove_incident(scope: PlayerScope, command: IncidentTarget) -> Effect:
-    row = await scope.session.get(IncidentRow, command.incident_id)
-    if row is None:
-        raise NotFoundError("No such incident.")
-    await scope.session.delete(row)
-    await scope.session.flush()
-    return Effect("The incident was struck from the record.")

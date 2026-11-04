@@ -15,6 +15,8 @@ from aerona.services.container import Services
 from aerona.settings import Settings
 from tests.agents.world import AgentWorld, seed_agent_world
 
+STARTUP_SECONDS = 120
+
 LOCAL_BASE_URL = "http://localhost"
 JOB_POLL_SECONDS = 0.05
 JOB_POLL_ATTEMPTS = 600
@@ -45,7 +47,7 @@ class ApiWorld:
 
 async def open_api(settings: Settings, *, model: LanguageModel | None = None, seeded: bool) -> AsyncIterator[ApiWorld]:
     app = create_app(settings, model=model)
-    async with LifespanManager(app) as manager:
+    async with LifespanManager(app, startup_timeout=STARTUP_SECONDS, shutdown_timeout=STARTUP_SECONDS) as manager:
         transport = ASGITransport(app=manager.app)
         async with AsyncClient(transport=transport, base_url=LOCAL_BASE_URL) as http:
             services: Services = app.state.services

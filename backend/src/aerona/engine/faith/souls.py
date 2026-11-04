@@ -1,23 +1,39 @@
-from sqlalchemy import select
+from dataclasses import dataclass, field
+
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
-from aerona.db.tables.culture import CastingRow, RiteProfileRow
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import CastingRow, RiteEffectRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import AfterlifeStratumRow, CultDoctrineRow, PossessionRow, ReincarnationRow, SpiritProfileRow
 from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import ConditionKind, HarmCause
-from aerona.domain.enums.culture import MagicSchool
+from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.culture import RiteEffectKind
 from aerona.domain.enums.domain import DEATH_DOMAINS
-from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
-from aerona.domain.enums.faith import AfterlifeState, JudgementDoctrine, ReincarnationGate, SpiritAlignment, StratumKind, TenetKind
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.faith import (
+    AfterlifeState,
+    BindingKind,
+    JudgementDoctrine,
+    RebirthPath,
+    ReincarnationGate,
+    SpiritAlignment,
+    StratumKind,
+    TenetKind,
+)
 from aerona.domain.enums.mind import TraitKind, TraitSource, ValueAxis, ValueHolder
 from aerona.domain.enums.society import CreatureTrait, NaturalLaw
-from aerona.engine.body.conditions import end_condition, gain_condition
+from aerona.engine.body.conditions import condition_of, end_condition, gain_condition
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of as creature_traits
+from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.faith.book import Church, faith_tenets
-from aerona.engine.faith.judgement import ledger_score
+from aerona.engine.faith.judgement import leave_realm, ledger_score, seal, unseal
 from aerona.engine.gods.progress import cap_gained_essence
 from aerona.engine.mind.book import add_trait, stored_values, values_for, write_values
 from aerona.engine.mind.memories import remember
@@ -52,16 +68,34 @@ async def venerates(ctx: TickContext, community: EntityRow) -> bool:
     return (await values_for(ctx.session, community.id)).get(ValueAxis.DEATH, 0) >= ctx.rules.spirits.ancestor_death_value
 
 
+async def house_luck(ctx: TickContext, profile: SpiritProfileRow) -> int:
+    if profile.alignment is not SpiritAlignment.GUARDIAN or profile.origin_mortal_id is None:
+        return 0
+    houses = await ctx.session.scalars(select(HouseMemberRow.house_entity_id).where(HouseMemberRow.mortal_entity_id == profile.origin_mortal_id))
+    lucky = 0
+    for house_id in houses:
+        house = await ctx.session.get(HouseProfileRow, house_id)
+        if house is None or house.extinct_epoch is not None or "wealth" in house.locked:
+            continue
+        house.wealth += round_half_up(ctx.rules.spirits.house_luck * max(profile.veneration, ctx.rules.spirits.guardian_veneration) / PERCENT)
+        lucky += 1
+    return lucky
+
+
 async def tend(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow) -> str:
     table = ctx.rules.spirits
     home = await home_of(ctx, profile)
     fed = home is not None and await venerates(ctx, home) and ctx.rng(f"offering.{spirit.id}.{ctx.epoch}").chance(table.offering_chance)
     if fed:
-        profile.veneration = clamp_int(profile.veneration + table.remembrance, 0, PERCENT)
-        profile.memory_strength = clamp_int(profile.memory_strength + table.remembrance, 0, PERCENT)
+        if "veneration" not in profile.locked:
+            profile.veneration = clamp_int(profile.veneration + table.remembrance, 0, PERCENT)
+        if "memory_strength" not in profile.locked:
+            profile.memory_strength = clamp_int(profile.memory_strength + table.remembrance, 0, PERCENT)
     else:
-        profile.memory_strength = clamp_int(profile.memory_strength - table.memory_decay, 0, PERCENT)
-        profile.veneration = clamp_int(profile.veneration - table.memory_decay, 0, PERCENT)
+        if "memory_strength" not in profile.locked:
+            profile.memory_strength = clamp_int(profile.memory_strength - table.memory_decay, 0, PERCENT)
+        if "veneration" not in profile.locked:
+            profile.veneration = clamp_int(profile.veneration - table.memory_decay, 0, PERCENT)
     unrest = stat(spirit, "unrest") or 0
     if profile.alignment is SpiritAlignment.GUARDIAN and not fed and profile.veneration < table.guardian_veneration:
         unrest = clamp_int(unrest + table.neglect_unrest, 0, PERCENT)
@@ -71,6 +105,7 @@ async def tend(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow) -
             profile.alignment = SpiritAlignment.VENGEFUL
         elif profile.veneration >= table.guardian_veneration:
             profile.alignment = SpiritAlignment.GUARDIAN
+    ctx.count("houses_lucky", await house_luck(ctx, profile))
     profile.updated_epoch = ctx.epoch
     return "fed" if fed else "forgotten" if profile.memory_strength == 0 else "kept"
 
@@ -92,7 +127,7 @@ async def gates(ctx: TickContext, profile: SpiritProfileRow, home: EntityRow | N
 
 
 async def rebirth_rite(ctx: TickContext, home_id: int, spirit_id: int) -> bool:
-    rites = select(RiteProfileRow.rite_entity_id).where(RiteProfileRow.school.in_([MagicSchool.DEATH, MagicSchool.LIFE]))
+    rites = select(RiteEffectRow.rite_entity_id).where(RiteEffectRow.effect.in_([RiteEffectKind.RAISE_DEAD, RiteEffectKind.UNSEAL_SOUL]))
     casters = select(EntityRow.id).where(EntityRow.location_id == home_id)
     statement = select(CastingRow.id).where(
         CastingRow.rite_entity_id.in_(rites),
@@ -103,13 +138,71 @@ async def rebirth_rite(ctx: TickContext, home_id: int, spirit_id: int) -> bool:
     return await ctx.session.scalar(statement.limit(1)) is not None
 
 
+async def soul_doctrine(session: AsyncSession, profile: SpiritProfileRow) -> CultDoctrineRow | None:
+    if profile.patron_son_id is None:
+        return None
+    cults = select(BondRow.source_node_id).where(BondRow.target_node_id == profile.patron_son_id, BondRow.kind == BondKind.WORSHIPS)
+    return await session.scalar(select(CultDoctrineRow).where(CultDoctrineRow.cult_entity_id.in_(cults)).order_by(CultDoctrineRow.cult_entity_id).limit(1))
+
+
+async def house_of(session: AsyncSession, mortal_id: int | None) -> HouseProfileRow | None:
+    if mortal_id is None:
+        return None
+    house_id = await session.scalar(select(HouseMemberRow.house_entity_id).where(HouseMemberRow.mortal_entity_id == mortal_id).limit(1))
+    house = await session.get(HouseProfileRow, house_id) if house_id is not None else None
+    return house if house is not None and house.extinct_epoch is None else None
+
+
+async def faithful_homes(session: AsyncSession, profile: SpiritProfileRow, world_id: int | None) -> list[EntityRow]:
+    if profile.patron_son_id is None:
+        return []
+    worshippers = select(BondRow.source_node_id).where(
+        BondRow.target_node_id == profile.patron_son_id, BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE
+    )
+    statement = select(EntityRow).where(EntityRow.id.in_(worshippers), EntityRow.entity_type.in_(list(COMMUNITY_TYPES)), EntityRow.status == EntityStatus.CANON)
+    if world_id is not None:
+        statement = statement.where(EntityRow.world_id == world_id)
+    return list(await session.scalars(statement.order_by(EntityRow.id)))
+
+
+@dataclass(frozen=True)
+class Cradle:
+    community: EntityRow
+    path: RebirthPath
+    house: HouseProfileRow | None = field(default=None)
+
+
+async def cradle(ctx: TickContext, profile: SpiritProfileRow, home: EntityRow) -> Cradle:
+    doctrine = await soul_doctrine(ctx.session, profile)
+    path = doctrine.rebirth_path if doctrine is not None else RebirthPath.PEOPLE
+    if path is RebirthPath.HOUSE:
+        house = await house_of(ctx.session, profile.origin_mortal_id)
+        head = await living_entity(ctx.session, house.head_entity_id) if house is not None and house.head_entity_id is not None else None
+        seat = await living_entity(ctx.session, head.location_id) if head is not None and head.location_id is not None else None
+        if house is not None:
+            return Cradle(seat if seat is not None and seat.entity_type in COMMUNITY_TYPES else home, path, house)
+    if path is RebirthPath.MERIT:
+        table = ctx.rules.afterlife
+        score = ledger_score(profile.deeds)
+        homes = await faithful_homes(ctx.session, profile, home.world_id) or [home]
+        ranked = sorted(homes, key=lambda item: (stat(item, "prosperity") or 0, -item.id))
+        if score >= table.paradise_score:
+            return Cradle(ranked[-1], path)
+        if score < table.torment_score:
+            return Cradle(ranked[0], path)
+    return Cradle(home, path)
+
+
 async def rebirth(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow, home: EntityRow, gate: ReincarnationGate) -> EntityRow:
     table = ctx.rules.afterlife
     old = await ctx.session.get(EntityRow, profile.origin_mortal_id) if profile.origin_mortal_id is not None else None
     name = old.name if old is not None else spirit.name
+    place = await cradle(ctx, profile, home)
     plan = BirthPlan(name=name, subtype="reborn", role=MortalRole.COMMONER, body=f"Born again with the soul of {name}.")
-    child = await born_mortal(ctx, home, plan)
+    child = await born_mortal(ctx, place.community, plan)
     set_stats(child, age=0)
+    if place.house is not None:
+        ctx.session.add(HouseMemberRow(house_entity_id=place.house.house_entity_id, mortal_entity_id=child.id, joined_epoch=ctx.epoch, by_marriage=False))
     carried = round_half_up(len(profile.traits) * table.reincarnation_traits_pct / PERCENT)
     for trait in profile.traits[:carried]:
         await add_trait(ctx.session, child.id, TraitKind(trait), TraitSource.INHERITED, ctx.epoch, source_node_id=spirit.id)
@@ -134,13 +227,13 @@ async def rebirth(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow
             spirit_entity_id=spirit.id,
             past_mortal_id=old.id if old is not None else None,
             newborn_entity_id=child.id,
-            community_entity_id=home.id,
+            community_entity_id=place.community.id,
             gate=gate,
             memory_pct=table.reincarnation_memory_pct,
             epoch=ctx.epoch,
         )
     )
-    profile.state = AfterlifeState.REBORN
+    await leave_realm(ctx, profile, AfterlifeState.REBORN)
     await retire_in(ctx, spirit, f"born again as {child.name}", close_bonds=False)
     return child
 
@@ -148,7 +241,7 @@ async def rebirth(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow
 async def reincarnate(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow) -> EntityRow | None:
     table = ctx.rules.afterlife
     home = await home_of(ctx, profile)
-    gate = await gates(ctx, profile, home)
+    gate = await gates(ctx, profile, home) if "state" not in profile.locked else None
     if gate is None or home is None or ledger_score(profile.deeds) < table.reincarnation_min_score:
         return None
     if not ctx.rng(f"rebirth.{spirit.id}.{ctx.epoch}").chance(table.reincarnation_chance_pct):
@@ -156,8 +249,46 @@ async def reincarnate(ctx: TickContext, profile: SpiritProfileRow, spirit: Entit
     return await rebirth(ctx, profile, spirit, home, gate)
 
 
+def restless(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow) -> bool:
+    return profile.alignment is SpiritAlignment.VENGEFUL or (stat(spirit, "unrest") or 0) >= ctx.rules.apocalypse.restless_threshold
+
+
+async def take_host(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow, host: EntityRow) -> PossessionRow:
+    original = await stored_values(ctx.session, ValueHolder.PERSONAL, host.id)
+    row = PossessionRow(
+        host_entity_id=host.id,
+        spirit_entity_id=spirit.id,
+        since_epoch=ctx.epoch,
+        stress=0,
+        host_values={axis.value: value for axis, value in original.items()},
+        locked=[],
+    )
+    ctx.session.add(row)
+    if profile.imprint:
+        await write_values(ctx.session, ValueHolder.PERSONAL, host.id, {ValueAxis(axis): value for axis, value in profile.imprint.items()})
+    if "binding" not in profile.locked:
+        profile.binding, profile.bound_entity_id = BindingKind.PERSON, host.id
+    if await condition_of(ctx, host.id, ConditionKind.POSSESSION) is None:
+        await gain_condition(ctx, host, ConditionKind.POSSESSION, HarmCause.CURSE, source_node_id=spirit.id)
+    await ctx.session.flush()
+    return row
+
+
+async def release_host(ctx: TickContext, row: PossessionRow, *, end: bool = True) -> None:
+    host = await ctx.session.get(EntityRow, row.host_entity_id)
+    profile = await ctx.session.get(SpiritProfileRow, row.spirit_entity_id)
+    if host is not None and row.host_values:
+        await write_values(ctx.session, ValueHolder.PERSONAL, host.id, {ValueAxis(axis): value for axis, value in row.host_values.items()})
+    if profile is not None and profile.bound_entity_id == row.host_entity_id and "binding" not in profile.locked:
+        profile.binding, profile.bound_entity_id = BindingKind.NONE, None
+    if end and host is not None:
+        await end_condition(ctx, host, ConditionKind.POSSESSION)
+    await ctx.session.delete(row)
+    await ctx.session.flush()
+
+
 async def possess(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow) -> EntityRow | None:
-    if profile.alignment is not SpiritAlignment.VENGEFUL or spirit.location_id is None:
+    if not restless(ctx, profile, spirit) or spirit.location_id is None or profile.binding is BindingKind.PERSON or "state" in profile.locked:
         return None
     if not ctx.rng(f"possess.{spirit.id}.{ctx.epoch}").chance(ctx.rules.necromancy.possession_chance):
         return None
@@ -175,77 +306,189 @@ async def possess(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow
     )
     if host is None:
         return None
-    ctx.session.add(PossessionRow(host_entity_id=host.id, spirit_entity_id=spirit.id, since_epoch=ctx.epoch, stress=0))
-    await gain_condition(ctx, host, ConditionKind.POSSESSION, HarmCause.CURSE, source_node_id=spirit.id)
+    await take_host(ctx, profile, spirit, host)
     return host
 
 
-async def possessions(ctx: TickContext) -> tuple[int, int]:
+async def burden(ctx: TickContext) -> list[tuple[PossessionRow, EntityRow, EntityRow]]:
     table = ctx.rules.necromancy
-    exorcised = held = 0
+    held: list[tuple[PossessionRow, EntityRow, EntityRow]] = []
     for row in list(await ctx.session.scalars(select(PossessionRow).order_by(PossessionRow.host_entity_id))):
         host = await living_entity(ctx.session, row.host_entity_id)
         spirit = await living_entity(ctx.session, row.spirit_entity_id)
         if host is None or spirit is None:
-            await ctx.session.delete(row)
+            await release_host(ctx, row, end=host is not None)
             continue
-        row.stress = clamp_int(row.stress + table.possession_stress, 0, PERCENT)
-        priests = await ctx.session.scalar(
-            select(EntityRow.id)
-            .where(EntityRow.location_id == host.location_id, EntityRow.mortal_role == MortalRole.PRIEST, EntityRow.status == EntityStatus.CANON)
-            .limit(1)
-        )
-        if priests is not None and ctx.rng(f"exorcism.{host.id}.{ctx.epoch}").chance(table.exorcism_chance):
-            await ctx.session.delete(row)
-            await end_condition(ctx, host, ConditionKind.POSSESSION)
-            exorcised += 1
+        if await condition_of(ctx, host.id, ConditionKind.POSSESSION) is None:
+            await release_host(ctx, row, end=False)
             continue
-        held += 1
-    return held, exorcised
+        if "stress" not in row.locked:
+            row.stress = clamp_int(row.stress + table.possession_stress, 0, PERCENT)
+        shift_sanity(ctx.rules, host, -row.stress * table.possession_sanity_pct / PERCENT)
+        held.append((row, host, spirit))
+    return held
 
 
-async def soul_eaters(ctx: TickContext, atlas: RegionAtlas) -> set[int]:
-    eaters = await ctx.session.scalars(
-        select(EntityRow).where(EntityRow.entity_type.in_([EntityType.SPECIES, EntityType.OUTER_BEING]), EntityRow.status == EntityStatus.CANON)
+async def exorcise(ctx: TickContext, host: EntityRow, power: int) -> bool:
+    table = ctx.rules.necromancy
+    row = await ctx.session.get(PossessionRow, host.id)
+    if row is None:
+        return False
+    community = await living_entity(ctx.session, host.location_id) if host.location_id is not None else None
+    piety = (stat(community, "piety") or 0) if community is not None else 0
+    chance = power * table.exorcism_per_power * (1 + piety * table.exorcism_piety_pct / PERCENT / PERCENT)
+    if not ctx.rng(f"exorcise.{host.id}.{ctx.epoch}").chance(clamp_int(chance, 0, PERCENT)):
+        return False
+    await release_host(ctx, row)
+    return True
+
+
+async def seal_with(ctx: TickContext, spirit_id: int, power: int) -> bool:
+    profile = await ctx.session.get(SpiritProfileRow, spirit_id)
+    if profile is None:
+        return False
+    seal(profile, power * ctx.rules.necromancy.seal_per_power)
+    return profile.sealed
+
+
+async def unseal_with(ctx: TickContext, spirit_id: int, power: int) -> bool:
+    profile = await ctx.session.get(SpiritProfileRow, spirit_id)
+    if profile is None or not profile.sealed:
+        return False
+    if power * ctx.rules.necromancy.seal_per_power <= profile.seal_strength:
+        return False
+    unseal(profile)
+    return not profile.sealed
+
+
+async def soul_near(ctx: TickContext, place_id: int | None, *, sealed: bool) -> SpiritProfileRow | None:
+    if place_id is None:
+        return None
+    here = select(EntityRow.id).where(EntityRow.location_id == place_id, EntityRow.status == EntityStatus.CANON)
+    mortals = select(EntityRow.id).where(EntityRow.location_id == place_id, EntityRow.entity_type == EntityType.MORTAL)
+    statement = select(SpiritProfileRow).where(
+        SpiritProfileRow.state.in_(list(LIVING_STATES)),
+        SpiritProfileRow.sealed.is_(sealed),
+        SpiritProfileRow.spirit_entity_id.in_(here) | SpiritProfileRow.origin_mortal_id.in_(mortals),
     )
-    regions: set[int] = set()
+    return await ctx.session.scalar(statement.order_by(SpiritProfileRow.spirit_entity_id).limit(1))
+
+
+@dataclass(frozen=True)
+class Eater:
+    entity: EntityRow
+    outer: bool
+
+
+async def soul_eaters(ctx: TickContext, atlas: RegionAtlas) -> dict[int, list[Eater]]:
+    eaters = await ctx.session.scalars(
+        select(EntityRow)
+        .where(EntityRow.entity_type.in_([EntityType.SPECIES, EntityType.OUTER_BEING]), EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.id)
+    )
+    regions: dict[int, list[Eater]] = {}
     for eater in eaters:
-        if eater.entity_type is EntityType.OUTER_BEING or CreatureTrait.SOUL_EATER in await creature_traits(ctx.session, eater.id):
+        outer = eater.entity_type is EntityType.OUTER_BEING
+        if outer or CreatureTrait.SOUL_EATER in await creature_traits(ctx.session, eater.id):
             region = atlas.top_region(eater.id)
             if region is not None:
-                regions.add(region)
+                regions.setdefault(region, []).append(Eater(eater, outer))
     return regions
 
 
-async def consume(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow) -> None:
-    profile.state = AfterlifeState.CONSUMED
+async def feed_eater(ctx: TickContext, eater: EntityRow) -> SonRow | None:
+    creator = await ctx.session.get(SonRow, eater.creator_son_id) if eater.creator_son_id is not None else None
+    if creator is None or not creator.alive or not ({creator.domain_primary, creator.domain_secondary} & DEATH_DOMAINS):
+        return None
+    before = creator.essence
+    creator.essence += ctx.rules.necromancy.consumption_essence
+    cap_gained_essence(ctx.rules, creator, before)
+    return creator
+
+
+async def consume(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow, eater: EntityRow | None = None) -> SonRow | None:
+    await leave_realm(ctx, profile, AfterlifeState.CONSUMED)
     await retire_in(ctx, spirit, "devoured by a soul-eater", close_bonds=True)
-    sons = await ctx.session.scalars(select(SonRow).where(SonRow.current_world_id == spirit.world_id).order_by(SonRow.id))
-    for son in sons:
-        if son.alive and {son.domain_primary, son.domain_secondary} & DEATH_DOMAINS:
+    owner = await ctx.session.get(SonRow, profile.patron_son_id) if profile.patron_son_id is not None else None
+    if owner is not None and owner.alive:
+        owner.essence = max(0, owner.essence - ctx.rules.necromancy.consumption_loss)
+    return await feed_eater(ctx, eater) if eater is not None else None
+
+
+async def gnaw(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow, eaters: list[Eater]) -> str | None:
+    table = ctx.rules.necromancy
+    if "state" in profile.locked:
+        return None
+    for eater in eaters:
+        if ctx.rng(f"eaten.{spirit.id}.{eater.entity.id}.{ctx.epoch}").chance(table.soul_eater_chance):
+            await consume(ctx, profile, spirit, eater.entity)
+            return "eaten"
+        if eater.outer and not profile.sealed and ctx.rng(f"gnawed.{spirit.id}.{eater.entity.id}.{ctx.epoch}").chance(table.outer_seal_chance):
+            seal(profile, table.outer_seal)
+            return "gnawed"
+    return None
+
+
+async def realm_population(session: AsyncSession, son_id: int) -> int:
+    found = await session.scalar(
+        select(func.count(SpiritProfileRow.spirit_entity_id))
+        .join(EntityRow, EntityRow.id == SpiritProfileRow.spirit_entity_id)
+        .where(SpiritProfileRow.patron_son_id == son_id, SpiritProfileRow.state == AfterlifeState.IN_REALM, EntityRow.status == EntityStatus.CANON)
+    )
+    return int(found or 0)
+
+
+async def realm_essence(ctx: TickContext) -> int:
+    drawn = 0
+    for son in list(await ctx.session.scalars(select(SonRow).order_by(SonRow.id))):
+        if not son.alive or not ({son.domain_primary, son.domain_secondary} & DEATH_DOMAINS):
+            continue
+        gain = await realm_population(ctx.session, son.id) * ctx.rules.afterlife.realm_essence_per_100 // PERCENT
+        if gain > 0:
             before = son.essence
-            son.essence += ctx.rules.necromancy.consumption_essence
+            son.essence += gain
             cap_gained_essence(ctx.rules, son, before)
+            drawn += gain
+    return drawn
+
+
+async def tormented(ctx: TickContext, church: Church) -> int:
+    if church.god is None:
+        return 0
+    origins = select(EntityRow.id).where(EntityRow.world_id == church.cult.world_id)
+    found = await ctx.session.scalar(
+        select(func.count(SpiritProfileRow.spirit_entity_id))
+        .join(AfterlifeStratumRow, AfterlifeStratumRow.id == SpiritProfileRow.stratum_id)
+        .where(
+            SpiritProfileRow.patron_son_id == church.god.id,
+            SpiritProfileRow.state == AfterlifeState.IN_REALM,
+            SpiritProfileRow.origin_mortal_id.in_(origins),
+            AfterlifeStratumRow.kind == StratumKind.TORMENT,
+        )
+    )
+    return int(found or 0)
 
 
 async def fear_of_torment(ctx: TickContext, church: Church) -> int:
     doctrine = church.doctrine
-    if doctrine is None or doctrine.judgement is not JudgementDoctrine.DEEDS:
+    if doctrine is None or doctrine.judgement is not JudgementDoctrine.DEEDS or not await tormented(ctx, church):
         return 0
-    torment = await ctx.session.scalar(
-        select(AfterlifeStratumRow.id).where(AfterlifeStratumRow.kind == StratumKind.TORMENT, AfterlifeStratumRow.population > 0).limit(1)
-    )
-    if torment is None:
-        return 0
-    step = ctx.rules.afterlife.torment_honour
+    table = ctx.rules.afterlife
+    moved = 0
     for member in church.members:
         values = await stored_values(ctx.session, ValueHolder.CULTURE, member.id)
         if not values:
             continue
+        changed = False
         for axis in (ValueAxis.HONOUR, ValueAxis.TRADITION):
-            values[axis] = values.get(axis, 0) + step
-        await write_values(ctx.session, ValueHolder.CULTURE, member.id, values)
-    return len(church.members)
+            current = values.get(axis, 0)
+            if current < table.torment_value_target:
+                values[axis] = min(table.torment_value_target, current + table.torment_honour)
+                changed = True
+        if changed:
+            await write_values(ctx.session, ValueHolder.CULTURE, member.id, values)
+            moved += 1
+    return moved
 
 
 async def guardians_of(ctx: TickContext, community_id: int) -> int:
@@ -254,6 +497,28 @@ async def guardians_of(ctx: TickContext, community_id: int) -> int:
         select(SpiritProfileRow.spirit_entity_id).where(SpiritProfileRow.origin_mortal_id.in_(mortals), SpiritProfileRow.alignment == SpiritAlignment.GUARDIAN)
     )
     return len(list(rows))
+
+
+async def ancestral_site(ctx: TickContext, community: EntityRow, place_id: int | None) -> bool:
+    if place_id is None:
+        return False
+    if place_id in {community.id, community.location_id}:
+        return True
+    atlas = await RegionAtlas.load(ctx.session)
+    if atlas.top_region(community.id) is not None and atlas.top_region(community.id) == atlas.top_region(place_id):
+        return True
+    mortals = select(EntityRow.id).where(EntityRow.location_id == community.id, EntityRow.entity_type == EntityType.MORTAL)
+    bound = await ctx.session.scalar(
+        select(SpiritProfileRow.spirit_entity_id)
+        .where(
+            SpiritProfileRow.origin_mortal_id.in_(mortals),
+            SpiritProfileRow.alignment == SpiritAlignment.GUARDIAN,
+            SpiritProfileRow.binding == BindingKind.PLACE,
+            SpiritProfileRow.bound_entity_id == place_id,
+        )
+        .limit(1)
+    )
+    return bound is not None
 
 
 async def doctrine_of(ctx: TickContext, cult_id: int) -> CultDoctrineRow | None:

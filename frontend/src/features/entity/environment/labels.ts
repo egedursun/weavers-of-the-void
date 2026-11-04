@@ -248,6 +248,11 @@ export const FIELD_LABELS: Record<string, string> = {
   soil: 'Soil',
   river_class: 'River',
   coast_kind: 'Coast',
+  temperature_band: 'Climate band',
+  sacredness: 'Sacredness',
+  derived_fertility: 'Fertility the land last gave',
+  biome_mix: 'Biomes',
+  cleared: 'Cleared land',
 }
 
 export const WORLD_ICON = Globe
@@ -257,6 +262,10 @@ export const THERMOMETER_ICON = Thermometer
 export const SEASONALITY_ICON = SunSnow
 
 export function fieldLabel(key: string): string {
+  if (key.startsWith('scar.'))
+    return `${SCARS[key.slice('scar.'.length)]?.label ?? key} scar`
+  if (key.startsWith('seam.'))
+    return `${MINERALS[key.slice('seam.'.length)] ?? 'Mineral'} seam`
   if (key.startsWith('passability.'))
     return `${MODES[key.slice('passability.'.length)]?.label ?? key} passability`
   return (

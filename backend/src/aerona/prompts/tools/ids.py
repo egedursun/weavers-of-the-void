@@ -23,6 +23,7 @@ class SonToolId(StrEnum):
     CREATE_RESOURCE = "create_resource"
     FOUND_SETTLEMENT = "found_settlement"
     CREATE_SPECIES = "create_species"
+    RAISE_BEAST = "raise_beast"
     CREATE_PEOPLE = "create_people"
     CREATE_MORTAL = "create_mortal"
     FORGE_ITEM = "forge_item"
@@ -60,6 +61,13 @@ class SonToolId(StrEnum):
     REORDER_SEASONS = "reorder_seasons"
     SHAPE_WEATHER = "shape_weather"
     SEVER_LEY = "sever_ley"
+    HIDE_SECRET = "hide_secret"
+    SANCTIFY_PLACE = "sanctify_place"
+    RAISE_NEXUS = "raise_nexus"
+    RESHAPE_LAND = "reshape_land"
+    SANCTIFY_REGION = "sanctify_region"
+    CURSE_REGION = "curse_region"
+    REDIRECT_RIVER = "redirect_river"
     DECLARE_HOLY_WORLD = "declare_holy_world"
     SEAL_GATE = "seal_gate"
     REKINDLE_STAR = "rekindle_star"
@@ -75,6 +83,8 @@ class SonToolId(StrEnum):
     BIRTH_WORLD = "birth_world"
     BIND_MORTALS = "bind_mortals"
     TOUCH_MORTAL = "touch_mortal"
+    REVEAL_TENET = "reveal_tenet"
+    OPEN_REBIRTH_GATE = "open_rebirth_gate"
 
 
 class MortalToolId(StrEnum):

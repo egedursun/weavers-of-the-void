@@ -16,7 +16,7 @@ from aerona.domain.models.entity_stats import SpeciesStats
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.records import RecordSpec, open_record
-from aerona.engine.primitives.stats import shift_bounded, stat, stat_or
+from aerona.engine.primitives.stats import stat, stat_or
 from aerona.rules.registry import Rules
 
 SPECIES_STAT_KEYS = ("strength", "agility", "intelligence", "danger")
@@ -25,47 +25,7 @@ INTELLIGENCE_KEY = "intelligence"
 DANGER_KEY = "danger"
 HP_KEY = "hp"
 
-TRAIT_HINTS: dict[CreatureTrait, tuple[str, ...]] = {
-    CreatureTrait.FLYING: ("wing", "flies", "flying", "fly", "sky", "bird", "glide", "soar"),
-    CreatureTrait.VENOMOUS: ("venom", "poison", "sting", "thorn", "toxic", "fang"),
-    CreatureTrait.SOUL_EATER: ("soul", "life-eater", "shadow-eater", "devours spirits", "eats souls"),
-    CreatureTrait.RADIANT: ("light", "glow", "glitter", "shining", "radiant", "luminous", "burning"),
-    CreatureTrait.FISSIPAROUS: ("split", "multiplies", "multiply", "in swarms", "bud", "divides"),
-    CreatureTrait.HIVE_MIND: ("swarm", "herd", "colony", "hive", "flock"),
-    CreatureTrait.STONESKIN: ("stone", "shell", "armour", "armor", "scale", "carapace"),
-    CreatureTrait.TIME_REWINDER: ("time", "rewind", "reborn", "returns again"),
-    CreatureTrait.SHAPESHIFTER: ("shape", "guise", "mimic", "mirror", "disguise", "changeling"),
-    CreatureTrait.MIND_READER: ("mind", "intellect", "reads thoughts", "whisper", "telepath"),
-    CreatureTrait.ARMOURED: ("armour", "plated", "shell", "hide like iron"),
-    CreatureTrait.BURROWING: ("burrow", "tunnel", "dig", "mole", "underground"),
-    CreatureTrait.AQUATIC: ("fish", "sea", "river", "water", "swim", "whale", "eel"),
-    CreatureTrait.AMPHIBIOUS: ("frog", "toad", "newt", "amphib", "shore"),
-    CreatureTrait.PACK_HUNTER: ("pack", "wolf", "hound", "jackal"),
-    CreatureTrait.AMBUSH_PREDATOR: ("ambush", "lurk", "stalker", "crocodile", "spider"),
-    CreatureTrait.REGENERATING: ("regenerat", "heal", "troll", "regrow"),
-    CreatureTrait.POISONOUS_FLESH: ("poisonous flesh", "bitter flesh", "toxic flesh", "inedible"),
-    CreatureTrait.FIRE_BREATHING: ("fire breath", "breathes fire", "flame", "dragon", "salamander"),
-    CreatureTrait.COLD_BREATHING: ("frost", "ice breath", "cold breath", "winter"),
-    CreatureTrait.ECHOLOCATION: ("bat", "echo", "sonar"),
-    CreatureTrait.CAMOUFLAGE: ("camouflag", "hidden", "chameleon", "blends"),
-    CreatureTrait.SWARM_BREEDER: ("locust", "rat", "swarm", "breeds fast", "teeming"),
-    CreatureTrait.LONG_LIVED: ("ancient", "long-lived", "elder", "centuries"),
-    CreatureTrait.MIMIC: ("mimic", "imitat", "look-alike"),
-    CreatureTrait.SPIRIT_SIGHT: ("spirit sight", "sees spirits", "ghost-hound", "owl"),
-    CreatureTrait.IRON_EATING: ("iron-eat", "eats iron", "rust", "ore-eat"),
-    CreatureTrait.CROP_PEST: ("locust", "weevil", "pest", "blight", "grub"),
-    CreatureTrait.PLAGUE_BEARER: ("plague", "rat", "flea", "disease", "pestilence"),
-    CreatureTrait.SACRED_ANIMAL: ("sacred", "holy beast", "divine", "totem"),
-}
-
-
 BESTOWED = frozenset({CreatureTrait.SACRED_ANIMAL})
-
-
-def hinted_traits(text: str, cap: int) -> list[CreatureTrait]:
-    lowered = text.lower()
-    found = [trait for trait, words in TRAIT_HINTS.items() if any(word in lowered for word in words)]
-    return found[: max(0, cap)]
 
 
 async def traits_of(session: AsyncSession, entity_id: int) -> set[CreatureTrait]:
@@ -74,21 +34,6 @@ async def traits_of(session: AsyncSession, entity_id: int) -> set[CreatureTrait]
 
 def trait_war(rules: Rules, traits: Iterable[CreatureTrait]) -> int:
     return sum(trait_war_bonus(rules, trait) for trait in traits)
-
-
-async def assign_traits(ctx: TickContext, species: EntityRow) -> list[CreatureTrait]:
-    repository = EntityRepository(ctx.session)
-    if await repository.traits(species.id):
-        return []
-    creatures = ctx.rules.creatures
-    chosen = hinted_traits(f"{species.name} {species.subtype or ''} {species.description}", creatures.traits_from_description_cap)
-    if not chosen:
-        chosen = [ctx.rng("random_trait").pick([trait for trait in CreatureTrait if trait not in BESTOWED])]
-    for trait in chosen:
-        await repository.add_trait(species.id, trait)
-    if CreatureTrait.HIVE_MIND in chosen:
-        shift_bounded(ctx.rules, species, INTELLIGENCE_KEY, creatures.hive_mind_intelligence)
-    return chosen
 
 
 async def common_child(session: AsyncSession, first: int, second: int) -> bool:

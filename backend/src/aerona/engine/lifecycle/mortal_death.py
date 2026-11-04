@@ -8,6 +8,7 @@ from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.schema import SINGLETON_ID
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.db.repositories.chronicle import CAUSE_SCOPE
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.celestial import WorldRow
@@ -25,6 +26,7 @@ from aerona.domain.enums.node import NodeKind
 from aerona.domain.models.entity_stats import SpiritStats, TraditionStats
 from aerona.engine.context import TickContext
 from aerona.engine.faith.judgement import profile_for
+from aerona.engine.interconnect.causes import killing_incident
 from aerona.engine.lifecycle.aging import immortal, raise_lifespan_to_death_age
 from aerona.engine.lifecycle.succession import dynasty_root, pass_rule
 from aerona.engine.lore.items import record
@@ -108,7 +110,9 @@ async def die(
     ids = [mortal.id] + ([heir.id] if heir is not None else []) + ([killer_id] if killer_id is not None and killer_kind is NodeKind.ENTITY else [])
     son_id = killer_id if killer_kind is NodeKind.SON else mortal.creator_son_id
     roles = {mortal.id: IncidentRole.TARGET, **({killer_id: IncidentRole.ACTOR} if killer_id is not None else {})}
-    await note(ctx, text, key="mortal.death.natural" if natural else "mortal.death.cause", ids=ids, son_id=son_id, roles=roles)
+    cause_id = None if natural or killer_id is None or CAUSE_SCOPE.get() is not None else await killing_incident(ctx.session, mortal.id, killer_id)
+    key = "mortal.death.natural" if natural else "mortal.death.cause"
+    await note(ctx, text, key=key, ids=ids, son_id=son_id, roles=roles, cause_incident_id=cause_id)
     await after_death(ctx, mortal)
     await sweep_dead_bonds(session, ctx.epoch, mortal.id)
     if await raise_lifespan_to_death_age(session, ctx.rules, mortal):

@@ -31,6 +31,8 @@ class WarSummary(ApiModel):
     victor: NodeRef | None
     loser: NodeRef | None
     sides: list[WarSideView]
+    instigator: NodeRef | None = None
+    incitement_held: bool = False
 
 
 class ArmyView(ApiModel):

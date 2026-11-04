@@ -6,7 +6,7 @@ from aerona.core.errors import ValidationFailedError
 from aerona.db.ledger_undo import UndoRun
 from aerona.db.tables.body import ConditionRow, InjuryRow, ProsthesisRow
 from aerona.db.tables.economy import WorldMaterialRow
-from aerona.db.tables.interconnect import IncidentRow, ModifierRow
+from aerona.db.tables.interconnect import ModifierRow
 from aerona.db.tables.mind import MemoryRow, SkillRow, TraitRow
 from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.domain.enums.body import BodyPart, ConditionKind, InjuryKind
@@ -15,14 +15,14 @@ from aerona.domain.enums.economy import MaterialFamily, MaterialOrigin
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import KindFamily, MemoryKind, NeedKind, SkillKind, TraitKind, ValueAxis
-from aerona.domain.enums.modifier import IncidentRole, ModifierOp, ModifierSource
+from aerona.domain.enums.modifier import ModifierSource
 from aerona.domain.enums.mortal import Ability, CrimeKind, EquipmentSlot, LifeStage, MarriageEnd, MortalSex, PunishmentKind
 from aerona.domain.models.entity_stats import ItemStats, MortalStats
 from aerona.engine.lore.items import profile_of
 from aerona.engine.mortal.kin import spouses_of
 from aerona.services.ledger import changes_of
 from aerona.services.ledger_narration import label_names, node_names
-from aerona.services.player import body, levers, mind, mortals, variants
+from aerona.services.player import body, mind, mortals, variants
 from aerona.services.player.scope import PlayerScope
 from tests.services.player.factories import PlayerWorld, make_entity
 
@@ -183,27 +183,6 @@ async def test_world_made_kinds_are_forged_given_and_unmade(scope: PlayerScope, 
     await variants.delete_variant(scope, variants.VariantTarget(variant_id=variant_id))
     await session.refresh(held)
     assert held.variant_id is None
-
-
-async def test_a_modifier_is_changed_in_place(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
-    mortal_id = await _mortal(session, world, "Mira")
-    await levers.add_player_modifier(scope, levers.AddModifier(node_id=mortal_id, key="strength", op=ModifierOp.ADD, magnitude=5))
-    row = await session.scalar(select(ModifierRow).where(ModifierRow.target_node_id == mortal_id))
-    assert row is not None
-    await variants.edit_modifier(scope, variants.EditModifier(modifier_id=row.id, magnitude=12, end_epoch=row.start_epoch + 3))
-    assert row.magnitude == 12 and row.end_epoch == row.start_epoch + 3
-    await variants.edit_modifier(scope, variants.EditModifier(modifier_id=row.id, forever=True))
-    assert row.end_epoch is None
-
-
-async def test_incidents_are_set_down_and_struck_out(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
-    mortal_id = await _mortal(session, world, "Nell")
-    participant = variants.Participant(node_id=mortal_id, role=IncidentRole.ACTOR)
-    made = await variants.create_incident(scope, variants.CreateIncident(kind="feud.oath_sworn", note="sworn at the ford", participants=[participant]))
-    incident_id = int((made.values or {})["incident_id"])
-    assert await session.get(IncidentRow, incident_id) is not None
-    await variants.remove_incident(scope, variants.IncidentTarget(incident_id=incident_id))
-    assert await session.get(IncidentRow, incident_id) is None
 
 
 async def test_a_prosthesis_of_a_world_material(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:

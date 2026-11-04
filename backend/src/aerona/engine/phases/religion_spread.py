@@ -11,7 +11,9 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.faith import CultDoctrineRow
 from aerona.db.tables.mind import PressureRow
+from aerona.db.tables.routes import JourneyRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
@@ -20,6 +22,7 @@ from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import PressureKind
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.son import SonStatus
+from aerona.domain.enums.travel import JourneyStatus
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import CultStats
 from aerona.engine.context import TickContext
@@ -27,7 +30,7 @@ from aerona.engine.economy.routes import link_partners
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.faith.zealotry import drifted, record_heresy
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.lore.language import barrier
+from aerona.engine.lore.language import barrier, intelligibility, interpreter, tongues_of
 from aerona.engine.mind.book import ValueIndex
 from aerona.engine.mind.drives import zeal_drive
 from aerona.engine.mind.hooks import converted
@@ -179,6 +182,14 @@ async def schisms(ctx: TickContext) -> None:
 
 
 @reads("settlement.piety", "table.bonds", "table.entity_flags", "table.nodes", "table.reverences")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
 async def godlessness(ctx: TickContext) -> None:
     settings = ctx.rules.religion
     faith = await FaithIndex.load(ctx.session)
@@ -249,6 +260,7 @@ class SpreadWorld:
     zeal: Mapping[int, float] = field(default_factory=dict)
     roads: Mapping[int, Mapping[int, float]] = field(default_factory=dict)
     churches: FaithBook | None = None
+    journeys: Mapping[int, Sequence[int]] = field(default_factory=dict)
 
 
 def god_kinship(world: SpreadWorld, first: int, second: int) -> float:
@@ -326,7 +338,52 @@ def missions(rules: Rules, community: EntityRow, world: SpreadWorld, old: int | 
         pull -= rival_quality / PERCENT * table.rival_clergy_pct / PERCENT * fraction(table.base_pct)
         if pull > 0:
             found.append(ConversionSource(church.god.id, pull, f"through the missionaries of {church.cult.name}", church.cult.id))
+    for cult_id in sorted(set(world.journeys.get(community.id, ()))):
+        church = world.churches.churches.get(cult_id)
+        if church is None or church.god is None or church.god.id == old or church.doctrine is None or not church.holds(TenetKind.PROSELYTISM):
+            continue
+        skill = church.doctrine.clergy_quality / PERCENT * table.skill_pct / PERCENT
+        pull = fraction(table.journey_pct) * doctrine_fit(rules, world, church.cult, community) * (1 + skill)
+        pull -= rival_quality / PERCENT * table.rival_clergy_pct / PERCENT * fraction(table.journey_pct)
+        if pull > 0:
+            found.append(ConversionSource(church.god.id, pull, f"through the missionaries who came on the journeys of {church.cult.name}", church.cult.id))
     return sorted(found, key=lambda item: -item.pull)[: table.cap]
+
+
+async def journey_missions(ctx: TickContext, book: FaithBook, atlas: RegionAtlas, communities: Sequence[EntityRow]) -> dict[int, list[int]]:
+    arrived = await ctx.session.scalars(
+        select(JourneyRow).where(
+            JourneyRow.status == JourneyStatus.ARRIVED,
+            JourneyRow.end_epoch.is_not(None),
+            JourneyRow.end_epoch >= ctx.epoch - ctx.rules.missions.journey_epochs,
+        )
+    )
+    found: dict[int, list[int]] = defaultdict(list)
+    for journey in arrived:
+        god = book.faith.patron(journey.traveller_entity_id)
+        preachers = [church for church in book.by_god.get(god or -1, []) if church.holds(TenetKind.PROSELYTISM)]
+        landing = journey.result_entity_id or journey.traveller_entity_id
+        if not preachers:
+            continue
+        for community in communities:
+            if community.world_id == journey.destination_world_id and (community.id == landing or atlas.same_region(community.id, landing)):
+                found[community.id].extend(church.cult.id for church in preachers)
+    return found
+
+
+async def preaching_barrier(ctx: TickContext, converter_id: int, community_id: int) -> float:
+    doctrine = await ctx.session.get(CultDoctrineRow, converter_id)
+    if doctrine is None or doctrine.liturgical_language_id is None:
+        return await barrier(ctx.session, ctx.rules, converter_id, community_id, ctx.epoch)
+    theirs = await tongues_of(ctx.session, community_id)
+    liturgy = doctrine.liturgical_language_id
+    if not theirs or liturgy in theirs:
+        return 1.0
+    best = max([await intelligibility(ctx.session, ctx.rules, liturgy, other, ctx.epoch) for other in theirs] or [PERCENT])
+    if best >= PERCENT or await interpreter(ctx.session, ctx.rules, converter_id, community_id):
+        return 1.0
+    floor = ctx.rules.interpreters.barrier_floor_pct / PERCENT
+    return floor + (1 - floor) * best / PERCENT
 
 
 def syncretism_weight(rules: Rules, world: SpreadWorld, community_id: int, god_id: int) -> float:
@@ -398,6 +455,7 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.culture_values",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.journeys",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.memories",
@@ -433,9 +491,11 @@ async def religion_spread(ctx: TickContext) -> None:
     flags = {flag: await flags_by_entity(session, flag) for flag in (EntityFlag.GODLESS, EntityFlag.SEEKING_GOD)}
     values = await ValueIndex.load(session)
     await lend_settlement_values(session, values, {community.id for community in communities})
+    book = await FaithBook.load(session)
+    atlas = await RegionAtlas.load(session)
     world = SpreadWorld(
         faith,
-        await RegionAtlas.load(session),
+        atlas,
         [cult for cult in communities if cult.entity_type is EntityType.CULT and faith.living_patron_son(cult.id) is not None],
         [community for community in communities if community.entity_type in SOCIETY_TYPES],
         flags,
@@ -443,7 +503,8 @@ async def religion_spread(ctx: TickContext) -> None:
         {row.entity_id: row.value for row in await session.scalars(select(PressureRow).where(PressureRow.pressure == PressureKind.IMPIETY))},
         {cult.id: await zeal_drive(session, ctx.rules, cult.id) for cult in communities if cult.entity_type is EntityType.CULT},
         await link_partners(ctx),
-        await FaithBook.load(session),
+        book,
+        await journey_missions(ctx, book, atlas, communities),
     )
     shares = WorshipShares.count(ctx.rules, communities, faith)
     shares.faith = await faith_shares(session)
@@ -461,9 +522,7 @@ async def religion_spread(ctx: TickContext) -> None:
             continue
         seeker = old is None or community.id in flags[EntityFlag.SEEKING_GOD] or community.id in flags[EntityFlag.GODLESS]
         chosen = best_source(ctx.rules, conversion_sources(ctx.rules, community, world, seeker), old, seeker, (faith, shares))
-        understood = (
-            await barrier(session, ctx.rules, chosen.converter_id, community.id, ctx.epoch) if chosen is not None and chosen.converter_id is not None else 1.0
-        )
+        understood = await preaching_barrier(ctx, chosen.converter_id, community.id) if chosen is not None and chosen.converter_id is not None else 1.0
         if chosen is None or not rng.probability(min(1.0, chosen.pull * understood * tolerance(ctx, laws, community.id))):
             continue
         weight = syncretism_weight(ctx.rules, world, community.id, chosen.god_id)

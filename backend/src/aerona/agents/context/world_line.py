@@ -2,6 +2,7 @@ from aerona.agents.context.scope import Scope
 from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.worlds import ATMOSPHERE_LABELS, GRAVITY_LABELS, WORLD_TYPES
 from aerona.db.tables.celestial import StarRow
+from aerona.engine.phases.world_age import golden_age_status
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import WorldLineContext
 
@@ -11,7 +12,12 @@ async def world_line_context(scope: Scope, world_id: int) -> WorldLineContext | 
     if world is None:
         return None
     star = await scope.session.get(StarRow, world.star_id) if world.star_id is not None else None
+    golden = await golden_age_status(scope.session, scope.rules, world.id, scope.epoch)
     return WorldLineContext(
+        golden_age_epochs=golden.epochs if golden.active else None,
+        golden_age_since=golden.since_epoch,
+        golden_age_gain=golden.prosperity_gain,
+        golden_age_soft=golden.decadence > 0,
         id=world.id,
         name=world.name,
         type_label=WORLD_TYPES[world.world_type].label,

@@ -9,7 +9,7 @@
 
 === RULES ===
 TASK: {{ task }}
-{% include "shared/lore_language.md.j2" %} {% include "shared/harm_narration.md.j2" %}
+{% include "shared/lore_language.md.j2" %} {% include "shared/_harm_narration.md.j2" %}
 
 {% if multi_world %}
 WORLDS: {% for world in worlds %}world#{{ world.id }} {{ world.name }}{% if not loop.last %}, {% endif %}{% endfor %}. In the "worlds" field write a separate section for EVERY world (skip none). Each world's section tells ONLY the events under that world's heading; do not carry another world's people, city or person into that world. For a world with few events, tell of its silence, its waiting, its everyday life; do not add invented great events.
@@ -82,6 +82,9 @@ RESULTS OF THE WORLD ENGINE:
 
 CHAINS OF CAUSE (tell them as causes, not as separate events):
 {{ chains | join("\n") if chains else "(none)" }}
+
+EVENTS AND THEIR PHASES (mark where a famine, plague or siege turns: its beginning, its height, its aftermath, its end):
+{{ event_phases | join("\n") if event_phases else "(none)" }}
 
 BORN OF THE WORLD'S OWN COURSE:
 {{ pending_text if pending_text else "(none)" }}

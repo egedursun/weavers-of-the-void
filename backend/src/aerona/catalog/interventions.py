@@ -58,6 +58,20 @@ DISASTERS: dict[Disaster, DisasterSpec] = {
             frozenset({KnowledgeBranch.ASTRONOMY}),
             "perished in the storm",
         ),
+        DisasterSpec(
+            Disaster.ERUPTION,
+            "Eruption",
+            "Buries towns under fire and ash; the ash later weathers into rich volcanic soil.",
+            frozenset({KnowledgeBranch.ASTRONOMY}),
+            "was buried under the burning ash",
+        ),
+        DisasterSpec(
+            Disaster.VOLCANIC_QUAKE,
+            "Volcanic earthquake",
+            "A stronger earthquake of a volcanic land; it can wake the mountain into eruption.",
+            frozenset({KnowledgeBranch.ARCHITECTURE, KnowledgeBranch.ASTRONOMY}),
+            "was crushed when the burning mountain shook",
+        ),
     )
 }
 

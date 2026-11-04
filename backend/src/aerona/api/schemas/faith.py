@@ -8,11 +8,13 @@ from aerona.domain.enums.faith import (
     FuneralRite,
     HoldingKind,
     JudgementDoctrine,
+    RebirthPath,
     ReincarnationGate,
     SpiritAlignment,
     StratumKind,
     TenetKind,
 )
+from aerona.domain.models.faith import StratumCriteria
 
 
 class TenetKindSpec(ApiModel):
@@ -24,6 +26,7 @@ class TenetKindSpec(ApiModel):
 
 class TenetView(ApiModel):
     tenet: TenetKind
+    name: str | None
     effect: str
     target: str | None
     target_name: str | None
@@ -41,6 +44,7 @@ class ClergyView(ApiModel):
     kind: ClergyOffice
     holder: NodeRef | None
     since_epoch: int
+    locked: bool
 
 
 class HeresyView(ApiModel):
@@ -50,6 +54,7 @@ class HeresyView(ApiModel):
     declared_epoch: int
     suppressed: bool
     tolerated: bool
+    locked: list[str]
 
 
 class RelicView(ApiModel):
@@ -59,6 +64,8 @@ class RelicView(ApiModel):
     sanctity: int
     pilgrims: int
     canonised_epoch: int
+    cult: NodeRef | None
+    locked: list[str]
 
 
 class DoctrineView(ApiModel):
@@ -84,20 +91,52 @@ class DoctrineView(ApiModel):
     heresies: list[HeresyView]
     mother: HeresyView | None
     relics: list[RelicView]
+    rebirth_path: RebirthPath
+    liturgical_language: NodeRef | None
+    liturgy_reach: int
+    parent_cult: NodeRef | None
+    devotion: int
+    state_realm: NodeRef | None
+    clergy_sway: int
+    god_king: NodeRef | None
+    tithe_base: list[NodeRef]
+    realm_population: int
 
 
 class StratumView(ApiModel):
     id: int
     kind: StratumKind
     name: str
-    criteria: dict[str, int | str]
+    criteria: StratumCriteria
     population: int
     souls: list[NodeRef]
+    realm: NodeRef | None
+    closed: bool
+    son_id: int | None
+    son_name: str | None
+    cult: NodeRef | None
+
+
+class RealmPopulation(ApiModel):
+    son_id: int
+    name: str
+    souls: int
 
 
 class RealmOfDeadView(ApiModel):
     realm: NodeRef | None
     strata: list[StratumView]
+    realms: list[NodeRef]
+    gods: list[RealmPopulation]
+
+
+class PossessionView(ApiModel):
+    host: NodeRef | None
+    spirit: NodeRef | None
+    since_epoch: int
+    stress: int
+    host_values: dict[str, int]
+    locked: list[str]
 
 
 class JudgementView(ApiModel):
@@ -130,3 +169,7 @@ class SoulCard(ApiModel):
     reborn_as: NodeRef | None
     gate: ReincarnationGate | None
     locked: list[str]
+    seal_strength: int
+    unrest: int
+    possession: PossessionView | None
+    patron_name: str | None

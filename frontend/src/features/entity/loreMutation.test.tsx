@@ -121,13 +121,26 @@ describe('lore action gate and runner', () => {
 
   it('offers undo when the ledger recorded the action', async () => {
     serveState(500)
-    onApi('POST', '/api/ledger/12/undo', ACCEPTED_ACTION)
+    onApi('POST', '/api/ledger/12/undo', {
+      entry_id: 12,
+      applied: ['entity:7.legitimacy'],
+      conflicts: [],
+    })
     stub(() => Response.json({ ...ACCEPTED_ACTION, ledger_entry_id: 12 }))
     const { screen } = await renderApp(<Runner />)
     await screen.getByRole('button', { name: 'Ping' }).click()
-    await screen.getByRole('button', { name: 'Undo' }).click()
-    await expect.element(screen.getByText('Undone')).toBeInTheDocument()
-    expect(callsTo('POST', '/api/ledger/12/undo')).toHaveLength(1)
+    const undo = screen.getByRole('button', { name: 'Undo' })
+    await expect.element(undo).toBeVisible()
+    await expect
+      .poll(async () => {
+        if (callsTo('POST', '/api/ledger/12/undo').length === 0)
+          await undo.click()
+        return callsTo('POST', '/api/ledger/12/undo').length
+      })
+      .toBe(1)
+    await expect
+      .element(screen.getByText('Undone', { exact: true }))
+      .toBeInTheDocument()
   })
 })
 

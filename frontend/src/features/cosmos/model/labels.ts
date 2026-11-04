@@ -199,6 +199,8 @@ export const DISASTER_LABEL: Record<Disaster, string> = {
   plague: 'Plague',
   drought: 'Drought',
   storm: 'Storm',
+  eruption: 'Eruption',
+  volcanic_quake: 'Volcanic earthquake',
 }
 
 export const FOREIGN_GOD_STATUS_LABEL: Record<ForeignGodStatus, string> = {
