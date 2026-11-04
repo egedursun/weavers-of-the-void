@@ -9,8 +9,8 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
-  EmptyState,
   KpiTile,
   Medallion,
   PageHeader,
@@ -327,6 +327,8 @@ function MechanicDetail({
   )
 }
 
+const GHOST_TILES = ['subsystems', 'mechanics', 'links', 'carriers']
+
 export function InterconnectionExplorer() {
   const graph = useQuery({
     queryKey: ['mechanics', 'graph'] as const,
@@ -366,11 +368,19 @@ export function InterconnectionExplorer() {
         icon={ITEM.icon}
       />
       {!data ? (
-        <EmptyState
-          icon={Network}
-          title='Reading the registry'
-          description='Every mechanic, its edges and the values that carry them are being gathered.'
-        />
+        <div
+          aria-busy='true'
+          aria-label='Reading the registry'
+          className='flex min-w-0 flex-col gap-6'
+        >
+          <div className='grid min-w-0 grid-cols-1 gap-3 @md/explorer:grid-cols-2 @3xl/explorer:grid-cols-4'>
+            {GHOST_TILES.map((key) => (
+              <Skeleton key={key} className='h-32 rounded-xl' />
+            ))}
+          </div>
+          <Skeleton className='h-control-lg w-1/3' />
+          <Skeleton className='h-96 rounded-xl' />
+        </div>
       ) : (
         <>
           <div className='grid min-w-0 grid-cols-1 gap-3 @md/explorer:grid-cols-2 @3xl/explorer:grid-cols-4'>

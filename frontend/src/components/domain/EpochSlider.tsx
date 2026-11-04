@@ -29,7 +29,7 @@ export function EpochSlider({
   return (
     <div
       data-domain='epoch-slider'
-      className='flex min-w-0 flex-1 items-center gap-3'
+      className='flex w-full min-w-0 items-center gap-3'
     >
       <Label as='label' htmlFor={id} className='shrink-0'>
         {label}

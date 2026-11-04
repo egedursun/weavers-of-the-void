@@ -38,10 +38,13 @@ import { SummonButton } from '@/features/pantheon/SummonButton'
 import { useWorldState } from '@/features/pantheon/api'
 import { MOOD_LABEL, plural } from '@/features/pantheon/labels'
 import { mediaUrl } from '@/features/pantheon/media'
+import { CreateHub } from './CreateHub'
 import { DoomChip } from './DoomChip'
 import { EssenceChip } from './EssenceChip'
 import { HudChip, HudLink } from './HudChip'
 import { useEpochStar } from './api'
+
+const HEADER_GHOSTS = ['w-32', 'w-28', 'w-24', 'w-36', 'w-24', 'w-28']
 
 function StarChips() {
   const star = useEpochStar()
@@ -172,7 +175,13 @@ export function WorldHeader() {
         data-layout='world-header'
         className='flex min-w-0 items-center gap-3 border-b px-3 py-2 md:px-4'
       >
-        <Skeleton className='h-control-md w-full' />
+        <Skeleton className='size-control-lg shrink-0 rounded-full' />
+        <div className='flex min-w-0 flex-1 flex-wrap items-center gap-2'>
+          {HEADER_GHOSTS.map((width, index) => (
+            <Skeleton key={index} className={`h-control-sm ${width}`} />
+          ))}
+        </div>
+        <Skeleton className='h-control-sm w-24 shrink-0' />
       </div>
     )
   const data = state.data
@@ -282,6 +291,7 @@ export function WorldHeader() {
       {shown && (
         <div className='ms-auto flex shrink-0 flex-wrap items-center justify-end gap-2'>
           <RevelationDialog triggerLabel='Reveal' triggerSize='sm' />
+          <CreateHub />
           <SummonButton size='sm' />
         </div>
       )}

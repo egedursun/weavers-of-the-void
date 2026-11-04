@@ -1,5 +1,6 @@
 import { type ReactNode, useState } from 'react'
 import { type LucideIcon } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Collapsible,
@@ -21,7 +22,10 @@ export function Opener({
     <Collapsible
       open={open}
       onOpenChange={setOpen}
-      className='flex min-w-0 flex-col gap-3'
+      className={cn(
+        'flex min-w-0 flex-col items-start gap-3',
+        open && 'basis-full'
+      )}
     >
       <CollapsibleTrigger asChild>
         <Button size='sm' variant={open ? 'outline' : 'default'}>
@@ -29,7 +33,7 @@ export function Opener({
           {label}
         </Button>
       </CollapsibleTrigger>
-      <CollapsibleContent className='flex min-w-0 flex-col'>
+      <CollapsibleContent className='flex w-full min-w-0 flex-col'>
         {children(() => setOpen(false))}
       </CollapsibleContent>
     </Collapsible>

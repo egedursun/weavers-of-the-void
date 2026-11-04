@@ -464,7 +464,7 @@ export function WarMap({ room }: { room: WarRoom }) {
             })}
           </svg>
         </div>
-        <div className='flex min-w-0 flex-col gap-3 @3xl/mil:col-span-2'>
+        <div className='flex min-w-0 flex-col justify-start gap-3 @3xl/mil:col-span-2'>
           <EpochSlider
             value={epoch}
             min={epochs[0] ?? room.war.started_epoch}

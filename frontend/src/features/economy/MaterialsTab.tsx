@@ -778,7 +778,7 @@ export function MaterialsBrowser({ worldId }: { worldId: number }) {
         title='Materials of this world'
         note='Edge and hardness cut, toughness and hardness protect, weight slows armies and burns them in heat, conductivity holds enchantment, sanctity and corruption draw gods and outer beings, decay wears things away.'
       />
-      <div className='flex min-w-0 flex-col gap-3'>
+      <div className='flex min-w-0 flex-wrap items-start gap-2'>
         <Opener icon={Hammer} label='Forge a new material'>
           {(close) => (
             <MaterialForge
