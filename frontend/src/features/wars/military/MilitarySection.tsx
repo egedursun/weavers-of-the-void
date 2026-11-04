@@ -33,6 +33,8 @@ import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { ArmyPanel } from './ArmyPanel'
+import { MilitaryDepth } from './MilitaryDepth'
+import { ArmyOrders } from './Orders'
 import { CohortCard, OccupationCard } from './WarRoom'
 import {
   type CommanderTrait,
@@ -524,8 +526,9 @@ export function MilitarySection({
         />
       )}
       {army && card.data && (
-        <div className='@container/mil min-w-0'>
+        <div className='@container/mil flex min-w-0 flex-col gap-3'>
           <ArmyPanel army={card.data} blocked={blocked} />
+          <ArmyOrders armyId={entityId} blocked={blocked} />
         </div>
       )}
       {!army && overview.data && (
@@ -535,6 +538,9 @@ export function MilitarySection({
           mortal={kind === 'mortal'}
           blocked={blocked}
         />
+      )}
+      {!army && kind !== 'mortal' && (
+        <MilitaryDepth entityId={entityId} kind={kind} blocked={blocked} />
       )}
     </Section>
   )

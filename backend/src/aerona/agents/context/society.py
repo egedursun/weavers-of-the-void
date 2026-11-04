@@ -2,6 +2,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.lore import lore_lines
+from aerona.agents.context.military import army_sheet, fleet_sheet, intrigue_sheet, war_sheet
 from aerona.agents.context.wilds import wild_lines
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import PeopleCultureRow
@@ -117,12 +118,15 @@ async def war_lines(session: AsyncSession, me: EntityRow, home: EntityRow, regio
         event = await session.get(EntityRow, war.event_entity_id)
         rows = await session.scalars(select(WarAimRow).where(WarAimRow.war_id == war.id, WarAimRow.side_entity_id == home.id))
         aims = [words(row.kind.value) for row in rows]
-        line = f"{event.name if event is not None else 'a war'} (weariness {side.weariness}"
+        line = f"{event.name if event is not None else 'a war'} (weariness {side.weariness}, cause {words(war.cause.value)}"
         wars.append(line + (f", aims: {', '.join(aims)})" if aims else ")"))
+        wars.extend(await war_sheet(session, war, home.id))
+    wars.extend(await intrigue_sheet(session, home.id))
+    wars.extend(await fleet_sheet(session, home.id))
     army_id = await session.scalar(select(ArmyRow.entity_id).where(ArmyRow.commander_entity_id == me.id, ArmyRow.disbanded_epoch.is_(None)).limit(1))
     army = await session.get(EntityRow, army_id) if army_id is not None else None
     traits = [words(trait.value) for trait in await session.scalars(select(CommanderTraitRow.trait).where(CommanderTraitRow.mortal_entity_id == me.id))]
-    command = (army.name if army is not None else "") + (f" (known as {', '.join(traits)})" if army is not None and traits else "")
+    command = (await army_sheet(session, army.id) if army is not None else "") + (f" (known as {', '.join(traits)})" if army is not None and traits else "")
     occupation = await session.get(OccupationRow, region) if region is not None else None
     occupier = await session.get(EntityRow, occupation.occupier_entity_id) if occupation is not None and occupation.occupier_entity_id != home.id else None
     holding = select(func.coalesce(func.sum(CaptiveCohortRow.count), 0)).where(CaptiveCohortRow.captor_entity_id == home.id)

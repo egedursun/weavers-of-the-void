@@ -22,7 +22,7 @@ from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind, RegionalStanding
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
-from aerona.domain.enums.war import WarStatus
+from aerona.domain.enums.war import WarCause, WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.lore.items import regalia_holder
 from aerona.engine.mind.book import values_for
@@ -254,7 +254,7 @@ async def secede(ctx: TickContext, book: RealmBook, realm: Realm, member: Entity
     await connect(ctx.session, member.id, realm.entity.id, BondKind.ENEMY, ctx.epoch, description="broke away")
     core = book.entities.get(realm.profile.core_entity_id or -1)
     if core is not None:
-        await declare_war(ctx, member.id, core.id, f"{member.name} broke away from {realm.entity.name}")
+        await declare_war(ctx, member.id, core.id, f"{member.name} broke away from {realm.entity.name}", cause=WarCause.INDEPENDENCE)
     await note(
         ctx,
         f"{member.name}, far from the throne and long left to itself, broke away from {realm.entity.name}.",

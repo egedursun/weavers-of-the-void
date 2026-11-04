@@ -62,6 +62,8 @@ class MoraleRules:
     rout_morale: int = rule(25, 0, 100, W, "Morale below which a stack routs")
     rout_contagion: int = rule(10, 0, 100, W, "Morale every stack loses when a neighbouring stack routs")
     trait_chance_pct: int = rule(30, 0, 100, W, "Chance a commander earns a trait a battle showed (%)")
+    warned_morale: int = rule(6, 0, 100, W, "Morale a side gains when its spies warned it of the attack")
+    medicine_levels: int = rule(5, 1, 20, W, "Medicine knowledge level at which the wounded get full care")
 
 
 @dataclass(frozen=True)
@@ -95,6 +97,8 @@ class TacticsRules:
     captive_pct: int = rule(25, 0, 100, W, "Share of pursuit losses taken captive rather than killed (%)")
     decisive_ratio_pct: int = rule(200, 100, 1000, W, "Strength ratio after battle for a decisive victory (%)")
     wounded_pct: int = rule(40, 0, 100, W, "Share of losses who are wounded rather than killed (%)")
+    fortune_pct: int = rule(10, 0, 50, W, "Fortune each stack meets in a phase of battle, either way (%)")
+    stalemate_ratio_pct: int = rule(115, 100, 300, W, "Strength ratio after battle below which it is a stalemate (%)")
 
 
 @dataclass(frozen=True)
@@ -141,6 +145,15 @@ class DuelsRules:
     disarm_chance: int = rule(10, 0, 100, W, "A clean parry disarms the foe (%)")
     honour_grievance: int = rule(40, 0, 100, W, "Grievance at which a mortal of an honour culture calls a duel")
     honour_cap: int = rule(4, 0, 100, W, "Most honour duels in an epoch")
+    pain_pct: int = rule(60, 0, 300, W, "Pain a hit leaves against its harm (%)")
+    stagger: int = rule(10, 0, 100, W, "Footing a heavy hit costs")
+    footing_floor: int = rule(40, 0, 100, W, "Least footing a fighter keeps")
+    terrain_footing: int = rule(15, 0, 100, W, "Footing lost on slippery ground")
+    weather_footing: int = rule(10, 0, 100, W, "Footing lost in rain or snow")
+    injury_footing: int = rule(5, 0, 100, W, "Footing lost per standing injury")
+    trial_chance: int = rule(30, 0, 100, W, "A claim in a realm that settles succession by combat goes to trial in an epoch (%)")
+    god_duel_chance: int = rule(20, 0, 100, W, "Champions of rival gods meet in single combat in a holy war in an epoch (%)")
+    god_duel_score: int = rule(2, 0, 20, W, "War score a god's champion wins for its side")
 
 
 @dataclass(frozen=True)
@@ -177,6 +190,8 @@ class OccupationRules:
     partisan_chance: int = rule(20, 0, 100, W, "A resisting land raids its occupier in an epoch at full resistance (%)")
     partisan_losses_pct: int = rule(5, 0, 100, W, "Soldiers an occupying army loses to partisans (%)")
     tax_pct: int = rule(50, 0, 100, W, "Share of an occupied land's taxes taken by the occupier at full control (%)")
+    revolt_resistance: int = rule(70, 0, 100, W, "Resistance at which an occupied land may rise in revolt")
+    revolt_chance: int = rule(15, 0, 100, W, "An occupied land at revolt resistance rises in an epoch (%)")
 
 
 @dataclass(frozen=True)
@@ -210,3 +225,11 @@ class VendettaRules:
     mediation_chance: int = rule(20, 0, 100, W, "A peace-minded priest mediates a feud (%)")
     raid_hp: int = rule(25, 0, 1000, W, "Harm a feud raid deals")
     cap: int = rule(6, 0, 100, W, "Most feud actions in an epoch")
+    honour_pct: int = rule(100, 0, 300, W, "Weight of an honour culture in a feud's intensity (%)")
+    marriage_brake_pct: int = rule(40, 0, 100, W, "Intensity a marriage between the feuding sides takes away (%)")
+    common_enemy_brake_pct: int = rule(30, 0, 100, W, "Intensity a shared enemy takes away (%)")
+    fade_per_epoch: int = rule(3, 0, 100, W, "Grievance and intensity a feud loses in an epoch")
+    generation_epochs: int = rule(3, 1, 100, W, "Epochs that count as a generation of a feud")
+    generation_fade: int = rule(10, 0, 100, W, "Intensity a feud loses with each new generation")
+    fade_floor: int = rule(10, 0, 100, W, "Intensity at which a feud fades away")
+    peace_tenet_mediation: int = rule(30, 0, 100, W, "A faith of peace mediates a burning feud (%)")

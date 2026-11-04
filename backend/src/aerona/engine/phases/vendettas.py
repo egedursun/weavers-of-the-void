@@ -6,7 +6,7 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.military import DuelContext, FeudAction
+from aerona.domain.enums.military import DuelContext, FeudAction, FeudParty, FeudStatus
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
@@ -18,6 +18,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.causes import war_cause_incident
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.traditions import keeps
+from aerona.engine.military.feuds import active_feuds, head_of, peace_mediator, realm_party, sides_of, temper
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.opinion import mortal_rulers
 from aerona.engine.notes import note
@@ -27,7 +28,7 @@ from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.records import death_path
-from aerona.engine.services.community_relations import blood_feud_pairs, change_relation, end_blood_feud, relation, start_blood_feud
+from aerona.engine.services.community_relations import change_relation, end_blood_feud, open_feud, relation, start_blood_feud
 from aerona.engine.services.war import declare_war
 
 GRIEF = (MemoryKind.KILLED_KIN, MemoryKind.MAIMED_ME)
@@ -44,6 +45,9 @@ async def grief(ctx: TickContext, holder_id: int, subject_id: int) -> int:
 
 
 async def target_of(ctx: TickContext, enemy: EntityRow) -> EntityRow | None:
+    head = await head_of(ctx, enemy)
+    if head is not None:
+        return head
     for ruler_id in await mortal_rulers(ctx.session, enemy.id):
         ruler = await living_entity(ctx.session, ruler_id)
         if ruler is not None:
@@ -69,7 +73,7 @@ async def choose(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> Feud
 
 
 async def mediate(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> str | None:
-    await end_blood_feud(ctx.session, avenger.id, enemy.id)
+    await end_blood_feud(ctx.session, avenger.id, enemy.id, epoch=ctx.epoch, status=FeudStatus.MEDIATED)
     return f"Priests of {avenger.name} mediated an end to its blood feud with {enemy.name}."
 
 
@@ -77,13 +81,14 @@ async def wergild(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> str
     price = ctx.rules.treaties.wergild_value
     shift_stat(enemy, "wealth", -price // 10)
     shift_stat(avenger, "wealth", price // 10)
-    await end_blood_feud(ctx.session, avenger.id, enemy.id)
+    await end_blood_feud(ctx.session, avenger.id, enemy.id, epoch=ctx.epoch)
     await change_relation(ctx, avenger.id, enemy.id, price // 3, MemoryKind.GIFTED_ME, note="wergild")
     return f"{enemy.name} paid {avenger.name} wergild and the blood feud was laid to rest."
 
 
 async def escalate(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> str | None:
-    if await declare_war(ctx, avenger.id, enemy.id, "the blood feud", cause=WarCause.VENDETTA):
+    first, second = await realm_party(ctx.session, avenger), await realm_party(ctx.session, enemy)
+    if first != second and await declare_war(ctx, first, second, "the blood feud", cause=WarCause.VENDETTA):
         return f"The blood feud between {avenger.name} and {enemy.name} flared into open war."
     return None
 
@@ -95,7 +100,10 @@ async def assassinate(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) ->
     await death_path(
         ctx, victim, f"murdered in the blood feud with {avenger.name}", avenger.id, "feud killing", forced=True, harm=HarmCause.BATTLE, manner=DeathCause.MURDER
     )
-    await start_blood_feud(ctx, enemy.id, avenger.id, f"the murder of {victim.name}")
+    if enemy.entity_type is EntityType.HOUSE or avenger.entity_type is EntityType.HOUSE:
+        await open_feud(ctx.session, ctx.rules, enemy.id, avenger.id, epoch=ctx.epoch, cause=f"the murder of {victim.name}", party=FeudParty.HOUSE)
+    else:
+        await start_blood_feud(ctx, enemy.id, avenger.id, f"the murder of {victim.name}")
     return f"An avenger of {avenger.name} murdered {victim.name} of {enemy.name}."
 
 
@@ -129,19 +137,27 @@ async def act(ctx: TickContext, action: FeudAction | None, avenger: EntityRow, e
 async def feuds(ctx: TickContext) -> int:
     table = ctx.rules.vendetta
     acted = 0
-    for first_id, second_id in sorted(await blood_feud_pairs(ctx.session)):
+    for row in await active_feuds(ctx.session):
         if acted >= table.cap:
             break
-        first, second = await living_entity(ctx.session, first_id), await living_entity(ctx.session, second_id)
-        if first is None or second is None:
+        pair = await sides_of(ctx, row)
+        if pair is None:
+            row.status, row.ended_epoch = FeudStatus.ENDED, ctx.epoch
             continue
-        hatred = -await relation(ctx.session, ctx.rules, first.id, second.id)
+        first, second = pair
+        hatred = -await relation(ctx.session, ctx.rules, first.id, second.id) if row.party is FeudParty.COMMUNITY else row.grievance
         sides = [(await grief(ctx, first.id, second.id), first, second), (await grief(ctx, second.id, first.id), second, first)]
-        pairs = sorted(sides, key=lambda item: -item[0])
-        pain, avenger, enemy = pairs[0]
-        if max(pain, hatred) < table.grievance:
+        pain, avenger, enemy = sorted(sides, key=lambda item: -item[0])[0]
+        intensity = await temper(ctx, row, first, second, max(pain, hatred))
+        if row.status is FeudStatus.FADED:
+            await end_blood_feud(ctx.session, first.id, second.id, epoch=ctx.epoch, status=FeudStatus.FADED)
+            await note(ctx, f"The old feud between {first.name} and {second.name} faded with the generations.", key="vendetta.faded", ids=[first.id, second.id])
             continue
-        action = await choose(ctx, avenger, enemy)
+        if intensity < table.grievance:
+            continue
+        mediated = await peace_mediator(ctx, first, second) and ctx.rng(f"peace_tenet.{row.id}.{ctx.epoch}").chance(table.peace_tenet_mediation)
+        action = None if mediated else await choose(ctx, avenger, enemy)
+        row.last_action, row.last_epoch = (action.value if action is not None else "mediated"), ctx.epoch
         text = await act(ctx, action, avenger, enemy)
         ctx.count(f"feud_{action.value if action is not None else 'mediated'}")
         if text is not None:
@@ -190,6 +206,77 @@ async def honour_duels(ctx: TickContext) -> int:
 
 @reads("table.community_relations", "table.laws", "table.memories", "table.minds")
 @writes("table.chronicle", "table.community_relations", "table.injuries", "table.memories")
+@reads(
+    "table.applied_fixups",
+    "table.army_officers",
+    "table.bonds",
+    "table.claims",
+    "table.community_cohorts",
+    "table.community_stocks",
+    "table.cult_tenets",
+    "table.currencies",
+    "table.districts",
+    "table.feuds",
+    "table.goods",
+    "table.house_members",
+    "table.house_profiles",
+    "table.injuries",
+    "table.law_profiles",
+    "table.learned_tactics",
+    "table.loans",
+    "table.memories",
+    "table.mercenary_contracts",
+    "table.offices",
+    "table.peace_terms",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.routes",
+    "table.settlement_infrastructure",
+    "table.settlement_profiles",
+    "table.spy_agents",
+    "table.treaty_clauses",
+    "table.treaty_profiles",
+    "table.unit_designs",
+    "table.vessel_profiles",
+    "table.war_sides",
+    "table.workshops",
+)
+@writes(
+    "people.wealth",
+    "settlement.wealth",
+    "table.applied_fixups",
+    "table.army_officers",
+    "table.battle_casualties",
+    "table.battle_stacks",
+    "table.bonds",
+    "table.captive_cohorts",
+    "table.captives",
+    "table.claims",
+    "table.community_cohorts",
+    "table.community_stocks",
+    "table.currencies",
+    "table.districts",
+    "table.entities",
+    "table.feuds",
+    "table.goods",
+    "table.house_members",
+    "table.house_profiles",
+    "table.learned_tactics",
+    "table.loans",
+    "table.maimed_cohorts",
+    "table.memories",
+    "table.mercenary_contracts",
+    "table.offices",
+    "table.peace_terms",
+    "table.polity_profiles",
+    "table.region_environment",
+    "table.settlement_infrastructure",
+    "table.settlement_profiles",
+    "table.spy_agents",
+    "table.spy_networks",
+    "table.treaty_breaches",
+    "table.vessel_profiles",
+)
 async def vendetta_cycles(ctx: TickContext) -> None:
     ctx.count("feud_actions", await feuds(ctx))
     ctx.count("honour_duels", await honour_duels(ctx))

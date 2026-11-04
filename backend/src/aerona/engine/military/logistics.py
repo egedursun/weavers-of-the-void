@@ -7,22 +7,44 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.military import ArmyMovementRow, ArmyProfileRow, ArmyUnitRow, CampaignFrontRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, PolityTreasuryRow
+from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ItemClass, Technique
-from aerona.domain.enums.environment import MovementMode
-from aerona.domain.enums.military import Stance
-from aerona.domain.enums.mortal import HarshnessScale
+from aerona.domain.enums.environment import MovementMode, WeatherKind
+from aerona.domain.enums.military import MutinyOutcome, Stance
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.perils import danger_toll, navigate
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import has_technique
-from aerona.engine.military.units import stacks_of, sync, take
+from aerona.engine.military.campaign import (
+    carry,
+    choose_stance,
+    class_desertion,
+    feed_mounts,
+    loot_wages,
+    march_budget,
+    mutiny,
+    mutiny_pressure,
+    on_road,
+    plunder,
+    plundered_share,
+    quartermaster,
+    raid_supply,
+    retreat,
+    sanitation_of,
+    scorch,
+    size_of,
+    step_cost,
+    straggle,
+    summer,
+)
+from aerona.engine.military.finance import war_credit
+from aerona.engine.military.units import rearm, stacks_of, sync, take
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.levies import demobilise
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_stats, stat
@@ -40,6 +62,10 @@ class Season:
     raided: bool = False
     starving: bool = False
     unpaid: bool = False
+    foraged: bool = False
+    scorched: bool = False
+    unfed_mounts: bool = False
+    mutiny: MutinyOutcome | None = None
 
 
 @dataclass(frozen=True)
@@ -57,7 +83,17 @@ def passable(rules: Rules, region: RegionEnvironmentRow | None) -> bool:
     return region.passability.get(MovementMode.ON_FOOT.value, PERCENT) >= rules.logistics.passability_floor
 
 
-def step_towards(rules: Rules, atlas: RegionAtlas, ground: EnvironmentBook, march: March, *, charted: bool = False, supplied: bool = False) -> int:
+def step_towards(
+    rules: Rules,
+    atlas: RegionAtlas,
+    ground: EnvironmentBook,
+    march: March,
+    *,
+    charted: bool = False,
+    supplied: bool = False,
+    weather: WeatherKind | None = None,
+    season: WorldSeasonRow | None = None,
+) -> int:
     profile = march.profile
     if march.goal is None or profile.region_entity_id is None or profile.region_entity_id == march.goal:
         return 0
@@ -65,10 +101,15 @@ def step_towards(rules: Rules, atlas: RegionAtlas, ground: EnvironmentBook, marc
     reach = rules.logistics.march_regions + (rules.maps.march_regions if charted else 0) + (rules.technique_effects.logistics_regions if supplied else 0)
     if profile.forced_march:
         reach = round_half_up(reach * rules.logistics.forced_march_pct / PERCENT)
+    here = ground.regions.get(profile.region_entity_id)
+    budget = march_budget(rules, reach, weather=weather, season=season, road=on_road(here, rules), baggage=profile.baggage)
     moved = 0
-    for region_id in path[1 : reach + 1]:
-        if not passable(rules, ground.regions.get(region_id)):
+    for region_id in path[1:]:
+        region = ground.regions.get(region_id)
+        cost = step_cost(rules, region, season)
+        if not passable(rules, region) or cost > budget:
             break
+        budget -= cost
         profile.region_entity_id = region_id
         moved += 1
     return moved
@@ -96,7 +137,7 @@ def supply_line(atlas: RegionAtlas, owner: EntityRow, profile: ArmyProfileRow) -
     return atlas.region_path(home, profile.region_entity_id) or []
 
 
-def feed(ctx: TickContext, march: March, region: RegionEnvironmentRow | None, home: int | None, log: Season) -> int:
+def feed(ctx: TickContext, march: March, region: RegionEnvironmentRow | None, home: int | None, log: Season, *, season: WorldSeasonRow | None = None) -> int:
     table = ctx.rules.logistics
     profile = march.profile
     size = stat(march.army, "size") or 0
@@ -106,10 +147,14 @@ def feed(ctx: TickContext, march: March, region: RegionEnvironmentRow | None, ho
     profile.supply_days = max(0, profile.supply_days - table.season_days)
     if region is None:
         return 0
-    fed = max(1, region.farmed * table.supply_per_farmed)
+    growth = (season.growth if season is not None else PERCENT // 2) * ctx.rules.campaign_depth.forage_season_pct / PERCENT / (PERCENT // 2)
+    fed = max(1, round_half_up(region.farmed * table.supply_per_farmed * (1 - plundered_share(region)) * min(2.0, growth)))
     if profile.stance in {Stance.FORAGE, Stance.MARCH, Stance.BESIEGE, Stance.RAID}:
         profile.supply_days = min(table.supply_days, profile.supply_days + round_half_up(table.forage_days * min(1.0, fed / max(1, size))))
         region.harvest_pct = clamp_int(region.harvest_pct - table.forage_scar, 0, PERCENT)
+        log.foraged = True
+        if profile.stance in {Stance.FORAGE, Stance.RAID} or march.attacking:
+            plunder(ctx.rules, region)
     if size <= fed:
         return 0
     lost = round_half_up(size * table.over_supply_attrition_pct / PERCENT * log2(size / fed))
@@ -126,20 +171,26 @@ def raid_line(ctx: TickContext, march: March, line: list[int], log: Season) -> N
         log.raided = True
 
 
-def camp_sickness(ctx: TickContext, march: March, region: RegionEnvironmentRow | None) -> int:
+def camp_sickness(ctx: TickContext, march: March, region: RegionEnvironmentRow | None, *, sanitation: int = 0, fever: bool = False) -> int:
     table = ctx.rules.attrition
+    depth = ctx.rules.campaign_depth
     profile = march.profile
     load = region.disease_load if region is not None else PERCENT // 2
+    kept = 1 - depth.sanitation_pct / PERCENT * sanitation / PERCENT
     if profile.stance in RESTING:
-        profile.disease = clamp_int(profile.disease + round_half_up(table.camp_disease_gain * load / PERCENT), 0, PERCENT)
+        gain = table.camp_disease_gain * load / PERCENT * kept + (depth.summer_fever if fever else 0)
+        profile.disease = clamp_int(profile.disease + round_half_up(gain), 0, PERCENT)
+    elif fever:
+        profile.disease = clamp_int(profile.disease + depth.summer_fever // 2, 0, PERCENT)
     else:
         profile.disease = clamp_int(profile.disease - table.camp_disease_gain // 2, 0, PERCENT)
     return round_half_up((stat(march.army, "size") or 0) * table.disease_pct / PERCENT * profile.disease / PERCENT)
 
 
-async def wages(ctx: TickContext, march: March) -> bool:
+async def wages(ctx: TickContext, march: March, rows: list[ArmyUnitRow] | None = None) -> bool:
     cost = round_half_up((stat(march.army, "size") or 0) * ctx.rules.logistics.pay_per_100 / HUNDRED)
     profile = march.profile
+    cost -= await loot_wages(ctx, march.owner, profile, cost, rows or [])
     paid = min(profile.war_chest, cost)
     profile.war_chest -= paid
     cost -= paid
@@ -159,7 +210,12 @@ async def wages(ctx: TickContext, march: March) -> bool:
     cost -= paid
     paid = min(max(0, realm.treasury), cost)
     realm.treasury -= paid
-    return paid >= cost
+    cost -= paid
+    if cost > 0 and await war_credit(ctx, march.owner, realm, polity_id):
+        paid = min(realm.war_chest, cost)
+        realm.war_chest -= paid
+        cost -= paid
+    return cost <= 0
 
 
 def desert(rules: Rules, march: March, rows: list[ArmyUnitRow], soldiers: int) -> int:
@@ -171,6 +227,16 @@ def desert(rules: Rules, march: March, rows: list[ArmyUnitRow], soldiers: int) -
     with flowing(FlowCategory.LEVY):
         set_stats(march.army, size=max(0, size - returned))
     return soldiers
+
+
+async def desert_by_class(ctx: TickContext, march: March, rows: list[ArmyUnitRow]) -> int:
+    leaving = await class_desertion(ctx, march.owner, march.profile, rows)
+    if leaving <= 0:
+        return 0
+    returned = demobilise(ctx.rules, march.owner, leaving)
+    with flowing(FlowCategory.LEVY):
+        set_stats(march.army, size=max(0, (stat(march.army, "size") or 0) - returned))
+    return leaving
 
 
 def dishearten(rows: list[ArmyUnitRow], loss: int) -> None:
@@ -186,20 +252,59 @@ async def holds_map(ctx: TickContext, owner_id: int) -> bool:
     return found is not None
 
 
-async def campaign_season(ctx: TickContext, atlas: RegionAtlas, ground: EnvironmentBook, march: March, season: int) -> Season:
+async def hardship(ctx: TickContext, march: March, rows: list[ArmyUnitRow], log: Season) -> int:
+    attrition = ctx.rules.attrition
+    profile = march.profile
+    size = stat(march.army, "size") or 0
+    dead = 0
+    if profile.supply_days <= 0:
+        log.starving = True
+        dead += round_half_up(size * attrition.starvation_pct / PERCENT)
+        dishearten(rows, round_half_up(ctx.rules.morale.base * ctx.rules.morale.supply_pct / PERCENT))
+    log.unpaid = not await wages(ctx, march, rows)
+    if log.unpaid:
+        dishearten(rows, ctx.rules.logistics.unpaid_morale)
+    if log.starving or log.unpaid:
+        log.deserted = await desert_by_class(ctx, march, rows)
+    dead += straggle(ctx.rules, rows, profile)
+    mutiny_pressure(ctx.rules, profile, hungry=log.starving, unpaid=log.unpaid)
+    return dead
+
+
+async def plan_stance(ctx: TickContext, march: March, enemy: March | None) -> None:
+    profile = march.profile
+    row = await ctx.session.get(ArmyRow, march.army.id)
+    if "stance" in profile.locked or row is None:
+        return
+    at_goal = march.goal is not None and profile.region_entity_id == march.goal
+    outnumbered = enemy is not None and size_of(enemy.army) * 2 > size_of(march.army) * 3
+    profile.stance = await choose_stance(ctx, march.owner, row, profile, attacking=march.attacking, at_goal=at_goal, outnumbered=outnumbered)
+
+
+async def campaign_season(
+    ctx: TickContext,
+    atlas: RegionAtlas,
+    ground: EnvironmentBook,
+    march: March,
+    season: int,
+    *,
+    weather: WeatherKind | None = None,
+    season_row: WorldSeasonRow | None = None,
+    enemy: March | None = None,
+) -> Season:
     log = Season()
     rows = await stacks_of(ctx.session, march.army.id)
     profile = march.profile
     origin = profile.region_entity_id
     charted = await holds_map(ctx, march.owner.id)
     supplied = await has_technique(ctx.session, march.owner.id, Technique.LOGISTICS)
-    log.moved = 0 if "region_id" in profile.locked else step_towards(ctx.rules, atlas, ground, march, charted=charted, supplied=supplied)
-    if "stance" in profile.locked:
-        pass
-    elif march.goal is not None and profile.region_entity_id == march.goal:
-        profile.stance = Stance.BESIEGE if march.attacking else Stance.GARRISON
-    elif not march.attacking:
-        profile.stance = Stance.ENTRENCH
+    await plan_stance(ctx, march, enemy)
+    if profile.stance is Stance.RETREAT:
+        log.moved = retreat(ctx.rules, atlas, march.owner, profile)
+    elif "region_id" not in profile.locked and profile.stance not in RESTING:
+        log.moved = step_towards(ctx.rules, atlas, ground, march, charted=charted, supplied=supplied, weather=weather, season=season_row)
+    if enemy is not None:
+        log.raided = raid_supply(ctx.rules, profile, enemy.profile) > 0 or log.raided
     wandering = await navigate(ctx, march.army, march.owner, profile.region_entity_id, origin, charted=charted)
     if wandering.lost and "region_id" not in profile.locked:
         profile.region_entity_id = origin
@@ -207,24 +312,29 @@ async def campaign_season(ctx: TickContext, atlas: RegionAtlas, ground: Environm
     tire(ctx.rules, rows, profile)
     entrench(ctx.rules, profile)
     region = ground.regions.get(profile.region_entity_id) if profile.region_entity_id is not None else None
+    home = atlas.top_region(march.owner.id)
+    if not march.attacking and enemy is not None and region is not None and profile.region_entity_id == home:
+        army_row = await ctx.session.get(ArmyRow, march.army.id)
+        if army_row is not None and await scorch(ctx, march.owner, army_row, region):
+            log.scorched = True
     line = supply_line(atlas, march.owner, profile)
     profile.supply_line = line
     raid_line(ctx, march, line, log)
+    profile.supply_days += await quartermaster(ctx, march.army.id)
+    sanitation = await sanitation_of(ctx, march.owner)
+    fever = summer(season_row, ground.seasons_of(march.owner.world_id))
     peril = await danger_toll(ctx, march.army, rows, profile.region_entity_id)
-    dead = feed(ctx, march, region, atlas.top_region(march.owner.id), log) + camp_sickness(ctx, march, region) + wandering.dead + peril.dead
-    attrition = ctx.rules.attrition
-    size = stat(march.army, "size") or 0
-    if profile.supply_days <= 0:
-        log.starving = True
-        dead += round_half_up(size * attrition.starvation_pct / PERCENT * harshness(ctx.rules, HarshnessScale.FAMINE_DEATH))
-        dishearten(rows, round_half_up(ctx.rules.morale.base * ctx.rules.morale.supply_pct / PERCENT))
-    log.unpaid = not await wages(ctx, march)
-    if log.unpaid:
-        dishearten(rows, ctx.rules.logistics.unpaid_morale)
-    if log.starving or log.unpaid:
-        log.deserted = desert(ctx.rules, march, rows, round_half_up(size * attrition.desertion_pct / PERCENT))
+    dead = feed(ctx, march, region, home, log, season=season_row) + camp_sickness(ctx, march, region, sanitation=sanitation, fever=fever)
+    dead += wandering.dead + peril.dead
+    log.unfed_mounts = not feed_mounts(ctx.rules, profile, rows, log.foraged)
+    await rearm(ctx, march.army, march.owner, rows)
+    dead += await hardship(ctx, march, rows, log)
     log.dead = take(rows, dead)
     sync(march.army, rows, ctx.rules)
+    carry(ctx.rules, profile, stat(march.army, "size") or 0)
+    army_row = await ctx.session.get(ArmyRow, march.army.id)
+    if army_row is not None:
+        log.mutiny = await mutiny(ctx, march.army, army_row, profile, enemy_id=enemy.owner.id if enemy is not None else None)
     profile.updated_epoch = ctx.epoch
     ctx.session.add(
         ArmyMovementRow(
@@ -242,6 +352,9 @@ async def campaign_season(ctx: TickContext, atlas: RegionAtlas, ground: Environm
                     ("raided", log.raided),
                     ("starving", log.starving),
                     ("unpaid", log.unpaid),
+                    ("scorched", log.scorched),
+                    ("mounts unfed", log.unfed_mounts),
+                    ("mutiny", log.mutiny is not None),
                     ("lost", wandering.lost),
                     ("ambushed", peril.ambushed),
                 )

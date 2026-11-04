@@ -15,6 +15,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import ClauseKind, OathKind, PartyRole, TreatyKind, TreatyStatus
+from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import TreatyStats
 from aerona.engine.context import TickContext
 from aerona.engine.lore.language import barrier
@@ -301,7 +302,7 @@ async def call_guarantors(ctx: TickContext, profile: TreatyProfileRow, breaker: 
         guarantor = await living_entity(ctx.session, party.party_node_id)
         if guarantor is None or not ctx.rng(f"guarantor.{profile.treaty_entity_id}.{guarantor.id}").chance(ctx.rules.treaties.guarantor_chance):
             continue
-        if await declare_war(ctx, guarantor.id, breaker.id, f"{guarantor.name} stood by its guarantee"):
+        if await declare_war(ctx, guarantor.id, breaker.id, f"{guarantor.name} stood by its guarantee", cause=WarCause.PUNITIVE):
             joined += 1
     return joined
 

@@ -155,9 +155,9 @@ async def mobilisation(session: AsyncSession, rules: Rules, community: EntityRow
         return 1.0
     values = await culture_of(session, people.id)
     culture = await session.get(PeopleCultureRow, people.id)
-    martial = 1 + values.get(ValueAxis.MARTIAL, 0) / PERCENT * table.levy_martial_pct / PERCENT
-    cohesion = 1 + ((culture.cohesion if culture is not None else table.cohesion_base) - table.cohesion_base) / PERCENT * table.levy_cohesion_pct / PERCENT
-    season = 1 - harvest_share * (1 - table.harvest_levy_pct / PERCENT)
+    martial = 1 + values.get(ValueAxis.MARTIAL, 0) / PERCENT * rules.levies.martial_pct / PERCENT
+    cohesion = 1 + ((culture.cohesion if culture is not None else table.cohesion_base) - table.cohesion_base) / PERCENT * rules.levies.cohesion_pct / PERCENT
+    season = 1 - harvest_share * (1 - rules.levies.harvest_pct / PERCENT)
     laws = await LawBook.load(session)
     share = laws.param(community.id, LawKind.LEVY_LAW, "share")
     drafted = laws.param(community.id, LawKind.CONSCRIPTION, "share")

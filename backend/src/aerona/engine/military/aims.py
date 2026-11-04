@@ -5,19 +5,23 @@ from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
-from aerona.db.tables.military import OccupationRow, WarAimRow
+from aerona.db.tables.military import OccupationRow, PeaceTermRow, WarAimRow
+from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import ClaimRow, PolityTerritoryRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.military import WarAimKind
+from aerona.domain.enums.military import PeaceTermKind, WarAimKind
 from aerona.domain.enums.polity import ClauseKind, GovernmentKind, PartyRole, TreatyKind
-from aerona.domain.enums.war import CaptiveStatus, WarCause
+from aerona.domain.enums.war import CaptiveStatus, WarCause, WarEnding
 from aerona.engine.context import TickContext
+from aerona.engine.faith.book import patron_node
+from aerona.engine.military.peace import AIM_TERMS, PeaceTerm, conclude, extra_terms, record
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.formation import set_ruler
 from aerona.engine.polity.treaties import Clause, sign
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.faith import change_religion
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
@@ -47,6 +51,13 @@ CAUSE_AIMS: dict[WarCause, tuple[WarAimKind, ...]] = {
     WarCause.BEAST: (A.LOOT, A.REVENGE),
     WarCause.RESOURCE: (A.SEIZE_RESOURCE, A.CONQUER_REGION),
     WarCause.IDEOLOGY: (A.CHANGE_GOVERNMENT, A.LIBERATE),
+    WarCause.TRADE_ROUTE: (A.SEIZE_RESOURCE, A.TRIBUTE),
+    WarCause.CLAIM: (A.PRESS_CLAIM, A.CONQUER_REGION),
+    WarCause.HOLY_WAR: (A.CONVERT, A.DESTROY_CULT),
+    WarCause.SUCCESSION: (A.PRESS_CLAIM, A.HUMILIATE),
+    WarCause.RAID: (A.LOOT,),
+    WarCause.LIBERATION: (A.LIBERATE, A.REVENGE),
+    WarCause.PUNITIVE: (A.REVENGE, A.TRIBUTE),
 }
 DEFENDER_AIMS = (A.HUMILIATE, A.LOOT)
 REGION_AIMS = frozenset({A.CONQUER_REGION, A.SEIZE_RESOURCE, A.SEIZE_NEXUS})
@@ -86,9 +97,47 @@ async def set_aims(ctx: TickContext, war: WarRow, attacker: EntityRow, defender:
     for side, enemy, kinds in ((attacker, defender, await wanted(ctx, war, attacker, defender)), (defender, attacker, list(DEFENDER_AIMS))):
         for kind in kinds[:count]:
             target = region if kind in REGION_AIMS and side is attacker else enemy.id
-            ctx.session.add(WarAimRow(war_id=war.id, side_entity_id=side.id, kind=kind, target_entity_id=target, params={}, achieved=0))
+            params = await aim_params(ctx, kind, side, enemy, target)
+            ctx.session.add(WarAimRow(war_id=war.id, side_entity_id=side.id, kind=kind, target_entity_id=target, params=params, achieved=0, locked=[]))
             made += 1
     return made
+
+
+async def aim_params(ctx: TickContext, kind: WarAimKind, side: EntityRow, enemy: EntityRow, target: int | None) -> dict[str, int | str | bool]:
+    peace = ctx.rules.peace
+    params: dict[str, int | str | bool] = {"target": target} if target is not None else {}
+    match kind:
+        case A.PRESS_CLAIM:
+            claim = await ctx.session.scalar(select(ClaimRow.id).where(ClaimRow.claimant_entity_id == side.id, ClaimRow.ended_epoch.is_(None)).limit(1))
+            params = {"claim": claim} if claim is not None else params
+        case A.CONVERT:
+            god = await patron_node(ctx.session, side.id)
+            params = {"god": god} if god is not None else {}
+        case A.TRIBUTE:
+            params = {"amount": peace.reparations, "epochs": peace.treaty_epochs}
+        case A.LOOT:
+            params = {"amount": ctx.rules.siegecraft.sack_loot}
+        case A.REVENGE:
+            memory = await ctx.session.scalar(
+                select(MemoryRow.id)
+                .where(MemoryRow.holder_node_id == side.id, MemoryRow.subject_node_id == enemy.id, MemoryRow.magnitude < 0)
+                .order_by(MemoryRow.magnitude, MemoryRow.id)
+                .limit(1)
+            )
+            params = {"memory": memory} if memory is not None else {}
+        case A.CHANGE_GOVERNMENT:
+            realm = (await RealmBook.load(ctx.session)).realm_of(side.id)
+            government = realm.profile.government if realm is not None else GovernmentKind.REPUBLIC
+            params = {"government": government.value}
+        case A.LIBERATE:
+            params = {"freed": side.id}
+        case A.VASSALISE:
+            params = {"overlord": side.id}
+        case A.DESTROY_CULT:
+            params = {"cult": enemy.id}
+        case _:
+            pass
+    return params
 
 
 async def advance(ctx: TickContext, war_id: int, side_id: int, amount: int, *, target: int | None = None, kinds: frozenset[WarAimKind] | None = None) -> int:
@@ -169,9 +218,12 @@ async def reparation_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: 
     peace = ctx.rules.peace
     if aim.achieved < peace.tribute_score:
         return None
-    shift_stat(loser, "wealth", -peace.reparations)
-    shift_stat(victor, "wealth", peace.reparations)
-    return f"{loser.name} paid reparations", Clause(ClauseKind.TRIBUTE, loser.id, victor.id, {"amount": peace.reparations})
+    amount = int(aim.params.get("amount", peace.reparations))
+    epochs = int(aim.params.get("epochs", 0))
+    shift_stat(loser, "wealth", -amount)
+    shift_stat(victor, "wealth", amount)
+    params: dict[str, int | str | bool] = {"amount": amount, "epochs": epochs} if epochs else {"amount": amount}
+    return f"{loser.name} paid {amount} in reparations", Clause(ClauseKind.TRIBUTE, loser.id, victor.id, params)
 
 
 async def liberty_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: Sides, book: RealmBook) -> Term:
@@ -182,7 +234,10 @@ async def liberty_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: Sid
 
 
 async def claim_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: Sides, book: RealmBook) -> Term:
-    return await press(ctx, *sides, book) if aim.achieved >= ctx.rules.peace.cession_score else None
+    if aim.achieved < ctx.rules.peace.cession_score:
+        return None
+    claim_id = aim.params.get("claim")
+    return await press(ctx, *sides, book, claim_id=int(claim_id) if isinstance(claim_id, int) and not isinstance(claim_id, bool) else None)
 
 
 async def cult_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: Sides, book: RealmBook) -> Term:
@@ -197,7 +252,13 @@ async def faith_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: Sides
     victor, loser = sides
     if aim.achieved < ctx.rules.peace.tribute_score:
         return None
-    return f"{loser.name} opened its temples to the faith of {victor.name}", Clause(ClauseKind.RELIGIOUS_FREEDOM, loser.id, victor.id)
+    god = aim.params.get("god")
+    god_id = int(god) if isinstance(god, int) and not isinstance(god, bool) else await patron_node(ctx.session, victor.id)
+    converted = aim.achieved >= ctx.rules.peace.vassal_score and await change_religion(
+        ctx.session, loser, god_id, ctx.epoch, f"forced by the peace with {victor.name}"
+    )
+    text = f"{loser.name} took the god of {victor.name}" if converted else f"{loser.name} opened its temples to the faith of {victor.name}"
+    return text, Clause(ClauseKind.RELIGIOUS_FREEDOM, loser.id, victor.id, {"god": god_id} if god_id is not None else {})
 
 
 async def government_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: Sides, book: RealmBook) -> Term:
@@ -205,8 +266,13 @@ async def government_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: 
     realm = book.realm_of(loser.id)
     if aim.achieved < ctx.rules.peace.cession_score or realm is None:
         return None
-    realm.profile.government = GovernmentKind.REPUBLIC
-    return f"{victor.name} overturned the rule of {loser.name}; the realm is now a republic", Clause(ClauseKind.NON_AGGRESSION, loser.id, victor.id)
+    try:
+        government = GovernmentKind(str(aim.params.get("government", GovernmentKind.REPUBLIC.value)))
+    except ValueError:
+        government = GovernmentKind.REPUBLIC
+    realm.profile.government = government
+    text = f"{victor.name} overturned the rule of {loser.name}; the realm is now a {government.value.replace('_', ' ')}"
+    return text, Clause(ClauseKind.NON_AGGRESSION, loser.id, victor.id, {"government": government.value})
 
 
 TERMS = {
@@ -227,32 +293,52 @@ TERMS = {
 }
 
 
-async def press(ctx: TickContext, victor: EntityRow, loser: EntityRow, book: RealmBook) -> tuple[str, Clause] | None:
+async def press(ctx: TickContext, victor: EntityRow, loser: EntityRow, book: RealmBook, *, claim_id: int | None = None) -> tuple[str, Clause] | None:
     realm = book.realm_of(loser.id)
     if realm is None:
         return None
-    claim = await ctx.session.scalar(
-        select(ClaimRow).where(ClaimRow.claimant_entity_id == victor.id, ClaimRow.polity_entity_id == realm.entity.id, ClaimRow.ended_epoch.is_(None)).limit(1)
-    )
+    claim = await ctx.session.get(ClaimRow, claim_id) if claim_id is not None else None
+    if claim is None or claim.ended_epoch is not None:
+        claim = await ctx.session.scalar(
+            select(ClaimRow)
+            .where(ClaimRow.claimant_entity_id == victor.id, ClaimRow.polity_entity_id == realm.entity.id, ClaimRow.ended_epoch.is_(None))
+            .limit(1)
+        )
     if claim is None or not set_ruler(ctx, realm, claim.claimant_entity_id, "claim won by war"):
         return None
     claim.pressed, claim.ended_epoch = True, ctx.epoch
     return f"{victor.name} took the throne it claimed", Clause(ClauseKind.CESSION, loser.id, victor.id, {"throne": realm.entity.id})
 
 
-async def peace_terms(ctx: TickContext, war: WarRow, victor: EntityRow, loser: EntityRow) -> list[str]:
+async def peace_terms(
+    ctx: TickContext, war: WarRow, victor: EntityRow, loser: EntityRow, *, ending: WarEnding = WarEnding.VICTORY, chosen: list[PeaceTerm] | None = None
+) -> list[str]:
     book = await RealmBook.load(ctx.session)
     notes: list[str] = []
     clauses: list[Clause] = []
+    rows: list[PeaceTermRow] = []
     for aim in await aims_of(ctx, war.id, victor.id):
         found = await TERMS[aim.kind](ctx, war, aim, (victor, loser), book)
         if found is not None:
             notes.append(found[0] + ".")
             clauses.append(found[1])
-    parties = [(victor.id, PartyRole.SIGNATORY), (loser.id, PartyRole.SIGNATORY)]
-    await sign(ctx, TreatyKind.PEACE, parties, clauses=clauses, until=ctx.epoch + ctx.rules.peace.treaty_epochs)
+            rows.append(record(ctx, war, AIM_TERMS[aim.kind], victor_id=victor.id, loser_id=loser.id, params=dict(aim.params), note=found[0]))
+    terms = chosen if chosen is not None else await extra_terms(ctx, war, victor, loser, ending=ending)
+    await conclude(ctx, war, ending, (victor, loser), clauses=clauses, notes=notes, terms=terms, rows=rows)
     return notes
 
 
-async def white_peace(ctx: TickContext, first: EntityRow, second: EntityRow) -> None:
-    await sign(ctx, TreatyKind.PEACE, [(first.id, PartyRole.SIGNATORY), (second.id, PartyRole.SIGNATORY)], until=ctx.epoch + ctx.rules.peace.treaty_epochs)
+async def white_peace(
+    ctx: TickContext, first: EntityRow, second: EntityRow, *, war: WarRow | None = None, ending: WarEnding = WarEnding.WHITE_PEACE
+) -> list[str]:
+    if war is None:
+        await sign(ctx, TreatyKind.PEACE, [(first.id, PartyRole.SIGNATORY), (second.id, PartyRole.SIGNATORY)], until=ctx.epoch + ctx.rules.peace.treaty_epochs)
+        return []
+    notes: list[str] = []
+    terms = [PeaceTerm(PeaceTermKind.WHITE_PEACE), *await extra_terms(ctx, war, first, second, ending=ending)]
+    await conclude(ctx, war, ending, (first, second), clauses=[], notes=notes, terms=terms, rows=[])
+    return notes
+
+
+async def unsigned_ending(ctx: TickContext, war: WarRow, ending: WarEnding, first: EntityRow, second: EntityRow) -> None:
+    await conclude(ctx, war, ending, (first, second), clauses=[], notes=[], terms=[], rows=[])

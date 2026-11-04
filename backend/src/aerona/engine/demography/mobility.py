@@ -21,6 +21,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for, total
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.military.units import resize
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.levies import demobilise
@@ -148,7 +149,7 @@ async def desertion(ctx: TickContext) -> int:
         with flowing(FlowCategory.LEVY):
             set_stats(army, size=size - returned)
         with flowing(FlowCategory.DEATH):
-            set_stats(army, size=size - leaving)
+            await resize(ctx.session, ctx.rules, army, size - leaving)
         deserted += leaving
         await note(
             ctx,

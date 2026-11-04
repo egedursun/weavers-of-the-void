@@ -60,9 +60,6 @@ class PeopleRules:
     assimilation_distance: int = rule(20, 0, 300, G, "Value distance below which a people of low cohesion assimilates into a neighbour sharing its tongue")
     assimilation_cohesion: int = rule(40, 0, 100, G, "Cohesion below which a people may assimilate")
     ethnogenesis_distance: int = rule(35, 0, 300, G, "Value distance from its parent people at which a settlement becomes a people of its own")
-    levy_martial_pct: int = rule(100, 0, 500, G, "Weight of a people's martial value in how many adults it can levy (%)")
-    levy_cohesion_pct: int = rule(100, 0, 500, G, "Weight of cohesion in how many adults a people can levy (%)")
-    harvest_levy_pct: int = rule(50, 0, 100, G, "Levy kept in the harvest season (%)")
 
 
 @dataclass(frozen=True)

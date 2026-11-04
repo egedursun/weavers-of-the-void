@@ -73,6 +73,7 @@ class ScarKind(StrEnum):
     HAUNTED = "haunted"
     BLIGHTED = "blighted"
     LEAK_WOUND = "leak_wound"
+    PLUNDERED = "plundered"
 
 
 class MovementMode(StrEnum):
