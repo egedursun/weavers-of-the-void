@@ -39,6 +39,7 @@ TREATY = Line(
 FOREIGN_TALK = Line("tools.son.foreign_talk", '{son} spoke with the foreign god {god} {manner}: "{words}" ({outcome}).')
 MOVE = Line("tools.son.move", "{son} turned from {old} to {new}.")
 SEVER_LEY = Line("tools.son.sever_ley", "{son} cut the ley line between {first} and {second}: {reason}")
+FORGE_MATERIAL = Line("tools.son.forge_material", "{son} forged {name} into the world: {reason}")
 SHAPE_WEATHER = Line("tools.son.shape_weather", "{son} held {weather} over {region} for {epochs} ages: {reason}.")
 REORDER_SEASONS = Line("tools.son.reorder_seasons", "{son} turned the year of {world}: its seasons now run {order}.")
 SEAL = Line("tools.son.seal", "{son} sealed the road between {first} and {second}; the two worlds' leakage decreased.")

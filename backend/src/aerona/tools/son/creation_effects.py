@@ -4,13 +4,17 @@ from typing import Any
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import AGENT_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.travel import TravelMethod, VehicleKind
 from aerona.engine.cosmos.routes import RouteSpec, method_label, open_route
 from aerona.engine.cosmos.vessels import set_vessel_kind
+from aerona.engine.economy.materials import set_node_material
+from aerona.engine.economy.provenance import ensure_materials
 from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.gods.queries import worshippers_of
 from aerona.engine.phases.society_support.knowledge import teach
@@ -157,12 +161,26 @@ async def _vessel_route(call: SonCall, args: CreationInput, created: EntityRow) 
     return result(SonResult.ROUTE_OPENED, id=route.id, world=target.name, method=method_label(method))
 
 
+async def _son_materials(call: SonCall, args: CreationInput, created: EntityRow) -> None:
+    chosen = {
+        MaterialSlot.BODY: (args.option("material"), args.option("world_material_id")),
+        MaterialSlot.HULL: (args.option("hull_material"), None),
+        MaterialSlot.FABRIC: (args.option("fabric_material"), None),
+    }
+    for slot, (material, world_material_id) in chosen.items():
+        known = world_material_id is not None and await call.session.get(WorldMaterialRow, world_material_id) is not None
+        if material is not None or known:
+            await set_node_material(call.session, created.id, slot, material, world_material_id if known else None)
+    await ensure_materials(call.session, created, rules=call.rules)
+
+
 async def finish_extras(call: SonCall, args: CreationInput, created: EntityRow) -> list[str]:
     notes: list[str] = []
     if created.entity_type is EntityType.VESSEL:
         route = await _vessel_route(call, args, created)
         if route is not None:
             notes.append(route)
+    await _son_materials(call, args, created)
     words = args.option("words")
     if created.entity_type is EntityType.LANGUAGE and words:
         await add_words(call.session, created, words[: call.rules.son_tools.coin_word_max_words], actor=(ActorKind.SON, call.son.id), epoch=call.epoch)

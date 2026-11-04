@@ -18,6 +18,7 @@ from aerona.domain.enums.polity import LawKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import shift_sanity
+from aerona.engine.economy.materials import MaterialBook
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore import art, ideology, items, legends, prophecy, research, rites, traditions
@@ -495,6 +496,7 @@ async def afflict(ctx: TickContext, item: EntityRow) -> str | None:
     "table.skills",
     "table.traits",
     "table.world_maps",
+    "table.world_materials",
 )
 @writes(
     "cult.zeal",
@@ -512,8 +514,9 @@ async def afflict(ctx: TickContext, item: EntityRow) -> str | None:
 )
 async def item_cycles(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
+    book = await MaterialBook.load(ctx.session)
     for item in await items.living_items(ctx):
-        for key, value in (await items.item_year(ctx, atlas, item)).items():
+        for key, value in (await items.item_year(ctx, atlas, item, book)).items():
             ctx.count(f"items_{key}", value)
         cursed = await afflict(ctx, item)
         if cursed:

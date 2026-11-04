@@ -46,6 +46,13 @@ class MaterialOrigin(StrEnum):
     BEAST = "beast"
     LEAK_CRYSTAL = "leak_crystal"
     RESEARCH = "research"
+    DIVINE = "divine"
+
+
+class FoeNature(StrEnum):
+    UNDEAD = "undead"
+    CURSED = "cursed"
+    VOID = "void"
 
 
 class MaterialSlot(StrEnum):

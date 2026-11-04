@@ -8,6 +8,7 @@ from aerona.domain.enums.mind import TraitEffect, ValueAxis
 from aerona.engine.body.book import effective
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.beasts import mounted_power
+from aerona.engine.economy.sanctity import holy_strike
 from aerona.engine.lore.arms import best_weapon, grip, guard_of, held_profiles
 from aerona.engine.mind.book import effect_of, scaled_by, values_for
 from aerona.engine.primitives.numbers import round_half_up
@@ -45,7 +46,7 @@ class Bout:
     log: list[str] = field(default_factory=list)
 
 
-async def fighter(ctx: TickContext, hero: EntityRow) -> Fighter:
+async def fighter(ctx: TickContext, hero: EntityRow, foe: EntityRow | None = None) -> Fighter:
     campaigns = ctx.rules.campaigns
     nerve = scaled_by(await effect_of(ctx.session, hero.id, TraitEffect.COURAGE, ctx.rules.traits.effect_scale_pct))
     base = (
@@ -60,7 +61,7 @@ async def fighter(ctx: TickContext, hero: EntityRow) -> Fighter:
     reach = blade.reach if blade is not None else min(REACH_ITEMS, sum(1 for item in items if (stat(item, "damage") or 0) > 0))
     return Fighter(
         entity=hero,
-        power=base * (grip(blade) if blade is not None else 1.0) * await mounted_power(ctx, hero.id),
+        power=base * (grip(blade) if blade is not None else 1.0) * await mounted_power(ctx, hero.id) * await holy_strike(ctx.session, ctx.rules, hero.id, foe),
         hp=stat(hero, "hp") or campaigns.hero_default_hp,
         armour=sum(stat(item, "protection") or 0 for item in items) + guard_of(held),
         reach=reach,

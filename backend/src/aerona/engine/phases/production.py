@@ -2,10 +2,12 @@ from collections import defaultdict
 
 from sqlalchemy import select
 
-from aerona.catalog.materials import SPECIES_YIELDS
+from aerona.catalog.commodities import commodity_label
+from aerona.catalog.materials import SPECIES_GOODS, SPECIES_GROUNDS, SPECIES_YIELDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.ecology import HerdRow
 from aerona.db.tables.economy import CommunityStockRow, NodeMaterialRow, ResourceProfileRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.domain.enums.body import BodyPlan
@@ -20,9 +22,10 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.deposits import Deposit, has_substance, new_substance, open_deposit
 from aerona.engine.economy.materials import corruption_lure, curse_bonus, decay_loss, enchantment_cap, sanctity_splendour, sanctity_ward
+from aerona.engine.economy.provenance import sweep_materials
 from aerona.engine.economy.refining import RefiningTally, refine_community
 from aerona.engine.economy.stocks import sync_aggregates
-from aerona.engine.economy.survey import economy_backfill, profile_resources, seed_communities
+from aerona.engine.economy.survey import depth_backfill, economy_backfill, profile_resources, seed_communities
 from aerona.engine.environment.book import active_sky
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
@@ -31,6 +34,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.rules.registry import Rules
 
 ITEM_DECAY_KEYS = ("damage", "protection", "might")
 CORRUPT_FROM = PERCENT // 2
@@ -372,54 +376,86 @@ async def world_materials(ctx: TickContext) -> None:
     ctx.count("beasts", await _slain_beasts(ctx))
 
 
-async def _grounds(ctx: TickContext) -> dict[int, tuple[EntityRow, ResourceProfileRow]]:
+async def _grounds(ctx: TickContext) -> dict[int, list[tuple[EntityRow, ResourceProfileRow]]]:
     statement = (
         select(EntityRow, ResourceProfileRow)
         .join(ResourceProfileRow, ResourceProfileRow.resource_entity_id == EntityRow.id)
         .where(EntityRow.entity_type == EntityType.RESOURCE, EntityRow.maker_entity_id.is_not(None))
+        .order_by(EntityRow.id)
     )
-    return {resource.maker_entity_id: (resource, profile) for resource, profile in await ctx.session.execute(statement) if resource.maker_entity_id is not None}
+    found: dict[int, list[tuple[EntityRow, ResourceProfileRow]]] = defaultdict(list)
+    for resource, profile in await ctx.session.execute(statement):
+        if resource.maker_entity_id is not None:
+            found[resource.maker_entity_id].append((resource, profile))
+    return found
 
 
-@reads("species.abundance", "table.bodies", "table.bonds", "table.entity_flags", "table.name_registry", "table.nodes", "table.resource_profiles")
+async def _herded(ctx: TickContext) -> set[int]:
+    return set(await ctx.session.scalars(select(HerdRow.species_entity_id)))
+
+
+def _wanted(plan: BodyPlan | None, abundance: int, rules: Rules, herded: bool) -> list[tuple[CommodityKind, MaterialKind | None]]:
+    materials = SPECIES_YIELDS.get(plan, ()) if plan in (BodyPlan.COLOSSAL, BodyPlan.INSECTOID) else ()
+    wanted: list[tuple[CommodityKind, MaterialKind | None]] = [(CommodityKind.ORE, materials[0])] if materials else []
+    if plan is not None and not herded and abundance >= rules.extraction.species_ground_abundance:
+        wanted.extend((good, None) for good in SPECIES_GOODS.get(plan, ()))
+    return wanted
+
+
+async def _open_ground(ctx: TickContext, species: EntityRow, place: EntityRow, ground: tuple[CommodityKind, MaterialKind | None], abundance: int) -> None:
+    commodity, material = ground
+    reserve = max(1, round_half_up(ctx.rules.extraction.deposit_reserve * abundance / PERCENT))
+    if material is not None:
+        name, body = f"Hunting Grounds of {species.name}", f"Hunters of {place.name} take {material.value.replace('_', ' ')} from the {species.name}."
+    else:
+        word = SPECIES_GROUNDS[commodity]
+        name, body = f"{word} of {species.name}", f"The people of {place.name} take {commodity_label(commodity).lower()} from the wild {species.name}."
+    resource = await open_deposit(
+        ctx, Deposit(name=name, body=body, place=place, commodity=commodity, material=material, reserve=reserve, richness=60, quality=70)
+    )
+    resource.maker_entity_id = species.id
+
+
+@reads(
+    "species.abundance",
+    "table.bodies",
+    "table.bonds",
+    "table.entity_flags",
+    "table.herds",
+    "table.name_registry",
+    "table.nodes",
+    "table.resource_profiles",
+)
 @writes("resource.abundance", "table.bonds", "table.entities", "table.name_registry", "table.resource_profiles")
 async def species_yields(ctx: TickContext) -> None:
     extinct = await flags_by_entity(ctx.session, EntityFlag.EXTINCT)
     megafauna = await flags_by_entity(ctx.session, EntityFlag.MEGAFAUNA)
     grounds = await _grounds(ctx)
+    herded = await _herded(ctx)
     opened = 0
-    for species_id, (_, profile) in grounds.items():
+    for species_id, worked in grounds.items():
         if species_id in extinct:
-            profile.regeneration = 0
+            for _, profile in worked:
+                if not profile.held:
+                    profile.regeneration = 0
     for species in await canon(ctx.session, [EntityType.SPECIES]):
         body = await ctx.session.get(BodyRow, species.id)
         plan = BodyPlan.COLOSSAL if species.id in megafauna else body.plan if body is not None else None
-        materials = SPECIES_YIELDS.get(plan, ()) if plan in (BodyPlan.COLOSSAL, BodyPlan.INSECTOID) else ()
-        if not materials or species.location_id is None:
-            continue
         abundance = stat(species, "abundance") or 0
-        if species.id in grounds:
-            _, profile = grounds[species.id]
-            profile.regeneration = round_half_up(profile.initial_reserve * ctx.rules.extraction.renewable_regen_pct / PERCENT * abundance / PERCENT)
+        worked = grounds.get(species.id, [])
+        for _, profile in worked:
+            if not profile.held:
+                profile.regeneration = round_half_up(profile.initial_reserve * ctx.rules.extraction.renewable_regen_pct / PERCENT * abundance / PERCENT)
+        if species.location_id is None:
             continue
-        place = await ctx.session.get(EntityRow, species.location_id)
+        have = {(profile.commodity, profile.material) for _, profile in worked}
+        missing = [item for item in _wanted(plan, abundance, ctx.rules, species.id in herded) if item not in have]
+        place = await ctx.session.get(EntityRow, species.location_id) if missing else None
         if place is None:
             continue
-        resource = await open_deposit(
-            ctx,
-            Deposit(
-                name=f"Hunting Grounds of {species.name}",
-                body=f"Hunters of {place.name} take {materials[0].value.replace('_', ' ')} from the {species.name}.",
-                place=place,
-                commodity=CommodityKind.ORE,
-                material=materials[0],
-                reserve=max(1, round_half_up(ctx.rules.extraction.deposit_reserve * abundance / PERCENT)),
-                richness=60,
-                quality=70,
-            ),
-        )
-        resource.maker_entity_id = species.id
-        opened += 1
+        for ground in missing:
+            await _open_ground(ctx, species, place, ground, abundance)
+            opened += 1
     ctx.count("hunting_grounds", opened)
 
 
@@ -483,7 +519,9 @@ async def deposit_finding(ctx: TickContext) -> None:
     "table.community_labour",
     "table.community_societies",
     "table.community_stocks",
+    "table.cosmos",
     "table.currencies",
+    "table.entities",
     "table.forced_weather",
     "table.holder_levels",
     "table.holder_techniques",
@@ -500,6 +538,7 @@ async def deposit_finding(ctx: TickContext) -> None:
     "table.trade_route_regions",
     "table.trade_route_tolls",
     "table.treaty_parties",
+    "table.vessel_profiles",
     "table.workshops",
     "table.world_maps",
     "table.world_materials",
@@ -526,6 +565,9 @@ async def economy_survey(ctx: TickContext) -> None:
     ctx.count("communities_seeded", await seed_communities(ctx, book))
     for key, value in (await economy_backfill(ctx, book)).items():
         ctx.count(f"backfilled_{key}", value)
+    for key, value in (await depth_backfill(ctx)).items():
+        ctx.count(f"depth_{key}", value)
+    ctx.count("materials_assigned", await sweep_materials(ctx.session, ctx.rules))
 
 
 PHASES = (

@@ -8,7 +8,7 @@ from aerona.catalog.materials import ALLOYS, MATERIALS, MaterialSpec
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import PROPERTY_COLUMNS, NodeMaterialRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.economy import MaterialFamily, MaterialOrigin, MaterialSlot
+from aerona.domain.enums.economy import FoeNature, MaterialFamily, MaterialOrigin, MaterialSlot
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -162,14 +162,93 @@ def corruption_lure(rules: Rules, props: MaterialProps) -> int:
     return round_half_up(props.corruption * rules.materials.corruption_lure_pct / PERCENT)
 
 
+MIDDLE = PERCENT // 2
+WORTH_FLOOR = 0.1
+
+
+def worth(props: MaterialProps) -> float:
+    return (props.rarity + props.base_value) / 2
+
+
+def worth_factor(rules: Rules, props: MaterialProps | None) -> float:
+    if props is None:
+        return 1.0
+    return max(WORTH_FLOOR, 1 + (worth(props) - MIDDLE) / PERCENT * rules.materials.item_worth_pct / PERCENT)
+
+
+def price_premium(rules: Rules, props: MaterialProps | None) -> float:
+    if props is None:
+        return 1.0
+    table = rules.markets
+    lift = ((props.rarity - MIDDLE) * table.rarity_price_pct + (props.base_value - MIDDLE) * table.value_price_pct) / PERCENT / PERCENT
+    return max(WORTH_FLOOR, 1 + lift)
+
+
+def battle_wear(rules: Rules, props: MaterialProps | None) -> int:
+    base = rules.item_wear.battle_wear
+    if props is None:
+        return base
+    return round_half_up(base * (1 - props.toughness / PERCENT * rules.materials.battle_toughness_pct / PERCENT))
+
+
+def rust_wear(rules: Rules, props: MaterialProps) -> int:
+    table = rules.materials
+    return round_half_up(rules.item_wear.decay_wet * props.decay / table.rust_decay_step * table.rust_decay_pct / PERCENT)
+
+
+def hull_guard(rules: Rules, props: MaterialProps | None) -> float:
+    if props is None:
+        return 1.0
+    return max(0.0, 1 - (props.hardness + props.toughness) / 2 / PERCENT * rules.materials.hull_guard_pct / PERCENT)
+
+
+def hull_wear(rules: Rules, props: MaterialProps | None, loss: int) -> int:
+    if props is None:
+        return loss
+    return round_half_up(loss * (1 - props.toughness / PERCENT * rules.materials.hull_wear_pct / PERCENT))
+
+
+def light_fabric(rules: Rules, props: MaterialProps | None) -> bool:
+    return props is not None and props.weight <= rules.materials.fabric_light_weight
+
+
+def wind_guard(rules: Rules, props: MaterialProps | None) -> float:
+    if props is None:
+        return 1.0
+    return max(0.0, 1 - props.toughness / PERCENT * rules.materials.fabric_wind_pct / PERCENT)
+
+
+def holy_edge(rules: Rules, props: MaterialProps | None, natures: frozenset[FoeNature]) -> float:
+    if props is None or not natures:
+        return 1.0
+    table = rules.materials
+    lift = 0.0
+    for nature in natures:
+        if nature is FoeNature.UNDEAD:
+            lift += props.sanctity * table.sanctity_undead_pct / PERCENT / PERCENT
+        elif nature is FoeNature.CURSED:
+            lift += props.sanctity * table.sanctity_cursed_pct / PERCENT / PERCENT
+        elif nature is FoeNature.VOID:
+            lift += (props.sanctity * table.sanctity_void_pct - props.corruption * table.corruption_void_pct) / PERCENT / PERCENT
+    return max(WORTH_FLOOR, 1 + lift)
+
+
 async def node_material(session: AsyncSession, node_id: int, slot: MaterialSlot = MaterialSlot.BODY) -> NodeMaterialRow | None:
     return await session.get(NodeMaterialRow, (node_id, slot))
 
 
 async def set_node_material(
-    session: AsyncSession, node_id: int, slot: MaterialSlot, material: MaterialKind | None, world_material_id: int | None = None
+    session: AsyncSession,
+    node_id: int,
+    slot: MaterialSlot,
+    material: MaterialKind | None,
+    world_material_id: int | None = None,
+    *,
+    force: bool = False,
 ) -> None:
     row = await session.get(NodeMaterialRow, (node_id, slot))
+    if row is not None and row.held and not force:
+        return
     if material is None and world_material_id is None:
         if row is not None:
             await session.delete(row)
@@ -180,3 +259,24 @@ async def set_node_material(
         row.material = material if world_material_id is None else None
         row.world_material_id = world_material_id
     await session.flush()
+
+
+@dataclass(frozen=True)
+class VesselRig:
+    hull: MaterialProps | None
+    fabric: MaterialProps | None
+
+
+async def slot_props(session: AsyncSession, node: EntityRow, slot: MaterialSlot, book: MaterialBook | None = None) -> MaterialProps | None:
+    row = await session.get(NodeMaterialRow, (node.id, slot))
+    if row is None:
+        return None
+    materials = book if book is not None else await MaterialBook.load(session)
+    return materials.props(node.world_id, row.material, row.world_material_id)
+
+
+async def rig_of(session: AsyncSession, vehicle: EntityRow | None) -> VesselRig | None:
+    if vehicle is None:
+        return None
+    book = await MaterialBook.load(session)
+    return VesselRig(await slot_props(session, vehicle, MaterialSlot.HULL, book), await slot_props(session, vehicle, MaterialSlot.FABRIC, book))

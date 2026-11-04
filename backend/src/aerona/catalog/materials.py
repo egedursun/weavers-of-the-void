@@ -113,6 +113,15 @@ SPECIES_GOODS: MappingProxyType[BodyPlan, tuple[CommodityKind, ...]] = MappingPr
     }
 )
 
+SPECIES_GROUNDS: MappingProxyType[CommodityKind, str] = MappingProxyType(
+    {
+        CommodityKind.LIVESTOCK: "Herds",
+        CommodityKind.MOUNTS: "Mount Herds",
+        CommodityKind.FISH: "Fisheries",
+        CommodityKind.CLOTH: "Silk Grounds",
+    }
+)
+
 
 def material_label(kind: MaterialKind) -> str:
     return MATERIALS[kind].label

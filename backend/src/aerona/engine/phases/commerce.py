@@ -2,6 +2,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.markets import MarketTally, apply_aggregate_prices, market_nodes, quote_market, raise_district, store_quotes
 from aerona.engine.economy.money import MoneyTally, collect, lend
+from aerona.engine.economy.realm_credit import collect_from_realms, lend_to_realms
 from aerona.engine.economy.routes import RouteTally, carry, contacts, controllers, enemies_of, found_route, load_routes, set_tolls, upkeep
 from aerona.engine.economy.stocks import sync_aggregates
 from aerona.engine.interconnect.annotations import reads, writes
@@ -25,6 +26,7 @@ from aerona.engine.phases.environment import works_by_region
     "table.goods_flows",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.market_price_holds",
     "table.market_prices",
     "table.place_environment",
     "table.region_environment",
@@ -84,6 +86,7 @@ async def markets(ctx: TickContext) -> None:
     "table.forced_weather",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.market_price_holds",
     "table.market_prices",
     "table.place_environment",
     "table.region_environment",
@@ -169,19 +172,30 @@ async def trade_flow(ctx: TickContext) -> None:
     "table.army_profiles",
     "table.bonds",
     "table.calendars",
+    "table.captives",
+    "table.community_cohorts",
     "table.community_labour",
     "table.community_societies",
+    "table.currencies",
     "table.forced_weather",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.law_jurisdictions",
+    "table.law_profiles",
     "table.loans",
+    "table.offices",
     "table.place_environment",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.polity_territories",
     "table.region_environment",
     "table.resource_profiles",
     "table.resource_workers",
+    "table.settlement_profiles",
     "table.skills",
     "table.sky_events",
     "table.treaty_parties",
+    "table.vassalages",
     "table.workshops",
     "table.world_maps",
     "table.world_materials",
@@ -192,19 +206,28 @@ async def trade_flow(ctx: TickContext) -> None:
     "people.prosperity",
     "people.wealth",
     "settlement.prosperity",
+    "table.bonds",
+    "table.captives",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.community_cohorts",
     "table.community_relations",
+    "table.community_societies",
     "table.incident_participants",
     "table.incidents",
     "table.loans",
     "table.memories",
+    "table.polity_profiles",
+    "table.polity_treasury",
+    "table.settlement_profiles",
 )
 async def banking(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     tally = MoneyTally()
     await lend(ctx, book, tally)
+    await lend_to_realms(ctx, book, tally)
     await collect(ctx, book, tally)
+    await collect_from_realms(ctx, book, tally)
     ctx.count("loans", tally.lent)
     ctx.count("repaid", tally.repaid)
     ctx.count("defaults", tally.defaulted)

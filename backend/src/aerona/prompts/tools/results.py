@@ -185,6 +185,8 @@ class SonResult(StrEnum):
     WEATHER_LIMIT = "You already shaped the weather this age."
     WEATHER_NOT_REGION = "Weather is held over a region; {{ name }} is not one."
     LEY_SEVERED = "The ley line between {{ first }} and {{ second }} is cut for {{ epochs }} ages."
+    MATERIAL_FORGED = "{{ name }} (substance #{{ id }}) is forged into the world{% if vein %}; its vein is #{{ vein }}{% endif %}."
+    NO_FORGE_WORLD = "There is no world #{{ id }} within your reach to forge into."
     NO_SUCH_LEY = "There is no ley line #{{ id }}."
     LEY_OUT_OF_REACH = "Your hand does not reach that ley line: its lands are not on your world or a world joined to yours."
     SEASONS_OUT_OF_REACH = "Your hand does not reach {{ name }}: it is not your world and no open road joins it to yours."

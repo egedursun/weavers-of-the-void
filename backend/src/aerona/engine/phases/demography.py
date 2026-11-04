@@ -93,6 +93,7 @@ async def labour_allocation(ctx: TickContext) -> None:
     "table.armies",
     "table.battles",
     "table.bonds",
+    "table.captives",
     "table.community_cohorts",
     "table.community_societies",
     "table.cult_tenets",
@@ -100,7 +101,15 @@ async def labour_allocation(ctx: TickContext) -> None:
     "table.people_culture",
 )
 @writes(
-    "army.size", "people.population", "settlement.population", "table.community_cohorts", "table.community_societies", "table.entities", "table.people_culture"
+    "army.size",
+    "people.population",
+    "settlement.population",
+    "table.bonds",
+    "table.captives",
+    "table.community_cohorts",
+    "table.community_societies",
+    "table.entities",
+    "table.people_culture",
 )
 async def society_mobility(ctx: TickContext) -> None:
     ctx.count("deserted", await desertion(ctx))

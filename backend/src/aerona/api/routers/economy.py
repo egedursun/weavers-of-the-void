@@ -35,6 +35,7 @@ from aerona.api.schemas.economy import (
 from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.materials import MATERIALS
 from aerona.catalog.production import CHAIN_STEPS, WORKSHOP_LABELS
+from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.db.tables.bonds import BondRow
@@ -58,20 +59,37 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import MaterialOrigin, WorkshopKind
-from aerona.domain.enums.entity import SOCIETY_TYPES
+from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
+from aerona.domain.enums.polity import DebtRemedy, LawKind
 from aerona.domain.enums.society import Commodity
 from aerona.engine.economy.household import storage_index, store_kind
-from aerona.engine.economy.materials import MaterialBook, MaterialProps
+from aerona.engine.economy.materials import MaterialBook, MaterialProps, price_premium, worth_factor
 from aerona.engine.economy.money import owed
 from aerona.engine.economy.stocks import aggregate_index
+from aerona.engine.polity.laws import law_param
+from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
 
 router = APIRouter(tags=["economy"])
 
 
-def material_view(props: MaterialProps, origin: MaterialOrigin, *, edited: bool, description: str | None = None, deposit_id: int | None = None) -> MaterialView:
+def material_view(
+    props: MaterialProps,
+    origin: MaterialOrigin,
+    *,
+    edited: bool,
+    description: str | None = None,
+    deposit_id: int | None = None,
+    held: bool = False,
+    rules: Rules | None = None,
+) -> MaterialView:
+    table = rules if rules is not None else Rules()
     return MaterialView(
+        held=held,
+        base_kind=props.kind,
+        price_premium_pct=round(price_premium(table, props) * PERCENT),
+        worth_pct=round(worth_factor(table, props) * PERCENT),
         kind=props.kind,
         world_material_id=props.world_material_id,
         label=props.label,
@@ -102,6 +120,27 @@ async def names_of(session: AsyncSession, ids: set[int]) -> dict[int, str]:
     return {entity_id: name for entity_id, name in await session.execute(select(EntityRow.id, EntityRow.name).where(EntityRow.id.in_(list(ids))))}
 
 
+async def types_of(session: AsyncSession, ids: set[int]) -> dict[int, EntityType]:
+    if not ids:
+        return {}
+    return {entity_id: kind for entity_id, kind in await session.execute(select(EntityRow.id, EntityRow.entity_type).where(EntityRow.id.in_(list(ids))))}
+
+
+async def remedy_of(session: AsyncSession, debtor_id: int, creditor_id: int) -> DebtRemedy | None:
+    for node in (debtor_id, creditor_id):
+        value = await law_param(session, node, LawKind.DEBT_LAW, "remedy")
+        if value is not None and str(value) in {item.value for item in DebtRemedy}:
+            return DebtRemedy(str(value))
+    return None
+
+
+async def gated_communities(session: AsyncSession, profile: ResourceProfileRow, communities: list[int]) -> list[int]:
+    if profile.required_branch is None or profile.required_level <= 0 or not communities:
+        return []
+    levels = await known_levels(session, communities)
+    return [node for node in communities if levels.get(node, {}).get(profile.required_branch, 0) < profile.required_level]
+
+
 async def rules_of(session: AsyncSession) -> tuple[Rules, int]:
     cosmos = await CosmosRepository(session).require_cosmos()
     return rules_from_snapshot(cosmos.rules_snapshot), cosmos.epoch
@@ -115,12 +154,24 @@ async def world_materials(services: ServicesDep, world_id: int = Path(ge=1)) -> 
         views: list[MaterialView] = []
         for kind in MATERIALS:
             props = book.props(world_id, kind)
+            override = book.overrides.get((world_id, kind))
             if props is not None:
-                views.append(material_view(props, MaterialOrigin.CATALOG, edited=(world_id, kind) in book.overrides))
+                views.append(
+                    material_view(
+                        props,
+                        MaterialOrigin.CATALOG,
+                        edited=override is not None,
+                        description=override.description if override is not None else None,
+                        held=override is not None and override.held,
+                        rules=rules,
+                    )
+                )
         for row in book.of_world(world_id):
             props = book.props(world_id, world_material_id=row.id)
             if props is not None:
-                views.append(material_view(props, row.origin, edited=False, description=row.description, deposit_id=row.deposit_entity_id))
+                views.append(
+                    material_view(props, row.origin, edited=False, description=row.description, deposit_id=row.deposit_entity_id, held=row.held, rules=rules)
+                )
         commodities = [
             CommodityView(
                 kind=item.kind,
@@ -216,9 +267,10 @@ async def community_economy(services: ServicesDep, community_id: int = Path(ge=1
                     label=lot_label(row, book, community.world_id),
                     quantity=row.quantity,
                     quality=row.quality,
+                    held=row.held,
                 )
                 for row in lots
-                if row.quantity > 0
+                if row.quantity > 0 or row.held
             ],
             supply={aggregate.value: await aggregate_index(session, rules, community, aggregate) for aggregate in Commodity},
             storage={aggregate.value: storage_index(rules, workshops.get(store_kind(aggregate)), aggregate) for aggregate in Commodity},
@@ -231,6 +283,7 @@ async def community_economy(services: ServicesDep, community_id: int = Path(ge=1
                     idle_epochs=row.idle_epochs,
                     built_epoch=row.built_epoch,
                     structure_id=row.structure_entity_id,
+                    held=row.held,
                 )
                 for row in sorted(workshops.values(), key=lambda item: item.kind.value)
             ],
@@ -286,8 +339,11 @@ async def resource_profile(services: ServicesDep, resource_id: int = Path(ge=1))
             revealed=profile.revealed,
             sealed_until_epoch=profile.sealed_until_epoch,
             last_output=profile.last_output,
+            held=profile.held,
+            knowledge_gated=await gated_communities(session, profile, [row.community_entity_id for row in workers]),
             workers=[
-                WorkerView(community_id=row.community_entity_id, community_name=names.get(row.community_entity_id, ""), workers=row.workers) for row in workers
+                WorkerView(community_id=row.community_entity_id, community_name=names.get(row.community_entity_id, ""), workers=row.workers, held=row.held)
+                for row in workers
             ],
             runs=[
                 RunView(epoch=run.epoch, community_id=run.community_entity_id, quantity=run.quantity, quality=run.quality, workers=run.workers) for run in runs
@@ -444,6 +500,7 @@ async def currencies(services: ServicesDep) -> list[CurrencyView]:
                 minted_epoch=row.minted_epoch,
                 debased_epoch=row.debased_epoch,
                 users=sorted(users.get(row.id, [])),
+                held=row.held,
             )
             for row in rows
         ]
@@ -461,6 +518,8 @@ async def debts_ledger(services: ServicesDep) -> LedgerView:
             | {bond.source_node_id for bond in bonds}
             | {bond.target_node_id for bond in bonds},
         )
+        coins = {row.id: row.name for row in await session.scalars(select(CurrencyRow))}
+        kinds = await types_of(session, {loan.borrower_entity_id for loan in loans})
         return LedgerView(
             loans=[
                 LoanView(
@@ -478,6 +537,9 @@ async def debts_ledger(services: ServicesDep) -> LedgerView:
                     due_epoch=loan.due_epoch,
                     status=loan.status,
                     purpose=loan.purpose,
+                    held=loan.held,
+                    borrower_type=kinds.get(loan.borrower_entity_id),
+                    currency_name=coins.get(loan.currency_id) if loan.currency_id is not None else None,
                 )
                 for loan in loans
             ],
@@ -492,6 +554,8 @@ async def debts_ledger(services: ServicesDep) -> LedgerView:
                     what=bond.debt_what or "",
                     due_epoch=bond.debt_due_epoch,
                     currency_id=bond.debt_currency_id,
+                    currency_name=coins.get(bond.debt_currency_id) if bond.debt_currency_id is not None else None,
+                    remedy=await remedy_of(session, bond.source_node_id, bond.target_node_id),
                 )
                 for bond in bonds
             ],

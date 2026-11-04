@@ -103,6 +103,7 @@ async def resource_economy(ctx: TickContext) -> None:
     ctx.count("resources_worked", tally.worked)
     ctx.count("output", tally.output)
     ctx.count("hazards", tally.hazards)
+    ctx.count("knowledge_gated", tally.gated)
 
 
 @reads(

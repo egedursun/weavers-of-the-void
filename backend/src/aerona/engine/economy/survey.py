@@ -5,6 +5,7 @@ from sqlalchemy import select
 from aerona.catalog.backfill_words import MATERIAL_WORDS, RESOURCE_WORDS, WORKSHOP_WORDS
 from aerona.catalog.production import EXTRACTION
 from aerona.constants.units import PERCENT
+from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.economy import CurrencyRow, NodeMaterialRow, ResourceProfileRow, WorkshopRow
@@ -22,6 +23,7 @@ from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.deposits import Deposit, open_deposit
 from aerona.engine.economy.extraction import extraction_kind
 from aerona.engine.economy.materials import set_node_material
+from aerona.engine.economy.provenance import sweep_materials
 from aerona.engine.economy.resources import default_material, ensure_profile
 from aerona.engine.economy.routes import found_route, load_routes
 from aerona.engine.economy.stocks import goods_of, lots_of
@@ -29,6 +31,7 @@ from aerona.engine.phases.environment import works_by_region
 from aerona.engine.primitives.queries import active_bonds
 
 BACKFILL_FIXUP = "economy.w4_backfill"
+DEPTH_FIXUP = "economy.depth_backfill"
 C = CommodityKind
 HIDDEN_SEAM_FLOOR = 70
 
@@ -277,5 +280,26 @@ async def economy_backfill(ctx: TickContext, book: EconomyBook) -> dict[str, int
         "hidden_seams": await hide_seams(ctx, book),
     }
     ctx.session.add(AppliedFixupRow(key=BACKFILL_FIXUP, result=result))
+    await ctx.session.flush()
+    return result
+
+
+async def debt_currencies(ctx: TickContext) -> int:
+    bonds = BondRepository(ctx.session)
+    statement = select(BondRow).where(BondRow.kind == BondKind.OWES, BondRow.debt_currency_id.is_(None)).order_by(BondRow.id)
+    priced = 0
+    for bond in await ctx.session.scalars(statement):
+        coin = await bonds.debt_coin(bond.target_node_id, bond.source_node_id)
+        if coin is not None:
+            bond.debt_currency_id = coin
+            priced += 1
+    return priced
+
+
+async def depth_backfill(ctx: TickContext) -> dict[str, int]:
+    if await ctx.session.get(AppliedFixupRow, DEPTH_FIXUP) is not None:
+        return {}
+    result = {"materials": await sweep_materials(ctx.session, ctx.rules), "debt_currencies": await debt_currencies(ctx)}
+    ctx.session.add(AppliedFixupRow(key=DEPTH_FIXUP, result=result))
     await ctx.session.flush()
     return result

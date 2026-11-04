@@ -64,6 +64,16 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
     EntityType.VESSEL: {
         "target_world_id": "If the gate, bridge or ship connects to another world, that world's id: a route is opened",
         "vessel_kind": "What it is: {{ vessel_kinds | join(', ') }}; a gate, ship, mount or bridge opens the matching kind of road",
+        "hull_material": "Its hull or frame: {{ materials | join(', ') }}; a hard, tough hull turns storms and raiders aside. Empty: its makers choose",
+        "fabric_material": "Its sails or harness: {{ materials | join(', ') }}; a light one runs a stage faster, a tough one braves the wind. Empty: its makers choose",
+    },
+    EntityType.ITEM: {
+        "material": "What it is made of: {{ materials | join(', ') }}; sets its edge, guard, worth, rot and holy harm to the undead. Empty: its makers choose",
+        "world_material_id": "Or a substance of this world by its id (see the world's materials); overrides material",
+    },
+    EntityType.STRUCTURE: {
+        "material": "What it is built of: {{ materials | join(', ') }}; holy stone makes a temple shine, soft wood rots. Empty: its builders choose",
+        "world_material_id": "Or a substance of this world by its id; overrides material",
     },
     EntityType.LEGEND: {"legend_category": LEGEND_CATEGORY_FIELD},
     EntityType.RESOURCE: {
@@ -282,6 +292,30 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.MOVE_TO_WORLD: ToolText(
         "You turn to another world of the cosmos: from now on your creations and inspections happen there. Free.",
         {"world_id": "The id of the world you go to (from the OTHER WORLDS OF THE COSMOS list)"},
+    ),
+    T.FORGE_MATERIAL: ToolText(
+        "You forge a new material into a world, a substance of its own with every property you name; you may set a vein of it into a land. "
+        "Smiths can work it once they know its branch to its level. {{ rules.son_tools.forge_material_essence }} essence, 1 action.",
+        {
+            "world_id": "The world it belongs to",
+            "name": "Its proper name",
+            "family": "Its family: {{ material_families | join(', ') }}",
+            "base_kind": "Optional: the catalog material it is akin to ({{ materials | join(', ') }}); unset properties follow it",
+            "hardness": "0 to 100: edge retention and armour",
+            "toughness": "0 to 100: resistance to breaking",
+            "weight": "0 to 100: burden on marches and in heat",
+            "edge": "0 to 100: cutting quality",
+            "conductivity": "0 to 100: how much enchantment it holds",
+            "sanctity": "0 to 100: holiness; harms the undead, the cursed and the void",
+            "corruption": "0 to 100: taint; lures outer beings and curses",
+            "rarity": "0 to 100: scarcity; raises the price of goods made of it",
+            "base_value": "0 to 100: worth of goods made of it",
+            "decay": "0 to 100: how fast it rots, rusts or crumbles",
+            "branch": "Optional knowledge branch needed to work it: {{ knowledge_branches }}",
+            "level": "Level of that branch needed",
+            "place_id": "Optional: a land or place where a vein of it is set",
+            "reason": "Why you forge it",
+        },
     ),
     T.SEVER_LEY: ToolText(
         "You cut a ley line between two regions: magic stops flowing along it, storms no longer run down it and works on it stop gaining power, "

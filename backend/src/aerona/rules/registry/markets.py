@@ -17,6 +17,8 @@ class MarketsRules:
     transport_cost_pct_per_hop: int = rule(4, 0, 100, G, "Price added to carried goods per region crossed (%)")
     danger_cost_pct: int = rule(30, 0, 200, G, "Price added to carried goods at the most dangerous route (% of the danger)")
     seller_wealth_per_value: int = rule(3, 0, 100, G, "Prosperity or wealth a selling market gains per thousand of value sold")
+    rarity_price_pct: int = rule(60, 0, 300, G, "Price added to goods for each point their material's rarity stands above the middle (% of the point)")
+    value_price_pct: int = rule(40, 0, 300, G, "Price added to goods for each point their material's base value stands above the middle (% of the point)")
 
 
 @dataclass(frozen=True)
@@ -37,6 +39,8 @@ class MoneyRules:
     beast_hoard_chance: int = rule(40, 0, 100, G, "A slain beast leaves a hoard that the hero's people carry home to market (%)")
     hoard_supply_pct: int = rule(30, 0, 1000, G, "Coin supply a hoard adds when it floods a market (% of the hoard)")
     hoard_luxury_units: int = rule(40, 0, 100000, G, "Luxuries a looted hoard pours into the market of the one who took it")
+    temple_hoard_units: int = rule(30, 0, 100000, G, "Luxuries a sacked temple pours into the market of the army that took it, before its material's worth")
+    temple_worth_pct: int = rule(100, 0, 500, G, "How strongly a temple's material rarity and value enlarge its looted hoard (%)")
 
 
 @dataclass(frozen=True)
@@ -90,6 +94,13 @@ class BankingRules:
     default_bank_loss: int = rule(15, 0, 100, G, "Wealth a bank loses when a loan defaults")
     collapse_wealth: int = rule(10, 0, 100, G, "Wealth below which a bank that has lost loans collapses")
     collapse_merchant_loss: int = rule(20, 0, 100, G, "Merchant satisfaction lost in a community whose bank collapses")
+    polity_lend_chance: int = rule(30, 0, 100, G, "A rich guild lends to an indebted realm or a realm at war with an empty treasury (% per epoch)")
+    polity_treasury_below: int = rule(40, 0, 100000, G, "Treasury below which a realm at war or in debt asks a bank for a loan")
+    polity_principal: int = rule(60, 1, 100000, G, "Silver a bank lends a realm")
+    polity_repay_pct: int = rule(35, 0, 100, G, "Share of what a realm owes that it pays its bank each epoch while its treasury allows (%)")
+    polity_default_debt_pct: int = rule(100, 0, 500, G, "Share of an unpaid realm loan that becomes the realm's standing debt on default (%)")
+    polity_bank_wealth_per_silver: int = rule(4, 0, 100, G, "Wealth a bank gains or loses per hundred silver lent to or repaid by a realm")
+    credit_shy_epochs: int = rule(5, 0, 100, G, "Epochs a bank refuses a borrower after it defaulted, unless the bank is its own")
 
 
 @dataclass(frozen=True)

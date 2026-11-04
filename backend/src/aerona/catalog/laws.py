@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from aerona.domain.enums.demography import MarriageCustom
-from aerona.domain.enums.polity import GenderRule, LawKind, SuccessionRule
+from aerona.domain.enums.polity import DebtRemedy, GenderRule, LawKind, SuccessionRule
 
 
 @dataclass(frozen=True)
@@ -40,7 +40,7 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = MappingProxyType(
         LawKind.TAX_RATE: {"rate": Param(10)},
         LawKind.TITHE: {"rate": Param(5, 0, 50), "enforced": Param(False)},
         LawKind.TOLLS: {"rate": Param(5)},
-        LawKind.DEBT_LAW: {"remedy": pick("bondage", "prison", "jubilee", default="prison"), "jubilee_epochs": Param(2, 1, 20)},
+        LawKind.DEBT_LAW: {"remedy": pick(*(item.value for item in DebtRemedy), default=DebtRemedy.PRISON.value), "jubilee_epochs": Param(2, 1, 20)},
         LawKind.PENAL_CODE: {
             "theft": pick(*PENALTIES, default="fine"),
             "murder": pick(*PENALTIES, default="wergild"),

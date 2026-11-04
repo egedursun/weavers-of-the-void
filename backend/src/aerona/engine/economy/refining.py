@@ -206,7 +206,7 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
             )
         )
     if batches <= 0:
-        if workshop is not None:
+        if workshop is not None and not workshop.held:
             workshop.idle_epochs += 1
         return 0
     used, input_quality = await consume_inputs(ctx, community, step, batches, material=material, world_material=world_material)
@@ -233,7 +233,7 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
             workers=batches * table.workers_per_batch,
         )
     )
-    if workshop is not None:
+    if workshop is not None and not workshop.held:
         workshop.idle_epochs = 0
         if batches >= room and workshop.level < table.max_level and ctx.rng(f"upgrade.{workshop.id}").chance(table.upgrade_chance):
             workshop.level += 1
@@ -283,7 +283,7 @@ async def build_workshops(ctx: TickContext, book: EconomyBook, community: Entity
 async def launch_ships(ctx: TickContext, book: EconomyBook, community: EntityRow, tally: RefiningTally) -> None:
     table = ctx.rules.refining
     yard = book.workshop(community.id, WorkshopKind.SHIPYARD)
-    if yard is None or yard.fleet >= table.fleet_cap or not ctx.rng(f"ship.{community.id}").chance(table.ship_chance):
+    if yard is None or yard.held or yard.fleet >= table.fleet_cap or not ctx.rng(f"ship.{community.id}").chance(table.ship_chance):
         return
     for commodity, amount in SHIP_INPUTS:
         if await holding(ctx.session, community.id, commodity) < amount:
@@ -297,7 +297,7 @@ async def launch_ships(ctx: TickContext, book: EconomyBook, community: EntityRow
 async def tend_workshops(ctx: TickContext, book: EconomyBook, community: EntityRow) -> None:
     limit = ctx.rules.refining.upgrade_idle_limit
     for workshop in book.workshops.get(community.id, {}).values():
-        if workshop.idle_epochs > limit and workshop.level > 1:
+        if not workshop.held and workshop.idle_epochs > limit and workshop.level > 1:
             workshop.level -= 1
             workshop.idle_epochs = 0
 

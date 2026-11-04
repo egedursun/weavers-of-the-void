@@ -1,15 +1,18 @@
 from dataclasses import dataclass, field
 
+from sqlalchemy import select
+
 from aerona.catalog.commodities import COMMODITIES
 from aerona.constants.units import PERCENT
-from aerona.db.tables.economy import CurrencyRow, MarketPriceRow, WorkshopRow
+from aerona.db.tables.economy import CurrencyRow, MarketPriceHoldRow, MarketPriceRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
-from aerona.engine.economy.stocks import epoch_need, goods_of, holding
+from aerona.engine.economy.materials import price_premium
+from aerona.engine.economy.stocks import epoch_need, goods_of, holding, lots_of
 from aerona.engine.faith.book import forbidden_foods
 from aerona.engine.lore.traditions import resent_taboo, taboos
 from aerona.engine.notes import note
@@ -51,13 +54,25 @@ def inflation(ctx: TickContext, currency: CurrencyRow | None) -> float:
     return 1 + ctx.rules.money.inflation_pct / PERCENT * lost
 
 
-def price_of(ctx: TickContext, commodity: CommodityKind, supply: int, demand: int, factor: float) -> int:
+def price_of(ctx: TickContext, commodity: CommodityKind, supply: int, demand: int, factor: float, *, premium: float = 1.0) -> int:
     table = ctx.rules.markets
-    base = COMMODITIES[commodity].base_price
+    base = COMMODITIES[commodity].base_price * premium
     pressure = (max(1, demand) / max(1, supply)) ** (table.elasticity_pct / PERCENT)
     low = base * table.price_floor_pct / PERCENT
     high = base * table.price_cap_pct / PERCENT
     return round_half_up(min(high, max(low, base * pressure * factor)))
+
+
+async def material_premium(ctx: TickContext, book: EconomyBook, market: EntityRow, commodity: CommodityKind) -> float:
+    lots = [row for row in await lots_of(ctx.session, market.id, commodity) if row.quantity > 0]
+    weight = sum(row.quantity for row in lots)
+    if weight <= 0:
+        return 1.0
+    return sum(price_premium(ctx.rules, book.materials.props(market.world_id, row.material, row.world_material_id)) * row.quantity for row in lots) / weight
+
+
+async def price_holds(ctx: TickContext, market_id: int) -> dict[CommodityKind, MarketPriceHoldRow]:
+    return {row.commodity: row for row in await ctx.session.scalars(select(MarketPriceHoldRow).where(MarketPriceHoldRow.market_entity_id == market_id))}
 
 
 async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -> dict[CommodityKind, Quote]:
@@ -65,12 +80,18 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
     population = headcount(market)
     quotes: dict[CommodityKind, Quote] = {}
     forbidden = await forbidden_foods(ctx.session, market.id) | await taboos(ctx, market.id)
+    held = await price_holds(ctx, market.id)
     for commodity in COMMODITIES:
+        hold = held.get(commodity)
         supply = await holding(ctx.session, market.id, commodity)
+        if hold is not None and hold.supply is not None:
+            supply = hold.supply
         demand = round_half_up(epoch_need(ctx.rules, population, commodity) * ctx.rules.markets.demand_epochs_pct / PERCENT)
         if commodity.value in forbidden:
             demand = round_half_up(demand * ctx.rules.doctrine.dietary_demand_pct / PERCENT)
-        quotes[commodity] = Quote(commodity, price_of(ctx, commodity, supply, demand, factor), supply, demand)
+        premium = await material_premium(ctx, book, market, commodity)
+        price = hold.price if hold is not None and hold.price is not None else price_of(ctx, commodity, supply, demand, factor, premium=premium)
+        quotes[commodity] = Quote(commodity, price, supply, demand)
     ctx.count("taboo_resentment", await resent_taboo(ctx, market.id))
     return quotes
 

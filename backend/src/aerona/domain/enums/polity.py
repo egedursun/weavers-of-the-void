@@ -110,6 +110,12 @@ class LawKind(StrEnum):
     CUSTOM = "custom"
 
 
+class DebtRemedy(StrEnum):
+    BONDAGE = "bondage"
+    PRISON = "prison"
+    JUBILEE = "jubilee"
+
+
 class LegitimacyBasis(StrEnum):
     CUSTOM = "custom"
     DECREE = "decree"

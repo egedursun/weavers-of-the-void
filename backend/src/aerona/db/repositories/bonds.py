@@ -9,6 +9,7 @@ from aerona.db.repositories.base import Repository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.bond import ROLE_BOND_KINDS, BondKind, BondRole, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -66,6 +67,8 @@ class BondRepository(Repository):
         )
         if not guarded:
             await self._apply_side_effects(normalized)
+        if normalized.kind is BondKind.OWES and normalized.debt_currency_id is None:
+            normalized = replace(normalized, debt_currency_id=await self.debt_coin(normalized.target_node_id, normalized.source_node_id))
         bond = BondRow(
             source_node_id=normalized.source_node_id,
             target_node_id=normalized.target_node_id,
@@ -84,6 +87,16 @@ class BondRepository(Repository):
             state=BondState.ACTIVE,
         )
         return bond if guarded else await self.insert(bond)
+
+    async def debt_coin(self, creditor_id: int, debtor_id: int) -> int | None:
+        for party_id in (creditor_id, debtor_id):
+            party = await self.session.get(EntityRow, party_id)
+            homes = [party_id] if party is None else [party_id, party.affiliated_entity_id, party.location_id]
+            for home in homes:
+                society = await self.session.get(CommunitySocietyRow, home) if home is not None else None
+                if society is not None and society.currency_id is not None:
+                    return society.currency_id
+        return None
 
     async def normalize(self, draft: BondDraft) -> BondDraft:
         kinds = await NodeRepository(self.session).kinds_of([draft.source_node_id, draft.target_node_id])

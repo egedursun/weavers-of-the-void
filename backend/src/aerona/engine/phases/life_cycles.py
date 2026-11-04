@@ -13,6 +13,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.war import TributeStatus, WarEnding
 from aerona.engine.context import TickContext
+from aerona.engine.economy.loot import loot_temple
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.hooks import desecrated
 from aerona.engine.notes import note
@@ -232,6 +233,8 @@ async def conquest_looting(ctx: TickContext) -> int:
         for structure in await EntityRepository(ctx.session).contents(loser.id):
             if structure.id not in wonders or structure.entity_type is not EntityType.STRUCTURE or not rng.chance(cycles.conquest_loot_chance):
                 continue
+            if structure.engine_kind is EngineKind.TEMPLE:
+                await loot_temple(ctx, structure, victor)
             await raze(ctx, structure, f"looted and razed in the conquest by {victor.name}", war.event_entity_id, victor.id)
             text = f"When {victor.name} conquered {loser.name}, its soldiers looted the wonder {structure.name} and tore it down."
             await note(ctx, text, key="life_cycles.looted", ids=[victor.id, loser.id, structure.id], feed=FeedCategory.WAR)
@@ -271,23 +274,32 @@ async def desolation(ctx: TickContext, atlas: RegionAtlas) -> int:
     "settlement.prosperity",
     "structure.durability",
     "table.bonds",
+    "table.community_societies",
+    "table.community_stocks",
+    "table.currencies",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.map_snapshots",
+    "table.node_materials",
     "table.nodes",
     "table.routes",
     "table.tributes",
     "table.wars",
     "table.world_maps",
+    "table.world_materials",
 )
 @writes(
     "structure.durability",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.community_societies",
+    "table.community_stocks",
+    "table.currencies",
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
 )

@@ -1,10 +1,14 @@
+from pydantic import Field
+
 from aerona.api.schemas.common import ApiModel
 from aerona.domain.enums.economy import (
     CommodityFamily,
     CommodityKind,
+    FoeNature,
     LoanStatus,
     MaterialFamily,
     MaterialOrigin,
+    MaterialSlot,
     TradeLoss,
     TradeMode,
     TradeRouteStatus,
@@ -12,6 +16,7 @@ from aerona.domain.enums.economy import (
 )
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.polity import DebtRemedy
 from aerona.domain.enums.society import KnowledgeBranch
 
 
@@ -37,6 +42,10 @@ class MaterialView(ApiModel):
     gate: KnowledgeBranch | None
     description: str | None = None
     deposit_id: int | None = None
+    held: bool = False
+    base_kind: MaterialKind | None = None
+    price_premium_pct: int = 100
+    worth_pct: int = 100
 
 
 class CommodityView(ApiModel):
@@ -63,6 +72,7 @@ class StockLotView(ApiModel):
     label: str
     quantity: int
     quality: int
+    held: bool = False
 
 
 class WorkshopView(ApiModel):
@@ -73,6 +83,7 @@ class WorkshopView(ApiModel):
     idle_epochs: int
     built_epoch: int
     structure_id: int | None
+    held: bool = False
 
 
 class ChainStepView(ApiModel):
@@ -122,6 +133,7 @@ class WorkerView(ApiModel):
     community_id: int
     community_name: str
     workers: int
+    held: bool = False
 
 
 class RunView(ApiModel):
@@ -157,6 +169,8 @@ class ResourceProfileView(ApiModel):
     revealed: bool
     sealed_until_epoch: int | None
     last_output: int
+    held: bool = False
+    knowledge_gated: list[int] = Field(default_factory=list)
     workers: list[WorkerView]
     runs: list[RunView]
     params: list[MechanicParamView]
@@ -248,6 +262,7 @@ class CurrencyView(ApiModel):
     minted_epoch: int
     debased_epoch: int | None
     users: list[int]
+    held: bool = False
 
 
 class LoanView(ApiModel):
@@ -265,6 +280,9 @@ class LoanView(ApiModel):
     due_epoch: int
     status: LoanStatus
     purpose: str
+    held: bool = False
+    borrower_type: EntityType | None = None
+    currency_name: str | None = None
 
 
 class DebtView(ApiModel):
@@ -277,6 +295,8 @@ class DebtView(ApiModel):
     what: str
     due_epoch: int | None
     currency_id: int | None
+    currency_name: str | None = None
+    remedy: DebtRemedy | None = None
 
 
 class LedgerView(ApiModel):
@@ -289,3 +309,52 @@ class MarketSummary(ApiModel):
     name: str
     world_id: int | None
     entity_type: EntityType
+
+
+class SlotView(ApiModel):
+    slot: MaterialSlot
+    material: MaterialKind | None
+    world_material_id: int | None
+    label: str
+    family: MaterialFamily
+    held: bool
+    hardness: int
+    toughness: int
+    weight: int
+    sanctity: int
+    corruption: int
+    rarity: int
+    base_value: int
+    decay: int
+    effects: dict[str, int]
+
+
+class NodeMaterialsView(ApiModel):
+    node_id: int
+    entity_type: EntityType
+    world_id: int | None
+    slots: list[SlotView]
+    open_slots: list[MaterialSlot]
+    foe_natures: list[FoeNature]
+
+
+class PremiumView(ApiModel):
+    commodity: CommodityKind
+    premium_pct: int
+    held_price: int | None
+    held_supply: int | None
+
+
+class MarketHoldsView(ApiModel):
+    market_id: int
+    premiums: list[PremiumView]
+
+
+class DebtLawView(ApiModel):
+    law_id: int
+    name: str
+    holders: list[int]
+    holder_names: list[str]
+    remedy: DebtRemedy
+    jubilee_epochs: int
+    enforcement: int
