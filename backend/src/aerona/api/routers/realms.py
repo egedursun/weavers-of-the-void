@@ -406,6 +406,7 @@ async def treaty(services: ServicesDep, treaty_id: int = Path(ge=1)) -> TreatyVi
             ended_epoch=profile.ended_epoch,
             witness_son_id=profile.witness_son_id,
             renewals=profile.renewals,
+            proposed_by_id=profile.proposed_by_node_id,
             parties=[PartyView(id=row.party_node_id, name=names.get(row.party_node_id, ""), role=row.role) for row in parties],
             clauses=[
                 ClauseView(
@@ -417,6 +418,7 @@ async def treaty(services: ServicesDep, treaty_id: int = Path(ge=1)) -> TreatyVi
                     beneficiary=names.get(row.beneficiary_node_id) if row.beneficiary_node_id else None,
                     params=dict(row.params),
                     last_kept_epoch=row.last_kept_epoch,
+                    locked=list(row.locked),
                 )
                 for row in clauses
             ],

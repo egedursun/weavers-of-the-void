@@ -11684,8 +11684,8 @@ export interface components {
             pressed: boolean;
             since_epoch: number;
             office: components["schemas"]["OfficeKind"];
-            backer_id?: number | null;
-            locked?: string[];
+            backer_id: number | null;
+            locked: string[];
         };
         ClassMood: {
             social_class: components["schemas"]["SocialClass"];
@@ -11705,7 +11705,7 @@ export interface components {
                 [key: string]: number | string | boolean;
             };
             last_kept_epoch: number | null;
-            locked?: string[];
+            locked: string[];
         };
         ClergyOffice: "high_priest" | "priest" | "monk" | "inquisitor";
         ClergyView: {
@@ -14870,7 +14870,7 @@ export interface components {
             entity_type: components["schemas"]["EntityType"];
             autonomy: number;
             population: number;
-            locked?: string[];
+            locked: string[];
         };
         MemorialForm: "monument" | "epic" | "lament" | "tradition" | "tale";
         MemorialOrderInput: {
@@ -15485,11 +15485,11 @@ export interface components {
             region_id: number | null;
             region: string | null;
             since_epoch: number;
-            title?: string | null;
-            powers?: string[];
-            target_id?: number | null;
-            target?: string | null;
-            locked?: string[];
+            title: string | null;
+            powers: string[];
+            target_id: number | null;
+            target: string | null;
+            locked: string[];
         };
         OpinionComponent: "trust" | "fear" | "respect" | "affection" | "grievance";
         OpinionComponentView: {
@@ -16478,12 +16478,12 @@ export interface components {
             overlord: components["schemas"]["NamedNode"] | null;
             vassals: components["schemas"]["NamedNode"][];
             tier_strain: number;
-            power_balance?: components["schemas"]["BalanceSlice"][];
-            loans?: components["schemas"]["RealmLoanView"][];
-            vassal_terms?: components["schemas"]["VassalView"][];
-            overlord_terms?: components["schemas"]["VassalView"] | null;
-            ruler_repute?: components["schemas"]["ReputeView"] | null;
-            sentences?: components["schemas"]["SentenceView"][];
+            power_balance: components["schemas"]["BalanceSlice"][];
+            loans: components["schemas"]["RealmLoanView"][];
+            vassal_terms: components["schemas"]["VassalView"][];
+            overlord_terms: components["schemas"]["VassalView"] | null;
+            ruler_repute: components["schemas"]["ReputeView"] | null;
+            sentences: components["schemas"]["SentenceView"][];
         };
         RecordEnd: "repeal" | "abandon" | "forget" | "disband" | "lose" | "assimilate";
         RecordEndInput: {
@@ -18131,8 +18131,8 @@ export interface components {
             region_id: number;
             name: string;
             control: number;
-            province?: string | null;
-            locked?: string[];
+            province: string | null;
+            locked: string[];
         };
         TextPayload: {
             epoch?: number | null;
@@ -18484,7 +18484,7 @@ export interface components {
             clauses: components["schemas"]["ClauseView"][];
             breaches: components["schemas"]["BreachView"][];
             locked: string[];
-            proposed_by_id?: number | null;
+            proposed_by_id: number | null;
         };
         TributeForgiveInput: {
             bond_id: number;

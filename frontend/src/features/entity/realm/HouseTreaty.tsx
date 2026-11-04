@@ -45,6 +45,7 @@ import {
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { HouseEditor, TreatyBuilder } from './Covenants'
 import { useHouse, useOaths, useTreaty } from './api'
 import {
   CLAIM_BASES,
@@ -273,6 +274,11 @@ export function HouseSection({
           data-surface='HouseView'
           className='@container/realm flex min-w-0 flex-col gap-4'
         >
+          <HouseEditor
+            key={JSON.stringify([house.locked, house.prestige, house.traits])}
+            house={house}
+            blocked={blocked}
+          />
           <Hero
             icon={Shield}
             tone={tincture?.tone ?? 'gold'}
@@ -591,6 +597,7 @@ export function TreatySection({
           data-surface='TreatyView'
           className='@container/realm flex min-w-0 flex-col gap-4'
         >
+          <TreatyBuilder treaty={treaty} blocked={blocked} />
           <Hero
             icon={kind.icon}
             tone={kind.tone}

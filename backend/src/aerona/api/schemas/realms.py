@@ -1,5 +1,3 @@
-from pydantic import Field
-
 from aerona.api.schemas.common import ApiModel
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.polity import (
@@ -32,15 +30,15 @@ class MemberView(ApiModel):
     entity_type: EntityType
     autonomy: int
     population: int
-    locked: list[str] = Field(default_factory=list)
+    locked: list[str]
 
 
 class TerritoryView(ApiModel):
     region_id: int
     name: str
     control: int
-    province: str | None = None
-    locked: list[str] = Field(default_factory=list)
+    province: str | None
+    locked: list[str]
 
 
 class BalanceSlice(ApiModel):
@@ -97,11 +95,11 @@ class OfficeView(ApiModel):
     region_id: int | None
     region: str | None
     since_epoch: int
-    title: str | None = None
-    powers: list[str] = Field(default_factory=list)
-    target_id: int | None = None
-    target: str | None = None
-    locked: list[str] = Field(default_factory=list)
+    title: str | None
+    powers: list[str]
+    target_id: int | None
+    target: str | None
+    locked: list[str]
 
 
 class WhyPart(ApiModel):
@@ -135,9 +133,9 @@ class ClaimView(ApiModel):
     basis: ClaimBasis
     pressed: bool
     since_epoch: int
-    office: OfficeKind = OfficeKind.RULER
-    backer_id: int | None = None
-    locked: list[str] = Field(default_factory=list)
+    office: OfficeKind
+    backer_id: int | None
+    locked: list[str]
 
 
 class TreasuryLineView(ApiModel):
@@ -189,13 +187,13 @@ class RealmView(ApiModel):
     treaties: list[TreatyBrief]
     overlord: NamedNode | None
     vassals: list[NamedNode]
-    tier_strain: int = 0
-    power_balance: list[BalanceSlice] = Field(default_factory=list)
-    loans: list[RealmLoanView] = Field(default_factory=list)
-    vassal_terms: list[VassalView] = Field(default_factory=list)
-    overlord_terms: VassalView | None = None
-    ruler_repute: ReputeView | None = None
-    sentences: list[SentenceView] = Field(default_factory=list)
+    tier_strain: int
+    power_balance: list[BalanceSlice]
+    loans: list[RealmLoanView]
+    vassal_terms: list[VassalView]
+    overlord_terms: VassalView | None
+    ruler_repute: ReputeView | None
+    sentences: list[SentenceView]
 
 
 class RealmLink(ApiModel):
@@ -256,7 +254,7 @@ class ClauseView(ApiModel):
     beneficiary: str | None
     params: dict[str, int | str | bool]
     last_kept_epoch: int | None
-    locked: list[str] = Field(default_factory=list)
+    locked: list[str]
 
 
 class BreachView(ApiModel):
@@ -280,7 +278,7 @@ class TreatyView(ApiModel):
     clauses: list[ClauseView]
     breaches: list[BreachView]
     locked: list[str]
-    proposed_by_id: int | None = None
+    proposed_by_id: int | None
 
 
 class OathView(ApiModel):
