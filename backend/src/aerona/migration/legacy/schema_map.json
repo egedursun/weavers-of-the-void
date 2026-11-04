@@ -913,7 +913,17 @@
       "evcil": "tamed",
       "ateskes": "truce",
       "borclu": "owes",
-      "tedavi_eden": "treated_by"
+      "tedavi_eden": "treated_by",
+      "inanir": "adherent_of",
+      "nisanli": "betrothed_to",
+      "cariyesi": "concubine_of",
+      "sabitlendi": "fixed_in",
+      "sut_evladi": "fostered_by",
+      "ebeveyni": "parent_of",
+      "uygular": "practises",
+      "esi": "spouse_of",
+      "kan_kardesi": "sworn_kin",
+      "rivayet_eder": "tells"
     },
     "dropped_bond_kind": {
       "bilirdi": "knew",
@@ -5331,9 +5341,9 @@
     "YARATICI.yalnizlik_isaret_sans": "creator.loneliness_sign_chance",
     "YARATIK.akil_okuyan_sagduyu": "creatures.mind_reader_sanity_loss",
     "YARATIK.akil_okuyan_tavan": "creatures.mind_reader_victims",
-    "YARATIK.av_bag_sans": "creatures.predation_link_chance",
-    "YARATIK.av_bag_tavan": "creatures.predation_link_cap",
-    "YARATIK.av_tehlike_fark": "creatures.predation_danger_margin",
+    "YARATIK.av_bag_sans": null,
+    "YARATIK.av_bag_tavan": null,
+    "YARATIK.av_tehlike_fark": null,
     "YARATIK.av_tukenme_fark": "creatures.depletion_danger_margin",
     "YARATIK.av_tukenme_sans": "creatures.prey_depletion_chance",
     "YARATIK.av_tukenme_seviye": "creatures.depletion_max_prey_power",
@@ -5546,6 +5556,9 @@
     "DERIN_TOPLUM.fiyat_kitlik_erzak",
     "DERIN_TOPLUM.fiyat_oran_alt",
     "DERIN_TOPLUM.fiyat_stok_alt",
-    "DERIN_TOPLUM.fiyat_ust"
+    "DERIN_TOPLUM.fiyat_ust",
+    "YARATIK.av_bag_sans",
+    "YARATIK.av_bag_tavan",
+    "YARATIK.av_tehlike_fark"
   ]
 }
