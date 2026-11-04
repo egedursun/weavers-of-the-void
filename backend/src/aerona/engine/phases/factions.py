@@ -233,6 +233,7 @@ async def found_factions(ctx: TickContext) -> int:
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.memories",
+    "table.minds",
     "table.name_registry",
     "table.nodes",
     "table.oaths",
@@ -245,11 +246,14 @@ async def found_factions(ctx: TickContext) -> int:
     "table.settlement_profiles",
     "table.skills",
     "table.sons",
+    "table.traits",
     "table.treaty_clauses",
     "table.treaty_parties",
     "table.treaty_profiles",
+    "table.vassalages",
     "table.war_sides",
     "table.wars",
+    "table.world_maps",
 )
 @writes(
     "faction.strength",

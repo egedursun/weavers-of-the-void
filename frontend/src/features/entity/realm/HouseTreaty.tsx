@@ -233,6 +233,7 @@ export function HouseSection({
             polity_id: polity ?? 0,
             strength,
             basis: 'divine',
+            office: 'ruler',
           },
         })
       ),

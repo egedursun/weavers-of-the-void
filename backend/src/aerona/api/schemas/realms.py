@@ -50,7 +50,7 @@ class BalanceSlice(ApiModel):
     share: int
 
 
-class LoanView(ApiModel):
+class RealmLoanView(ApiModel):
     id: int
     lender_id: int
     lender: str
@@ -191,7 +191,7 @@ class RealmView(ApiModel):
     vassals: list[NamedNode]
     tier_strain: int = 0
     power_balance: list[BalanceSlice] = Field(default_factory=list)
-    loans: list[LoanView] = Field(default_factory=list)
+    loans: list[RealmLoanView] = Field(default_factory=list)
     vassal_terms: list[VassalView] = Field(default_factory=list)
     overlord_terms: VassalView | None = None
     ruler_repute: ReputeView | None = None

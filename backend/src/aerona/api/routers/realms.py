@@ -14,7 +14,7 @@ from aerona.api.schemas.realms import (
     LawKindSpec,
     LawParamSpec,
     LawView,
-    LoanView,
+    RealmLoanView,
     MemberView,
     NamedNode,
     OathsView,
@@ -186,7 +186,7 @@ async def realm(services: ServicesDep, polity_id: int = Path(ge=1)) -> RealmView
                 for key, value in sorted(balance.items())
             ],
             loans=[
-                LoanView(
+                RealmLoanView(
                     id=row.id,
                     lender_id=row.lender_entity_id,
                     lender=names.get(row.lender_entity_id, ""),

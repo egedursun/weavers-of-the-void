@@ -650,6 +650,9 @@ async def spontaneous_treaty(ctx: TickContext) -> None:
     "table.name_registry",
     "table.thread_links",
     "table.threads",
+    "table.treaty_clauses",
+    "table.treaty_parties",
+    "table.treaty_profiles",
 )
 async def civilization_phase(ctx: TickContext) -> None:
     await update_tiers(ctx)

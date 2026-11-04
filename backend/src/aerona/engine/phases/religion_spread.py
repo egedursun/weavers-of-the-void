@@ -414,6 +414,7 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.trade_route_regions",
     "table.trade_route_tolls",
     "table.traits",
+    "table.treaty_clauses",
     "table.world_maps",
 )
 @writes(
