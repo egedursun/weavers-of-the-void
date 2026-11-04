@@ -4287,6 +4287,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/variants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["kind_variants_api_variants_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/mechanics": {
         parameters: {
             query?: never;
@@ -10191,6 +10207,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/variant:create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_variant_create_api_actions_variant_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/variant:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_variant_edit_api_actions_variant_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/variant:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_variant_release_api_actions_variant_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/variant:delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_variant_delete_api_actions_variant_delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/variant:assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_variant_assign_api_actions_variant_assign_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/modifier:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_modifier_edit_api_actions_modifier_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/incident:create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_incident_create_api_actions_incident_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/incident:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_incident_remove_api_actions_incident_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/mind:skill_edit": {
         parameters: {
             query?: never;
@@ -10977,6 +11121,7 @@ export interface components {
         BodyConditionInput: {
             bearer_id: number;
             kind: components["schemas"]["ConditionKind"];
+            variant_id?: number | null;
             severity: number;
             part?: string | null;
         };
@@ -11051,10 +11196,12 @@ export interface components {
             quality?: number | null;
             restored_pct?: number | null;
             material?: components["schemas"]["MaterialKind"] | null;
+            world_material_id?: number | null;
         };
         BodyProsthesisInput: {
             injury_id: number;
             material: components["schemas"]["MaterialKind"];
+            world_material_id?: number | null;
             quality: number;
             item_id?: number | null;
         };
@@ -11075,6 +11222,7 @@ export interface components {
         };
         BodyView: {
             node_id: number;
+            world_id?: number | null;
             name: string;
             bearer_kind: string;
             alive: boolean;
@@ -11661,6 +11809,7 @@ export interface components {
             source_link: string | null;
             since_epoch: number;
             ended_epoch: number | null;
+            variant_id?: number | null;
             visible: boolean;
         };
         ContextBlock: {
@@ -13533,6 +13682,13 @@ export interface components {
             incident_id: number;
             note?: string | null;
         };
+        IncidentCreateInput: {
+            kind: string;
+            note?: string | null;
+            magnitude: number;
+            place_entity_id?: number | null;
+            participants: components["schemas"]["Participant"][];
+        };
         IncidentRecord: {
             id: number;
             kind: string;
@@ -13547,6 +13703,9 @@ export interface components {
             thread_id: number | null;
             causes: string[];
             consequences: number[];
+        };
+        IncidentRemoveInput: {
+            incident_id: number;
         };
         IncidentRole: "subject" | "actor" | "target" | "witness" | "place";
         InfrastructureView: {
@@ -13840,6 +13999,7 @@ export interface components {
             language: components["schemas"]["NodeRef"] | null;
             value: number;
         };
+        KindFamily: "trait" | "skill" | "condition";
         KnowledgeBranch: "agriculture" | "metallurgy" | "seafaring" | "writing" | "architecture" | "medicine" | "magic" | "warfare" | "astronomy" | "trade" | "sky_navigation" | "shipbuilding" | "gate_lore" | "pathfinding" | "void_living" | "immortality" | "biomancy" | "forbidden";
         KnowledgeInsight: {
             branch: string | null;
@@ -14716,10 +14876,12 @@ export interface components {
         MindTraitInput: {
             node_id: number;
             trait: components["schemas"]["TraitKind"];
+            variant_id?: number | null;
         };
         MindTraitRemoveInput: {
             node_id: number;
             trait: components["schemas"]["TraitKind"];
+            variant_id?: number | null;
         };
         MindUnlockInput: {
             node_id: number;
@@ -14786,6 +14948,14 @@ export interface components {
             op: components["schemas"]["ModifierOp"];
             magnitude: number;
             epochs?: number | null;
+            decay_pct?: number | null;
+        };
+        ModifierEditInput: {
+            modifier_id: number;
+            magnitude?: number | null;
+            op?: components["schemas"]["ModifierOp"] | null;
+            end_epoch?: number | null;
+            forever: boolean;
             decay_pct?: number | null;
         };
         ModifierOp: "add" | "multiply";
@@ -14896,6 +15066,7 @@ export interface components {
             loyalty_community: number;
             loyalty_god: number;
             career: components["schemas"]["CareerPath"] | null;
+            profession: components["schemas"]["Profession"] | null;
             last_break: components["schemas"]["StressBreak"] | null;
             last_break_epoch: number | null;
             cause_of_death: components["schemas"]["DeathCause"] | null;
@@ -15408,6 +15579,10 @@ export interface components {
             loss: number;
             state: components["schemas"]["InjuryState"] | null;
             prosthesis: components["schemas"]["MaterialKind"] | null;
+        };
+        Participant: {
+            node_id: number;
+            role: components["schemas"]["IncidentRole"];
         };
         PartyRole: "signatory" | "overlord" | "vassal" | "guarantor";
         PartyView: {
@@ -15937,6 +16112,7 @@ export interface components {
             commodity: components["schemas"]["CommodityKind"];
             points: components["schemas"]["PricePoint"][];
         };
+        Profession: "soldier" | "rider" | "smith" | "builder" | "weaver" | "healer" | "scholar" | "priest" | "sorcerer" | "merchant" | "diplomat" | "hunter" | "sailor" | "commander";
         ProfileColumnRecord: {
             name: string;
             kind: string;
@@ -16038,6 +16214,7 @@ export interface components {
             maker_node_id: number | null;
             maker_name: string | null;
             epoch: number;
+            world_material_id?: number | null;
         };
         PutBeliefsBody: {
             people_id: number;
@@ -17307,7 +17484,7 @@ export interface components {
             value: number;
         };
         SonStatus: "active" | "asleep" | "exiled" | "dead";
-        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_father" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "sever_ley" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world";
+        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_father" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "sever_ley" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world" | "bind_mortals" | "touch_mortal";
         SonToolsView: {
             son_id: number;
             rarity: components["schemas"]["Rarity"];
@@ -18045,6 +18222,7 @@ export interface components {
             heritable: boolean;
             effects: components["schemas"]["TraitEffectView"][];
             capacities: components["schemas"]["TraitCapacityView"][];
+            variant_id?: number | null;
         };
         TranslateRequest: {
             text: string;
@@ -18236,6 +18414,44 @@ export interface components {
             low_label: string;
             high_label: string;
             reference: number | null;
+        };
+        VariantAssignInput: {
+            family: components["schemas"]["KindFamily"];
+            row_id: number;
+            variant_id?: number | null;
+        };
+        VariantCreateInput: {
+            family: components["schemas"]["KindFamily"];
+            base: string;
+            name: string;
+            description?: string | null;
+            strength_pct: number;
+            learning_pct: number;
+        };
+        VariantDeleteInput: {
+            variant_id: number;
+        };
+        VariantEditInput: {
+            variant_id: number;
+            name?: string | null;
+            description?: string | null;
+            strength_pct?: number | null;
+            learning_pct?: number | null;
+            hold: boolean;
+        };
+        VariantReleaseInput: {
+            variant_id: number;
+            field: string;
+        };
+        VariantView: {
+            id: number;
+            family: components["schemas"]["KindFamily"];
+            base: string;
+            name: string;
+            description: string | null;
+            strength_pct: number;
+            learning_pct: number;
+            held: string[];
         };
         VerdictChoice: "accept" | "reject";
         VesselStats: {
@@ -26868,6 +27084,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    kind_variants_api_variants_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VariantView"][];
                 };
             };
         };
@@ -37947,6 +38182,254 @@ export interface operations {
             };
         };
     };
+    action_variant_create_api_actions_variant_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VariantCreateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_variant_edit_api_actions_variant_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VariantEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_variant_release_api_actions_variant_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VariantReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_variant_delete_api_actions_variant_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VariantDeleteInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_variant_assign_api_actions_variant_assign_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VariantAssignInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_modifier_edit_api_actions_modifier_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModifierEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_incident_create_api_actions_incident_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncidentCreateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_incident_remove_api_actions_incident_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncidentRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_mind_skill_edit_api_actions_mind_skill_edit_post: {
         parameters: {
             query?: never;
@@ -38761,6 +39244,7 @@ export const journeyIntentValues: ReadonlyArray<FlattenedDeepRequired<components
 export const journeyStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JourneyStatus"]> = ["underway", "waiting", "arrived", "lost", "recalled", "stranded"];
 export const judgementDoctrineValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["JudgementDoctrine"]> = ["deeds", "faith", "rite", "favour", "none"];
 export const kinBondInputKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["KinBondInput"]["kind"]> = ["parent_of", "spouse_of", "betrothed_to", "concubine_of", "fostered_by", "sworn_kin"];
+export const kindFamilyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["KindFamily"]> = ["trait", "skill", "condition"];
 export const knowledgeBranchValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["KnowledgeBranch"]> = ["agriculture", "metallurgy", "seafaring", "writing", "architecture", "medicine", "magic", "warfare", "astronomy", "trade", "sky_navigation", "shipbuilding", "gate_lore", "pathfinding", "void_living", "immortality", "biomancy", "forbidden"];
 export const knowledgeStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["KnowledgeStats"]["kind"]> = ["knowledge"];
 export const landKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LandKind"]> = ["region", "place"];
@@ -38839,6 +39323,7 @@ export const polityStatsKindValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const powerEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PowerEffect"]> = ["cheap_creation", "duel_master", "essence_spring", "worshipped", "tireless", "untouchable", "dream_whisper", "war_father", "harvester", "seer", "reviving", "bounty_giver", "curser"];
 export const prayerRequestValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PrayerRequest"]> = ["essence", "blessing", "permission", "vengeance", "forgiveness", "none", "wish"];
 export const pressureKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PressureKind"]> = ["hunger", "insecurity", "overcrowding", "poverty", "impiety", "humiliation", "stagnation"];
+export const professionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Profession"]> = ["soldier", "rider", "smith", "builder", "weaver", "healer", "scholar", "priest", "sorcerer", "merchant", "diplomat", "hunter", "sailor", "commander"];
 export const promptAreaValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PromptArea"]> = ["shared", "context", "genesis", "son_turn", "fate", "chronicler", "naming", "voices", "deepening", "image_prompts", "council", "translation", "world_birth", "network_repair", "mortal", "opportunities", "agent", "chronicle", "localisation"];
 export const promptIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PromptId"]> = ["cliche_ban", "image_prompt_rules", "section_keys_rule", "no_numbers_clause", "lore_language", "rationale_rule", "verdict_criteria", "tired_images", "world_header", "dialect_block", "world_line", "cosmos_lines", "entity_line", "bond_lines", "society_lines", "entity_detail", "recent_chronicle", "thread_lines", "siblings", "powers", "location_tree", "language_lines", "geography_lines", "world_summary", "son_memory", "sky_calendar", "budget_trailer", "inspect_sibling", "genesis_system", "genesis_user", "genesis_wizard_settings", "son_powers_system", "son_powers_user", "creator_portrait_system", "creator_portrait_user", "summon_son_system", "summon_son_user", "awaken_peoples_system", "awaken_peoples_user", "revelation_system", "revelation_user", "son_turn_system", "son_turn_user", "son_turn_resume_note", "son_turn_continuation", "creator_wishes", "reputation_line", "fate_judgment_system", "fate_judgment_user", "fate_extra_judgment_user", "fate_prescreen_warnings", "fate_creation_entry", "age_events", "age_events_by_world", "chronicler_system", "chronicler_concise_system", "chronicler_user", "chronicler_fix_opening_user", "chronicler_audit_fix_user", "chronicler_missing_worlds_user", "chronicler_lost_age_user", "chronicler_lost_world_sections_user", "naming_system", "naming_user", "voices_system", "voices_user", "deepen_entity_system", "deepen_entity_user", "deepen_celestial_system", "deepen_celestial_user", "creator_epic_system", "creator_epic_user", "creator_deepen_system", "creator_deepen_user", "foreign_god_deepen_system", "foreign_god_deepen_user", "son_epic_system", "son_epic_user", "entity_image_prompts_system", "entity_image_prompts_user", "cosmos_image_prompts_system", "cosmos_image_prompts_user", "council_persona", "council_agenda", "council_session_system", "council_session_user", "son_chat_system", "son_chat_user", "translate_system", "translate_user", "new_world_system", "new_world_user", "world_inspiration", "bond_node_line", "bond_suggest_system", "bond_suggest_user", "bond_name_related_system", "bond_name_related_user", "mortal_turn_system", "mortal_turn_user", "mortal_turn_continuation", "mortal_context", "son_opportunities", "mortal_opportunities", "creator_opportunities", "tool_rejection", "tool_failure_refund", "son_gate_rejection", "mortal_gate_rejection", "captive_gate_rejection", "actions_spent", "status_line", "sleep_notice", "pending_long_job", "entity_state_reason", "field_error", "per_epoch_limit", "creator_sign", "sentient_demand", "localise_system", "localise_user"];
 export const prophecyPredicateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ProphecyPredicate"]> = ["dies", "falls", "born_in", "sky_event", "war_between", "ruler_of", "within_epochs"];
@@ -38890,7 +39375,7 @@ export const sonDistributedEventKindValues: ReadonlyArray<FlattenedDeepRequired<
 export const sonDistributionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonDistribution"]> = ["auto", "manual"];
 export const sonNewEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonNewEvent"]["kind"]> = ["son.new"];
 export const sonStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonStatus"]> = ["active", "asleep", "exiled", "dead"];
-export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_father", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "sever_ley", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world"];
+export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_father", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "sever_ley", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world", "bind_mortals", "touch_mortal"];
 export const sonTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnFinishedEvent"]["kind"]> = ["son.turn_finished"];
 export const sonTurnQueuedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnQueuedEvent"]["kind"]> = ["son.turn_queued"];
 export const sonTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnStartedEvent"]["kind"]> = ["son.turn_started"];

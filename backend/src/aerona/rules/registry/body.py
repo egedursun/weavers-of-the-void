@@ -347,6 +347,7 @@ class ProstheticsRules:
     default_quality: int = rule(45, 0, 100, G, "Quality of a prosthesis made without a known artisan")
     maker_intellect_pct: int = rule(60, 0, 100, G, "Share of a prosthesis's quality that comes from its maker's intellect (%)")
     relic_quality: int = rule(75, 0, 100, G, "Quality at which a prosthesis of precious material becomes a relic")
+    world_sanctity_pct: int = rule(20, 0, 200, G, "How much the sanctity of a world-born material lifts a prosthesis made of it (%)")
     relic_power_div: int = rule(10, 1, 100, G, "Quality per point of power of a relic prosthesis")
     wood: int = rule(55, 0, 100, G, "Function a wooden prosthesis restores at full quality (%)")
     bone: int = rule(45, 0, 100, G, "Function a bone prosthesis restores at full quality (%)")

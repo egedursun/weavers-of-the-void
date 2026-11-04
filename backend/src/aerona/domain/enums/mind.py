@@ -254,6 +254,12 @@ class TraitEffect(StrEnum):
     COURAGE = "courage"
 
 
+class KindFamily(StrEnum):
+    TRAIT = "trait"
+    SKILL = "skill"
+    CONDITION = "condition"
+
+
 class Profession(StrEnum):
     SOLDIER = "soldier"
     RIDER = "rider"

@@ -6,6 +6,7 @@ import {
   Pause,
   Play,
   Plus,
+  Pencil,
   Sigma,
   Sparkles,
   Trash2,
@@ -33,6 +34,7 @@ import { loreKeys } from '../api/keys'
 import {
   ActingMechanics,
   IncidentEntry,
+  IncidentForge,
   WhyBreakdown,
 } from '../mechanics/parts'
 
@@ -83,6 +85,30 @@ function ModifierRow({
   blocked: string | undefined
   onRemove: () => void
 }) {
+  const [editing, setEditing] = useState(false)
+  const [magnitude, setMagnitude] = useState(String(modifier.magnitude))
+  const [until, setUntil] = useState(
+    modifier.end_epoch === null ? '' : String(modifier.end_epoch)
+  )
+  const edit = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/modifier:edit', {
+          body: {
+            modifier_id: modifier.id,
+            magnitude: Number(magnitude),
+            end_epoch: until === '' ? null : Number(until),
+            forever: until === '',
+          },
+        })
+      ),
+    success: 'Modifier changed',
+    onDone: () => setEditing(false),
+  })
+  const reason =
+    blocked ??
+    (edit.isPending ? WORKING : undefined) ??
+    (Number.isFinite(Number(magnitude)) ? undefined : 'Write a number.')
   return (
     <li className='flex min-w-0 flex-wrap items-center gap-3 rounded-lg border bg-muted/30 p-2'>
       <Medallion
@@ -110,11 +136,56 @@ function ModifierRow({
         variant='ghost'
         disabled={blocked !== undefined}
         disabledReason={blocked}
+        onClick={() => setEditing(!editing)}
+      >
+        <Pencil />
+        Change
+      </Button>
+      <Button
+        size='sm'
+        variant='ghost'
+        disabled={blocked !== undefined}
+        disabledReason={blocked}
         onClick={onRemove}
       >
         <Trash2 />
         Remove
       </Button>
+      {editing && (
+        <div className='flex w-full min-w-0 flex-wrap items-end gap-2'>
+          <div className='flex min-w-0 flex-col gap-1'>
+            <Label as='label' htmlFor={`modifier-size-${modifier.id}`}>
+              Size
+            </Label>
+            <Input
+              id={`modifier-size-${modifier.id}`}
+              type='number'
+              value={magnitude}
+              onChange={(event) => setMagnitude(event.target.value)}
+            />
+          </div>
+          <div className='flex min-w-0 flex-col gap-1'>
+            <Label as='label' htmlFor={`modifier-until-${modifier.id}`}>
+              Until epoch (empty: lasts)
+            </Label>
+            <Input
+              id={`modifier-until-${modifier.id}`}
+              type='number'
+              min={0}
+              value={until}
+              onChange={(event) => setUntil(event.target.value)}
+            />
+          </div>
+          <Button
+            size='sm'
+            disabled={reason !== undefined}
+            disabledReason={reason}
+            onClick={() => edit.mutate(undefined)}
+          >
+            Keep the change
+          </Button>
+        </div>
+      )}
     </li>
   )
 }
@@ -301,6 +372,7 @@ export function EntityMechanics({
           )}
           <div className='flex min-w-0 flex-col gap-2'>
             <Label variant='overline'>Recent incidents</Label>
+            <IncidentForge nodeId={nodeId} blocked={needs(null)} />
             {data.incidents.length === 0 ? (
               <Muted>It has not taken part in anything yet.</Muted>
             ) : (

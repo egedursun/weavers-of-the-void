@@ -203,6 +203,8 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   lend: HandCoins,
   repay_debt: Receipt,
   advance_knowledge: GraduationCap,
+  bind_mortals: HeartHandshake,
+  touch_mortal: Sparkles,
 }
 
 export const TOOL_FALLBACK_ICON: LucideIcon = Wrench

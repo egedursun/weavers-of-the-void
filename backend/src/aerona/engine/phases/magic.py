@@ -106,6 +106,8 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
 
 
 @reads(
+    "table.skills",
+    "table.minds",
     "table.mortal_equipment",
     "mortal.intellect",
     "settlement.prosperity",
@@ -132,6 +134,7 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
     "table.world_maps",
 )
 @writes(
+    "table.skills",
     "settlement.prosperity",
     "table.chronicle",
     "table.chronicle_entities",

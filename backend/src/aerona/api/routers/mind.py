@@ -96,6 +96,7 @@ async def trait_views(session: AsyncSession, node_id: int) -> list[TraitView]:
             source_node=sources.get(row.source_node_id) if row.source_node_id is not None else None,
             opposite=TRAITS[row.trait].opposite,
             heritable=TRAITS[row.trait].heritable,
+            variant_id=row.variant_id,
             effects=[TraitEffectView(effect=effect, value=value) for effect, value in TRAITS[row.trait].effects.items()],
             capacities=[TraitCapacityView(capacity=capacity, value=value) for capacity, value in TRAITS[row.trait].capacities.items()],
         )

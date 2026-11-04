@@ -15,8 +15,10 @@ from aerona.db.tables.body import (
     MaimedCohortRow,
     ProsthesisRow,
 )
+from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.mortal import KindVariantRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.body import (
@@ -35,10 +37,11 @@ from aerona.domain.enums.body import (
 )
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.mind import KindFamily
 from aerona.engine.body.book import Bearer, anatomy_for, ensure_body
 from aerona.engine.body.conditions import end_condition, gain_condition
 from aerona.engine.body.customs import CUSTOM_FIELDS, ensure_customs
-from aerona.engine.body.healing import INJURY_HOLD, fit_prosthesis, mend, workability
+from aerona.engine.body.healing import INJURY_HOLD, fit_prosthesis, material_workability, mend
 from aerona.engine.body.hits import TOTAL_LOSS_KINDS, Harm
 from aerona.engine.body.state import PAIN, refresh
 from aerona.engine.lifecycle.wounds import apply_hits, wound_sentence
@@ -92,6 +95,7 @@ class EditProsthesis(Command):
     quality: int | None = Field(default=None, ge=0, le=PERCENT)
     restored_pct: int | None = Field(default=None, ge=0, le=PERCENT)
     material: MaterialKind | None = None
+    world_material_id: int | None = None
 
 
 class HoldInjuries(BearerTarget):
@@ -101,6 +105,7 @@ class HoldInjuries(BearerTarget):
 class FitProsthesis(Command):
     injury_id: int
     material: MaterialKind
+    world_material_id: int | None = None
     quality: int = Field(ge=0, le=PERCENT)
     item_id: int | None = None
 
@@ -111,6 +116,7 @@ class ProsthesisTarget(Command):
 
 class AddCondition(BearerTarget):
     kind: ConditionKind
+    variant_id: int | None = None
     severity: int = Field(default=SEVERITY_MIN, ge=SEVERITY_MIN, le=SEVERITY_MAX)
     part: str | None = Field(default=None, pattern=PART_PATTERN)
 
@@ -245,6 +251,15 @@ async def edit_injury(scope: PlayerScope, command: EditInjury) -> Effect:
     return Effect(f"The wound to {bearer.name}'s {_label(row.part)} was changed.", target_node_id=bearer.id)
 
 
+async def world_material(scope: PlayerScope, material_id: int | None) -> WorldMaterialRow | None:
+    if material_id is None:
+        return None
+    found = await scope.session.get(WorldMaterialRow, material_id)
+    if found is None:
+        raise NotFoundError("No such material.")
+    return found
+
+
 @player_action("body:condition_edit", ActionKind.OTHER)
 async def edit_condition(scope: PlayerScope, command: EditCondition) -> Effect:
     row = await scope.session.get(ConditionRow, command.condition_id)
@@ -267,10 +282,14 @@ async def edit_prosthesis(scope: PlayerScope, command: EditProsthesis) -> Effect
     bearer = await bearer_of(scope, row.bearer_node_id)
     if command.material is not None:
         row.material = command.material
+    if command.world_material_id is not None:
+        world = await world_material(scope, command.world_material_id)
+        row.world_material_id = world.id if world is not None else None
     if command.quality is not None:
         row.quality = command.quality
-        if command.restored_pct is None:
-            row.restored_pct = min(PERCENT, workability(scope.rules.prosthetics, row.material) * command.quality // PERCENT)
+    if command.restored_pct is None and (command.quality is not None or command.world_material_id is not None or command.material is not None):
+        world = await world_material(scope, row.world_material_id)
+        row.restored_pct = min(PERCENT, material_workability(scope.rules.prosthetics, row.material, world) * row.quality // PERCENT)
     if command.restored_pct is not None:
         row.restored_pct = command.restored_pct
     await refresh(scope.session, scope.rules, bearer, await scope.epoch())
@@ -308,7 +327,8 @@ async def apply_prosthesis(scope: PlayerScope, command: FitProsthesis) -> Effect
         await scope.session.delete(prosthesis)
     await scope.session.flush()
     ctx = await scope.context("body_prosthesis")
-    fitted = await fit_prosthesis(ctx, bearer, row, part, command.material, maker=None, quality=command.quality, item=item)
+    world = await world_material(scope, command.world_material_id)
+    fitted = await fit_prosthesis(ctx, bearer, row, part, command.material, maker=None, quality=command.quality, item=item, world_material=world)
     await refresh(scope.session, scope.rules, bearer, ctx.epoch)
     return Effect(
         f"{bearer.name} now wears a {_label(command.material.value)} {part.label.lower()}.", target_node_id=bearer.id, values={"prosthesis_id": fitted.id}
@@ -334,6 +354,11 @@ async def add_condition(scope: PlayerScope, command: AddCondition) -> Effect:
     row = await gain_condition(ctx, bearer, command.kind, HarmCause.PLAYER, severity=command.severity, part=command.part, announce=False)
     if row is None:
         raise ValidationFailedError("The condition did not take hold.")
+    if command.variant_id is not None:
+        variant = await scope.session.get(KindVariantRow, command.variant_id)
+        if variant is None or variant.family is not KindFamily.CONDITION or variant.base != command.kind.value:
+            raise ValidationFailedError(f"That is not a kind of {_label(command.kind.value)}.")
+        row.variant_id = variant.id
     return Effect(f"{bearer.name} now lives with {_label(command.kind.value)}.", target_node_id=bearer.id, values={"condition_id": row.id})
 
 

@@ -110,6 +110,33 @@ MIND_GAP_MECHANICS: tuple[Mechanic, ...] = (
 )
 LIFE_MECHANICS: tuple[Mechanic, ...] = (
     Mechanic(
+        key="mortal_learning",
+        spec_item="F6",
+        title="Skills in each tongue spoken and each school of magic worked; professions as bundles of skills; learning from masters, lectures and books",
+        subsystem=S.KNOWLEDGE,
+        phases=("mortal_life_course", "wizards"),
+        surface=Surface(drawer=LIFE),
+        backfill="none: learning begins from the next epoch",
+        fields=("profession", "subject_node_id", "variant_id"),
+        tables=PROFILES,
+        couplings=(
+            Coupling(S.LANGUAGE, "speakers of a tongue bridge the barrier between peoples", EdgeKind.MODIFIER, "skills.speak_xp"),
+            Coupling(S.MAGIC, "mastery of a school tames its backlash", EdgeKind.MODIFIER, "skills.school_backlash_pct"),
+        ),
+    ),
+    Mechanic(
+        key="legend_memories",
+        spec_item="F7",
+        title="Legends swell what their tellers remember and plant memories of what never happened",
+        subsystem=S.CULTURE,
+        phases=("legend_cycles",),
+        surface=Surface(drawer=MIND),
+        backfill="none: legends reshape memory from the next epoch",
+        templates=("lore.legend_memory",),
+        fields=("credence", "distortion"),
+        targets=("legend", "people", "settlement"),
+    ),
+    Mechanic(
         key="mortal_life_course",
         spec_item="S3.1",
         title="Abilities, sex, life stages from the people's lifespan curve, growth and elder decline, health, fertility, schooling and old-age death",

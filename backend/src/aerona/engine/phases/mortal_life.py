@@ -86,6 +86,8 @@ async def mortal_survey(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.book_contents",
+    "table.minds",
     *MORTAL_STATS,
     "table.bodies",
     "table.bonds",

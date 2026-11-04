@@ -62,6 +62,7 @@ class TraitRow(Base):
     source: Mapped[TraitSource] = mapped_column(enum_type(TraitSource, "source"))
     epoch: Mapped[int]
     source_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    variant_id: Mapped[int | None] = mapped_column(ForeignKey("kind_variants.id", ondelete="SET NULL"))
 
 
 class SkillRow(Base):
@@ -83,6 +84,7 @@ class SkillRow(Base):
     peak: Mapped[int]
     last_used_epoch: Mapped[int]
     source: Mapped[SkillSource] = mapped_column(enum_type(SkillSource, "source"))
+    variant_id: Mapped[int | None] = mapped_column(ForeignKey("kind_variants.id", ondelete="SET NULL"))
 
 
 class MemoryRow(CreatedAtMixin, Base):

@@ -4,22 +4,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import ValidationFailedError
 from aerona.db.ledger_undo import UndoRun
-from aerona.db.tables.body import ConditionRow, InjuryRow
-from aerona.db.tables.interconnect import ModifierRow
-from aerona.db.tables.mind import MemoryRow, SkillRow
+from aerona.db.tables.body import ConditionRow, InjuryRow, ProsthesisRow
+from aerona.db.tables.economy import WorldMaterialRow
+from aerona.db.tables.interconnect import IncidentRow, ModifierRow
+from aerona.db.tables.mind import MemoryRow, SkillRow, TraitRow
 from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.domain.enums.body import BodyPart, ConditionKind, InjuryKind
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.economy import MaterialFamily, MaterialOrigin
 from aerona.domain.enums.entity import EntityType, MortalRole
-from aerona.domain.enums.mind import MemoryKind, NeedKind, SkillKind, TraitKind, ValueAxis
-from aerona.domain.enums.modifier import ModifierSource
+from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.mind import KindFamily, MemoryKind, NeedKind, SkillKind, TraitKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole, ModifierOp, ModifierSource
 from aerona.domain.enums.mortal import Ability, CrimeKind, EquipmentSlot, LifeStage, MarriageEnd, MortalSex, PunishmentKind
 from aerona.domain.models.entity_stats import ItemStats, MortalStats
 from aerona.engine.lore.items import profile_of
 from aerona.engine.mortal.kin import spouses_of
 from aerona.services.ledger import changes_of
 from aerona.services.ledger_narration import label_names, node_names
-from aerona.services.player import body, mind, mortals
+from aerona.services.player import body, levers, mind, mortals, variants
 from aerona.services.player.scope import PlayerScope
 from tests.services.player.factories import PlayerWorld, make_entity
 
@@ -162,3 +165,71 @@ async def test_mind_levers_shape_values_traits_skills_memories_and_needs(scope: 
     await mind.forget_memory(scope, mind.MemoryTarget(memory_id=memory_id))
     await mind.set_need(scope, mind.SetNeed(node_id=mortal_id, need=NeedKind.FAITH, value=10))
     await mind.set_role(scope, mind.SetRole(node_id=mortal_id, role=MortalRole.SCRIBE))
+
+
+async def test_world_made_kinds_are_forged_given_and_unmade(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
+    mortal_id = await _mortal(session, world, "Lark")
+    made = await variants.create_variant(
+        scope, variants.CreateVariant(family=KindFamily.TRAIT, base=TraitKind.BRAVE.value, name="Lion-hearted", strength_pct=150)
+    )
+    variant_id = int((made.values or {})["variant_id"])
+    with pytest.raises(ValidationFailedError):
+        await variants.create_variant(scope, variants.CreateVariant(family=KindFamily.TRAIT, base="flying", name="Bad"))
+    await mind.give_trait(scope, mind.TraitCommand(node_id=mortal_id, trait=TraitKind.BRAVE, variant_id=variant_id))
+    held = await session.get(TraitRow, (mortal_id, TraitKind.BRAVE))
+    assert held is not None and held.variant_id == variant_id
+    await variants.edit_variant(scope, variants.EditVariant(variant_id=variant_id, strength_pct=180))
+    await variants.release_variant(scope, variants.VariantField(variant_id=variant_id, field="strength_pct"))
+    await variants.delete_variant(scope, variants.VariantTarget(variant_id=variant_id))
+    await session.refresh(held)
+    assert held.variant_id is None
+
+
+async def test_a_modifier_is_changed_in_place(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
+    mortal_id = await _mortal(session, world, "Mira")
+    await levers.add_player_modifier(scope, levers.AddModifier(node_id=mortal_id, key="strength", op=ModifierOp.ADD, magnitude=5))
+    row = await session.scalar(select(ModifierRow).where(ModifierRow.target_node_id == mortal_id))
+    assert row is not None
+    await variants.edit_modifier(scope, variants.EditModifier(modifier_id=row.id, magnitude=12, end_epoch=row.start_epoch + 3))
+    assert row.magnitude == 12 and row.end_epoch == row.start_epoch + 3
+    await variants.edit_modifier(scope, variants.EditModifier(modifier_id=row.id, forever=True))
+    assert row.end_epoch is None
+
+
+async def test_incidents_are_set_down_and_struck_out(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
+    mortal_id = await _mortal(session, world, "Nell")
+    participant = variants.Participant(node_id=mortal_id, role=IncidentRole.ACTOR)
+    made = await variants.create_incident(scope, variants.CreateIncident(kind="feud.oath_sworn", note="sworn at the ford", participants=[participant]))
+    incident_id = int((made.values or {})["incident_id"])
+    assert await session.get(IncidentRow, incident_id) is not None
+    await variants.remove_incident(scope, variants.IncidentTarget(incident_id=incident_id))
+    assert await session.get(IncidentRow, incident_id) is None
+
+
+async def test_a_prosthesis_of_a_world_material(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
+    mortal_id = await _mortal(session, world, "Orla")
+    material = WorldMaterialRow(
+        world_id=world.world.id,
+        origin=MaterialOrigin.GOD_REMAINS,
+        name="Godbone",
+        family=MaterialFamily.PRECIOUS,
+        hardness=90,
+        toughness=90,
+        weight=20,
+        edge=40,
+        conductivity=10,
+        sanctity=80,
+        corruption=0,
+        rarity=90,
+        base_value=90,
+        decay=0,
+        created_epoch=1,
+    )
+    session.add(material)
+    await session.flush()
+    maimed = await body.maim(scope, body.Maim(bearer_id=mortal_id, part="left_hand", kind=InjuryKind.SEVERED, severity=5))
+    injury_id = int((maimed.values or {})["injury_id"])
+    fitted = await body.apply_prosthesis(scope, body.FitProsthesis(injury_id=injury_id, material=MaterialKind.WOOD, quality=80, world_material_id=material.id))
+    prosthesis = await session.get(ProsthesisRow, int((fitted.values or {})["prosthesis_id"]))
+    assert prosthesis is not None and prosthesis.world_material_id == material.id
+    assert prosthesis.restored_pct > 0

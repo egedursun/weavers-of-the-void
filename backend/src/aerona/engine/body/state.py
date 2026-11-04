@@ -24,6 +24,7 @@ from aerona.engine.body.capacities import BodyState, function_percents, pain_of
 from aerona.engine.body.customs import customs_of, presence_pct
 from aerona.engine.gods.queries import community_of
 from aerona.engine.mortal.equipment import mount_pct
+from aerona.engine.mortal.variants import strength, variants_by_id
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.queries import active_bonds
 from aerona.rules.registry import Rules
@@ -53,7 +54,11 @@ async def refresh(session: AsyncSession, rules: Rules, bearer: Bearer, epoch: in
     conditions = await active_conditions(session, bearer.id)
     reading = await reading_of(session, rules, bearer)
     locked = set(body.locked)
-    for capacity, value in factors_of(rules, bearer, body, injuries=injuries, prostheses=prostheses, conditions=conditions, reading=reading).items():
+    variants = await variants_by_id(session, (row.variant_id for row in conditions))
+    scale = {variant_id: strength(variants, variant_id) for variant_id in variants}
+    for capacity, value in factors_of(
+        rules, bearer, body, injuries=injuries, prostheses=prostheses, conditions=conditions, reading=reading, variant_scale=scale
+    ).items():
         if capacity.value not in locked:
             setattr(body, capacity.value, value)
     if isinstance(bearer, EntityRow):

@@ -25,6 +25,7 @@ from aerona.engine.body.functions import Wound
 from aerona.engine.body.hits import Armour
 from aerona.engine.lore.arms import guard_of, held_profiles
 from aerona.engine.mortal.equipment import worn_coverage
+from aerona.engine.mortal.variants import strength, variants_by_id
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.stats import stat
@@ -274,16 +275,26 @@ async def armour_of(session: AsyncSession, rules: Rules, bearer: Bearer, communi
 
 
 def factors_of(
-    rules: Rules, bearer: Bearer, body: BodyRow, *, injuries: list[InjuryRow], prostheses: list[ProsthesisRow], conditions: list[ConditionRow], reading: Reading
+    rules: Rules,
+    bearer: Bearer,
+    body: BodyRow,
+    *,
+    injuries: list[InjuryRow],
+    prostheses: list[ProsthesisRow],
+    conditions: list[ConditionRow],
+    reading: Reading,
+    variant_scale: dict[int, float] | None = None,
 ) -> dict[Capacity, int]:
     stats = bearer_stats(bearer)
     anatomy = anatomy_for(body)
+    scales = variant_scale or {}
+    variant_scales = {row.id: scales[row.variant_id] for row in conditions if row.variant_id is not None and row.variant_id in scales}
     state = BodyState(
         anatomy,
         wounds_from(injuries, prostheses),
         body.fingers,
         open_severity(injuries),
-        tuple((row.kind, row.severity) for row in conditions),
+        tuple((row.kind, row.severity * variant_scales.get(row.id, 1.0)) for row in conditions),
         reading.presence_pct,
         reading.reader,
     )
@@ -385,17 +396,20 @@ STAT_CAPACITY: dict[str, Capacity] = {
 
 
 async def temperament(session: AsyncSession, rules: Rules, node_id: int, capacity: Capacity) -> float:
-    held = await session.scalars(select(TraitRow.trait).where(TraitRow.node_id == node_id))
-    lift = sum(TRAITS[trait].capacities.get(capacity, 0) for trait in held) * rules.traits.capacity_scale_pct / PERCENT
+    held = list(await session.scalars(select(TraitRow).where(TraitRow.node_id == node_id)))
+    variants = await variants_by_id(session, (row.variant_id for row in held))
+    lift = sum(TRAITS[row.trait].capacities.get(capacity, 0) * strength(variants, row.variant_id) for row in held) * rules.traits.capacity_scale_pct / PERCENT
     return max(0.0, (PERCENT + lift) / PERCENT)
 
 
 async def training(session: AsyncSession, rules: Rules, node_id: int, capacity: Capacity) -> float:
     wanted = [skill for skill, spec in SKILLS.items() if spec.capacity is capacity]
-    levels = await session.scalars(
-        select(SkillRow.level).where(SkillRow.holder_node_id == node_id, SkillRow.skill.in_(wanted), SkillRow.subject_node_id.is_(None))
+    rows = list(
+        await session.scalars(select(SkillRow).where(SkillRow.holder_node_id == node_id, SkillRow.skill.in_(wanted), SkillRow.subject_node_id.is_(None)))
     )
-    return 1 + max(levels, default=0) * rules.skills.capacity_skill_pct / PERCENT / PERCENT
+    variants = await variants_by_id(session, (row.variant_id for row in rows))
+    best = max((row.level * strength(variants, row.variant_id) for row in rows), default=0)
+    return 1 + best * rules.skills.capacity_skill_pct / PERCENT / PERCENT
 
 
 async def effective(

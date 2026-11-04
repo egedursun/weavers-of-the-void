@@ -8,6 +8,7 @@ import {
   Play,
   ScrollText,
   Sparkles,
+  Trash2,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -358,7 +359,18 @@ export function IncidentEntry({
       ),
     success: 'Your note is kept',
   })
-  const busy = blocked ?? (annotate.isPending ? 'Saving the note.' : undefined)
+  const strike = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/incident:remove', {
+          body: { incident_id: incident.id },
+        })
+      ),
+    success: 'The incident is struck from the record',
+  })
+  const busy =
+    blocked ??
+    (annotate.isPending || strike.isPending ? 'Saving the change.' : undefined)
   return (
     <TimelineItem
       icon={ScrollText}
@@ -420,17 +432,109 @@ export function IncidentEntry({
             </Button>
           </div>
         ) : (
-          <Button
-            size='sm'
-            variant='ghost'
-            className='self-start'
-            onClick={() => setWriting(true)}
-          >
-            <Feather />
-            {incident.note ? 'Change your note' : 'Add a note'}
-          </Button>
+          <div className='flex min-w-0 flex-wrap gap-1'>
+            <Button size='sm' variant='ghost' onClick={() => setWriting(true)}>
+              <Feather />
+              {incident.note ? 'Change your note' : 'Add a note'}
+            </Button>
+            <Button
+              size='sm'
+              variant='ghost'
+              disabled={busy !== undefined}
+              disabledReason={busy}
+              onClick={() => strike.mutate(undefined)}
+            >
+              <Trash2 />
+              Strike it out
+            </Button>
+          </div>
         )}
       </div>
     </TimelineItem>
+  )
+}
+
+const INCIDENT_KIND = /^[a-z][a-z0-9_.]*$/
+
+export function IncidentForge({
+  nodeId,
+  blocked,
+}: {
+  nodeId: number
+  blocked: string | undefined
+}) {
+  const [kind, setKind] = useState('')
+  const [note, setNote] = useState('')
+  const [role, setRole] = useState('subject')
+  const create = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/incident:create', {
+          body: {
+            kind,
+            note: note.trim() || null,
+            magnitude: 0,
+            participants: [
+              {
+                node_id: nodeId,
+                role: role as components['schemas']['IncidentRole'],
+              },
+            ],
+          },
+        })
+      ),
+    success: 'The incident is set into the record',
+    onDone: () => {
+      setKind('')
+      setNote('')
+    },
+  })
+  const reason =
+    blocked ??
+    (create.isPending ? 'Saving the incident.' : undefined) ??
+    (INCIDENT_KIND.test(kind)
+      ? undefined
+      : 'Name the kind in lower case, such as feud.oath_sworn.')
+  return (
+    <div className='flex min-w-0 flex-col gap-2 rounded-md border border-dashed p-2'>
+      <Label variant='overline'>Set an incident into the record</Label>
+      <div className='flex min-w-0 flex-wrap items-end gap-2'>
+        <Input
+          aria-label='Kind of incident'
+          placeholder='Kind, such as feud.oath_sworn'
+          className='min-w-48 flex-1'
+          value={kind}
+          onChange={(event) => setKind(event.target.value)}
+        />
+        <Input
+          aria-label='What happened'
+          placeholder='What happened'
+          className='min-w-48 flex-1'
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+        />
+        <div className='flex flex-wrap gap-1'>
+          {Object.entries(ROLE_LABEL).map(([key, text]) => (
+            <Button
+              key={key}
+              size='sm'
+              variant={role === key ? 'secondary' : 'ghost'}
+              onClick={() => setRole(key)}
+            >
+              {text}
+            </Button>
+          ))}
+        </div>
+        <Button
+          size='sm'
+          disabled={reason !== undefined}
+          disabledReason={reason}
+          onClick={() => create.mutate(undefined)}
+        >
+          <ScrollText />
+          Set it down
+        </Button>
+      </div>
+    </div>
   )
 }
