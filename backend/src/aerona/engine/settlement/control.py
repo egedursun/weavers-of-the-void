@@ -251,7 +251,6 @@ async def create_design(
         base_kind=base_kind,
         created_epoch=ctx.epoch,
         created_by_son_id=son_id,
-        locked=[],
         **{key: design_value(key, value) for key, value in values.items()},
     )
     ctx.session.add(design)
@@ -265,19 +264,16 @@ class DesignChange:
     name: str | None = None
     description: str | None = None
     base_kind: DistrictKind | None = None
-    release: tuple[str, ...] = ()
 
 
 async def edit_design(ctx: TickContext, design_id: int, change: DesignChange) -> DistrictDesignRow:
     design = await ctx.session.get(DistrictDesignRow, design_id)
     if design is None:
         raise NotFoundError("No such district design.")
-    locked = list(design.locked or [])
     for key, value in change.values.items():
         if key not in DESIGN_PARAMETERS:
             raise ValidationFailedError(f"Unknown district parameter: {key}.")
         setattr(design, key, design_value(key, value) if value is not None else None)
-        locked = lock(locked, key)
     if change.name is not None:
         design.name = change.name
     if change.description is not None:
@@ -286,10 +282,6 @@ async def edit_design(ctx: TickContext, design_id: int, change: DesignChange) ->
         design.base_kind = change.base_kind
         for district in await ctx.session.scalars(select(DistrictRow).where(DistrictRow.design_id == design.id)):
             district.kind = change.base_kind
-    unknown = [key for key in change.release if key not in DESIGN_PARAMETERS]
-    if unknown:
-        raise ValidationFailedError(f"Unknown district parameter: {unknown[0]}.")
-    design.locked = [key for key in locked if key not in change.release]
     await ctx.session.flush()
     return design
 

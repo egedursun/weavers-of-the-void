@@ -551,6 +551,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.resource_profiles",
     "table.resource_workers",
     "table.reverences",
+    "table.settlement_infrastructure",
     "table.skills",
     "table.sky_events",
     "table.treaty_parties",

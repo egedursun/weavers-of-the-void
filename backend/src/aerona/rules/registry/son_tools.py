@@ -251,3 +251,7 @@ class SonToolsRules:
     shape_weather_max_epochs: int = rule(3, 1, 50, RuleGroup.SON_TOOLS, "Most ages a son can hold one weather")
     reorder_seasons_per_epoch: int = rule(1, 0, 20, RuleGroup.SON_TOOLS, "Most times a son can reorder a world's seasons in one epoch")
     sever_ley_essence: int = rule(30, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to cut a ley line")
+    raise_district_essence: int = rule(20, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to raise or enlarge a district of a settlement")
+    raise_district_ap: int = rule(1, 1, 10, RuleGroup.SON_TOOLS, "raise_district action cost")
+    design_district_essence: int = rule(35, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to devise a new kind of district for its world")
+    design_district_ap: int = rule(1, 1, 10, RuleGroup.SON_TOOLS, "design_district action cost")

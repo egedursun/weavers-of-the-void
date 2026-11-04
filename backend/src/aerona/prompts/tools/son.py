@@ -387,4 +387,38 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "new_star": "Only if no star in the list fits this world's light: a distant system with its own new sun",
         },
     ),
+    T.RAISE_DISTRICT: ToolText(
+        "You raise or enlarge a district of a settlement: farmland, market, craft quarter, temple quarter, harbour, citadel, palace, foreign quarter, "
+        "necropolis or one of the world's district designs. Each kind changes the city: storage, housing, order, sanitation, piety, administration, "
+        "policing, trade and harbour capacity. {{ rules.son_tools.raise_district_essence }} essence, {{ rules.son_tools.raise_district_ap }} actions.",
+        {
+            "settlement_id": "The settlement's id",
+            "kind": "The district kind (farmland, market, craft_quarter, temple_quarter, harbour, citadel, slums, palace, foreign_quarter, necropolis)",
+            "design_id": "Or the id of one of the world's district designs",
+            "material": "timber or stone (stone resists fire, flood and storm but falls in earthquakes)",
+            "reason": "Why you raise it",
+        },
+    ),
+    T.DESIGN_DISTRICT: ToolText(
+        "You devise a new kind of district for your world on a base kind; every city may then raise it. Each number you give replaces the base "
+        "kind's effect per level: housing (people), food_store and goods_store (stored goods), harbour (trade capacity), order, sanitation (may be "
+        "negative), piety_floor, admin_pct (administrative reach), policing, investment_pct and tension_relief_pct. "
+        "{{ rules.son_tools.design_district_essence }} essence, {{ rules.son_tools.design_district_ap }} actions.",
+        {
+            "name": "The design's name",
+            "base_kind": "The base district kind it builds on",
+            "housing": "People housed per level",
+            "food_store": "Food stored per level",
+            "goods_store": "Ore and goods stored per level",
+            "harbour": "Harbour trade capacity per level",
+            "order": "Public order per level",
+            "sanitation": "Sanitation per level (negative for squalor)",
+            "piety_floor": "Piety the district keeps alive per level",
+            "admin_pct": "Administrative reach per level (%)",
+            "policing": "Crime suppressed per level",
+            "investment_pct": "Extra investment drawn per level (%)",
+            "tension_relief_pct": "City-countryside tension relieved per level (%)",
+            "reason": "What the district is and why you devise it",
+        },
+    ),
 }

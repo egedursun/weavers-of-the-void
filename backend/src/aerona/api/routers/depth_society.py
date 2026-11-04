@@ -386,7 +386,6 @@ async def settlement_plan(services: ServicesDep, entity_id: int = Path(ge=1)) ->
                     parameters={key: getattr(row, key) for key in DESIGN_PARAMETERS},
                     defaults=base_parameters(rules, row.base_kind),
                     created_epoch=row.created_epoch,
-                    locked=list(row.locked or []),
                 )
                 for row in readout.designs
             ],

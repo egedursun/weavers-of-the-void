@@ -331,7 +331,7 @@ async def build(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_war
         kind, _, detail = want.partition(":")
         if kind == "repair":
             district = next((item for item in town.districts if str(item.id) == detail), None)
-            if district is not None and spend(ctx, town, table.repair_cost, table.district_labour // 4, "repairs"):
+            if district is not None and "condition" not in district.locked and spend(ctx, town, table.repair_cost, table.district_labour // 4, "repairs"):
                 district.condition = PERCENT
                 built += 1
             continue

@@ -44,7 +44,6 @@ def upgrade() -> None:
         *(sa.Column(column, sa.Integer(), nullable=True) for column in DESIGN_PARAMETERS),
         sa.Column("created_epoch", sa.Integer(), nullable=False),
         sa.Column("created_by_son_id", sa.Integer(), nullable=True),
-        sa.Column("locked", sa.JSON(), nullable=False),
         sa.ForeignKeyConstraint(["created_by_son_id"], ["sons.id"], name=op.f("fk_district_designs_created_by_son_id_sons"), ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["world_id"], ["worlds.id"], name=op.f("fk_district_designs_world_id_worlds"), ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_district_designs")),

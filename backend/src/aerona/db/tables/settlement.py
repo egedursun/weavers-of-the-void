@@ -93,7 +93,6 @@ class DistrictDesignRow(Base):
     tension_relief_pct: Mapped[int | None]
     created_epoch: Mapped[int] = mapped_column(default=0)
     created_by_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
-    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class DistrictRow(Base):

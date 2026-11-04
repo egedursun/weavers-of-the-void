@@ -198,7 +198,6 @@ class DistrictDesignView(ApiModel):
     parameters: dict[str, int | None]
     defaults: dict[str, int]
     created_epoch: int
-    locked: list[str]
 
 
 class AdminView(ApiModel):

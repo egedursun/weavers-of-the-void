@@ -52,7 +52,6 @@ class EditDesign(Command):
     name: str | None = Field(default=None, min_length=1, max_length=NAME_MAX)
     description: str | None = Field(default=None, max_length=DESCRIPTION_MAX)
     base_kind: DistrictKind | None = None
-    release: list[str] = Field(default_factory=list)
 
 
 class DesignTarget(Command):
@@ -123,9 +122,7 @@ async def design_district(scope: PlayerScope, command: DesignDistrict) -> Effect
 
 @player_action("district:design_edit", ActionKind.EDIT_RECORD)
 async def edit_design(scope: PlayerScope, command: EditDesign) -> Effect:
-    change = control.DesignChange(
-        values=command.values, name=command.name, description=command.description, base_kind=command.base_kind, release=tuple(command.release)
-    )
+    change = control.DesignChange(values=command.values, name=command.name, description=command.description, base_kind=command.base_kind)
     design = await control.edit_design(await scope.context("district_design_edit"), command.design_id, change)
     return Effect(f"The {design.name} design was reworked.")
 
