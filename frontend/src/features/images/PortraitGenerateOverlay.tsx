@@ -4,6 +4,7 @@ import { type Rarity } from '@/constants/rarity'
 import { Progress } from '@/components/ui/progress'
 import { Portrait } from '@/components/domain'
 import { Muted } from '@/components/typography'
+import { useGalleryStore } from './galleryStore'
 import { percentOf, stageText, useNodeImageState } from './imageGenState'
 import { mediaUrl } from './media'
 import { useGenerateImage } from './useGenerateImage'
@@ -40,6 +41,7 @@ export function PortraitGenerateOverlay({
   readOnlyReason = null,
 }: PortraitGenerateOverlayProps) {
   const state = useNodeImageState(nodeId)
+  const openGallery = useGalleryStore((store) => store.open)
   const generate = useGenerateImage(nodeId)
   if (veiled)
     return (
@@ -49,17 +51,8 @@ export function PortraitGenerateOverlay({
         className='size-portrait-xl shrink-0 rounded-lg bg-muted blur-sm'
       />
     )
-  if (cover && !onOpen)
-    return (
-      <Portrait
-        name={name}
-        src={mediaUrl(cover, 320)}
-        size='xl'
-        shape='square'
-        rarity={rarity}
-      />
-    )
-  if (cover && onOpen)
+  const openImages = onOpen ?? (() => openGallery(nodeId, 0))
+  if (cover)
     return (
       <a
         href={mediaUrl(cover)}
@@ -67,7 +60,7 @@ export function PortraitGenerateOverlay({
         aria-label={`Open the images of ${name}`}
         onClick={(event) => {
           event.preventDefault()
-          onOpen()
+          openImages()
         }}
       >
         <Portrait

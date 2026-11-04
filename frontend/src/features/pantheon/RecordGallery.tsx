@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { ImagePlus, Wand2 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -9,6 +9,7 @@ import { EmptyState, Section } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { Gallery } from '@/features/images/Gallery'
 import { Lightbox } from '@/features/images/Lightbox'
+import { useGalleryStore } from '@/features/images/galleryStore'
 import { ActionButton } from './ActionButton'
 import { ActionJob } from './ActionJob'
 import { type ImageRecord } from './api'
@@ -37,7 +38,20 @@ export function RecordGallery({
   emptyText = 'No image yet. Generate one from the prompt or upload your own.',
 }: RecordGalleryProps) {
   const promptId = useId()
-  const [open, setOpen] = useState<number | null>(null)
+  const open = useGalleryStore((store) =>
+    store.nodeId === nodeId ? store.index : null
+  )
+  const openAt = useGalleryStore((store) => store.open)
+  const close = useGalleryStore((store) => store.close)
+  const setOpen = (index: number | null) =>
+    index === null ? close() : openAt(nodeId, index)
+  useEffect(
+    () => () => {
+      if (useGalleryStore.getState().nodeId === nodeId)
+        useGalleryStore.getState().close()
+    },
+    [nodeId]
+  )
   const uploadId = useId()
   const [draft, setDraft] = useState(prompt ?? '')
   const { reason, state } = useGodGate()
