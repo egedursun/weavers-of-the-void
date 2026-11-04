@@ -58,9 +58,7 @@ async def son_anchorage(services: ServicesDep, son_id: int = Path(ge=1)) -> Anch
         shrines = await dedicated_structures(session, son.id)
         wars = await incited_wars(session, son.id)
         made = list(
-            await session.scalars(
-                select(EntityRow.id).where(EntityRow.creator_son_id == son.id, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
-            )
+            await session.scalars(select(EntityRow.id).where(EntityRow.creator_son_id == son.id, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id))
         )
         refs = await node_refs(session, [*(work.id for work in shrines), *(war.event_entity_id for war in wars), *made])
         return AnchorageView(

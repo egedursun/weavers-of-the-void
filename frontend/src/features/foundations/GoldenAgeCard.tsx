@@ -199,7 +199,7 @@ export function GoldenAgeSection({ worldId }: { worldId: number }) {
               hint={softness(view.data)}
             />
             <KpiTile
-              label='Communities'
+              label='Sharing it'
               value={`${view.data.golden_communities} / ${view.data.communities}`}
               icon={Users}
               tone='info'

@@ -19,7 +19,7 @@ import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { Adjust } from '@/features/wars/military/parts'
 import { useDedication } from './api'
-import { HoldToggle, NO_SON, SonSelect } from './parts'
+import { HoldToggle, SonSelect } from './parts'
 
 export function DedicationSection({
   structureId,
@@ -31,7 +31,7 @@ export function DedicationSection({
   const view = useDedication(structureId)
   const { reason } = useGodGate()
   const blocked = readOnlyReason ?? reason()
-  const [son, setSon] = useState(NO_SON)
+  const [son, setSon] = useState('')
   const [hold, setHold] = useState(true)
   const dedicate = useGodAction({
     run: () =>
@@ -138,9 +138,9 @@ export function DedicationSection({
             <div className='flex min-w-0 flex-wrap gap-2'>
               <Button
                 size='sm'
-                disabled={busy !== null || son === NO_SON}
+                disabled={busy !== null || son === ''}
                 disabledReason={
-                  busy ?? (son === NO_SON ? 'Choose a god' : undefined)
+                  busy ?? (son === '' ? 'Choose a god' : undefined)
                 }
                 onClick={() => dedicate.mutate(undefined)}
               >

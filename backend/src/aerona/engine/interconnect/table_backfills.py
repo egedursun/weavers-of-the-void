@@ -1,7 +1,10 @@
 from aerona.engine.interconnect.registry import Mechanic
 
 TABLE_BACKFILLS: dict[tuple[str, str], str] = {
-    ("community_opinion", "community_relations"): "existing mechanic: relation values stood before the wave; mind_opinion refreshes them from the migrated memories",
+    (
+        "community_opinion",
+        "community_relations",
+    ): "existing mechanic: relation values stood before the wave; mind_opinion refreshes them from the migrated memories",
     ("world_seasons", "calendars"): "existing mechanic: peoples who know astronomy adopt a calendar in the next epoch's seasons step",
     ("materials", "world_materials"): "none: catalog materials need no row; world substances appear from deposits, beasts and dead gods after the wave",
     ("extraction", "resource_workers"): "existing mechanic: workers are assigned to every profiled resource by the next extraction",

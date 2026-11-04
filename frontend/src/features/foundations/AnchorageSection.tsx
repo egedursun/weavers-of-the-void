@@ -27,12 +27,13 @@ import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { Adjust, Panel } from '@/features/wars/military/parts'
 import { type Anchorage, useAnchorage } from './api'
+import { battles } from './labels'
 import { HoldToggle } from './parts'
 
 function endingText(war: Anchorage['incited'][number]): string {
   if (war.ending === null || war.ending === undefined)
-    return `Still burning · ${war.battles} battles`
-  return `Ended in age ${war.ended_epoch} · ${war.ending.replaceAll('_', ' ')} · ${war.battles} battles`
+    return `Still burning · ${battles(war.battles)}`
+  return `Ended in age ${war.ended_epoch} · ${war.ending.replaceAll('_', ' ')} · ${battles(war.battles)}`
 }
 
 function AnchorControls({

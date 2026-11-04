@@ -28,6 +28,7 @@ from aerona.domain.enums.body import ConditionKind, InjuryKind
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.interconnect.catalog_faith import BEHAVIOURS as FAITH_BEHAVIOURS
 from aerona.engine.interconnect.catalog_faith import FAITH_MECHANICS
+from aerona.engine.interconnect.catalog_foundations import FOUNDATION_MECHANICS
 from aerona.engine.interconnect.catalog_lore import BEHAVIOURS as LORE_BEHAVIOURS
 from aerona.engine.interconnect.catalog_lore import LORE_MECHANICS
 from aerona.engine.interconnect.catalog_military import BEHAVIOURS as MILITARY_BEHAVIOURS
@@ -818,7 +819,16 @@ CORE_MECHANICS = (
         ),
     ),
 )
-BUILT_IN = (*CORE_MECHANICS, *SOCIETY_MECHANICS, *REALM_MECHANICS, *MILITARY_MECHANICS, *FAITH_MECHANICS, *LORE_MECHANICS, *WILDS_MECHANICS)
+BUILT_IN = (
+    *CORE_MECHANICS,
+    *SOCIETY_MECHANICS,
+    *REALM_MECHANICS,
+    *MILITARY_MECHANICS,
+    *FAITH_MECHANICS,
+    *LORE_MECHANICS,
+    *WILDS_MECHANICS,
+    *FOUNDATION_MECHANICS,
+)
 
 MODULE_SUBSYSTEMS: dict[str, Subsystem] = {
     "warfare": Subsystem.WAR,
