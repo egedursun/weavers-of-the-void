@@ -56,6 +56,7 @@ import {
   HoldWeather,
   NotableYears,
 } from '../environment/RegionPowers'
+import { RegionWorksPanel } from '../environment/RegionWorksPanel'
 import {
   BAND,
   COAST,
@@ -742,6 +743,7 @@ function RegionEnvironmentSection({ regionId }: { regionId: number }) {
               <NotableYears regionId={regionId} ground={ground} />
             </Card>
           </div>
+          <RegionWorksPanel regionId={regionId} ground={ground} />
           <RegionControls regionId={regionId} ground={ground} />
         </div>
       )}

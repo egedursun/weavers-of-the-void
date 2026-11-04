@@ -4,9 +4,9 @@ from aerona.engine.economy.markets import MarketTally, apply_aggregate_prices, m
 from aerona.engine.economy.money import MoneyTally, collect, lend
 from aerona.engine.economy.routes import RouteTally, carry, contacts, controllers, enemies_of, found_route, load_routes, set_tolls, upkeep
 from aerona.engine.economy.stocks import sync_aggregates
+from aerona.engine.environment.works import works_by_region
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
-from aerona.engine.phases.environment import works_by_region
 
 
 @reads(
@@ -81,6 +81,7 @@ async def markets(ctx: TickContext) -> None:
     "table.community_societies",
     "table.community_stocks",
     "table.cult_tenets",
+    "table.districts",
     "table.forced_weather",
     "table.holder_levels",
     "table.holder_techniques",
@@ -89,6 +90,7 @@ async def markets(ctx: TickContext) -> None:
     "table.region_environment",
     "table.resource_profiles",
     "table.resource_workers",
+    "table.settlement_infrastructure",
     "table.skills",
     "table.sky_events",
     "table.trade_route_profiles",

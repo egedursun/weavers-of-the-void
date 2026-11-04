@@ -188,6 +188,7 @@ from aerona.rules.registry.record_schema import RecordSchemaRules
 from aerona.rules.registry.religion import ReligionRules
 from aerona.rules.registry.remembrance import RemembranceRules
 from aerona.rules.registry.reputation import ReputationRules
+from aerona.rules.registry.seasonal import SeasonalRules
 from aerona.rules.registry.server import ServerRules
 from aerona.rules.registry.settlement import CrimeRules, FireRules, SanitationRules, TaxationRules, UrbanRules
 from aerona.rules.registry.setup_wizard import SetupWizardRules
@@ -230,6 +231,7 @@ class Rules:
     calendars: CalendarsRules = field(default_factory=CalendarsRules)
     engine_budget: EngineBudgetRules = field(default_factory=EngineBudgetRules)
     weather: WeatherRules = field(default_factory=WeatherRules)
+    seasonal: SeasonalRules = field(default_factory=SeasonalRules)
     anatomy: AnatomyRules = field(default_factory=AnatomyRules)
     injury: InjuryRules = field(default_factory=InjuryRules)
     capacities: CapacityRules = field(default_factory=CapacityRules)

@@ -27,6 +27,7 @@ from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, Personali
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.domain.enums.body import ConditionKind, InjuryKind
 from aerona.domain.enums.entity import EntityType
+from aerona.engine.interconnect.catalog_couplings import COUPLING_MECHANICS
 from aerona.engine.interconnect.catalog_faith import BEHAVIOURS as FAITH_BEHAVIOURS
 from aerona.engine.interconnect.catalog_faith import FAITH_MECHANICS
 from aerona.engine.interconnect.catalog_foundations import FOUNDATION_MECHANICS
@@ -939,6 +940,7 @@ BUILT_IN = (
     *FOUNDATION_MECHANICS,
     *PLACE_MECHANICS,
     *PLACE_BEHAVIOURS,
+    *COUPLING_MECHANICS,
 )
 
 MODULE_SUBSYSTEMS: dict[str, Subsystem] = {

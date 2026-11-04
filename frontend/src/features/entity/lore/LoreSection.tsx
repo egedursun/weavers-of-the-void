@@ -411,6 +411,15 @@ function TraditionPanel({
     <div data-surface='TraditionCard' className='flex min-w-0 flex-col gap-3'>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Badge variant='info'>{words(card.kind)}</Badge>
+        {card.in_season === true && (
+          <Badge variant='success'>kept in its season</Badge>
+        )}
+        {card.in_season === false && (
+          <Badge variant='warning'>drifted off its season</Badge>
+        )}
+        {card.calendar_entity_id != null && (
+          <Badge variant='secondary'>date fixed by a calendar</Badge>
+        )}
         {card.taboo_target && (
           <Badge variant='destructive'>{`taboo: ${words(card.taboo_target)}`}</Badge>
         )}
@@ -426,6 +435,8 @@ function TraditionPanel({
         fields={[
           { key: 'kind', kind: 'enum', values: traditionKindValues },
           { key: 'calendar_slot', kind: 'text', nullable: true },
+          { key: 'season_position', kind: 'number', min: 0, nullable: true },
+          { key: 'calendar_entity_id', kind: 'number', min: 1, nullable: true },
           { key: 'taboo_target', kind: 'text', nullable: true },
         ]}
         current={card}

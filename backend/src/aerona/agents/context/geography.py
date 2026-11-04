@@ -5,14 +5,19 @@ from sqlalchemy import select
 from aerona.agents.context.scope import Scope
 from aerona.cartography.model import RegionRecord
 from aerona.constants.agents import LARGE_REGION_RATIO, SMALL_REGION_RATIO
-from aerona.db.tables.celestial import WorldMapRow
+from aerona.constants.units import PERCENT
+from aerona.db.tables.celestial import WorldMapRow, WorldRow
+from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
+from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import LandUse, RiverClass
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.ley import LeyWeb
+from aerona.engine.environment.profile import Works
+from aerona.engine.environment.works import region_works
+from aerona.engine.lore.calendar_rites import long_days
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import GeographyLinesContext, RegionGeography
 from aerona.prompts.contexts.common import NamedRecord
@@ -121,6 +126,43 @@ async def place_lines(scope: Scope, region_ids: set[int]) -> dict[int, list[str]
     return found
 
 
+def works_words(works: Works | None) -> str | None:
+    if works is None:
+        return None
+    parts = [f"{count} {label}" for count, label in ((works.bridges, "bridges"), (works.irrigation, "irrigation works"), (works.harbours, "harbours")) if count]
+    return ", ".join(parts) or None
+
+
+def drying_words(rules: Rules, ground: RegionEnvironmentRow | None) -> str | None:
+    if ground is None:
+        return None
+    lost = round(ground.base_forest * ground.cleared / PERCENT * rules.environment.forest_rain_pct / PERCENT)
+    return f"rains down {lost} since the forests were cleared" if lost >= rules.context.scar_shown_depth else None
+
+
+async def season_words(scope: Scope, world_id: int) -> list[str]:
+    seasons = list(await scope.session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == world_id).order_by(WorldSeasonRow.position)))
+    if not seasons:
+        return []
+    statement = (
+        select(EntityRow.name, TraditionProfileRow.season_position)
+        .join(TraditionProfileRow, TraditionProfileRow.tradition_entity_id == EntityRow.id)
+        .where(EntityRow.world_id == world_id, EntityRow.status == EntityStatus.CANON, TraditionProfileRow.season_position.is_not(None))
+        .order_by(EntityRow.name)
+    )
+    kept: dict[int, list[str]] = {}
+    for name, position in await scope.session.execute(statement):
+        kept.setdefault(position or 0, []).append(name)
+    return [f"{season.name}" + (f" (kept: {', '.join(kept[season.position])})" if season.position in kept else "") for season in seasons]
+
+
+async def long_day_words(scope: Scope, world_id: int) -> str | None:
+    world = await scope.session.get(WorldRow, world_id)
+    if not long_days(scope.rules.seasonal.long_day_hours, world) or world is None:
+        return None
+    return f"A day lasts {world.day_length_hours} hours: folk rest at noon in the heat or keep vigil through the long night."
+
+
 async def geography_lines(scope: Scope, world_id: int | None) -> str:
     if world_id is None:
         return ""
@@ -140,6 +182,7 @@ async def geography_lines(scope: Scope, world_id: int | None) -> str:
     nexus = await nexus_names(scope, set(regions))
     book = await EnvironmentBook.load(scope.session, scope.rules, scope.epoch)
     places = await place_lines(scope, set(regions))
+    works = await region_works(scope.session, book.atlas)
     lines = [
         RegionGeography(
             id=record.id,
@@ -154,7 +197,12 @@ async def geography_lines(scope: Scope, world_id: int | None) -> str:
             nexus=nexus.get(record.id),
             weather=weather_words(scope, book, grounds.get(record.id)),
             places=places.get(record.id, []),
+            works=works_words(works.get(record.id)),
+            drying=drying_words(scope.rules, grounds.get(record.id)),
         )
         for record in known
     ]
-    return render(PromptId.GEOGRAPHY_LINES, GeographyLinesContext(known_regions=len(lines), regions=lines))
+    context = GeographyLinesContext(
+        known_regions=len(lines), regions=lines, seasons=await season_words(scope, world_id), long_days=await long_day_words(scope, world_id)
+    )
+    return render(PromptId.GEOGRAPHY_LINES, context)

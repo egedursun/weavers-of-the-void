@@ -318,11 +318,15 @@ class RegionGeography(ContextItem):
     nexus: str | None = None
     weather: str | None = None
     places: list[str] = Field(default_factory=list)
+    works: str | None = None
+    drying: str | None = None
 
 
 class GeographyLinesContext(PromptContext):
     known_regions: int
     regions: list[RegionGeography]
+    seasons: list[str] = Field(default_factory=list)
+    long_days: str | None = None
 
 
 class SummarySection(StrEnum):
