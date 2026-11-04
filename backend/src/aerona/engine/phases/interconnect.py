@@ -9,6 +9,7 @@ from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.derived import derive_environment_modifiers, derive_tick_modifiers
+from aerona.engine.interconnect.incident_backfill import backfill_incident_roles
 from aerona.engine.interconnect.incidents import chains_in
 from aerona.engine.interconnect.sources import CONDITION_EFFECTS, DERIVED_SOURCES
 from aerona.engine.phase import Phase
@@ -23,7 +24,6 @@ WONDER_GROUP = "wonder"
 
 
 @reads(
-    "army.morale",
     "artwork.renown",
     "structure.function",
     "table.artwork_profiles",
@@ -37,6 +37,7 @@ WONDER_GROUP = "wonder"
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.modifiers",
+    "table.nodes",
     "table.polity_members",
     "table.son_powers",
     "table.sons",
@@ -46,6 +47,7 @@ WONDER_GROUP = "wonder"
     "table.treaty_clauses",
     "table.treaty_parties",
     "table.treaty_profiles",
+    "table.world_maps",
 )
 @writes("table.modifiers")
 async def modifier_upkeep(ctx: TickContext) -> None:
@@ -72,12 +74,15 @@ async def modifier_upkeep(ctx: TickContext) -> None:
 
 
 @reads(
-    "region.fertility",
     "table.calendars",
     "table.entities",
     "table.forced_weather",
     "table.modifiers",
+    "table.place_environment",
     "table.region_environment",
+    "table.sky_events",
+    "table.stars",
+    "table.world_maps",
     "table.world_seasons",
     "table.worlds",
 )
@@ -124,10 +129,20 @@ async def derive_modifiers(ctx: TickContext) -> int:
     return made
 
 
-@reads("table.chronicle", "table.entities", "table.incident_participants", "table.incidents", "table.thread_links")
-@writes("table.incidents", "table.thread_links", "table.threads")
+@reads(
+    "table.applied_fixups",
+    "table.chronicle",
+    "table.entities",
+    "table.incident_participants",
+    "table.incidents",
+    "table.thread_links",
+    "table.war_sides",
+    "table.wars",
+)
+@writes("table.applied_fixups", "table.incident_participants", "table.incidents", "table.thread_links", "table.threads")
 async def incident_threads(ctx: TickContext) -> None:
     table = ctx.rules.incidents
+    ctx.count("incident_roles_backfilled", await backfill_incident_roles(ctx))
     chains = await chains_in(ctx.session, ctx.epoch, table.thread_chain_min, table.chain_depth)
     opened = 0
     for chain in sorted(chains, key=lambda item: (-len(item.incident_ids), item.incident_ids)):

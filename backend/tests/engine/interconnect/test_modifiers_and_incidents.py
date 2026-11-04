@@ -46,9 +46,9 @@ async def test_index_reads_only_modifiers_active_this_epoch(session: AsyncSessio
 
 async def test_upkeep_expires_and_decays_modifiers(session: AsyncSession, world_id: int) -> None:
     folk = await make(session, "Reed Folk", EntityType.PEOPLE, world_id, population=900, piety=40)
-    await add_modifier(session, ModifierDraft(folk.id, "piety", ModifierOp.ADD, 10, ModifierSource.BLESSING, "gone", start_epoch=1, end_epoch=3))
-    decaying = await add_modifier(session, ModifierDraft(folk.id, "piety", ModifierOp.ADD, 10, ModifierSource.BLESSING, "fading", start_epoch=1, decay_pct=50))
-    await add_modifier(session, ModifierDraft(folk.id, "piety", ModifierOp.MULTIPLY, 1.004, ModifierSource.BLESSING, "tiny", start_epoch=1, decay_pct=10))
+    await add_modifier(session, ModifierDraft(folk.id, "piety", ModifierOp.ADD, 10, ModifierSource.PLAYER, "gone", start_epoch=1, end_epoch=3))
+    decaying = await add_modifier(session, ModifierDraft(folk.id, "piety", ModifierOp.ADD, 10, ModifierSource.PLAYER, "fading", start_epoch=1, decay_pct=50))
+    await add_modifier(session, ModifierDraft(folk.id, "piety", ModifierOp.MULTIPLY, 1.004, ModifierSource.PLAYER, "tiny", start_epoch=1, decay_pct=10))
     await modifier_upkeep(make_ctx(session, Rules(), epoch=5))
     await session.flush()
     rows = list(await session.scalars(select(ModifierRow).order_by(ModifierRow.id)))

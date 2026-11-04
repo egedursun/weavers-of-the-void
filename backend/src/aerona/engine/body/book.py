@@ -27,9 +27,9 @@ from aerona.engine.body.functions import Wound
 from aerona.engine.body.hits import Armour
 from aerona.engine.lore.arms import guard_of, held_profiles
 from aerona.engine.primitives.knowledge import known_levels
-from aerona.engine.primitives.modifiers import live_sources
+from aerona.engine.primitives.modifiers import combine, live_contributions
 from aerona.engine.primitives.queries import active_bonds, living_entity
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import base_stat, clamp_to_field, stat
 from aerona.rules.registry import Rules
 
 Bearer = EntityRow | SonRow | ForeignGodRow
@@ -338,6 +338,7 @@ def frame_style(rules: Rules, attacker_size: int, target: BodyRow) -> StrikeStyl
     return StrikeStyle.NORMAL
 
 
+BODY_SOURCES = frozenset({ModifierSource.INJURY, ModifierSource.TRAIT})
 STAT_CAPACITY: dict[str, Capacity] = {
     "strength": Capacity.MELEE,
     "agility": Capacity.MOBILITY,
@@ -366,12 +367,15 @@ async def training(session: AsyncSession, rules: Rules, node_id: int, capacity: 
 async def effective(
     session: AsyncSession, mortal: EntityRow, key: str, default: int = 0, capacity: Capacity | None = None, *, rules: Rules | None = None
 ) -> float:
-    value = stat(mortal, key)
+    contributions = live_contributions(mortal.id, key)
+    held = {item.source_kind for item in contributions if item.held and item.source_kind in BODY_SOURCES}
+    kept = [item for item in contributions if item.source_kind not in BODY_SOURCES or item.held]
+    raw = base_stat(mortal, key)
+    value = raw if raw is None or not contributions else clamp_to_field(mortal, key, combine(raw, kept).value)
     base = default if value is None else value
     use = capacity or STAT_CAPACITY[key]
-    derived = live_sources(mortal.id, key) if capacity is None or capacity is STAT_CAPACITY.get(key) else frozenset()
-    result = base if ModifierSource.INJURY in derived else base * await factor(session, mortal.id, use)
+    result = base if ModifierSource.INJURY in held else base * await factor(session, mortal.id, use)
     if rules is not None:
-        mood = 1.0 if ModifierSource.TRAIT in derived else await temperament(session, rules, mortal.id, use)
+        mood = 1.0 if ModifierSource.TRAIT in held else await temperament(session, rules, mortal.id, use)
         result *= mood * await training(session, rules, mortal.id, use)
     return result

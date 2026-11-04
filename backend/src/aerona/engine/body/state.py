@@ -7,11 +7,9 @@ from aerona.db.tables.body import ARMOUR_COLUMNS, BodyRow, InjuryRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import InjuryKind
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.entity import EntityType
 from aerona.engine.body.book import Bearer, Reading, active_conditions, armour_of, ensure_body, factors_of, injuries_of, open_severity, prostheses_of
 from aerona.engine.body.capacities import pain_of
 from aerona.engine.body.customs import customs_of, presence_pct
-from aerona.engine.body.derived import refresh_body_modifiers
 from aerona.engine.gods.queries import community_of
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.queries import active_bonds
@@ -54,9 +52,6 @@ async def refresh(session: AsyncSession, rules: Rules, bearer: Bearer, epoch: in
             setattr(body, column, value)
     cap_sanity(rules, bearer, injuries)
     body.updated_epoch = epoch
-    if isinstance(bearer, EntityRow) and bearer.entity_type is EntityType.MORTAL:
-        await session.flush()
-        await refresh_body_modifiers(session, rules, epoch, bearer.id)
     return body
 
 

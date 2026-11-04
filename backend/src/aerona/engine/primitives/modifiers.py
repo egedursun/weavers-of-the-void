@@ -68,6 +68,7 @@ class Contribution:
     source_node_id: int | None
     reason_key: str
     stacking_group: str | None
+    held: bool = False
 
 
 @dataclass(frozen=True)
@@ -125,7 +126,7 @@ class ModifierIndex:
         self._by_target: dict[tuple[int, str], list[Contribution]] = {}
         for row in rows:
             self._by_target.setdefault((row.target_node_id, row.target_key), []).append(
-                Contribution(row.id, row.op, row.magnitude, row.source_kind, row.source_node_id, row.reason_key, row.stacking_group)
+                Contribution(row.id, row.op, row.magnitude, row.source_kind, row.source_node_id, row.reason_key, row.stacking_group, row.held)
             )
 
     @classmethod
@@ -152,7 +153,7 @@ class ModifierIndex:
         if row.source_kind in GUARD_SOURCES:
             return
         self._by_target.setdefault((row.target_node_id, row.target_key), []).append(
-            Contribution(row.id, row.op, row.magnitude, row.source_kind, row.source_node_id, row.reason_key, row.stacking_group)
+            Contribution(row.id, row.op, row.magnitude, row.source_kind, row.source_node_id, row.reason_key, row.stacking_group, row.held)
         )
 
     def discard(self, node_ids: Iterable[int], sources: Iterable[ModifierSource]) -> None:

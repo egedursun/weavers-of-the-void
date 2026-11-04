@@ -12,11 +12,10 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 from aerona.engine.body.book import STAT_CAPACITY, temperament_factor
-from aerona.engine.primitives.derivation import Origin, replace_derived, shaped_draft
+from aerona.engine.primitives.derivation import Origin, shaped_draft
 from aerona.engine.primitives.modifiers import ModifierDraft
 from aerona.rules.registry import Rules
 
-BODY_SOURCES = frozenset({ModifierSource.INJURY, ModifierSource.TRAIT})
 INJURY_REASON = "modifier.injury"
 TRAIT_REASON = "modifier.trait"
 
@@ -49,7 +48,3 @@ async def body_drafts(session: AsyncSession, rules: Rules, epoch: int, node_ids:
             if (draft := shaped_draft(mortals[node_id], key, ModifierOp.MULTIPLY, temperament_factor(rules, traits, capacity), origin)) is not None:
                 drafts.append(draft)
     return drafts
-
-
-async def refresh_body_modifiers(session: AsyncSession, rules: Rules, epoch: int, node_id: int) -> int:
-    return await replace_derived(session, BODY_SOURCES, await body_drafts(session, rules, epoch, [node_id]), [node_id])

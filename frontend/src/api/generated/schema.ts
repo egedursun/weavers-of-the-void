@@ -4287,6 +4287,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/nodes/{node_id}/causality": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["node_causality_api_nodes__node_id__causality_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mechanics/graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["mechanics_graph_api_mechanics_graph_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mechanics/{key}/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["mechanic_detail_api_mechanics__key__links_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/nodes/{node_id}/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["node_profiles_api_nodes__node_id__profiles_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/worlds/{world_id}/materials": {
         parameters: {
             query?: never;
@@ -8207,6 +8271,198 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/modifier:create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_modifier_create_api_actions_modifier_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/modifier:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_modifier_edit_api_actions_modifier_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/modifier:hold": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_modifier_hold_api_actions_modifier_hold_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/modifier:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_modifier_release_api_actions_modifier_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/incident:create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_incident_create_api_actions_incident_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/incident:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_incident_edit_api_actions_incident_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/incident:roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_incident_roles_api_actions_incident_roles_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/incident:link_cause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_incident_link_cause_api_actions_incident_link_cause_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/incident:unlink_cause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_incident_unlink_cause_api_actions_incident_unlink_cause_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/incident:delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_incident_delete_api_actions_incident_delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/profile:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_profile_set_api_actions_profile_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/profile:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_profile_release_api_actions_profile_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/ley:sever": {
         parameters: {
             query?: never;
@@ -10891,6 +11147,27 @@ export interface components {
             severity: number;
             enabled_by_default: boolean;
         };
+        CausalEdge: {
+            cause: number;
+            effect: number;
+            span: number;
+        };
+        CausalNode: {
+            id: number;
+            kind: string;
+            epoch: number;
+            year: number | null;
+            magnitude: number;
+            text: string;
+            own: boolean;
+            role: components["schemas"]["IncidentRole"] | null;
+            cause_incident_id: number | null;
+        };
+        CausalityView: {
+            node_id: number;
+            nodes: components["schemas"]["CausalNode"][];
+            edges: components["schemas"]["CausalEdge"][];
+        };
         CelestialStats: {
             kind: "celestial";
             brightness?: number | null;
@@ -11794,6 +12071,7 @@ export interface components {
             text: string;
             is_read: boolean;
         };
+        EdgeKind: "modifier" | "rule_switch" | "flow" | "trigger";
         EffectiveValue: {
             key: string;
             base: number;
@@ -13097,6 +13375,37 @@ export interface components {
             incident_id: number;
             note?: string | null;
         };
+        IncidentCreateInput: {
+            text: string;
+            kind: string;
+            epoch?: number | null;
+            year?: number | null;
+            magnitude: number;
+            place_entity_id?: number | null;
+            cause_incident_id?: number | null;
+            participants?: components["schemas"]["Participant"][];
+        };
+        IncidentDeleteInput: {
+            incident_id: number;
+        };
+        IncidentEditInput: {
+            incident_id: number;
+            text?: string | null;
+            kind?: string | null;
+            magnitude?: number | null;
+            year?: number | null;
+            place_entity_id?: number | null;
+            clear_place: boolean;
+        };
+        IncidentLinkCauseInput: {
+            incident_id: number;
+            cause_incident_id: number;
+        };
+        IncidentParticipantRecord: {
+            node_id: number;
+            name: string | null;
+            role: components["schemas"]["IncidentRole"];
+        };
         IncidentRecord: {
             id: number;
             kind: string;
@@ -13111,8 +13420,17 @@ export interface components {
             thread_id: number | null;
             causes: string[];
             consequences: number[];
+            place_entity_id?: number | null;
+            participants?: components["schemas"]["IncidentParticipantRecord"][];
         };
         IncidentRole: "subject" | "actor" | "target" | "witness" | "place";
+        IncidentRolesInput: {
+            incident_id: number;
+            participants: components["schemas"]["Participant"][];
+        };
+        IncidentUnlinkCauseInput: {
+            incident_id: number;
+        };
         InfrastructureView: {
             walls_level: number;
             walls_material: components["schemas"]["BuildMaterial"];
@@ -14077,6 +14395,18 @@ export interface components {
             materials: components["schemas"]["MaterialView"][];
             commodities: components["schemas"]["CommodityView"][];
         };
+        MechanicDetailView: {
+            mechanic: components["schemas"]["MechanicRecord"];
+            links: components["schemas"]["MechanicLinkRecord"][];
+        };
+        MechanicLinkRecord: {
+            direction: string;
+            other: string;
+            other_title: string | null;
+            other_subsystem: components["schemas"]["Subsystem"] | null;
+            kind: components["schemas"]["EdgeKind"];
+            carriers: string[];
+        };
         MechanicParamView: {
             mechanic: string;
             magnitude: number | null;
@@ -14095,6 +14425,11 @@ export interface components {
             exposure: components["schemas"]["Exposure"];
             tools: string[];
             couplings: components["schemas"]["Subsystem"][];
+        };
+        MechanicsGraphView: {
+            subsystems: components["schemas"]["SubsystemSummary"][];
+            links: components["schemas"]["SubsystemLink"][];
+            mechanics: components["schemas"]["MechanicRecord"][];
         };
         MedicineTier: "none" | "herbs" | "surgery" | "prosthetics" | "reattachment";
         MemberView: {
@@ -14291,6 +14626,35 @@ export interface components {
             epochs?: number | null;
             decay_pct?: number | null;
         };
+        ModifierCreateInput: {
+            node_id: number;
+            key: string;
+            op: components["schemas"]["ModifierOp"];
+            magnitude: number;
+            source_kind: components["schemas"]["ModifierSource"];
+            source_node_id?: number | null;
+            stacking_group?: string | null;
+            epochs?: number | null;
+            decay_pct?: number | null;
+        };
+        ModifierEditInput: {
+            modifier_id: number;
+            key?: string | null;
+            op?: components["schemas"]["ModifierOp"] | null;
+            magnitude?: number | null;
+            source_kind?: components["schemas"]["ModifierSource"] | null;
+            source_node_id?: number | null;
+            clear_source_node: boolean;
+            stacking_group?: string | null;
+            clear_stacking_group: boolean;
+            epochs?: number | null;
+            endless: boolean;
+            decay_pct?: number | null;
+            clear_decay: boolean;
+        };
+        ModifierHoldInput: {
+            modifier_id: number;
+        };
         ModifierOp: "add" | "multiply";
         ModifierRecord: {
             id: number;
@@ -14307,6 +14671,10 @@ export interface components {
             start_epoch: number;
             end_epoch: number | null;
             decay_pct: number | null;
+            held: boolean;
+        };
+        ModifierReleaseInput: {
+            modifier_id: number;
         };
         ModifierRemoveInput: {
             modifier_id: number;
@@ -14830,6 +15198,10 @@ export interface components {
             loss: number;
             state: components["schemas"]["InjuryState"] | null;
             prosthesis: components["schemas"]["MaterialKind"] | null;
+        };
+        Participant: {
+            node_id: number;
+            role: components["schemas"]["IncidentRole"];
         };
         PartyRole: "signatory" | "overlord" | "vassal" | "guarantor";
         PartyView: {
@@ -15358,6 +15730,32 @@ export interface components {
         PriceSeries: {
             commodity: components["schemas"]["CommodityKind"];
             points: components["schemas"]["PricePoint"][];
+        };
+        ProfileColumnRecord: {
+            name: string;
+            kind: string;
+            value: number | string | boolean | null;
+            options: string[];
+            nullable: boolean;
+            held: boolean;
+            pinned: boolean;
+        };
+        ProfileReleaseInput: {
+            node_id: number;
+            table: string;
+            column: string;
+        };
+        ProfileSetInput: {
+            node_id: number;
+            table: string;
+            column: string;
+            value: number | string | boolean | null;
+            hold: boolean;
+        };
+        ProfileTableRecord: {
+            table: string;
+            lockable: boolean;
+            columns: components["schemas"]["ProfileColumnRecord"][];
         };
         PromptArea: "shared" | "context" | "genesis" | "son_turn" | "fate" | "chronicler" | "naming" | "voices" | "deepening" | "image_prompts" | "council" | "translation" | "world_birth" | "network_repair" | "mortal" | "opportunities" | "agent" | "chronicle" | "localisation";
         PromptCatalogue: {
@@ -17162,6 +17560,21 @@ export interface components {
             function?: number | null;
         };
         Subsystem: "core" | "body" | "mind" | "social" | "household" | "demography" | "economy" | "polity" | "law" | "intrigue" | "communication" | "war" | "faith" | "magic" | "knowledge" | "culture" | "language" | "ecology" | "environment" | "gods" | "cosmos";
+        SubsystemLink: {
+            source: components["schemas"]["Subsystem"];
+            target: components["schemas"]["Subsystem"];
+            kinds: components["schemas"]["EdgeKind"][];
+            edges: number;
+            carriers: string[];
+            writers: string[];
+            readers: string[];
+        };
+        SubsystemSummary: {
+            key: components["schemas"]["Subsystem"];
+            mechanics: number;
+            outgoing: number;
+            incoming: number;
+        };
         SummarySection: "pantheon" | "threads" | "events" | "cosmos" | "geography" | "languages" | "map" | "legends";
         SystemErrorEvent: {
             id: number;
@@ -26242,6 +26655,114 @@ export interface operations {
             };
         };
     };
+    node_causality_api_nodes__node_id__causality_get: {
+        parameters: {
+            query?: {
+                depth?: number | null;
+            };
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CausalityView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mechanics_graph_api_mechanics_graph_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MechanicsGraphView"];
+                };
+            };
+        };
+    };
+    mechanic_detail_api_mechanics__key__links_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MechanicDetailView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    node_profiles_api_nodes__node_id__profiles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileTableRecord"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     world_materials_api_worlds__world_id__materials_get: {
         parameters: {
             query?: never;
@@ -33489,6 +34010,378 @@ export interface operations {
             };
         };
     };
+    action_modifier_create_api_actions_modifier_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModifierCreateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_modifier_edit_api_actions_modifier_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModifierEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_modifier_hold_api_actions_modifier_hold_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModifierHoldInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_modifier_release_api_actions_modifier_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModifierReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_incident_create_api_actions_incident_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncidentCreateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_incident_edit_api_actions_incident_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncidentEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_incident_roles_api_actions_incident_roles_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncidentRolesInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_incident_link_cause_api_actions_incident_link_cause_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncidentLinkCauseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_incident_unlink_cause_api_actions_incident_unlink_cause_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncidentUnlinkCauseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_incident_delete_api_actions_incident_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncidentDeleteInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_profile_set_api_actions_profile_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_profile_release_api_actions_profile_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_ley_sever_api_actions_ley_sever_post: {
         parameters: {
             query?: never;
@@ -37280,6 +38173,7 @@ export const diseaseVectorValues: ReadonlyArray<FlattenedDeepRequired<components
 export const districtKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DistrictKind"]> = ["farmland", "market", "craft_quarter", "temple_quarter", "harbour", "citadel", "slums", "palace", "foreign_quarter", "necropolis"];
 export const domainValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Domain"]> = ["sea", "fire", "earth", "sky", "storm", "death", "life", "dream", "time", "light", "shadow", "war", "craft", "knowledge", "love", "trickery", "hunt", "plants", "bone", "blood", "sound", "stone", "ice", "madness", "trade", "road", "plague", "harvest", "moon", "sun", "star", "lies", "oath", "memory", "hunger", "glass", "salt", "ash", "border", "sleep"];
 export const domesticationStageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DomesticationStage"]> = ["wild", "tamed", "herded", "domesticated", "breed"];
+export const edgeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EdgeKind"]> = ["modifier", "rule_switch", "flow", "trigger"];
 export const elevationClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ElevationClass"]> = ["mountainous", "hilly", "plain", "water"];
 export const engineFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EngineFinishedEvent"]["kind"]> = ["engine.finished"];
 export const engineKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EngineKind"]> = ["war", "battle", "siege", "magic_storm", "earthquake", "flood", "plague", "drought", "storm", "famine", "uprising", "migration", "temple", "wall", "library", "school", "observatory", "cosmic_archive", "wonder", "rebels", "merchant_guild", "priests_council", "warrior_band", "interworld_federation", "wandering_market", "void_pirates", "peoples_army", "holy_guard", "mercenary_army", "dialect", "primitive_language", "currency", "eclipse_prophecy", "cosmic_travel_resource", "golem", "domesticated", "chimera", "descended_soul", "mirror_birth", "apprentice", "comet", "ascension_myth", "god_corpse", "god_shade", "resurrection_order", "ghost_ship", "colony"];
