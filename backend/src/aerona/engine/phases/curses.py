@@ -48,14 +48,18 @@ async def curser_of(ctx: TickContext, entity: EntityRow) -> int | None:
     "people.wealth",
     "settlement.population",
     "settlement.prosperity",
+    "settlement.wealth",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
     "table.conditions",
+    "table.cult_tenets",
     "table.culture_values",
     "table.entity_flags",
     "table.entity_tags",
+    "table.holder_levels",
     "table.injuries",
+    "table.item_profiles",
     "table.prostheses",
 )
 @writes(
@@ -69,22 +73,6 @@ async def curser_of(ctx: TickContext, entity: EntityRow) -> int | None:
     "table.entities",
     "table.injuries",
 )
-@reads(
-    "item.protection",
-    "mortal.age",
-    "mortal.agility",
-    "mortal.charisma",
-    "mortal.hp",
-    "mortal.intellect",
-    "mortal.lifespan",
-    "mortal.strength",
-    "people.population",
-    "people.prosperity",
-    "people.wealth",
-    "settlement.population",
-    "settlement.prosperity",
-)
-@writes("mortal.hp", "mortal.strength", "people.population", "settlement.population", "settlement.prosperity")
 async def curse_decay(ctx: TickContext) -> None:
     rules = ctx.rules
     effects = rules.world_effects
@@ -110,7 +98,7 @@ async def curse_decay(ctx: TickContext) -> None:
             await apply_hits(ctx, entity, Harm(rules.world_engine.curse_hp_loss, HarmCause.CURSE, CURSE_DEATH, source_node_id=curser, killer_id=curser))
 
 
-@reads("table.conditions", "table.epoch_year_cursors")
+@reads("table.conditions", "table.epoch_year_cursors", "table.holder_levels")
 @writes("table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
 async def lift_curses(ctx: TickContext) -> None:
     engine = ctx.rules.world_engine
@@ -150,15 +138,21 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
     "table.body_customs",
     "table.bonds",
     "table.conditions",
+    "table.cult_tenets",
     "table.culture_values",
     "table.entity_flags",
     "table.entity_tags",
     "table.epoch_year_cursors",
+    "table.holder_levels",
     "table.injuries",
+    "table.item_profiles",
     "table.memories",
     "table.minds",
+    "table.node_materials",
+    "table.nodes",
     "table.prostheses",
     "table.traits",
+    "table.world_materials",
 )
 @writes(
     "mortal.hp",
@@ -176,19 +170,6 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
     "table.injuries",
     "table.memories",
 )
-@reads(
-    "item.curse",
-    "item.protection",
-    "mortal.age",
-    "mortal.agility",
-    "mortal.charisma",
-    "mortal.hp",
-    "mortal.intellect",
-    "mortal.lifespan",
-    "mortal.strength",
-    "people.prosperity",
-)
-@writes("mortal.hp")
 async def cursed_items(ctx: TickContext) -> None:
     rules = ctx.rules
     effects = rules.world_effects

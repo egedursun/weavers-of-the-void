@@ -103,7 +103,19 @@ async def _spread_language(ctx: TickContext, source: EntityRow, target: EntityRo
     )
 
 
-@reads("knowledge.spread", "table.bonds", "table.epoch_year_cursors", "table.nodes")
+@reads(
+    "knowledge.spread",
+    "table.bonds",
+    "table.book_contents",
+    "table.epoch_year_cursors",
+    "table.holder_techniques",
+    "table.nodes",
+    "table.skills",
+    "table.trade_flows",
+    "table.trade_route_profiles",
+    "table.trade_route_regions",
+    "table.trade_route_tolls",
+)
 @writes(
     "knowledge.spread",
     "table.bonds",
@@ -114,8 +126,6 @@ async def _spread_language(ctx: TickContext, source: EntityRow, target: EntityRo
     "table.incident_participants",
     "table.incidents",
 )
-@reads("knowledge.spread")
-@writes("knowledge.spread")
 async def knowledge_diffusion(ctx: TickContext) -> None:
     session = ctx.session
     entities = {entity.id: entity for entity in await canon(session)}
@@ -252,7 +262,18 @@ def _trading_communities(bond_entities: tuple[EntityRow | None, EntityRow | None
     return first, second
 
 
-@reads("knowledge.spread", "table.bonds", "table.epoch_year_cursors", "table.lexemes", "table.nodes", "table.reverences")
+@reads(
+    "knowledge.spread",
+    "table.bonds",
+    "table.epoch_year_cursors",
+    "table.lexemes",
+    "table.nodes",
+    "table.reverences",
+    "table.trade_flows",
+    "table.trade_route_profiles",
+    "table.trade_route_regions",
+    "table.trade_route_tolls",
+)
 @writes(
     "knowledge.spread",
     "table.bonds",
@@ -264,8 +285,6 @@ def _trading_communities(bond_entities: tuple[EntityRow | None, EntityRow | None
     "table.incidents",
     "table.lexemes",
 )
-@reads("knowledge.spread")
-@writes("knowledge.spread")
 async def cultural_exchange(ctx: TickContext) -> None:
     culture = ctx.rules.culture
     entities: Mapping[int, EntityRow] = {entity.id: entity for entity in await canon(ctx.session, COMMUNITY_TYPES)}

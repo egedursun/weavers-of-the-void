@@ -377,12 +377,15 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.entity_flags",
     "table.entity_traits",
     "table.epoch_year_cursors",
+    "table.holder_levels",
     "table.injuries",
+    "table.item_profiles",
     "table.language_profiles",
     "table.lexemes",
     "table.memories",
     "table.minds",
     "table.name_registry",
+    "table.node_materials",
     "table.nodes",
     "table.prostheses",
     "table.routes",
@@ -410,8 +413,6 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.name_registry",
     "table.sons",
 )
-@reads("army.experience", "mortal.age", "mortal.agility", "mortal.charisma", "mortal.hp", "mortal.intellect", "mortal.lifespan", "mortal.strength")
-@writes("army.experience", "mortal.death_year", "mortal.hp")
 async def war_casualties(ctx: TickContext) -> None:
     clashes = await clashes_of(ctx)
     ctx.count("duel_dead", await mark_duel_dead(ctx, clashes))
@@ -452,6 +453,7 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     "table.designated_heirs",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.holder_levels",
     "table.language_profiles",
     "table.lexemes",
     "table.memories",
@@ -477,8 +479,6 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     "table.name_registry",
     "table.sons",
 )
-@reads("event.severity", "mortal.age", "mortal.agility", "mortal.charisma", "mortal.intellect", "mortal.lifespan", "mortal.strength")
-@writes("mortal.death_year")
 async def disaster_casualties(ctx: TickContext) -> None:
     losses = ctx.rules.casualties
     session = ctx.session

@@ -160,8 +160,25 @@ async def scribes(ctx: TickContext) -> tuple[int, int]:
     return pleased, strained
 
 
-@reads("language.sacredness", "table.bonds", "table.language_standings", "table.speaker_cohorts", "table.people_culture", "table.community_society")
-@writes("table.language_standings", "table.speaker_cohorts", "table.community_society", "table.settlement_profiles")
+@reads(
+    "language.sacredness",
+    "table.artwork_profiles",
+    "table.bonds",
+    "table.community_societies",
+    "table.community_society",
+    "table.language_profiles",
+    "table.language_standing",
+    "table.language_standings",
+    "table.offices",
+    "table.people_culture",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.polity_territories",
+    "table.speaker_cohorts",
+    "table.vassalages",
+    "table.world_maps",
+)
+@writes("table.community_society", "table.language_standing", "table.language_standings", "table.settlement_profiles", "table.speaker_cohorts")
 async def language_cycles(ctx: TickContext) -> None:
     liturgical = set(await ctx.session.scalars(select(PeopleCultureRow.liturgical_language_id).where(PeopleCultureRow.liturgical_language_id.is_not(None))))
     standings = [
@@ -187,8 +204,17 @@ async def confirmed(ctx: TickContext, legend: EntityRow, row: LegendProfileRow) 
     return any(word in name.lower() for name in events for word in words)
 
 
-@reads("legend.spread", "table.bonds", "table.legend_profiles", "table.people_culture", "table.value_profiles", "table.claims", "table.house_profiles")
-@writes("table.legend_profiles", "table.value_profiles", "table.claims", "table.house_profiles")
+@reads(
+    "legend.spread",
+    "table.bonds",
+    "table.claims",
+    "table.culture_values",
+    "table.house_profiles",
+    "table.legend_profiles",
+    "table.people_culture",
+    "table.value_profiles",
+)
+@writes("table.claims", "table.culture_values", "table.house_profiles", "table.legend_profiles", "table.value_profiles")
 async def legend_cycles(ctx: TickContext) -> None:
     table = ctx.rules.belief
     for legend in await canon(ctx.session, [EntityType.LEGEND]):
@@ -219,8 +245,40 @@ async def defied(ctx: TickContext, laws: LawBook, kind: TraditionKind, community
     return True
 
 
-@reads("table.traditions", "table.tradition_participation", "table.bonds", "table.laws", "table.value_profiles", "table.community_stocks")
-@writes("table.tradition_participation", "table.value_profiles", "table.community_stocks", "table.settlement_profiles", "table.region_environment")
+@reads(
+    "event.severity",
+    "people.population",
+    "settlement.population",
+    "table.bonds",
+    "table.community_societies",
+    "table.community_stocks",
+    "table.culture_values",
+    "table.goods_flows",
+    "table.holder_techniques",
+    "table.law_jurisdictions",
+    "table.law_profiles",
+    "table.laws",
+    "table.people_culture",
+    "table.polity_members",
+    "table.region_environment",
+    "table.tradition_participation",
+    "table.tradition_profiles",
+    "table.traditions",
+    "table.value_profiles",
+    "table.world_maps",
+)
+@writes(
+    "table.community_societies",
+    "table.community_stocks",
+    "table.culture_values",
+    "table.goods_flows",
+    "table.people_culture",
+    "table.region_environment",
+    "table.settlement_profiles",
+    "table.tradition_participation",
+    "table.tradition_profiles",
+    "table.value_profiles",
+)
 async def tradition_cycles(ctx: TickContext) -> None:
     table = ctx.rules.traditions
     atlas = await RegionAtlas.load(ctx.session)
@@ -249,8 +307,17 @@ async def tradition_cycles(ctx: TickContext) -> None:
     ctx.count("traditions_skipped", len(list(skipped)))
 
 
-@reads("table.knowledge_holders", "table.holder_levels", "table.holder_techniques", "table.bonds", "table.people_culture")
-@writes("table.holder_levels", "table.holder_techniques", "table.bonds", "table.book_contents")
+@reads(
+    "people.population",
+    "settlement.population",
+    "table.bonds",
+    "table.holder_levels",
+    "table.holder_techniques",
+    "table.item_profiles",
+    "table.knowledge_holders",
+    "table.people_culture",
+)
+@writes("table.bonds", "table.book_contents", "table.holder_levels", "table.holder_techniques")
 async def research_cycles(ctx: TickContext) -> None:
     ctx.count("holders_seeded", await research.ensure_holders(ctx))
     for key, value in (await research.practise(ctx)).items():
@@ -260,8 +327,39 @@ async def research_cycles(ctx: TickContext) -> None:
     ctx.count("books_filled", await research.fill_books(ctx))
 
 
-@reads("ideology.adherents", "ideology.appeal", "table.ideology_profiles", "table.ideology_adherents", "table.community_society", "table.polity_profiles")
-@writes("ideology.adherents", "table.ideology_profiles", "table.ideology_adherents", "table.value_profiles", "table.polity_profiles", "table.wars")
+@reads(
+    "ideology.adherents",
+    "ideology.appeal",
+    "mortal.intellect",
+    "table.bonds",
+    "table.community_societies",
+    "table.community_society",
+    "table.culture_values",
+    "table.epoch_year_cursors",
+    "table.ideology_adherents",
+    "table.ideology_profiles",
+    "table.ideology_tenets",
+    "table.name_registry",
+    "table.personality_values",
+    "table.polity_profiles",
+)
+@writes(
+    "ideology.adherents",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.culture_values",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.ideology_adherents",
+    "table.ideology_profiles",
+    "table.ideology_tenets",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+    "table.polity_profiles",
+    "table.value_profiles",
+    "table.wars",
+)
 async def ideology_cycles(ctx: TickContext) -> None:
     table = ctx.rules.ideologies
     founded = await ideology.emerge(ctx)
@@ -287,8 +385,21 @@ async def ideology_cycles(ctx: TickContext) -> None:
             await note(ctx, f"In the name of {creed.name}, {outcome}.", key="lore.revolution", ids=[creed.id])
 
 
-@reads("rite.power", "table.rite_profiles", "table.rite_effects", "table.castings", "table.entity_flags", "table.laws")
-@writes("rite.castings", "table.rite_profiles", "table.castings", "table.item_enchantments", "table.entities")
+@reads(
+    "rite.power",
+    "table.castings",
+    "table.entity_flags",
+    "table.laws",
+    "table.offices",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.polity_territories",
+    "table.rite_effects",
+    "table.rite_profiles",
+    "table.vassalages",
+    "table.world_maps",
+)
+@writes("rite.castings", "table.castings", "table.entities", "table.item_enchantments", "table.rite_profiles")
 async def rite_cycles(ctx: TickContext) -> None:
     realms = await RealmBook.load(ctx.session)
     ctx.count("cult_rites", await rites.cult_rites(ctx, realms))
@@ -296,8 +407,8 @@ async def rite_cycles(ctx: TickContext) -> None:
     ctx.count("rites_branded", await rites.heresies(ctx))
 
 
-@reads("prophecy.certainty", "table.prophecy_conditions", "table.bonds", "table.offices", "table.house_members", "table.wars", "table.sky_events")
-@writes("prophecy.certainty", "table.prophecy_conditions", "table.claims", "table.entities", "table.relations")
+@reads("prophecy.certainty", "table.bonds", "table.house_members", "table.offices", "table.prophecy_conditions", "table.sky_events", "table.wars")
+@writes("prophecy.certainty", "table.claims", "table.entities", "table.prophecy_conditions", "table.relations")
 async def prophecy_cycles(ctx: TickContext) -> None:
     for seen in await canon(ctx.session, [EntityType.PROPHECY]):
         state, pressed = await prophecy.resolve(ctx, seen)
@@ -349,8 +460,56 @@ async def afflict(ctx: TickContext, item: EntityRow) -> str | None:
     return row.curse.value
 
 
-@reads("table.item_profiles", "table.item_history", "table.relics", "table.region_environment", "table.conditions")
-@writes("table.item_profiles", "table.item_history", "table.relics", "table.conditions", "cult.zeal", "table.memories")
+@reads(
+    "item.curse",
+    "item.damage",
+    "item.might",
+    "item.protection",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "table.bodies",
+    "table.body_customs",
+    "table.bonds",
+    "table.conditions",
+    "table.cult_tenets",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.entity_tags",
+    "table.holder_levels",
+    "table.injuries",
+    "table.item_history",
+    "table.item_profiles",
+    "table.memories",
+    "table.minds",
+    "table.node_materials",
+    "table.nodes",
+    "table.personality_values",
+    "table.prostheses",
+    "table.region_environment",
+    "table.relics",
+    "table.skills",
+    "table.traits",
+    "table.world_maps",
+)
+@writes(
+    "cult.zeal",
+    "mortal.hp",
+    "table.bodies",
+    "table.body_customs",
+    "table.conditions",
+    "table.entities",
+    "table.injuries",
+    "table.item_history",
+    "table.item_profiles",
+    "table.memories",
+    "table.personality_values",
+    "table.relics",
+)
 async def item_cycles(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     for item in await items.living_items(ctx):
@@ -363,8 +522,8 @@ async def item_cycles(ctx: TickContext) -> None:
         ctx.count(f"relics_{key}", value)
 
 
-@reads("artwork.renown", "artwork.influence", "table.artwork_profiles", "table.polity_profiles", "table.offices")
-@writes("table.artwork_profiles", "table.value_profiles", "table.polity_profiles", "table.entities")
+@reads("artwork.influence", "artwork.renown", "table.artwork_profiles", "table.offices", "table.polity_profiles")
+@writes("table.artwork_profiles", "table.entities", "table.polity_profiles", "table.value_profiles")
 async def artwork_cycles(ctx: TickContext) -> None:
     for work in await art.living_artworks(ctx):
         for key, value in (await art.art_year(ctx, work)).items():

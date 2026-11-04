@@ -147,7 +147,6 @@ async def migrate(ctx: TickContext, atlas: RegionAtlas, source: EntityRow, targe
     "table.world_maps",
     "table.world_seasons",
 )
-@reads("people.population", "settlement.population", "settlement.prosperity")
 async def famine_migration(ctx: TickContext) -> None:
     rules = ctx.rules
     effects = rules.world_effects

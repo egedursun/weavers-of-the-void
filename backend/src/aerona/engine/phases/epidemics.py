@@ -30,8 +30,12 @@ async def ensure_profiles(ctx: TickContext) -> int:
     "people.population",
     "settlement.population",
     "table.armies",
+    "table.community_cohorts",
+    "table.disease_cures",
     "table.disease_profiles",
     "table.endemic_diseases",
+    "table.holder_levels",
+    "table.holder_techniques",
     "table.immunities",
     "table.journeys",
     "table.outbreaks",
@@ -39,6 +43,7 @@ async def ensure_profiles(ctx: TickContext) -> int:
     "table.region_environment",
     "table.settlement_profiles",
     "table.sieges",
+    "table.world_maps",
 )
 @writes(
     "army.size",

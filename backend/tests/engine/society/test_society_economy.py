@@ -1,33 +1,40 @@
 from dataclasses import replace
-from typing import Any
+from types import SimpleNamespace
+from typing import Any, cast
 
 import pytest
 
+from aerona.catalog.commodities import COMMODITIES
 from aerona.core.errors import ValidationFailedError
-from aerona.db.tables.economy import ResourceCommodityRow
+from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.domain.models.entity_stats import ResourceStats
+from aerona.engine.context import TickContext
+from aerona.engine.economy.control import open_route
+from aerona.engine.economy.markets import price_of
+from aerona.engine.economy.resources import set_resource_yield
+from aerona.engine.economy.stocks import goods_of, holding
+from aerona.engine.phases.commerce import trade_flow
 from aerona.engine.phases.society_economy import (
     EconomyInputs,
     class_targets,
     default_society,
     food_rate,
     incite_class_uprising,
-    market_prices,
     normalized_shares,
     order_forge,
     satisfaction_targets,
     send_famine,
     send_plenty,
     set_class_shares,
-    set_resource_commodity,
     set_stores,
     society_economy,
-    society_of,
     society_view,
+    storage_room,
 )
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
@@ -48,7 +55,6 @@ BASE_INPUTS = EconomyInputs(
     justice=None,
     fertility=50,
     branches=frozenset(),
-    ore_income=0.0,
     piety=50,
     prosperity=50,
     skilled_crafts=False,
@@ -85,12 +91,12 @@ def test_food_rate_reacts_to_harvest_and_law() -> None:
 
 
 def test_prices_rise_in_scarcity() -> None:
-    settings = RULES.society
-    scarce = market_prices(settings, 1.0, {Commodity.FOOD: 10, Commodity.ORE: 1, Commodity.GOODS: 1})
-    plenty = market_prices(settings, 1.0, {Commodity.FOOD: 190, Commodity.ORE: 100, Commodity.GOODS: 200})
-    assert scarce[Commodity.FOOD] > plenty[Commodity.FOOD]
-    assert scarce[Commodity.ORE] > plenty[Commodity.ORE]
-    assert plenty[Commodity.GOODS] >= settings.price_min_pct
+    ctx = cast(TickContext, SimpleNamespace(rules=RULES))
+    for commodity in (CommodityKind.GRAIN, CommodityKind.ORE, CommodityKind.LUXURIES):
+        scarce = price_of(ctx, commodity, supply=1, demand=100, factor=1.0)
+        plenty = price_of(ctx, commodity, supply=200, demand=100, factor=1.0)
+        assert scarce > plenty
+        assert plenty >= round(COMMODITIES[commodity].base_price * RULES.markets.price_floor_pct / 100) - 1
 
 
 def test_satisfaction_targets_punish_hunger_tribute_and_reward_justice() -> None:
@@ -114,7 +120,7 @@ async def test_phase_creates_societies_and_moves_stocks(realm: Realm) -> None:
 
 async def test_famine_strikes_empty_granaries(realm: Realm) -> None:
     town = await settlement(realm, "Gaunt", population=4000)
-    rules = tuned(society={"famine_food": 1000, "famine_rate_pct": 1000, "food_rate_effect": 0})
+    rules = tuned(society={"famine_food": 1000, "famine_rate_pct": 1000})
     ctx = context(realm.session, rules)
     await society_economy(ctx)
     assert stat(town, "population") == 4000 * rules.society.famine_population_kept_pct // 100
@@ -127,9 +133,10 @@ async def test_forges_and_ore_mines(realm: Realm) -> None:
     await link(realm.session, town.id, smithing.id, BondKind.KNOWS)
     mine = await make(realm.session, "Iron Hill", EntityType.RESOURCE, ResourceStats(abundance=100), world_id=realm.world.id, location_id=realm.region.id)
     await link(realm.session, town.id, mine.id, BondKind.OWNS)
-    ctx = context(realm.session, tuned(society={"weapon_ore_required": 0, "weapon_warrior_pct": 0, "forge_weapon_chance": 100}))
-    await set_resource_commodity(ctx, mine.id, Commodity.ORE)
-    assert (await realm.session.get(ResourceCommodityRow, mine.id)) is not None
+    ctx = context(realm.session, tuned(society={"weapon_warrior_pct": 0, "forge_weapon_chance": 100}))
+    await set_resource_yield(ctx.session, ctx.rules, mine.id, CommodityKind.ORE)
+    await goods_of(ctx.session, ctx.epoch).add(town.id, CommodityKind.WEAPONS, ctx.rules.refining.weapon_batch_threshold * 2, GoodsFlow.PLAYER)
+    assert (await realm.session.get(ResourceProfileRow, mine.id)) is not None
     await society_economy(ctx)
     weapons = [item for item in await named(realm.session, EntityType.ITEM) if item.subtype == "weapon"]
     assert len(weapons) == 1
@@ -159,14 +166,15 @@ async def test_trade_flows_level_stores(realm: Realm) -> None:
     rich = await settlement(realm, "Granary")
     poor = await settlement(realm, "Hollow")
     ctx = context(realm.session)
-    await set_stores(ctx, rich.id, {Commodity.FOOD: 190})
-    await set_stores(ctx, poor.id, {Commodity.FOOD: 0})
-    await link(realm.session, rich.id, poor.id, BondKind.TRADES_WITH)
     await society_economy(ctx)
-    rich_food = (await society_of(realm.session, RULES, rich.id)).stocks[Commodity.FOOD]
-    poor_food = (await society_of(realm.session, RULES, poor.id)).stocks[Commodity.FOOD]
-    assert rich_food - poor_food < 190
-    assert ctx.environment.stats.counters["test.trade_flows"] == 1
+    await goods_of(ctx.session, ctx.epoch).add(rich.id, CommodityKind.GRAIN, 6000, GoodsFlow.PLAYER)
+    await send_famine(ctx, poor.id)
+    stored = await holding(ctx.session, rich.id, CommodityKind.GRAIN)
+    await open_route(ctx, route_id=None, first_id=rich.id, second_id=poor.id)
+    await trade_flow(ctx)
+    assert await holding(ctx.session, rich.id, CommodityKind.GRAIN) < stored
+    assert await holding(ctx.session, poor.id, CommodityKind.GRAIN) > 0
+    assert ctx.environment.stats.counters["test.loads_moved"] > 0
 
 
 async def test_manual_controls(realm: Realm) -> None:
@@ -179,14 +187,14 @@ async def test_manual_controls(realm: Realm) -> None:
     await set_stores(ctx, town.id, {Commodity.ORE: 0})
     with pytest.raises(ValidationFailedError):
         await order_forge(ctx, town.id)
-    await set_stores(ctx, town.id, {Commodity.ORE: 50})
+    await goods_of(ctx.session, ctx.epoch).add(town.id, CommodityKind.WEAPONS, RULES.refining.weapon_batch_threshold, GoodsFlow.PLAYER)
     weapon = await order_forge(ctx, town.id)
     assert await active_bonds(realm.session, town.id, BondKind.OWNS)
     assert weapon.entity_type is EntityType.ITEM
     famine = await send_famine(ctx, town.id)
     assert famine.stocks[Commodity.FOOD] == 0
     plenty = await send_plenty(ctx, town.id)
-    assert plenty.stocks[Commodity.FOOD] == RULES.society.stockpile_cap
+    assert plenty.stocks[Commodity.FOOD] == await storage_room(ctx, town, Commodity.FOOD)
     view = await society_view(realm.session, RULES, town.id)
     assert view.stored
     rebels = await incite_class_uprising(ctx, town.id, SocialClass.FARMER)

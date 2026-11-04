@@ -838,6 +838,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.entity_traits",
     "table.epoch_year_cursors",
     "table.forced_weather",
+    "table.holder_levels",
     "table.journeys",
     "table.language_profiles",
     "table.lexemes",
@@ -882,21 +883,6 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.routes",
     "table.sons",
 )
-@reads(
-    "knowledge.spread",
-    "people.craft",
-    "people.magic",
-    "people.martiality",
-    "people.piety",
-    "people.population",
-    "people.prosperity",
-    "region.fertility",
-    "settlement.defense",
-    "settlement.piety",
-    "settlement.population",
-    "species.danger",
-)
-@writes("knowledge.spread", "people.piety", "people.population", "settlement.piety", "settlement.population")
 async def travel_phase(ctx: TickContext) -> None:
     await hidden_routes(ctx)
     await route_knowledge(ctx)

@@ -219,19 +219,6 @@ async def _hold_piety(session: AsyncSession, rules: Rules, entity_id: int, floor
     "table.incidents",
     "table.sons",
 )
-@reads(
-    "knowledge.spread",
-    "people.piety",
-    "people.prosperity",
-    "place.mystery",
-    "prophecy.certainty",
-    "settlement.defense",
-    "settlement.piety",
-    "settlement.prosperity",
-    "structure.durability",
-    "structure.function",
-)
-@writes("knowledge.spread", "people.piety", "place.mystery", "prophecy.certainty", "settlement.defense", "structure.function")
 async def living_stats(ctx: TickContext) -> None:
     ctx.count("mysteries", await solve_mysteries(ctx))
     ctx.count("functions", await work_functions(ctx))

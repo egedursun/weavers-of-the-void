@@ -608,17 +608,6 @@ async def plague_faith(ctx: TickContext) -> int:
     "table.memories",
     "table.name_registry",
 )
-@reads(
-    "event.severity",
-    "people.piety",
-    "people.population",
-    "people.prosperity",
-    "people.wealth",
-    "settlement.piety",
-    "settlement.population",
-    "settlement.prosperity",
-)
-@writes("people.piety", "settlement.piety")
 async def remembrance(ctx: TickContext) -> None:
     cap = ctx.rules.remembrance.epoch_cap
     made = await wars_remembered(ctx, cap)

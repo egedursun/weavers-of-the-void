@@ -107,7 +107,6 @@ async def native_species(ctx: TickContext, world: WorldRow, region: EntityRow) -
 
 
 @reads("region.fertility")
-@reads("region.fertility")
 async def life_seed(ctx: TickContext) -> None:
     rules = ctx.rules
     rng = ctx.rng()

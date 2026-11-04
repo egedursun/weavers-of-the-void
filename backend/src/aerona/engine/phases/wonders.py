@@ -121,8 +121,6 @@ async def envy(ctx: TickContext, work: EntityRow, owner: EntityRow, neighbours: 
     "table.memories",
     "table.sons",
 )
-@reads("people.piety", "people.prosperity", "settlement.piety", "settlement.prosperity", "structure.splendor")
-@writes("people.piety", "settlement.piety", "settlement.prosperity")
 async def wonders(ctx: TickContext) -> None:
     session = ctx.session
     settings = ctx.rules.wonders

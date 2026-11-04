@@ -9,25 +9,46 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.records import retire_in
 
 
-@reads("table.bonds", "table.herds", "table.species_profiles", "table.species_uses", "table.species_yields", "table.community_stocks", "table.skills")
-@writes("table.herds", "table.species_profiles", "table.species_uses", "table.species_yields", "table.community_stocks", "table.entities", "table.bonds")
+@reads(
+    "table.bonds",
+    "table.community_stocks",
+    "table.herds",
+    "table.skills",
+    "table.species_profiles",
+    "table.species_uses",
+    "table.species_yields",
+    "table.world_maps",
+)
+@writes("table.bonds", "table.community_stocks", "table.entities", "table.herds", "table.species_profiles", "table.species_uses", "table.species_yields")
 async def husbandry_cycles(ctx: TickContext) -> None:
     for key, value in (await husbandry(ctx)).items():
         ctx.count(key, value)
     ctx.count("totems", await adopt_totems(ctx))
 
 
-@reads("beast.terror", "beast.strength", "settlement.defense", "settlement.population", "table.beast_profiles", "table.memories", "table.species_ranges")
-@writes(
+@reads(
+    "beast.strength",
     "beast.terror",
+    "settlement.defense",
+    "settlement.population",
+    "species.danger",
+    "table.beast_profiles",
+    "table.entity_flags",
+    "table.memories",
+    "table.species_profiles",
+    "table.species_ranges",
+    "table.world_maps",
+)
+@writes(
     "beast.renown",
+    "beast.terror",
+    "settlement.defense",
     "settlement.population",
     "settlement.prosperity",
-    "settlement.defense",
     "table.beast_profiles",
+    "table.bonds",
     "table.community_stocks",
     "table.entities",
-    "table.bonds",
 )
 async def beast_cycles(ctx: TickContext) -> None:
     ctx.count("beasts_risen", await champions(ctx))

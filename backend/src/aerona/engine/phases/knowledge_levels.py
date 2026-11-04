@@ -315,12 +315,18 @@ async def decline_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     "settlement.prosperity",
     "table.bonds",
     "table.community_societies",
+    "table.endemic_diseases",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.holder_levels",
     "table.language_profiles",
     "table.lexemes",
     "table.name_registry",
     "table.nodes",
+    "table.outbreaks",
+    "table.people_culture",
+    "table.region_environment",
+    "table.world_maps",
 )
 @writes(
     "knowledge.spread",
@@ -329,12 +335,11 @@ async def decline_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     "table.chronicle_entities",
     "table.entities",
     "table.epoch_year_cursors",
+    "table.holder_levels",
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
 )
-@reads("knowledge.spread", "people.prosperity", "settlement.prosperity")
-@writes("knowledge.spread")
 async def knowledge_levels(ctx: TickContext) -> None:
     scene = await KnowledgeScene.load(ctx)
     ctx.count("deepened", await deepen_round(ctx, scene))

@@ -353,8 +353,6 @@ async def run_networks(ctx: TickContext) -> None:
     "table.incidents",
     "table.memories",
 )
-@reads("cult.influence", "faction.sway", "knowledge.spread", "people.wealth", "settlement.defense")
-@writes("knowledge.spread")
 async def espionage(ctx: TickContext) -> None:
     ctx.count("spy_networks_founded", await found_networks(ctx))
     await run_networks(ctx)

@@ -364,6 +364,7 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.armies",
     "table.body_customs",
     "table.bonds",
+    "table.captive_cohorts",
     "table.captives",
     "table.community_relations",
     "table.cosmos",
@@ -377,6 +378,8 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.pressures",
     "table.routes",
     "table.sieges",
+    "table.speaker_cohorts",
+    "table.trade_route_profiles",
     "table.traits",
     "table.war_sides",
     "table.wars",
@@ -401,8 +404,6 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.war_sides",
     "table.wars",
 )
-@reads("army.size", "mortal.age", "people.population", "settlement.population")
-@writes("army.size", "people.population", "settlement.population")
 async def diplomacy(ctx: TickContext) -> None:
     ctx.count("alliances_lapsed", await alliance_lifetimes(ctx))
     counters = DiplomacyCounters()

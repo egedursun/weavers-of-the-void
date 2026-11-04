@@ -24,8 +24,8 @@ class FlowCategory(StrEnum):
     UNSPECIFIED = "unspecified"
 
 
-TRANSFERS = frozenset({FlowCategory.MIGRATION, FlowCategory.LEVY, FlowCategory.JOURNEY, FlowCategory.CAPTIVE, FlowCategory.MERGE})
-SOURCES = frozenset({FlowCategory.BIRTH, FlowCategory.GROWTH, FlowCategory.CREATION, FlowCategory.CONVERSION})
+TRANSFERS = frozenset({FlowCategory.MIGRATION, FlowCategory.LEVY, FlowCategory.JOURNEY, FlowCategory.MERGE})
+SOURCES = frozenset({FlowCategory.BIRTH, FlowCategory.GROWTH, FlowCategory.CREATION, FlowCategory.CONVERSION, FlowCategory.CAPTIVE})
 SINKS = frozenset({FlowCategory.DEATH, FlowCategory.CASUALTY, FlowCategory.DISASTER, FlowCategory.FAMINE, FlowCategory.PLAGUE})
 
 FLOW_CATEGORY: ContextVar[FlowCategory | None] = ContextVar("flow_category", default=None)
@@ -52,6 +52,7 @@ PHASE_FLOWS: dict[str, FlowCategory] = {
     "diplomacy": C.LEVY,
     "war_upkeep": C.LEVY,
     "campaigns": C.CASUALTY,
+    "prisoners": C.CAPTIVE,
     "war_casualties": C.CASUALTY,
     "travel": C.JOURNEY,
     "exploration": C.MIGRATION,

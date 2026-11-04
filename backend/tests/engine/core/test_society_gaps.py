@@ -3,11 +3,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.repositories.sons import SonRepository
+from aerona.db.tables.culture import CastingRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.engine.economy.stocks import goods_of
+from aerona.engine.lore.control import set_technique
 from aerona.engine.phases.births import villages
 from aerona.engine.phases.doom import doom_clock
 from aerona.engine.phases.factions import FactionKind, eligible_kinds, factions
@@ -16,8 +23,8 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.naming import Namer
 from aerona.engine.primitives.queries import has_flag
-from aerona.engine.primitives.stats import stat
-from tests.engine.core.factories import CoreWorld, add_flag, bond, knowledge, mortal, settlement, tuned_rules
+from aerona.engine.primitives.stats import set_stats, stat
+from tests.engine.core.factories import CoreWorld, add_flag, bond, knowledge, mortal, settlement, son_draft, tuned_rules
 from tests.engine.warfare.factories import society as seed_society
 
 
@@ -102,22 +109,39 @@ async def test_wizard_wards_a_home_with_protection_or_plenty(session: AsyncSessi
     mage = await mortal(session, "Vesna", world, town.id, intellect=90)
     lore = await knowledge(session, world, "Ember Lore", KnowledgeBranch.MAGIC)
     await bond(session, mage.id, lore.id, BondKind.KNOWS)
+    mason = await SonRepository(session).create(son_draft("Halden", world.world.id, (Domain.STONE, Domain.EARTH)))
+    await bond(session, mage.id, mason.id, BondKind.WORSHIPS)
+    set_stats(world.regions[0], magic=90)
+    quiet = {"invention_chance": 100}
     protect = await manual_context(
         session,
         "ward",
-        tuned_rules(world_engine={"sorcerer_act_chance": 100, "sorcerer_curse_chance": 0}, world_effects={"sorcerer_protect_chance": 100}),
+        tuned_rules(
+            world_engine={"sorcerer_act_chance": 100, "sorcerer_curse_chance": 0},
+            world_effects={"sorcerer_protect_chance": 100},
+            rites=quiet,
+            backlash={"per_power_pct": 0},
+        ),
     )
+    await set_technique(protect, town.id, Technique.WARDING, held=True, secret=False)
+    await goods_of(session, protect.epoch).add(town.id, CommodityKind.MAGICAL_REAGENTS, 40, GoodsFlow.PLAYER)
     await wizards(protect)
     assert await has_flag(session, town.id, EntityFlag.PROTECTED)
     assert stat(town, "defense") == 30 + protect.rules.intervention_effects.protection_defense_gain
-    assert "magic.ward" in await keys(session)
+    assert "magic.rite" in await keys(session)
     plenty = await manual_context(
         session,
         "plenty",
-        tuned_rules(world_engine={"sorcerer_act_chance": 100, "sorcerer_curse_chance": 0}, world_effects={"sorcerer_protect_chance": 0}),
+        tuned_rules(
+            world_engine={"sorcerer_act_chance": 100, "sorcerer_curse_chance": 0},
+            world_effects={"sorcerer_protect_chance": 0},
+            rites=quiet,
+            backlash={"per_power_pct": 0},
+        ),
     )
     await wizards(plenty)
-    assert "magic.plenty" in await keys(session)
+    effects = list(await session.scalars(select(CastingRow.effect).where(CastingRow.caster_entity_id == mage.id).order_by(CastingRow.id)))
+    assert effects == ["blessed Brookhold; warded Brookhold", "blessed the fields of Brookhold"]
 
 
 async def test_doom_clock_chronicles_the_first_and_final_omens(session: AsyncSession, world: CoreWorld) -> None:

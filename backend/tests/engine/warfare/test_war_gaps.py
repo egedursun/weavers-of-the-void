@@ -120,12 +120,16 @@ async def test_without_a_war_ban_the_same_hostility_opens_a_war(session: AsyncSe
 
 
 async def test_duel_without_death_wounds_the_loser(session: AsyncSession, world_id: int) -> None:
-    rules = tune(Rules(), campaigns={**QUIET, "duel_death_chance": 0, "duel_die": 1})
+    rules = tune(
+        Rules(),
+        campaigns={**QUIET, "duel_death_chance": 0, "duel_die": 1},
+        duels={"yield_honour": -100, "mercy_spare": 100, "disarm_chance": 0, "exchanges_min": 20, "exchanges_max": 20},
+    )
     ctx = make_ctx(session, rules)
     champion = await make(session, "Bren", EntityType.MORTAL, world_id, strength=95, agility=60, hp=100, age=30)
     victim = await make(session, "Tam", EntityType.MORTAL, world_id, strength=5, agility=5, hp=100, age=30)
     text = await order_duel(ctx, champion.id, victim.id)
-    assert "badly wounded" in text
+    assert "Tam was crippled" in text
     assert victim.status is EntityStatus.CANON and champion.status is EntityStatus.CANON
     assert victim.stats.model_dump()["hp"] == 100 - rules.campaigns.duel_loser_hp_loss
     assert champion.stats.model_dump()["hp"] == 100

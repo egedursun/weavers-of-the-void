@@ -28,7 +28,6 @@ async def total_population(ctx: TickContext) -> int:
 
 
 @reads("people.population", "settlement.population")
-@reads("people.population", "settlement.population")
 async def population_baseline(ctx: TickContext) -> None:
     record(ctx, LedgerKey.POPULATION_START, await total_population(ctx))
 
@@ -131,23 +130,22 @@ async def grow_community(
     "settlement.population",
     "settlement.prosperity",
     "table.bonds",
+    "table.community_cohorts",
+    "table.community_societies",
+    "table.endemic_diseases",
+    "table.holder_levels",
     "table.nodes",
+    "table.outbreaks",
+    "table.people_biology",
     "table.place_environment",
+    "table.region_environment",
+    "table.settlement_profiles",
     "table.son_powers",
+    "table.war_sides",
+    "table.wars",
     "table.world_maps",
 )
-@writes("cult.followers", "people.population", "settlement.population", "table.entities")
-@reads(
-    "cult.followers",
-    "cult.influence",
-    "people.population",
-    "place.fertility",
-    "region.breadth",
-    "region.fertility",
-    "settlement.population",
-    "settlement.prosperity",
-)
-@writes("cult.followers", "people.population", "settlement.population")
+@writes("cult.followers", "people.population", "settlement.population", "table.community_cohorts", "table.entities")
 async def population_growth(ctx: TickContext) -> None:
     record(ctx, LedgerKey.POPULATION_BEFORE_GROWTH, await total_population(ctx))
     model = await CapacityModel.load(ctx.session, ctx.rules)

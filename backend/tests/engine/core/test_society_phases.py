@@ -13,6 +13,7 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import WarCause, WarStatus
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import EventStats, LegendStats, ProphecyStats, SpeciesStats, SpiritStats, TraditionStats
+from aerona.engine.lore.legends import profile_of
 from aerona.engine.phases.belief_memory import belief_and_memory, event_to_legend, revive_legend
 from aerona.engine.phases.births import (
     awaken_species,
@@ -233,6 +234,7 @@ async def test_belief_and_memory(session: AsyncSession, world: CoreWorld) -> Non
     spring = await entity(session, "The Singing Spring", EntityType.LEGEND, LegendStats(spread=95), world_id=world.world.id)
     await bond(session, spring.id, world.regions[1].id, BondKind.TELLS_OF)
     await bond(session, world.people.id, spring.id, BondKind.TELLS_OF)
+    (await profile_of(ctx, spring)).credence = 90
     faded = await entity(session, "Old Dust", EntityType.TRADITION, TraditionStats(spread=5), world_id=world.world.id)
     battle = await entity(session, "Red Field", EntityType.EVENT, EventStats(severity=90), world_id=world.world.id, location_id=world.regions[0].id)
     prophecy = await entity(session, "The Long Wait", EntityType.PROPHECY, ProphecyStats(certainty=50), world_id=world.world.id)

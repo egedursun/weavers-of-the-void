@@ -1,4 +1,5 @@
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
@@ -81,9 +82,15 @@ async def sync_aggregates(session: AsyncSession, rules: Rules, community: Entity
     return row
 
 
-def index_units(rules: Rules, community: EntityRow, aggregate: Commodity, index: int) -> int:
-    need = aggregate_need(rules, headcount(community), aggregate)
-    return round_half_up(abs(index) * need / rules.economy.supply_index_epoch)
+def index_units(rules: Rules, community: EntityRow, aggregate: Commodity, index: int, mix: Mapping[CommodityKind, int]) -> int:
+    if aggregate is not Commodity.FOOD:
+        need = aggregate_need(rules, headcount(community), aggregate)
+        return round_half_up(abs(index) * need / rules.economy.supply_index_epoch)
+    weight = sum(mix.values())
+    nourishing = sum(share * COMMODITIES[kind].nourishment for kind, share in mix.items()) / max(1, weight)
+    if nourishing <= 0:
+        return 0
+    return round_half_up(abs(index) * nourishment_need(rules, headcount(community)) / rules.economy.supply_index_epoch / nourishing)
 
 
 @dataclass(frozen=True)
@@ -176,16 +183,17 @@ class GoodsLedger:
         return moved
 
     async def shift_aggregate(self, rules: Rules, community: EntityRow, aggregate: Commodity, index_delta: int, *, flow: GoodsFlow) -> int:
-        units = index_units(rules, community, aggregate, index_delta)
+        totals = await holdings(self.session, community.id)
+        family = {kind: quantity for kind, quantity in totals.items() if COMMODITIES[kind].aggregate is aggregate and quantity > 0}
+        split = dict(BACKFILL_SPLITS[aggregate])
+        units = index_units(rules, community, aggregate, index_delta, split if index_delta > 0 else family)
         if units <= 0:
             return 0
         moved = 0
         if index_delta > 0:
-            for kind, share in BACKFILL_SPLITS[aggregate]:
+            for kind, share in split.items():
                 moved += await self.add(community.id, kind, round_half_up(units * share / PERCENT), flow)
         else:
-            totals = await holdings(self.session, community.id)
-            family = {kind: quantity for kind, quantity in totals.items() if COMMODITIES[kind].aggregate is aggregate and quantity > 0}
             stocked = sum(family.values())
             for kind, quantity in sorted(family.items()):
                 moved -= await self.take_units(community.id, kind, min(quantity, round_half_up(units * quantity / max(1, stocked))), flow)
@@ -193,9 +201,9 @@ class GoodsLedger:
         return moved
 
     async def move_aggregate(self, rules: Rules, source: EntityRow, target: EntityRow, aggregate: Commodity, *, index: int, flow: GoodsFlow) -> int:
-        units = index_units(rules, source, aggregate, index)
         totals = await holdings(self.session, source.id)
         family = {kind: quantity for kind, quantity in totals.items() if COMMODITIES[kind].aggregate is aggregate and quantity > 0}
+        units = index_units(rules, source, aggregate, index, family)
         stocked = sum(family.values())
         moved = 0
         for kind, quantity in sorted(family.items()):

@@ -37,7 +37,7 @@ async def test_creature_rebellion_and_speciation(session: AsyncSession, cosmos: 
     assert son.existence == 60 - rules.creatures.creature_revolt_son_existence_loss
     await BondRepository(session).connect(BondDraft(beast.id, region.id, BondKind.LIVES_IN, 1))
     assert await speciation(ctx) == 1
-    child = await session.scalar(select(EntityRow).where(EntityRow.subtype == "subspecies"))
+    child = await session.scalar(select(EntityRow).where(EntityRow.subtype.like("%subspecies")))
     assert child is not None and await BondRepository(session).exists_between(child.id, beast.id, BondKind.DESCENDS_FROM)
 
 

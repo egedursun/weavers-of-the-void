@@ -367,6 +367,7 @@ async def peoples(ctx: TickContext) -> int:
     "table.culture_values",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.law_profiles",
     "table.nodes",
     "table.routes",
     "table.wars",
@@ -386,7 +387,6 @@ async def peoples(ctx: TickContext) -> int:
     "table.incidents",
     "table.routes",
 )
-@reads("cult.followers", "cult.influence", "cult.zeal", "law.justice", "law.rigidity", "people.population")
 async def institution_cycles(ctx: TickContext) -> None:
     await laws(ctx)
     await cults(ctx)
@@ -548,8 +548,6 @@ async def swallowed_places(ctx: TickContext) -> int:
     "table.incident_participants",
     "table.incidents",
 )
-@reads("artwork.influence", "artwork.renown", "event.severity", "item.might")
-@writes("artwork.influence", "artwork.renown")
 async def culture_cycles(ctx: TickContext) -> None:
     await works(ctx)
     await items(ctx)

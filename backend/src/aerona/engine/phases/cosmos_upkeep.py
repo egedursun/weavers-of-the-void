@@ -16,14 +16,13 @@ async def world_maps(ctx: TickContext) -> None:
 
 @reads("celestial.brightness")
 @writes("table.worlds")
-@reads("celestial.brightness")
 async def epoch_stars(ctx: TickContext) -> None:
     chosen = await choose_epoch_stars(ctx)
     ctx.count("stars_chosen", sum(1 for star in chosen.values() if star is not None))
 
 
-@reads("table.worlds", "table.foreign_gods", "table.entities")
-@writes("table.foreign_gods", "table.chronicle", "table.incidents")
+@reads("table.entities", "table.foreign_gods", "table.worlds")
+@writes("table.chronicle", "table.foreign_gods", "table.incidents")
 async def local_gods(ctx: TickContext) -> None:
     ctx.count("born", len(await birth_local_gods(ctx)))
 

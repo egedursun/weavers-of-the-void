@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.session import Database
-from aerona.db.tables.economy import ResourceCommodityRow
+from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import CreationVerdictRow, EntityRow
 from aerona.db.tables.lore import LexemeRow, MessageRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
@@ -121,8 +121,8 @@ async def test_discovery_claim_and_settlement(database: Database) -> None:
         toolkit, "discover_resource", {"name": "Pearl Bed", "description": LONG, "location_id": realm.cosmos.region_id, "domain": "sea", "commodity": "ore"}
     )
     async with database.read() as session:
-        commodity = await session.get(ResourceCommodityRow, toolkit.created_entity_ids[-1])
-    assert commodity is not None and commodity.commodity is Commodity.ORE
+        commodity = await session.get(ResourceProfileRow, toolkit.created_entity_ids[-1])
+    assert commodity is not None and commodity.commodity == Commodity.ORE.value
     assert "son_tools" not in await rejected(toolkit, "discover_resource", {"name": "Second Bed", "description": LONG, "location_id": realm.cosmos.region_id})
     async with database.write() as session:
         await connect(session, realm.faction_id, realm.resource_id, BondKind.OWNS)

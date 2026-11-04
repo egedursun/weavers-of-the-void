@@ -16,8 +16,6 @@ def reverted(prosperity: int, target: int, share_pct: int, roll: float | None = 
 
 @reads("people.prosperity", "settlement.prosperity")
 @writes("people.prosperity", "settlement.prosperity")
-@reads("people.prosperity", "settlement.prosperity")
-@writes("people.prosperity", "settlement.prosperity")
 async def prosperity_reversion(ctx: TickContext) -> None:
     effects = ctx.rules.world_effects
     for community in await canon(ctx.session, COMMUNITY_TYPES):

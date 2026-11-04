@@ -108,8 +108,6 @@ async def overflow_to_sons(session: AsyncSession, rules: Rules, budget: int) -> 
     "table.nodes",
 )
 @writes("region.fertility", "table.chronicle", "table.creator", "table.entities", "table.epoch_year_cursors", "table.incidents")
-@reads("people.piety", "people.population", "region.fertility", "settlement.piety", "settlement.population")
-@writes("region.fertility")
 async def creator_essence(ctx: TickContext) -> None:
     rules = ctx.rules
     balance = rules.balance

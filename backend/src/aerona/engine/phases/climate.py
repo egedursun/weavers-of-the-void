@@ -126,8 +126,8 @@ async def climate_transition(ctx: TickContext) -> None:
     ctx.count("worlds", len(worlds))
 
 
-@reads("region.fertility", "place.fertility")
-@writes("region.fertility", "place.fertility")
+@reads("place.fertility", "region.fertility")
+@writes("place.fertility", "region.fertility")
 async def law_fertility(ctx: TickContext) -> None:
     laws = await ctx.laws()
     if not (laws.anywhere(NaturalLaw.BOUNTY) or laws.anywhere(NaturalLaw.DROUGHT)):

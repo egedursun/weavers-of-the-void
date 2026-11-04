@@ -387,6 +387,7 @@ async def fairy_tales(ctx: TickContext) -> None:
     "table.bonds",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.legend_profiles",
     "table.name_registry",
     "table.nodes",
     "table.notable_years",
@@ -405,11 +406,10 @@ async def fairy_tales(ctx: TickContext) -> None:
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.legend_profiles",
     "table.name_registry",
     "tradition.spread",
 )
-@reads("event.severity", "legend.spread", "tradition.rigidity", "tradition.spread")
-@writes("legend.spread", "tradition.spread")
 async def belief_and_memory(ctx: TickContext) -> None:
     await legend_spread(ctx)
     await traditions(ctx)

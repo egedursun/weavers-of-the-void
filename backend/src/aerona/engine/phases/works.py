@@ -204,8 +204,11 @@ def can_build(rules: Rules, community: EntityRow) -> bool:
     "settlement.prosperity",
     "table.bonds",
     "table.community_societies",
+    "table.community_stocks",
     "table.culture_values",
     "table.epoch_year_cursors",
+    "table.goods_flows",
+    "table.holder_levels",
     "table.language_profiles",
     "table.lexemes",
     "table.memories",
@@ -224,25 +227,16 @@ def can_build(rules: Rules, community: EntityRow) -> bool:
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_societies",
+    "table.community_stocks",
     "table.entities",
     "table.epoch_year_cursors",
+    "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",
     "table.memories",
     "table.name_registry",
 )
-@reads(
-    "people.craft",
-    "people.piety",
-    "people.population",
-    "people.prosperity",
-    "settlement.defense",
-    "settlement.piety",
-    "settlement.population",
-    "settlement.prosperity",
-)
-@writes("people.piety", "people.prosperity", "settlement.defense", "settlement.piety", "settlement.prosperity")
 async def engine_works(ctx: TickContext) -> None:
     rules = ctx.rules
     rng = ctx.rng()
@@ -274,10 +268,8 @@ async def owner_of(ctx: TickContext, work: EntityRow) -> EntityRow | None:
     return owner if owner is not None and owner.entity_type in COMMUNITY_TYPES else None
 
 
-@reads("people.craft", "people.prosperity", "settlement.prosperity", "structure.splendor", "table.bonds", "table.community_societies")
+@reads("people.craft", "people.prosperity", "settlement.prosperity", "structure.splendor", "table.bonds", "table.community_societies", "table.holder_levels")
 @writes("structure.splendor", "table.entities")
-@reads("people.craft", "people.prosperity", "settlement.prosperity", "structure.splendor")
-@writes("structure.splendor")
 async def splendor_growth(ctx: TickContext) -> None:
     rules = ctx.rules
     life = rules.deep_life

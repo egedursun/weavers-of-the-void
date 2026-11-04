@@ -40,11 +40,17 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
     "resource.value",
     "settlement.population",
     "settlement.prosperity",
+    "table.army_profiles",
     "table.bonds",
     "table.calendars",
+    "table.community_labour",
     "table.community_societies",
     "table.community_stocks",
+    "table.epoch_year_cursors",
     "table.forced_weather",
+    "table.goods_flows",
+    "table.holder_levels",
+    "table.holder_techniques",
     "table.maimed_cohorts",
     "table.place_environment",
     "table.region_environment",
@@ -52,8 +58,10 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
     "table.resource_workers",
     "table.skills",
     "table.sky_events",
+    "table.treaty_parties",
     "table.workshops",
     "table.world_maps",
+    "table.world_materials",
     "table.world_seasons",
 )
 @writes(
@@ -65,9 +73,15 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
     "resource.abundance",
     "settlement.population",
     "settlement.prosperity",
+    "table.chronicle",
+    "table.chronicle_entities",
     "table.community_societies",
     "table.community_stocks",
+    "table.entities",
+    "table.epoch_year_cursors",
     "table.goods_flows",
+    "table.incident_participants",
+    "table.incidents",
     "table.maimed_cohorts",
     "table.production_runs",
     "table.region_environment",
@@ -91,7 +105,28 @@ async def resource_economy(ctx: TickContext) -> None:
     ctx.count("hazards", tally.hazards)
 
 
-@reads("resource.abundance", "table.resource_profiles")
+@reads(
+    "resource.abundance",
+    "table.army_profiles",
+    "table.bonds",
+    "table.calendars",
+    "table.community_labour",
+    "table.community_societies",
+    "table.forced_weather",
+    "table.holder_levels",
+    "table.holder_techniques",
+    "table.place_environment",
+    "table.region_environment",
+    "table.resource_profiles",
+    "table.resource_workers",
+    "table.skills",
+    "table.sky_events",
+    "table.treaty_parties",
+    "table.workshops",
+    "table.world_maps",
+    "table.world_materials",
+    "table.world_seasons",
+)
 @writes("resource.abundance", "table.resource_profiles")
 async def resource_regeneration(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)

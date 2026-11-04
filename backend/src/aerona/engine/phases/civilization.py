@@ -591,6 +591,7 @@ async def spontaneous_treaty(ctx: TickContext) -> None:
     "resource.value",
     "settlement.population",
     "settlement.prosperity",
+    "settlement.wealth",
     "table.bonds",
     "table.captives",
     "table.civilization_tier_locks",
@@ -599,12 +600,17 @@ async def spontaneous_treaty(ctx: TickContext) -> None:
     "table.culture_values",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.language_intelligibility",
+    "table.language_profiles",
+    "table.lexemes",
     "table.memories",
     "table.minds",
     "table.name_registry",
     "table.nodes",
     "table.personality_values",
     "table.routes",
+    "table.skills",
+    "table.speaker_cohorts",
     "table.traits",
     "table.tributes",
     "table.world_maps",
@@ -621,26 +627,12 @@ async def spontaneous_treaty(ctx: TickContext) -> None:
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.language_intelligibility",
     "table.memories",
     "table.name_registry",
     "table.thread_links",
     "table.threads",
 )
-@reads(
-    "faction.wealth",
-    "item.damage",
-    "item.might",
-    "item.protection",
-    "mortal.age",
-    "people.population",
-    "people.prosperity",
-    "people.wealth",
-    "region.danger",
-    "resource.value",
-    "settlement.population",
-    "settlement.prosperity",
-)
-@writes("faction.wealth", "settlement.prosperity")
 async def civilization_phase(ctx: TickContext) -> None:
     await update_tiers(ctx)
     await colony_independence(ctx)

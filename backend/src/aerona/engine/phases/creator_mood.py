@@ -34,8 +34,6 @@ from aerona.engine.primitives.numbers import clamp_percent
     "table.incident_participants",
     "table.incidents",
 )
-@reads("people.prosperity", "settlement.prosperity")
-@writes("settlement.prosperity")
 async def creator_mood(ctx: TickContext) -> None:
     creator = await creator_row(ctx.session)
     cosmos = await cosmos_row(ctx.session)

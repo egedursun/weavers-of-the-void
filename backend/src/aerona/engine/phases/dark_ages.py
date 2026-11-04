@@ -223,6 +223,7 @@ async def _rediscovery(ctx: TickContext, holdings: KnowledgeHoldings, lost: set[
     "settlement.prosperity",
     "table.bonds",
     "table.community_societies",
+    "table.cult_holdings",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.nodes",
@@ -240,8 +241,6 @@ async def _rediscovery(ctx: TickContext, holdings: KnowledgeHoldings, lost: set[
     "table.incident_participants",
     "table.incidents",
 )
-@reads("event.severity", "knowledge.spread", "people.prosperity", "settlement.prosperity")
-@writes("knowledge.spread")
 async def dark_ages(ctx: TickContext) -> None:
     holdings = await KnowledgeHoldings.load(ctx.session)
     ctx.count("forgotten", await _forgetting(ctx, holdings))

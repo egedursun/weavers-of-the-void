@@ -80,8 +80,6 @@ async def restore_ruin(
 
 @reads("law.justice", "settlement.defense", "settlement.prosperity")
 @writes("settlement.defense")
-@reads("law.justice", "settlement.defense", "settlement.prosperity")
-@writes("settlement.defense")
 async def settlement_laws(ctx: TickContext) -> None:
     effects = ctx.rules.world_effects
     justice: dict[int, list[int]] = defaultdict(list)
@@ -105,9 +103,7 @@ async def settlement_laws(ctx: TickContext) -> None:
         )
 
 
-@reads("settlement.defense")
-@writes("settlement.defense")
-@reads("settlement.defense")
+@reads("settlement.defense", "table.holder_levels")
 @writes("settlement.defense")
 async def architecture(ctx: TickContext) -> None:
     effects = ctx.rules.world_effects

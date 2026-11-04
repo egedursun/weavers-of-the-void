@@ -36,8 +36,44 @@ ITEM_DECAY_KEYS = ("damage", "protection", "might")
 CORRUPT_FROM = PERCENT // 2
 
 
-@reads("people.population", "settlement.population", "table.community_societies", "table.community_stocks", "table.workshops", "table.skills", "table.bonds")
-@writes("table.community_stocks", "table.community_societies", "table.goods_flows", "table.production_runs", "table.workshops")
+@reads(
+    "people.population",
+    "settlement.population",
+    "table.army_profiles",
+    "table.bonds",
+    "table.calendars",
+    "table.community_labour",
+    "table.community_societies",
+    "table.community_stocks",
+    "table.epoch_year_cursors",
+    "table.forced_weather",
+    "table.goods_flows",
+    "table.holder_levels",
+    "table.holder_techniques",
+    "table.place_environment",
+    "table.region_environment",
+    "table.resource_profiles",
+    "table.resource_workers",
+    "table.skills",
+    "table.sky_events",
+    "table.treaty_parties",
+    "table.workshops",
+    "table.world_maps",
+    "table.world_materials",
+    "table.world_seasons",
+)
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_societies",
+    "table.community_stocks",
+    "table.epoch_year_cursors",
+    "table.goods_flows",
+    "table.incident_participants",
+    "table.incidents",
+    "table.production_runs",
+    "table.workshops",
+)
 async def refining(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     tally = RefiningTally()
@@ -78,8 +114,48 @@ async def holy_and_tainted_stocks(ctx: TickContext, book: EconomyBook, lure: dic
     return wards
 
 
-@reads("item.curse", "item.damage", "item.might", "item.protection", "structure.durability", "structure.splendor", "spirit.unrest", "outer_being.interest")
-@writes("item.curse", "item.damage", "item.might", "item.protection", "structure.durability", "structure.splendor", "spirit.unrest", "outer_being.interest")
+@reads(
+    "item.curse",
+    "item.damage",
+    "item.might",
+    "item.protection",
+    "outer_being.interest",
+    "spirit.unrest",
+    "structure.durability",
+    "structure.splendor",
+    "table.army_profiles",
+    "table.bonds",
+    "table.calendars",
+    "table.community_labour",
+    "table.community_societies",
+    "table.community_stocks",
+    "table.forced_weather",
+    "table.holder_levels",
+    "table.holder_techniques",
+    "table.node_materials",
+    "table.place_environment",
+    "table.region_environment",
+    "table.resource_profiles",
+    "table.resource_workers",
+    "table.skills",
+    "table.sky_events",
+    "table.treaty_parties",
+    "table.workshops",
+    "table.world_maps",
+    "table.world_materials",
+    "table.world_seasons",
+)
+@writes(
+    "item.curse",
+    "item.damage",
+    "item.might",
+    "item.protection",
+    "outer_being.interest",
+    "spirit.unrest",
+    "structure.durability",
+    "structure.splendor",
+    "table.entities",
+)
 async def material_decay(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     rows = list(await ctx.session.scalars(select(NodeMaterialRow).order_by(NodeMaterialRow.node_id, NodeMaterialRow.slot)))
@@ -252,15 +328,39 @@ async def _slain_beasts(ctx: TickContext) -> int:
     return made
 
 
-@reads("table.nodes", "table.world_materials", "table.region_environment", "table.sky_events", "table.stars", "table.entity_flags", "table.bodies")
-@writes(
-    "table.world_materials",
+@reads(
+    "table.army_profiles",
+    "table.bodies",
+    "table.bonds",
+    "table.calendars",
+    "table.community_labour",
+    "table.community_societies",
+    "table.entity_flags",
+    "table.forced_weather",
+    "table.holder_levels",
+    "table.holder_techniques",
+    "table.nodes",
+    "table.place_environment",
+    "table.region_environment",
     "table.resource_profiles",
-    "table.entities",
+    "table.resource_workers",
+    "table.skills",
+    "table.sky_events",
+    "table.stars",
+    "table.treaty_parties",
+    "table.workshops",
+    "table.world_maps",
+    "table.world_materials",
+    "table.world_seasons",
+)
+@writes(
     "table.chronicle",
     "table.chronicle_entities",
-    "table.incidents",
+    "table.entities",
     "table.incident_participants",
+    "table.incidents",
+    "table.resource_profiles",
+    "table.world_materials",
 )
 async def world_materials(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
@@ -281,8 +381,8 @@ async def _grounds(ctx: TickContext) -> dict[int, tuple[EntityRow, ResourceProfi
     return {resource.maker_entity_id: (resource, profile) for resource, profile in await ctx.session.execute(statement) if resource.maker_entity_id is not None}
 
 
-@reads("species.abundance", "table.bodies", "table.resource_profiles", "table.entity_flags")
-@writes("resource.abundance", "table.resource_profiles", "table.entities")
+@reads("species.abundance", "table.bodies", "table.bonds", "table.entity_flags", "table.name_registry", "table.nodes", "table.resource_profiles")
+@writes("resource.abundance", "table.bonds", "table.entities", "table.name_registry", "table.resource_profiles")
 async def species_yields(ctx: TickContext) -> None:
     extinct = await flags_by_entity(ctx.session, EntityFlag.EXTINCT)
     megafauna = await flags_by_entity(ctx.session, EntityFlag.MEGAFAUNA)
@@ -323,8 +423,28 @@ async def species_yields(ctx: TickContext) -> None:
     ctx.count("hunting_grounds", opened)
 
 
-@reads("table.resource_profiles", "table.region_environment", "table.bonds")
-@writes("table.resource_profiles", "table.chronicle", "table.chronicle_entities", "table.incidents", "table.incident_participants")
+@reads(
+    "table.army_profiles",
+    "table.bonds",
+    "table.calendars",
+    "table.community_labour",
+    "table.community_societies",
+    "table.forced_weather",
+    "table.holder_levels",
+    "table.holder_techniques",
+    "table.place_environment",
+    "table.region_environment",
+    "table.resource_profiles",
+    "table.resource_workers",
+    "table.skills",
+    "table.sky_events",
+    "table.treaty_parties",
+    "table.workshops",
+    "table.world_maps",
+    "table.world_materials",
+    "table.world_seasons",
+)
+@writes("table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents", "table.resource_profiles")
 async def deposit_finding(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     table = ctx.rules.extraction
@@ -355,19 +475,45 @@ async def deposit_finding(ctx: TickContext) -> None:
     "resource.abundance",
     "resource.might",
     "resource.value",
+    "table.applied_fixups",
+    "table.armies",
+    "table.army_profiles",
+    "table.bonds",
+    "table.calendars",
+    "table.community_labour",
     "table.community_societies",
     "table.community_stocks",
+    "table.currencies",
+    "table.forced_weather",
+    "table.holder_levels",
+    "table.holder_techniques",
+    "table.name_registry",
+    "table.node_materials",
     "table.nodes",
-    "table.bonds",
-    "table.applied_fixups",
+    "table.place_environment",
+    "table.region_environment",
+    "table.resource_profiles",
+    "table.resource_workers",
+    "table.skills",
+    "table.sky_events",
+    "table.trade_route_profiles",
+    "table.trade_route_regions",
+    "table.trade_route_tolls",
+    "table.treaty_parties",
+    "table.workshops",
+    "table.world_maps",
+    "table.world_materials",
+    "table.world_seasons",
 )
 @writes(
     "table.applied_fixups",
+    "table.bonds",
     "table.community_societies",
     "table.community_stocks",
     "table.currencies",
     "table.entities",
     "table.goods_flows",
+    "table.name_registry",
     "table.node_materials",
     "table.resource_profiles",
     "table.trade_route_profiles",

@@ -37,8 +37,6 @@ async def lay_to_rest(ctx: TickContext, spirit: EntityRow, reason: str) -> None:
 
 @reads("spirit.unrest", "table.bonds", "table.entity_flags", "table.epoch_year_cursors", "table.nodes", "table.routes")
 @writes("spirit.unrest", "table.bonds", "table.chronicle", "table.entities", "table.entity_flags", "table.epoch_year_cursors", "table.incidents")
-@reads("spirit.unrest")
-@writes("spirit.unrest")
 async def spirits_rest(ctx: TickContext) -> None:
     rules = ctx.rules
     life = rules.deep_life
@@ -92,7 +90,7 @@ async def spirits_rest(ctx: TickContext) -> None:
     ctx.count("crossed", crossed)
 
 
-@reads("settlement.prosperity", "spirit.unrest", "table.epoch_year_cursors", "table.world_maps")
+@reads("settlement.prosperity", "spirit.unrest", "table.bonds", "table.epoch_year_cursors", "table.spirit_profiles", "table.world_maps")
 @writes(
     "settlement.prosperity",
     "spirit.unrest",
@@ -103,8 +101,6 @@ async def spirits_rest(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
 )
-@reads("settlement.prosperity", "spirit.unrest")
-@writes("settlement.prosperity", "spirit.unrest")
 async def hauntings(ctx: TickContext) -> None:
     rules = ctx.rules
     effects = rules.world_effects

@@ -97,14 +97,17 @@ def route_income(
     "table.bonds",
     "table.calendars",
     "table.forced_weather",
+    "table.holder_levels",
     "table.place_environment",
     "table.region_environment",
     "table.sky_events",
+    "table.trade_flows",
+    "table.trade_route_profiles",
+    "table.trade_route_regions",
+    "table.trade_route_tolls",
     "table.world_maps",
     "table.world_seasons",
 )
-@writes("faction.wealth", "people.prosperity", "people.wealth", "settlement.prosperity")
-@reads("faction.wealth", "people.prosperity", "people.wealth", "settlement.prosperity")
 @writes("faction.wealth", "people.prosperity", "people.wealth", "settlement.prosperity")
 async def trade_income(ctx: TickContext) -> None:
     settings = ctx.rules.trade
@@ -212,7 +215,20 @@ async def _seize_from_neighbours(
     return 0
 
 
-@reads("table.bonds", "table.epoch_year_cursors", "table.nodes", "table.world_maps")
+@reads(
+    "people.martiality",
+    "people.population",
+    "settlement.defense",
+    "settlement.population",
+    "table.bonds",
+    "table.community_societies",
+    "table.community_stocks",
+    "table.epoch_year_cursors",
+    "table.holder_levels",
+    "table.nodes",
+    "table.resource_profiles",
+    "table.world_maps",
+)
 @writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
 async def barter_and_rivalry(ctx: TickContext) -> None:
     session = ctx.session
@@ -250,12 +266,29 @@ async def barter_and_rivalry(ctx: TickContext) -> None:
     "people.prosperity",
     "people.wealth",
     "settlement.prosperity",
+    "table.army_profiles",
     "table.bonds",
+    "table.calendars",
+    "table.community_labour",
     "table.community_societies",
     "table.community_stocks",
     "table.currencies",
     "table.epoch_year_cursors",
+    "table.forced_weather",
+    "table.holder_levels",
+    "table.holder_techniques",
     "table.nodes",
+    "table.place_environment",
+    "table.region_environment",
+    "table.resource_profiles",
+    "table.resource_workers",
+    "table.skills",
+    "table.sky_events",
+    "table.treaty_parties",
+    "table.workshops",
+    "table.world_maps",
+    "table.world_materials",
+    "table.world_seasons",
 )
 @writes(
     "faction.wealth",

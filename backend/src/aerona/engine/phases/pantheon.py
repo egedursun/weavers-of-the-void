@@ -541,7 +541,6 @@ async def outer_gnaw(ctx: TickContext) -> int:
     "table.sons",
     "table.worlds",
 )
-@reads("people.population", "settlement.population")
 async def pantheon_phase(ctx: TickContext) -> None:
     await defeated_waking(ctx)
     await sleep_waking(ctx)

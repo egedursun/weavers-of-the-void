@@ -64,6 +64,20 @@ def merge(target: dict[str, set[tuple[str, str]]], source: dict[str, set[tuple[s
         target.setdefault(phase, set()).update(items)
 
 
+def without_annotations(lines: list[str], first: int) -> tuple[list[str], int]:
+    end = first
+    while not lines[end].lstrip().startswith(("def ", "async def ")):
+        end += 1
+    kept: list[str] = []
+    dropping = False
+    for item in lines[first:end]:
+        if item.startswith("@"):
+            dropping = bool(DECORATOR.match(item))
+        if not dropping:
+            kept.append(item)
+    return kept, end
+
+
 def annotate(recorded: dict[str, set[tuple[str, str]]], *, rebuild: bool) -> list[Path]:
     wanted: dict[object, tuple[set[str], set[str]]] = {}
     for phase in all_phases():
@@ -84,16 +98,14 @@ def annotate(recorded: dict[str, set[tuple[str, str]]], *, rebuild: bool) -> lis
     for source, entries in by_file.items():
         lines = source.read_text(encoding="utf-8").splitlines()
         for line, reads_now, writes_now in sorted(entries, reverse=True):
-            index = line - 1
-            while index > 0 and DECORATOR.match(lines[index - 1]):
-                index -= 1
-                del lines[index]
+            first = line - 1
+            kept, end = without_annotations(lines, first)
             insert = []
             if reads_now:
                 insert.append("@reads(" + ", ".join(f'"{key}"' for key in sorted(reads_now)) + ")")
             if writes_now:
                 insert.append("@writes(" + ", ".join(f'"{key}"' for key in sorted(writes_now)) + ")")
-            lines[index:index] = insert
+            lines[first:end] = kept + insert
         text = "\n".join(lines) + "\n"
         if IMPORT_LINE not in text:
             first = next(number for number, item in enumerate(lines) if item.startswith("from aerona."))

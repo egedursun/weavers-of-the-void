@@ -192,7 +192,6 @@ async def found_factions(ctx: TickContext) -> int:
     "table.incidents",
     "table.name_registry",
 )
-@reads("people.population", "people.prosperity", "settlement.population", "settlement.prosperity")
 async def factions(ctx: TickContext) -> None:
     ctx.count("uprisings_disbanded", await disband_uprisings(ctx))
     await found_factions(ctx)

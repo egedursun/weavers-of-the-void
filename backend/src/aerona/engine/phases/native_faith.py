@@ -220,7 +220,6 @@ async def feed_god(ctx: TickContext, god: ForeignGodRow) -> None:
     "table.incidents",
     "table.reverences",
 )
-@reads("people.piety", "people.population", "settlement.piety", "settlement.population")
 async def native_faith(ctx: TickContext) -> None:
     gods = list(await ctx.session.scalars(select(ForeignGodRow).where(ForeignGodRow.status != ForeignGodStatus.DEAD).order_by(ForeignGodRow.id)))
     struck = await struck_places(ctx.session, ctx.epoch)

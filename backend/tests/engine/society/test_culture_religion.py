@@ -15,7 +15,7 @@ from aerona.engine.phases.religion_spread import godlessness, religion_spread, s
 from aerona.engine.primitives.faith import dominance_multiplier
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
-from tests.engine.society.factories import Realm, bonded, chronicle_keys, context, knowledge, link, make, named, natural_law, people, son, tuned
+from tests.engine.society.factories import Realm, bonded, chronicle_keys, context, knowledge, link, make, named, natural_law, people, son, trade_route, tuned
 
 RULES = Rules()
 
@@ -39,7 +39,7 @@ async def test_knowledge_and_language_diffuse_along_trade(realm: Realm) -> None:
     tongue = await make(realm.session, "Old Tongue", EntityType.LANGUAGE, LanguageStats(spread=10), world_id=realm.world.id)
     await link(realm.session, teacher.id, letters.id, BondKind.KNOWS)
     await link(realm.session, teacher.id, tongue.id, BondKind.SPEAKS)
-    await link(realm.session, teacher.id, learner.id, BondKind.TRADES_WITH)
+    await trade_route(realm, teacher, learner)
     await natural_law(realm, "One Speech", NaturalLaw.ONE_LANGUAGE)
     ctx = context(realm.session, tuned(knowledge={"diffusion_chance": 100, "language_spread_chance": 100}))
     await knowledge_diffusion(ctx)

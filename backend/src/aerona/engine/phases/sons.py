@@ -138,7 +138,6 @@ async def regenerate_essence(ctx: TickContext, son: SonRow, faith: int, band: Ex
     "table.son_powers",
 )
 @writes("table.chronicle", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.sons")
-@reads("celestial.influence", "cult.followers", "cult.influence", "people.piety", "people.population", "settlement.piety", "settlement.population")
 async def sons_renewal(ctx: TickContext) -> None:
     total = 0
     for son in await living_sons(ctx.session):
@@ -172,7 +171,7 @@ async def works_remember_gods(ctx: TickContext) -> None:
             son.existence = min(PERCENT, son.existence + transition.dedicated_work_existence)
 
 
-@reads("table.sons", "table.son_relations")
+@reads("table.son_relations", "table.sons")
 @writes("table.son_relations")
 async def domain_rivalry(ctx: TickContext) -> None:
     transition = ctx.rules.world_epoch_transition

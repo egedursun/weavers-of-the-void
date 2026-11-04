@@ -374,10 +374,15 @@ async def language_stats(ctx: TickContext) -> int:
     "settlement.population",
     "table.bonds",
     "table.epoch_year_cursors",
+    "table.holder_levels",
     "table.language_profiles",
     "table.lexemes",
     "table.name_registry",
     "table.nodes",
+    "table.trade_flows",
+    "table.trade_route_profiles",
+    "table.trade_route_regions",
+    "table.trade_route_tolls",
 )
 @writes(
     "language.complexity",
@@ -394,8 +399,6 @@ async def language_stats(ctx: TickContext) -> int:
     "table.lexemes",
     "table.name_registry",
 )
-@reads("language.complexity", "language.sacredness", "language.spread", "people.piety", "people.population", "settlement.piety", "settlement.population")
-@writes("language.complexity", "language.sacredness", "language.spread")
 async def language_contact(ctx: TickContext) -> None:
     tally = ContactTally(loans_left=ctx.rules.language_contact.loan_cap)
     await conquest_contact(ctx, tally)

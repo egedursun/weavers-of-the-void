@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.mind import MindRow
 from aerona.db.tables.society import CommunityRelationRow
@@ -8,6 +9,7 @@ from aerona.db.tables.warfare import HeroQuestRow
 from aerona.domain.enums.body import HarmCause, InjuryKind, InjuryState
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import (
     ActKind,
@@ -52,7 +54,7 @@ from aerona.engine.mind.opinion import opinion
 from aerona.engine.mind.skills import left_to_beg, practise, weather_skills
 from aerona.engine.mind.space import value_distance, value_reading
 from aerona.engine.phases.mind import famine_aid, mind_memories, mind_needs, mind_opinion, mind_skills, mind_survey, mind_values
-from aerona.engine.primitives.society import set_stock, stock
+from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.services.community_relations import change_relation, refresh_relation, relation
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, context, link, make, mortal, people, settlement, son, tuned
@@ -343,6 +345,12 @@ async def test_a_rusted_skill_returns_fast_and_a_better_master_teaches_faster(re
     await practise(realm.session, rules, rusty.id, SkillKind.SPEAR, 40, epoch=2)
     await practise(realm.session, rules, fresh.id, SkillKind.SPEAR, 40, epoch=2)
     assert (await skills_of(realm.session, rusty.id))[SkillKind.SPEAR].level > (await skills_of(realm.session, fresh.id))[SkillKind.SPEAR].level
+
+
+async def set_stock(session: AsyncSession, entity_id: int, commodity: Commodity, value: int) -> None:
+    rules = Rules()
+    current = await stock(session, rules, entity_id, commodity)
+    await shift_stock(session, rules, entity_id, commodity, value - current, epoch=1, flow=GoodsFlow.PLAYER)
 
 
 async def test_a_full_granary_feeds_a_starving_neighbour(realm: Realm) -> None:

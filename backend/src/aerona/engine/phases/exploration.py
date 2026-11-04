@@ -699,6 +699,7 @@ async def foreign_god_land(ctx: TickContext, god_id: int | None = None) -> list[
     "table.bonds",
     "table.community_societies",
     "table.epoch_year_cursors",
+    "table.holder_levels",
     "table.language_profiles",
     "table.lexemes",
     "table.name_registry",
@@ -724,21 +725,6 @@ async def foreign_god_land(ctx: TickContext, god_id: int | None = None) -> list[
     "table.routes",
     "table.vessel_profiles",
 )
-@reads(
-    "cult.followers",
-    "mortal.agility",
-    "mortal.intellect",
-    "people.piety",
-    "people.population",
-    "people.prosperity",
-    "place.fertility",
-    "region.breadth",
-    "region.fertility",
-    "settlement.piety",
-    "settlement.population",
-    "settlement.prosperity",
-)
-@writes("people.population", "settlement.population")
 async def exploration_phase(ctx: TickContext) -> None:
     await planet_exploration(ctx)
     await cosmic_exploration(ctx)

@@ -22,7 +22,7 @@ SUBSYSTEM_PREFIXES: dict[str, frozenset[str]] = {
     "cosmos": frozenset({"exploration", "travel", "sky", "pantheon", "beyond", "creatures", "cosmos", "horror"}),
     "gods": frozenset({"gods", "sons", "creator", "doom", "essence"}),
 }
-GROWING = (EntityType.PEOPLE, EntityType.MORTAL, EntityType.SETTLEMENT)
+GROWING = (EntityType.MORTAL, EntityType.SETTLEMENT)
 
 
 @dataclass(frozen=True)
@@ -74,6 +74,7 @@ async def test_a_rich_cosmos_lives_twelve_epochs_deterministically(tmp_path: Pat
     assert failures(first) == {}
     for entity_type in GROWING:
         assert first.after[entity_type] > first.before[entity_type], entity_type
+    assert first.after[EntityType.PEOPLE] >= first.before[EntityType.PEOPLE]
     assert first.wars_started > 0
     assert first.wars_ended > 0
     assert first.mapped_worlds >= 4

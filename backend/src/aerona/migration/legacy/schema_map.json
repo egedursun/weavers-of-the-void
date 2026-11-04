@@ -692,7 +692,15 @@
       "arac": "vessel",
       "dis": "outer_being",
       "ordu": "army",
-      "yasa": "natural_law"
+      "yasa": "natural_law",
+      "ticaret_yolu": "trade_route",
+      "hastalik": "disease",
+      "devlet": "polity",
+      "hanedan": "house",
+      "antlasma": "treaty",
+      "ideoloji": "ideology",
+      "ayin": "rite",
+      "canavar": "beast"
     },
     "entity_status": {
       "kanon": "canon",
@@ -1215,7 +1223,11 @@
       "tuccar": "merchant",
       "rahip": "priest",
       "savasci": "warrior",
-      "katip": "scribe"
+      "katip": "scribe",
+      "soylu": "noble",
+      "kole": "serf_or_slave",
+      "dislanmis": "outcast",
+      "kesis": "monastic"
     },
     "commodity": {
       "erzak": "food",
@@ -2046,7 +2058,51 @@
       "techizat": "equipment",
       "deneyim": "experience"
     },
-    "natural_law": {}
+    "natural_law": {},
+    "trade_route": {
+      "kapasite": "capacity",
+      "tehlike": "danger",
+      "un": "renown",
+      "kultur": "culture"
+    },
+    "disease": {
+      "bulasicilik": "virulence",
+      "oldurucululuk": "lethality",
+      "hasta": "infected",
+      "olu": "dead"
+    },
+    "polity": {
+      "mesruiyet": "legitimacy",
+      "istikrar": "stability",
+      "tebaa": "subjects",
+      "toprak": "territory"
+    },
+    "house": {
+      "itibar": "prestige",
+      "uye": "members",
+      "servet": "wealth"
+    },
+    "treaty": {
+      "taraf": "parties",
+      "guven": "trust"
+    },
+    "ideology": {
+      "taraftar": "adherents",
+      "cazibe": "appeal"
+    },
+    "rite": {
+      "guc": "power",
+      "icra": "castings"
+    },
+    "beast": {
+      "can": "hp",
+      "tehlike": "danger",
+      "guc": "strength",
+      "ceviklik": "agility",
+      "kurnazlik": "cunning",
+      "un": "renown",
+      "dehset": "terror"
+    }
   },
   "entity_extra_stats": {
     "sagduyu": "sanity",

@@ -462,8 +462,10 @@ async def invasive_pressure(ctx: TickContext) -> None:
     "table.entity_flags",
     "table.entity_traits",
     "table.epoch_year_cursors",
+    "table.holder_levels",
     "table.name_registry",
     "table.nodes",
+    "table.species_ranges",
     "table.world_maps",
 )
 @writes(
@@ -483,19 +485,6 @@ async def invasive_pressure(ctx: TickContext) -> None:
     "table.incidents",
     "table.name_registry",
 )
-@reads(
-    "place.danger",
-    "place.fertility",
-    "region.danger",
-    "region.fertility",
-    "species.agility",
-    "species.danger",
-    "species.hp",
-    "species.intelligence",
-    "species.might",
-    "species.strength",
-)
-@writes("place.danger", "place.fertility", "region.danger", "region.fertility", "species.danger")
 async def creature_phase(ctx: TickContext) -> None:
     for species in await _species(ctx):
         await assign_traits(ctx, species)
@@ -758,12 +747,10 @@ async def run_creature_phase(session: AsyncSession, rules: Rules) -> None:
 
 @reads("species.danger", "table.bonds", "table.entity_traits", "table.epoch_year_cursors", "table.nodes", "table.world_maps")
 @writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
-@reads("species.danger")
 async def creature_migration_phase(ctx: TickContext) -> None:
     await creature_migration(ctx)
 
 
-@reads("species.danger", "species.intelligence")
 @reads("species.danger", "species.intelligence")
 async def creature_rebellion_phase(ctx: TickContext) -> None:
     await creature_rebellion(ctx)
@@ -791,7 +778,6 @@ async def creature_rebellion_phase(ctx: TickContext) -> None:
     "table.incidents",
     "table.name_registry",
 )
-@reads("species.agility", "species.danger", "species.intelligence", "species.strength")
 async def speciation_phase(ctx: TickContext) -> None:
     await speciation(ctx)
 

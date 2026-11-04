@@ -500,7 +500,6 @@ async def drift_worlds(ctx: TickContext) -> None:
     "table.name_registry",
     "table.sky_events",
 )
-@reads("mortal.charisma")
 async def sky_phase(ctx: TickContext) -> None:
     result = await spontaneous_sky_event(ctx)
     if result is not None:

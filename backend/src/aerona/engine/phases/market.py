@@ -236,17 +236,6 @@ async def resource_market(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
 )
-@reads(
-    "cult.followers",
-    "people.population",
-    "people.prosperity",
-    "people.wealth",
-    "resource.abundance",
-    "resource.value",
-    "settlement.population",
-    "settlement.prosperity",
-)
-@writes("resource.abundance", "resource.value", "settlement.prosperity")
 async def market(ctx: TickContext) -> None:
     tally = MarketTally()
     await debt_endings(ctx, tally)

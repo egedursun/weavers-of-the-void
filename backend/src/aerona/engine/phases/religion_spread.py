@@ -130,11 +130,13 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
     "cult.influence",
     "cult.zeal",
     "table.bonds",
+    "table.cult_doctrines",
     "table.epoch_year_cursors",
     "table.name_registry",
     "table.nodes",
     "table.reverences",
     "table.son_relations",
+    "table.war_sides",
     "table.wars",
 )
 @writes(
@@ -149,8 +151,6 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
     "table.name_registry",
     "table.son_relations",
 )
-@reads("cult.followers", "cult.influence", "cult.zeal")
-@writes("cult.followers")
 async def schisms(ctx: TickContext) -> None:
     settings = ctx.rules.religion
     cults = await canon(ctx.session, [EntityType.CULT])
@@ -179,7 +179,6 @@ async def schisms(ctx: TickContext) -> None:
 
 
 @reads("settlement.piety", "table.bonds", "table.entity_flags", "table.nodes", "table.reverences")
-@reads("settlement.piety")
 async def godlessness(ctx: TickContext) -> None:
     settings = ctx.rules.religion
     faith = await FaithIndex.load(ctx.session)
@@ -394,15 +393,25 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "people.population",
     "settlement.population",
     "table.bonds",
+    "table.cult_doctrines",
+    "table.cult_tenets",
     "table.culture_values",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.law_jurisdictions",
+    "table.law_profiles",
     "table.memories",
     "table.minds",
     "table.nodes",
     "table.personality_values",
+    "table.polity_members",
     "table.pressures",
     "table.reverences",
+    "table.speaker_cohorts",
+    "table.trade_flows",
+    "table.trade_route_profiles",
+    "table.trade_route_regions",
+    "table.trade_route_tolls",
     "table.traits",
     "table.world_maps",
 )
@@ -416,7 +425,6 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.memories",
     "table.reverences",
 )
-@reads("cult.followers", "cult.influence", "people.population", "settlement.population")
 async def religion_spread(ctx: TickContext) -> None:
     settings = ctx.rules.religion
     session = ctx.session

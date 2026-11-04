@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LegendaryQuestRow, ThreadRow
 from aerona.db.tables.society import ArchiveHoldingRow, SoulRow
@@ -65,6 +66,8 @@ async def test_predators_hunt_starve_and_revert(session: AsyncSession, cosmos: C
     deer = await make_entity(
         session, "Glimdeer", EntityType.SPECIES, SpeciesStats(strength=20, danger=10), world_id=cosmos.home.id, location_id=region.id, power=2
     )
+    session.add_all([SpeciesRangeRow(species_entity_id=kind.id, region_entity_id=region.id, abundance=60) for kind in (wolf, deer)])
+    await session.flush()
     assert await predator_bonds(ctx) == 1
     assert await predation_pressure(ctx) == 1 and deer.status is EntityStatus.DEAD
     assert await starving_predators(ctx) == 1

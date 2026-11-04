@@ -157,8 +157,28 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
         await defect(ctx, row, captive, captor)
 
 
-@reads("table.bonds", "table.captives", "table.minds", "table.traits")
-@writes("table.captives")
+@reads(
+    "people.population",
+    "people.wealth",
+    "table.bonds",
+    "table.captive_cohorts",
+    "table.captives",
+    "table.culture_values",
+    "table.epoch_year_cursors",
+    "table.minds",
+    "table.polity_members",
+    "table.traits",
+)
+@writes(
+    "people.population",
+    "people.wealth",
+    "table.captive_cohorts",
+    "table.captives",
+    "table.chronicle",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incidents",
+)
 async def prisoners(ctx: TickContext) -> None:
     held = (CaptiveStatus.HELD, CaptiveStatus.WARD)
     rows = list(await ctx.session.scalars(select(CaptiveRow).where(CaptiveRow.status.in_(held)).order_by(CaptiveRow.id)))

@@ -34,7 +34,6 @@ async def abandon(ctx: TickContext, settlement: EntityRow) -> EntityRow:
     "table.incident_participants",
     "table.incidents",
 )
-@reads("settlement.population")
 async def abandonment(ctx: TickContext) -> None:
     world_rules = ctx.rules.deep_world
     sheltered = await flags_by_entity(ctx.session, EntityFlag.PROTECTED_FROM_RUIN)

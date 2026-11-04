@@ -682,8 +682,6 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
     "table.language_profiles",
     "table.name_registry",
 )
-@reads("cult.followers", "people.piety", "people.population", "settlement.piety", "settlement.population", "species.intelligence")
-@writes("people.population", "settlement.population")
 async def spontaneous_births(ctx: TickContext) -> None:
     await single_rule(ctx)
     namer = Namer(ctx.session, ctx.rules)
@@ -751,7 +749,31 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
     return child
 
 
-@reads("table.bodies", "table.bonds", "table.traits")
+@reads(
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "table.bodies",
+    "table.bonds",
+    "table.epoch_year_cursors",
+    "table.language_profiles",
+    "table.lexemes",
+    "table.name_registry",
+    "table.nodes",
+    "table.traits",
+)
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+)
 async def couples_bear_children(ctx: TickContext) -> None:
     rules = ctx.rules
     rng = ctx.rng()

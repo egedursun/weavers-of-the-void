@@ -77,14 +77,18 @@ async def _note(ctx: TickContext, text: str, key: str, ids: tuple[int, ...]) -> 
     "item.might",
     "item.protection",
     "people.martiality",
+    "people.population",
     "people.prosperity",
     "people.wealth",
     "settlement.defense",
     "table.bonds",
     "table.community_relations",
     "table.community_societies",
+    "table.community_stocks",
     "table.culture_values",
     "table.epoch_year_cursors",
+    "table.goods_flows",
+    "table.holder_levels",
     "table.memories",
     "table.minds",
     "table.nodes",
@@ -94,31 +98,22 @@ async def _note(ctx: TickContext, text: str, key: str, ids: tuple[int, ...]) -> 
 )
 @writes(
     "faction.wealth",
+    "people.prosperity",
+    "people.wealth",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_relations",
     "table.community_societies",
+    "table.community_stocks",
     "table.entities",
     "table.epoch_year_cursors",
+    "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
     "table.memories",
     "table.tributes",
 )
-@reads(
-    "faction.strength",
-    "faction.sway",
-    "faction.wealth",
-    "item.damage",
-    "item.might",
-    "item.protection",
-    "people.martiality",
-    "people.prosperity",
-    "people.wealth",
-    "settlement.defense",
-)
-@writes("faction.wealth")
 async def tribute(ctx: TickContext) -> None:
     rules = ctx.rules.campaigns
     ctx.count("tributes_adopted", await adopt_untracked_tributes(ctx))

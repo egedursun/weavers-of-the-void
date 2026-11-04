@@ -336,7 +336,7 @@ RAW = (
         LORE,
         ("item", "mortal"),
         ("history",),
-        (S.HOUSEHOLD, None, "inheritance"),
+        (S.SOCIAL, None, "inheritance"),
     ),
     ("maps", "S7.1", "A lord holding a map marches further", ("campaigns",), LORE, ("item", "army"), ("item_class",), (S.WAR, "maps.march_regions", "march")),
     (
@@ -1544,7 +1544,7 @@ EXTRA: tuple[Raw, ...] = (
         LORE,
         ("item", "mortal"),
         ("history",),
-        (S.HOUSEHOLD, None, "burial"),
+        (S.FAITH, None, "burial"),
     ),
     (
         "art_memory",

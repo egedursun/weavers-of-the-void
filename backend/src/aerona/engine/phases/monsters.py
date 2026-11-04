@@ -78,11 +78,15 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
     "table.bodies",
     "table.bonds",
     "table.community_societies",
+    "table.community_stocks",
     "table.cosmos",
     "table.designated_heirs",
     "table.entity_flags",
     "table.entity_traits",
     "table.epoch_year_cursors",
+    "table.goods_flows",
+    "table.herds",
+    "table.holder_levels",
     "table.language_profiles",
     "table.lexemes",
     "table.memories",
@@ -91,6 +95,8 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
     "table.nodes",
     "table.routes",
     "table.skills",
+    "table.species_profiles",
+    "table.species_ranges",
     "table.traits",
     "table.world_maps",
 )
@@ -104,9 +110,11 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.community_stocks",
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
     "table.injuries",
@@ -114,21 +122,6 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
     "table.name_registry",
     "table.sons",
 )
-@reads(
-    "mortal.age",
-    "mortal.agility",
-    "mortal.charisma",
-    "mortal.intellect",
-    "mortal.lifespan",
-    "mortal.strength",
-    "settlement.defense",
-    "settlement.population",
-    "settlement.prosperity",
-    "species.agility",
-    "species.danger",
-    "species.strength",
-)
-@writes("mortal.charisma", "mortal.death_year", "settlement.defense", "settlement.population", "settlement.prosperity", "species.danger")
 async def monster_raids(ctx: TickContext) -> None:
     rules = ctx.rules
     rng = ctx.rng()

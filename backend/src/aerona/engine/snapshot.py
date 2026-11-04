@@ -147,16 +147,15 @@ async def epoch_statistics(ctx: TickContext) -> EpochStatsData:
     "cult.followers",
     "people.population",
     "settlement.population",
-    "table.journeys",
     "table.bonds",
     "table.cosmos",
     "table.entity_flags",
     "table.epoch_stats",
+    "table.journeys",
     "table.lexemes",
     "table.world_leak_items",
 )
 @writes("table.epoch_stats")
-@reads("cult.followers", "people.population", "settlement.population")
 async def record_statistics(ctx: TickContext) -> None:
     await epoch_statistics(ctx)
 

@@ -10,11 +10,13 @@ from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.repositories.sons import SonDraft, SonRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
+from aerona.db.tables.economy import TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.economy import TradeMode, TradeRouteStatus
 from aerona.domain.enums.entity import EntityOrigin, EntityType, MortalRole
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
@@ -27,6 +29,7 @@ from aerona.domain.models.entity_stats import (
     PeopleStats,
     RegionStats,
     SettlementStats,
+    TradeRouteStats,
 )
 from aerona.domain.models.profiles import Personality
 from aerona.domain.models.stats import PassionBlock, StatBlock
@@ -204,3 +207,21 @@ async def chronicle_keys(session: AsyncSession) -> list[str]:
 
 async def named(session: AsyncSession, entity_type: EntityType) -> list[EntityRow]:
     return list(await session.scalars(select(EntityRow).where(EntityRow.entity_type == entity_type).order_by(EntityRow.id)))
+
+
+async def trade_route(realm: Realm, first: EntityRow, second: EntityRow) -> EntityRow:
+    stats = TradeRouteStats(capacity=40, danger=0, renown=0, culture=0)
+    road = await make(realm.session, f"Road of {first.name}", EntityType.TRADE_ROUTE, stats, world_id=realm.world.id, location_id=realm.region.id)
+    realm.session.add(
+        TradeRouteProfileRow(
+            route_entity_id=road.id,
+            first_market_id=first.id,
+            second_market_id=second.id,
+            mode=TradeMode.ROAD,
+            status=TradeRouteStatus.OPEN,
+            length=1,
+            founded_epoch=1,
+        )
+    )
+    await realm.session.flush()
+    return road

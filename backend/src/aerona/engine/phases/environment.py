@@ -392,6 +392,7 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
     "table.calendars",
     "table.entity_flags",
     "table.forced_weather",
+    "table.holder_levels",
     "table.notable_years",
     "table.place_environment",
     "table.region_environment",
@@ -400,7 +401,6 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
     "table.world_seasons",
 )
 @writes("table.applied_fixups", "table.notable_years", "table.place_environment", "table.region_environment", "table.world_seasons", "table.worlds")
-@reads("event.severity", "people.population", "place.fertility", "region.breadth", "region.fertility", "region.magic", "settlement.population")
 async def environment_survey(ctx: TickContext) -> None:
     ctx.count("notable_years_backfilled", await backfill_notable_years(ctx))
     moons = await moons_by_world(ctx)
@@ -517,15 +517,15 @@ async def sanitation_by_region(ctx: TickContext, book: EnvironmentBook, communit
     "table.calendars",
     "table.entity_flags",
     "table.forced_weather",
+    "table.holder_levels",
     "table.place_environment",
     "table.region_environment",
+    "table.settlement_profiles",
     "table.sky_events",
     "table.world_maps",
     "table.world_seasons",
 )
 @writes("place.fertility", "region.fertility", "table.entities", "table.place_environment", "table.region_environment")
-@reads("people.population", "place.fertility", "region.breadth", "region.fertility", "region.magic", "settlement.population")
-@writes("place.fertility", "region.fertility")
 async def environment_derive(ctx: TickContext) -> None:
     rules = ctx.rules
     book = await EnvironmentBook.load(ctx.session, rules, ctx.epoch)
@@ -665,6 +665,7 @@ async def note_land(ctx: TickContext, env: RegionEnvironmentRow, before: LandMar
     "table.calendars",
     "table.epoch_year_cursors",
     "table.forced_weather",
+    "table.holder_levels",
     "table.place_environment",
     "table.region_environment",
     "table.sky_events",
@@ -672,7 +673,6 @@ async def note_land(ctx: TickContext, env: RegionEnvironmentRow, before: LandMar
     "table.world_seasons",
 )
 @writes("table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.region_environment")
-@reads("people.population", "place.fertility", "region.breadth", "region.fertility", "settlement.population")
 async def land_use(ctx: TickContext) -> None:
     rules = ctx.rules
     settings = rules.land_use
@@ -896,6 +896,7 @@ async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason)
     "table.calendars",
     "table.epoch_year_cursors",
     "table.forced_weather",
+    "table.holder_levels",
     "table.place_environment",
     "table.region_environment",
     "table.sky_events",
@@ -911,7 +912,6 @@ async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason)
     "table.notable_years",
     "table.region_environment",
 )
-@reads("people.population", "settlement.population")
 async def harvest(ctx: TickContext) -> None:
     rules = ctx.rules
     book = await EnvironmentBook.load(ctx.session, rules, ctx.epoch)
@@ -1172,8 +1172,6 @@ async def empower_works(ctx: TickContext, web: LeyWeb) -> int:
     "table.place_environment",
     "table.region_environment",
 )
-@reads("place.mystery", "region.magic", "structure.function")
-@writes("structure.function")
 async def ley_lines(ctx: TickContext) -> None:
     web = await LeyWeb.load(ctx.session)
     regions = {region.id: region for region in await canon(ctx.session, [EntityType.REGION])}

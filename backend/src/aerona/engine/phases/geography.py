@@ -157,7 +157,6 @@ async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None =
     "table.incidents",
     "table.name_registry",
 )
-@reads("region.danger", "region.fertility", "region.magic", "settlement.population")
 async def geography(ctx: TickContext) -> None:
     settings = ctx.rules.geography
     if not settings.seed_cap:

@@ -7,9 +7,13 @@ from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.lore import ChronicleRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw
 from aerona.domain.models.entity_stats import CultStats, ItemStats, LawStats, PeopleStats, ResourceStats, SpeciesStats
+from aerona.engine.economy.resources import set_resource_yield
+from aerona.engine.economy.stocks import holding
 from aerona.engine.phases.curses import curse_decay, cursed_items, lift_curses
 from aerona.engine.phases.grudges import divine_grudges
 from aerona.engine.phases.heroism import EncounterOutcome, encounter, glory_hunts, send_hero_to_hunt, sworn_hunts
@@ -21,6 +25,7 @@ from aerona.engine.phases.settlements import architecture, settlement_laws
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import has_flag
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.rules.registry import Rules
 from tests.engine.core.factories import CoreWorld, add_flag, bond, entity, knowledge, mortal, natural_law, settlement, son_draft, tuned_rules
 
 
@@ -104,18 +109,25 @@ async def test_curses_decay_lift_and_spread(session: AsyncSession, world: CoreWo
 
 
 async def test_resources_feed_owners_and_regrow(session: AsyncSession, world: CoreWorld) -> None:
+    rules = Rules()
     ore = await entity(
         session, "Brightvein", EntityType.RESOURCE, ResourceStats(abundance=50, value=80), world_id=world.world.id, location_id=world.regions[0].id
     )
-    await bond(session, world.people.id, ore.id, BondKind.OWNS)
+    wood = await entity(session, "Greenwood", EntityType.RESOURCE, ResourceStats(abundance=50), world_id=world.world.id, location_id=world.regions[0].id)
+    seam = await set_resource_yield(session, rules, ore.id, CommodityKind.ORE, MaterialKind.IRON)
+    grove = await set_resource_yield(session, rules, wood.id, CommodityKind.TIMBER)
+    for resource in (ore, wood):
+        await bond(session, world.people.id, resource.id, BondKind.OWNS)
+    reserve = seam.reserve
     ctx = await manual_context(session, "resources")
     await resource_economy(ctx)
-    effects = ctx.rules.world_effects
-    gain = effects.resource_income + round(80 / effects.resource_value_divisor)
-    assert stat(world.people, "wealth") == 40 + gain
-    assert stat(ore, "abundance") == 50 - effects.resource_consumption
+    assert await holding(session, world.people.id, CommodityKind.ORE) > 0
+    assert seam.reserve < reserve
+    cut = grove.reserve
+    assert cut < grove.initial_reserve and grove.regeneration > 0
     await resource_regeneration(ctx)
-    assert stat(ore, "abundance") == 50 - effects.resource_consumption + effects.resource_regen
+    assert grove.reserve > cut
+    assert seam.regeneration == 0
 
 
 async def test_prosperity_reverts_toward_equilibrium(session: AsyncSession, world: CoreWorld) -> None:
@@ -128,7 +140,11 @@ async def test_prosperity_reverts_toward_equilibrium(session: AsyncSession, worl
 async def test_magic_storms_wizards_and_price(session: AsyncSession, world: CoreWorld) -> None:
     set_stats(world.regions[0], magic=95)
     relic = await entity(session, "Star Shard", EntityType.ITEM, ItemStats(might=10), world_id=world.world.id, location_id=world.regions[0].id)
-    rules = tuned_rules(world_engine={"magic_storm_chance": 100, "magic_storm_curse_chance": 0, "sorcerer_act_chance": 100, "sorcerer_curse_chance": 100})
+    rules = tuned_rules(
+        world_engine={"magic_storm_chance": 100, "magic_storm_curse_chance": 0, "sorcerer_act_chance": 100, "sorcerer_curse_chance": 100},
+        rites={"invention_chance": 100},
+        backlash={"per_power_pct": 0},
+    )
     ctx = await manual_context(session, "magic", rules)
     await magic_storms(ctx)
     assert stat(relic, "might") == 10 + rules.world_effects.magic_storm_might_gain
@@ -138,6 +154,8 @@ async def test_magic_storms_wizards_and_price(session: AsyncSession, world: Core
     mage = await mortal(session, "Vesna", world, town.id, intellect=90)
     lore = await knowledge(session, world, "Ember Lore", KnowledgeBranch.MAGIC)
     await bond(session, mage.id, lore.id, BondKind.KNOWS)
+    dreamer = await SonRepository(session).create(son_draft("Morrow", world.world.id, (Domain.DREAM, Domain.SOUND)))
+    await bond(session, mage.id, dreamer.id, BondKind.WORSHIPS)
     await wizards(ctx)
     assert await has_flag(session, mage.id, EntityFlag.WIZARD)
     assert await has_flag(session, foe.id, EntityFlag.CURSED)
@@ -145,7 +163,7 @@ async def test_magic_storms_wizards_and_price(session: AsyncSession, world: Core
     mages = await entity(
         session, "Starborn", EntityType.PEOPLE, PeopleStats(population=1000, magic=90), world_id=world.world.id, location_id=world.regions[1].id
     )
-    await price_of_magic(ctx)
+    await price_of_magic(await manual_context(session, "magic_price", rules))
     assert stat(mages, "population") == 1000 * rules.world_effects.magic_price_population_kept_pct // 100
 
 

@@ -22,7 +22,6 @@ from aerona.engine.phase import Phase
     "table.wars",
 )
 @writes("table.achievements", "table.notifications", "table.scores")
-@reads("people.population")
 async def goals(ctx: TickContext) -> None:
     if await cosmos_row(ctx.session) is None:
         return

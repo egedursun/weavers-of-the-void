@@ -30,6 +30,7 @@ async def region_of(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) 
     "table.community_cohorts",
     "table.community_societies",
     "table.culture_values",
+    "table.entity_flags",
     "table.incident_participants",
     "table.incidents",
     "table.maimed_cohorts",
@@ -37,6 +38,7 @@ async def region_of(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) 
     "table.people_biology",
     "table.people_culture",
     "table.region_environment",
+    "table.world_maps",
 )
 @writes("table.community_cohorts", "table.entities", "table.entity_flags", "table.people_biology", "table.people_culture")
 async def cohort_upkeep(ctx: TickContext) -> None:
@@ -60,8 +62,16 @@ async def cohort_upkeep(ctx: TickContext) -> None:
     await ctx.session.flush()
 
 
-@reads("people.population", "settlement.population", "table.community_cohorts", "table.community_societies")
-@writes("table.community_labour", "table.community_cohorts")
+@reads(
+    "people.population",
+    "settlement.population",
+    "table.community_cohorts",
+    "table.community_labour",
+    "table.community_societies",
+    "table.region_environment",
+    "table.world_maps",
+)
+@writes("table.community_cohorts", "table.community_labour")
 async def labour_allocation(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     kept = 0
@@ -85,6 +95,7 @@ async def labour_allocation(ctx: TickContext) -> None:
     "table.bonds",
     "table.community_cohorts",
     "table.community_societies",
+    "table.cult_tenets",
     "table.loans",
     "table.people_culture",
 )
@@ -101,8 +112,19 @@ async def society_mobility(ctx: TickContext) -> None:
     await ctx.session.flush()
 
 
-@reads("people.population", "table.bonds", "table.culture_values", "table.people_culture", "table.region_environment")
-@writes("people.population", "table.entities", "table.people_culture")
+@reads(
+    "people.population",
+    "table.bonds",
+    "table.culture_values",
+    "table.holder_levels",
+    "table.holder_techniques",
+    "table.language_profiles",
+    "table.people_biology",
+    "table.people_culture",
+    "table.region_environment",
+    "table.world_maps",
+)
+@writes("people.population", "table.entities", "table.people_biology", "table.people_culture")
 async def people_cycles(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     for people in await canon(ctx.session, [EntityType.PEOPLE]):

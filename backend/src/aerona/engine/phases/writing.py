@@ -23,7 +23,15 @@ async def adopt_script(ctx: TickContext, language: EntityRow, writer: EntityRow,
     await note(ctx, script_note(writer.name, language.name, system), key="writing.script", ids=[writer.id, language.id])
 
 
-@reads("language.complexity", "language.sacredness", "table.bonds", "table.community_societies", "table.epoch_year_cursors", "table.language_profiles")
+@reads(
+    "language.complexity",
+    "language.sacredness",
+    "table.bonds",
+    "table.community_societies",
+    "table.epoch_year_cursors",
+    "table.holder_levels",
+    "table.language_profiles",
+)
 @writes(
     "language.complexity",
     "table.chronicle",
@@ -34,8 +42,6 @@ async def adopt_script(ctx: TickContext, language: EntityRow, writer: EntityRow,
     "table.incidents",
     "table.language_profiles",
 )
-@reads("language.complexity", "language.sacredness")
-@writes("language.complexity")
 async def writing_systems(ctx: TickContext) -> None:
     rules = ctx.rules
     rng = ctx.rng()

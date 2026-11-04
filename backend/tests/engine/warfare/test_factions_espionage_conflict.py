@@ -63,7 +63,7 @@ async def test_ordered_spy_operation_steals_knowledge(session: AsyncSession, wor
     target = await make(session, "Proud City", EntityType.SETTLEMENT, world_id, population=900, defense=40)
     lore = await make(session, "Bronze Casting", EntityType.KNOWLEDGE, world_id, level=2)
     await bond(session, target.id, lore.id, BondKind.KNOWS)
-    text = await order_spy_operation(ctx, spies.id, target.id, SpyOperation.STEAL)
+    text = await order_spy_operation(ctx, spies.id, target.id, SpyOperation.STEAL_KNOWLEDGE)
     assert "Bronze Casting" in text
     assert await BondRepository(session).exists_between(spies.id, lore.id, BondKind.KNOWS)
 

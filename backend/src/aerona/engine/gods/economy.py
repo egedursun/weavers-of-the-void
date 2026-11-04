@@ -292,6 +292,7 @@ async def withdrawal(ctx: TickContext) -> None:
     "table.epoch_year_cursors",
     "table.nodes",
     "table.resource_mechanics",
+    "table.resource_profiles",
 )
 @writes(
     "mortal.strength",
@@ -308,10 +309,9 @@ async def withdrawal(ctx: TickContext) -> None:
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.resource_profiles",
     "table.sons",
 )
-@reads("mortal.strength", "people.piety", "people.population", "people.prosperity", "people.wealth", "resource.abundance", "settlement.prosperity")
-@writes("mortal.strength", "people.piety", "people.population", "resource.abundance", "settlement.prosperity")
 async def resource_mechanics(ctx: TickContext) -> None:
     economy = ctx.rules.economy
     resources = list(
@@ -625,8 +625,6 @@ async def _pirates(ctx: TickContext, traffic: int) -> None:
     "table.name_registry",
     "table.routes",
 )
-@reads("people.prosperity", "settlement.prosperity")
-@writes("people.prosperity", "settlement.prosperity")
 async def cosmic_economy(ctx: TickContext) -> None:
     if await world_count(ctx.session) < MULTI_WORLD_MINIMUM:
         return

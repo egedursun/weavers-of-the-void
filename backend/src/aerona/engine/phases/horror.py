@@ -555,6 +555,7 @@ async def spontaneous_horror(ctx: TickContext) -> str | None:
     "table.cosmos",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.holder_levels",
     "table.nodes",
     "table.outer_bargains",
     "table.routes",
@@ -572,8 +573,6 @@ async def spontaneous_horror(ctx: TickContext) -> str | None:
     "table.world_leak_items",
     "table.worlds",
 )
-@reads("people.population", "settlement.population")
-@writes("people.population", "settlement.population")
 async def horror_phase(ctx: TickContext) -> None:
     await reopen_severed(ctx)
     await reseal_temporary(ctx)

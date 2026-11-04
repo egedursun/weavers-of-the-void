@@ -149,8 +149,6 @@ async def flee(
     "table.incident_participants",
     "table.incidents",
 )
-@reads("event.severity", "people.population", "settlement.population")
-@writes("people.population", "settlement.population")
 async def refugees(ctx: TickContext) -> None:
     rules = ctx.rules
     life = rules.deep_life

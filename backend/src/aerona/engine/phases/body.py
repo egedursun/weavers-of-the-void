@@ -63,16 +63,18 @@ PLAN_FIXUP = "body.species_plans"
     "table.body_customs",
     "table.bonds",
     "table.conditions",
+    "table.cult_tenets",
     "table.culture_values",
     "table.entity_flags",
     "table.entity_tags",
     "table.entity_traits",
+    "table.holder_levels",
     "table.injuries",
+    "table.item_profiles",
     "table.nodes",
     "table.prostheses",
 )
 @writes("table.applied_fixups", "table.bodies", "table.body_customs", "table.injuries")
-@reads("item.protection", "mortal.age", "mortal.agility", "mortal.charisma", "mortal.hp", "mortal.intellect", "mortal.lifespan", "mortal.strength")
 async def body_survey(ctx: TickContext) -> None:
     rules = ctx.rules
     known = set(await ctx.session.scalars(select(BodyRow.node_id)))
@@ -182,18 +184,24 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.community_societies",
     "table.conditions",
     "table.cosmos",
+    "table.cult_tenets",
     "table.culture_values",
     "table.designated_heirs",
+    "table.endemic_diseases",
     "table.entity_flags",
     "table.entity_tags",
     "table.epoch_year_cursors",
+    "table.holder_levels",
+    "table.holder_techniques",
     "table.injuries",
+    "table.item_profiles",
     "table.language_profiles",
     "table.lexemes",
     "table.memories",
     "table.minds",
     "table.name_registry",
     "table.nodes",
+    "table.outbreaks",
     "table.prostheses",
     "table.region_environment",
     "table.routes",
@@ -209,6 +217,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.conditions",
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
@@ -220,8 +229,6 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.skills",
     "table.sons",
 )
-@reads("item.protection", "mortal.age", "mortal.agility", "mortal.charisma", "mortal.hp", "mortal.intellect", "mortal.lifespan", "mortal.strength")
-@writes("mortal.death_year", "mortal.hp")
 async def body_healing(ctx: TickContext) -> None:
     await heal_wounds(ctx)
 
@@ -381,11 +388,14 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
     "table.body_customs",
     "table.bonds",
     "table.conditions",
+    "table.cult_tenets",
     "table.culture_values",
     "table.entity_flags",
     "table.entity_tags",
     "table.epoch_year_cursors",
+    "table.holder_levels",
     "table.injuries",
+    "table.item_profiles",
     "table.minds",
     "table.nodes",
     "table.prostheses",
@@ -402,18 +412,6 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
     "table.incident_participants",
     "table.incidents",
     "table.traits",
-)
-@reads(
-    "item.protection",
-    "mortal.age",
-    "mortal.agility",
-    "mortal.charisma",
-    "mortal.hp",
-    "mortal.intellect",
-    "mortal.lifespan",
-    "mortal.strength",
-    "settlement.piety",
-    "spirit.unrest",
 )
 async def body_conditions(ctx: TickContext) -> None:
     mortals = [mortal for mortal in await canon(ctx.session, [EntityType.MORTAL]) if mortal.status is EntityStatus.CANON]
@@ -490,13 +488,13 @@ async def _recruit(ctx: TickContext) -> None:
     "table.bodies",
     "table.body_customs",
     "table.bonds",
+    "table.cult_tenets",
     "table.culture_values",
     "table.injuries",
     "table.maimed_cohorts",
     "table.nodes",
 )
 @writes("table.body_customs", "table.maimed_cohorts")
-@reads("people.population", "people.prosperity", "settlement.population", "settlement.prosperity")
 async def body_society(ctx: TickContext) -> None:
     await tend_cohorts(ctx)
     await _wholeness(ctx)

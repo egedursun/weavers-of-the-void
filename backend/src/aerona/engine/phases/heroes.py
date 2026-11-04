@@ -424,21 +424,6 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.name_registry",
     "table.sons",
 )
-@reads(
-    "item.protection",
-    "knowledge.spread",
-    "mortal.age",
-    "mortal.agility",
-    "mortal.charisma",
-    "mortal.hp",
-    "mortal.intellect",
-    "mortal.lifespan",
-    "mortal.strength",
-    "species.agility",
-    "species.danger",
-    "species.strength",
-)
-@writes("knowledge.spread", "mortal.charisma", "mortal.death_year", "mortal.hp", "species.danger")
 async def heroes(ctx: TickContext) -> None:
     world = await load_hero_world(ctx)
     counters = HeroCounters()
@@ -520,7 +505,6 @@ async def bear_hero(ctx: TickContext, community: EntityRow) -> EntityRow:
     "table.incidents",
     "table.name_registry",
 )
-@reads("people.population", "settlement.population")
 async def hero_births(ctx: TickContext) -> None:
     settings = ctx.rules.heroes
     communities = await canon(ctx.session, SOCIETY_TYPES)

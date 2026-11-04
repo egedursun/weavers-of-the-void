@@ -291,8 +291,6 @@ async def desolation(ctx: TickContext, atlas: RegionAtlas) -> int:
     "table.incident_participants",
     "table.incidents",
 )
-@reads("people.population", "people.prosperity", "settlement.population", "settlement.prosperity", "structure.durability")
-@writes("structure.durability")
 async def settlement_cycles(ctx: TickContext) -> None:
     history = await population_history(ctx)
     atlas = await RegionAtlas.load(ctx.session)

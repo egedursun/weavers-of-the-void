@@ -180,8 +180,8 @@ async def honour_duels(ctx: TickContext) -> int:
     return fought
 
 
-@reads("table.community_relations", "table.memories", "table.minds", "table.laws")
-@writes("table.community_relations", "table.memories", "table.chronicle", "table.injuries")
+@reads("table.community_relations", "table.laws", "table.memories", "table.minds")
+@writes("table.chronicle", "table.community_relations", "table.injuries", "table.memories")
 async def vendetta_cycles(ctx: TickContext) -> None:
     ctx.count("feud_actions", await feuds(ctx))
     ctx.count("honour_duels", await honour_duels(ctx))

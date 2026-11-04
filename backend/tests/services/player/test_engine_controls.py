@@ -43,7 +43,7 @@ ENGINE_MANUAL_FUNCTIONS = (
     "send_plenty",
     "order_forge",
     "incite_class_uprising",
-    "set_resource_commodity",
+    "set_resource_yield",
     "order_minting",
     "commission_work",
     "order_exodus",

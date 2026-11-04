@@ -11205,6 +11205,7 @@ export interface components {
         };
         CommunityMintInput: {
             entity_id: number;
+            metal?: components["schemas"]["MaterialKind"] | null;
         };
         CommunityNotableInput: {
             community_id: number;

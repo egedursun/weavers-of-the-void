@@ -176,7 +176,9 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
     "table.community_relations",
     "table.community_societies",
     "table.culture_values",
+    "table.entity_flags",
     "table.entity_tags",
+    "table.holder_levels",
     "table.injuries",
     "table.memories",
     "table.minds",
@@ -200,27 +202,6 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
     "table.pressures",
     "table.skills",
     "table.traits",
-)
-@reads(
-    "cult.zeal",
-    "mortal.age",
-    "mortal.agility",
-    "mortal.charisma",
-    "mortal.intellect",
-    "mortal.lifespan",
-    "mortal.strength",
-    "people.craft",
-    "people.magic",
-    "people.martiality",
-    "people.piety",
-    "people.population",
-    "people.prosperity",
-    "people.wealth",
-    "place.fertility",
-    "region.fertility",
-    "settlement.piety",
-    "settlement.population",
-    "settlement.prosperity",
 )
 async def mind_survey(ctx: TickContext) -> None:
     known = set(await ctx.session.scalars(select(MindRow.node_id)))
@@ -343,7 +324,9 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     "table.culture_values",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.holder_levels",
     "table.injuries",
+    "table.item_profiles",
     "table.memories",
     "table.minds",
     "table.nodes",
@@ -368,8 +351,6 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     "table.skills",
     "table.traits",
 )
-@reads("mortal.age", "mortal.agility", "mortal.charisma", "mortal.hp", "mortal.intellect", "mortal.lifespan", "mortal.strength")
-@writes("mortal.hp")
 async def mind_skills(ctx: TickContext) -> None:
     ctx.count("lessons", await teach_apprentices(ctx))
     index = await ValueIndex.load(ctx.session)
@@ -439,6 +420,7 @@ async def mind_memories(ctx: TickContext) -> None:
 
 
 @reads(
+    "mortal.charisma",
     "people.piety",
     "people.population",
     "people.prosperity",
@@ -453,6 +435,7 @@ async def mind_memories(ctx: TickContext) -> None:
     "table.entity_flags",
     "table.entity_tags",
     "table.epoch_year_cursors",
+    "table.holder_levels",
     "table.injuries",
     "table.memories",
     "table.minds",
@@ -472,16 +455,6 @@ async def mind_memories(ctx: TickContext) -> None:
     "table.incidents",
     "table.needs",
     "table.pressures",
-)
-@reads(
-    "people.piety",
-    "people.population",
-    "people.prosperity",
-    "place.fertility",
-    "region.fertility",
-    "settlement.piety",
-    "settlement.population",
-    "settlement.prosperity",
 )
 async def mind_needs(ctx: TickContext) -> None:
     index = await ValueIndex.load(ctx.session)
@@ -515,17 +488,21 @@ SURVEY_PHASES = (Phase("mind_survey", mind_survey),)
 
 
 @reads(
+    "settlement.population",
     "table.bonds",
     "table.community_relations",
     "table.community_societies",
+    "table.community_stocks",
     "table.cosmos",
     "table.culture_values",
     "table.epoch_year_cursors",
+    "table.goods_flows",
     "table.memories",
     "table.minds",
     "table.nodes",
     "table.personality_values",
     "table.pressures",
+    "table.speaker_cohorts",
     "table.traits",
     "table.world_maps",
 )
@@ -534,7 +511,9 @@ SURVEY_PHASES = (Phase("mind_survey", mind_survey),)
     "table.chronicle_entities",
     "table.community_relations",
     "table.community_societies",
+    "table.community_stocks",
     "table.epoch_year_cursors",
+    "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
     "table.memories",

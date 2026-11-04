@@ -589,6 +589,7 @@ async def pursuit_of_immortality(ctx: TickContext) -> int:
     "table.cosmos",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.holder_levels",
     "table.journeys",
     "table.name_registry",
     "table.nodes",
@@ -617,19 +618,6 @@ async def pursuit_of_immortality(ctx: TickContext) -> int:
     "table.threads",
     "table.worlds",
 )
-@reads(
-    "cult.followers",
-    "cult.influence",
-    "cult.zeal",
-    "knowledge.spread",
-    "mortal.agility",
-    "mortal.charisma",
-    "mortal.intellect",
-    "mortal.lifespan",
-    "mortal.strength",
-    "settlement.population",
-)
-@writes("cult.followers", "cult.influence", "settlement.population")
 async def beyond_phase(ctx: TickContext) -> None:
     await soul_buildup(ctx)
     await soul_descent(ctx)

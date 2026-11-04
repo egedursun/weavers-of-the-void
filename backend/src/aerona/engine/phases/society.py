@@ -132,9 +132,36 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
 
 
 @reads(
-    "law.justice", "settlement.population", "settlement.prosperity", "table.bonds", "table.entity_flags", "table.pressures", "table.traits", "table.tributes"
+    "law.justice",
+    "settlement.defense",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.community_societies",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.holder_levels",
+    "table.name_registry",
+    "table.nodes",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.pressures",
+    "table.settlement_profiles",
+    "table.traits",
+    "table.tributes",
 )
-@reads("law.justice", "settlement.population", "settlement.prosperity")
+@writes(
+    "settlement.defense",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
+)
 async def uprisings(ctx: TickContext) -> None:
     settings = ctx.rules.society
     session = ctx.session
@@ -170,7 +197,6 @@ async def uprisings(ctx: TickContext) -> None:
 
 @reads("mortal.age", "table.bonds", "table.epoch_year_cursors", "table.nodes")
 @writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
-@reads("mortal.age")
 async def love_and_rivalry(ctx: TickContext) -> None:
     settings = ctx.rules.society
     session = ctx.session

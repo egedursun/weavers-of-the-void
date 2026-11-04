@@ -50,6 +50,7 @@ NATURAL_LAWS: dict[NaturalLaw, KeyedText[NaturalLaw]] = {
         KeyedText(NaturalLaw.SEA_BAN, "Sea ban", "Seas cannot be crossed; seafaring is useless."),
         KeyedText(NaturalLaw.ONE_LANGUAGE, "One language", "Languages spread faster through conquest and trade."),
         KeyedText(NaturalLaw.DISASTERS, "Disasters", "Natural disasters happen more often."),
+        KeyedText(NaturalLaw.SOULS_REINCARNATE, "Souls reincarnate", "Souls that pass judgement may be born again into a new life."),
     )
 }
 

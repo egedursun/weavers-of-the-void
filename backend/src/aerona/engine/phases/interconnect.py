@@ -75,8 +75,8 @@ async def derive_modifiers(ctx: TickContext) -> int:
     return made
 
 
-@reads("table.incidents", "table.incident_participants", "table.chronicle", "table.entities", "table.thread_links")
-@writes("table.threads", "table.thread_links", "table.incidents")
+@reads("table.chronicle", "table.entities", "table.incident_participants", "table.incidents", "table.thread_links")
+@writes("table.incidents", "table.thread_links", "table.threads")
 async def incident_threads(ctx: TickContext) -> None:
     table = ctx.rules.incidents
     chains = await chains_in(ctx.session, ctx.epoch, table.thread_chain_min, table.chain_depth)

@@ -51,8 +51,6 @@ WARDED_HOME_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.PLACE})
     "table.incidents",
     "table.name_registry",
 )
-@reads("item.curse", "item.might", "region.magic", "resource.might")
-@writes("item.curse", "item.might", "resource.might")
 async def magic_storms(ctx: TickContext) -> None:
     rules = ctx.rules
     effects = rules.world_effects
@@ -110,10 +108,25 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
     "mortal.intellect",
     "settlement.prosperity",
     "table.bonds",
+    "table.cult_doctrines",
+    "table.cult_tenets",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.holder_levels",
+    "table.holder_techniques",
+    "table.law_jurisdictions",
+    "table.law_profiles",
     "table.ley_lines",
+    "table.nodes",
+    "table.offices",
+    "table.personality_values",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.polity_territories",
     "table.resurrection_orders",
+    "table.reverences",
+    "table.rite_profiles",
+    "table.vassalages",
     "table.world_maps",
 )
 @writes(
@@ -126,7 +139,6 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
     "table.incident_participants",
     "table.incidents",
 )
-@reads("mortal.intellect")
 async def wizards(ctx: TickContext) -> None:
     rules = ctx.rules
     rng = ctx.rng()

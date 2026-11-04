@@ -6,7 +6,7 @@ from aerona.db.repositories.bonds import BondRepository
 from aerona.db.session import Database
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
-from aerona.db.tables.economy import ResourceCommodityRow
+from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import ForcedWeatherRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -318,8 +318,8 @@ async def test_creation_sets_legend_category_and_commodity(database: Database) -
         {"name": "Ironbrine Vein", "description": LONG, "power_level": 1, "links": link, "location_id": realm.cosmos.region_id, "commodity": "ore"},
     )
     async with database.read() as session:
-        row = await session.get(ResourceCommodityRow, toolkit.created_entity_ids[-1])
-    assert row is not None and row.commodity is Commodity.ORE
+        row = await session.get(ResourceProfileRow, toolkit.created_entity_ids[-1])
+    assert row is not None and row.commodity == Commodity.ORE.value
 
 
 async def test_inspect_shows_society_and_canon_facts(database: Database) -> None:

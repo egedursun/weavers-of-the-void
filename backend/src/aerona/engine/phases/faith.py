@@ -101,15 +101,65 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     return lines
 
 
-@reads("cult.followers", "cult.zeal", "cult.influence", "settlement.prosperity", "people.prosperity", "table.bonds", "table.laws", "table.memories")
-@writes(
-    "cult.zeal",
+@reads(
+    "cult.followers",
     "cult.influence",
+    "cult.zeal",
+    "people.population",
+    "people.prosperity",
+    "settlement.population",
     "settlement.prosperity",
+    "table.afterlife_strata",
+    "table.battles",
+    "table.bonds",
+    "table.chronicle",
+    "table.community_societies",
+    "table.community_stocks",
     "table.cult_doctrines",
-    "table.cult_tenets",
     "table.cult_holdings",
     "table.cult_offices",
+    "table.cult_tenets",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.goods_flows",
+    "table.heresies",
+    "table.holder_levels",
+    "table.language_profiles",
+    "table.law_jurisdictions",
+    "table.law_profiles",
+    "table.laws",
+    "table.lexemes",
+    "table.memories",
+    "table.name_registry",
+    "table.nodes",
+    "table.outbreaks",
+    "table.place_environment",
+    "table.polity_members",
+    "table.relics",
+    "table.reverences",
+    "table.skills",
+    "table.world_maps",
+)
+@writes(
+    "cult.influence",
+    "cult.zeal",
+    "settlement.prosperity",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_stocks",
+    "table.cult_doctrines",
+    "table.cult_holdings",
+    "table.cult_offices",
+    "table.cult_tenets",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.goods_flows",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
     "table.relics",
 )
 async def faith_cycles(ctx: TickContext) -> None:
@@ -123,8 +173,19 @@ async def faith_cycles(ctx: TickContext) -> None:
             await note(ctx, line, key="faith.year", ids=[church.cult.id], kind=ChronicleKind.WORSHIP)
 
 
-@reads("spirit.unrest", "table.spirit_profiles", "table.possessions", "table.memories")
-@writes("spirit.unrest", "table.spirit_profiles", "table.possessions", "table.reincarnations", "table.conditions")
+@reads(
+    "spirit.unrest",
+    "table.bonds",
+    "table.castings",
+    "table.cult_tenets",
+    "table.culture_values",
+    "table.entity_traits",
+    "table.memories",
+    "table.possessions",
+    "table.spirit_profiles",
+    "table.world_maps",
+)
+@writes("spirit.unrest", "table.conditions", "table.entities", "table.possessions", "table.reincarnations", "table.spirit_profiles")
 async def soul_cycles(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     eaten_here = await soul_eaters(ctx, atlas)

@@ -658,7 +658,7 @@ SOCIETY_ACTIONS = (
     _sync(Meta("society:forge", "Order weapons forged", G.SOCIETY), society.forge, society.SocietyTarget, free, ()),
     _sync(Meta("society:uprising", "Incite a class uprising", G.SOCIETY), society.class_uprising, society.ClassUprising, free, ()),
     _sync(Meta("resource:commodity", "Set what a resource yields", G.SOCIETY), society.resource_commodity, society.ResourceCommodity, free, ()),
-    _sync(Meta("community:mint", "Order a coin minted", G.SOCIETY), society.mint, society.SocietyTarget, free, ()),
+    _sync(Meta("community:mint", "Order a coin minted", G.SOCIETY), society.mint, society.Mint, free, ()),
     _sync(Meta("community:work", "Commission a work", G.SOCIETY), society.raise_work, society.Work, free, ()),
     _sync(Meta("community:exodus", "Send a community into exodus", G.SOCIETY), society.exodus, society.Exodus, free, ()),
     _sync(Meta("community:contact", "Bring two cultures into contact", G.SOCIETY), society.contact, society.Contact, free, ()),

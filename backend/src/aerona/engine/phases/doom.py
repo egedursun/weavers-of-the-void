@@ -147,8 +147,6 @@ async def destroy_leakiest_world(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
 )
-@reads("people.piety", "people.population", "people.prosperity", "settlement.piety", "settlement.population", "settlement.prosperity", "spirit.unrest")
-@writes("settlement.prosperity")
 async def doom_clock(ctx: TickContext) -> None:
     rules = ctx.rules
     doom = rules.apocalypse

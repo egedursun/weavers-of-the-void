@@ -49,7 +49,6 @@ async def succumb(ctx: TickContext, mortal: EntityRow) -> None:
 
 
 @reads("mortal.hp")
-@reads("mortal.hp")
 async def mortal_wounds(ctx: TickContext) -> None:
     for mortal in await canon(ctx.session, [EntityType.MORTAL]):
         hp = stat(mortal, "hp")
@@ -125,13 +124,19 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "table.designated_heirs",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.holder_levels",
+    "table.injuries",
+    "table.item_profiles",
     "table.language_profiles",
     "table.lexemes",
     "table.memories",
     "table.minds",
     "table.name_registry",
     "table.nodes",
+    "table.personality_values",
+    "table.polity_members",
     "table.routes",
+    "table.spirit_profiles",
     "table.traits",
     "table.world_maps",
 )
@@ -141,18 +146,19 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.designated_heirs",
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.item_history",
     "table.language_profiles",
     "table.memories",
     "table.name_registry",
     "table.sons",
+    "table.spirit_profiles",
 )
-@reads("mortal.age", "mortal.agility", "mortal.charisma", "mortal.intellect", "mortal.lifespan", "mortal.strength")
-@writes("mortal.age", "mortal.death_year")
 async def mortal_aging(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     world = AgingWorld(

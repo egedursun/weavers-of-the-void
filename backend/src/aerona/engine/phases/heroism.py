@@ -342,6 +342,7 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.entity_tags",
     "table.entity_traits",
     "table.epoch_year_cursors",
+    "table.holder_levels",
     "table.injuries",
     "table.language_profiles",
     "table.lexemes",
@@ -349,9 +350,12 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.minds",
     "table.name_registry",
     "table.nodes",
+    "table.personality_values",
+    "table.polity_members",
     "table.prostheses",
     "table.routes",
     "table.skills",
+    "table.spirit_profiles",
     "table.traits",
     "table.world_maps",
 )
@@ -375,23 +379,8 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.memories",
     "table.name_registry",
     "table.sons",
+    "table.spirit_profiles",
 )
-@reads(
-    "item.damage",
-    "item.might",
-    "item.protection",
-    "mortal.age",
-    "mortal.agility",
-    "mortal.charisma",
-    "mortal.hp",
-    "mortal.intellect",
-    "mortal.lifespan",
-    "mortal.strength",
-    "species.agility",
-    "species.danger",
-    "species.strength",
-)
-@writes("item.might", "item.protection", "mortal.charisma", "mortal.death_year", "mortal.hp", "species.danger")
 async def glory_hunts(ctx: TickContext) -> None:
     engine = ctx.rules.world_engine
     rng = ctx.rng()

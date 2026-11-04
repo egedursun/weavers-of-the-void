@@ -420,7 +420,6 @@ async def revive(ctx: TickContext, world: WorldRow, *, forced: bool = False) -> 
     "table.incidents",
     "table.name_registry",
 )
-@reads("people.piety", "people.population", "settlement.piety", "settlement.population")
 async def world_balance(ctx: TickContext) -> None:
     ctx.count("guardians", await guard_patronless(ctx))
     worlds = await living_worlds(ctx.session)

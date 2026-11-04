@@ -32,6 +32,7 @@ from tests.engine.society.factories import (
     region_record,
     settlement,
     store_map,
+    trade_route,
     tuned,
 )
 
@@ -156,8 +157,8 @@ async def test_region_disasters_need_terrain(realm: Realm) -> None:
 async def test_city_plague_and_spread(realm: Realm) -> None:
     city = await settlement(realm, "Crowded", population=50000)
     partner = await settlement(realm, "Partner", population=2000, location_id=realm.far_region.id)
-    await link(realm.session, city.id, partner.id, BondKind.TRADES_WITH)
-    ctx = context(realm.session, tuned(disasters={"city_plague_chance": 100, "plague_spread_chance": 100}))
+    await trade_route(realm, city, partner)
+    ctx = context(realm.session, tuned(disasters={"city_plague_chance": 100, "plague_spread_chance": 100}, epidemiology={"crowd_population": 1000}))
     await set_stores(ctx, city.id, {Commodity.FOOD: 100})
     await natural_disasters(ctx)
     plagues = [event for event in await named(realm.session, EntityType.EVENT) if event.engine_kind is EngineKind.PLAGUE]
