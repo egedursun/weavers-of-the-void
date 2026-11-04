@@ -11,6 +11,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.environment import CoastKind, NotableYearKind, RiverClass, ScarKind, TerrainKind, WaterSource, WeatherKind
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.world import ClimateEra, SkyEventKind, WorldType
 from aerona.domain.models.entity_stats import EventStats, PlaceStats, StructureStats
@@ -26,6 +27,7 @@ from aerona.engine.environment.control import (
     unlock_region_field,
 )
 from aerona.engine.environment.notable import backfill_notable_years
+from aerona.engine.environment.places import write_kind
 from aerona.engine.environment.profile import Geography, Ground, Surroundings, Works, climate_factor, passability_of, temperature_of
 from aerona.engine.environment.seasons import season_drafts, world_calendar
 from aerona.engine.environment.weather import WeatherInputs, weather_at, weather_weights
@@ -165,6 +167,7 @@ async def test_places_inherit_terrain_and_water_shapes_capacity(realm: Realm) ->
         location_id=realm.region.id,
         subtype="pass",
     )
+    await write_kind(realm.session, RULES, spring.id, PlaceKind.PASS)
     await environment_survey(context(realm.session))
     ground = await realm.session.get(PlaceEnvironmentRow, spring.id)
     assert ground is not None and ground.chokepoint and ground.terrain is TerrainKind.HIGH_PASS and ground.water_source is WaterSource.NONE
@@ -240,6 +243,7 @@ async def test_a_place_can_go_back_to_its_region_terrain(realm: Realm) -> None:
     await surveyed(realm)
     stats = PlaceStats(danger=10, fertility=50, mystery=10)
     place = await make(realm.session, "High Pass", EntityType.PLACE, stats, world_id=realm.world.id, location_id=realm.region.id, subtype="pass")
+    await write_kind(realm.session, RULES, place.id, PlaceKind.PASS)
     await environment_survey(context(realm.session))
     ground = await realm.session.get(PlaceEnvironmentRow, place.id)
     assert ground is not None and ground.terrain is TerrainKind.HIGH_PASS

@@ -140,9 +140,9 @@ async def test_creation_tools(database: Database) -> None:
     async with database.read() as session:
         owners = await BondRepository(session).incoming(forged.id, BondKind.OWNS)
         assert owners
-    taken = await rejected(toolkit, "create_place", {"name": "Brineknife", "description": LONG, "power_level": 1, "links": link})
+    taken = await rejected(toolkit, "create_place", {"place_kind": "cave", "name": "Brineknife", "description": LONG, "power_level": 1, "links": link})
     assert "already exists" in taken
-    numbered = await rejected(toolkit, "create_place", {"name": "Hollow III", "description": LONG, "power_level": 1, "links": link})
+    numbered = await rejected(toolkit, "create_place", {"place_kind": "cave", "name": "Hollow III", "description": LONG, "power_level": 1, "links": link})
     assert "numbered name" in numbered
     language = await ok(
         toolkit,
@@ -151,11 +151,11 @@ async def test_creation_tools(database: Database) -> None:
     )
     assert "Vellish" in language
     crowded = await ok(
-        toolkit, "create_place", {"name": "Lastshore", "description": LONG, "power_level": 1, "links": link, "location_id": realm.cosmos.region_id}
+        toolkit, "create_place", {"place_kind": "cave", "name": "Lastshore", "description": LONG, "power_level": 1, "links": link, "location_id": realm.cosmos.region_id}
     )
     assert "Remaining actions: 0" in crowded
     spent = await rejected(
-        toolkit, "create_place", {"name": "Farshore", "description": LONG, "power_level": 1, "links": link, "location_id": realm.cosmos.region_id}
+        toolkit, "create_place", {"place_kind": "cave", "name": "Farshore", "description": LONG, "power_level": 1, "links": link, "location_id": realm.cosmos.region_id}
     )
     assert "spent" in spent
 
@@ -164,7 +164,7 @@ async def test_power_ceiling_follows_rarity(database: Database) -> None:
     realm = await seed_realm(database, rarity=Rarity.COMMON)
     toolkit = await son_toolkit(database, realm.son_id)
     link = [{"target_id": realm.people_id, "kind": "related", "description": "near them"}]
-    ceiling = await rejected(toolkit, "create_place", {"name": "Deepreach", "description": LONG, "power_level": 5, "links": link})
+    ceiling = await rejected(toolkit, "create_place", {"place_kind": "cave", "name": "Deepreach", "description": LONG, "power_level": 5, "links": link})
     assert "at most 2" in ceiling
 
 
