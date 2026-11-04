@@ -118,6 +118,8 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
 
 
 @reads(
+    "table.marriages",
+    "table.mortal_profiles",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
@@ -147,6 +149,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "table.world_maps",
 )
 @writes(
+    "table.mortal_profiles",
     "mortal.age",
     "mortal.death_year",
     "table.bonds",

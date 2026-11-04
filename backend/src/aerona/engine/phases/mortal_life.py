@@ -102,6 +102,7 @@ async def mortal_survey(ctx: TickContext) -> None:
     "table.traits",
 )
 @writes(
+    "table.entities",
     *MORTAL_STATS,
     "table.chronicle",
     "table.chronicle_entities",
@@ -123,6 +124,7 @@ async def mortal_life_course(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.community_relations",
     "table.bonds",
     "table.culture_values",
     "table.entity_flags",
@@ -161,6 +163,7 @@ async def mortal_kin(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.entity_flags",
     *MORTAL_STATS,
     "artwork.renown",
     "table.artwork_profiles",
@@ -198,6 +201,9 @@ async def mortal_standing(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.community_relations",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
     *MORTAL_STATS,
     "table.bodies",
     "table.bonds",
@@ -255,6 +261,10 @@ async def mortal_minds(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.offices",
+    "table.polity_territories",
+    "table.vassalages",
+    "table.world_maps",
     "people.population",
     "table.bonds",
     "table.community_relations",

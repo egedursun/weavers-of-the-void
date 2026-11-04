@@ -320,6 +320,9 @@ async def sworn_hunts(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.house_members",
+    "table.marriages",
+    "table.mortal_profiles",
     "item.damage",
     "item.might",
     "item.protection",
@@ -361,6 +364,7 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.world_maps",
 )
 @writes(
+    "table.mortal_profiles",
     "item.might",
     "item.protection",
     "mortal.charisma",

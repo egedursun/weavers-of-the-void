@@ -62,6 +62,9 @@ async def at_war(ctx: TickContext, mortal: EntityRow) -> bool:
 
 
 @reads(
+    "mortal.endurance",
+    "table.mortal_equipment",
+    "table.species_profiles",
     "item.protection",
     "mortal.age",
     "mortal.agility",
@@ -182,6 +185,8 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
 
 
 @reads(
+    "mortal.endurance",
+    "table.mortal_equipment",
     "item.protection",
     "mortal.age",
     "mortal.agility",
@@ -406,6 +411,11 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
 
 
 @reads(
+    "mortal.endurance",
+    "table.mortal_equipment",
+    "table.region_environment",
+    "table.war_sides",
+    "table.wars",
     "item.protection",
     "mortal.age",
     "mortal.agility",

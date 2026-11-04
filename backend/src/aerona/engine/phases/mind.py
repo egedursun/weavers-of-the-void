@@ -268,6 +268,8 @@ async def plagued_communities(ctx: TickContext) -> set[int]:
 
 
 @reads(
+    "table.injuries",
+    "table.war_sides",
     "table.bonds",
     "table.community_relations",
     "table.culture_values",
@@ -313,6 +315,7 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
 
 
 @reads(
+    "table.mortal_profiles",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
