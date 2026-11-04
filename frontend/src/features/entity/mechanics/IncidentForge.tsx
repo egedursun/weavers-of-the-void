@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Feather,
   Link2,
@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { ConfirmDialog, Medallion } from '@/components/domain'
+import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { named } from '../environment/labels'
@@ -36,7 +37,6 @@ type Role = components['schemas']['IncidentRole']
 type Participant = { node_id: number; role: Role; name?: string | null }
 
 const ROLES = Object.keys(INCIDENT_ROLE) as Role[]
-const NO_CAUSE = 'none'
 const BUSY = 'Another change is being applied.'
 
 function incidentLabel(incident: Incident): string {
@@ -177,29 +177,30 @@ function CausePicker({
   onChange: (value: number | null) => void
   exclude?: number
 }) {
+  const options = useMemo(
+    () =>
+      incidents
+        .filter((item) => item.id !== exclude)
+        .map((item) => ({
+          value: String(item.id),
+          label: incidentLabel(item),
+          keywords: `#${item.id} ${item.kind}`,
+        })),
+    [incidents, exclude]
+  )
   return (
     <div className='flex min-w-0 flex-col gap-1'>
       <Label>Caused by</Label>
-      <Select
-        value={value === null ? NO_CAUSE : String(value)}
-        onValueChange={(next) =>
-          onChange(next === NO_CAUSE ? null : Number(next))
-        }
-      >
-        <SelectTrigger aria-label='Caused by'>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={NO_CAUSE}>Nothing recorded</SelectItem>
-          {incidents
-            .filter((item) => item.id !== exclude)
-            .map((item) => (
-              <SelectItem key={item.id} value={String(item.id)}>
-                {incidentLabel(item)}
-              </SelectItem>
-            ))}
-        </SelectContent>
-      </Select>
+      <RecordCombobox
+        options={options}
+        value={value === null ? null : String(value)}
+        onChange={(next) => onChange(next === null ? null : Number(next))}
+        placeholder='Nothing recorded'
+        searchPlaceholder='Find the cause'
+        emptyText='No incident matches.'
+        clearable
+        aria-label='Caused by'
+      />
     </div>
   )
 }
@@ -315,7 +316,7 @@ export function IncidentControls({
   incidents: Incident[]
   blocked: string | undefined
 }) {
-  const [mode, setMode] = useState<'edit' | 'roles' | null>(null)
+  const [mode, setMode] = useState<'edit' | 'roles' | 'cause' | null>(null)
   const [text, setText] = useState(incident.text ?? '')
   const [magnitude, setMagnitude] = useState(String(incident.magnitude))
   const [participants, setParticipants] = useState<Participant[]>(
@@ -420,6 +421,16 @@ export function IncidentControls({
           <Users />
           Roles
         </Button>
+        <Button
+          size='sm'
+          variant='ghost'
+          disabled={busy !== undefined}
+          disabledReason={busy}
+          onClick={() => setMode(mode === 'cause' ? null : 'cause')}
+        >
+          <Link2 />
+          Link a cause
+        </Button>
         {incident.cause_incident_id !== null ? (
           <Button
             size='sm'
@@ -443,20 +454,22 @@ export function IncidentControls({
           Strike
         </Button>
       </div>
-      <div className='flex min-w-0 items-end gap-2'>
-        <div className='min-w-0 flex-1'>
+      {mode === 'cause' && (
+        <div className='flex min-w-0 flex-col gap-2 rounded-lg border border-dashed bg-muted/20 p-2'>
           <CausePicker
             incidents={incidents}
             value={incident.cause_incident_id}
             exclude={incident.id}
-            onChange={(next) => link.mutate(next)}
+            onChange={(next) => {
+              link.mutate(next)
+              setMode(null)
+            }}
           />
+          <Muted variant='caption'>
+            A cause may lie epochs back; it cannot come after what it caused.
+          </Muted>
         </div>
-        <Link2
-          aria-hidden='true'
-          className='mb-2 size-icon-sm shrink-0 text-muted-foreground'
-        />
-      </div>
+      )}
       {mode === 'edit' && (
         <div className='flex min-w-0 flex-col gap-2 rounded-lg border border-dashed bg-muted/20 p-2'>
           <Label as='label' htmlFor={`incident-edit-${incident.id}`}>

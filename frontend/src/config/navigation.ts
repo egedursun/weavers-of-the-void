@@ -21,6 +21,7 @@ import {
   Scale,
   ScrollText,
   Settings,
+  Share2,
   SlidersHorizontal,
   Sparkles,
   Swords,
@@ -42,6 +43,7 @@ export type NavRoute =
   | '/map'
   | '/atlas'
   | '/network'
+  | '/interconnections'
   | '/wars'
   | '/economy'
   | '/chronicle'
@@ -240,6 +242,14 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Waypoints,
         description: 'The knowledge graph of records and their bonds.',
         shortcut: '5',
+      },
+      {
+        id: 'interconnections',
+        title: 'Interconnections',
+        to: '/interconnections',
+        icon: Share2,
+        description:
+          'How every mechanic feeds the others: the subsystem matrix and the links of each mechanic.',
       },
       {
         id: 'wars',

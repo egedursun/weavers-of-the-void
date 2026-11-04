@@ -24,18 +24,46 @@ const PAD = 16
 
 export type Placed = { node: CausalNode; x: number; y: number }
 
+export function linkedOnly(graph: Graph): Graph {
+  const linked = new Set(
+    graph.edges.flatMap((edge) => [edge.cause, edge.effect])
+  )
+  return { ...graph, nodes: graph.nodes.filter((node) => linked.has(node.id)) }
+}
+
 export function layoutCausality(graph: Graph): {
   placed: Placed[]
   width: number
   height: number
 } {
-  const epochs = [...new Set(graph.nodes.map((node) => node.epoch))].sort(
-    (a, b) => a - b
+  const present = new Set(graph.nodes.map((node) => node.id))
+  const causeOf = new Map(
+    graph.nodes.map((node) => [
+      node.id,
+      node.cause_incident_id !== null && present.has(node.cause_incident_id)
+        ? node.cause_incident_id
+        : null,
+    ])
   )
-  const column = new Map(epochs.map((epoch, index) => [epoch, index]))
+  const depthOf = (id: number): number => {
+    let depth = 0
+    const seen = new Set<number>([id])
+    let cause = causeOf.get(id) ?? null
+    while (cause !== null && !seen.has(cause)) {
+      seen.add(cause)
+      depth += 1
+      cause = causeOf.get(cause) ?? null
+    }
+    return depth
+  }
+  const ordered = [...graph.nodes].sort(
+    (a, b) => a.epoch - b.epoch || a.id - b.id
+  )
   const rows = new Map<number, number>()
-  const placed = graph.nodes.map((node) => {
-    const at = column.get(node.epoch) ?? 0
+  let columns = 1
+  const placed = ordered.map((node) => {
+    const at = depthOf(node.id)
+    columns = Math.max(columns, at + 1)
     const row = rows.get(at) ?? 0
     rows.set(at, row + 1)
     return { node, x: PAD + at * COLUMN, y: PAD + row * ROW }
@@ -43,7 +71,7 @@ export function layoutCausality(graph: Graph): {
   const tallest = Math.max(1, ...rows.values())
   return {
     placed,
-    width: PAD * 2 + Math.max(1, epochs.length) * COLUMN,
+    width: PAD * 2 + columns * COLUMN,
     height: PAD * 2 + tallest * ROW,
   }
 }
@@ -64,7 +92,7 @@ export function CausalityGraph({ nodeId }: { nodeId: number }) {
   })
   const [chosen, setChosen] = useState<number | null>(null)
   const layout = useMemo(
-    () => (query.data ? layoutCausality(query.data) : null),
+    () => (query.data ? layoutCausality(linkedOnly(query.data)) : null),
     [query.data]
   )
   if (!query.data || !layout) return null
@@ -161,7 +189,8 @@ export function CausalityGraph({ nodeId }: { nodeId: number }) {
         </svg>
       </div>
       <Muted variant='caption'>
-        Dashed lines reach across epochs. Pick an incident to read it.
+        Each column is one more step of cause; dashed lines reach across epochs.
+        Pick an incident to read it.
       </Muted>
       {selected && (
         <div className='flex min-w-0 items-start gap-2 rounded-lg border bg-background p-2'>

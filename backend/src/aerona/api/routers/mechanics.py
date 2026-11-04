@@ -29,8 +29,8 @@ from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.modifier import ModifierSource
 from aerona.engine.interconnect.catalog import REGISTERED
-from aerona.engine.interconnect.edges import GENERIC_CARRIERS, all_edges, mechanic_reads, mechanic_writes
-from aerona.engine.interconnect.explorer import mechanic_links, subsystem_links
+from aerona.engine.interconnect.edges import mechanic_reads, mechanic_writes
+from aerona.engine.interconnect.explorer import affects_by_writer, mechanic_links, subsystem_links
 from aerona.engine.interconnect.incidents import causality_graph, chain_to, last_incident
 from aerona.engine.interconnect.registry import Subsystem
 from aerona.engine.interconnect.sources import SOURCE_SUBSYSTEMS, reason_text
@@ -100,7 +100,7 @@ async def acting_mechanics(session: AsyncSession, entity: EntityRow | None, supp
         return []
     kind = entity.entity_type.value
     prefix = f"{kind}."
-    edges = all_edges()
+    affected = affects_by_writer()
     found: list[ActingMechanic] = []
     for mechanic in sorted(REGISTERED.values(), key=lambda item: item.key):
         writes = sorted(key.removeprefix(prefix) for key in mechanic_writes(mechanic) if key.startswith(prefix))
@@ -118,13 +118,7 @@ async def acting_mechanics(session: AsyncSession, entity: EntityRow | None, supp
                 fields=sorted({*mechanic.fields, *writes}),
                 reads=reads,
                 writes=writes,
-                affects=sorted(
-                    {
-                        edge.target
-                        for edge in edges
-                        if edge.writer == mechanic.key and edge.target != mechanic.subsystem and edge.carrier not in GENERIC_CARRIERS
-                    }
-                ),
+                affects=sorted(target for target in affected.get(mechanic.key, frozenset()) if target != mechanic.subsystem),
                 suppressed=mechanic.key in suppressed,
                 last_incident_id=last.id if last is not None else None,
                 last_text=chronicle.text if chronicle is not None else None,

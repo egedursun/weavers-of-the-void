@@ -2,7 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from functools import cache
 
-from aerona.engine.interconnect.edges import cached_edges
+from aerona.engine.interconnect.edges import GENERIC_CARRIERS, cached_edges
 from aerona.engine.interconnect.registry import EdgeKind, Subsystem
 
 
@@ -68,3 +68,12 @@ def mechanic_links() -> dict[str, tuple[MechanicLink, ...]]:
     for (mechanic, direction, other, subsystem, kind), carriers in sorted(grouped.items(), key=lambda item: (item[0][0], item[0][1], item[0][2], item[0][4])):
         found[mechanic].append(MechanicLink(mechanic, direction, other, subsystem, kind, tuple(sorted(carriers))))
     return {key: tuple(items) for key, items in found.items()}
+
+
+@cache
+def affects_by_writer() -> dict[str, frozenset[Subsystem]]:
+    found: dict[str, set[Subsystem]] = defaultdict(set)
+    for edge in cached_edges():
+        if edge.carrier not in GENERIC_CARRIERS:
+            found[edge.writer].add(edge.target)
+    return {key: frozenset(value) for key, value in found.items()}
