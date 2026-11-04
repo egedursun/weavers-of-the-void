@@ -173,6 +173,8 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
     "settlement.prosperity",
     "table.applied_fixups",
     "table.bonds",
+    "table.class_standing",
+    "table.community_needs",
     "table.community_relations",
     "table.community_societies",
     "table.culture_values",
@@ -272,14 +274,26 @@ async def plagued_communities(ctx: TickContext) -> set[int]:
 @reads(
     "table.bonds",
     "table.community_relations",
+    "table.culture_drift_causes",
     "table.culture_values",
+    "table.drift_impositions",
+    "table.entities",
+    "table.ideology_adherents",
+    "table.ideology_profiles",
     "table.memories",
     "table.minds",
     "table.nodes",
+    "table.people_culture",
     "table.personality_values",
+    "table.pressures",
     "table.traits",
 )
-@writes("table.culture_values", "table.personality_values")
+@writes(
+    "table.culture_drift_causes",
+    "table.culture_values",
+    "table.drift_impositions",
+    "table.personality_values",
+)
 async def mind_values(ctx: TickContext) -> None:
     index = await ValueIndex.load(ctx.session)
     plagued = await plagued_communities(ctx)
@@ -430,6 +444,8 @@ async def mind_memories(ctx: TickContext) -> None:
     "settlement.population",
     "settlement.prosperity",
     "table.bonds",
+    "table.class_standing",
+    "table.community_needs",
     "table.community_societies",
     "table.culture_values",
     "table.entity_flags",

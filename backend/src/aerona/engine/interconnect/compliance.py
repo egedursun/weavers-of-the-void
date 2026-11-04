@@ -24,6 +24,15 @@ from aerona.db.tables.culture import (
     TraditionProfileRow,
 )
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleBiologyRow, PeopleCultureRow
+from aerona.db.tables.society_depth import (
+    ClassStandingRow,
+    CommunityNeedRow,
+    CorveeRow,
+    DriftCauseRow,
+    LabourReasonRow,
+    MobilityEventRow,
+    PolityLoyaltyRow,
+)
 from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, EndemicDiseaseRow, ImmunityRow, OutbreakRow, QuarantineRow
 from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesHostRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow, SpeciesYieldRow
 from aerona.db.tables.economy import (
@@ -641,5 +650,38 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (),
         ("afterlife.",),
         ("d6e2a8c0f4b1",),
+    ),
+    ComplianceRow(
+        "F3",
+        (CommunityNeedRow.__tablename__,),
+        ("society_economy",),
+        ("needs:hold",),
+        ("NeedsBasket", "section-needs"),
+        ("mortal_context",),
+        (),
+        ("consumption.",),
+        ("society.depth_backfill",),
+    ),
+    ComplianceRow(
+        "S4.1",
+        (CommunityNeedRow.__tablename__, ClassStandingRow.__tablename__, LabourReasonRow.__tablename__, DriftCauseRow.__tablename__, PolityLoyaltyRow.__tablename__),
+        ("society_economy", "mind_needs", "labour_allocation", "mind_values", "polity_cycles", "markets"),
+        ("needs:hold", "class:standing", "labour:set", "drift:impose", "drift:edit", "drift:cancel", "loyalty:edit"),
+        ("NeedsBasket", "LabourReasons", "CultureDrift", "LoyaltyBreakdown"),
+        ("mortal_context",),
+        (),
+        ("loyalty.", "labour."),
+        ("society.depth_backfill", "labour_allocation", "mind_values", "polity_cycles"),
+    ),
+    ComplianceRow(
+        "S4.9",
+        (ClassStandingRow.__tablename__, MobilityEventRow.__tablename__, CorveeRow.__tablename__),
+        ("society_economy", "society_mobility", "factions", "labour_allocation"),
+        ("class:standing", "labour:corvee", "mobility:ennoble", "mobility:ruin", "mobility:enslave", "mobility:manumit"),
+        ("ClassWealth", "MobilityHistory", "section-mobility"),
+        ("mortal_context",),
+        (),
+        ("society.enslaved", "society.freed", "society.ennobled", "labour.corvee"),
+        ("society.depth_backfill",),
     ),
 )

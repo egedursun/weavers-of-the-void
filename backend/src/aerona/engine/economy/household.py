@@ -30,6 +30,17 @@ class Meal:
     fed_pct: int
     eaten: dict[CommodityKind, int] = field(default_factory=dict)
     short: dict[CommodityKind, int] = field(default_factory=dict)
+    wanted: dict[CommodityKind, int] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class Wear:
+    wanted: dict[CommodityKind, int] = field(default_factory=dict)
+    got: dict[CommodityKind, int] = field(default_factory=dict)
+
+    @property
+    def short(self) -> dict[CommodityKind, int]:
+        return {kind: amount - self.got.get(kind, 0) for kind, amount in self.wanted.items() if amount > self.got.get(kind, 0)}
 
 
 def mix_of(ctx: TickContext, book: EconomyBook, community: EntityRow) -> CropMix:
@@ -58,21 +69,37 @@ async def harvest_goods(ctx: TickContext, book: EconomyBook, community: EntityRo
     return split
 
 
-async def eat(ctx: TickContext, community: EntityRow) -> Meal:
+def eating_order(staples: tuple[CommodityKind, ...]) -> tuple[CommodityKind, ...]:
+    return (*staples, *(kind for kind in EATING_ORDER if kind not in staples))
+
+
+def diet_demand(rules: Rules, population: int, staples: tuple[CommodityKind, ...]) -> dict[CommodityKind, int]:
+    base = {kind: epoch_need(rules, population, kind) for kind in EATING_ORDER}
+    if not staples:
+        return base
+    weight = {kind: base[kind] * (rules.consumption.staple_demand_pct if kind in staples else PERCENT) / PERCENT for kind in base}
+    wanted = sum(base[kind] * COMMODITIES[kind].nourishment for kind in base)
+    weighted = sum(weight[kind] * COMMODITIES[kind].nourishment for kind in base)
+    scale = wanted / weighted if weighted > 0 else 1.0
+    return {kind: round_half_up(weight[kind] * scale) for kind in base}
+
+
+async def eat(ctx: TickContext, community: EntityRow, staples: tuple[CommodityKind, ...] = ()) -> Meal:
     population = headcount(community)
     need = nourishment_need(ctx.rules, population)
     if need <= 0:
         return Meal(PERCENT)
     ledger = goods_of(ctx.session, ctx.epoch)
+    order = eating_order(staples)
+    wanted = diet_demand(ctx.rules, population, staples)
     eaten: dict[CommodityKind, int] = {}
     left = need
-    for kind in EATING_ORDER:
-        share = epoch_need(ctx.rules, population, kind)
-        taken = sum(lot.quantity for lot in await ledger.take(community.id, kind, share, GoodsFlow.CONSUMPTION, best_first=False))
+    for kind in order:
+        taken = sum(lot.quantity for lot in await ledger.take(community.id, kind, wanted.get(kind, 0), GoodsFlow.CONSUMPTION, best_first=False))
         eaten[kind] = taken
         left = max(0, left - taken * COMMODITIES[kind].nourishment)
     held = await holdings(ctx.session, community.id)
-    for kind in EATING_ORDER:
+    for kind in order:
         if left <= 0:
             break
         value = COMMODITIES[kind].nourishment
@@ -83,7 +110,8 @@ async def eat(ctx: TickContext, community: EntityRow) -> Meal:
         eaten[kind] = eaten.get(kind, 0) + taken
         left = max(0, left - taken * value)
     fed = round_half_up((need - left) * PERCENT / need)
-    return Meal(fed, eaten)
+    short = {kind: amount - min(amount, eaten.get(kind, 0)) for kind, amount in wanted.items() if amount > eaten.get(kind, 0)}
+    return Meal(fed, eaten, short, wanted)
 
 
 async def gather_commons(ctx: TickContext, book: EconomyBook, community: EntityRow, farmer_share: float) -> dict[CommodityKind, int]:
@@ -108,9 +136,10 @@ async def prosthetic_demand(ctx: TickContext, community: EntityRow) -> int:
     return round_half_up(int(maimed or 0) * ctx.rules.economy.prosthetic_tools_per_1000_maimed / THOUSAND)
 
 
-async def wear(ctx: TickContext, community: EntityRow) -> dict[CommodityKind, int]:
+async def wear(ctx: TickContext, community: EntityRow) -> Wear:
     population = headcount(community)
-    short: dict[CommodityKind, int] = {}
+    wanted: dict[CommodityKind, int] = {}
+    got: dict[CommodityKind, int] = {}
     for kind in COMMODITIES:
         if kind in FOOD_KINDS:
             continue
@@ -119,10 +148,9 @@ async def wear(ctx: TickContext, community: EntityRow) -> dict[CommodityKind, in
             need += await prosthetic_demand(ctx, community)
         if need <= 0:
             continue
-        taken = sum(lot.quantity for lot in await goods_of(ctx.session, ctx.epoch).take(community.id, kind, need, GoodsFlow.CONSUMPTION, best_first=False))
-        if taken < need:
-            short[kind] = need - taken
-    return short
+        wanted[kind] = need
+        got[kind] = sum(lot.quantity for lot in await goods_of(ctx.session, ctx.epoch).take(community.id, kind, need, GoodsFlow.CONSUMPTION, best_first=False))
+    return Wear(wanted, got)
 
 
 def store_kind(aggregate: Commodity) -> WorkshopKind:

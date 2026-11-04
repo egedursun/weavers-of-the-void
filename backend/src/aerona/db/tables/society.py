@@ -14,6 +14,7 @@ class CommunitySocietyRow(Base):
         *(between(f"satisfaction_{item.value}", PERCENT_MIN, PERCENT_MAX) for item in SocialClass),
         *(CheckConstraint(f"stock_{item.value} >= 0", name=f"stock_{item.value}_min") for item in Commodity),
         *(CheckConstraint(f"price_{item.value} >= 0", name=f"price_{item.value}_min") for item in Commodity),
+        between("gini", PERCENT_MIN, PERCENT_MAX),
     )
 
     entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
@@ -45,6 +46,7 @@ class CommunitySocietyRow(Base):
     price_goods: Mapped[int]
     golden_age_since_epoch: Mapped[int | None]
     currency_id: Mapped[int | None] = mapped_column(ForeignKey("currencies.id", ondelete="SET NULL"))
+    gini: Mapped[int] = mapped_column(default=0)
 
     def share(self, social_class: SocialClass) -> float:
         value: float = getattr(self, f"share_{social_class.value}")

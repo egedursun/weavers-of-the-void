@@ -1,0 +1,79 @@
+from dataclasses import dataclass
+
+from aerona.rules.groups import RuleGroup
+from aerona.rules.model import rule
+
+E = RuleGroup.ECONOMY
+G = RuleGroup.POPULATION_AND_GROWTH
+P = RuleGroup.CIVILIZATION
+
+
+@dataclass(frozen=True)
+class ConsumptionRules:
+    grain_per_1000: int = rule(500, 0, 100000, E, "Units of grain a thousand people use in an epoch")
+    livestock_per_1000: int = rule(150, 0, 100000, E, "Units of livestock a thousand people use in an epoch")
+    fish_per_1000: int = rule(100, 0, 100000, E, "Units of fish a thousand people use in an epoch")
+    bread_per_1000: int = rule(200, 0, 100000, E, "Units of bread a thousand people use in an epoch")
+    fodder_per_1000: int = rule(50, 0, 100000, E, "Units of fodder a thousand people use in an epoch")
+    timber_per_1000: int = rule(25, 0, 100000, E, "Units of timber a thousand people use in an epoch")
+    fuel_per_1000: int = rule(30, 0, 100000, E, "Units of fuel a thousand people use in an epoch")
+    ore_per_1000: int = rule(0, 0, 100000, E, "Units of ore a thousand people use in an epoch")
+    stone_per_1000: int = rule(10, 0, 100000, E, "Units of stone a thousand people use in an epoch")
+    cloth_per_1000: int = rule(20, 0, 100000, E, "Units of cloth a thousand people use in an epoch")
+    tools_per_1000: int = rule(8, 0, 100000, E, "Units of tools a thousand people use in an epoch")
+    weapons_per_1000: int = rule(5, 0, 100000, E, "Units of weapons a thousand people use in an epoch")
+    armour_per_1000: int = rule(3, 0, 100000, E, "Units of armour a thousand people use in an epoch")
+    mounts_per_1000: int = rule(2, 0, 100000, E, "Units of mounts a thousand people use in an epoch")
+    siege_materiel_per_1000: int = rule(1, 0, 100000, E, "Units of siege materiel a thousand people use in an epoch")
+    medicine_per_1000: int = rule(5, 0, 100000, E, "Units of medicine a thousand people use in an epoch")
+    luxuries_per_1000: int = rule(10, 0, 100000, E, "Units of luxuries a thousand people use in an epoch")
+    incense_per_1000: int = rule(4, 0, 100000, E, "Units of incense a thousand people use in an epoch")
+    sacred_goods_per_1000: int = rule(3, 0, 100000, E, "Units of sacred goods a thousand people use in an epoch")
+    magical_reagents_per_1000: int = rule(2, 0, 100000, E, "Units of magical reagents a thousand people use in an epoch")
+    staple_demand_pct: int = rule(250, 100, 1000, E, "How much more of its cuisine staples a people wants than of other foods (%)")
+    staple_satisfaction: int = rule(6, 0, 100, E, "Contentment a class loses when it eats, but not the staples of its cuisine")
+    need_satisfaction: int = rule(30, 0, 100, E, "Contentment a class loses when nothing it needs beyond food is met")
+    hunger_satisfaction: int = rule(35, 0, 100, E, "Contentment a class loses when it goes wholly unfed")
+    luxury_plenty_pct: int = rule(150, 100, 1000, E, "Luxuries held against the wanted share at which nobles and merchants count as living in plenty (%)")
+    luxury_plenty_satisfaction: int = rule(10, 0, 100, E, "Contentment nobles and merchants gain from luxuries in plenty")
+    cold_death_pct: int = rule(2, 0, 100, E, "People who die of cold in an epoch when no fuel, timber or cloth is to be had, in a temperate land (%)")
+    cold_land_pct: int = rule(250, 0, 1000, E, "Cold deaths in a cold or frozen land against a temperate one (%)")
+    warm_land_pct: int = rule(30, 0, 1000, E, "Cold deaths in a warm or hot land against a temperate one (%)")
+    sickness_pct: int = rule(4, 0, 100, E, "Adults who fall sick in an epoch when no medicine is to be had (%)")
+    impiety_piety: int = rule(6, 0, 100, E, "Piety lost when no incense or sacred goods are to be had")
+    toil_prosperity: int = rule(5, 0, 100, E, "Prosperity lost when no tools, ore or stone are to be had")
+    insecurity_defense: int = rule(4, 0, 100, E, "Defence or martial spirit lost when no weapons, armour or mounts are to be had")
+    herd_loss_pct: int = rule(15, 0, 100, E, "Livestock that starves in an epoch when no fodder is to be had (%)")
+    hunger_pressure_pct: int = rule(100, 0, 300, E, "Hunger pressure from the unfed share of the people (%)")
+    poverty_pressure_pct: int = rule(80, 0, 300, E, "Poverty pressure from the unmet share of the poorer classes' needs (%)")
+    impiety_pressure_pct: int = rule(60, 0, 300, E, "Impiety pressure from missing incense and sacred goods (%)")
+    insecurity_pressure_pct: int = rule(40, 0, 300, E, "Insecurity pressure from missing weapons and armour (%)")
+    arcane_pressure_pct: int = rule(30, 0, 300, E, "Stagnation pressure from missing magical reagents (%)")
+    notable_cold_deaths: int = rule(50, 1, 1000000, E, "Cold deaths in an epoch the chronicle notes")
+    notable_sick: int = rule(100, 1, 1000000, E, "People fallen sick for want of medicine in an epoch the chronicle notes")
+
+
+@dataclass(frozen=True)
+class MobilisationRules:
+    martial_pct: int = rule(100, 0, 500, G, "Weight of a people's martial value in how many adults it can levy (%)")
+    cohesion_pct: int = rule(100, 0, 500, G, "Weight of cohesion in how many adults a people can levy (%)")
+    harvest_pct: int = rule(50, 0, 100, G, "Levy kept in the harvest season (%)")
+
+
+@dataclass(frozen=True)
+class LoyaltyRules:
+    base: int = rule(60, 0, 100, P, "Loyalty of a member to its realm before values, grievances and benefits")
+    distance_pct: int = rule(30, 0, 300, P, "Loyalty lost per point of value distance between a member and its ruler (%)")
+    tribute_grievance: int = rule(10, 0, 100, P, "Grievance from tribute paid to others")
+    weariness_grievance_pct: int = rule(30, 0, 300, P, "Grievance from the realm's war weariness (%)")
+    conquest_grievance: int = rule(15, 0, 100, P, "Grievance of a member that remembers being conquered by the realm")
+    tax_grievance_pct: int = rule(60, 0, 300, P, "Grievance per point of tax above the ordinary rate (%)")
+    tax_ordinary: int = rule(10, 0, 100, P, "Tax rate members bear without grievance")
+    route_benefit: int = rule(4, 0, 100, P, "Benefit per trade route a member keeps")
+    route_benefit_cap: int = rule(16, 0, 100, P, "Most benefit trade routes give")
+    victory_benefit: int = rule(5, 0, 100, P, "Benefit per recent victory of the realm")
+    faith_benefit: int = rule(8, 0, 100, P, "Benefit to a member that worships the realm's state faith")
+    prosperity_benefit_pct: int = rule(20, 0, 200, P, "Benefit from a member's prosperity above the middle (%)")
+    satisfaction_pct: int = rule(40, 0, 200, P, "Loyalty gained or lost by the classes' satisfaction above or below the middle (%)")
+    autonomy_pct: int = rule(20, 0, 200, P, "Autonomy a member gains each epoch per point of loyalty below the middle, and loses above it (%)")
+    wavering_loyalty: int = rule(30, 0, 100, P, "Loyalty below which the chronicle notes that a member wavers")

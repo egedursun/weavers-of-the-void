@@ -32,3 +32,9 @@ class FactionsRules:
     faction_max_power: int = rule(6, 1, 12, RuleGroup.WAR_AND_DIPLOMACY, "Maximum power level of an engine-founded faction")
     faction_stat_die: int = rule(25, 1, 100, RuleGroup.WAR_AND_DIPLOMACY, "Die added to the stats of a new faction")
     faction_stat_shift: int = rule(5, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Subtracted from a new faction's stats after the die")
+    recruit_satisfaction_pct: int = rule(
+        100, 0, 300, RuleGroup.WAR_AND_DIPLOMACY, "How much a discontented class raises the founding chance of its faction (%)"
+    )
+    recruit_strength_pct: int = rule(
+        10, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Strength a class faction gains each epoch per point of its class's discontent below the middle (%)"
+    )

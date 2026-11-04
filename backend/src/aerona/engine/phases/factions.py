@@ -15,6 +15,7 @@ from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
+from aerona.engine.demography.recruitment import founding_factor, recruit
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import faction_drive
 from aerona.engine.phase import Phase
@@ -156,11 +157,12 @@ async def found_factions(ctx: TickContext) -> int:
     for community in await canon(ctx.session, SOCIETY_TYPES):
         if founded >= rules.faction_cap:
             break
-        if (stat(community, "population") or 0) < rules.faction_min_population or not rng.chance(
-            rules.faction_chance * await faction_drive(ctx.session, ctx.rules, community.id)
-        ):
+        if (stat(community, "population") or 0) < rules.faction_min_population:
             continue
         kinds = await eligible_kinds(ctx, community)
+        discontent = await founding_factor(ctx.session, ctx.rules, community.id, blueprint(kinds[0]).engine_kind) if kinds else 1.0
+        if not rng.chance(rules.faction_chance * await faction_drive(ctx.session, ctx.rules, community.id) * discontent):
+            continue
         if kinds:
             await found_faction(ctx, community, kinds[0])
             founded += 1
@@ -168,6 +170,7 @@ async def found_factions(ctx: TickContext) -> int:
 
 
 @reads(
+    "faction.strength",
     "people.population",
     "people.prosperity",
     "settlement.population",
@@ -183,6 +186,7 @@ async def found_factions(ctx: TickContext) -> int:
     "table.wars",
 )
 @writes(
+    "faction.strength",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
@@ -194,6 +198,7 @@ async def found_factions(ctx: TickContext) -> int:
 )
 async def factions(ctx: TickContext) -> None:
     ctx.count("uprisings_disbanded", await disband_uprisings(ctx))
+    ctx.count("faction_recruits", await recruit(ctx))
     await found_factions(ctx)
 
 

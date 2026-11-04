@@ -32,6 +32,7 @@ class LabourRow(Base):
     workers: Mapped[int] = mapped_column(default=0)
     output_pct: Mapped[int] = mapped_column(default=100)
     epoch: Mapped[int] = mapped_column(default=0)
+    held: Mapped[bool] = mapped_column(default=False)
 
 
 class PeopleBiologyRow(Base):

@@ -17,6 +17,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.mind import MemoryKind, TraitEffect, TraitKind, ValueAxis, ValueHolder
+from aerona.domain.enums.society_depth import DriftCause
 from aerona.domain.enums.son import Passion
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -33,6 +34,19 @@ from aerona.engine.mind.book import (
     trait_effect,
     traits_of,
     write_values,
+)
+from aerona.engine.mind.drift_causes import (
+    Causes,
+    add_shift,
+    cohesion_of,
+    empty,
+    famine_shift,
+    ideology_shift,
+    impositions_of,
+    lost_war_sign,
+    pull_shift,
+    record_causes,
+    spend_impositions,
 )
 from aerona.engine.mind.space import blend
 from aerona.engine.notes import note
@@ -199,29 +213,35 @@ async def neighbour_mean(session: AsyncSession, index: ValueIndex, community_id:
     return {axis: round(sum(vector.get(axis, 0) for vector in vectors) / len(vectors)) for axis in ValueAxis}
 
 
-async def experience_shift(ctx: TickContext, community: EntityRow, index: ValueIndex, plagued: set[int]) -> tuple[dict[ValueAxis, float], Values | None]:
+async def experience_shift(ctx: TickContext, community: EntityRow, index: ValueIndex, plagued: set[int]) -> tuple[Causes, Values | None]:
     table = ctx.rules.culture_drift
-    shift: dict[ValueAxis, float] = defaultdict(float)
+    causes = empty()
     conqueror: Values | None = None
+    sign = lost_war_sign(ctx.rules, await cohesion_of(ctx.session, ctx.rules, community))
     fresh = await ctx.session.scalars(select(MemoryRow).where(MemoryRow.holder_node_id == community.id, MemoryRow.epoch == ctx.epoch))
     for memory in fresh:
         if memory.kind is MemoryKind.CONQUERED_US:
-            shift[ValueAxis.MARTIAL] -= table.war_lost_martial
+            add_shift(causes, DriftCause.WAR_LOST, ValueAxis.MARTIAL, sign * table.war_lost_martial)
             conqueror = index.of(memory.subject_node_id) or conqueror
         elif memory.kind is MemoryKind.FOUGHT_US:
-            shift[ValueAxis.MARTIAL] += table.war_martial
+            add_shift(causes, DriftCause.WAR_FOUGHT, ValueAxis.MARTIAL, table.war_martial)
         elif memory.kind is MemoryKind.TRADED_WITH:
-            shift[ValueAxis.XENOPHILIA] += table.trade_xenophilia
-            shift[ValueAxis.WEALTH] += table.trade_wealth
+            add_shift(causes, DriftCause.TRADE, ValueAxis.XENOPHILIA, table.trade_xenophilia)
+            add_shift(causes, DriftCause.TRADE, ValueAxis.WEALTH, table.trade_wealth)
     victories = await ctx.session.scalars(
         select(MemoryRow).where(MemoryRow.subject_node_id == community.id, MemoryRow.epoch == ctx.epoch, MemoryRow.kind == MemoryKind.CONQUERED_US)
     )
     for _ in victories:
-        shift[ValueAxis.MARTIAL] += table.war_won_martial
+        add_shift(causes, DriftCause.WAR_WON, ValueAxis.MARTIAL, table.war_won_martial)
     if community.id in plagued:
-        shift[ValueAxis.PIETY] += table.plague_piety
-        shift[ValueAxis.DEATH] += table.plague_death
-    return shift, conqueror
+        add_shift(causes, DriftCause.PLAGUE, ValueAxis.PIETY, table.plague_piety)
+        add_shift(causes, DriftCause.PLAGUE, ValueAxis.DEATH, table.plague_death)
+    famine = await famine_shift(ctx.session, ctx.rules, community.id)
+    if famine:
+        add_shift(causes, DriftCause.FAMINE, ValueAxis.KINSHIP, famine)
+    for axis, value in (await ideology_shift(ctx.session, ctx.rules, community.id)).items():
+        add_shift(causes, DriftCause.IDEOLOGY, axis, value)
+    return causes, conqueror
 
 
 def pull_toward(target: dict[ValueAxis, float], current: Values, source: Values | None, share_pct: float) -> None:
@@ -231,23 +251,35 @@ def pull_toward(target: dict[ValueAxis, float], current: Values, source: Values 
         target[axis] += (source.get(axis, 0) - current.get(axis, 0)) * share_pct / PERCENT
 
 
-async def pressure_target(ctx: TickContext, community: EntityRow, index: ValueIndex, current: Values, plagued: set[int]) -> dict[ValueAxis, float]:
+async def pressure_causes(ctx: TickContext, community: EntityRow, index: ValueIndex, current: Values, plagued: set[int]) -> Causes:
     table = ctx.rules.culture_drift
-    target: dict[ValueAxis, float] = {axis: float(current.get(axis, 0)) for axis in ValueAxis}
-    pull_toward(
-        target, current, await neighbour_mean(ctx.session, index, community.id), table.neighbour_pull_pct * scaled_by(current.get(ValueAxis.XENOPHILIA, 0))
+    causes, conqueror = await experience_shift(ctx, community, index, plagued)
+    pulls = (
+        (
+            DriftCause.NEIGHBOURS,
+            await neighbour_mean(ctx.session, index, community.id),
+            table.neighbour_pull_pct * scaled_by(current.get(ValueAxis.XENOPHILIA, 0)),
+        ),
+        (DriftCause.RULER, await ruler_values(ctx.session, index, community.id), table.ruler_pull_pct),
     )
-    pull_toward(target, current, await ruler_values(ctx.session, index, community.id), table.ruler_pull_pct)
     patron = await living_patron(ctx.session, community)
     god = index.of(patron.id) if patron is not None else {}
-    pull_toward(target, current, god, table.god_pull_pct * scaled_by(current.get(ValueAxis.PIETY, 0)))
-    shift, conqueror = await experience_shift(ctx, community, index, plagued)
-    for axis, value in shift.items():
-        target[axis] += value
+    for cause, source, share in (*pulls, (DriftCause.GOD, god, table.god_pull_pct * scaled_by(current.get(ValueAxis.PIETY, 0)))):
+        for axis, value in pull_shift(current, source, share).items():
+            add_shift(causes, cause, axis, value)
     if conqueror:
         resistance = (current.get(ValueAxis.KINSHIP, 0) + current.get(ValueAxis.TRADITION, 0) + current.get(ValueAxis.HONOUR, 0)) / 3
         sign = -1 if resistance >= table.conquest_resistance else 1
-        pull_toward(target, current, conqueror, sign * table.conquest_pull_pct)
+        for axis, value in pull_shift(current, conqueror, sign * table.conquest_pull_pct).items():
+            add_shift(causes, DriftCause.CONQUEST, axis, value)
+    return causes
+
+
+async def pressure_target(ctx: TickContext, community: EntityRow, index: ValueIndex, current: Values, plagued: set[int]) -> dict[ValueAxis, float]:
+    target: dict[ValueAxis, float] = {axis: float(current.get(axis, 0)) for axis in ValueAxis}
+    for shift in (await pressure_causes(ctx, community, index, current, plagued)).values():
+        for axis, value in shift.items():
+            target[axis] += value
     return target
 
 
@@ -258,9 +290,19 @@ async def drift_culture(ctx: TickContext, community: EntityRow, index: ValueInde
     holder = holder_kind(community)
     if mind is None or is_locked(mind, VALUE_LOCK) or not current or holder is None:
         return False
-    target = await pressure_target(ctx, community, index, current, plagued)
+    causes = await pressure_causes(ctx, community, index, current, plagued)
+    imposed = await impositions_of(ctx.session, community.id)
+    for row in imposed:
+        add_shift(causes, row.cause, row.axis, row.amount * PERCENT / max(1, table.drift_rate_pct))
+    await spend_impositions(ctx.session, imposed)
+    target: dict[ValueAxis, float] = {axis: float(current.get(axis, 0)) for axis in ValueAxis}
+    for shift in causes.values():
+        for axis, value in shift.items():
+            target[axis] += value
     resist = scaled_by(-max(0, current.get(ValueAxis.TRADITION, 0)) * table.tradition_resist_pct // PERCENT)
-    moved = blend(current, {axis: round(value) for axis, value in target.items()}, table.drift_rate_pct * resist)
+    rate = table.drift_rate_pct * resist
+    await record_causes(ctx, community.id, causes, rate)
+    moved = blend(current, {axis: round(value) for axis, value in target.items()}, rate)
     if moved == current:
         return False
     await write_values(ctx.session, holder, community.id, moved)
