@@ -11,11 +11,14 @@ import { EntityView } from '@/features/entity/EntityView'
 import { humanize } from '@/features/entity/actions/schema'
 import { useCosmos, useWorldState } from '@/features/entity/api/queries'
 import { mediaUrl } from '@/features/pantheon/media'
+import { AtlasGroup } from './AtlasGroup'
 import { AtlasHome } from './AtlasHome'
+import { type AtlasNode } from './atlasModel'
 import { parseSelection } from './atlasSearch'
 
 type AtlasDetailProps = {
   selection: string | null
+  group?: AtlasNode | null
   records: number
   kinds: number
   onSelect: (key: string) => void
@@ -43,6 +46,7 @@ function OpenInDrawer({ kind, id }: { kind: DrawerKind; id: number | null }) {
 
 export function AtlasDetail({
   selection,
+  group = null,
   records,
   kinds,
   onSelect,
@@ -50,6 +54,7 @@ export function AtlasDetail({
   const state = useWorldState()
   const cosmos = useCosmos()
   const parsed = parseSelection(selection)
+  if (group) return <AtlasGroup node={group} onSelect={onSelect} />
   if (!parsed)
     return <AtlasHome records={records} kinds={kinds} onSelect={onSelect} />
   if (parsed.kind === 'entity') return <EntityView id={parsed.id} />

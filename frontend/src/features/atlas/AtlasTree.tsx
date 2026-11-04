@@ -1,56 +1,13 @@
 import { type KeyboardEvent, useMemo, useState } from 'react'
-import {
-  BookOpen,
-  ChevronDown,
-  ChevronRight,
-  Crown,
-  Folder,
-  Ghost,
-  Globe,
-  type LucideIcon,
-  Star,
-  Sun,
-} from 'lucide-react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { ENTITY_TYPE_ICON } from '@/components/domain/domainIcons'
 import { Muted, Text } from '@/components/typography'
 import { GenerateImageMini } from '@/features/images/GenerateImageMini'
 import { Highlight } from './Highlight'
-import {
-  type AtlasNode,
-  type AtlasNodeKind,
-  countLeaves,
-  flattenVisible,
-} from './atlasModel'
-
-const KIND_TONE: Record<AtlasNodeKind, string> = {
-  group: 'text-muted-foreground',
-  entity: 'text-brand-verdigris',
-  son: 'text-primary',
-  creator: 'text-primary',
-  world: 'text-info',
-  star: 'text-warning',
-  'foreign-god': 'text-destructive',
-}
-
-function nodeIcon(node: AtlasNode): LucideIcon {
-  const typeKey = node.entity?.entity_type ?? node.typeKey
-  if (typeKey && typeKey in ENTITY_TYPE_ICON)
-    return ENTITY_TYPE_ICON[typeKey as keyof typeof ENTITY_TYPE_ICON]
-  return KIND_ICON[node.kind]
-}
-
-const KIND_ICON: Record<AtlasNodeKind, LucideIcon> = {
-  group: Folder,
-  entity: BookOpen,
-  son: Crown,
-  creator: Sun,
-  world: Globe,
-  star: Star,
-  'foreign-god': Ghost,
-}
+import { type AtlasNode, countLeaves, flattenVisible } from './atlasModel'
+import { KIND_TONE, nodeIcon } from './nodeVisuals'
 
 const INDENT = [
   'ps-0',

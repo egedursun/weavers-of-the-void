@@ -28,6 +28,7 @@ import {
   VISIBLE_STATUS,
   allKeys,
   buildAtlasTree,
+  findNode,
   isFiltering,
   matchesEntity,
   pruneTree,
@@ -143,6 +144,8 @@ export function AtlasScreen() {
     [all]
   )
   const selected = search.select ?? null
+  const selectedNode = selected ? findNode(tree, selected) : null
+  const selectedGroup = selectedNode?.kind === 'group' ? selectedNode : null
   const select = (key: string) => change({ select: key })
   const activate = (node: AtlasNode) => {
     const id = node.id !== undefined ? String(node.id) : undefined
@@ -276,6 +279,7 @@ export function AtlasScreen() {
           >
             <AtlasDetail
               selection={selected}
+              group={selectedGroup}
               records={all.length}
               kinds={typeCounts.size}
               onSelect={select}

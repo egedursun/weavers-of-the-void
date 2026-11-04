@@ -308,6 +308,15 @@ export function flattenVisible(
   return rows
 }
 
+export function findNode(nodes: AtlasNode[], key: string): AtlasNode | null {
+  for (const node of nodes) {
+    if (node.key === key) return node
+    const found = findNode(node.children, key)
+    if (found) return found
+  }
+  return null
+}
+
 export function allKeys(nodes: AtlasNode[]): string[] {
   return nodes.flatMap((node) =>
     node.children.length ? [node.key, ...allKeys(node.children)] : []
