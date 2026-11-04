@@ -36,7 +36,30 @@ TRAIT_HINTS: dict[CreatureTrait, tuple[str, ...]] = {
     CreatureTrait.TIME_REWINDER: ("time", "rewind", "reborn", "returns again"),
     CreatureTrait.SHAPESHIFTER: ("shape", "guise", "mimic", "mirror", "disguise", "changeling"),
     CreatureTrait.MIND_READER: ("mind", "intellect", "reads thoughts", "whisper", "telepath"),
+    CreatureTrait.ARMOURED: ("armour", "plated", "shell", "hide like iron"),
+    CreatureTrait.BURROWING: ("burrow", "tunnel", "dig", "mole", "underground"),
+    CreatureTrait.AQUATIC: ("fish", "sea", "river", "water", "swim", "whale", "eel"),
+    CreatureTrait.AMPHIBIOUS: ("frog", "toad", "newt", "amphib", "shore"),
+    CreatureTrait.PACK_HUNTER: ("pack", "wolf", "hound", "jackal"),
+    CreatureTrait.AMBUSH_PREDATOR: ("ambush", "lurk", "stalker", "crocodile", "spider"),
+    CreatureTrait.REGENERATING: ("regenerat", "heal", "troll", "regrow"),
+    CreatureTrait.POISONOUS_FLESH: ("poisonous flesh", "bitter flesh", "toxic flesh", "inedible"),
+    CreatureTrait.FIRE_BREATHING: ("fire breath", "breathes fire", "flame", "dragon", "salamander"),
+    CreatureTrait.COLD_BREATHING: ("frost", "ice breath", "cold breath", "winter"),
+    CreatureTrait.ECHOLOCATION: ("bat", "echo", "sonar"),
+    CreatureTrait.CAMOUFLAGE: ("camouflag", "hidden", "chameleon", "blends"),
+    CreatureTrait.SWARM_BREEDER: ("locust", "rat", "swarm", "breeds fast", "teeming"),
+    CreatureTrait.LONG_LIVED: ("ancient", "long-lived", "elder", "centuries"),
+    CreatureTrait.MIMIC: ("mimic", "imitat", "look-alike"),
+    CreatureTrait.SPIRIT_SIGHT: ("spirit sight", "sees spirits", "ghost-hound", "owl"),
+    CreatureTrait.IRON_EATING: ("iron-eat", "eats iron", "rust", "ore-eat"),
+    CreatureTrait.CROP_PEST: ("locust", "weevil", "pest", "blight", "grub"),
+    CreatureTrait.PLAGUE_BEARER: ("plague", "rat", "flea", "disease", "pestilence"),
+    CreatureTrait.SACRED_ANIMAL: ("sacred", "holy beast", "divine", "totem"),
 }
+
+
+BESTOWED = frozenset({CreatureTrait.SACRED_ANIMAL})
 
 
 def hinted_traits(text: str, cap: int) -> list[CreatureTrait]:
@@ -60,7 +83,7 @@ async def assign_traits(ctx: TickContext, species: EntityRow) -> list[CreatureTr
     creatures = ctx.rules.creatures
     chosen = hinted_traits(f"{species.name} {species.subtype or ''} {species.description}", creatures.traits_from_description_cap)
     if not chosen:
-        chosen = [ctx.rng("random_trait").pick(list(CreatureTrait))]
+        chosen = [ctx.rng("random_trait").pick([trait for trait in CreatureTrait if trait not in BESTOWED])]
     for trait in chosen:
         await repository.add_trait(species.id, trait)
     if CreatureTrait.HIVE_MIND in chosen:

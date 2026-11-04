@@ -1,28 +1,35 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
+from sqlalchemy import select
+
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.body.book import effective, strike_style
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.ecology.beasts import rob_hoard
 from aerona.engine.economy.money import inject_hoard
 from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import apply_hits, fatal_injury
+from aerona.engine.mind.memories import remember
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -57,11 +64,22 @@ class EncounterResult:
     legend: EntityRow | None = None
 
 
-async def monsters_of(ctx: TickContext) -> list[EntityRow]:
+async def monsters_of(ctx: TickContext, *, beasts: bool = True) -> list[EntityRow]:
     engine = ctx.rules.world_engine
     species = await canon(ctx.session, [EntityType.SPECIES])
     threshold = relative_threshold(species, "danger", fraction(engine.monster_top_pct), engine.monster_min_danger, engine.monster_always_danger)
-    return [creature for creature in species if (stat(creature, "danger") or 0) >= threshold(creature)]
+    found = [creature for creature in species if (stat(creature, "danger") or 0) >= threshold(creature)]
+    return found + (await wild_beasts(ctx) if beasts else [])
+
+
+async def wild_beasts(ctx: TickContext) -> list[EntityRow]:
+    held = select(BeastProfileRow.beast_entity_id).where(BeastProfileRow.temper.in_([BeastTemper.BOUND, BeastTemper.TAMED]))
+    rows = await ctx.session.scalars(
+        select(EntityRow)
+        .where(EntityRow.entity_type == EntityType.BEAST, EntityRow.status == EntityStatus.CANON, EntityRow.id.not_in(held))
+        .order_by(EntityRow.id)
+    )
+    return list(rows)
 
 
 async def legend_carrier(ctx: TickContext, hero: EntityRow) -> EntityRow | None:
@@ -158,6 +176,24 @@ async def _hero_wins(ctx: TickContext, hero: EntityRow, monster: EntityRow, patr
         rewound = True
     else:
         rewound = False
+    if monster.entity_type is EntityType.BEAST:
+        if slain:
+            await connect(ctx.session, hero.id, monster.id, BondKind.KILLED, ctx.epoch, description="slew the beast")
+        else:
+            await remember(
+                ctx.session,
+                ctx.rules,
+                holder_id=monster.id,
+                subject_id=hero.id,
+                kind=MemoryKind.HARMED_ME,
+                magnitude=-PERCENT // 4,
+                epoch=ctx.epoch,
+                note="wounded it",
+            )
+            await rob_hoard(ctx, monster, hero)
+            await apply_hits(
+                ctx, monster, Harm(ctx.rules.beasts.wound_damage, HarmCause.MONSTER, f"slain by {hero.name}", killer_id=hero.id, source_node_id=hero.id)
+            )
     if slain:
         await retire(ctx.session, monster, ctx.epoch, f"Epoch {ctx.epoch}: killed by {hero.name}.")
         home = await community_of(ctx.session, hero)

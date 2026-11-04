@@ -69,6 +69,7 @@ const ALPHA: Record<LayerMode, number> = {
   population: 0.45,
   followers: 0.45,
   soldiers: 0.45,
+  wildlife: 0.45,
 }
 
 export const STOCK_BANDS = [
@@ -81,6 +82,20 @@ const BAND_LABEL: Record<string, string> = {
   few: 'Fewer than a thousand',
   many: 'Thousands',
   multitude: 'Tens of thousands or more',
+  sparse: 'Few wild herds',
+  teeming: 'Many wild herds',
+  wild: 'A land of beasts',
+}
+
+export const WILD_BANDS = [
+  { key: 'sparse', below: 100 },
+  { key: 'teeming', below: 300 },
+  { key: 'wild', below: Number.POSITIVE_INFINITY },
+] as const
+
+export function wildBand(value: number): string | null {
+  if (value <= 0) return null
+  return WILD_BANDS.find((band) => value < band.below)?.key ?? null
 }
 
 export function stockBand(value: number): string | null {
@@ -157,6 +172,11 @@ function regionKey(
       const band = stocks ? stockBand(stocks[mode]) : null
       return band ? { key: `${mode}:${band}`, alpha } : null
     }
+    case 'wildlife': {
+      const stocks = view.stocks[String(regionId)] ?? view.stocks[String(topId)]
+      const band = stocks ? wildBand(stocks.wildlife ?? 0) : null
+      return band ? { key: `wildlife:${band}`, alpha } : null
+    }
     case 'realms': {
       const held =
         view.realms?.[String(regionId)] ?? view.realms?.[String(topId)]
@@ -202,7 +222,12 @@ function labelFor(
   if (kind === 'language') return names.languages.get(id) ?? `Language ${id}`
   if (kind === 'ley')
     return raw === 'nexus' ? 'Nexus of ley lines' : 'On a ley line'
-  if (kind === 'population' || kind === 'followers' || kind === 'soldiers')
+  if (
+    kind === 'population' ||
+    kind === 'followers' ||
+    kind === 'soldiers' ||
+    kind === 'wildlife'
+  )
     return BAND_LABEL[raw] ?? words(raw)
   if (
     kind === 'ground' ||

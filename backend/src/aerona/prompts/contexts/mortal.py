@@ -121,6 +121,9 @@ class HomeLine(ContextItem):
     prophecies: list[str] = Field(default_factory=list)
     rites: list[str] = Field(default_factory=list)
     treasures: list[str] = Field(default_factory=list)
+    wildlife: list[str] = Field(default_factory=list)
+    herds: list[str] = Field(default_factory=list)
+    beasts: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

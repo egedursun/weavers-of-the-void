@@ -13,6 +13,7 @@ from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.models.entity_stats import DiseaseStats
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
+from aerona.engine.ecology.hosts import link_hosts
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
@@ -145,7 +146,11 @@ async def new_disease(
     ground = await ctx.session.get(RegionEnvironmentRow, region.id)
     rng = ctx.rng(f"disease.new.{region.id}.{path.value}.{len(book.diseases)}")
     profile = fresh_profile(ctx, rng, ground, host=host, cursed=cursed)
-    return await birth_disease(ctx, book, profile, region=region, path=path, name=name_of(rng, profile.vector, profile.climate_affinity, region), son_id=son_id)
+    disease = await birth_disease(
+        ctx, book, profile, region=region, path=path, name=name_of(rng, profile.vector, profile.climate_affinity, region), son_id=son_id
+    )
+    ctx.count("disease_hosts", await link_hosts(ctx, disease, region.id, host))
+    return disease
 
 
 async def new_strain(ctx: TickContext, book: DiseaseBook, parent: EntityRow, region: EntityRow) -> EntityRow | None:

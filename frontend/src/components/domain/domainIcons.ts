@@ -29,6 +29,7 @@ import {
   Mountain,
   Package,
   Paintbrush,
+  Footprints,
   PawPrint,
   Route,
   Scale,
@@ -83,6 +84,7 @@ export const ENTITY_TYPE_ICON: Record<Schemas['EntityType'], LucideIcon> = {
   house: Shield,
   treaty: Handshake,
   ideology: Lightbulb,
+  beast: Footprints,
   rite: Wand2,
 }
 

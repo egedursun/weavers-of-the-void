@@ -3,6 +3,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.engine.context import TickContext
+from aerona.engine.ecology.foodweb import appetites, raid_chance, raid_herds
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -28,6 +29,18 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
         if protector is not None and protector.entity_type is EntityType.MORTAL:
             await encounter(ctx, protector, monster, f"while protecting {settlement.name}")
             return
+    herds = await raid_herds(ctx, monster, settlement)
+    if herds > 0:
+        if await directed_bond(ctx.session, monster.id, settlement.id, BondKind.HUNTS) is None:
+            await connect(ctx.session, monster.id, settlement.id, BondKind.HUNTS, ctx.epoch, description="raids its herds")
+        ctx.count("herd_raids")
+        await note(
+            ctx,
+            f"{monster.name} fell on the herds of {settlement.name} and carried off {herds} head.",
+            key="monsters.herd_raid",
+            ids=[monster.id, settlement.id],
+        )
+        return
     loss = raid_loss(rules, monster)
     population = stat(settlement, "population")
     prosperity = stat(settlement, "prosperity")
@@ -121,11 +134,13 @@ async def monster_raids(ctx: TickContext) -> None:
     rng = ctx.rng()
     atlas = await RegionAtlas.load(ctx.session)
     settlements = await canon(ctx.session, [EntityType.SETTLEMENT])
-    for monster in await monsters_of(ctx):
+    monsters = await monsters_of(ctx, beasts=False)
+    hunger = await appetites(ctx, monsters, adjust=False)
+    for monster in monsters:
         if monster.status is not EntityStatus.CANON:
             continue
         targets = [settlement for settlement in settlements if atlas.distance(monster.id, settlement.id) <= rules.world_effects.raid_distance]
-        if not targets or not rng.probability((stat(monster, "danger") or 0) / rules.world_engine.raid_danger_divisor):
+        if not targets or not rng.probability(min(1.0, await raid_chance(ctx, monster, hunger))):
             continue
         target = rng.pick(targets)
         if target.status is EntityStatus.CANON:

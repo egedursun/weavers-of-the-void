@@ -6,12 +6,18 @@ from sqlalchemy import select
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityFlag, EntityType
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.context import TickContext
+from aerona.engine.ecology.domestication import domestic_head
+from aerona.engine.ecology.extinction import cascade
+from aerona.engine.ecology.foodweb import appetites
+from aerona.engine.ecology.pests import plague_of_pests
+from aerona.engine.ecology.ranges import RangeMarks, Wilds, harvest_hunt, load_wilds, migrate, overall, plan, seed, settle, spread
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -23,6 +29,7 @@ from aerona.engine.primitives.stats import set_stats, stat
 from aerona.rules.registry import Rules
 
 ABUNDANCE_KEY = "abundance"
+HERD_UNIT = 10
 
 
 @dataclass
@@ -57,14 +64,6 @@ def initial_abundance(rules: Rules, fertility: int, megafauna: bool) -> int:
     return clamp_int(ecology.initial_base + fertility * ecology.initial_fertility_pct / 100, 1, 100)
 
 
-def carrying_capacity(rules: Rules, fertility: int, megafauna: bool, wildness: int | None = None) -> int:
-    ecology = rules.ecology
-    if megafauna:
-        return ecology.megafauna_capacity
-    wild = 0 if wildness is None else (wildness - ecology.wildness_pivot) * ecology.capacity_wildness_pct / 100
-    return clamp_int(ecology.capacity_base + fertility * ecology.capacity_fertility_pct / 100 + wild, 1, 100)
-
-
 def wildness_of(forest_cover: int, cleared: int, wetland: int) -> int:
     return clamp_int(forest_cover + wetland - cleared, 0, 100)
 
@@ -88,15 +87,6 @@ async def load_habitat(ctx: TickContext, species: list[EntityRow], invasive: set
         if item.id in invasive and region is not None:
             habitat.invasive[region] += 1
     return habitat
-
-
-async def seed_abundance(ctx: TickContext, species: list[EntityRow], habitat: Habitat, megafauna: set[int]) -> int:
-    seeded = 0
-    for item in species:
-        if stat(item, ABUNDANCE_KEY) is None:
-            set_stats(item, abundance=initial_abundance(ctx.rules, await fertility_of(ctx, item, habitat), item.id in megafauna))
-            seeded += 1
-    return seeded
 
 
 async def extinction(ctx: TickContext, species: EntityRow, hunters: list[EntityRow], habitat: Habitat) -> None:
@@ -150,26 +140,6 @@ async def food_web(ctx: TickContext, species: list[EntityRow]) -> FoodWeb:
     return FoodWeb(prey_of, hunters_of)
 
 
-async def planned_abundance(ctx: TickContext, item: EntityRow, web: FoodWeb, habitat: Habitat, marks: EcologyMarks) -> int:
-    settings = ctx.rules.ecology
-    current = abundance(item)
-    is_megafauna = item.id in marks.megafauna
-    capacity = carrying_capacity(ctx.rules, await fertility_of(ctx, item, habitat), is_megafauna, habitat.wildness(item))
-    delta = (capacity - current) * settings.reversion_pct / 100
-    for hunter in web.hunters_of[item.id]:
-        delta -= settings.predation + abundance(hunter) / settings.predation_divisor
-    eaten = web.prey_of[item.id]
-    if eaten and sum(abundance(other) for other in eaten) / len(eaten) < settings.hunger_threshold:
-        delta -= settings.hunger
-    region = habitat.region_of(item)
-    if item.id not in marks.protected and not is_megafauna and (stat(item, "danger") or 0) < settings.hunting_danger and region is not None:
-        delta -= min(settings.hunting_cap, habitat.population[region] // settings.hunting_population)
-    if item.id not in marks.invasive and region is not None:
-        delta -= habitat.invasive[region] * settings.invasive_pressure
-    delta += ctx.rng(f"abundance.{item.id}").die(settings.noise) - (settings.noise + 1) / 2
-    return round_half_up(current + delta)
-
-
 async def track_endangered(ctx: TickContext, item: EntityRow, marks: EcologyMarks, warnings: int) -> int:
     settings = ctx.rules.ecology
     if abundance(item) < settings.critical and item.id not in marks.endangered:
@@ -180,6 +150,41 @@ async def track_endangered(ctx: TickContext, item: EntityRow, marks: EcologyMark
     elif abundance(item) >= settings.critical * 2 and item.id in marks.endangered:
         await remove_flag(ctx.session, item.id, EntityFlag.ENDANGERED)
     return warnings
+
+
+async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: EcologyMarks) -> tuple[Wilds, int]:
+    wilds = await load_wilds(ctx, species, marks.invasive)
+    habitat = await load_habitat(ctx, species, marks.invasive)
+    initial = {
+        item.id: stat(item, ABUNDANCE_KEY) or initial_abundance(ctx.rules, await fertility_of(ctx, item, habitat), item.id in marks.megafauna)
+        for item in species
+    }
+    ctx.count("ranges_seeded", await seed(ctx, wilds, species, initial))
+    web = await food_web(ctx, species)
+    prey_of = {key: [item.id for item in rows] for key, rows in web.prey_of.items()}
+    hunters_of = {key: [item.id for item in rows] for key, rows in web.hunters_of.items()}
+    range_marks = RangeMarks(marks.megafauna, marks.protected, marks.invasive)
+    planned = [
+        (row, plan(ctx, wilds, item, row, hunters_of=hunters_of, prey_of=prey_of, marks=range_marks))
+        for item in species
+        for row in list(wilds.ranges[item.id].values())
+    ]
+    hunted = 0
+    for row, pressure in planned:
+        settle(row, pressure.loss, ctx.epoch)
+        row.hunted = round_half_up(pressure.hunted)
+        hunted += await harvest_hunt(ctx, wilds, row.species_entity_id, row.region_entity_id, pressure.hunted)
+    ctx.count("hunted_goods", hunted)
+    for item in species:
+        rows = wilds.ranges[item.id]
+        for region in [region for region, row in rows.items() if row.abundance <= 0 and len(rows) > 1]:
+            await ctx.session.delete(rows.pop(region))
+            ctx.count("ranges_lost")
+    ctx.count("ranges_spread", await spread(ctx, wilds, species))
+    ctx.count("migrations", await migrate(ctx, wilds, species))
+    for key, value in (await plague_of_pests(ctx, wilds)).items():
+        ctx.count(key, value)
+    return wilds, hunted
 
 
 @reads(
@@ -195,6 +200,11 @@ async def track_endangered(ctx: TickContext, item: EntityRow, marks: EcologyMark
     "table.epoch_year_cursors",
     "table.nodes",
     "table.region_environment",
+    "table.species_profiles",
+    "table.species_ranges",
+    "table.species_yields",
+    "table.species_hosts",
+    "table.outbreaks",
     "table.world_maps",
 )
 @writes(
@@ -207,9 +217,12 @@ async def track_endangered(ctx: TickContext, item: EntityRow, marks: EcologyMark
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.species_profiles",
+    "table.species_ranges",
+    "table.species_yields",
+    "table.species_uses",
+    "table.community_stocks",
 )
-@reads("people.population", "place.fertility", "region.fertility", "settlement.population", "species.abundance", "species.danger")
-@writes("species.abundance")
 async def ecology(ctx: TickContext) -> None:
     settings = ctx.rules.ecology
     species = await canon(ctx.session, [EntityType.SPECIES])
@@ -220,15 +233,24 @@ async def ecology(ctx: TickContext) -> None:
         for flag in (EntityFlag.MEGAFAUNA, EntityFlag.PROTECTED, EntityFlag.INVASIVE, EntityFlag.ENDANGERED, EntityFlag.TIME_RETURNED)
     ]
     marks = EcologyMarks(*flags)
-    habitat = await load_habitat(ctx, species, marks.invasive)
-    ctx.count("seeded", await seed_abundance(ctx, species, habitat, marks.megafauna))
+    wilds, _ = await wild_numbers(ctx, species, marks)
+    ctx.count("hungry_hunters", sum(1 for value in (await appetites(ctx, species, adjust=True)).values() if value > 1))
     web = await food_web(ctx, species)
-    planned = {item.id: await planned_abundance(ctx, item, web, habitat, marks) for item in species}
+    habitat = await load_habitat(ctx, species, marks.invasive)
     extinct = warnings = 0
     for item in species:
-        value = settings.last_herd if planned[item.id] <= 0 and item.id in marks.protected else planned[item.id]
+        rows = list(wilds.ranges[item.id].values())
+        head = await domestic_head(ctx, item.id)
+        if not rows and head is None:
+            ctx.count("unplaced")
+            continue
+        value = overall(ctx.rules, rows) if head is None else clamp_int(head // HERD_UNIT, 1 if head > 0 else 0, 100)
+        if value <= 0 and item.id in marks.protected:
+            value = settings.last_herd
         if value <= 0:
             if CreatureTrait.TIME_REWINDER in await EntityRepository(ctx.session).traits(item.id) and item.id not in marks.rewound:
+                for row in rows:
+                    row.abundance = settings.rewind_abundance
                 set_stats(item, abundance=settings.rewind_abundance)
                 await add_flag(ctx.session, item.id, EntityFlag.TIME_RETURNED, ctx.epoch)
                 await note(
@@ -237,9 +259,12 @@ async def ecology(ctx: TickContext) -> None:
                 continue
             if extinct < settings.extinction_cap:
                 await extinction(ctx, item, web.hunters_of[item.id], habitat)
+                ctx.count("cascade", await cascade(ctx, item))
                 extinct += 1
                 continue
             value = settings.last_herd
+            for row in rows:
+                row.abundance = max(row.abundance, settings.last_herd)
         set_stats(item, abundance=clamp_int(value, 0, 100))
         warnings = await track_endangered(ctx, item, marks, warnings)
     ctx.count("extinct", extinct)
@@ -251,6 +276,9 @@ async def set_abundance(ctx: TickContext, species_id: int, value: int) -> Entity
     if species is None or species.entity_type is not EntityType.SPECIES:
         raise ValidationFailedError("Only a living species has an abundance.")
     set_stats(species, abundance=clamp_int(value, 0, 100))
+    rows = list(await ctx.session.scalars(select(SpeciesRangeRow).where(SpeciesRangeRow.species_entity_id == species.id)))
+    for row in rows:
+        row.abundance = clamp_int(value, 0, 100)
     if abundance(species) >= ctx.rules.ecology.critical:
         await remove_flag(ctx.session, species.id, EntityFlag.ENDANGERED)
     await note(ctx, f"The herds of {species.name} now stand at {abundance(species)}.", key="ecology.abundance_set", ids=[species.id])

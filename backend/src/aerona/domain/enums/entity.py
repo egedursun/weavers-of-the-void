@@ -34,6 +34,7 @@ class EntityType(StrEnum):
     TREATY = "treaty"
     IDEOLOGY = "ideology"
     RITE = "rite"
+    BEAST = "beast"
 
 
 class EntityStatus(StrEnum):
@@ -88,6 +89,7 @@ class EngineKind(StrEnum):
     ECLIPSE_PROPHECY = "eclipse_prophecy"
     COSMIC_TRAVEL_RESOURCE = "cosmic_travel_resource"
     GOLEM = "golem"
+    DOMESTICATED = "domesticated"
     CHIMERA = "chimera"
     DESCENDED_SOUL = "descended_soul"
     MIRROR_BIRTH = "mirror_birth"
@@ -267,7 +269,9 @@ class CivilizationTier(IntEnum):
 
 LIVING_STATUSES = frozenset({EntityStatus.CANON, EntityStatus.DEAD, EntityStatus.FULFILLED})
 ENDED_STATUSES = frozenset({EntityStatus.DEAD, EntityStatus.DESTROYED})
-AGENT_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.FACTION, EntityType.CULT, EntityType.MORTAL, EntityType.SPECIES, EntityType.ARMY})
+AGENT_TYPES = frozenset(
+    {EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.FACTION, EntityType.CULT, EntityType.MORTAL, EntityType.SPECIES, EntityType.ARMY, EntityType.BEAST}
+)
 COMMUNITY_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.FACTION, EntityType.CULT})
 SOCIETY_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
 COMPANION_TYPES = frozenset({EntityType.MORTAL, EntityType.SPECIES, EntityType.ARMY, EntityType.SPIRIT, EntityType.FACTION, EntityType.CULT, EntityType.PEOPLE})

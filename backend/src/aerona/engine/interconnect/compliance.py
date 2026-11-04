@@ -25,6 +25,7 @@ from aerona.db.tables.culture import (
 )
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, EndemicDiseaseRow, ImmunityRow, OutbreakRow, QuarantineRow
+from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesHostRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow, SpeciesYieldRow
 from aerona.db.tables.economy import (
     CommunityStockRow,
     CurrencyRow,
@@ -484,6 +485,46 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (),
         ("faith.",),
         ("faith_cycles",),
+    ),
+    ComplianceRow(
+        "S3.2",
+        (
+            SpeciesProfileRow.__tablename__,
+            SpeciesRangeRow.__tablename__,
+            SpeciesYieldRow.__tablename__,
+            SpeciesUseRow.__tablename__,
+            SpeciesHostRow.__tablename__,
+            HerdRow.__tablename__,
+        ),
+        ("ecology", "creatures", "husbandry", "monster_raids", "speciation"),
+        (
+            "species:edit",
+            "species:range",
+            "species:move_range",
+            "species:drop_range",
+            "species:yield",
+            "species:use",
+            "species:host",
+            "species:sacred",
+            "species:domesticate",
+            "herd:edit",
+        ),
+        ("SpeciesProfile", "SpeciesRanges", "SpeciesYields", "SpeciesUses", "DomesticationTimeline", "FoodWebNodes", "HerdRow", "map-layer-wildlife"),
+        ("mortal_context",),
+        (),
+        ("ecology.", "monsters.herd_raid"),
+        ("ecology",),
+    ),
+    ComplianceRow(
+        "S3.3a",
+        (BeastProfileRow.__tablename__,),
+        ("beast_cycles", "glory_hunts"),
+        ("beast:edit", "beast:rouse", "beast:bind", "beast:lair", "beast:spawn"),
+        ("BeastCard", "BeastForm", "BeastControls", "BeastBody", "BeastWounds", "map-layer-beasts"),
+        ("mortal_context",),
+        (),
+        ("beasts.",),
+        ("beast_cycles",),
     ),
     ComplianceRow(
         "S8.1",

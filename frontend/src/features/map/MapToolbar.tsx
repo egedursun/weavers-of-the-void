@@ -8,10 +8,12 @@ import {
   Crown,
   Flag,
   Flame,
+  Footprints,
   Ghost,
   Landmark,
   Languages,
   Layers,
+  Leaf,
   Map as MapIcon,
   MapPin,
   Maximize,
@@ -84,6 +86,7 @@ const LAYER_ICON: Record<LayerMode, LucideIcon> = {
   population: Users,
   followers: Flame,
   soldiers: Shield,
+  wildlife: Leaf,
 }
 
 const OVERLAY_ICON: Record<Overlay, LucideIcon> = {
@@ -93,6 +96,7 @@ const OVERLAY_ICON: Record<Overlay, LucideIcon> = {
   military: Flag,
   faith: Church,
   lore: Ghost,
+  beasts: Footprints,
   ties: Waypoints,
   wars: Swords,
   events: Zap,

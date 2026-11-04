@@ -16,6 +16,7 @@ from aerona.api.schemas.maps import (
     MapArmy,
     MapFront,
     MapHoly,
+    MapLair,
     MapLore,
     MapOccupation,
     MapOutbreak,
@@ -41,6 +42,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
 from aerona.db.tables.culture import ArtworkProfileRow, CastingRow, LanguageStandingRow, LegendProfileRow
 from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
+from aerona.db.tables.ecology import BeastProfileRow, SpeciesRangeRow
 from aerona.db.tables.economy import TradeFlowRow, TradeRouteProfileRow, TradeRouteRegionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
@@ -174,6 +176,7 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
             holy=await holy_marks(session, world_id, positions),
             lore=await lore_marks(session, world_id, positions, current),
             tongues=await region_tongues(session, world_id),
+            lairs=await lair_marks(session, world_id, positions, rules.beasts.raid_reach),
             notes=[MapNoteRecord.model_validate(row) for row in await map_notes(session, world_id)],
             time=MapTime(current=current, shown=shown, snapshots=await snapshot_epochs(session, world_id)),
         )
@@ -498,7 +501,31 @@ async def region_stocks(session: AsyncSession, world_id: int) -> dict[int, Regio
         value = stat(entity, "size" if key == "soldiers" else key) or 0
         bucket = totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0})
         bucket[key] += value
+    regions = select(EntityRow.id).where(EntityRow.world_id == world_id, EntityRow.entity_type == EntityType.REGION)
+    for region, total in await session.execute(
+        select(SpeciesRangeRow.region_entity_id, func.sum(SpeciesRangeRow.abundance))
+        .where(SpeciesRangeRow.region_entity_id.in_(regions))
+        .group_by(SpeciesRangeRow.region_entity_id)
+    ):
+        totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0})["wildlife"] = int(total or 0)
     return {region: RegionStocks(**values) for region, values in totals.items()}
+
+
+async def lair_marks(session: AsyncSession, world_id: int, positions: dict[int, tuple[float, float]], reach: int) -> list[MapLair]:
+    rows = await session.execute(
+        select(EntityRow, BeastProfileRow)
+        .join(BeastProfileRow, BeastProfileRow.beast_entity_id == EntityRow.id)
+        .where(EntityRow.world_id == world_id, EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.id)
+    )
+    found: list[MapLair] = []
+    for beast, row in rows:
+        point = positions.get(row.lair_place_id or 0) or positions.get(beast.location_id or 0) or positions.get(beast.id)
+        if point is not None:
+            found.append(
+                MapLair(beast_id=beast.id, name=beast.name, x=point[0], y=point[1], terror=stat(beast, "terror") or 0, temper=row.temper.value, reach=reach)
+            )
+    return found
 
 
 @router.get("/worlds/{world_id}/geography", response_model=GeographyPreview)

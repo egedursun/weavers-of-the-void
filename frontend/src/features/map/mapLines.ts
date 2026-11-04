@@ -324,6 +324,7 @@ export function drawLines(
     military?: boolean
     faith?: boolean
     lore?: boolean
+    beasts?: boolean
     time: number
     animate: boolean
     fade: number
@@ -335,6 +336,8 @@ export function drawLines(
     drawArmies(context, view, tokens, transform.k, options.fade)
   if (options.faith) drawHoly(context, view, tokens, transform.k, options.fade)
   if (options.lore) drawLore(context, view, tokens, transform.k, options.fade)
+  if (options.beasts)
+    drawLairs(context, view, tokens, transform.k, options.fade)
   const shapes = visibleShapes(
     view,
     options.roads,
@@ -516,6 +519,37 @@ function drawLore(
       }
       context.closePath()
     } else context.arc(mark.x, mark.y, size, 0, Math.PI * 2)
+    context.fill()
+  }
+  context.globalAlpha = fade
+}
+
+const LAIR_RADIUS = 4
+const TERROR_REACH = 18
+const TERROR_ALPHA = 0.18
+
+function drawLairs(
+  context: CanvasRenderingContext2D,
+  view: MapView,
+  tokens: ThemeColors,
+  k: number,
+  fade: number
+): void {
+  for (const lair of view.lairs ?? []) {
+    const reach =
+      (TERROR_REACH * Math.max(1, lair.reach) * (lair.terror / 100)) / k
+    context.globalAlpha = TERROR_ALPHA * fade
+    context.fillStyle = tokens.destructive
+    context.beginPath()
+    context.arc(lair.x, lair.y, reach, 0, Math.PI * 2)
+    context.fill()
+    context.globalAlpha = fade
+    context.fillStyle =
+      lair.temper === 'sleeping'
+        ? tokens['muted-foreground']
+        : tokens.destructive
+    context.beginPath()
+    context.arc(lair.x, lair.y, LAIR_RADIUS / k, 0, Math.PI * 2)
     context.fill()
   }
   context.globalAlpha = fade

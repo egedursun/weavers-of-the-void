@@ -17,6 +17,7 @@ from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import PeopleStats, ResourceStats, SpeciesStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import (
+    BESTOWED,
     DANGER_KEY,
     SPECIES_STAT_KEYS,
     STRENGTH_KEY,
@@ -28,6 +29,8 @@ from aerona.engine.cosmos.fauna import (
 )
 from aerona.engine.cosmos.resources import set_mechanics, travel_resource
 from aerona.engine.cosmos.sanity import sanity_of, shift_sanity
+from aerona.engine.ecology.foodweb import broken_links, diet_allows, form_link, regions_of
+from aerona.engine.ecology.ranges import adapt_subspecies
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -113,7 +116,7 @@ async def mutate_species(ctx: TickContext, species: EntityRow, leak: int) -> Ent
     creatures = ctx.rules.creatures
     rng = ctx.rng("mutation")
     owned = await traits_of(ctx.session, species.id)
-    fresh = [trait for trait in CreatureTrait if trait not in owned]
+    fresh = [trait for trait in CreatureTrait if trait not in owned and trait not in BESTOWED]
     new_trait = rng.pick_or_none(fresh)
     stats = species.stats
     if isinstance(stats, SpeciesStats):
@@ -336,7 +339,9 @@ async def megafauna(ctx: TickContext) -> int:
     return trails
 
 
-async def _prey_for(ctx: TickContext, hunter: EntityRow, species: list[EntityRow], atlas: RegionAtlas, megafauna_ids: set[int]) -> EntityRow | None:
+async def _prey_for(
+    ctx: TickContext, hunter: EntityRow, species: list[EntityRow], atlas: RegionAtlas, *, megafauna_ids: set[int], ranges: dict[int, dict[int, int]]
+) -> EntityRow | None:
     margin = ctx.rules.creatures.predation_danger_margin
     hunter_danger = species_danger(ctx.rules, hunter)
     candidates = [
@@ -349,7 +354,10 @@ async def _prey_for(ctx: TickContext, hunter: EntityRow, species: list[EntityRow
         and hunter_danger >= species_danger(ctx.rules, prey) + margin
         and stat_or(hunter, STRENGTH_KEY, 0) >= stat_or(prey, STRENGTH_KEY, 0)
     ]
-    return min(candidates, key=lambda prey: (species_danger(ctx.rules, prey), prey.id)) if candidates else None
+    for prey in sorted(candidates, key=lambda prey: (species_danger(ctx.rules, prey), prey.id)):
+        if await diet_allows(ctx, hunter, prey, ranges):
+            return prey
+    return None
 
 
 async def predator_bonds(ctx: TickContext) -> int:
@@ -360,16 +368,18 @@ async def predator_bonds(ctx: TickContext) -> int:
     atlas = await RegionAtlas.load(ctx.session)
     megafauna_ids = await flags_by_entity(ctx.session, EntityFlag.MEGAFAUNA)
     rng = ctx.rng("predation")
+    ranges = await regions_of(ctx)
+    ctx.count("hunting_links_broken", await broken_links(ctx, species, ranges))
     formed = 0
     for hunter in species:
         if formed >= creatures.predation_link_cap:
             break
         if hunter.id in hunting:
             continue
-        prey = await _prey_for(ctx, hunter, species, atlas, megafauna_ids)
+        prey = await _prey_for(ctx, hunter, species, atlas, megafauna_ids=megafauna_ids, ranges=ranges)
         if prey is None or not rng.chance(creatures.predation_link_chance):
             continue
-        await BondRepository(ctx.session).connect(BondDraft(hunter.id, prey.id, BondKind.HUNTS, ctx.epoch, "predator and prey"))
+        await form_link(ctx, hunter, prey)
         await note(ctx, f"{hunter.name} began hunting the herds of {prey.name}.", key="creatures.predation", ids=[hunter.id, prey.id])
         formed += 1
     return formed
@@ -626,6 +636,7 @@ async def _branch_subspecies(ctx: TickContext, species: EntityRow, home: EntityR
         ),
     )
     bonds = BondRepository(ctx.session)
+    await adapt_subspecies(ctx, species, child, home.id)
     await bonds.connect(BondDraft(child.id, species.id, BondKind.DESCENDS_FROM, ctx.epoch, "evolution"))
     await bonds.deactivate(bond, ctx.epoch, "speciation")
     await note(

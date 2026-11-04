@@ -25,6 +25,7 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow, EntityTagRow
 from aerona.db.tables.lore import MessageRow
 from aerona.db.tables.mind import NeedRow, PressureRow, TraitRow
@@ -46,8 +47,9 @@ from aerona.prompts.contexts.opportunities import MortalOpportunitiesContext
 from aerona.prompts.contexts.son_turn import DoneAction, TurnContinuationContext, TurnInterruption
 from aerona.rules.registry import Rules
 
-AGENT_TYPES = (EntityType.PEOPLE, EntityType.FACTION, EntityType.CULT, EntityType.SETTLEMENT, EntityType.MORTAL, EntityType.SPECIES)
+AGENT_TYPES = (EntityType.PEOPLE, EntityType.FACTION, EntityType.CULT, EntityType.SETTLEMENT, EntityType.MORTAL, EntityType.SPECIES, EntityType.BEAST)
 SELECTION_STREAM = "agents.mortal_selection"
+CREATURES = frozenset({EntityType.SPECIES, EntityType.BEAST})
 CROWD_FLOOR = 10
 
 
@@ -87,10 +89,18 @@ async def candidates(session_scope: Scope) -> list[Candidate]:
         .where(EntityRow.status == EntityStatus.CANON, EntityRow.last_acted_epoch < epoch, EntityRow.entity_type.in_(AGENT_TYPES))
         .order_by(EntityRow.id)
     )
+    listed = list(rows)
+    minds = {
+        beast_id: value
+        for beast_id, value in await session_scope.session.execute(
+            select(BeastProfileRow.beast_entity_id, BeastProfileRow.intelligence).where(BeastProfileRow.beast_entity_id.in_([row.id for row in listed]))
+        )
+    }
     eligible = [
         row
-        for row in rows
-        if (row.entity_type is not EntityType.SPECIES or intelligence(row) >= rules.mortal_agents.creature_min_intelligence) and not bedridden(rules, row)
+        for row in listed
+        if (row.entity_type not in CREATURES or minds.get(row.id, intelligence(row)) >= rules.mortal_agents.creature_min_intelligence)
+        and not bedridden(rules, row)
     ]
     ids = [row.id for row in eligible]
     tags: dict[int, set[str]] = defaultdict(set)

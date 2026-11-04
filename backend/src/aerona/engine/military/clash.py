@@ -14,6 +14,7 @@ from aerona.domain.enums.military import CaptiveFate, CommanderTrait, OutcomeCla
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
+from aerona.engine.ecology.beasts import beast_dread
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import guardians_of
 from aerona.engine.lore.items import standard_of
@@ -58,7 +59,7 @@ async def side_of(
     table = ctx.rules
     lead = await skill_level(ctx, row.commander_entity_id, SkillKind.LEADERSHIP)
     veteran = max([await skill_level(ctx, row.commander_entity_id, skill) for skill in COMBAT_SKILLS] or [0])
-    spirit = await faith_spirit(ctx, community, enemy) - await babel(ctx, community)
+    spirit = await faith_spirit(ctx, community, enemy) - await babel(ctx, community) - await beast_dread(ctx, enemy.id)
     return Side(
         veteran=table.military_units.veteran_skill_pct / PERCENT * veteran / PERCENT,
         leadership=round(PERCENT * table.morale.leadership_pct / PERCENT * lead / PERCENT) + spirit,

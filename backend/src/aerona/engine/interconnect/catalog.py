@@ -36,6 +36,8 @@ from aerona.engine.interconnect.catalog_realm import BEHAVIOURS as REALM_BEHAVIO
 from aerona.engine.interconnect.catalog_realm import REALM_MECHANICS
 from aerona.engine.interconnect.catalog_society import BEHAVIOURS as SOCIETY_BEHAVIOURS
 from aerona.engine.interconnect.catalog_society import SOCIETY_MECHANICS
+from aerona.engine.interconnect.catalog_wilds import BEHAVIOURS as WILDS_BEHAVIOURS
+from aerona.engine.interconnect.catalog_wilds import WILDS_MECHANICS
 from aerona.engine.interconnect.registry import MECHANICS, Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface, register
 from aerona.engine.phase import Phase
 from aerona.engine.pipeline import PHASE_REGISTRY
@@ -816,7 +818,7 @@ CORE_MECHANICS = (
         ),
     ),
 )
-BUILT_IN = (*CORE_MECHANICS, *SOCIETY_MECHANICS, *REALM_MECHANICS, *MILITARY_MECHANICS, *FAITH_MECHANICS, *LORE_MECHANICS)
+BUILT_IN = (*CORE_MECHANICS, *SOCIETY_MECHANICS, *REALM_MECHANICS, *MILITARY_MECHANICS, *FAITH_MECHANICS, *LORE_MECHANICS, *WILDS_MECHANICS)
 
 MODULE_SUBSYSTEMS: dict[str, Subsystem] = {
     "warfare": Subsystem.WAR,
@@ -1584,7 +1586,7 @@ ROUTE_DIFFUSION = Mechanic(
         Coupling(Subsystem.DEMOGRAPHY, "plague follows the busiest roads", EdgeKind.FLOW),
     ),
 )
-for entry in (*BEHAVIOURS, *SOCIETY_BEHAVIOURS, *REALM_BEHAVIOURS, *MILITARY_BEHAVIOURS, *FAITH_BEHAVIOURS, *LORE_BEHAVIOURS):
+for entry in (*BEHAVIOURS, *SOCIETY_BEHAVIOURS, *REALM_BEHAVIOURS, *MILITARY_BEHAVIOURS, *FAITH_BEHAVIOURS, *LORE_BEHAVIOURS, *WILDS_BEHAVIOURS):
     register(behaviour(entry))
 register(ROUTE_DIFFUSION)
 CLAIMED = {phase for mechanic in BUILT_IN for phase in mechanic.phases}

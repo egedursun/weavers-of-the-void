@@ -1,0 +1,958 @@
+from aerona.catalog.creatures import CREATURE_TRAITS
+from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow
+from aerona.domain.enums.ecology import BeastTemper, Diet, DomesticationStage, SizeClass, Sociality, SpeciesUse
+from aerona.engine.ecology.extinction import CRAFTS
+from aerona.engine.ecology.profiles import BONE, CHITIN, DRAGONBONE, FEATHERS, HIDE, IVORY, MEAT, MILK, REAGENTS, SILK, VENOM, WOOL
+from aerona.engine.interconnect.registry import Coupling, EdgeKind, Mechanic, Subsystem, Surface
+
+ECOLOGY = "section-ecology"
+BEAST = "section-beast"
+HERDS = "section-herds"
+WEB = "section-food-web"
+WILD_LAYER = "map-layer-wildlife"
+LAIR_LAYER = "map-layer-beasts"
+SP = "species"
+S = Subsystem
+LANDS = (SP, "region", "settlement", "people")
+
+WILDS_MECHANICS = (
+    Mechanic(
+        key="species_ranges",
+        spec_item="S3.2",
+        title="Kinds range land by land: growth by habitat, climate, seasons, forage and prey, less predation, hunting and sickness; spreading",
+        subsystem=S.ECOLOGY,
+        phases=("ecology",),
+        surface=Surface(drawer=ECOLOGY, layer=WILD_LAYER),
+        backfill="ecology: every kind is described and seeded into the lands it lives in",
+        fields=("abundance", "trend", "fit", "hunted", "habitat", "temperature_min", "temperature_max", "altitude_min", "altitude_max", "water_need"),
+        tables=(SpeciesProfileRow.__tablename__, SpeciesRangeRow.__tablename__),
+        targets=LANDS,
+        couplings=(
+            Coupling(S.ENVIRONMENT, "climate and land shape where a kind can live", EdgeKind.MODIFIER, "habitat.cold_penalty_pct"),
+            Coupling(S.ECONOMY, "hunters bring home meat, hide and bone", EdgeKind.FLOW, "ecology.hunting_cap"),
+            Coupling(S.DEMOGRAPHY, "people press on the kinds of their land", EdgeKind.MODIFIER, "ecology.hunting_population"),
+        ),
+    ),
+    Mechanic(
+        key="food_web",
+        spec_item="S3.2",
+        title="Hunting links derived from diet, size and shared land; hunger makes predators bold and sends them against the herds of the towns",
+        subsystem=S.ECOLOGY,
+        phases=("creatures", "ecology", "monster_raids"),
+        surface=Surface(drawer=WEB),
+        backfill="creatures: hunting links are re-read from diet and size",
+        templates=("monsters.herd_raid",),
+        fields=("diet", "size_class", "aggression"),
+        targets=(SP, "settlement"),
+        couplings=(
+            Coupling(S.ECONOMY, "raiders carry off livestock", EdgeKind.FLOW, "food_web.raid_livestock"),
+            Coupling(S.WAR, "a hungry predator turns raider", EdgeKind.TRIGGER, "food_web.hunger_aggression"),
+        ),
+    ),
+    Mechanic(
+        key="pests",
+        spec_item="S3.2",
+        title="Crop pests strip the harvest, iron-eaters gnaw the ore, plague-bearers foul the land",
+        subsystem=S.ECOLOGY,
+        phases=("ecology",),
+        surface=Surface(drawer=ECOLOGY, layer=WILD_LAYER),
+        backfill="none: pests act from the next epoch",
+        fields=("harvest_pct", "disease_load"),
+        targets=LANDS,
+        couplings=(
+            Coupling(S.ECONOMY, "pests cut harvest and ore", EdgeKind.FLOW, "pests.harvest_loss"),
+            Coupling(S.DEMOGRAPHY, "plague-bearers raise the land's sickness", EdgeKind.MODIFIER, "pests.disease_load"),
+        ),
+    ),
+    Mechanic(
+        key="domestication",
+        spec_item="S3.2",
+        title="Tamed beasts become herds, domesticated kinds and named breeds; herds yield goods and mounts for armies",
+        subsystem=S.ECONOMY,
+        phases=("husbandry", "campaigns"),
+        surface=Surface(drawer=HERDS, chart="DomesticationTimeline"),
+        backfill="husbandry: every tamed bond of a community becomes a herd",
+        templates=("ecology.domestication",),
+        fields=("head", "stage", "fed_epochs", "tameability", "domesticated_from_id"),
+        tables=(HerdRow.__tablename__, SpeciesUseRow.__tablename__),
+        targets=(SP, "settlement", "people", "army"),
+        couplings=(
+            Coupling(S.WAR, "cavalry and war beasts need mounts", EdgeKind.MODIFIER),
+            Coupling(S.ECONOMY, "herds eat fodder and yield goods", EdgeKind.FLOW, "domestication.fodder_per_head"),
+        ),
+    ),
+    Mechanic(
+        key="extinction_cascade",
+        spec_item="S3.2",
+        title="A kind dying out starves its hunters, fades the crafts it fed and shakes the faith that held it holy",
+        subsystem=S.ECOLOGY,
+        phases=("ecology",),
+        surface=Surface(drawer=ECOLOGY),
+        backfill="none: cascades follow the next extinction",
+        templates=("ecology.craft_lost", "ecology.sacred_lost"),
+        fields=("level", "zeal"),
+        targets=(SP, "knowledge", "cult", "settlement"),
+        couplings=(
+            Coupling(S.KNOWLEDGE, "a lost material fades its craft", EdgeKind.MODIFIER, "extinction.craft_loss"),
+            Coupling(S.FAITH, "a lost sacred animal costs zeal", EdgeKind.MODIFIER, "extinction.sacred_zeal"),
+        ),
+    ),
+    Mechanic(
+        key="beast_lives",
+        spec_item="S3.3a",
+        title="Named beasts rise from great kinds, sleep and wake, raid, hoard, terrorise, remember their wounds and fall to heroes",
+        subsystem=S.ECOLOGY,
+        phases=("beast_cycles", "glory_hunts", "monster_raids"),
+        surface=Surface(drawer=BEAST, layer=LAIR_LAYER),
+        backfill="beast_cycles: great kinds bring forth named beasts",
+        templates=("beasts.risen", "beasts.deed", "beasts.fallen"),
+        fields=(
+            "temper",
+            "lair_place_id",
+            "hoard",
+            "raids",
+            "terror",
+            "renown",
+            "bound_to_node_id",
+            "age",
+            "lifespan",
+            "intelligence",
+            "endurance",
+            "perception",
+            "willpower",
+            "size_class",
+            "species_entity_id",
+            "woke_epoch",
+            "hp",
+            "danger",
+            "strength",
+            "agility",
+            "cunning",
+            "wounds",
+            "injuries",
+            "body_plan",
+            "hoard_luxuries",
+            "hoard_livestock",
+            "hoard_grain",
+            "corpse",
+            "lair_region",
+            "tribute",
+        ),
+        tables=(BeastProfileRow.__tablename__,),
+        targets=("beast", SP, "settlement", "mortal", "army", "house", "place", "legend"),
+        couplings=(
+            Coupling(S.ECONOMY, "a hoard looted is a flood of riches", EdgeKind.FLOW, "beasts.hoard_wealth_pct"),
+            Coupling(S.WAR, "a bound beast frightens the enemy", EdgeKind.MODIFIER, "beasts.army_terror"),
+            Coupling(S.SOCIAL, "terror drains the towns near the lair", EdgeKind.MODIFIER, "beasts.terror_prosperity"),
+            Coupling(S.CULTURE, "a slain beast becomes a legend", EdgeKind.TRIGGER),
+        ),
+    ),
+)
+
+
+def entry(
+    item: tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tuple[str, ...], tuple[Subsystem, str | None, str]],
+) -> tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tuple[str, ...], Subsystem, str | None, str]:
+    key, spec, title, phases, drawer, targets, fields, (subsystem, rule_key, carrier) = item
+    return f"wilds_{key}", spec, title, phases, drawer, targets, fields, subsystem, rule_key, carrier
+
+
+Raw = tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tuple[str, ...], tuple[Subsystem, str | None, str]]
+
+
+def label(value: str) -> str:
+    return value.replace("_", " ")
+
+
+def traits() -> tuple[Raw, ...]:
+    return tuple(
+        (
+            f"trait_{spec.trait.value}",
+            "S3.2",
+            f"{spec.label}: {spec.effect[0].lower()}{spec.effect[1:-1]}",
+            ("ecology", "creatures"),
+            ECOLOGY,
+            (SP, "region"),
+            ("traits", f"trait_{spec.trait.value}"),
+            (S.ECOLOGY, f"creature_traits.{spec.trait.value}_war_bonus", "species.abundance"),
+        )
+        for spec in CREATURE_TRAITS.values()
+    )
+
+
+DIET_TEXT = {
+    Diet.HERBIVORE: "grazes on forest and soil",
+    Diet.CARNIVORE: "lives on the prey of its land",
+    Diet.OMNIVORE: "grazes and hunts alike",
+    Diet.SCAVENGER: "lives on what others leave",
+    Diet.FILTER: "sifts the waters for its food",
+    Diet.PHOTOSYNTHETIC: "lives on light and yields no meat",
+    Diet.MINERAL: "eats stone and ore and cannot be eaten",
+    Diet.SOUL: "feeds on souls",
+    Diet.VOID: "feeds on the void and cannot be eaten",
+}
+
+
+def diets() -> tuple[Raw, ...]:
+    return tuple(
+        (
+            f"diet_{diet.value}",
+            "S3.2",
+            f"A {label(diet.value)} {DIET_TEXT[diet]}",
+            ("ecology",),
+            ECOLOGY,
+            (SP, "region"),
+            ("diet", f"diet_{diet.value}"),
+            (S.ECOLOGY, "habitat.forage_pct" if diet in {Diet.HERBIVORE, Diet.FILTER} else "habitat.prey_pct", "species.abundance"),
+        )
+        for diet in Diet
+    )
+
+
+def sizes() -> tuple[Raw, ...]:
+    return tuple(
+        (
+            f"size_{size.value}",
+            "S3.2",
+            f"A {label(size.value)} kind lives, breeds, eats and yields by its size",
+            ("ecology", "creatures"),
+            ECOLOGY,
+            (SP,),
+            ("size_class", f"size_{size.value}"),
+            (S.ECOLOGY, "food_web.size_reach", "species.abundance"),
+        )
+        for size in SizeClass
+    )
+
+
+SOCIAL_RULES = {Sociality.SOLITARY: None, Sociality.PACK: "habitat.pack_pct", Sociality.HERD: "habitat.herd_pct", Sociality.HIVE: "habitat.herd_pct"}
+
+
+def socialities() -> tuple[Raw, ...]:
+    return tuple(
+        (
+            f"social_{kind.value}",
+            "S3.2",
+            f"A kind that lives {label(kind.value)} hunts and is hunted by its numbers",
+            ("ecology",),
+            ECOLOGY,
+            (SP,),
+            ("sociality", f"social_{kind.value}"),
+            (S.ECOLOGY, SOCIAL_RULES[kind], "species.abundance"),
+        )
+        for kind in Sociality
+    )
+
+
+STAGE_RULES = {
+    DomesticationStage.WILD: None,
+    DomesticationStage.TAMED: "domestication.starting_head",
+    DomesticationStage.HERDED: "domestication.herd_epochs",
+    DomesticationStage.DOMESTICATED: "domestication.domesticate_chance",
+    DomesticationStage.BREED: "domestication.breed_chance",
+}
+
+
+def stages() -> tuple[Raw, ...]:
+    return tuple(
+        (
+            f"stage_{stage.value}",
+            "S3.2",
+            f"A {label(stage.value)} kind moves along the path of taming",
+            ("husbandry",),
+            HERDS,
+            (SP, "settlement", "people"),
+            ("stage", f"stage_{stage.value}"),
+            (S.ECONOMY, STAGE_RULES[stage], "herds"),
+        )
+        for stage in DomesticationStage
+    )
+
+
+USE_RULES = {
+    SpeciesUse.FOOD: "domestication.livestock_per_head",
+    SpeciesUse.LABOUR: "domestication.labour_pct",
+    SpeciesUse.MOUNT: "domestication.mounts_per_head",
+    SpeciesUse.WAR: "domestication.mounts_per_head",
+    SpeciesUse.GUARD: "domestication.guard_pct",
+    SpeciesUse.COMPANION: "domestication.companion_calm",
+    SpeciesUse.SACRIFICE: "domestication.sacred_per_head",
+    SpeciesUse.MAGIC: "domestication.reagents_per_head",
+}
+
+
+def uses() -> tuple[Raw, ...]:
+    return tuple(
+        (
+            f"use_{use.value}",
+            "S3.2",
+            f"Herds kept for {label(use.value)} serve their keepers",
+            ("husbandry", "campaigns", "society_economy"),
+            HERDS,
+            (SP, "settlement", "army"),
+            ("uses", f"use_{use.value}"),
+            (S.ECONOMY, USE_RULES[use], "herds"),
+        )
+        for use in SpeciesUse
+    )
+
+
+def products() -> tuple[Raw, ...]:
+    return tuple(
+        (
+            f"yield_{item.product.replace(' ', '_')}",
+            "S3.2",
+            f"Hunted or herded, a kind yields {item.product}",
+            ("ecology", "husbandry"),
+            ECOLOGY,
+            (SP, "settlement", "people"),
+            ("yields", item.product.replace(" ", "_")),
+            (S.ECONOMY, None, "goods"),
+        )
+        for item in (MEAT, HIDE, BONE, IVORY, CHITIN, VENOM, SILK, WOOL, MILK, FEATHERS, REAGENTS, DRAGONBONE)
+    )
+
+
+def crafts() -> tuple[Raw, ...]:
+    return tuple(
+        (
+            f"craft_{product.replace(' ', '_')}",
+            "S3.2",
+            f"When the last kind yielding {product} dies, {label(branch.value)} fades",
+            ("ecology",),
+            ECOLOGY,
+            (SP, "knowledge"),
+            ("level",),
+            (S.KNOWLEDGE, "extinction.craft_loss", "knowledge.spread"),
+        )
+        for product, branch in CRAFTS.items()
+    )
+
+
+TEMPER_TEXT = {
+    BeastTemper.HUNGRY: "hunts the towns in its reach",
+    BeastTemper.TERRITORIAL: "drives all from its land",
+    BeastTemper.SLEEPING: "sleeps in its lair until it wakes or is woken",
+    BeastTemper.ENRAGED: "hunts the house of the one who wounded it",
+    BeastTemper.BOUND: "guards what it is bound to",
+    BeastTemper.TAMED: "carries its rider to battle",
+}
+
+
+def tempers() -> tuple[Raw, ...]:
+    return tuple(
+        (
+            f"temper_{temper.value}",
+            "S3.3a",
+            f"A {label(temper.value)} beast {TEMPER_TEXT[temper]}",
+            ("beast_cycles",),
+            BEAST,
+            ("beast", "settlement"),
+            ("temper", f"temper_{temper.value}"),
+            (S.ECOLOGY, "beasts.raid_reach", "beast.terror"),
+        )
+        for temper in BeastTemper
+    )
+
+
+EXTRA: tuple[Raw, ...] = (
+    (
+        "worship",
+        "S3.3a",
+        "A feared and famous beast is prayed to and becomes a local god",
+        ("beast_cycles", "native_faith"),
+        BEAST,
+        ("beast", "foreign_god", "settlement"),
+        ("renown", "terror", "god"),
+        (S.FAITH, "beasts.deify_chance", "beast.renown"),
+    ),
+    (
+        "hoard_theft",
+        "S3.3a",
+        "A hero who bests but does not slay a beast carries off part of its hoard, and it remembers",
+        ("glory_hunts",),
+        BEAST,
+        ("beast", "mortal", "settlement"),
+        ("hoard",),
+        (S.ECONOMY, "beasts.theft_pct", "goods"),
+    ),
+    (
+        "woken_by_mines",
+        "S3.3a",
+        "Deep mining near the lair wakes the beast",
+        ("beast_cycles",),
+        BEAST,
+        ("beast", "region"),
+        ("mined",),
+        (S.ECONOMY, "beasts.disturb_chance", "beast.terror"),
+    ),
+    (
+        "woken_by_war",
+        "S3.3a",
+        "War in its land wakes the beast",
+        ("beast_cycles",),
+        BEAST,
+        ("beast", "war"),
+        ("war",),
+        (S.WAR, "beasts.disturb_chance", "beast.terror"),
+    ),
+    (
+        "woken_by_thieves",
+        "S3.3a",
+        "A robbed beast wakes enraged",
+        ("beast_cycles",),
+        BEAST,
+        ("beast", "mortal"),
+        ("hoard",),
+        (S.MIND, "beasts.disturb_chance", "beast.terror"),
+    ),
+    (
+        "beast_body",
+        "S3.3a",
+        "A beast has the body of its kind and carries its injuries",
+        ("glory_hunts", "mortal_wounds"),
+        BEAST,
+        ("beast",),
+        ("body_plan", "injuries", "hp", "height_class", "build"),
+        (S.BODY, "beasts.wound_damage", "beast.hp"),
+    ),
+    (
+        "death_by_wounds",
+        "S3.3a",
+        "A beast whose wounds empty it dies, and its slayer is named",
+        ("glory_hunts",),
+        BEAST,
+        ("beast", "mortal"),
+        ("hp",),
+        (S.BODY, None, "beast.renown"),
+    ),
+    (
+        "terrain_fit",
+        "S3.2",
+        "A kind thrives in the lands it loves and dwindles elsewhere",
+        ("ecology",),
+        ECOLOGY,
+        LANDS,
+        ("habitat", "fit"),
+        (S.ENVIRONMENT, "habitat.terrain_default", "species.abundance"),
+    ),
+    (
+        "climate_band",
+        "S3.2",
+        "Heat and cold beyond its band wear a kind down",
+        ("ecology",),
+        ECOLOGY,
+        (SP, "region"),
+        ("temperature_min", "temperature_max"),
+        (S.ENVIRONMENT, "habitat.cold_penalty_pct", "species.abundance"),
+    ),
+    (
+        "altitude",
+        "S3.2",
+        "A kind outside its heights suffers",
+        ("ecology",),
+        ECOLOGY,
+        (SP, "region"),
+        ("altitude_min", "altitude_max"),
+        (S.ENVIRONMENT, "habitat.altitude_penalty_pct", "species.abundance"),
+    ),
+    (
+        "thirst",
+        "S3.2",
+        "A thirsty kind fails in a dry land",
+        ("ecology",),
+        ECOLOGY,
+        (SP, "region"),
+        ("water_need",),
+        (S.ENVIRONMENT, "habitat.water_pct", "species.abundance"),
+    ),
+    (
+        "seasons",
+        "S3.2",
+        "Hard seasons slow a kind's growth",
+        ("ecology",),
+        ECOLOGY,
+        (SP, "region"),
+        ("seasonality", "breeding_seasons"),
+        (S.ENVIRONMENT, "habitat.season_pct", "species.abundance"),
+    ),
+    (
+        "fecundity",
+        "S3.2",
+        "Litters and breeding seasons drive recovery",
+        ("ecology",),
+        ECOLOGY,
+        (SP,),
+        ("litter_size", "maturity_years"),
+        (S.ECOLOGY, "habitat.fecundity_pct", "species.abundance"),
+    ),
+    (
+        "forage",
+        "S3.2",
+        "Grazers live on forest and soil",
+        ("ecology",),
+        ECOLOGY,
+        (SP, "region"),
+        ("forest_cover", "soil_fertility"),
+        (S.ENVIRONMENT, "habitat.forage_pct", "species.abundance"),
+    ),
+    ("prey", "S3.2", "Hunters live on the prey of their land", ("ecology",), ECOLOGY, (SP,), ("prey",), (S.ECOLOGY, "habitat.prey_pct", "species.abundance")),
+    (
+        "hunting",
+        "S3.2",
+        "People hunt the kinds of their land",
+        ("ecology",),
+        ECOLOGY,
+        LANDS,
+        ("hunted",),
+        (S.DEMOGRAPHY, "ecology.hunting_cap", "species.abundance"),
+    ),
+    (
+        "cunning",
+        "S3.2",
+        "A cunning or nocturnal kind slips the hunters",
+        ("ecology",),
+        ECOLOGY,
+        (SP,),
+        ("cunning", "nocturnal"),
+        (S.MIND, "habitat.cunning_pct", "species.abundance"),
+    ),
+    (
+        "territory",
+        "S3.2",
+        "A territorial kind pushes invaders back",
+        ("ecology",),
+        ECOLOGY,
+        (SP,),
+        ("territoriality",),
+        (S.ECOLOGY, "habitat.territory_pct", "species.abundance"),
+    ),
+    (
+        "metabolism",
+        "S3.2",
+        "A hungry kind of quick metabolism starves faster",
+        ("ecology",),
+        ECOLOGY,
+        (SP,),
+        ("metabolism",),
+        (S.BODY, "habitat.metabolism_mean", "species.abundance"),
+    ),
+    (
+        "fear_of_people",
+        "S3.2",
+        "A kind afraid of people keeps from their herds",
+        ("monster_raids",),
+        ECOLOGY,
+        (SP, "settlement"),
+        ("fear_of_people",),
+        (S.SOCIAL, "food_web.fear_pct", "raids"),
+    ),
+    (
+        "sickness",
+        "S3.2",
+        "A sickness it carries wastes a kind where it rages",
+        ("ecology",),
+        ECOLOGY,
+        (SP, "disease"),
+        ("hosts",),
+        (S.DEMOGRAPHY, "habitat.disease_loss", "species.abundance"),
+    ),
+    (
+        "hosts",
+        "S3.2",
+        "A new sickness takes the kinds of its land as hosts",
+        ("epidemics", "ecology"),
+        ECOLOGY,
+        (SP, "disease"),
+        ("hosts",),
+        (S.DEMOGRAPHY, None, "hosts"),
+    ),
+    (
+        "invaders",
+        "S3.2",
+        "Invasive kinds crowd out the natives",
+        ("ecology",),
+        ECOLOGY,
+        (SP, "region"),
+        ("invasive",),
+        (S.ECOLOGY, "ecology.invasive_pressure", "species.abundance"),
+    ),
+    (
+        "spread",
+        "S3.2",
+        "A thriving kind spills into fitting neighbouring lands",
+        ("ecology",),
+        ECOLOGY,
+        (SP, "region"),
+        ("abundance",),
+        (S.ECOLOGY, "habitat.spread_threshold", "species.abundance"),
+    ),
+    (
+        "migration",
+        "S3.2",
+        "Migratory herds move along their path with the seasons",
+        ("ecology",),
+        ECOLOGY,
+        (SP, "region"),
+        ("migratory", "migration_path"),
+        (S.ENVIRONMENT, "habitat.migration_pct", "species.abundance"),
+    ),
+    (
+        "overall",
+        "S3.2",
+        "A kind's numbers are its strongest herd and the lands it holds",
+        ("ecology",),
+        ECOLOGY,
+        (SP,),
+        ("abundance",),
+        (S.ECOLOGY, "habitat.range_bonus", "species.abundance"),
+    ),
+    ("hunting_links", "S3.2", "Hunters and prey part when their lands or appetites part", ("creatures",), WEB, (SP,), ("hunts",), (S.ECOLOGY, None, "hunts")),
+    (
+        "hunger",
+        "S3.2",
+        "Prey shortage makes predators bold",
+        ("ecology",),
+        WEB,
+        (SP,),
+        ("aggression",),
+        (S.ECOLOGY, "food_web.hunger_aggression", "species.danger"),
+    ),
+    ("calm", "S3.2", "A fed predator calms", ("ecology",), WEB, (SP,), ("aggression",), (S.ECOLOGY, "food_web.calm_aggression", "species.danger")),
+    (
+        "herd_raids",
+        "S3.2",
+        "Raiders take the herds before the people",
+        ("monster_raids",),
+        WEB,
+        (SP, "settlement"),
+        ("livestock",),
+        (S.ECONOMY, "food_web.raid_livestock", "settlement.population"),
+    ),
+    (
+        "guard_beasts",
+        "S3.2",
+        "Guard beasts fend off raiders",
+        ("monster_raids",),
+        HERDS,
+        (SP, "settlement"),
+        ("uses",),
+        (S.WAR, "domestication.guard_pct", "raids"),
+    ),
+    (
+        "breath",
+        "S3.2",
+        "Fire- and frost-breathers burn what they raid",
+        ("monster_raids",),
+        WEB,
+        (SP, "settlement"),
+        ("traits",),
+        (S.ECONOMY, "food_web.breath_prosperity", "settlement.prosperity"),
+    ),
+    (
+        "ambush",
+        "S3.2",
+        "Ambush predators take more",
+        ("monster_raids",),
+        WEB,
+        (SP, "settlement"),
+        ("traits",),
+        (S.ECONOMY, "food_web.ambush_pct", "settlement.population"),
+    ),
+    (
+        "blight",
+        "S3.2",
+        "Crop pests swarm in some years",
+        ("ecology",),
+        ECOLOGY,
+        (SP, "region"),
+        ("harvest_pct",),
+        (S.ECONOMY, "pests.pest_year_chance", "harvest"),
+    ),
+    ("ore_gnawing", "S3.2", "Iron-eaters gnaw the ore of the towns", ("ecology",), ECOLOGY, (SP, "settlement"), ("ore",), (S.ECONOMY, "pests.ore_loss", "ore")),
+    (
+        "foul_land",
+        "S3.2",
+        "Plague-bearers foul the land",
+        ("ecology",),
+        ECOLOGY,
+        (SP, "region"),
+        ("disease_load",),
+        (S.DEMOGRAPHY, "pests.disease_load", "sickness"),
+    ),
+    (
+        "spirit_calm",
+        "S3.2",
+        "Spirit-sighted kinds quieten the dead",
+        ("ecology",),
+        ECOLOGY,
+        (SP, "spirit"),
+        ("unrest",),
+        (S.FAITH, "habitat.spirit_calm", "spirit.unrest"),
+    ),
+    (
+        "herd_feeding",
+        "S3.2",
+        "Herds eat fodder and grow, or starve and dwindle",
+        ("husbandry",),
+        HERDS,
+        (SP, "settlement"),
+        ("head", "fed_epochs"),
+        (S.ECONOMY, "domestication.growth_pct", "herds"),
+    ),
+    ("herd_starving", "S3.2", "An unfed herd dwindles", ("husbandry",), HERDS, (SP, "settlement"), ("head",), (S.ECONOMY, "domestication.starve_pct", "herds")),
+    (
+        "domestic_drift",
+        "S3.2",
+        "Domesticated kinds grow tamer and yield more than their wild parents",
+        ("husbandry",),
+        HERDS,
+        (SP,),
+        ("aggression", "tameability"),
+        (S.ECOLOGY, "domestication.tame_drift", "species.danger"),
+    ),
+    (
+        "breeders",
+        "S3.2",
+        "Master herders raise named breeds",
+        ("husbandry",),
+        HERDS,
+        (SP, "mortal"),
+        ("stage",),
+        (S.MIND, "domestication.breed_skill", "herds"),
+    ),
+    ("cavalry", "S3.2", "Cavalry, chariots and war beasts need mount and war herds", ("campaigns",), HERDS, (SP, "army"), ("uses",), (S.WAR, None, "units")),
+    (
+        "draught",
+        "S3.2",
+        "Draught beasts plough more fields",
+        ("society_economy",),
+        HERDS,
+        (SP, "settlement"),
+        ("uses",),
+        (S.ECONOMY, "domestication.labour_head", "harvest"),
+    ),
+    (
+        "subspecies",
+        "S3.2",
+        "An isolated herd becomes a subspecies fit for its land, larger in the cold and smaller in the heat",
+        ("speciation",),
+        ECOLOGY,
+        (SP, "region"),
+        ("temperature_min", "size_class"),
+        (S.ECOLOGY, "habitat.subspecies_drift", "species.abundance"),
+    ),
+    (
+        "sacred_crisis",
+        "S3.2",
+        "The death of a sacred animal shakes its faithful",
+        ("ecology",),
+        ECOLOGY,
+        (SP, "cult", "settlement"),
+        ("zeal", "unrest"),
+        (S.FAITH, "extinction.sacred_unrest", "cult.zeal"),
+    ),
+    (
+        "sacred_hunt",
+        "S3.2",
+        "The faithful will not hunt what their faith holds holy",
+        ("ecology",),
+        ECOLOGY,
+        (SP, "cult"),
+        ("sacred_to_node_id",),
+        (S.FAITH, None, "hunting"),
+    ),
+    (
+        "totems",
+        "S3.2",
+        "A people takes the great kind of its land as its totem and will not hunt it",
+        ("husbandry", "ecology"),
+        ECOLOGY,
+        (SP, "people", "tradition"),
+        ("totem",),
+        (S.CULTURE, "totems.chance", "hunting"),
+    ),
+    (
+        "champions",
+        "S3.3a",
+        "A great kind brings forth a named beast",
+        ("beast_cycles",),
+        BEAST,
+        ("beast", SP),
+        ("species_entity_id",),
+        (S.ECOLOGY, "beasts.promotion_chance", "beast.terror"),
+    ),
+    (
+        "waking",
+        "S3.3a",
+        "A beast wakes of itself or when mining, war or theft disturbs its lair",
+        ("beast_cycles",),
+        BEAST,
+        ("beast", "region"),
+        ("woke_epoch",),
+        (S.ENVIRONMENT, "beasts.disturb_chance", "beast.terror"),
+    ),
+    (
+        "sleeping",
+        "S3.3a",
+        "A sated beast returns to sleep",
+        ("beast_cycles",),
+        BEAST,
+        ("beast",),
+        ("temper",),
+        (S.ECOLOGY, "beasts.sleep_chance", "beast.terror"),
+    ),
+    (
+        "raids",
+        "S3.3a",
+        "A waking beast raids the towns in its reach",
+        ("beast_cycles",),
+        BEAST,
+        ("beast", "settlement"),
+        ("raids",),
+        (S.WAR, "beasts.raid_population_pct", "settlement.population"),
+    ),
+    (
+        "hoard",
+        "S3.3a",
+        "Raids fill the beast's hoard",
+        ("beast_cycles",),
+        BEAST,
+        ("beast", "settlement"),
+        ("hoard",),
+        (S.ECONOMY, "beasts.raid_hoard", "goods"),
+    ),
+    (
+        "tribute",
+        "S3.3a",
+        "Cowed towns pay the beast tribute",
+        ("beast_cycles",),
+        BEAST,
+        ("beast", "settlement"),
+        ("hoard",),
+        (S.ECONOMY, "beasts.tribute_hoard", "goods"),
+    ),
+    (
+        "terror",
+        "S3.3a",
+        "The beast's terror drains the towns near its lair",
+        ("beast_cycles",),
+        BEAST,
+        ("beast", "settlement"),
+        ("terror",),
+        (S.SOCIAL, "beasts.terror_prosperity", "settlement.prosperity"),
+    ),
+    (
+        "quiet",
+        "S3.3a",
+        "A quiet beast is slowly feared less",
+        ("beast_cycles",),
+        BEAST,
+        ("beast",),
+        ("terror",),
+        (S.SOCIAL, "beasts.terror_decay", "beast.terror"),
+    ),
+    (
+        "renown",
+        "S3.3a",
+        "Each raid spreads the beast's name",
+        ("beast_cycles",),
+        BEAST,
+        ("beast",),
+        ("renown",),
+        (S.CULTURE, "beasts.renown_gain", "beast.renown"),
+    ),
+    (
+        "vengeance",
+        "S3.3a",
+        "A wounded beast hunts the house of the one who wounded it",
+        ("beast_cycles", "glory_hunts"),
+        BEAST,
+        ("beast", "mortal", "house"),
+        ("wounds",),
+        (S.MIND, "beasts.vengeance_chance", "beast.terror"),
+    ),
+    (
+        "old_age",
+        "S3.3a",
+        "A beast ages and at last dies in its lair",
+        ("beast_cycles",),
+        BEAST,
+        ("beast",),
+        ("age", "lifespan"),
+        (S.BODY, "beasts.age_years", "beast.renown"),
+    ),
+    (
+        "corpse",
+        "S3.3a",
+        "A slain beast's corpse yields bone, ivory or dragonbone to its slayers",
+        ("beast_cycles",),
+        BEAST,
+        ("beast", "settlement"),
+        ("corpse",),
+        (S.ECONOMY, "beasts.corpse_yield", "goods"),
+    ),
+    (
+        "treasure",
+        "S3.3a",
+        "A slain beast's hoard becomes a treasure place and riches for its slayers",
+        ("beast_cycles",),
+        BEAST,
+        ("beast", "place", "settlement"),
+        ("hoard", "treasure_place"),
+        (S.ECONOMY, "beasts.hoard_wealth_pct", "wealth"),
+    ),
+    (
+        "slayer",
+        "S3.3a",
+        "The slayer gains renown and a legend",
+        ("beast_cycles",),
+        BEAST,
+        ("beast", "mortal", "legend"),
+        ("renown", "slayer", "legend"),
+        (S.CULTURE, "beasts.slayer_renown", "legend"),
+    ),
+    (
+        "mount",
+        "S3.3a",
+        "A tamed beast carries its rider to victory",
+        ("vendetta_cycles", "campaigns"),
+        BEAST,
+        ("beast", "mortal"),
+        ("bound_to_node_id", "rider"),
+        (S.WAR, "beasts.mount_power_pct", "duels"),
+    ),
+    (
+        "guardian",
+        "S3.3a",
+        "A bound beast guards its master's walls",
+        ("beast_cycles",),
+        BEAST,
+        ("beast", "settlement", "place"),
+        ("bound_to_node_id", "ward"),
+        (S.WAR, "beasts.guard_defence", "settlement.defense"),
+    ),
+    (
+        "war_beast",
+        "S3.3a",
+        "A bound beast in an army breaks the enemy's nerve",
+        ("campaigns",),
+        BEAST,
+        ("beast", "army"),
+        ("bound_to_node_id",),
+        (S.WAR, "beasts.army_terror", "morale"),
+    ),
+    ("quests", "S3.3a", "Heroes seek beasts by name", ("glory_hunts",), BEAST, ("beast", "mortal"), ("renown",), (S.CULTURE, None, "quests")),
+    (
+        "sapience",
+        "S3.3a",
+        "A beast of great wit speaks and acts for itself",
+        ("beast_cycles",),
+        BEAST,
+        ("beast",),
+        ("intelligence",),
+        (S.MIND, "mortal_agents.creature_min_intelligence", "agents"),
+    ),
+)
+
+BEHAVIOURS = tuple(entry(item) for item in (*EXTRA, *traits(), *diets(), *sizes(), *socialities(), *stages(), *uses(), *products(), *crafts(), *tempers()))

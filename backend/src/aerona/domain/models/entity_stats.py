@@ -233,6 +233,17 @@ class IdeologyStats(ValueObject):
     appeal: Percent | None = None
 
 
+class BeastStats(ValueObject):
+    kind: Literal["beast"] = "beast"
+    hp: Count | None = None
+    danger: Percent | None = None
+    strength: Percent | None = None
+    agility: Percent | None = None
+    cunning: Percent | None = None
+    renown: Percent | None = None
+    terror: Percent | None = None
+
+
 class RiteStats(ValueObject):
     kind: Literal["rite"] = "rite"
     power: Annotated[int, Field(ge=1, le=10)] | None = None
@@ -271,6 +282,7 @@ EntityStats = Annotated[
     | TreatyStats
     | IdeologyStats
     | RiteStats
+    | BeastStats
     | NaturalLawStats,
     Field(discriminator="kind"),
 ]

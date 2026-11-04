@@ -9,6 +9,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import DamageType, InjuryKind, InjuryState
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.engine.body.book import Bearer, anatomy_for, ensure_body
 from aerona.engine.body.hits import MARK_KINDS, Armour, Harm, Hit, hits_for, loss_for
@@ -23,6 +24,8 @@ from aerona.engine.mind.hooks import wound_memories
 from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.queries import connect
+from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import set_stats, stat
 
 
@@ -162,10 +165,11 @@ async def _hp_loss(ctx: TickContext, bearer: Bearer, harm: Harm, hits: list[Hit]
 
 
 DAMAGE_TYPES = frozenset(item.value for item in DamageType)
+BODIED = frozenset({EntityType.MORTAL, EntityType.BEAST})
 
 
 async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bool = True) -> Wounding:
-    if isinstance(bearer, EntityRow) and (bearer.entity_type is not EntityType.MORTAL or bearer.status is not EntityStatus.CANON):
+    if isinstance(bearer, EntityRow) and (bearer.entity_type not in BODIED or bearer.status is not EntityStatus.CANON):
         return Wounding(None)
     if isinstance(bearer, EntityRow) and await is_immortal(ctx.session, bearer):
         return Wounding(WoundOutcome.IMMORTAL)
@@ -197,6 +201,11 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
     if not killed:
         return Wounding(WoundOutcome.WOUNDED, rows, lost)
     if not isinstance(bearer, EntityRow):
+        return Wounding(WoundOutcome.DIED, rows, lost)
+    if bearer.entity_type is EntityType.BEAST:
+        if harm.killer_id is not None:
+            await connect(ctx.session, harm.killer_id, bearer.id, BondKind.KILLED, ctx.epoch, description=harm.death_cause)
+        await retire_in(ctx, bearer, harm.death_cause)
         return Wounding(WoundOutcome.DIED, rows, lost)
     if rows and not any(row.state is InjuryState.LETHAL for row in rows):
         max(rows, key=lambda row: row.severity).state = InjuryState.LETHAL

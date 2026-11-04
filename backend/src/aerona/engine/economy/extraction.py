@@ -20,6 +20,7 @@ from aerona.domain.models.entity_stats import SpeciesStats
 from aerona.engine.body.cohorts import cohort, labour_factor
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.ecology.domestication import draught
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of, lots_of
 from aerona.engine.environment.years import sampled_years
@@ -184,6 +185,8 @@ async def output_of(ctx: TickContext, book: EconomyBook, resource: EntityRow, pr
     works = 1 + (site.level if site is not None else 0) * table.workshop_pct_per_level / PERCENT
     raw = base * skill * knowledge * season * difficulty * works * await tools_factor(ctx, community.id, workers) * await labour_factor(ctx, community)
     raw *= craft_factor(ctx, book, community.id, resource.id, kind)
+    if kind is ExtractionKind.FARMING:
+        raw *= await draught(ctx, community.id)
     return max(0, min(profile.reserve, round_half_up(raw)))
 
 

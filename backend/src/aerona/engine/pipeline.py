@@ -93,6 +93,7 @@ from aerona.engine.phases import (
     tribute,
     vendettas,
     warfare,
+    wilds,
     wonders,
     works,
     world_balance,
@@ -188,6 +189,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + works.PHASES
     + writing.PHASES
     + epidemics.PHASES
+    + wilds.PHASES
     + lore.PHASES
     + faith.PHASES
     + vendettas.PHASES
@@ -235,6 +237,8 @@ SUB_ENGINE_STAGE = stage(
     "horror",
     "creatures",
     "ecology",
+    "husbandry",
+    "beast_cycles",
     "pantheon",
     "native_faith",
     "death_engine",

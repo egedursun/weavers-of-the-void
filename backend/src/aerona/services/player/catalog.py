@@ -60,6 +60,7 @@ from aerona.services.player import (
     son_tools,
     urban,
     warfare,
+    wilds,
     world_edits,
 )
 from aerona.services.player.canon import ConfirmationWord
@@ -1125,6 +1126,27 @@ LORE_ACTIONS = (
     ),
 )
 
+
+WILDS_ACTIONS = (
+    _sync(
+        Meta("species:edit", "Edit a kind's body, diet, habitat, temper and domestication", G.CREATURES), wilds.edit_species, wilds.EditSpecies, free, ("S3.2",)
+    ),
+    _sync(Meta("species:range", "Set how a kind ranges in a land", G.CREATURES), wilds.edit_range, wilds.EditRange, free, ("S3.2",)),
+    _sync(Meta("species:move_range", "Move a kind's herds to another land", G.CREATURES), wilds.move_range, wilds.MoveRange, free, ("S3.2",)),
+    _sync(Meta("species:drop_range", "Drive a kind out of a land", G.CREATURES), wilds.drop_range, wilds.DropRange, free, ("S3.2",)),
+    _sync(Meta("species:yield", "Set what a kind yields", G.CREATURES), wilds.set_yield, wilds.SpeciesYield, free, ("S3.2",)),
+    _sync(Meta("species:use", "Set what a kind is kept for", G.CREATURES), wilds.set_use, wilds.Use, free, ("S3.2",)),
+    _sync(Meta("species:host", "Set a sickness a kind carries", G.CREATURES), wilds.set_host, wilds.Host, free, ("S3.2",)),
+    _sync(Meta("species:sacred", "Make a kind sacred to a son", G.CREATURES), wilds.make_sacred, wilds.Sacred, free, ("S3.2",)),
+    _sync(Meta("species:domesticate", "Domesticate a kind now", G.CREATURES), wilds.domesticate, wilds.Domesticate, free, ("S3.2",)),
+    _sync(Meta("herd:edit", "Edit a community's herd", G.CREATURES), wilds.edit_herd, wilds.EditHerd, free, ("S3.2",)),
+    _sync(Meta("beast:edit", "Edit a named beast", G.CREATURES), wilds.edit_beast, wilds.EditBeast, free, ("S3.3a",)),
+    _sync(Meta("beast:rouse", "Wake or lull a beast", G.CREATURES), wilds.rouse, wilds.Rouse, free, ("S3.3a",)),
+    _sync(Meta("beast:bind", "Bind or loose a beast", G.CREATURES), wilds.bind, wilds.Bind, free, ("S3.3a",)),
+    _sync(Meta("beast:lair", "Shift a beast's lair", G.CREATURES), wilds.shift_lair, wilds.Lair, free, ("S3.3a",)),
+    _sync(Meta("beast:spawn", "Raise a named beast from a kind", G.CREATURES), wilds.spawn, wilds.Spawn, free, ("S3.3a",)),
+)
+
 ENVIRONMENT_ACTIONS = (
     _sync(
         Meta("ley:sever", "Cut a ley line for some epochs", G.WORLDS),
@@ -1277,6 +1299,7 @@ MECHANIC_ACTIONS = (
     _sync(Meta("incident:annotate", "Keep a note beside an incident", G.SETTINGS), levers.annotate_incident, levers.AnnotateIncident, free, ("F10",)),
 )
 ACTIONS: tuple[ActionSpec, ...] = (
+    *WILDS_ACTIONS,
     *LORE_ACTIONS,
     *CREATOR_ACTIONS,
     *SON_ACTIONS,

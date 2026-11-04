@@ -21,6 +21,14 @@ export type FieldSpec =
   | { key: string; kind: 'text'; nullable?: boolean }
   | { key: string; kind: 'enum'; values: readonly string[] }
 
+export type Editor = {
+  mutate: (variables: {
+    values: Record<string, unknown>
+    release?: string[]
+  }) => void
+  isPending: boolean
+}
+
 export type DictSpec = {
   key: string
   label: string
@@ -48,6 +56,7 @@ export function LoreFields({
   current,
   locked,
   blocked,
+  editor,
 }: {
   entityId: number
   surface: string
@@ -55,6 +64,7 @@ export function LoreFields({
   current: Readonly<Record<string, unknown>>
   locked: readonly string[]
   blocked: string | null
+  editor?: Editor
 }) {
   const [draft, setDraft] = useState<Record<string, string | boolean>>(() =>
     Object.fromEntries(
@@ -66,7 +76,8 @@ export function LoreFields({
       ])
     )
   )
-  const edit = useLoreEdit(entityId)
+  const own = useLoreEdit(entityId)
+  const edit = editor ?? own
   const busy = busyOf(blocked, edit.isPending)
   const save = () =>
     edit.mutate({
@@ -158,17 +169,20 @@ export function DictField({
   spec,
   blocked,
   suggestions = [],
+  editor,
 }: {
   entityId: number
   spec: DictSpec
   blocked: string | null
   suggestions?: readonly string[]
+  editor?: Editor
 }) {
   const [rows, setRows] = useState<Array<[string, string]>>(() =>
     Object.entries(spec.value).map(([key, value]) => [key, String(value)])
   )
   const [fresh, setFresh] = useState('')
-  const edit = useLoreEdit(entityId)
+  const own = useLoreEdit(entityId)
+  const edit = editor ?? own
   const busy = busyOf(blocked, edit.isPending)
   const save = (next: Array<[string, string]>) =>
     edit.mutate({

@@ -58,6 +58,7 @@ from aerona.api.routers import (
     sons,
     state,
     wars,
+    wilds,
 )
 from aerona.api.security import BodyLimit
 from aerona.constants.api import IMAGE_UPLOAD_MAX_BYTES, PACKAGE_UPLOAD_MAX_BYTES
@@ -118,6 +119,7 @@ ROUTERS: tuple[ModuleType, ...] = (
     military,
     faith,
     lore,
+    wilds,
     actions,
 )
 IMAGE_UPLOAD_SUFFIX = "/images"

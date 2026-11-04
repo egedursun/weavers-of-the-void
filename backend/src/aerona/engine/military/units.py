@@ -18,6 +18,7 @@ from aerona.domain.enums.military import ArmourType, ShieldType, Stance, UnitFam
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.ecology.domestication import herd_uses
 from aerona.engine.economy.stocks import holding
 from aerona.engine.lore.research import techniques_of
 from aerona.engine.primitives.distance import RegionAtlas
@@ -38,6 +39,16 @@ WEAPONS: dict[UnitFamily, tuple[str, ...]] = {
     UnitFamily.EXOTIC: ("claw",),
 }
 FALLBACK = UnitKind.LEVY
+MOUNT_NEEDS = {
+    UnitKind.LIGHT_CAVALRY: "mount",
+    UnitKind.HEAVY_CAVALRY: "mount",
+    UnitKind.HORSE_ARCHERS: "mount",
+    UnitKind.CHARIOTS: "mount",
+    UnitKind.BEAST_RIDERS: "mount",
+    UnitKind.WAR_BEASTS: "war",
+    UnitKind.SKY_MOUNTS: "sky_mount",
+    UnitKind.BOUND_BEASTS: "bound_beast",
+}
 NAVAL_LADDER = (UnitKind.WARSHIPS, UnitKind.GALLEYS, UnitKind.LONGSHIPS)
 
 
@@ -117,6 +128,9 @@ async def composition(ctx: TickContext, community: EntityRow, size: int, knowled
         plan[kind] = plan.get(kind, 0.0) + table.style_share_pct / PERCENT / (index + 1) / sum(1 / (i + 1) for i in range(len(styled)))
     for kind, share in (await extras(ctx, community, knowledge, society)).items():
         add(plan, kind, share)
+    beasts = await herd_uses(ctx, community.id)
+    for kind in [kind for kind in plan if MOUNT_NEEDS.get(kind, "") not in beasts and kind in MOUNT_NEEDS]:
+        plan.pop(kind)
     rest = max(0.0, 1 - sum(plan.values()))
     plan[FALLBACK] = plan.get(FALLBACK, 0.0) + rest
     total = sum(plan.values()) or 1.0

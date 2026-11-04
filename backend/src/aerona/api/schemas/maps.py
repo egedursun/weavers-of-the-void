@@ -77,6 +77,7 @@ class RegionStocks(ApiModel):
     population: int
     followers: int
     soldiers: int
+    wildlife: int = 0
 
 
 class MapTrade(ApiModel):
@@ -105,6 +106,16 @@ class MapLore(ApiModel):
     x: float
     y: float
     detail: str | None = None
+
+
+class MapLair(ApiModel):
+    beast_id: int
+    name: str
+    x: float
+    y: float
+    terror: int
+    temper: str
+    reach: int
 
 
 class RegionTongue(ApiModel):
@@ -186,5 +197,6 @@ class MapView(ApiModel):
     holy: list[MapHoly] = Field(default_factory=list)
     lore: list[MapLore] = Field(default_factory=list)
     tongues: dict[int, RegionTongue] = Field(default_factory=dict)
+    lairs: list[MapLair] = Field(default_factory=list)
     notes: list[MapNoteRecord]
     time: MapTime

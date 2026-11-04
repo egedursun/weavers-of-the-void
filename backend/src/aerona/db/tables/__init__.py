@@ -36,6 +36,15 @@ from aerona.db.tables.disease import (
     OutbreakRow,
     QuarantineRow,
 )
+from aerona.db.tables.ecology import (
+    BeastProfileRow,
+    HerdRow,
+    SpeciesHostRow,
+    SpeciesProfileRow,
+    SpeciesRangeRow,
+    SpeciesUseRow,
+    SpeciesYieldRow,
+)
 from aerona.db.tables.economy import (
     CommunityStockRow,
     CurrencyRow,
@@ -183,6 +192,7 @@ __all__ = [
     "ArtworkProfileRow",
     "BattlePhaseRow",
     "BattleRow",
+    "BeastProfileRow",
     "BodyCustomRow",
     "BodyRow",
     "BondRow",
@@ -243,6 +253,7 @@ __all__ = [
     "GodConflictRow",
     "GoodsFlowRow",
     "HeirloomRow",
+    "HerdRow",
     "HeresyRow",
     "HeroQuestRow",
     "HistorianViewRow",
@@ -340,6 +351,11 @@ __all__ = [
     "SoulJudgementRow",
     "SoulRow",
     "SpeakerCohortRow",
+    "SpeciesHostRow",
+    "SpeciesProfileRow",
+    "SpeciesRangeRow",
+    "SpeciesUseRow",
+    "SpeciesYieldRow",
     "SpiritProfileRow",
     "SpyNetworkRow",
     "StarRow",

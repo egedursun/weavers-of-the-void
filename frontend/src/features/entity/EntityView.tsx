@@ -77,6 +77,12 @@ import {
   SettlementPlanSection,
   TreasurySection,
 } from './society/SettlementPlan'
+import {
+  BeastSection,
+  FoodWebSection,
+  HerdsSection,
+} from './wilds/BeastSection'
+import { SpeciesSection } from './wilds/SpeciesSection'
 
 const MIND_TYPES = new Set([
   'mortal',
@@ -360,6 +366,18 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       )}
       {isCommunity(ctx.type) && (
         <LearningSection holderId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'species' && (
+        <SpeciesSection speciesId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'beast' && (
+        <BeastSection beastId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {isCommunity(ctx.type) && (
+        <HerdsSection communityId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'region' && (
+        <FoodWebSection regionId={entity.id} />
       )}
       {entity.entity_type === 'spirit' && (
         <SoulSection spiritId={entity.id} readOnlyReason={readOnly} />

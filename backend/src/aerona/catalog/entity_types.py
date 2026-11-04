@@ -128,7 +128,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("abundance", "Abundance"),
             ),
             ("animal", "plant", "fungus", "monster", "spirit species"),
-            frozenset({EngineKind.GOLEM, EngineKind.CHIMERA}),
+            frozenset({EngineKind.GOLEM, EngineKind.CHIMERA, EngineKind.DOMESTICATED}),
         ),
         EntityTypeSpec(
             EntityType.PEOPLE,
@@ -523,6 +523,25 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             ("calling of flame", "rain summoning", "warding of the walls", "raising of the fallen", "reading of omens"),
         ),
         EntityTypeSpec(
+            EntityType.BEAST,
+            "Beast",
+            "Beasts",
+            "beast",
+            None,
+            LAND,
+            False,
+            (
+                StatField("hp", "HP", 1, lambda rules: rules.limits.hp_cap),
+                StatField("strength", "Strength"),
+                StatField("agility", "Agility"),
+                StatField("danger", "Danger"),
+                StatField("cunning", "Cunning"),
+                StatField("renown", "Renown"),
+                StatField("terror", "Terror"),
+            ),
+            ("dragon of the north", "great wolf", "sea serpent", "cave bear", "terror of the marsh"),
+        ),
+        EntityTypeSpec(
             EntityType.NATURAL_LAW,
             "Natural law",
             "Natural laws",
@@ -568,6 +587,7 @@ CREATION_BASE_COST_RULES: dict[EntityType, RuleBound] = {
     EntityType.HOUSE: lambda rules: rules.creation_base_cost.house,
     EntityType.TREATY: lambda rules: rules.creation_base_cost.treaty,
     EntityType.IDEOLOGY: lambda rules: rules.creation_base_cost.ideology,
+    EntityType.BEAST: lambda rules: rules.creation_base_cost.beast,
     EntityType.RITE: lambda rules: rules.creation_base_cost.rite,
 }
 

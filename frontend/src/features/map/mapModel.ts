@@ -27,6 +27,7 @@ export const LAYER_MODES = [
   'population',
   'followers',
   'soldiers',
+  'wildlife',
 ] as const
 export type LayerMode = (typeof LAYER_MODES)[number]
 
@@ -46,6 +47,7 @@ export const LAYER_LABEL: Record<LayerMode, string> = {
   population: 'Population',
   followers: 'Followers',
   soldiers: 'Soldiers',
+  wildlife: 'Wildlife',
 }
 
 export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
@@ -58,6 +60,7 @@ export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
   population: 'map-layer-population',
   followers: 'map-layer-followers',
   soldiers: 'map-layer-soldiers',
+  wildlife: 'map-layer-wildlife',
 }
 
 export const OVERLAY_SURFACE: Partial<Record<Overlay, string>> = {
@@ -66,6 +69,7 @@ export const OVERLAY_SURFACE: Partial<Record<Overlay, string>> = {
   military: 'map-layer-military',
   faith: 'map-layer-faith',
   lore: 'map-layer-lore',
+  beasts: 'map-layer-beasts',
 }
 
 export const STOCK_LAYERS = ['population', 'followers', 'soldiers'] as const
@@ -78,6 +82,7 @@ export const OVERLAYS = [
   'military',
   'faith',
   'lore',
+  'beasts',
   'ties',
   'wars',
   'events',
@@ -93,6 +98,7 @@ export const OVERLAY_LABEL: Record<Overlay, string> = {
   military: 'Armies',
   faith: 'Holy places',
   lore: 'Legends and rites',
+  beasts: 'Beast lairs',
   ties: 'Ties',
   wars: 'Wars',
   events: 'Events',

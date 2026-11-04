@@ -96,6 +96,9 @@ class RarityGatesRules:
     create_ideology: int = rule(
         1, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can found an Ideology (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
     )
+    create_beast: int = rule(
+        2, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can loose a named Beast (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )
     create_rite: int = rule(
         1, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can reveal a Rite (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
     )
