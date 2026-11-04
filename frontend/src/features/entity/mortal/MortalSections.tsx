@@ -98,6 +98,13 @@ function postAction(
   return unwrap(post(path, { body })) as Promise<ActionResponse>
 }
 
+function generationLabel(generation: number): string {
+  if (generation === 0) return 'Their generation'
+  const steps = Math.abs(generation)
+  const word = steps === 1 ? 'generation' : 'generations'
+  return `${steps} ${word} ${generation < 0 ? 'up' : 'down'}`
+}
+
 function heldLabel(field: string): string {
   return HELD_LABELS[field] ?? plain({}, field.replace(/_id$/, ''))
 }
@@ -734,11 +741,7 @@ export function KinSection({
                 className='flex min-w-0 flex-col gap-1.5'
               >
                 <Label variant='overline'>
-                  {row[0]?.generation === 0
-                    ? 'Their generation'
-                    : (row[0]?.generation ?? 0) < 0
-                      ? `${Math.abs(row[0]?.generation ?? 0)} generations up`
-                      : `${row[0]?.generation ?? 0} generations down`}
+                  {generationLabel(row[0]?.generation ?? 0)}
                 </Label>
                 <ul className='grid min-w-0 grid-cols-1 gap-2 @md/kin:grid-cols-2 @2xl/kin:grid-cols-3'>
                   {row.map((person) => (

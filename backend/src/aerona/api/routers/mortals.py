@@ -17,6 +17,7 @@ from aerona.domain.enums.mortal import Ability, EquipmentSlot, LifeStage, Mortal
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.mortal.equipment import SLOT_COLUMNS
 from aerona.engine.mortal.kinship import marriages_of
+from aerona.engine.mortal.life import sex_of_stats
 from aerona.engine.primitives.stats import stat
 
 router = APIRouter(tags=["mortals"])
@@ -33,8 +34,7 @@ async def mortal_row(session: AsyncSession, mortal_id: int) -> EntityRow:
 
 
 def sex_of(mortal: EntityRow) -> MortalSex:
-    stats = mortal.stats
-    return MortalSex(stats.sex) if isinstance(stats, MortalStats) and stats.sex is not None else MortalSex.OTHER
+    return sex_of_stats(mortal)
 
 
 async def pinned(session: AsyncSession, mortal_id: int) -> set[str]:
