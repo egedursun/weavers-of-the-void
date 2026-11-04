@@ -95,7 +95,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     limit = info.effective
     profile = await profile_of(ctx.session, mortal.id)
     health = profile.health if profile is not None else PERCENT
-    if not rng.chance(hazard_chance(rules, aged, limit, health, medicine=info.medicine > 0)):
+    if (first and aged < limit) or not rng.chance(hazard_chance(rules, aged, limit, health, medicine=info.medicine > 0)):
         set_stats(mortal, age=aged)
         return
     years = rules.time.years_per_epoch

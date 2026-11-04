@@ -34,7 +34,6 @@ class FertilityRules:
     female_window_end_pct: int = rule(60, 0, 200, G, "Share of a lifespan past which women bear no more children (%)")
     male_window_end_pct: int = rule(85, 0, 200, G, "Share of a lifespan past which men father no more children (%)")
     other_window_end_pct: int = rule(70, 0, 200, G, "Share of a lifespan past which others bear no more children (%)")
-    birth_chance: int = rule(30, 0, 100, G, "Chance a fertile wedded couple has a child each epoch (%)")
     unwed_rate_pct: int = rule(25, 0, 100, G, "Rate of children born to lovers who are not wed (%)")
     concubine_rate_pct: int = rule(60, 0, 100, G, "Rate of children born of concubinage (%)")
     youth_rate_pct: int = rule(40, 0, 100, G, "Rate of children born to youths where custom allows it (%)")

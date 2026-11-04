@@ -72,7 +72,11 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "mechanics": "The resource's strange rules, at most {{ rules.mechanics.resource_max }} (if left empty they are read from its name and text; sacred makes it yours): {{ resource_mechanics }}",
     },
     EntityType.LANGUAGE: {**WORD_FIELDS, "words": "The language's first words (at most {{ rules.son_tools.coin_word_max_words }}); matching the naming rule"},
-    EntityType.MORTAL: {"title": 'Their nickname or title ("Salt Seer", "Ash Mouth"); do not bury it in the name, write it here'},
+    EntityType.MORTAL: {
+        "title": 'Their nickname or title ("Salt Seer", "Ash Mouth"); do not bury it in the name, write it here',
+        "sex": "female, male or other",
+        "traits": "Up to five typed traits of temper, such as brave, cruel, scholarly or zealous",
+    },
     EntityType.EVENT: {
         "effects": "How the event is reflected on the stats of affected entities (at most {{ rules.son_tools.event_max_effects }}; e.g. war lowers population). The same stat of the same entity counts once; touching a sibling's creation angers its maker",
         "effects.entity_id": "The affected entity",

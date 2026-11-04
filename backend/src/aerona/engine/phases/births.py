@@ -33,7 +33,7 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.mind.needs import sustenance_need
 from aerona.engine.mind.space import value_distance
 from aerona.engine.mortal.kinship import add_parent
-from aerona.engine.mortal.life import adult, biology_of, fertility_window, inherited_abilities, sex_of_stats
+from aerona.engine.mortal.life import adult, biology_of, fertility_window, inherited_abilities, refresh_life, sex_of_stats
 from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -820,9 +820,11 @@ async def couple_chance(ctx: TickContext, first: EntityRow, second: EntityRow, k
     rate = bond_rate(rules, kind) / PERCENT
     if kind is BondKind.CONCUBINE_OF and not await concubinage_allowed(ctx, first):
         return 0.0
-    chance = table.birth_chance * rate
+    chance = rules.world_engine.birth_chance * rate
     for parent in (first, second):
-        profile, _ = await ensure_profile(ctx.session, parent.id, ctx.epoch)
+        profile, created = await ensure_profile(ctx.session, parent.id, ctx.epoch)
+        if created:
+            await refresh_life(ctx.session, rules, parent, profile)
         if profile.life_stage is LifeStage.YOUTH:
             chance *= table.youth_rate_pct / PERCENT
         elif not adult(profile.life_stage):
