@@ -11,6 +11,7 @@ from aerona.domain.enums.body import InjuryKind, InjuryState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, HERO_ROLES, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import ActKind, MemoryKind, SkillKind, TraitKind, TraitSource
 from aerona.engine.context import TickContext
+from aerona.engine.lore.taboos import violated
 from aerona.engine.mind.book import load_holder, values_for
 from aerona.engine.mind.memories import kin_of, remember
 from aerona.engine.mind.skills import practise, practise_any
@@ -189,6 +190,7 @@ async def onlookers(ctx: TickContext, actor_id: int, victim_id: int) -> list[int
 
 
 async def judged(ctx: TickContext, actor_id: int, victim_id: int, act: ActKind, *, note: str | None = None) -> int:
+    await violated(ctx, actor_id, act)
     base = ctx.rules.memory.witness_magnitude
     if not base:
         return 0

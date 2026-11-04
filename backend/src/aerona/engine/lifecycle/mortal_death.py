@@ -31,7 +31,7 @@ from aerona.engine.faith.judgement import profile_for
 from aerona.engine.interconnect.causes import killing_incident
 from aerona.engine.lifecycle.aging import immortal, raise_lifespan_to_death_age
 from aerona.engine.lifecycle.succession import dynasty_root, pass_rule
-from aerona.engine.lore.items import record
+from aerona.engine.lore.history import record
 from aerona.engine.mind.memories import inherit_memories, mourn
 from aerona.engine.mortal.death import record_end
 from aerona.engine.mortal.kin import children_of

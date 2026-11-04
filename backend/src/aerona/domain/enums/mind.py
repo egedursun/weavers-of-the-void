@@ -214,6 +214,9 @@ class ActKind(StrEnum):
     OATHBREAKING = "oathbreaking"
     LEARNING = "learning"
     HOSPITALITY = "hospitality"
+    WINTER_FIGHTING = "winter_fighting"
+    GUEST_KILLING = "guest_killing"
+    RITUAL_SCARRING = "ritual_scarring"
 
 
 class NeedKind(StrEnum):

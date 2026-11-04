@@ -10,6 +10,7 @@ from aerona.engine.primitives.numbers import clamp_percent
 
 
 @reads(
+    "knowledge.spread",
     "people.prosperity",
     "settlement.prosperity",
     "table.action_records",

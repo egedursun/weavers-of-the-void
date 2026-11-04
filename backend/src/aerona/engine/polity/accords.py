@@ -11,12 +11,13 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import TreatyClauseRow, TreatyPartyRow, TreatyProfileRow
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.culture import LanguageRegister
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClauseKind, OathKind, PartyRole, TreatyKind, TreatyStatus
 from aerona.domain.models.entity_stats import TreatyStats
 from aerona.engine.context import TickContext
-from aerona.engine.lore.language import barrier
+from aerona.engine.lore.language import register_barrier
 from aerona.engine.mind.memories import remember
 from aerona.engine.polity.oaths import oath_god, swear
 from aerona.engine.primitives.queries import active_bonds, close, connect, living_entity
@@ -87,7 +88,8 @@ def halved(value: int | str | bool) -> int | str | bool:
 async def misread(ctx: TickContext, clause: Clause) -> Clause:
     if clause.obligor is None or clause.beneficiary is None or clause.obligor == clause.beneficiary:
         return clause
-    if await barrier(ctx.session, ctx.rules, clause.obligor, clause.beneficiary, ctx.epoch) >= 1:
+    court = LanguageRegister.COURT
+    if await register_barrier(ctx.session, ctx.rules, clause.obligor, clause.beneficiary, ctx.epoch, ours=court, theirs=court) >= 1:
         return clause
     if not ctx.rng(f"misread.{clause.kind.value}.{clause.obligor}.{clause.beneficiary}.{ctx.epoch}").chance(ctx.rules.interpreters.misread_chance):
         return clause

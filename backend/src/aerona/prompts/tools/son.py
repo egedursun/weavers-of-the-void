@@ -1,5 +1,8 @@
 from aerona.catalog.entity_types import ENTITY_TYPES
+from aerona.domain.enums.culture import ArtMedium, CalendarSlot, ItemClass, LegendArchetype, ProphecyConsequence, ProphecyPredicate, TraditionKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.world import SkyEventKind
 from aerona.prompts.tools.ids import SonToolId
 from aerona.prompts.tools.shared import IMAGE_PROMPT_FIELD, LINK_FIELDS, WORD_FIELDS
 from aerona.prompts.tools.text import ToolText
@@ -42,6 +45,15 @@ CREATION_FIELDS: dict[str, str] = {
 
 WORSHIPPED_SON_FIELD = {"worshipped_son_id": "Whom they worship (son id){% if entity.type == 'cult' %}; you if empty{% endif %}. Faith flows this way."}
 
+ARCHETYPES = ", ".join(item.value for item in LegendArchetype)
+TRADITION_KINDS = ", ".join(item.value for item in TraditionKind)
+CALENDAR_SLOTS = ", ".join(item.value for item in CalendarSlot)
+ITEM_CLASSES = ", ".join(item.value for item in ItemClass)
+ART_MEDIA = ", ".join(item.value for item in ArtMedium)
+PREDICATES = ", ".join(item.value for item in ProphecyPredicate)
+CONSEQUENCES = ", ".join(item.value for item in ProphecyConsequence)
+SKY_KINDS = ", ".join(item.value for item in SkyEventKind)
+TABOO_ACTS = ", ".join(item.value for item in ActKind)
 LEGEND_CATEGORY_FIELD = "What the legend would become if belief ever made it walk the world: {{ legend_categories | join(', ') }}; creature for a beast or monster, spirit for a ghost or soul, resource for a sacred spring or vein, relic for a weapon or treasure"
 COMMODITY_FIELD = "What its people draw from it: {{ commodities | join(', ') }}; ore feeds forges and coin, grain, livestock and fish feed mouths, timber feeds fuel and ships; empty if none"
 MATERIAL_FIELD = "What it is made of or yields, if a material: {{ materials | join(', ') }}; it sets hardness, edge, weight, holiness and taint"
@@ -97,11 +109,37 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "home_port_id": "For a ship: the settlement it sails from",
         "captain_id": "For a ship: the mortal who commands it",
     },
+    EntityType.LEGEND: {
+        "legend_category": LEGEND_CATEGORY_FIELD,
+        "archetype": "The kind of tale it is, which sets the lesson it presses on its tellers: " + ARCHETYPES,
+    },
+    EntityType.TRADITION: {
+        "tradition_kind": "What kind of custom it is; this decides what keeping it costs and brings: " + TRADITION_KINDS,
+        "calendar_slot": "When it is kept, if at a set time: " + CALENDAR_SLOTS + "; a feast in its season is stronger",
+        "taboo_target": "For a taboo: the good its keepers will not touch",
+        "taboo_act": "For a taboo: the deed its keepers will not do (" + TABOO_ACTS + "); breakers are held in infamy",
+    },
     EntityType.ITEM: {
+        "item_class": "What kind of thing it is; this decides how it is used and what it does in the world: " + ITEM_CLASSES,
         "material": "What it is made of: {{ materials | join(', ') }}; sets its edge, guard, worth, rot and holy harm to the undead. Empty: its makers choose",
         "world_material_id": "Or a substance of this world by its id (see the world's materials); overrides material",
+        "secondary_materials": "Other materials worked into it (inlays, bindings, hilts): {{ materials | join(', ') }}",
     },
-    EntityType.LEGEND: {"legend_category": LEGEND_CATEGORY_FIELD},
+    EntityType.ARTWORK: {
+        "medium": "What kind of work it is; performed works live only while someone can perform them: " + ART_MEDIA,
+        "subject_id": "Whom or what it portrays, if anyone (an entity id); a portrayed mortal is remembered, a portrayed god gains fame",
+    },
+    EntityType.PROPHECY: {
+        "predicate": "What exactly must happen for it to come true, checked by the world itself: " + PREDICATES,
+        "subject_id": "The one the foretelling names: who dies (dies), what falls (falls), the house (born_in), the realm (ruler_of), the first side (war_between)",
+        "second_id": "For war_between: the second side",
+        "archetype": "For ruler_of: the kind of legend the coming ruler must fit (" + ARCHETYPES + ")",
+        "sky_kind": "For sky_event: the sign in the sky (" + SKY_KINDS + ")",
+        "event_kind": "For within_epochs: the kind of happening foretold (a war, a plague, a flood...)",
+        "within_epochs": "In how many ages it must come true; if it does not, the seer is mocked",
+        "consequence": "What it means when it comes true: " + CONSEQUENCES,
+        "consequence_id": "Whom the consequence touches (the one who will rule, the city that will fall)",
+    },
     EntityType.STRUCTURE: {
         "structure_kind": "What it is and what it does: {{ structure_kinds }}",
         "material": "What it is built of: {{ materials | join(', ') }}; stone lasts and resists fire, holy stone makes a temple shine, wood rots and burns. Empty: its builders choose",
@@ -149,6 +187,48 @@ STATUS_FREE = "Free."
 ESSENCE_GIFT_CAP = "{{ rules.son_tools.gift_max_essence }}"
 
 SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
+    T.COMMISSION_ARTWORK: ToolText(
+        "You commission a work of art: a song, epic, statue, fresco... It presses its message on those who keep it, remembers whom it portrays,"
+        " and a realm or town pays for it from its treasury. 1 action.",
+        {
+            "name": "A proper name for it, in the world's naming language",
+            "medium": "What kind of work: {{ art_media }}; songs, plays and dances live only while someone can perform them",
+            "subject_id": "Whom or what it portrays (an entity id), if anyone",
+            "author_id": "The artist who makes it (a mortal id), if any; a skilled hand makes a finer work",
+            "patron_id": "Who commissions and keeps it (a community id); one of your worshipping communities",
+        },
+    ),
+    T.DESIGN_RITE: ToolText(
+        "You devise a new rite of magic with the workings you choose; it must still be cast to take effect. 1 action.",
+        {
+            "name": "A proper name for the rite",
+            "school": "Its school of magic: {{ magic_schools }}",
+            "source": "What it draws on: {{ magic_sources }}; divine costs a god's essence, blood costs blood (captives' first), void costs sanity",
+            "power": "Its power, 1 to 10; stronger rites cost more and backfire more often",
+            "workings": "What it does, at most 4 workings",
+            "workings.effect": "The working: {{ rite_effects }}",
+            "workings.magnitude": "Its strength, 1 to 100",
+            "workings.damage_type": "For destruction: fire, cold, void or another wound",
+            "workings.summon_form": "For a summoning: spirit, beast or undead",
+            "holder_id": "The worshipping community or follower who will keep the rite",
+        },
+    ),
+    T.CAST_RITE: ToolText(
+        "You work a rite you know. It must be lawful where it is worked, its requirements met and its price paid; it may backfire. 1 action.",
+        {
+            "rite_id": "The rite to work (a rite id)",
+            "target_id": "Whom or where it is aimed at, if anyone",
+            "vessel_id": "The worshipping community the rite is worked through; you pay its price in essence",
+        },
+    ),
+    T.FOUND_SCHOOL: ToolText(
+        "You found a school of thought, a creed that spreads along roads, through scholars, books and schools, and can move a realm. 1 action.",
+        {
+            "name": "A proper name for the school or creed",
+            "tenets": "What it teaches, 1 to 3 tenets: {{ ideology_tenets }}",
+            "founder_id": "The mortal follower who founds it in your name",
+        },
+    ),
     T.WORLD_SUMMARY: ToolText(
         "Shows the world's current map, laws, pantheon, open stories and recent events. Give section to see in full a section that was truncated in the prompt "
         "({{ summary_sections | join(', ') }}). Free.",

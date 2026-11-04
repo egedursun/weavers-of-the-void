@@ -29,6 +29,7 @@ from aerona.db.tables.node import NodeRow
 from aerona.db.tables.routes import RouteRow
 from aerona.domain.enums.bond import VISIBLE_BOND_STATES, BondKind, BondState
 from aerona.engine.cosmos.routes import RouteBook, current_calendar, forgotten_world_ids
+from aerona.engine.lore.display_bonds import DerivedBond, derived_bonds
 from aerona.rules.registry import Rules
 from aerona.services.images.records import cover_of
 from aerona.services.state import SonView
@@ -94,7 +95,30 @@ def touching(node_id: int, active_only: bool) -> ColumnElement[bool]:
 
 async def bond_count(session: AsyncSession, node_id: int, active_only: bool) -> int:
     statement = select(func.count()).select_from(BondRow).where(touching(node_id, active_only))
-    return int(await session.scalar(statement) or 0)
+    return int(await session.scalar(statement) or 0) + len(await derived_bonds(session, node_id))
+
+
+def derived_view(index: int, bond: DerivedBond, node_id: int, other: NodeRef | None) -> BondView:
+    return BondView(
+        id=-(index + 1),
+        source_node_id=bond.source_node_id,
+        target_node_id=bond.target_node_id,
+        kind=bond.kind,
+        description=bond.description,
+        role=None,
+        epoch=bond.epoch,
+        state=BondState.ACTIVE,
+        closed_epoch=None,
+        closed_reason=None,
+        war_id=None,
+        debt_amount=None,
+        debt_what=None,
+        debt_due_epoch=None,
+        debt_status=None,
+        outgoing=bond.source_node_id == node_id,
+        other=other,
+        derived=True,
+    )
 
 
 async def bond_views(session: AsyncSession, node_id: int, *, offset: int, limit: int, active_only: bool = False) -> list[BondView]:
@@ -102,7 +126,9 @@ async def bond_views(session: AsyncSession, node_id: int, *, offset: int, limit:
     ordered = statement.order_by((BondRow.source_node_id != node_id), (BondRow.state != BondState.ACTIVE), BondRow.id.desc())
     bonds = list(await session.scalars(ordered.offset(offset).limit(limit)))
     others = [bond.target_node_id if bond.source_node_id == node_id else bond.source_node_id for bond in bonds]
-    refs = await node_refs(session, others)
+    derived = await derived_bonds(session, node_id) if offset == 0 else []
+    derived_others = [bond.target_node_id if bond.source_node_id == node_id else bond.source_node_id for bond in derived]
+    refs = await node_refs(session, [*others, *derived_others])
     return [
         BondView(
             **BondRecord.model_validate(bond).model_dump(),
@@ -110,7 +136,7 @@ async def bond_views(session: AsyncSession, node_id: int, *, offset: int, limit:
             other=refs.get(other),
         )
         for bond, other in zip(bonds, others, strict=True)
-    ]
+    ] + [derived_view(index, bond, node_id, refs.get(other)) for index, (bond, other) in enumerate(zip(derived, derived_others, strict=True))]
 
 
 async def chronicle_lines(session: AsyncSession, rows: Sequence[ChronicleRow]) -> list[ChronicleLineRecord]:

@@ -56,6 +56,7 @@ from aerona.engine.economy.materials import VesselRig, hull_guard, hull_wear, ri
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.dangers import harm_of
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lore.items import wayfinder
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.drives import expedition_drive
 from aerona.engine.notes import note
@@ -562,7 +563,8 @@ async def advance_journey(ctx: TickContext, scene: JourneyScene, journey: Journe
     journey.status = JourneyStatus.UNDERWAY
     if not await road_event(ctx, scene, journey, traveller, route):
         return
-    journey.epochs_left = max(0, journey.epochs_left - 1)
+    guided = await wayfinder(ctx.session, traveller.id) or await wayfinder(ctx.session, traveller.location_id)
+    journey.epochs_left = max(0, journey.epochs_left - 1 - (ctx.rules.item_powers.map_journey if guided else 0))
     if journey.epochs_left > 0 and await mount_of(ctx, traveller.id) is not None:
         journey.epochs_left = max(0, journey.epochs_left - ctx.rules.beasts.mount_travel_epochs)
     if journey.epochs_left > 0:

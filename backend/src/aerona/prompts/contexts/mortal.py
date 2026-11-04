@@ -71,6 +71,12 @@ class MortalLand(ContextItem):
     weather: str | None = None
 
 
+class HeardRumour(ContextItem):
+    age: int
+    fidelity: int
+    text: str
+
+
 class KnowledgeItem(ContextItem):
     id: int
     name: str
@@ -166,6 +172,7 @@ class MortalContextContext(RulesContext):
     stores: StoresLine | None = None
     home: HomeLine | None = None
     mentions: list[ChronicleRow] = Field(default_factory=list)
+    rumours: list[HeardRumour] = Field(default_factory=list)
     languages: str = ""
     other_worlds: str = ""
     routes: list[RouteLine] = Field(default_factory=list)

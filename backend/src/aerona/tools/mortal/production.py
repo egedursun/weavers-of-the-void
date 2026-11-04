@@ -14,6 +14,7 @@ from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.civilization import TierCapability
+from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind, MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
@@ -25,6 +26,7 @@ from aerona.domain.enums.war import WarCause
 from aerona.engine.economy.materials import armour_protection, curse_bonus, decay_loss, enchantment_cap, sanctity_splendour, set_node_material, weapon_damage
 from aerona.engine.economy.resources import ensure_profile, set_resource_yield
 from aerona.engine.environment.ley_works import ley_row
+from aerona.engine.lore import legends, traditions
 from aerona.engine.polity.laws import attach_profile, validate
 from aerona.engine.primitives.mechanics import assign_mechanics
 from aerona.engine.primitives.queries import spoken_language
@@ -256,6 +258,16 @@ def _culture_stats(call: MortalCall, kind: CultureKind) -> dict[str, int]:
     return {"spread": tools.tradition_spread, "rigidity": tools.tradition_rigidity}
 
 
+async def seed_culture(call: MortalCall, args: CultureInput, created: EntityRow) -> None:
+    if args.kind is CultureKind.LEGEND:
+        await legends.profile_of(call.tick, created, args.archetype)
+    if args.kind is CultureKind.TRADITION:
+        row = await traditions.profile_of(call.tick, created, args.tradition_kind or TraditionKind.FESTIVAL)
+        row.calendar_slot, row.taboo_act = args.calendar_slot, args.taboo_act
+        if args.taboo_target is not None:
+            row.taboo_target = args.taboo_target.value
+
+
 async def create_culture(call: MortalCall, args: CultureInput) -> str:
     tools = call.rules.mortal_tools
     await call.within_limit(TurnCounter.CULTURES_CREATED, tools.culture_per_epoch, "mortal_tools.culture_per_epoch", MortalResult.CULTURE_LIMIT)
@@ -282,6 +294,7 @@ async def create_culture(call: MortalCall, args: CultureInput) -> str:
     )
     bonds = BondRepository(call.session)
     await bonds.connect(BondDraft(call.me.id, created.id, CULTURE_BONDS[args.kind], call.epoch))
+    await seed_culture(call, args, created)
     if args.kind is CultureKind.LAW:
         await attach_profile(call.session, created, law_kind, args.law_params, holder=home, epoch=call.epoch, by_id=call.me.id)
     patron = await bonds.patron(call.me.id)

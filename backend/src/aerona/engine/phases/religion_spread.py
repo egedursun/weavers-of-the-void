@@ -17,6 +17,7 @@ from aerona.db.tables.routes import JourneyRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.culture import LanguageRegister
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import PressureKind
@@ -30,7 +31,8 @@ from aerona.engine.economy.routes import link_partners
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.faith.zealotry import drifted, record_heresy
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.lore.language import barrier, intelligibility, interpreter, tongues_of
+from aerona.engine.lore.language import intelligibility, interpreter, register_barrier, tongues_of
+from aerona.engine.lore.traditions import absorb_festivals
 from aerona.engine.mind.book import ValueIndex
 from aerona.engine.mind.drives import zeal_drive
 from aerona.engine.mind.hooks import converted
@@ -375,7 +377,7 @@ async def journey_missions(ctx: TickContext, book: FaithBook, atlas: RegionAtlas
 async def preaching_barrier(ctx: TickContext, converter_id: int, community_id: int) -> float:
     doctrine = await ctx.session.get(CultDoctrineRow, converter_id)
     if doctrine is None or doctrine.liturgical_language_id is None:
-        return await barrier(ctx.session, ctx.rules, converter_id, community_id, ctx.epoch)
+        return await register_barrier(ctx.session, ctx.rules, converter_id, community_id, ctx.epoch, ours=LanguageRegister.LITURGICAL)
     theirs = await tongues_of(ctx.session, community_id)
     liturgy = doctrine.liturgical_language_id
     if not theirs or liturgy in theirs:
@@ -457,6 +459,7 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.journeys",
+    "table.language_registers",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.memories",
@@ -544,6 +547,14 @@ async def religion_spread(ctx: TickContext) -> None:
         await _announce(ctx, community, faith, old, chosen, syncretic=syncretic)
         if chosen.converter_id is not None:
             await converted(ctx, community.id, chosen.converter_id, note=chosen.reason)
+            for festival in await absorb_festivals(ctx, community, chosen.converter_id):
+                ctx.count("festivals_absorbed")
+                await note(
+                    ctx,
+                    f"{community.name} kept {festival.name} even under the new faith, and the converters took the festival as their own.",
+                    key="lore.festival_absorbed",
+                    ids=[community.id, festival.id, chosen.converter_id],
+                )
     ctx.count("conversions", conversions)
     ctx.count("syncretisms", syncretisms)
 

@@ -377,6 +377,7 @@ async def house_cycles(ctx: TickContext) -> None:
     "table.foreign_gods",
     "table.holder_levels",
     "table.language_intelligibility",
+    "table.language_registers",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.memories",

@@ -97,6 +97,7 @@ from aerona.rules.registry.image_gen import ImageGenRules
 from aerona.rules.registry.incitement import IncitementRules
 from aerona.rules.registry.intervention_costs import InterventionCostsRules
 from aerona.rules.registry.intervention_effects import InterventionEffectsRules
+from aerona.rules.registry.items import EnchantmentsRules, ItemPowersRules
 from aerona.rules.registry.knowledge import KnowledgeRules
 from aerona.rules.registry.language import LanguageRules
 from aerona.rules.registry.language_contact import LanguageContactRules
@@ -197,6 +198,7 @@ from aerona.rules.registry.religion import ReligionRules
 from aerona.rules.registry.remembrance import RemembranceRules
 from aerona.rules.registry.reputation import ReputationRules
 from aerona.rules.registry.routes import ChokepointsRules, RouteDangersRules, RouteSeasonsRules, SentientPactsRules, SonRoutesRules
+from aerona.rules.registry.rumours import RumoursRules
 from aerona.rules.registry.seasonal import SeasonalRules
 from aerona.rules.registry.server import ServerRules
 from aerona.rules.registry.settlement import CrimeRules, DistrictRules, FireRules, SanitationRules, TaxationRules, UrbanRules
@@ -412,6 +414,9 @@ class Rules:
     item_renown: ItemRenownRules = field(default_factory=ItemRenownRules)
     regalia: RegaliaRules = field(default_factory=RegaliaRules)
     relics: RelicsRules = field(default_factory=RelicsRules)
+    rumours: RumoursRules = field(default_factory=RumoursRules)
+    item_powers: ItemPowersRules = field(default_factory=ItemPowersRules)
+    enchantments: EnchantmentsRules = field(default_factory=EnchantmentsRules)
     art: ArtRules = field(default_factory=ArtRules)
     propaganda: PropagandaRules = field(default_factory=PropagandaRules)
     doctrine: DoctrineRules = field(default_factory=DoctrineRules)

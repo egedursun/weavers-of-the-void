@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.materials import ALLOYS, MATERIALS, MaterialSpec
 from aerona.constants.units import PERCENT
+from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.economy import PROPERTY_COLUMNS, NodeMaterialRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.economy import FoeNature, MaterialFamily, MaterialOrigin, MaterialSlot
@@ -237,6 +238,9 @@ async def node_material(session: AsyncSession, node_id: int, slot: MaterialSlot 
     return await session.get(NodeMaterialRow, (node_id, slot))
 
 
+WORLD_KEY_PREFIX = "world:"
+
+
 async def set_node_material(
     session: AsyncSession,
     node_id: int,
@@ -249,6 +253,8 @@ async def set_node_material(
     row = await session.get(NodeMaterialRow, (node_id, slot))
     if row is not None and row.held and not force:
         return
+    if slot is MaterialSlot.BODY:
+        await sync_item_material(session, node_id, material, world_material_id)
     if material is None and world_material_id is None:
         if row is not None:
             await session.delete(row)
@@ -259,6 +265,18 @@ async def set_node_material(
         row.material = material if world_material_id is None else None
         row.world_material_id = world_material_id
     await session.flush()
+
+
+def slot_key(material: MaterialKind | None, world_material_id: int | None) -> str | None:
+    if world_material_id is not None:
+        return f"{WORLD_KEY_PREFIX}{world_material_id}"
+    return material.value if material is not None else None
+
+
+async def sync_item_material(session: AsyncSession, node_id: int, material: MaterialKind | None, world_material_id: int | None) -> None:
+    item = await session.get(ItemProfileRow, node_id)
+    if item is not None:
+        item.material = slot_key(material, world_material_id)
 
 
 @dataclass(frozen=True)

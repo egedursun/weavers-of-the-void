@@ -153,9 +153,11 @@ def presence_pct(
 ) -> int:
     table = rules.body_customs
     reading = custom.reading if custom is not None else BodyReading.NEUTRAL
-    lost = sum(1 for row in injuries if missing(row))
-    marks = [row for row in injuries if scarred(row)]
-    shift = 0
+    rite = [row for row in injuries if row.cause_kind is HarmCause.RITUAL and scarred(row)]
+    ordinary = [row for row in injuries if row.cause_kind is not HarmCause.RITUAL]
+    lost = sum(1 for row in ordinary if missing(row))
+    marks = [row for row in ordinary if scarred(row)]
+    shift = min(rules.traditions.ritual_presence_cap, len(rite) * rules.traditions.ritual_presence_pct)
     if reading is BodyReading.MARTIAL_HONOUR:
         honoured = sum(1 for row in marks if row.cause_kind in HONOURED_CAUSES)
         shameful = sum(1 for row in marks if row.cause_kind in SHAMEFUL_CAUSES)

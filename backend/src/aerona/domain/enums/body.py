@@ -120,6 +120,7 @@ class HarmCause(StrEnum):
     AGE = "age"
     PLAYER = "player"
     EXPOSURE = "exposure"
+    RITUAL = "ritual"
 
 
 class ConditionKind(StrEnum):

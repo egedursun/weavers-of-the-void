@@ -2,6 +2,7 @@ from sqlalchemy import delete, or_, select
 
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
+from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
@@ -89,6 +90,9 @@ async def wanted(ctx: TickContext, war: WarRow, attacker: EntityRow, defender: E
         kinds.append(A.DESTROY_CULT)
     if defender.entity_type is EntityType.SETTLEMENT:
         kinds.append(A.SEIZE_SETTLEMENT)
+    symbols = select(ItemProfileRow.item_entity_id).where(ItemProfileRow.regalia_of_entity_id == defender.id, ItemProfileRow.symbol.is_(True))
+    if await ctx.session.scalar(symbols.limit(1)) is not None:
+        kinds.append(A.HUMILIATE)
     kinds.extend(CAUSE_AIMS.get(war.cause, CAUSE_AIMS[WarCause.HOSTILITY]))
     return list(dict.fromkeys(kinds))
 

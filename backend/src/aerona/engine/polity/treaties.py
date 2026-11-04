@@ -22,6 +22,7 @@ from aerona.domain.enums.war import TributeStatus, WarCause, WarSide, WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.mortal.kinship import marry
+from aerona.engine.notes import note
 from aerona.engine.polity.accords import (
     DEFAULT_CLAUSES,
     Clause,
@@ -245,7 +246,32 @@ async def keep_clauses(ctx: TickContext, book: RealmBook) -> dict[str, int]:
     return counts
 
 
+async def misread_breach(ctx: TickContext, profile: TreatyProfileRow, clause: TreatyClauseRow) -> bool:
+    if not clause.params.get("misread") or clause.obligor_node_id is None or clause.beneficiary_node_id is None:
+        return False
+    seed = f"misread_breach.{profile.treaty_entity_id}.{clause.id}.{ctx.epoch}"
+    if not ctx.rng(seed).chance(ctx.rules.interpreters.misread_breach_chance):
+        return False
+    obligor = await living_entity(ctx.session, clause.obligor_node_id)
+    beneficiary = await living_entity(ctx.session, clause.beneficiary_node_id)
+    if obligor is None or beneficiary is None:
+        return False
+    label = clause.kind.value.replace("_", " ")
+    await note(
+        ctx,
+        f"Neither court read the other's tongue: {obligor.name} kept the clause of {label} as something less than {beneficiary.name} meant, "
+        "and the misreading was counted a breach.",
+        key="treaty.misread_breach",
+        ids=[obligor.id, beneficiary.id],
+    )
+    ctx.count("treaty_clause_misread_breach")
+    await breach(ctx, profile, obligor.id, clause=clause, reason="it kept the clause only as its own tongue had read it")
+    return True
+
+
 async def keep_clause(ctx: TickContext, profile: TreatyProfileRow, clause: TreatyClauseRow, strength: MilitaryStrength) -> bool:
+    if await misread_breach(ctx, profile, clause):
+        return False
     if clause.kind is ClauseKind.TRIBUTE:
         return await pay_tribute(ctx, profile, clause)
     if clause.kind is ClauseKind.HOSTAGE:

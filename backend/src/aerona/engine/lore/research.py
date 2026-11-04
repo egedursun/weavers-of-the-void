@@ -1,15 +1,15 @@
 from collections import defaultdict
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.structures import RESEARCH_HOUSES
-from aerona.catalog.techniques import BRANCH_GRAPH, TECHNIQUES, Gate
+from aerona.catalog.techniques import BRANCH_GRAPH, BRANCH_SKILLS, TECHNIQUES, Gate
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.culture import BookContentRow, HolderLevelRow, HolderTechniqueRow, ItemProfileRow
+from aerona.db.tables.culture import BookContentRow, HolderLevelRow, HolderTechniqueRow, ItemProfileRow, ResearchProgressRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
@@ -21,9 +21,10 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
+from aerona.engine.lore.kinds import custom_bases
 from aerona.engine.primitives.knowledge import raw_level
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import headcount
+from aerona.engine.primitives.stats import headcount, set_stats, stat
 from aerona.engine.structures.readers import working
 from aerona.rules.registry import Rules
 
@@ -47,13 +48,16 @@ def gate_open(gate: Gate, levels: dict[KnowledgeBranch, int]) -> bool:
 
 
 async def techniques_of(session: AsyncSession, holder_id: int) -> set[Technique]:
-    return set(await session.scalars(select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == holder_id)))
+    held = set(await session.scalars(select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == holder_id)))
+    return held | await custom_bases(session, holder_id)
 
 
 async def has_technique(session: AsyncSession, holder_id: int | None, technique: Technique) -> bool:
     if holder_id is None:
         return False
-    return await session.get(HolderTechniqueRow, (holder_id, technique)) is not None
+    if await session.get(HolderTechniqueRow, (holder_id, technique)) is not None:
+        return True
+    return technique in await custom_bases(session, holder_id)
 
 
 async def known_bonds(session: AsyncSession) -> list[tuple[int, int, KnowledgeBranch, int, int]]:
@@ -156,11 +160,13 @@ async def scholar_levels(session: AsyncSession, community_id: int) -> list[float
     return [level * bodies.get(holder, PERCENT) / PERCENT for holder, level in best.items()]
 
 
-async def masters(session: AsyncSession, rules: Rules, community_id: int) -> bool:
+async def masters(session: AsyncSession, rules: Rules, community_id: int, branch: KnowledgeBranch | None = None) -> bool:
     mortals = select(EntityRow.id).where(
         EntityRow.location_id == community_id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
     )
     skilled = select(SkillRow.holder_node_id).where(SkillRow.holder_node_id.in_(mortals), SkillRow.level >= rules.research.master_skill)
+    if branch is not None:
+        skilled = skilled.where(SkillRow.skill.in_(list(BRANCH_SKILLS.get(branch, ()))))
     holders = set(await session.scalars(skilled))
     if not holders:
         return False
@@ -184,7 +190,7 @@ async def practise(ctx: TickContext) -> dict[str, int]:
         if not dying or "level" in row.locked:
             continue
         knowledge = knowledge_by.get((row.holder_entity_id, row.branch))
-        if (knowledge is not None and knowledge in await books_of(ctx.session, holder.id)) or await masters(ctx.session, ctx.rules, holder.id):
+        if (knowledge is not None and knowledge in await books_of(ctx.session, holder.id)) or await masters(ctx.session, ctx.rules, holder.id, row.branch):
             continue
         if not ctx.rng(f"loss.{holder.id}.{row.branch.value}.{ctx.epoch}").chance(table.loss_chance):
             continue
@@ -208,6 +214,19 @@ async def forget(ctx: TickContext, holder_id: int, knowledge_id: int) -> None:
         await repository.deactivate(bond, ctx.epoch, "the last masters died")
 
 
+async def advanced(ctx: TickContext, holder_id: int, technique: Technique) -> bool:
+    row = await ctx.session.get(ResearchProgressRow, (holder_id, technique))
+    if row is None:
+        row = ResearchProgressRow(holder_entity_id=holder_id, technique=technique, progress=0, updated_epoch=ctx.epoch)
+        ctx.session.add(row)
+    row.progress = clamp_int(row.progress + ctx.rules.tech_graph.adopt_chance, 0, PERCENT)
+    row.updated_epoch = ctx.epoch
+    if row.progress < PERCENT:
+        return False
+    await ctx.session.delete(row)
+    return True
+
+
 async def adopt_techniques(ctx: TickContext) -> int:
     table = ctx.rules.tech_graph
     levels = await holder_levels(ctx.session)
@@ -225,7 +244,7 @@ async def adopt_techniques(ctx: TickContext) -> int:
             if not gate_open(BRANCH_GRAPH[spec.branch], levels[holder_id]) and spec.level > 1:
                 continue
             rng = ctx.rng(f"technique.{holder_id}.{technique.value}.{ctx.epoch}")
-            if not rng.chance(table.adopt_chance):
+            if not await advanced(ctx, holder_id, technique):
                 continue
             secret = holder.entity_type in ORDERS and rng.chance(table.secret_pct)
             ctx.session.add(HolderTechniqueRow(holder_entity_id=holder_id, technique=technique, since_epoch=ctx.epoch, secret=secret))
@@ -244,11 +263,15 @@ async def diffuse_techniques(ctx: TickContext) -> int:
     )
     for first, second in links.all():
         for giver, taker in ((first, second), (second, first)):
+            hidden = set(
+                await ctx.session.scalars(select(HolderLevelRow.branch).where(HolderLevelRow.holder_entity_id == giver, HolderLevelRow.secret.is_(True)))
+            )
             theirs = {
                 row.technique
                 for row in await ctx.session.scalars(
                     select(HolderTechniqueRow).where(HolderTechniqueRow.holder_entity_id == giver, HolderTechniqueRow.secret.is_(False))
                 )
+                if TECHNIQUES[row.technique].branch not in hidden
             }
             mine = await techniques_of(ctx.session, taker)
             for technique in sorted(theirs - mine):
@@ -269,7 +292,78 @@ async def steal_technique(ctx: TickContext, thief_id: int, victim_id: int) -> Te
         if ctx.rng(f"steal_technique.{thief_id}.{technique.value}.{ctx.epoch}").chance(ctx.rules.tech_graph.steal_chance):
             ctx.session.add(HolderTechniqueRow(holder_entity_id=thief_id, technique=technique, since_epoch=ctx.epoch, secret=True))
             return technique
+    await steal_level(ctx, thief_id, victim_id)
     return None
+
+
+async def steal_level(ctx: TickContext, thief_id: int, victim_id: int) -> KnowledgeBranch | None:
+    hidden = await ctx.session.scalars(
+        select(HolderLevelRow).where(HolderLevelRow.holder_entity_id == victim_id, HolderLevelRow.secret.is_(True)).order_by(HolderLevelRow.branch)
+    )
+    for victim in hidden:
+        mine = await ctx.session.get(HolderLevelRow, (thief_id, victim.branch))
+        if mine is None or mine.level >= victim.level or "level" in mine.locked:
+            continue
+        if ctx.rng(f"steal_level.{thief_id}.{victim.branch.value}.{ctx.epoch}").chance(ctx.rules.tech_graph.steal_chance):
+            mine.level += 1
+            return victim.branch
+    return None
+
+
+async def read_books(ctx: TickContext) -> int:
+    table = ctx.rules.research
+    taught = 0
+    for book, knowledge, fidelity in (
+        await ctx.session.execute(select(BookContentRow.book_entity_id, BookContentRow.knowledge_entity_id, BookContentRow.fidelity))
+    ).all():
+        owner = await ctx.session.scalar(
+            select(BondRow.source_node_id).where(BondRow.target_node_id == book, BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE).limit(1)
+        )
+        record = await ctx.session.get(EntityRow, knowledge)
+        reader = await ctx.session.get(EntityRow, owner) if owner is not None else None
+        if reader is None or record is None or record.knowledge_branch is None:
+            continue
+        holder = reader.location_id if reader.entity_type is EntityType.MORTAL else reader.id
+        row = await ctx.session.get(HolderLevelRow, (holder, record.knowledge_branch)) if holder is not None else None
+        if row is None or "progress" in row.locked or row.level >= raw_level(record.stats):
+            continue
+        paper = ctx.rules.technique_effects.paper_pct if await has_technique(ctx.session, holder, Technique.PAPER) else 0
+        row.progress = clamp_int(row.progress + round_half_up(table.book_progress * fidelity / PERCENT * (1 + paper / PERCENT)), 0, PERCENT)
+        taught += 1
+    return taught
+
+
+async def spread_of(ctx: TickContext) -> int:
+    measured = 0
+    for knowledge in list(
+        await ctx.session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.KNOWLEDGE, EntityRow.status == EntityStatus.CANON))
+    ):
+        communities = await ctx.session.scalar(
+            select(func.count(EntityRow.id)).where(
+                EntityRow.world_id == knowledge.world_id,
+                EntityRow.status == EntityStatus.CANON,
+                EntityRow.entity_type.in_([EntityType.PEOPLE, EntityType.SETTLEMENT]),
+            )
+        )
+        holders = await ctx.session.scalar(
+            select(func.count(func.distinct(HolderLevelRow.holder_entity_id))).where(
+                HolderLevelRow.branch == knowledge.knowledge_branch,
+                HolderLevelRow.level >= 1,
+                HolderLevelRow.holder_entity_id.in_(select(EntityRow.id).where(EntityRow.world_id == knowledge.world_id)),
+            )
+        )
+        if communities:
+            set_stats(knowledge, spread=clamp_int(round_half_up(int(holders or 0) * PERCENT / int(communities)), 0, PERCENT))
+            measured += 1
+    return measured
+
+
+async def mean_spread(session: AsyncSession) -> float:
+    values = [
+        raw for raw in await session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.KNOWLEDGE, EntityRow.status == EntityStatus.CANON))
+    ]
+    spreads = [stat(item, "spread") or 0 for item in values]
+    return sum(spreads) / len(spreads) if spreads else 0.0
 
 
 async def fill_books(ctx: TickContext) -> int:

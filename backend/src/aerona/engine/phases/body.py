@@ -390,15 +390,11 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
 
 
 @reads(
-    "mortal.endurance",
-    "table.mortal_equipment",
-    "table.region_environment",
-    "table.war_sides",
-    "table.wars",
     "item.protection",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
+    "mortal.endurance",
     "mortal.hp",
     "mortal.intellect",
     "mortal.lifespan",
@@ -417,9 +413,13 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
     "table.injuries",
     "table.item_profiles",
     "table.minds",
+    "table.mortal_equipment",
     "table.nodes",
     "table.prostheses",
+    "table.region_environment",
     "table.traits",
+    "table.war_sides",
+    "table.wars",
     "table.world_maps",
 )
 @writes(

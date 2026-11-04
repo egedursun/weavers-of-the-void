@@ -3,6 +3,7 @@ from types import MappingProxyType
 
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.military import UnitKind
+from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch
 
 B = KnowledgeBranch
@@ -120,5 +121,25 @@ UNIT_TECHNIQUES = MappingProxyType(
         UnitKind.GOLEMS: T.ALCHEMY,
         UnitKind.CROSSBOWMEN: T.IRON,
         UnitKind.HEAVY_CAVALRY: T.IRON,
+    }
+)
+
+
+BRANCH_SKILLS: MappingProxyType[KnowledgeBranch, tuple[SkillKind, ...]] = MappingProxyType(
+    {
+        KnowledgeBranch.AGRICULTURE: (SkillKind.FORAGING, SkillKind.BEAST_HANDLING),
+        KnowledgeBranch.METALLURGY: (SkillKind.SMITHING, SkillKind.JEWELLING),
+        KnowledgeBranch.SEAFARING: (SkillKind.SAILING, SkillKind.NAVIGATION),
+        KnowledgeBranch.WRITING: (SkillKind.WRITING, SkillKind.LANGUAGES),
+        KnowledgeBranch.ARCHITECTURE: (SkillKind.MASONRY, SkillKind.ENGINEERING),
+        KnowledgeBranch.MEDICINE: (SkillKind.MEDICINE, SkillKind.SURGERY),
+        KnowledgeBranch.MAGIC: (SkillKind.SPELLCRAFT, SkillKind.RITUAL),
+        KnowledgeBranch.WARFARE: (SkillKind.TACTICS, SkillKind.STRATEGY),
+        KnowledgeBranch.ASTRONOMY: (SkillKind.ASTRONOMY,),
+        KnowledgeBranch.TRADE: (SkillKind.NEGOTIATION, SkillKind.ACCOUNTING),
+        KnowledgeBranch.SKY_NAVIGATION: (SkillKind.NAVIGATION, SkillKind.ASTRONOMY),
+        KnowledgeBranch.SHIPBUILDING: (SkillKind.SHIPWRIGHT, SkillKind.CARPENTRY),
+        KnowledgeBranch.GATE_LORE: (SkillKind.LORE, SkillKind.SPELLCRAFT),
+        KnowledgeBranch.PATHFINDING: (SkillKind.TRACKING, SkillKind.NAVIGATION),
     }
 )

@@ -35,6 +35,8 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
         "arms_and_wear",
         "unit_designs",
     ): "none: designs are drawn up by the player, gods or a realm's muster from the next epoch; earlier armies fought with the catalog's units",
+    ("tradition_keeping", "tradition_participation"): "tradition_cycles: every community that celebrates a tradition takes its participation row",
+    ("tradition_keeping", "tradition_effects"): "tradition_cycles: every tradition seeds its typed effects from its kind or its own kind",
 }
 
 

@@ -547,6 +547,9 @@ ACT_READINGS: MappingProxyType[ActKind, MappingProxyType[ValueAxis, int]] = Mapp
             A.OATHBREAKING: {V.HONOUR: -55, V.PIETY: -20},
             A.LEARNING: {V.KNOWLEDGE: 50, V.TRADITION: -15},
             A.HOSPITALITY: {V.XENOPHILIA: 35, V.KINSHIP: 20, V.MERCY: 15},
+            A.WINTER_FIGHTING: {V.MARTIAL: 30, V.TRADITION: -35, V.MERCY: -15},
+            A.GUEST_KILLING: {V.HONOUR: -60, V.XENOPHILIA: -30, V.KINSHIP: -20, V.PIETY: -20},
+            A.RITUAL_SCARRING: {V.TRADITION: 45, V.PIETY: 25, V.MARTIAL: 15, V.PURITY: -20},
         }.items()
     }
 )

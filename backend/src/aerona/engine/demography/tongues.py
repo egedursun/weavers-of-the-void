@@ -1,18 +1,15 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
-from aerona.db.tables.demography import PeopleCultureRow
-from aerona.db.tables.entities import EntityRow
-from aerona.engine.body.customs import people_of
-from aerona.engine.lore.language import barrier, tongues_of
+from aerona.db.tables.culture import LanguageRegisterRow
+from aerona.domain.enums.culture import LanguageRegister
+from aerona.engine.lore.language import chosen_trade_tongue, register_barrier, tongues_of
 from aerona.rules.registry import Rules
 
 
 async def trade_tongue(session: AsyncSession, community_id: int) -> int | None:
-    entity = await session.get(EntityRow, community_id)
-    people = await people_of(session, entity) if entity is not None else None
-    culture = await session.get(PeopleCultureRow, people.id) if people is not None else None
-    return culture.trade_language_id if culture is not None else None
+    row = await session.get(LanguageRegisterRow, (community_id, LanguageRegister.TRADE))
+    return row.language_entity_id if row is not None else await chosen_trade_tongue(session, community_id)
 
 
 def shares_tongue(first_trade: int | None, second_trade: int | None, first_tongues: set[int], second_tongues: set[int]) -> bool:
@@ -31,7 +28,7 @@ async def shared_trade_tongue(session: AsyncSession, first: int, second: int) ->
 async def trade_barrier(session: AsyncSession, rules: Rules, first: int, second: int, epoch: int) -> float:
     if await shared_trade_tongue(session, first, second):
         return rules.customs.trade_tongue_pct / PERCENT
-    return await barrier(session, rules, first, second, epoch)
+    return await register_barrier(session, rules, first, second, epoch, ours=LanguageRegister.TRADE, theirs=LanguageRegister.TRADE)
 
 
 async def tongue_link(session: AsyncSession, rules: Rules, first: int, second: int) -> float:

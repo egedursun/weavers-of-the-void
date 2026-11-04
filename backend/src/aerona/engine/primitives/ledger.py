@@ -32,6 +32,7 @@ class DoomItem(StrEnum):
     GOLDEN_AGE = "golden age"
     WORLD_AGE = "age turning and world age"
     CREATOR_CULT = "creator's cult"
+    ENLIGHTENMENT = "spread of learning"
     SPEED = "apocalypse speed (world rules)"
     RESET = "post-apocalypse reset"
 

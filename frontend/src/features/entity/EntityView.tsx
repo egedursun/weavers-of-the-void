@@ -42,6 +42,7 @@ import { LandShapeSection } from './happenings/LandShape'
 import { LearningSection } from './lore/LearningSection'
 import { LoreSection } from './lore/LoreSection'
 import { isLoreKind } from './lore/model'
+import { RumoursSection } from './lore/rumours/RumoursSection'
 import {
   EquipmentSection,
   KinSection,
@@ -474,6 +475,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       )}
       {isCommunity(ctx.type) && (
         <LearningSection holderId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {(isCommunity(ctx.type) || entity.entity_type === 'polity') && (
+        <RumoursSection communityId={entity.id} readOnlyReason={readOnly} />
       )}
       {entity.entity_type === 'species' && (
         <SpeciesSection speciesId={entity.id} readOnlyReason={readOnly} />

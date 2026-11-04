@@ -92,6 +92,10 @@ class SonToolId(StrEnum):
     OPEN_TRADE_ROUTE = "open_trade_route"
     CLOSE_TRADE_ROUTE = "close_trade_route"
     COMMISSION_STRUCTURE = "commission_structure"
+    COMMISSION_ARTWORK = "commission_artwork"
+    DESIGN_RITE = "design_rite"
+    CAST_RITE = "cast_rite"
+    FOUND_SCHOOL = "found_school"
     BIND_MORTALS = "bind_mortals"
     TOUCH_MORTAL = "touch_mortal"
     REVEAL_TENET = "reveal_tenet"
@@ -149,6 +153,10 @@ class MortalToolId(StrEnum):
     LEND = "lend"
     REPAY_DEBT = "repay_debt"
     ADOPT = "adopt"
+    COMMISSION_ARTWORK = "commission_artwork"
+    DESIGN_RITE = "design_rite"
+    CAST_RITE = "cast_rite"
+    FOUND_SCHOOL = "found_school"
 
 
 ToolId = SonToolId | MortalToolId

@@ -16,6 +16,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.lore.taboos import forbidden
 from aerona.engine.military.captivity import announce, cohort_fates, ransom_lawful, rich, wring_intel
 from aerona.engine.military.ransom import grow_ward, marry_captive, named_ransom, pay_from_treasury, release_by_opinion, ward_returns
 from aerona.engine.mind.book import stored_values, values_for, write_values
@@ -164,7 +165,7 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
         return
     cruelty = await cruelty_drive(ctx.session, ctx.rules, captor.id)
     hated = home is not None and await relation(ctx.session, ctx.rules, home.id, captor.id) <= -campaigns.execution_relation
-    if home is not None and hated and rng.chance(campaigns.execution_chance * cruelty):
+    if home is not None and hated and rng.chance(campaigns.execution_chance * cruelty) and not await forbidden(ctx, captor.id, ActKind.EXECUTION):
         await execute(ctx, row, captive, captor, home)
         return
     if home is not None and rng.chance(ctx.rules.captivity.torture_chance * cruelty):

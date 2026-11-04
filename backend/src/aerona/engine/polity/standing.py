@@ -26,6 +26,7 @@ from aerona.domain.enums.war import WarCause, WarStatus
 from aerona.engine.body.customs import customs_of, maimed_for_rule, presence_pct
 from aerona.engine.context import TickContext
 from aerona.engine.lore.items import regalia_holder
+from aerona.engine.lore.legends import foretold_return
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.memories import strength_of
 from aerona.engine.notes import note
@@ -115,7 +116,7 @@ async def claim_to_rule(ctx: TickContext, realm: Realm, ruler: EntityRow) -> dic
             kind=ChronicleKind.CIVILIZATION,
         )
     if "usurper" in realm.profile.legitimacy_parts:
-        return {"usurper": -table.usurper}
+        return {"usurper": -table.usurper, **await foretold_return(ctx, ruler)}
     return {"rightful heir": table.rightful}
 
 

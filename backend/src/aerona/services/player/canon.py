@@ -23,7 +23,7 @@ from aerona.db.tables.epochs import EpochRow
 from aerona.db.tables.lore import CanonFactRow, FolkBeliefRow, LexemeRow, ThreadRow
 from aerona.db.tables.meta import ImageRow, MapNoteRow
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.bond import DERIVED_BOND_KINDS, BondKind, BondState
 from aerona.domain.enums.chronicle import ThreadStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.node import NodeKind
@@ -367,6 +367,8 @@ async def _bond_end(scope: PlayerScope, node_id: int) -> str:
 async def add_bond(scope: PlayerScope, command: AddBond) -> Effect:
     if command.kind is BondKind.INSIDE:
         raise ValidationFailedError(f'Invalid bond type: {command.kind.value}. "Inside" is location; it changes by moving.')
+    if command.kind in DERIVED_BOND_KINDS:
+        raise ValidationFailedError(f"{command.kind.value.replace('_', ' ').capitalize()} comes from the record itself; set it on the legend, creed or rite.")
     if command.source_id == command.target_id:
         raise ValidationFailedError("A thing cannot be bonded to itself.")
     first = await _bond_end(scope, command.source_id)

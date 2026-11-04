@@ -30,7 +30,7 @@ from aerona.engine.factions.book import new_profile
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.faith.doctrine import found_doctrine
 from aerona.engine.gods.queries import worshippers_of
-from aerona.engine.lore.traditions import profile_of as tradition_profile
+from aerona.engine.lore import art, items, legends, prophecy, traditions
 from aerona.engine.military.shipyard import Commission, commission
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.polity.laws import attach_profile
@@ -225,6 +225,45 @@ async def raise_divine_structure(call: SonCall, args: CreationInput, created: En
     return lines.STRUCTURE_RAISED.format(kind=kind.value.replace("_", " "), effect=profile.effect_pct)
 
 
+async def seed_lore_kinds(call: SonCall, args: CreationInput, created: EntityRow) -> None:
+    if created.entity_type is EntityType.LEGEND:
+        await legends.profile_of(call.tick, created, args.option("archetype"))
+    if created.entity_type is EntityType.TRADITION:
+        row = await traditions.profile_of(call.tick, created, args.option("tradition_kind") or TraditionKind.FESTIVAL)
+        row.calendar_slot = args.option("calendar_slot")
+        taboo_target, taboo_act = args.option("taboo_target"), args.option("taboo_act")
+        if taboo_target is not None:
+            row.taboo_target = taboo_target.value
+        row.taboo_act = taboo_act
+
+
+async def seed_made_kinds(call: SonCall, args: CreationInput, created: EntityRow) -> None:
+    if created.entity_type is EntityType.ITEM:
+        row = await items.profile_of(call.tick, created, args.option("item_class"))
+        row.secondary_materials = [item.value for item in args.option("secondary_materials") or []]
+    if created.entity_type is EntityType.ARTWORK:
+        work = await art.profile_of(call.tick, created, args.option("medium"))
+        subject = args.option("subject_id")
+        if subject is not None and await call.session.get(EntityRow, subject) is not None:
+            work.subject_node_id = subject
+    if created.entity_type is EntityType.PROPHECY:
+        await prophecy.typed_condition(
+            call.tick,
+            created,
+            prophecy.Foretelling(
+                predicate=args.option("predicate"),
+                subject_id=args.option("subject_id"),
+                second_id=args.option("second_id"),
+                archetype=args.option("archetype"),
+                sky_kind=args.option("sky_kind"),
+                event_kind=args.option("event_kind"),
+                within_epochs=args.option("within_epochs"),
+                consequence=args.option("consequence"),
+                consequence_id=args.option("consequence_id"),
+            ),
+        )
+
+
 async def teach_cult(call: SonCall, args: CreationInput, created: EntityRow) -> list[str]:
     await call.session.flush()
     church = (await FaithBook.load(call.session)).churches.get(created.id)
@@ -243,8 +282,11 @@ async def teach_cult(call: SonCall, args: CreationInput, created: EntityRow) -> 
 
 
 async def keep_rite(call: SonCall, created: EntityRow, rite: FuneralRite) -> None:
-    profile = await tradition_profile(call.tick, created)
+    profile = await traditions.profile_of(call.tick, created, TraditionKind.FUNERAL_RITE)
+    reseed = profile.kind is not TraditionKind.FUNERAL_RITE
     profile.kind, profile.funeral_rite = TraditionKind.FUNERAL_RITE, rite
+    if reseed:
+        await traditions.seed_effects(call.tick, profile, replace=True)
     profile.locked = [*profile.locked, "funeral_rite"] if "funeral_rite" not in profile.locked else profile.locked
 
 
@@ -268,6 +310,8 @@ async def polity_extras(call: SonCall, args: CreationInput, created: EntityRow) 
 
 async def finish_extras(call: SonCall, args: CreationInput, created: EntityRow) -> list[str]:
     notes: list[str] = []
+    await seed_lore_kinds(call, args, created)
+    await seed_made_kinds(call, args, created)
     if created.entity_type is EntityType.VESSEL:
         route = await _vessel_route(call, args, created)
         if route is not None:

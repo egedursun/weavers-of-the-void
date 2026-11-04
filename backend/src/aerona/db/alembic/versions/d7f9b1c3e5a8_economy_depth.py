@@ -78,8 +78,6 @@ def upgrade() -> None:
     for table in HELD_TABLES:
         with op.batch_alter_table(table, schema=None) as batch_op:
             batch_op.add_column(sa.Column("held", sa.Boolean(), nullable=False, server_default=sa.false()))
-    with op.batch_alter_table("item_profiles", schema=None) as batch_op:
-        batch_op.drop_column("material")
     op.create_table(
         "workshop_designs",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -125,8 +123,6 @@ def downgrade() -> None:
         batch_op.drop_constraint(batch_op.f("fk_workshops_design_id_workshop_designs"), type_="foreignkey")
         batch_op.drop_column("design_id")
     op.drop_table("workshop_designs")
-    with op.batch_alter_table("item_profiles", schema=None) as batch_op:
-        batch_op.add_column(sa.Column("material", sa.String(length=120), nullable=True))
     for table in HELD_TABLES:
         with op.batch_alter_table(table, schema=None) as batch_op:
             batch_op.drop_column("held")

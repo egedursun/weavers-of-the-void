@@ -16,6 +16,7 @@ from aerona.domain.enums.war import SiegeStatus, WarEnding, WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.faith.church import holy_peace
 from aerona.engine.gods.incitement import answer_incitement
+from aerona.engine.lore.taboos import forbidden
 from aerona.engine.military.aims import peace_terms, unsigned_ending, white_peace
 from aerona.engine.military.captivity import exchange_at_peace
 from aerona.engine.military.peace import PeaceTerm
@@ -156,6 +157,8 @@ async def _conquer(ctx: TickContext, war: WarRow, victor: EntityRow, loser: Enti
 
 async def burn_books(ctx: TickContext, victor: EntityRow, loser: EntityRow) -> list[str]:
     if value_reading(await values_for(ctx.session, victor.id), ActKind.BURNING_BOOKS) < ctx.rules.campaigns.book_burning_reading:
+        return []
+    if await forbidden(ctx, victor.id, ActKind.BURNING_BOOKS):
         return []
     keeps = await ctx.session.scalars(
         select(EntityRow)

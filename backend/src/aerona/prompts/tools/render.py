@@ -9,6 +9,7 @@ from aerona.catalog.structures import STRUCTURES
 from aerona.catalog.tenets import TENET_EFFECTS
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.culture import ArtMedium, IdeologyTenet, MagicSchool, MagicSource, ProphecyConsequence, ProphecyPredicate, RiteEffectKind
 from aerona.domain.enums.ecology import BeastTemper, Diet, SizeClass, Sociality, YieldProduct
 from aerona.domain.enums.economy import CommodityKind, MaterialFamily
 from aerona.domain.enums.entity import LIVING_CREATION_TYPES, EntityType, LegendCategory
@@ -80,6 +81,13 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "materials": [material.value for material in MaterialKind],
         "material_families": [family.value for family in MaterialFamily],
         "structure_kinds": ", ".join(f"{kind} ({spec.label})" for kind, spec in STRUCTURES.items()),
+        "art_media": ", ".join(medium.value for medium in ArtMedium),
+        "magic_schools": ", ".join(school.value for school in MagicSchool),
+        "magic_sources": ", ".join(source.value for source in MagicSource),
+        "rite_effects": ", ".join(effect.value for effect in RiteEffectKind),
+        "ideology_tenets": ", ".join(tenet.value for tenet in IdeologyTenet),
+        "prophecy_predicates": ", ".join(item.value for item in ProphecyPredicate),
+        "prophecy_consequences": ", ".join(item.value for item in ProphecyConsequence),
         "size_classes": [size.value for size in SizeClass],
         "diets": [diet.value for diet in Diet],
         "socialities": [kind.value for kind in Sociality],

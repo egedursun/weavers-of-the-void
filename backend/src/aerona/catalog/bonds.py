@@ -93,6 +93,10 @@ BOND_KINDS: dict[BondKind, BondKindSpec] = {
         BondKindSpec(BondKind.CONCUBINE_OF, "concubine of", MECHANICAL, KIN_TYPES, KIN_TYPES),
         BondKindSpec(BondKind.FOSTERED_BY, "fostered by", MECHANICAL, KIN_TYPES, KIN_TYPES),
         BondKindSpec(BondKind.SWORN_KIN, "sworn kin of", MECHANICAL, KIN_TYPES, KIN_TYPES),
+        BondKindSpec(BondKind.TELLS, "tells", MECHANICAL),
+        BondKindSpec(BondKind.FIXED_IN, "is fixed in", MECHANICAL),
+        BondKindSpec(BondKind.ADHERENT_OF, "adheres to", MECHANICAL),
+        BondKindSpec(BondKind.PRACTISES, "practises", MECHANICAL),
     )
 }
 

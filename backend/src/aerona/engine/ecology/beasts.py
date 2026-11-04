@@ -28,7 +28,7 @@ from aerona.engine.economy.materials import set_node_material
 from aerona.engine.economy.money import inject_hoard
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.gods.queries import community_of
-from aerona.engine.lore.items import record
+from aerona.engine.lore.history import record
 from aerona.engine.mind.memories import remember
 from aerona.engine.notes import note
 from aerona.engine.polity.accords import Clause, end_treaty, sign

@@ -21,6 +21,7 @@ from aerona.services.player import (
     creation,
     creator,
     creatures,
+    culture,
     curation,
     death,
     diplomacy,
@@ -49,6 +50,7 @@ from aerona.services.player import (
     life_cycles,
     living_stats,
     lore,
+    made_things,
     market,
     mechanics,
     memory,
@@ -67,6 +69,7 @@ from aerona.services.player import (
     regions,
     relations,
     routes,
+    rumours,
     settings,
     settlements,
     society,
@@ -1392,18 +1395,114 @@ LORE_ACTIONS = (
         ("S8.1",),
     ),
     _sync(Meta("language:speakers", "Set the speakers of a tongue in a community", G.LANGUAGES), lore.set_speakers, lore.Speakers, free, ("S8.1",)),
+    _sync(
+        Meta("language:register", "Set or hold the tongue of a court, faith, market or hearth", G.LANGUAGES),
+        culture.set_register,
+        culture.Register,
+        free,
+        ("S8.1",),
+    ),
+    _sync(
+        Meta("language:release_understanding", "Let the world measure two tongues again", G.LANGUAGES),
+        culture.release_understanding,
+        culture.PairTarget,
+        free,
+        ("S8.1",),
+    ),
+    _sync(
+        Meta("language:release_speakers", "Let a community's share of speakers move again", G.LANGUAGES),
+        culture.release_speakers,
+        culture.SpeakerTarget,
+        free,
+        ("S8.1",),
+    ),
     _sync(Meta("research:level", "Set a people's level in a branch of knowledge", G.SOCIETY), lore.set_level, lore.HolderLevel, free, ("S8.4",)),
     _sync(Meta("research:technique", "Give or take a technique", G.SOCIETY), lore.set_technique, lore.HolderTechnique, free, ("S8.4",)),
+    _sync(
+        Meta("research:holder", "Set a people's standing in a branch", G.SOCIETY),
+        lore.edit_holder,
+        lore.EditHolder,
+        free,
+        ("S8.4",),
+    ),
+    _sync(
+        Meta("research:custom_technique", "Give or take a technique of your own making", G.SOCIETY),
+        lore.set_custom_technique,
+        lore.HolderCustomTechnique,
+        free,
+        ("S8.4",),
+    ),
     _sync(Meta("creed:tenet", "Add or remove a creed's tenet", G.SOCIETY), lore.set_creed_tenet, lore.CreedTenet, free, ("S8.5",)),
     _sync(Meta("creed:adherent", "Set a community's adherence to a creed", G.SOCIETY), lore.set_adherent, lore.Adherent, free, ("S8.5",)),
     _sync(Meta("creed:found", "Let a mortal found a creed", G.SOCIETY), lore.found_creed, lore.FoundCreed, free, ("S8.5",)),
+    _sync(
+        Meta("creed:custom_tenet", "Give or take a tenet of your own", G.SOCIETY),
+        lore.set_custom_tenet,
+        lore.CreedCustomTenet,
+        free,
+        ("S8.5",),
+    ),
+    _sync(Meta("creed:suppress", "Suppress a creed", G.SOCIETY), lore.suppress_creed, lore.SuppressCreed, free, ("S8.5",)),
     _sync(Meta("rite:devise", "Let a mortal devise a rite", G.BEYOND), lore.devise_rite, lore.DeviseRite, free, ("S8.6",)),
     _sync(Meta("rite:effect", "Set what a rite does", G.BEYOND), lore.set_rite_effect, lore.RiteEffect, free, ("S8.6",)),
     _sync(Meta("rite:cast", "Work a rite now", G.BEYOND), lore.cast_rite, lore.CastRite, free, ("S8.6",)),
+    _sync(Meta("rite:teach", "Teach a rite to a mortal, people or cult, or make them forget it", G.BEYOND), lore.teach_rite, lore.TeachRite, free, ("S8.6",)),
+    _sync(Meta("rite:forbid", "Forbid a rite in a realm, cult or people, or lift the ban", G.BEYOND), lore.forbid_rite, lore.ForbidRite, free, ("S8.6",)),
+    _sync(Meta("rite:dispel", "Undo the last working of a rite", G.BEYOND), lore.dispel_rite, lore.RiteTarget, free, ("S8.6",)),
+    _sync(Meta("rite:requirements", "Set what a rite asks of its caster", G.BEYOND), lore.set_rite_requirements, lore.RiteRequirements, free, ("S8.6",)),
     _sync(Meta("prophecy:resolve", "Fulfil or fail a prophecy", G.MEMORY), lore.resolve_prophecy, lore.ResolveProphecy, free, ("S8.7",)),
     _sync(Meta("item:enchant", "Set an enchantment on an item", G.BEYOND), lore.set_enchantment, lore.Enchantment, free, ("S7.1", "S8.6")),
     _sync(
         Meta("tradition:participation", "Set how fully a community keeps a tradition", G.SOCIETY), lore.set_participation, lore.Participation, free, ("S8.3",)
+    ),
+    _sync(
+        Meta("tradition:release_participation", "Let a community's keeping of a tradition move again", G.SOCIETY),
+        culture.release_participation,
+        culture.KeeperTarget,
+        free,
+        ("S8.3",),
+    ),
+    _sync(
+        Meta("tradition:effect", "Set what a tradition brings its keepers", G.SOCIETY),
+        culture.set_tradition_effect,
+        culture.TraditionEffect,
+        free,
+        ("S8.3",),
+    ),
+    _sync(
+        Meta("tradition:reseed", "Draw a tradition's effects again from its kind", G.SOCIETY),
+        culture.reseed_tradition,
+        culture.TraditionTarget,
+        free,
+        ("S8.3",),
+    ),
+    _sync(
+        Meta("lore:create", "Make a new language, legend, tradition, creed, rite, prophecy, item, artwork or knowledge", G.LANGUAGES),
+        lore.create_lore,
+        lore.CreateLore,
+        free,
+        ("S8.1", "S8.2", "S8.3", "S8.4", "S8.5", "S8.6", "S8.7", "S7.1", "S7.4"),
+    ),
+    _sync(
+        Meta("kind:create", "Name a new kind of technique, tenet, tradition, tale, item or working", G.LANGUAGES),
+        lore.create_kind,
+        lore.CreateKind,
+        free,
+        ("S8.2", "S8.3", "S8.4", "S8.5", "S8.6", "S7.1"),
+    ),
+    _sync(
+        Meta("kind:edit", "Reshape a kind of your own making", G.LANGUAGES),
+        lore.edit_kind,
+        lore.EditKind,
+        free,
+        ("S8.2", "S8.3", "S8.4", "S8.5", "S8.6", "S7.1"),
+    ),
+    _sync(
+        Meta("kind:delete", "Unmake a kind of your own making", G.LANGUAGES),
+        lore.delete_kind,
+        lore.KindTarget,
+        free,
+        ("S8.2", "S8.3", "S8.4", "S8.5", "S8.6", "S7.1"),
     ),
 )
 
@@ -1820,6 +1919,21 @@ ROUTE_ACTIONS = (
 )
 
 
+RUMOUR_ACTIONS = (
+    _sync(Meta("rumour:plant", "Whisper a rumour into a community", G.MEMORY), rumours.plant_rumour, rumours.PlantRumour, free, ("F11",)),
+    _sync(Meta("rumour:edit", "Set how true a rumour runs, or let it fade", G.MEMORY), rumours.edit_rumour, rumours.EditRumour, free, ("F11",)),
+    _sync(Meta("rumour:suppress", "Silence a rumour", G.MEMORY), rumours.suppress_rumour, rumours.SuppressRumour, free, ("F11",)),
+)
+MADE_ACTIONS = (
+    _sync(Meta("item:transfer", "Give an item into new hands", G.BEYOND), made_things.transfer_item, made_things.TransferItem, free, ("S7.1",)),
+    _sync(Meta("item:deed", "Add a deed to an item's history", G.BEYOND), made_things.add_deed, made_things.AddDeed, free, ("S7.1",)),
+    _sync(Meta("item:deed_remove", "Strike a deed from an item's story", G.BEYOND), made_things.remove_deed, made_things.DeedTarget, free, ("S7.1",)),
+    _sync(
+        Meta("item:content", "Write knowledge into a book or scrape it out", G.BEYOND), made_things.set_content, made_things.BookContent, free, ("S7.1", "S8.4")
+    ),
+    _sync(Meta("art:commission", "Commission an artwork", G.SOCIETY), made_things.commission_artwork, made_things.CommissionArtwork, free, ("S7.4",)),
+    _sync(Meta("art:canonise", "Set an artwork among the classics, or strike it out", G.SOCIETY), made_things.canonise, made_things.Canonise, free, ("S7.4",)),
+)
 FOUNDATION_ACTIONS = (
     _sync(Meta("war:incite", "Lay a war at a god's feet, or clear the blame", G.WARFARE), foundations.set_incitement, foundations.WarIncitement, free, ("W0",)),
     _sync(
@@ -1864,6 +1978,8 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *FOUNDATION_ACTIONS,
     *WILDS_ACTIONS,
     *LORE_ACTIONS,
+    *RUMOUR_ACTIONS,
+    *MADE_ACTIONS,
     *CREATOR_ACTIONS,
     *SON_ACTIONS,
     *GOD_POWER_ACTIONS,
