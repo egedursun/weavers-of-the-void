@@ -109,6 +109,7 @@ async def advance_all(ctx: TickContext, knowledge: KnowledgeMap) -> int:
     "settlement.piety",
     "settlement.population",
     "settlement.prosperity",
+    "settlement.wealth",
     "structure.durability",
     "table.bonds",
     "table.community_cohorts",

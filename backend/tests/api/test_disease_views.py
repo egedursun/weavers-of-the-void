@@ -1,5 +1,5 @@
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.models.entity_stats import MortalStats, SettlementStats
+from aerona.domain.models.entity_stats import MortalStats, SettlementStats, SpeciesStats
 from aerona.engine.demography.cohorts import seed
 from aerona.engine.disease.control import DiseaseDesign, create_disease, loose
 from tests.api.conftest import ApiWorld, seeded
@@ -11,7 +11,7 @@ async def test_the_disease_card_shows_vector_targets_origin_hosts_and_holds(api:
     core = seeded(api).core
     region = core.regions[0]
     async with api.services.database.write() as session:
-        rats = await entity(session, "Bog Rats", EntityType.SPECIES, None, world_id=core.world.id)
+        rats = await entity(session, "Bog Rats", EntityType.SPECIES, SpeciesStats(), world_id=core.world.id)
         ctx = context(session)
         design = DiseaseDesign(
             name="The Bog Ague", values={"vector": "bite", "target_functions": ["vital", "cognition"], "incubation": 4, "host_species_id": rats.id}
