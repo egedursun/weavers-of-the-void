@@ -2,6 +2,7 @@ from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
+from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.formation import refresh_realms
 from aerona.engine.polity.governance import agenda, collect, conquest_conflict, cult_laws, enforce, law_effects, proposals, repeal_discord
@@ -11,7 +12,7 @@ from aerona.engine.polity.laws import LawBook, backfill_kinds, ensure_profile
 from aerona.engine.polity.oaths import lapse, pledges
 from aerona.engine.polity.offices import coups, name_heir, office_effects, press_claims, purge, regency, staff, succession_line
 from aerona.engine.polity.standing import administration, legitimacy, overreach, rank, realm_tier, secede, settle, stability
-from aerona.engine.polity.treaties import Clause, adopt_bonds, hostilities, keep_clauses, sign
+from aerona.engine.polity.treaties import adopt_bonds, hostilities, keep_clauses, tribute_ledger, vassal_duties
 from aerona.engine.polity.wars import champions, join_wars
 from aerona.engine.primitives.knowledge import KnowledgeMap
 
@@ -292,6 +293,9 @@ async def treaty_cycles(ctx: TickContext) -> None:
     ctx.count("treaties_breached", await hostilities(ctx))
     for key, value in (await keep_clauses(ctx, book)).items():
         ctx.count(f"treaties_{key}", value)
+    for key, value in (await vassal_duties(ctx, book)).items():
+        ctx.count(f"vassal_{key}", value)
+    ctx.count("tributes_closed", await tribute_ledger(ctx))
     ctx.count("joined_wars", await join_wars(ctx, book))
     ctx.count("champions", await champions(ctx))
     rulers = {member: realm.ruler_id for realm in book.realms.values() if realm.ruler_id is not None for member in realm.members}

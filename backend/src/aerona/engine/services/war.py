@@ -14,12 +14,14 @@ from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import WorldSeasonRow
+from aerona.db.tables.polity import TreatyProfileRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, TributeRow, WarRow, WarSideRow
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.limits import PERCENT_MAX
-from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
+from aerona.domain.enums.society import Commodity, KnowledgeBranch
 from aerona.domain.enums.war import CaptiveStatus, TributeStatus, WarCause, WarSide, WarStatus
 from aerona.domain.models.entity_stats import ArmyStats, EventStats
 from aerona.engine.body.book import effective
@@ -28,6 +30,7 @@ from aerona.engine.demography.labour import fighting_age, mobilisation
 from aerona.engine.economy.equipment import equip_army
 from aerona.engine.interconnect.flows import flowing
 from aerona.engine.mind.hooks import freed, taken_captive
+from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.primitives.levies import levy, levy_category
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -129,7 +132,11 @@ async def grant_truce(ctx: TickContext, first: int, second: int, reason: str) ->
     if await has_truce(session, rules, first, second, epoch):
         return False
     until = epoch + rules.diplomacy.truce_epochs
-    await BondRepository(session).connect(BondDraft(first, second, BondKind.TRUCE, epoch, f"{reason}; until Epoch {until}", truce_until_epoch=until))
+    one, two = await living_entity(session, first), await living_entity(session, second)
+    if one is None or two is None or not is_community(one) or not is_community(two):
+        await BondRepository(session).connect(BondDraft(first, second, BondKind.TRUCE, epoch, f"{reason}; until Epoch {until}", truce_until_epoch=until))
+        return True
+    await sign(ctx, TreatyKind.TRUCE, [(first, PartyRole.SIGNATORY), (second, PartyRole.SIGNATORY)], until=until, witnessed=False)
     return True
 
 
@@ -570,9 +577,21 @@ async def impose_tribute(ctx: TickContext, payer: EntityRow, receiver: EntityRow
         raise ValidationFailedError("A community cannot pay tribute to itself.")
     bonds = BondRepository(ctx.session)
     existing = await active_tribute(ctx.session, payer.id, receiver.id)
-    bond = await bonds.connect(BondDraft(payer.id, receiver.id, BondKind.PAYS_TRIBUTE, ctx.epoch, description, war_id=war.id if war else None))
+    campaigns = ctx.rules.campaigns
+    terms: dict[str, int | str | bool] = {"amount": campaigns.tribute_flow, "commodity": Commodity.GOODS.value, "epochs": campaigns.tribute_epochs}
+    treaty = await sign(
+        ctx,
+        TreatyKind.TRIBUTE,
+        [(payer.id, PartyRole.VASSAL), (receiver.id, PartyRole.OVERLORD)],
+        clauses=[Clause(ClauseKind.TRIBUTE, payer.id, receiver.id, terms)],
+        until=ctx.epoch + campaigns.tribute_epochs,
+        witnessed=False,
+    )
+    profile = await ctx.session.get(TreatyProfileRow, treaty.id)
+    linked = await ctx.session.get(BondRow, profile.source_bond_id) if profile is not None and profile.source_bond_id is not None else None
+    bond = linked if linked is not None else await bonds.connect(BondDraft(payer.id, receiver.id, BondKind.PAYS_TRIBUTE, ctx.epoch, description))
+    bond.war_id = war.id if war is not None else bond.war_id
     bond.epoch = ctx.epoch
-    bond.description = description
     if existing is not None:
         existing.since_epoch = ctx.epoch
         existing.war_id = war.id if war is not None else existing.war_id

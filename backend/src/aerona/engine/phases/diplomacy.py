@@ -11,7 +11,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.polity import ClauseKind, LawKind, PartyRole, TreatyKind, TreatyStatus
 from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.engine.body.cohorts import war_appetite
 from aerona.engine.context import TickContext
@@ -20,7 +20,9 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import betrayal_drive, closeness, war_drive
 from aerona.engine.phase import Phase
 from aerona.engine.phases.afterlife import cosmic_court
+from aerona.engine.polity.accords import Clause, end_treaty, sign, treaty_between
 from aerona.engine.polity.laws import law_param
+from aerona.engine.polity.treaties import breach
 from aerona.engine.primitives.queries import BondIndex, active_bonds, canon, living_entity
 from aerona.engine.primitives.stats import stat
 from aerona.engine.services.community_relations import (
@@ -45,6 +47,7 @@ from aerona.rules.registry import Rules
 
 MARRIAGE_AGE_FALLBACK_KEY = "age"
 HOSTILITY_TYPES = frozenset({*COMMUNITY_TYPES, EntityType.MORTAL})
+ALLIANCES = frozenset({TreatyKind.ALLIANCE_DEFENSIVE, TreatyKind.ALLIANCE_OFFENSIVE, TreatyKind.MARRIAGE_PACT})
 
 
 @dataclass
@@ -169,7 +172,16 @@ async def form_alliance(ctx: TickContext, first: EntityRow, second: EntityRow, s
         second_heir = next(iter(_marriageable(ctx, sides, second.id)), None)
         if first_heir is not None and second_heir is not None:
             spouses = (first_heir, second_heir)
-    await bonds.connect(BondDraft(first.id, second.id, BondKind.ALLY, ctx.epoch, "marriage alliance" if marriage else "oath of friendship"))
+    clauses = [Clause(ClauseKind.CALL_TO_ARMS, first.id, second.id), Clause(ClauseKind.CALL_TO_ARMS, second.id, first.id)]
+    if spouses is not None:
+        clauses.append(Clause(ClauseKind.MARRIAGE, first.id, second.id, {"first_id": spouses[0].id, "second_id": spouses[1].id}))
+    await sign(
+        ctx,
+        TreatyKind.MARRIAGE_PACT if marriage else TreatyKind.ALLIANCE_DEFENSIVE,
+        [(first.id, PartyRole.SIGNATORY), (second.id, PartyRole.SIGNATORY)],
+        clauses=clauses,
+        until=ctx.epoch + (ctx.rules.treaties.marriage_treaty_epochs if marriage else ctx.rules.treaties.alliance_epochs),
+    )
     if marriage and spouses is not None and not await bonds.exists_between(spouses[0].id, spouses[1].id, BondKind.LOVES):
         await bonds.connect(BondDraft(spouses[0].id, spouses[1].id, BondKind.LOVES, ctx.epoch, "marriage alliance"))
     if marriage:
@@ -211,8 +223,11 @@ async def abandon_mid_war(ctx: TickContext, traitor: EntityRow, victim: EntityRo
 
 async def betray(ctx: TickContext, first: EntityRow, second: EntityRow, neighbourhood: Neighbourhood, war_roll: bool) -> EntityRow:
     rules = ctx.rules.diplomacy
-    await BondRepository(ctx.session).close_between(first.id, second.id, [BondKind.ALLY], ctx.epoch, "betrayal")
     traitor, victim = (first, second) if _weight(ctx, first) >= _weight(ctx, second) else (second, first)
+    pact = await treaty_between(ctx.session, first.id, second.id, list(ALLIANCES))
+    if pact is not None:
+        await breach(ctx, pact, traitor.id, clause=None, reason="it betrayed its ally")
+    await BondRepository(ctx.session).close_between(first.id, second.id, [BondKind.ALLY], ctx.epoch, "betrayal")
     await change_relation(ctx, victim.id, traitor.id, -rules.betrayal_relation, MemoryKind.BETRAYED_ME, note="betrayal", reverse=MemoryKind.ILL_WILL)
     await abandon_mid_war(ctx, traitor, victim)
     if war_roll:
@@ -348,6 +363,9 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
             continue
         if not ctx.rng(f"alliance_end.{bond.id}").chance(settings.alliance_end_chance):
             continue
+        pact = await treaty_between(ctx.session, first.id, second.id, list(ALLIANCES))
+        if pact is not None:
+            await end_treaty(ctx, pact, TreatyStatus.EXPIRED, "no common threat remained")
         await BondRepository(ctx.session).deactivate(bond, ctx.epoch, "alliance lapsed")
         ended += 1
         text = f"The {ctx.epoch - bond.epoch}-epoch alliance of {first.name} and {second.name} loosened once no common threat remained; the oath quietly ended."

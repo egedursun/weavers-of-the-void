@@ -23,6 +23,7 @@ from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherEffect
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMethod
@@ -58,6 +59,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.phases.culture_exchange import cultural_contact
 from aerona.engine.phases.exploration import LandSearch, find_land
 from aerona.engine.phases.sky import time_difference
+from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
 from aerona.engine.primitives.knowledge import KnowledgeMap, knows
 from aerona.engine.primitives.manual import manual_context
@@ -714,7 +716,25 @@ async def _contact(ctx: TickContext, arrival: Arrival, native: EntityRow) -> str
         await change_relation(ctx, traveller.id, native.id, travel.contact_trade_relation, MemoryKind.TRADED_WITH, note="first contact")
         text = f"trade began with {native.name}"
         if rng.chance(travel.interworld_alliance_chance) and not await bonds.exists_between(traveller.id, native.id, BondKind.ALLY):
-            await bonds.connect(BondDraft(traveller.id, native.id, BondKind.ALLY, ctx.epoch, f"interworld alliance ({arrival.target.name})"))
+            await sign(
+                ctx,
+                TreatyKind.INTERWORLD,
+                [(traveller.id, PartyRole.SIGNATORY), (native.id, PartyRole.SIGNATORY)],
+                clauses=[
+                    Clause(ClauseKind.TRADE_RIGHTS, traveller.id, native.id),
+                    Clause(ClauseKind.CALL_TO_ARMS, traveller.id, native.id),
+                    Clause(ClauseKind.CALL_TO_ARMS, native.id, traveller.id),
+                ],
+                until=ctx.epoch + ctx.rules.treaties.alliance_epochs,
+            )
+            await sign(
+                ctx,
+                TreatyKind.ALLIANCE_DEFENSIVE,
+                [(traveller.id, PartyRole.SIGNATORY), (native.id, PartyRole.SIGNATORY)],
+                clauses=[Clause(ClauseKind.CALL_TO_ARMS, traveller.id, native.id), Clause(ClauseKind.CALL_TO_ARMS, native.id, traveller.id)],
+                until=ctx.epoch + ctx.rules.treaties.alliance_epochs,
+                witnessed=False,
+            )
             await change_relation(ctx, traveller.id, native.id, travel.alliance_relation, MemoryKind.ALLIED_WITH, note="interworld alliance")
             text += f"; an interworld alliance was formed with {native.name}"
         exchanged = await cultural_contact(ctx, traveller, native, first_contact=True) + await cultural_contact(ctx, native, traveller, first_contact=True)

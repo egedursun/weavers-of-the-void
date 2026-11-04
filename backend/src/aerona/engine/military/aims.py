@@ -14,9 +14,9 @@ from aerona.domain.enums.military import WarAimKind
 from aerona.domain.enums.polity import ClauseKind, GovernmentKind, PartyRole, TreatyKind
 from aerona.domain.enums.war import CaptiveStatus, WarCause
 from aerona.engine.context import TickContext
+from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.formation import set_ruler
-from aerona.engine.polity.treaties import Clause, sign
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
@@ -165,7 +165,7 @@ async def hostage_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: Sid
     taken = await hostage(ctx, war, victor, loser, book) if aim.achieved >= ctx.rules.peace.hostage_score else None
     if taken is None:
         return None
-    return f"{taken.name} went to {victor.name} as a hostage", Clause(ClauseKind.HOSTAGE, loser.id, victor.id, {"hostage": taken.id})
+    return f"{taken.name} went to {victor.name} as a hostage", Clause(ClauseKind.HOSTAGE, loser.id, victor.id, {"mortal_id": taken.id})
 
 
 async def reparation_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: Sides, book: RealmBook) -> Term:

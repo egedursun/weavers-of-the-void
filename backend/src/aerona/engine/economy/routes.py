@@ -17,6 +17,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeLoss, Tra
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, LegendCategory
 from aerona.domain.enums.environment import CoastKind, RiverClass, TerrainKind
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.polity import ClauseKind
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import WarCause
@@ -31,6 +32,7 @@ from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.language import barrier
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.notes import note
+from aerona.engine.polity.accords import clause_pairs
 from aerona.engine.polity.law_effects import toll_rate
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
@@ -273,12 +275,18 @@ async def controllers(ctx: TickContext, book: EconomyBook) -> dict[int, int]:
     return found
 
 
-async def set_tolls(ctx: TickContext, book: EconomyBook, route: Route, masters: dict[int, int]) -> None:
+async def set_tolls(ctx: TickContext, book: EconomyBook, route: Route, masters: dict[int, int], waived: set[frozenset[int]] | None = None) -> None:
     table = ctx.rules.tolls
     first, second = route.ends
+    free = waived if waived is not None else await clause_pairs(ctx.session, ClauseKind.TOLLS_WAIVED)
     for region in route.path:
         master = masters.get(region)
         if master is None or master in (first, second):
+            continue
+        if frozenset((master, first)) in free or frozenset((master, second)) in free:
+            toll = route.tolls.get(region)
+            if toll is not None and not toll.set_by_player:
+                toll.controller_entity_id, toll.rate_pct = master, 0
             continue
         greed = await greed_drive(ctx.session, ctx.rules, master)
         decreed = await toll_rate(ctx.session, master)

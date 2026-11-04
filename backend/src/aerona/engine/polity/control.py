@@ -41,6 +41,7 @@ from aerona.domain.enums.polity import (
 )
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.succession import pass_rule
+from aerona.engine.polity.accords import Clause, end_treaty, sign
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.formation import found_polity, refresh_realms
 from aerona.engine.polity.houses import HouseBook, extinguish, found_house, join
@@ -48,7 +49,7 @@ from aerona.engine.polity.laws import edit_law, enact, ensure_profile, jurisdict
 from aerona.engine.polity.oaths import break_oath, swear
 from aerona.engine.polity.offices import DEFAULT_POWERS, appoint
 from aerona.engine.polity.repute import repute_of
-from aerona.engine.polity.treaties import Clause, breach, end_treaty, sign
+from aerona.engine.polity.treaties import breach
 from aerona.engine.primitives.queries import active_bonds, add_flag, close, connect, living_entity, remove_flag
 from aerona.engine.primitives.records import retire_in
 

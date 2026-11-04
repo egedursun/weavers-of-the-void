@@ -197,6 +197,8 @@ class TreatyStatus(StrEnum):
     FULFILLED = "fulfilled"
     BROKEN = "broken"
     EXPIRED = "expired"
+    PROPOSED = "proposed"
+    REJECTED = "rejected"
 
 
 class ClauseKind(StrEnum):

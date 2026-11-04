@@ -21,6 +21,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, ThreadLinkRole, ThreadS
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.entity import COMMUNITY_TYPES, CivilizationTier, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import CaptiveStatus, DebtStatus, WarCause
 from aerona.domain.models.entity_stats import FactionStats, ItemStats, KnowledgeStats, PlaceStats
@@ -30,6 +31,7 @@ from aerona.engine.cosmos.tiers import TierScene, may, planned_tiers, tier_lock,
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
+from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_percent
@@ -532,9 +534,25 @@ class TreatyOffer:
 
 
 async def sign_treaty(ctx: TickContext, offer: TreatyOffer) -> str:
-    await BondRepository(ctx.session).connect(
-        BondDraft(offer.first.id, offer.second.id, offer.kind, ctx.epoch, f"interworld treaty (by way of {offer.method})")
+    clauses = [Clause(ClauseKind.TRADE_RIGHTS, offer.first.id, offer.second.id), Clause(ClauseKind.NON_AGGRESSION, offer.first.id, offer.second.id)]
+    if offer.kind is BondKind.ALLY:
+        clauses.extend([Clause(ClauseKind.CALL_TO_ARMS, offer.first.id, offer.second.id), Clause(ClauseKind.CALL_TO_ARMS, offer.second.id, offer.first.id)])
+    await sign(
+        ctx,
+        TreatyKind.INTERWORLD,
+        [(offer.first.id, PartyRole.SIGNATORY), (offer.second.id, PartyRole.SIGNATORY)],
+        clauses=clauses,
+        until=ctx.epoch + ctx.rules.treaties.alliance_epochs,
     )
+    if offer.kind is BondKind.ALLY:
+        await sign(
+            ctx,
+            TreatyKind.ALLIANCE_DEFENSIVE,
+            [(offer.first.id, PartyRole.SIGNATORY), (offer.second.id, PartyRole.SIGNATORY)],
+            clauses=clauses[2:],
+            until=ctx.epoch + ctx.rules.treaties.alliance_epochs,
+            witnessed=False,
+        )
     await change_relation(ctx, offer.first.id, offer.second.id, ctx.rules.civilization.treaty_relation, MemoryKind.ALLIED_WITH, note="interworld treaty")
     kind = "alliance" if offer.kind is BondKind.ALLY else "trade"
     first_world, second_world = await world_name(ctx.session, offer.first.world_id), await world_name(ctx.session, offer.second.world_id)

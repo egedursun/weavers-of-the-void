@@ -145,6 +145,7 @@ class VassalageRow(Base):
     tribute_pct: Mapped[int] = mapped_column(default=10)
     levy_pct: Mapped[int] = mapped_column(default=10)
     loyalty: Mapped[int] = mapped_column(default=50)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class LawProfileRow(Base):
@@ -262,6 +263,7 @@ class TreatyProfileRow(Base):
     witness_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
     oath_id: Mapped[int | None] = mapped_column(ForeignKey("oaths.id", ondelete="SET NULL"))
     source_bond_id: Mapped[int | None] = mapped_column(ForeignKey("bonds.id", ondelete="SET NULL"), index=True)
+    proposed_by_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     renewals: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
@@ -286,6 +288,7 @@ class TreatyClauseRow(Base):
     beneficiary_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     params: Mapped[dict[str, int | str | bool]] = mapped_column(JSON, default=dict)
     last_kept_epoch: Mapped[int | None]
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class TreatyBreachRow(Base):

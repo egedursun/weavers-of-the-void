@@ -43,7 +43,7 @@ async def join_wars(ctx: TickContext, book: RealmBook) -> int:
         present = {row.entity_id for row in sides}
         event = await war_event(ctx.session, war)
         for row in list(sides):
-            called = await allies_called(ctx, row.entity_id)
+            called = await allies_called(ctx, row.entity_id, row.side)
             for ally_id in [*comrades(book, row.entity_id), *called]:
                 if ally_id in present:
                     continue
