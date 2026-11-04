@@ -314,7 +314,7 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (LawProfileRow.__tablename__, LawJurisdictionRow.__tablename__, SentenceRow.__tablename__),
         ("polity_cycles", "institution_cycles", "settlement_life", "market", "trade_flow", "war_upkeep"),
         ("law:enact", "law:repeal", "law:edit", "law:protect"),
-        ("LawCode", "section-law-code", "LawProtection", "EnactLawForm"),
+        ("LawCode", "section-law-code", "LawProtection"),
         ("mortal_context",),
         ("enact_law", "decree_law", "create_culture"),
         ("polity.law_enacted", "polity.law_proposed", "polity.law_rejected", "polity.law_amended", "polity.cult_law", "polity.jubilee"),

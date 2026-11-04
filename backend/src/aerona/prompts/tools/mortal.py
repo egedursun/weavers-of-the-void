@@ -296,6 +296,10 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage (you become the vassal), tribute, marriage_pact, trade_pact, guarantee or interworld",
             "clauses": "Typed clauses with who owes, who gains and their terms (amount, commodity, epochs, region_id, mortal_id...)",
             "epochs": "How many ages it should hold",
+            "clauses.kind": "The clause's kind",
+            "clauses.obligor_id": "Who owes it",
+            "clauses.beneficiary_id": "Who gains by it",
+            "clauses.params": "Its terms by name (amount, commodity, epochs, region_id, mortal_id...)",
         },
     ),
     T.SWEAR_OATH: ToolText(

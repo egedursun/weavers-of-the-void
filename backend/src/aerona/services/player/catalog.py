@@ -1096,7 +1096,7 @@ ECONOMY_ACTIONS = (
     _sync(Meta("treaty:sign", "Seal a treaty", G.SOCIETY), realms.sign_treaty, realms.SignTreaty, free, ("S5.13",)),
     _sync(Meta("treaty:break", "Break a treaty", G.SOCIETY), realms.break_treaty, realms.BreakTreaty, free, ("S5.13",)),
     _sync(Meta("treaty:edit", "Change a treaty's term or standing", G.SOCIETY), realms.edit_treaty, realms.EditTreaty, free, ("S5.13",)),
-    _sync(Meta("treaty:clause_add", "Write a clause into a treaty", G.SOCIETY), realms.add_clause, realms.AddClause, free, ("S5.13",)),
+    _sync(Meta("treaty:clause_add", "Add a clause to a treaty", G.SOCIETY), realms.add_clause, realms.AddClause, free, ("S5.13",)),
     _sync(Meta("treaty:clause_edit", "Rewrite a treaty clause", G.SOCIETY), realms.edit_clause, realms.EditClause, free, ("S5.13",)),
     _sync(Meta("treaty:clause_remove", "Strike a clause from a treaty", G.SOCIETY), realms.remove_clause, realms.ClauseTarget, free, ("S5.13",)),
     _sync(Meta("treaty:party_add", "Bind another party or guarantor to a treaty", G.SOCIETY), realms.add_party, realms.TreatyPartyChange, free, ("S5.13",)),

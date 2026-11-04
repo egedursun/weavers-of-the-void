@@ -12,12 +12,13 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.lore.control import set_technique
 from aerona.engine.phases.births import villages
 from aerona.engine.phases.doom import doom_clock
-from aerona.engine.phases.factions import FactionKind, eligible_kinds, factions
+from aerona.engine.phases.factions import eligible_kinds, factions
 from aerona.engine.phases.magic import wizards
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.manual import manual_context
@@ -67,18 +68,18 @@ async def faction_town(session: AsyncSession, world: CoreWorld, **shares: float)
 
 
 async def test_merchant_guild_needs_trade_prosperity_and_merchants(session: AsyncSession, world: CoreWorld) -> None:
-    rules = tuned_rules(factions={"faction_chance": 100, "faction_min_population": 100})
+    rules = tuned_rules(factions={"faction_chance": 100, "faction_min_population": 100, "faction_cap": 10})
     ctx = await manual_context(session, "guild", rules)
     town = await faction_town(session, world, merchant=25.0)
-    assert await eligible_kinds(ctx, town) == []
+    assert FactionKind.MERCHANT_GUILD not in await eligible_kinds(ctx, town)
     partner = await settlement(session, "Saltgate", world, world.regions[3])
     await bond(session, town.id, partner.id, BondKind.TRADES_WITH)
-    assert await eligible_kinds(ctx, town) == [FactionKind.GUILD]
+    assert FactionKind.MERCHANT_GUILD in await eligible_kinds(ctx, town)
     await factions(ctx)
-    guild = await session.scalar(select(EntityRow).where(EntityRow.entity_type == EntityType.FACTION))
+    guild = await session.scalar(select(EntityRow).where(EntityRow.entity_type == EntityType.FACTION, EntityRow.affiliated_entity_id == town.id))
     assert guild is not None and guild.engine_kind is EngineKind.MERCHANT_GUILD and guild.affiliated_entity_id == town.id
-    assert "faction.founded_guild" in await keys(session)
-    assert await eligible_kinds(ctx, town) == []
+    assert "faction.founded" in await keys(session)
+    assert FactionKind.MERCHANT_GUILD not in await eligible_kinds(ctx, town)
 
 
 async def test_merchant_guild_is_refused_to_a_poor_town(session: AsyncSession, world: CoreWorld) -> None:
@@ -87,21 +88,21 @@ async def test_merchant_guild_is_refused_to_a_poor_town(session: AsyncSession, w
     partner = await settlement(session, "Saltgate", world, world.regions[3])
     await bond(session, town.id, partner.id, BondKind.TRADES_WITH)
     town.stats = town.stats.model_copy(update={"prosperity": ctx.rules.factions.guild_min_prosperity - 1})
-    assert await eligible_kinds(ctx, town) == []
+    assert FactionKind.MERCHANT_GUILD not in await eligible_kinds(ctx, town)
 
 
 async def test_priests_council_needs_priests_and_a_god(session: AsyncSession, world: CoreWorld) -> None:
-    rules = tuned_rules(factions={"faction_chance": 100, "faction_min_population": 100})
+    rules = tuned_rules(factions={"faction_chance": 100, "faction_min_population": 100, "faction_cap": 10})
     ctx = await manual_context(session, "council", rules)
     town = await faction_town(session, world, priest=25.0)
-    assert await eligible_kinds(ctx, town) == []
+    assert FactionKind.PRIESTHOOD not in await eligible_kinds(ctx, town)
     await bond(session, town.id, world.son.id, BondKind.WORSHIPS)
-    assert await eligible_kinds(ctx, town) == [FactionKind.COUNCIL]
+    assert FactionKind.PRIESTHOOD in await eligible_kinds(ctx, town)
     await factions(ctx)
-    council = await session.scalar(select(EntityRow).where(EntityRow.entity_type == EntityType.FACTION))
+    council = await session.scalar(select(EntityRow).where(EntityRow.entity_type == EntityType.FACTION, EntityRow.affiliated_entity_id == town.id))
     assert council is not None and council.engine_kind is EngineKind.PRIESTS_COUNCIL
     assert await BondRepository(session).exists_between(council.id, world.son.id, BondKind.WORSHIPS)
-    assert "faction.founded_council" in await keys(session)
+    assert "faction.founded" in await keys(session)
 
 
 async def test_wizard_wards_a_home_with_protection_or_plenty(session: AsyncSession, world: CoreWorld) -> None:

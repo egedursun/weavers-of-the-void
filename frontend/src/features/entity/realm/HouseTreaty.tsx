@@ -274,11 +274,6 @@ export function HouseSection({
           data-surface='HouseView'
           className='@container/realm flex min-w-0 flex-col gap-4'
         >
-          <HouseEditor
-            key={JSON.stringify([house.locked, house.prestige, house.traits])}
-            house={house}
-            blocked={blocked}
-          />
           <Hero
             icon={Shield}
             tone={tincture?.tone ?? 'gold'}
@@ -314,6 +309,11 @@ export function HouseSection({
               />
             ))}
           </Hero>
+          <HouseEditor
+            key={JSON.stringify([house.locked, house.prestige, house.traits])}
+            house={house}
+            blocked={blocked}
+          />
           <div className='grid min-w-0 grid-cols-1 gap-3 @xs/realm:grid-cols-2 @xl/realm:grid-cols-4'>
             <KpiTile
               label='Prestige'
@@ -597,7 +597,6 @@ export function TreatySection({
           data-surface='TreatyView'
           className='@container/realm flex min-w-0 flex-col gap-4'
         >
-          <TreatyBuilder treaty={treaty} blocked={blocked} />
           <Hero
             icon={kind.icon}
             tone={kind.tone}
@@ -621,6 +620,7 @@ export function TreatySection({
               />
             )}
           </Hero>
+          <TreatyBuilder treaty={treaty} blocked={blocked} />
           <div className='grid min-w-0 grid-cols-1 gap-3 @xs/realm:grid-cols-3'>
             <KpiTile
               label='Signed'

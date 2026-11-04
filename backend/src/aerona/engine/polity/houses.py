@@ -712,7 +712,7 @@ async def arrange_marriages(ctx: TickContext, book: HouseBook, realms: RealmBook
             continue
         mine = await values_of(ctx, mortal)
         custom = await custom_of(ctx, mortal)
-        closed = await endogamous(ctx.session, mortal.location_id)
+        closed = bool(ctx.rules.legislation.endogamy_strict) and await endogamous(ctx.session, mortal.location_id)
         people = await people_of(ctx.session, mortal)
         best: tuple[float, EntityRow] | None = None
         for other_house, other in pool:

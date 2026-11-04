@@ -67,6 +67,7 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
     },
     EntityType.LEGEND: {"legend_category": LEGEND_CATEGORY_FIELD},
     EntityType.FACTION: {
+        **WORSHIPPED_SON_FIELD,
         "faction_kind": "What it is: merchant_guild, craft_guild, priesthood, warrior_order, noble_council, peasant_league, rebels, bandits, pirates, assassins, scholars_academy, secret_society, mercenary_company, interworld_federation, wandering_market or void_pirates; its kind decides what it strives for and how it acts",
     },
     EntityType.LAW: {
@@ -356,6 +357,12 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "parties": "Each party's id and role (signatory, overlord, vassal, guarantor)",
             "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression), who owes it, who gains, and its terms (amount, commodity, epochs, region_id, mortal_id...)",
             "epochs": "How many ages it holds; empty for ever",
+            "parties.party_id": "The party's id",
+            "parties.role": "Its role: signatory, overlord, vassal or guarantor",
+            "clauses.kind": "The clause's kind",
+            "clauses.obligor_id": "Who owes it",
+            "clauses.beneficiary_id": "Who gains by it",
+            "clauses.params": "Its terms by name (amount, commodity, epochs, region_id, mortal_id...)",
         },
     ),
     T.BLESS_BLOODLINE: ToolText(

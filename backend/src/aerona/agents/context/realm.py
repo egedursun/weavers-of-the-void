@@ -129,7 +129,7 @@ async def faction_lines(session: AsyncSession, mortal_id: int) -> list[str]:
         aims = [f"{words(goal.kind.value)} ({goal.progress}%)" for goal in goals]
         outlaw = ", outlawed" if profile.outlawed else ""
         found.append(
-            f"you are a {membership.rank.value} of {faction.name} ({words(profile.kind.value)}{outlaw}; "
+            f"{membership.rank.value} of {faction.name} ({words(profile.kind.value)}{outlaw}; "
             f"treasury {profile.treasury}, cohesion {profile.cohesion})" + (f", striving to {', '.join(aims)}" if aims else "")
         )
     return found
