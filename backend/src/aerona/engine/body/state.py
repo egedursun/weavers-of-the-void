@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import ARMOUR_COLUMNS, BodyRow, InjuryRow
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.body import Capacity, InjuryKind
+from aerona.domain.enums.body import BodyFunction, Capacity, InjuryKind
 from aerona.domain.enums.bond import BondKind
 from aerona.engine.body.book import (
     Bearer,
@@ -73,7 +73,9 @@ async def refresh(session: AsyncSession, rules: Rules, bearer: Bearer, epoch: in
     for column, value in zip(ARMOUR_COLUMNS, (armour.head, armour.torso, armour.limbs), strict=True):
         if column not in locked:
             setattr(body, column, value)
-    cap_sanity(rules, bearer, injuries, body.cognition)
+    bodily = [row for row in injuries if row.kind is not InjuryKind.VOID_TOUCH]
+    wits = function_percents(rules, BodyState(anatomy_for(body), wounds_from(bodily, prostheses), body.fingers, open_severity(bodily)))[BodyFunction.COGNITION]
+    cap_sanity(rules, bearer, injuries, wits)
     body.updated_epoch = epoch
     return body
 

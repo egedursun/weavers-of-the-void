@@ -7,6 +7,7 @@ from aerona.rules.model import rule
 @dataclass(frozen=True)
 class SonToolsRules:
     anchor_per_epoch: int = rule(1, 0, 20, RuleGroup.SON_TOOLS, "Maximum times a son can change his anchor in one epoch")
+    touch_amount: int = rule(15, 0, 100, RuleGroup.SON_TOOLS, "How far a son's touch moves a mortal's stress, renown, infamy or ability")
     gift_per_epoch: int = rule(1, 0, 20, RuleGroup.SON_TOOLS, "Maximum gifts a son can give in one epoch")
     prayer_per_epoch: int = rule(1, 0, 20, RuleGroup.SON_TOOLS, "Maximum prayers a son can make to his father in one epoch")
     holy_world_per_epoch: int = rule(1, 0, 20, RuleGroup.SON_TOOLS, "Maximum holy-world declarations a son can make in one epoch")

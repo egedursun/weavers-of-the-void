@@ -25,6 +25,7 @@ from aerona.engine.lore.arms import grip
 from aerona.engine.mind.hooks import wound_memories
 from aerona.engine.mortal.death import manner_of
 from aerona.engine.mortal.equipment import mount_pct, off_hand_pct, wielded
+from aerona.engine.mortal.standing import add_stress
 from aerona.engine.notes import note
 from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.naming import seed_of
@@ -188,16 +189,9 @@ DAMAGE_TYPES = frozenset(item.value for item in DamageType)
 BODIED = frozenset({EntityType.MORTAL, EntityType.BEAST})
 
 
-async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bool = True) -> Wounding:
-    if isinstance(bearer, EntityRow) and (bearer.entity_type not in BODIED or bearer.status is not EntityStatus.CANON):
-        return Wounding(None)
-    if isinstance(bearer, EntityRow) and await is_immortal(ctx.session, bearer):
-        return Wounding(WoundOutcome.IMMORTAL)
-    body = await ensure_body(ctx.session, ctx.rules, bearer, ctx.epoch)
-    anatomy = anatomy_for(body)
-    rng = ctx.rng(seed_of("hits", bearer.id, harm.cause.value, round_half_up(harm.damage)))
+async def armed(ctx: TickContext, harm: Harm) -> Harm:
+    wielder = harm.source_node_id or harm.killer_id
     if harm.edge is None and harm.damage_type is None:
-        wielder = harm.source_node_id or harm.killer_id
         blade = await weapon_of(ctx.session, wielder)
         if blade is not None:
             harm = replace(harm, edge=blade.edge, heft=blade.weight)
@@ -212,11 +206,25 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
                 heft=(harm.heft or 0) + held.weight,
             )
     if harm.cause is HarmCause.MONSTER and harm.venom_pct is None and harm.damage_type is None:
-        harm = replace(harm, venom_pct=await function_level(ctx.session, ctx.rules, harm.source_node_id or harm.killer_id, BodyFunction.VENOM))
+        harm = replace(harm, venom_pct=await function_level(ctx.session, ctx.rules, wielder, BodyFunction.VENOM))
+    return harm
+
+
+async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bool = True) -> Wounding:
+    if isinstance(bearer, EntityRow) and (bearer.entity_type not in BODIED or bearer.status is not EntityStatus.CANON):
+        return Wounding(None)
+    if isinstance(bearer, EntityRow) and await is_immortal(ctx.session, bearer):
+        return Wounding(WoundOutcome.IMMORTAL)
+    body = await ensure_body(ctx.session, ctx.rules, bearer, ctx.epoch)
+    anatomy = anatomy_for(body)
+    rng = ctx.rng(seed_of("hits", bearer.id, harm.cause.value, round_half_up(harm.damage)))
+    harm = await armed(ctx, harm)
     hits = hits_for(ctx.rules, anatomy, harm, _armour(body), rng)
     if not lethal:
         hits = [_spare(hit) for hit in hits]
     rows = await _record(ctx, bearer, body, harm, hits, world_id=world_of(bearer))
+    if isinstance(bearer, EntityRow) and bearer.entity_type is EntityType.MORTAL and rows:
+        await add_stress(ctx.session, bearer.id, sum(row.severity for row in rows) * ctx.rules.stress.wound_per_severity, ctx.epoch)
     lost, emptied = await _hp_loss(ctx, bearer, harm, hits, lethal)
     await refresh(ctx.session, ctx.rules, bearer, ctx.epoch)
     await _announce(ctx, bearer, rows)

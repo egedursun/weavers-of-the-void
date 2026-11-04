@@ -1,10 +1,206 @@
-from aerona.engine.interconnect.registry import Mechanic, Subsystem
+from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
+from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
 
 Behaviour = tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tuple[str, ...], Subsystem, str | None, str]
 
-BODY_GAP_MECHANICS: tuple[Mechanic, ...] = ()
-MIND_GAP_MECHANICS: tuple[Mechanic, ...] = ()
-LIFE_MECHANICS: tuple[Mechanic, ...] = ()
-STANDING_MECHANICS: tuple[Mechanic, ...] = ()
+LIFE = "section-life"
+KIN = "section-kin"
+GEAR = "section-gear"
+MIND = "section-mind"
+BODY = "section-body"
+S = Subsystem
+PROFILES = (MortalProfileRow.__tablename__,)
+
+BODY_GAP_MECHANICS: tuple[Mechanic, ...] = (
+    Mechanic(
+        key="harshness_dial",
+        spec_item="G11",
+        title="One harshness dial scales wound lethality, festering, lasting harm, disease, famine, childbirth and battle losses and the survival of notables",
+        subsystem=S.BODY,
+        phases=("body_healing", "war_casualties", "epidemics", "couple_births"),
+        surface=Surface(drawer=BODY),
+        backfill="none: the dial applies from the next epoch",
+        fields=("profile",),
+        couplings=(
+            Coupling(S.WAR, "battle and pursuit losses follow the dial", EdgeKind.MODIFIER, "harshness.realistic_battle_loss_pct"),
+            Coupling(S.DEMOGRAPHY, "famine and plague deaths follow the dial", EdgeKind.MODIFIER, "harshness.realistic_famine_death_pct"),
+        ),
+    ),
+    Mechanic(
+        key="body_functions",
+        spec_item="F4.1",
+        title="Vital, wits, hearing, sight, horn, tail and venom levels feed wound deaths, festering, sanity, perception, scouting, goring and venomous bites",
+        subsystem=S.BODY,
+        phases=("body_survey", "body_healing", "body_conditions"),
+        surface=Surface(drawer=BODY),
+        backfill="body_survey: every body's function levels are read from its wounds",
+        templates=("injury.severed", "healing.prosthesis"),
+        fields=("vital", "cognition", "hearing", "sight", "venom", "horn", "tail"),
+        tables=("bodies",),
+        couplings=(Coupling(S.WAR, "a commander's ears and eyes widen scouting", EdgeKind.MODIFIER, "capacities.scouting_perception_pct"),),
+    ),
+    Mechanic(
+        key="weather_exposure",
+        spec_item="S3.1",
+        title="Travellers and soldiers in frozen or searing lands suffer frostbite and heat",
+        subsystem=S.ENVIRONMENT,
+        phases=("body_conditions",),
+        surface=Surface(drawer=BODY),
+        backfill="none: exposure acts from the next epoch",
+        fields=("temperature_band",),
+        couplings=(Coupling(S.BODY, "harsh weather wounds the exposed", EdgeKind.FLOW, "injury.exposure_chance"),),
+    ),
+)
+MIND_GAP_MECHANICS: tuple[Mechanic, ...] = (
+    Mechanic(
+        key="mortal_stress",
+        spec_item="F14",
+        title="Stress from wounds, unmet needs, war, grief and torn loyalties; past the threshold a mind breaks",
+        subsystem=S.MIND,
+        phases=("mortal_minds",),
+        surface=Surface(drawer=MIND),
+        backfill="mortal_survey: every living mortal starts calm",
+        templates=("stress.rage", "stress.flight", "stress.despair", "stress.zeal", "stress.vice", "stress.revelation"),
+        fields=("stress", "last_break", "last_break_epoch"),
+        tables=PROFILES,
+        exposure=Exposure.CONTEXT,
+        targets=("mortal",),
+        couplings=(Coupling(S.HOUSEHOLD, "stress lowers fertility", EdgeKind.MODIFIER, "fertility.stress_divisor"),),
+    ),
+    Mechanic(
+        key="mortal_loyalty",
+        spec_item="F5",
+        title="Loyalty to liege, people and god from shared values, regard and fear; low loyalty breeds plots, flight and conversion",
+        subsystem=S.MIND,
+        phases=("mortal_minds",),
+        surface=Surface(drawer=LIFE),
+        backfill="mortal_survey: loyalty starts even and settles over epochs",
+        templates=("mind.conversion", "mind.plot", "mind.plot_uncovered"),
+        fields=("polity_id", "loyalty_liege", "loyalty_community", "loyalty_god"),
+        tables=PROFILES,
+        exposure=Exposure.CONTEXT,
+        targets=("mortal",),
+        couplings=(Coupling(S.INTRIGUE, "grieved, scheming mortals plot against their liege", EdgeKind.TRIGGER, "acts.plot_chance"),),
+    ),
+    Mechanic(
+        key="mortal_acts",
+        spec_item="S3.1",
+        title="Gratitude repays benefactors with protection and gifts; careers are chosen among many paths",
+        subsystem=S.SOCIAL,
+        phases=("mortal_minds",),
+        surface=Surface(drawer=LIFE),
+        backfill="none: acts begin from the next epoch",
+        templates=("memory.gratitude", "career.army", "career.office", "career.apprentice", "career.vows", "career.trade", "career.wander", "career.bandit"),
+        fields=("career",),
+        tables=PROFILES,
+    ),
+    Mechanic(
+        key="ethnic_relations",
+        spec_item="S4.10",
+        title="Peoples under one crown draw closer in harmony or clash in strife that stirs unrest and costs the realm stability",
+        subsystem=S.POLITY,
+        phases=("ethnic_relations",),
+        surface=Surface(drawer="section-realm"),
+        backfill="none: strife and harmony act from the next epoch",
+        templates=("relations.ethnic_strife",),
+        fields=("stability", "unrest"),
+        targets=("polity", "people", "settlement"),
+        couplings=(Coupling(S.DEMOGRAPHY, "strife thins the weaker people", EdgeKind.FLOW, "ethnic.strife_population_pct"),),
+    ),
+)
+LIFE_MECHANICS: tuple[Mechanic, ...] = (
+    Mechanic(
+        key="mortal_life_course",
+        spec_item="S3.1",
+        title="Abilities, sex, life stages from the people's lifespan curve, growth and elder decline, health, fertility, schooling and old-age death",
+        subsystem=S.HOUSEHOLD,
+        phases=("mortal_survey", "mortal_life_course", "mortal_aging"),
+        surface=Surface(drawer=LIFE),
+        backfill="mortal_survey: abilities, sex, stage, health and fertility are read for every living mortal",
+        templates=("life.adult", "life.elder"),
+        fields=("life_stage", "fertility", "health", "education", "endurance", "willpower", "perception", "wisdom", "creativity", "beauty"),
+        tables=PROFILES,
+        exposure=Exposure.CONTEXT,
+        targets=("mortal",),
+    ),
+    Mechanic(
+        key="mortal_births",
+        spec_item="S3.1",
+        title="Children born of fertility, stress, sustenance and kinship; childbirth deaths, twins, stillbirths, inherited abilities and bloodline marks",
+        subsystem=S.HOUSEHOLD,
+        phases=("couple_births",),
+        surface=Surface(drawer=KIN),
+        backfill="none: births follow the new rules from the next epoch",
+        templates=("births.child", "births.twins", "births.stillborn"),
+        fields=("fertility", "stress"),
+        tables=PROFILES,
+    ),
+    Mechanic(
+        key="mortal_kin",
+        spec_item="S3.1",
+        title="Typed kin: parents, spouses, the promised, concubines, wards and sworn kin; marriages, betrothals, divorce, fostering and widowing",
+        subsystem=S.HOUSEHOLD,
+        phases=("mortal_survey", "mortal_kin"),
+        surface=Surface(drawer=KIN),
+        backfill="mortal.typed_kin: descent and love between mortals become parent bonds and marriages",
+        templates=("kin.marriage", "kin.betrothal", "kin.divorce", "kin.fostered", "kin.sworn"),
+        fields=("kind", "start_epoch", "end_epoch", "cause_end", "forced"),
+        tables=(MarriageRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal",),
+    ),
+)
+STANDING_MECHANICS: tuple[Mechanic, ...] = (
+    Mechanic(
+        key="mortal_standing",
+        spec_item="S3.1",
+        title="Personal wealth, fading renown, honour, infamy and legitimacy in office; patrons fund works and the ambitious buy favour",
+        subsystem=S.SOCIAL,
+        phases=("mortal_standing",),
+        surface=Surface(drawer=LIFE),
+        backfill="mortal_survey: renown from importance, wealth from station, infamy from remembered cruelty",
+        templates=("standing.patronage", "standing.bribe"),
+        fields=("wealth", "renown", "honour", "infamy", "legitimacy"),
+        tables=PROFILES,
+        exposure=Exposure.CONTEXT,
+        targets=("mortal",),
+        couplings=(Coupling(S.POLITY, "renown and bribes weigh in appointments", EdgeKind.MODIFIER, "standing.bribe_effect"),),
+    ),
+    Mechanic(
+        key="mortal_death_record",
+        spec_item="S3.1",
+        title="Typed manner and place of death; widowing, grief and the house's prestige by the manner of death",
+        subsystem=S.HOUSEHOLD,
+        phases=("mortal_survey", "mortal_aging", "mortal_wounds"),
+        surface=Surface(drawer=LIFE),
+        backfill="mortal.death_causes: the dead are given a manner of death from their wounds and flags",
+        templates=("mortal.death_prestige",),
+        fields=("cause_of_death", "death_place_id"),
+        tables=PROFILES,
+    ),
+    Mechanic(
+        key="mortal_justice",
+        spec_item="S3.1",
+        title="Sentences under the penal code: fines, flogging, exile, branding, the loss of a hand, the tongue or the eyes, and death",
+        subsystem=S.LAW,
+        phases=("settlement_life", "mortal_minds"),
+        surface=Surface(drawer=LIFE),
+        backfill="none: sentences follow the code from the next epoch",
+        templates=("justice.fine", "justice.flogging", "justice.exile", "justice.branding", "justice.hand", "justice.tongue", "justice.eyes", "justice.death"),
+        fields=("infamy", "wealth"),
+        tables=PROFILES,
+    ),
+    Mechanic(
+        key="mortal_equipment",
+        spec_item="S3.1",
+        title="Equipment slots: main and off hand, body armour, helm, mount and magic focus shape blows, armour, mobility and spellcraft",
+        subsystem=S.WAR,
+        phases=("mortal_survey", "mortal_standing"),
+        surface=Surface(drawer=GEAR),
+        backfill="mortal_survey: each mortal is fitted from what they own",
+        fields=("wielded_main_id", "wielded_off_id", "armour_body_id", "armour_head_id", "mount_id", "focus_id"),
+        tables=(MortalEquipmentRow.__tablename__,),
+    ),
+)
 MORTAL_MECHANICS = (*BODY_GAP_MECHANICS, *MIND_GAP_MECHANICS, *LIFE_MECHANICS, *STANDING_MECHANICS)
 BEHAVIOURS: tuple[Behaviour, ...] = ()

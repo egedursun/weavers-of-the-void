@@ -70,6 +70,8 @@ async def code_punishment(ctx: TickContext, community_id: int | None, crime: Cri
     value = await law_param(ctx.session, community_id, LawKind.PENAL_CODE, crime.value) if community_id is not None else None
     chosen = CODE_PUNISHMENTS.get(str(value), PunishmentKind.FINE) if value is not None else PunishmentKind.FINE
     table = ctx.rules.punishment
+    if chosen in MUTILATIONS and community_id is not None and ctx.rng(f"mercy.{community_id}.{crime.value}").chance(table.exile_chance):
+        return PunishmentKind.EXILE
     if chosen is PunishmentKind.DEATH and crime is CrimeKind.TREASON and not table.death_for_treason:
         return PunishmentKind.EXILE
     if chosen is PunishmentKind.DEATH and crime is CrimeKind.BLASPHEMY and not table.death_for_blasphemy:

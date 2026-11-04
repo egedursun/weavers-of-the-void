@@ -11,7 +11,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.promotion import dormant_ids
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.mortal.acts import accumulate_stress, bribe, choose_path, convert, plot, repay, stress_break, update_loyalty
+from aerona.engine.mortal.acts import accumulate_stress, blasphemy, bribe, choose_path, convert, plot, repay, stress_break, update_loyalty
 from aerona.engine.mortal.course import (
     backfill_deaths,
     betroth_children,
@@ -246,6 +246,7 @@ async def mortal_minds(ctx: TickContext) -> None:
         counts["gratitude"] += 1 if await repay(ctx, mortal) else 0
         counts["plots"] += 1 if await plot(ctx, mortal, profile) else 0
         counts["conversions"] += 1 if await convert(ctx, mortal, profile) else 0
+        counts["blasphemy_trials"] += 1 if mortal.status is EntityStatus.CANON and await blasphemy(ctx, mortal) else 0
         path = await choose_path(ctx, mortal, profile)
         if path is not None:
             counts[f"career_{path.value}"] += 1

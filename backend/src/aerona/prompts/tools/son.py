@@ -117,6 +117,26 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "Free, {{ rules.son_tools.anchor_per_epoch }} per age.",
         {"entity_id": "Your own canonical creation", "reason": "Why this creation holds your existence"},
     ),
+    T.BIND_MORTALS: ToolText(
+        "You bind two living mortals by your will: promise them to each other, wed them, give the first to the second as a ward, or make them sworn kin. "
+        "Costs {{ rules.costs.influence }} essence and one action.",
+        {
+            "first_id": "The first mortal",
+            "second_id": "The second mortal (the fosterer when you foster)",
+            "binding": "betroth, wed, foster or swear_kin",
+            "reason": "Why you bind them",
+        },
+    ),
+    T.TOUCH_MORTAL: ToolText(
+        "You touch one living mortal: ease or burden their mind, grant renown or shame, heal their body, or strengthen one ability. "
+        "Costs {{ rules.costs.influence }} essence and one action.",
+        {
+            "mortal_id": "The mortal you touch",
+            "touch": "ease_mind, burden_mind, grant_renown, shame, heal_body or strengthen",
+            "ability": "When you strengthen: endurance, willpower, perception, wisdom, creativity or beauty",
+            "reason": "Why you touch them",
+        },
+    ),
     T.COIN_WORDS: ToolText(
         "You add words to a language's dictionary: meaning, word class and origin (from which event, from which words it was born). Languages grow this way and new names "
         "are derived from these words. Free, {{ rules.son_tools.coin_word_per_epoch }} times per age, at most {{ rules.son_tools.coin_word_max_words }} words each time.",

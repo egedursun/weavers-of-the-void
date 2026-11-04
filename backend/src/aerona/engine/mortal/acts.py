@@ -15,6 +15,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.mind import MemoryKind, NeedKind, OpinionComponent, TraitKind, ValueAxis
 from aerona.domain.enums.mortal import Ability, CareerPath, CrimeKind, DeathCause, LifeStage, StressBreak
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.book import perception_of
 from aerona.engine.body.conditions import gain_condition
@@ -27,11 +28,12 @@ from aerona.engine.mind.memories import remember, strength_of
 from aerona.engine.mind.opinion import opinion
 from aerona.engine.mind.space import value_alignment
 from aerona.engine.mind.values import liege_of
-from aerona.engine.mortal.justice import code_punishment, sentence
+from aerona.engine.mortal.justice import code_punishment, community_ruler, sentence
 from aerona.engine.mortal.life import ability
 from aerona.engine.mortal.profile import is_held
 from aerona.engine.mortal.standing import add_renown, add_wealth
 from aerona.engine.notes import note
+from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.naming import seed_of
@@ -87,6 +89,7 @@ CAREER_NEEDS: dict[CareerPath, NeedKind] = {
 }
 OFFICE_CLASSES = frozenset({SocialClass.NOBLE, SocialClass.SCRIBE, SocialClass.PRIEST})
 FULL = PERCENT
+PERSECUTION = "persecution"
 
 
 @dataclass(frozen=True)
@@ -319,6 +322,23 @@ async def repay(ctx: TickContext, mortal: EntityRow) -> bool:
         await note(ctx, text, key="memory.gratitude", ids=[mortal.id, benefactor.id])
         return True
     return False
+
+
+async def blasphemy(ctx: TickContext, mortal: EntityRow) -> bool:
+    if mortal.location_id is None:
+        return False
+    level = await law_param(ctx.session, mortal.location_id, LawKind.RELIGIOUS_TOLERANCE, "level")
+    if level != PERSECUTION:
+        return False
+    community = await living_entity(ctx.session, mortal.location_id)
+    state_god = await living_patron(ctx.session, community) if community is not None else None
+    own = await living_patron(ctx.session, mortal)
+    if state_god is None or own is None or own.id == state_god.id:
+        return False
+    if not ctx.rng(seed_of("blasphemy", mortal.id, ctx.epoch)).chance(ctx.rules.punishment.blasphemy_chance):
+        return False
+    judge = await community_ruler(ctx.session, mortal.location_id)
+    return await sentence(ctx, mortal, CrimeKind.BLASPHEMY, await code_punishment(ctx, mortal.location_id, CrimeKind.BLASPHEMY), judge=judge)
 
 
 async def plot(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) -> bool:
