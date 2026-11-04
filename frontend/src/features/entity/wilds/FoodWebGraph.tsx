@@ -116,7 +116,11 @@ export function FoodWebGraph({ web }: { web: FoodWeb }) {
               />
               <text
                 x={node.x}
-                y={node.y + node.r + 14}
+                y={
+                  node.y +
+                  node.r +
+                  (node.crowded && node.slot % 2 === 1 ? 28 : 14)
+                }
                 textAnchor='middle'
                 className='fill-foreground'
                 fontSize={12}

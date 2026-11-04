@@ -1517,7 +1517,7 @@ function SpeciesControls({ id, card, blocked }: Blocked) {
           </TabsTrigger>
           <TabsTrigger value='yields'>
             <Wheat />
-            Yields and uses
+            Yields
           </TabsTrigger>
           <TabsTrigger value='taming'>
             <Dna />
@@ -1533,7 +1533,7 @@ function SpeciesControls({ id, card, blocked }: Blocked) {
           </TabsTrigger>
           <TabsTrigger value='keeping'>
             <Sparkles />
-            Ways of keeping
+            Keeping
           </TabsTrigger>
         </TabsList>
         <TabsContent value='nature'>

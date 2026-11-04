@@ -8,6 +8,8 @@ export type PlacedNode = {
   name: string
   diet: string
   tier: number
+  slot: number
+  crowded: boolean
   x: number
   y: number
   r: number
@@ -28,6 +30,7 @@ const PAD = 40
 const MIN_R = 9
 const GROW_R = 14
 const PERCENT = 100
+const CROWD = 6
 
 export function tiersOf(
   ids: readonly number[],
@@ -82,6 +85,8 @@ export function layoutWeb(web: FoodWeb, width = 640): WebLayout {
         name: node.species.name,
         diet: node.diet,
         tier,
+        slot: index,
+        crowded: sorted.length > CROWD,
         x: Math.round(((index + 1) * width) / (sorted.length + 1)),
         y: PAD + (top - tier) * ROW,
         r:
@@ -103,5 +108,11 @@ export function layoutWeb(web: FoodWeb, width = 640): WebLayout {
       to: link.prey_id,
       pinned: link.kind === 'pinned',
     }))
-  return { nodes, edges, width, height: PAD * 2 + top * ROW, tiers: top + 1 }
+  return {
+    nodes,
+    edges,
+    width,
+    height: PAD * 2 + top * ROW + PAD / 2,
+    tiers: top + 1,
+  }
 }

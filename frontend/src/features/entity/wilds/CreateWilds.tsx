@@ -319,7 +319,9 @@ export function CreateSpeciesDialog({ regionId }: { regionId?: number }) {
           </div>
           <ChoiceGrid
             label='Yields beyond meat, hide and bone'
-            values={yieldProductValues}
+            values={yieldProductValues.filter(
+              (value) => !['meat', 'hide', 'bone'].includes(value)
+            )}
             table={PRODUCTS}
             chosen={products}
             onPick={(value) => setProducts((before) => toggled(before, value))}

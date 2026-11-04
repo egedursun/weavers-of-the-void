@@ -92,7 +92,7 @@ describe('wilds controls', () => {
   it('keeps a kind in a way of your own', async () => {
     onApi('POST', '/api/actions/species:custom_use', ACCEPTED_ACTION)
     const { screen } = await openSpecies(SPECIES)
-    await screen.getByRole('tab', { name: 'Ways of keeping' }).click()
+    await screen.getByRole('tab', { name: 'Keeping' }).click()
     await screen
       .getByRole('switch', { name: 'Keep this kind as Grave-guarding' })
       .click()
