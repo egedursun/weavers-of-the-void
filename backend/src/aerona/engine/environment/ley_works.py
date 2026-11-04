@@ -13,7 +13,7 @@ from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import set_stats, stat_or
 
 LEY_WORK_KINDS = frozenset({EngineKind.TEMPLE, EngineKind.OBSERVATORY})
-LEY_FIXUP = "environment.ley_attunement.v1"
+LEY_FIXUP = "environment.ley_attunement"
 LEY_WORDS = ("gate", "tower", "temple", "observatory", "shrine")
 
 

@@ -20,7 +20,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.queries import canon
 
-WORKS_FIXUP = "environment.typed_works.v1"
+WORKS_FIXUP = "environment.typed_works"
 WORK_MAX = 5
 BRIDGE_WORDS = ("bridge",)
 HARBOUR_WORDS = ("harbour", "harbor", "port", "quay", "dock")

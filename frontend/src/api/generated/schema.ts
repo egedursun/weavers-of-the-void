@@ -4239,6 +4239,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/worlds/{world_id}/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["world_calendar_api_worlds__world_id__calendar_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/regions/{region_id}/works": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["region_works_view_api_regions__region_id__works_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/minds/{node_id}": {
         parameters: {
             query?: never;
@@ -4279,6 +4311,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["node_mechanics_api_nodes__node_id__mechanics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/nodes/{node_id}/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["node_profiles_api_nodes__node_id__profiles_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8207,6 +8255,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/profile:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_profile_set_api_actions_profile_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/profile:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_profile_release_api_actions_profile_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/ley:sever": {
         parameters: {
             query?: never;
@@ -8489,6 +8569,230 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["action_calendar_rename_api_actions_calendar_rename_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/seasons:add": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_seasons_add_api_actions_seasons_add_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/seasons:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_seasons_remove_api_actions_seasons_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/seasons:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_seasons_release_api_actions_seasons_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/seasons:moons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_seasons_moons_api_actions_seasons_moons_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/seasons:calendar_release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_seasons_calendar_release_api_actions_seasons_calendar_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/weather:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_weather_edit_api_actions_weather_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/year:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_year_edit_api_actions_year_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/year:delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_year_delete_api_actions_year_delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/calendar:holy_day": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_calendar_holy_day_api_actions_calendar_holy_day_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/calendar:holy_day_remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_calendar_holy_day_remove_api_actions_calendar_holy_day_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/calendar:anchor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_calendar_anchor_api_actions_calendar_anchor_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/ley:strength": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_ley_strength_api_actions_ley_strength_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/ley:dissolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_ley_dissolve_api_actions_ley_dissolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/ley:work": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_ley_work_api_actions_ley_work_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10784,8 +11088,32 @@ export interface components {
         CalendarAdoptInput: {
             knowledge_id: number;
         };
+        CalendarAnchorInput: {
+            knowledge_id: number;
+            anchor_year: number;
+        };
+        CalendarDetail: {
+            knowledge_id: number;
+            name: string;
+            anchor_year: number;
+            keepers: number;
+            holy_days: components["schemas"]["HolyDayDetail"][];
+        };
         CalendarDropInput: {
             knowledge_id: number;
+        };
+        CalendarHolyDayInput: {
+            knowledge_id: number;
+            index?: number | null;
+            name: string;
+            season_position?: number | null;
+            notable_year_id?: number | null;
+            tradition_id?: number | null;
+            found_tradition: boolean;
+        };
+        CalendarHolyDayRemoveInput: {
+            knowledge_id: number;
+            index: number;
         };
         CalendarRenameInput: {
             knowledge_id: number;
@@ -12885,6 +13213,15 @@ export interface components {
             holding: components["schemas"]["NodeRef"] | null;
             since_epoch: number;
         };
+        HolyDayDetail: {
+            index: number;
+            name: string;
+            year: number | null;
+            season_position: number | null;
+            notable_year_id: number | null;
+            tradition_id: number | null;
+            tradition_name: string | null;
+        };
         HolyDayView: {
             name: string;
             year: number | null;
@@ -13125,6 +13462,8 @@ export interface components {
             warehouse_capacity: number;
             harbour_capacity: number;
             towers: number;
+            bridges: number;
+            irrigation: number;
             locked: string[];
         };
         InheritanceCustom: "gavelkind" | "primogeniture" | "ultimogeniture" | "matrilineal" | "elective" | "by_merit";
@@ -13683,6 +14022,9 @@ export interface components {
             added_by: components["schemas"]["NodeRef"] | null;
             epoch: number;
         };
+        LeyDissolveInput: {
+            line_id: number;
+        };
         LeyForgeInput: {
             first_region_id: number;
             second_region_id: number;
@@ -13704,8 +14046,28 @@ export interface components {
             line_id: number;
             epochs?: number | null;
         };
+        LeyStrengthInput: {
+            line_id: number;
+            strength: number;
+        };
         LeyUnforgeInput: {
             line_id: number;
+        };
+        LeyWorkInput: {
+            structure_id: number;
+            values?: {
+                [key: string]: boolean;
+            };
+            release?: string[];
+        };
+        LeyWorkView: {
+            structure_id: number;
+            name: string;
+            attuned: boolean;
+            on_ley_line: boolean;
+            at_nexus: boolean;
+            function: number | null;
+            locked: string[];
         };
         LifeInsight: {
             age: number | null;
@@ -14734,6 +15096,7 @@ export interface components {
         };
         OutbreakStatus: "active" | "waning" | "ended";
         OutbreakView: {
+            season_factor: number;
             id: number;
             disease_id: number;
             disease: string;
@@ -15359,6 +15722,32 @@ export interface components {
             commodity: components["schemas"]["CommodityKind"];
             points: components["schemas"]["PricePoint"][];
         };
+        ProfileColumnRecord: {
+            name: string;
+            kind: string;
+            value: number | string | boolean | null;
+            options: string[];
+            nullable: boolean;
+            held: boolean;
+            pinned: boolean;
+        };
+        ProfileReleaseInput: {
+            node_id: number;
+            table: string;
+            column: string;
+        };
+        ProfileSetInput: {
+            node_id: number;
+            table: string;
+            column: string;
+            value: number | string | boolean | null;
+            hold: boolean;
+        };
+        ProfileTableRecord: {
+            table: string;
+            lockable: boolean;
+            columns: components["schemas"]["ProfileColumnRecord"][];
+        };
         PromptArea: "shared" | "context" | "genesis" | "son_turn" | "fate" | "chronicler" | "naming" | "voices" | "deepening" | "image_prompts" | "council" | "translation" | "world_birth" | "network_repair" | "mortal" | "opportunities" | "agent" | "chronicle" | "localisation";
         PromptCatalogue: {
             prompts: components["schemas"]["PromptEntry"][];
@@ -15547,6 +15936,7 @@ export interface components {
             demand: number;
             imported: number;
             exported: number;
+            swing: number;
         };
         RangeTrend: "rising" | "steady" | "falling";
         RangeView: {
@@ -15746,6 +16136,19 @@ export interface components {
             name: string;
             prestige: number;
             lingua_franca: boolean;
+        };
+        RegionWorksView: {
+            region_id: number;
+            roads: number;
+            bridges: number;
+            harbours: number;
+            irrigation: number;
+            irrigation_pct: number;
+            rainfall: number;
+            rain_lost_to_clearing: number;
+            cleared: number;
+            settlements: components["schemas"]["SettlementWorks"][];
+            ley_works: components["schemas"]["LeyWorkView"][];
         };
         RegionalStanding: "hegemon" | "great_power" | "minor_power" | "client";
         ReincarnationGate: "tenet" | "natural_law" | "rite" | "god";
@@ -16159,6 +16562,16 @@ export interface components {
             snippet: string | null;
             epoch?: number | null;
         };
+        SeasonTradition: {
+            id: number;
+            name: string;
+            kind: components["schemas"]["TraditionKind"];
+            season_position: number | null;
+            calendar_id: number | null;
+            calendar_name: string | null;
+            in_season: boolean | null;
+            held: string[];
+        };
         SeasonView: {
             id: number;
             position: number;
@@ -16170,12 +16583,26 @@ export interface components {
             campaign: number;
             edited: boolean;
         };
+        SeasonsAddInput: {
+            world_id: number;
+            name: string;
+            position?: number | null;
+            temperature_shift: number;
+            rain_shift: number;
+            growth: number;
+            travel: number;
+            campaign: number;
+        };
         SeasonsCalendarInput: {
             world_id: number;
             axial_tilt?: number | null;
             year_length_days?: number | null;
             day_length_hours?: number | null;
             regenerate_seasons: boolean;
+        };
+        SeasonsCalendarReleaseInput: {
+            world_id: number;
+            fields: string[];
         };
         SeasonsEditInput: {
             season_id: number;
@@ -16185,6 +16612,17 @@ export interface components {
             growth?: number | null;
             travel?: number | null;
             campaign?: number | null;
+        };
+        SeasonsMoonsInput: {
+            world_id: number;
+            moon_count?: number | null;
+            tidal_strength?: number | null;
+        };
+        SeasonsReleaseInput: {
+            season_id: number;
+        };
+        SeasonsRemoveInput: {
+            season_id: number;
         };
         SeasonsReorderInput: {
             world_id: number;
@@ -16295,6 +16733,14 @@ export interface components {
             rate: number;
         };
         SettlementTier: "capital" | "village" | "town" | "city" | "great_city";
+        SettlementWorks: {
+            settlement_id: number;
+            name: string;
+            bridges: number;
+            irrigation: number;
+            harbour: boolean;
+            locked: string[];
+        };
         Sex: "female" | "male";
         ShieldType: "none" | "small" | "large" | "tower";
         SiblingView: {
@@ -17393,6 +17839,10 @@ export interface components {
         TraditionCard: {
             kind: components["schemas"]["TraditionKind"];
             calendar_slot: string | null;
+            season_position?: number | null;
+            calendar_entity_id?: number | null;
+            notable_year_id?: number | null;
+            in_season?: boolean | null;
             cost: {
                 [key: string]: number;
             };
@@ -17404,7 +17854,7 @@ export interface components {
             keepers: components["schemas"]["KeeperView"][];
             locked: string[];
         };
-        TraditionKind: "festival" | "fast" | "funeral_rite" | "initiation" | "marriage_rite" | "coming_of_age" | "taboo" | "offering" | "pilgrimage" | "hospitality_law" | "duel_custom" | "mourning" | "harvest_rite" | "war_dance" | "scar_rite" | "ancestor_feast";
+        TraditionKind: "festival" | "fast" | "funeral_rite" | "initiation" | "marriage_rite" | "coming_of_age" | "taboo" | "offering" | "pilgrimage" | "hospitality_law" | "duel_custom" | "mourning" | "harvest_rite" | "war_dance" | "scar_rite" | "ancestor_feast" | "siesta" | "night_vigil";
         TraditionParticipationInput: {
             tradition_id: number;
             community_id: number;
@@ -17732,6 +18182,13 @@ export interface components {
             kind: string;
             degree: number;
         };
+        WeatherEditInput: {
+            forced_id: number;
+            kind?: components["schemas"]["WeatherKind"] | null;
+            until_epoch?: number | null;
+            season_position?: number | null;
+            every_season: boolean;
+        };
         WeatherEffect: "visibility" | "footing" | "cold" | "heat" | "wet" | "wind" | "morale" | "growth";
         WeatherForceInput: {
             region_id: number;
@@ -17854,6 +18311,16 @@ export interface components {
             world_type: string;
             discovery: string;
             leakage: number;
+        };
+        WorldCalendarView: {
+            world_id: number;
+            calendar_locked: string[];
+            day_length_hours: number | null;
+            long_days: boolean;
+            long_day_hours: number;
+            sleep_customs: number;
+            calendars: components["schemas"]["CalendarDetail"][];
+            traditions: components["schemas"]["SeasonTradition"][];
         };
         WorldChangedEvent: {
             id: number;
@@ -18089,6 +18556,17 @@ export interface components {
             epoch: number;
         };
         WritingSystem: "alphabet" | "syllabary" | "pictographic" | "knot" | "notch";
+        YearDeleteInput: {
+            notable_id: number;
+        };
+        YearEditInput: {
+            notable_id: number;
+            name?: string | null;
+            magnitude?: number | null;
+            kind?: components["schemas"]["NotableYearKind"] | null;
+            weather?: components["schemas"]["WeatherKind"] | null;
+            year?: number | null;
+        };
         YearForceNotableInput: {
             region_id: number;
             kind: components["schemas"]["NotableYearKind"];
@@ -26165,6 +26643,64 @@ export interface operations {
             };
         };
     };
+    world_calendar_api_worlds__world_id__calendar_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorldCalendarView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    region_works_view_api_regions__region_id__works_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                region_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegionWorksView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     mind_view_api_minds__node_id__get: {
         parameters: {
             query?: never;
@@ -26230,6 +26766,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NodeMechanicsView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    node_profiles_api_nodes__node_id__profiles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileTableRecord"][];
                 };
             };
             422: {
@@ -33489,6 +34054,68 @@ export interface operations {
             };
         };
     };
+    action_profile_set_api_actions_profile_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_profile_release_api_actions_profile_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_ley_sever_api_actions_ley_sever_post: {
         parameters: {
             query?: never;
@@ -34026,6 +34653,440 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["CalendarRenameInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_seasons_add_api_actions_seasons_add_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeasonsAddInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_seasons_remove_api_actions_seasons_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeasonsRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_seasons_release_api_actions_seasons_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeasonsReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_seasons_moons_api_actions_seasons_moons_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeasonsMoonsInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_seasons_calendar_release_api_actions_seasons_calendar_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeasonsCalendarReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_weather_edit_api_actions_weather_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WeatherEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_year_edit_api_actions_year_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["YearEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_year_delete_api_actions_year_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["YearDeleteInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_calendar_holy_day_api_actions_calendar_holy_day_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarHolyDayInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_calendar_holy_day_remove_api_actions_calendar_holy_day_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarHolyDayRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_calendar_anchor_api_actions_calendar_anchor_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarAnchorInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_ley_strength_api_actions_ley_strength_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeyStrengthInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_ley_dissolve_api_actions_ley_dissolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeyDissolveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_ley_work_api_actions_ley_work_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeyWorkInput"];
             };
         };
         responses: {
@@ -37528,7 +38589,7 @@ export const tradeLossValues: ReadonlyArray<FlattenedDeepRequired<components>["s
 export const tradeModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TradeMode"]> = ["road", "river", "sea", "caravan", "sky"];
 export const tradeRouteStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TradeRouteStats"]["kind"]> = ["trade_route"];
 export const tradeRouteStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TradeRouteStatus"]> = ["forming", "open", "blockaded", "closed", "decayed"];
-export const traditionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraditionKind"]> = ["festival", "fast", "funeral_rite", "initiation", "marriage_rite", "coming_of_age", "taboo", "offering", "pilgrimage", "hospitality_law", "duel_custom", "mourning", "harvest_rite", "war_dance", "scar_rite", "ancestor_feast"];
+export const traditionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraditionKind"]> = ["festival", "fast", "funeral_rite", "initiation", "marriage_rite", "coming_of_age", "taboo", "offering", "pilgrimage", "hospitality_law", "duel_custom", "mourning", "harvest_rite", "war_dance", "scar_rite", "ancestor_feast", "siesta", "night_vigil"];
 export const traditionStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraditionStats"]["kind"]> = ["tradition"];
 export const traitEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraitEffect"]> = ["war_appetite", "betrayal", "cruelty", "trust", "memory_decay", "zeal", "agent_weight", "learning", "drift", "exploration", "fertility", "justice", "deceit", "greed", "courage"];
 export const traitKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraitKind"]> = ["brave", "craven", "wrathful", "patient", "cruel", "kind", "ambitious", "content", "greedy", "generous", "honest", "deceitful", "zealous", "cynical", "paranoid", "trusting", "lustful", "chaste", "gluttonous", "ascetic", "scholarly", "illiterate_proud", "gregarious", "reclusive", "vengeful", "forgiving", "stubborn", "fickle", "just", "arbitrary", "humble", "proud", "curious", "incurious", "melancholic", "sanguine", "iron_willed", "impressionable", "cunning_tactician", "reckless"];

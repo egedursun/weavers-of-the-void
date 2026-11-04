@@ -27,7 +27,7 @@ from aerona.engine.primitives.records import RecordSpec, create_record
 K = TraditionKind
 SEASON_HELD = "season_position"
 CALENDAR_HELD = "calendar_entity_id"
-HOLY_DAY_FIXUP = "lore.holy_day_traditions.v1"
+HOLY_DAY_FIXUP = "lore.holy_day_traditions"
 WARM_BANDS = frozenset({TemperatureBand.WARM, TemperatureBand.HOT, TemperatureBand.SEARING})
 SLEEP_CUSTOMS = frozenset({K.SIESTA, K.NIGHT_VIGIL})
 

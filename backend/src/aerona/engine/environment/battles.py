@@ -6,7 +6,7 @@ from aerona.domain.models.calendar import epoch_start_year
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
 
-BATTLE_FIXUP = "environment.battle_ground.v1"
+BATTLE_FIXUP = "environment.battle_ground"
 
 
 async def backfill_battle_ground(ctx: TickContext) -> int:

@@ -404,6 +404,8 @@ TRADITION_EFFECTS = {
     "war_dance": (S.MIND, "traditions.war_dance_martial", "martial"),
     "scar_rite": (S.BODY, "traditions.scar_rite_chance", "scars"),
     "ancestor_feast": (S.FAITH, "traditions.ancestor_feast_placation", "spirits"),
+    "siesta": (S.SOCIAL, "seasonal.siesta_unrest", "unrest"),
+    "night_vigil": (S.SOCIAL, "seasonal.vigil_crime", "crime"),
 }
 
 
