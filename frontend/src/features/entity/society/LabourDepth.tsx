@@ -12,7 +12,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { IconStat, Medallion, MiniStat } from '@/components/domain'
+import { IconStat, Medallion, MiniStat, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -95,28 +95,30 @@ function JobReasons({
         {shifts.length === 0 && (
           <Muted variant='caption'>Nothing pulls workers in or out.</Muted>
         )}
-        {shifts.map((reason) => {
-          const why = REASON_SPEC[reason.reason]
-          const detail = reasonDetail(reason)
-          return (
-            <Tooltip key={reason.reason}>
-              <TooltipTrigger asChild>
-                <span tabIndex={0} className='inline-flex min-w-0'>
-                  <Badge
-                    size='sm'
-                    variant={reason.workers >= 0 ? 'success' : 'destructive'}
-                  >
-                    <why.icon />
-                    {`${why.label} ${reason.workers >= 0 ? '+' : ''}${formatInteger(reason.workers)}`}
-                  </Badge>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                {detail ? `${why.hint}. ${detail}` : why.hint}
-              </TooltipContent>
-            </Tooltip>
-          )
-        })}
+        <Paged items={shifts}>
+          {(reason) => {
+            const why = REASON_SPEC[reason.reason]
+            const detail = reasonDetail(reason)
+            return (
+              <Tooltip key={reason.reason}>
+                <TooltipTrigger asChild>
+                  <span tabIndex={0} className='inline-flex min-w-0'>
+                    <Badge
+                      size='sm'
+                      variant={reason.workers >= 0 ? 'success' : 'destructive'}
+                    >
+                      <why.icon />
+                      {`${why.label} ${reason.workers >= 0 ? '+' : ''}${formatInteger(reason.workers)}`}
+                    </Badge>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {detail ? `${why.hint}. ${detail}` : why.hint}
+                </TooltipContent>
+              </Tooltip>
+            )
+          }}
+        </Paged>
       </div>
     </div>
   )
@@ -300,14 +302,16 @@ export function LabourDepth({
         hint='Class custom, then mines and coasts, workshops, resources, prices, corvee and your holds'
       >
         <div className='grid min-w-0 grid-cols-1 gap-2 @md/why:grid-cols-2 @3xl/why:grid-cols-3'>
-          {jobs.map((job) => (
-            <JobReasons
-              key={job}
-              job={job}
-              reasons={data.labour_reasons.filter((item) => item.job === job)}
-              held={data.held_jobs.includes(job)}
-            />
-          ))}
+          <Paged items={jobs}>
+            {(job) => (
+              <JobReasons
+                key={job}
+                job={job}
+                reasons={data.labour_reasons.filter((item) => item.job === job)}
+                held={data.held_jobs.includes(job)}
+              />
+            )}
+          </Paged>
         </div>
       </Panel>
       <Panel
@@ -316,19 +320,21 @@ export function LabourDepth({
         hint='Against each good’s usual price; dear goods draw hands to their trade'
       >
         <div className='flex min-w-0 flex-wrap gap-1.5'>
-          {dear.map((price) => {
-            const good = COMMODITY[price.commodity as CommodityKind]
-            return (
-              <IconStat
-                key={price.commodity}
-                icon={good?.icon ?? Coins}
-                label={good?.label ?? price.commodity}
-                value={`${price.price_pct}%`}
-                tone={priceTone(price.price_pct)}
-                hint={good?.label}
-              />
-            )
-          })}
+          <Paged items={dear}>
+            {(price) => {
+              const good = COMMODITY[price.commodity as CommodityKind]
+              return (
+                <IconStat
+                  key={price.commodity}
+                  icon={good?.icon ?? Coins}
+                  label={good?.label ?? price.commodity}
+                  value={`${price.price_pct}%`}
+                  tone={priceTone(price.price_pct)}
+                  hint={good?.label}
+                />
+              )
+            }}
+          </Paged>
         </div>
       </Panel>
       <AdjustPanel

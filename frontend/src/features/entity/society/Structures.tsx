@@ -43,6 +43,7 @@ import {
   MiniStat,
   Section,
   StatBar,
+  Paged,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
@@ -597,9 +598,11 @@ function DesignsPanel({
           </Muted>
         ) : (
           <ul className='grid min-w-0 grid-cols-1 gap-3 @xl:grid-cols-2'>
-            {designs.map((design) => (
-              <DesignCard key={design.id} design={design} blocked={blocked} />
-            ))}
+            <Paged items={designs} as='li'>
+              {(design) => (
+                <DesignCard key={design.id} design={design} blocked={blocked} />
+              )}
+            </Paged>
           </ul>
         )}
       </div>
@@ -692,19 +695,27 @@ export function SettlementStructures({
           description='Commission the first one below, or wait for its people to raise one.'
         />
       ) : (
-        groups.map(({ group, items }) => (
-          <div key={group} className='flex min-w-0 flex-col gap-2'>
-            <GroupHeader
-              group={group as StructureView['group']}
-              count={items.length}
-            />
-            <ul className='grid min-w-0 grid-cols-1 gap-3 @md:grid-cols-2 @3xl:grid-cols-3'>
-              {items.map((item) => (
-                <StructureCard key={item.id} view={item} blocked={blocked} />
-              ))}
-            </ul>
-          </div>
-        ))
+        <Paged items={groups}>
+          {({ group, items }) => (
+            <div key={group} className='flex min-w-0 flex-col gap-2'>
+              <GroupHeader
+                group={group as StructureView['group']}
+                count={items.length}
+              />
+              <ul className='grid min-w-0 grid-cols-1 gap-3 @md:grid-cols-2 @3xl:grid-cols-3'>
+                <Paged items={items} as='li'>
+                  {(item) => (
+                    <StructureCard
+                      key={item.id}
+                      view={item}
+                      blocked={blocked}
+                    />
+                  )}
+                </Paged>
+              </ul>
+            </div>
+          )}
+        </Paged>
       )}
       <CommissionPanel
         key={data.kinds.map((item) => `${item.kind}${item.allowed}`).join()}

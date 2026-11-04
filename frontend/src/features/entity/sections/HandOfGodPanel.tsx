@@ -11,7 +11,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { ConfirmDialog, FormRow, Section } from '@/components/domain'
+import { ConfirmDialog, FormRow, Section, Paged } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted } from '@/components/typography'
 import { CostChip } from '../actions/ActionCard'
@@ -117,21 +117,23 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
           {costText('miracle')}
         </div>
         <div className='flex min-w-0 flex-wrap gap-2'>
-          {miracles.map((miracle) => {
-            const reason = reasonFor('miracle') ?? miracleBlock(ctx, miracle)
-            return (
-              <Button
-                key={miracle}
-                variant='outline'
-                disabled={reason !== null}
-                disabledReason={reason ?? undefined}
-                onClick={() => run('miracle', miracle)}
-              >
-                <HandHeart />
-                {humanize(miracle)}
-              </Button>
-            )
-          })}
+          <Paged items={miracles}>
+            {(miracle) => {
+              const reason = reasonFor('miracle') ?? miracleBlock(ctx, miracle)
+              return (
+                <Button
+                  key={miracle}
+                  variant='outline'
+                  disabled={reason !== null}
+                  disabledReason={reason ?? undefined}
+                  onClick={() => run('miracle', miracle)}
+                >
+                  <HandHeart />
+                  {humanize(miracle)}
+                </Button>
+              )
+            }}
+          </Paged>
         </div>
       </div>
       {DISASTER_TYPES.includes(ctx.type) && (
@@ -141,23 +143,25 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
             {costText('disaster')}
           </div>
           <div className='flex min-w-0 flex-wrap gap-2'>
-            {disasters.map((disaster) => {
-              const reason = reasonFor('disaster')
-              return (
-                <Button
-                  key={disaster}
-                  variant='destructive'
-                  disabled={reason !== null}
-                  disabledReason={reason ?? undefined}
-                  onClick={() =>
-                    setPending({ kind: 'disaster', option: disaster })
-                  }
-                >
-                  <CloudLightning />
-                  {humanize(disaster)}
-                </Button>
-              )
-            })}
+            <Paged items={disasters}>
+              {(disaster) => {
+                const reason = reasonFor('disaster')
+                return (
+                  <Button
+                    key={disaster}
+                    variant='destructive'
+                    disabled={reason !== null}
+                    disabledReason={reason ?? undefined}
+                    onClick={() =>
+                      setPending({ kind: 'disaster', option: disaster })
+                    }
+                  >
+                    <CloudLightning />
+                    {humanize(disaster)}
+                  </Button>
+                )
+              }}
+            </Paged>
           </div>
         </div>
       )}

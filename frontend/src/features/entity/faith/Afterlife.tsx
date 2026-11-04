@@ -34,6 +34,7 @@ import {
   TimelineItem,
   type TimelineTone,
   useShowMore,
+  Paged,
 } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -549,33 +550,37 @@ function SoulBody({
           count={soul.judgements.length}
         >
           <Timeline label='Judgements'>
-            {soul.judgements.map((item, index) => {
-              const doctrine = named(JUDGEMENTS, item.doctrine)
-              return (
-                <TimelineItem
-                  key={`${item.epoch}.${index}`}
-                  icon={doctrine.icon}
-                  framed
-                  title={
-                    item.stratum ? `Sent to ${item.stratum}` : 'Left to wander'
-                  }
-                  timestamp={`Epoch ${item.epoch}`}
-                  tone={item.stratum ? 'primary' : 'warning'}
-                  last={index === soul.judgements.length - 1}
-                >
-                  <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-                    <Tag spec={doctrine} />
-                    <Badge size='sm' variant='secondary'>
-                      {`Score ${item.score}`}
-                    </Badge>
-                    <Tag spec={named(RITES, item.rite)} />
-                  </div>
-                  {!AUTOMATIC.test(item.reason) && (
-                    <Muted variant='caption'>{sentence(item.reason)}</Muted>
-                  )}
-                </TimelineItem>
-              )
-            })}
+            <Paged items={soul.judgements} as='li'>
+              {(item, index) => {
+                const doctrine = named(JUDGEMENTS, item.doctrine)
+                return (
+                  <TimelineItem
+                    key={`${item.epoch}.${index}`}
+                    icon={doctrine.icon}
+                    framed
+                    title={
+                      item.stratum
+                        ? `Sent to ${item.stratum}`
+                        : 'Left to wander'
+                    }
+                    timestamp={`Epoch ${item.epoch}`}
+                    tone={item.stratum ? 'primary' : 'warning'}
+                    last={index === soul.judgements.length - 1}
+                  >
+                    <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+                      <Tag spec={doctrine} />
+                      <Badge size='sm' variant='secondary'>
+                        {`Score ${item.score}`}
+                      </Badge>
+                      <Tag spec={named(RITES, item.rite)} />
+                    </div>
+                    {!AUTOMATIC.test(item.reason) && (
+                      <Muted variant='caption'>{sentence(item.reason)}</Muted>
+                    )}
+                  </TimelineItem>
+                )
+              }}
+            </Paged>
           </Timeline>
         </Panel>
       )}
@@ -798,16 +803,18 @@ export function AfterlifeSection({
                 <Label variant='overline'>The heavens</Label>
               </div>
               <Timeline label='Strata of the afterlife'>
-                {strata.map((stratum, index) => (
-                  <StratumRung
-                    key={`${stratum.id}-${stratum.name}`}
-                    realmId={regionId}
-                    stratum={stratum}
-                    most={most}
-                    last={index === strata.length - 1}
-                    blocked={blocked}
-                  />
-                ))}
+                <Paged items={strata} as='li'>
+                  {(stratum, index) => (
+                    <StratumRung
+                      key={`${stratum.id}-${stratum.name}`}
+                      realmId={regionId}
+                      stratum={stratum}
+                      most={most}
+                      last={index === strata.length - 1}
+                      blocked={blocked}
+                    />
+                  )}
+                </Paged>
               </Timeline>
               <div className='flex min-w-0 items-center gap-2'>
                 <ArrowDown

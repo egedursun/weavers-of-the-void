@@ -14,7 +14,13 @@ import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { EmptyState, KpiTile, Section, StatBar } from '@/components/domain'
+import {
+  EmptyState,
+  KpiTile,
+  Section,
+  StatBar,
+  Paged,
+} from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { type ActionResponse } from '@/features/pantheon/api'
@@ -188,28 +194,33 @@ function Abilities({ profile }: { profile: MortalProfile }) {
       hint='Inherited from both parents; age wears and ripens them'
     >
       <ul className='flex min-w-0 flex-col gap-2'>
-        {profile.abilities.map((item) => {
-          const spec = named(ABILITIES, item.ability)
-          return (
-            <li key={item.ability} className='flex min-w-0 items-center gap-2'>
-              <div className='min-w-0 flex-1'>
-                <StatBar
-                  label={spec.label}
-                  value={item.value}
-                  max={PERCENT}
-                  icon={spec.icon}
-                  showMax={false}
-                />
-              </div>
-              {item.held && (
-                <Lock
-                  aria-label='Held'
-                  className='size-icon-sm shrink-0 text-muted-foreground'
-                />
-              )}
-            </li>
-          )
-        })}
+        <Paged items={profile.abilities} as='li'>
+          {(item) => {
+            const spec = named(ABILITIES, item.ability)
+            return (
+              <li
+                key={item.ability}
+                className='flex min-w-0 items-center gap-2'
+              >
+                <div className='min-w-0 flex-1'>
+                  <StatBar
+                    label={spec.label}
+                    value={item.value}
+                    max={PERCENT}
+                    icon={spec.icon}
+                    showMax={false}
+                  />
+                </div>
+                {item.held && (
+                  <Lock
+                    aria-label='Held'
+                    className='size-icon-sm shrink-0 text-muted-foreground'
+                  />
+                )}
+              </li>
+            )
+          }}
+        </Paged>
       </ul>
     </Panel>
   )
@@ -753,44 +764,46 @@ export function KinSection({
             count={tree.people.length}
             hint={`${rows.length} ${rows.length === 1 ? 'generation' : 'generations'}`}
           >
-            {rows.map((row) => (
-              <div
-                key={row[0]?.generation ?? 0}
-                className='flex min-w-0 flex-col gap-1.5'
-              >
-                <Label variant='overline'>
-                  {generationLabel(row[0]?.generation ?? 0)}
-                </Label>
-                <ul className='grid min-w-0 grid-cols-1 gap-2 @md/kin:grid-cols-2 @2xl/kin:grid-cols-3'>
-                  {row.map((person) => (
-                    <li
-                      key={person.id}
-                      className='flex min-w-0 items-center gap-2 rounded-md border bg-background px-2 py-1.5'
-                    >
-                      <span className='min-w-0 flex-1 truncate'>
-                        <RefLink
-                          node={{
-                            id: person.id,
-                            kind: 'entity',
-                            name: person.name,
-                          }}
-                        />
-                      </span>
-                      {person.sex && (
-                        <Badge size='sm' variant='outline'>
-                          {named(SEXES, person.sex).label}
-                        </Badge>
-                      )}
-                      {!person.living && (
-                        <Badge size='sm' variant='secondary'>
-                          Dead
-                        </Badge>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            <Paged items={rows}>
+              {(row) => (
+                <div
+                  key={row[0]?.generation ?? 0}
+                  className='flex min-w-0 flex-col gap-1.5'
+                >
+                  <Label variant='overline'>
+                    {generationLabel(row[0]?.generation ?? 0)}
+                  </Label>
+                  <ul className='grid min-w-0 grid-cols-1 gap-2 @md/kin:grid-cols-2 @2xl/kin:grid-cols-3'>
+                    {row.map((person) => (
+                      <li
+                        key={person.id}
+                        className='flex min-w-0 items-center gap-2 rounded-md border bg-background px-2 py-1.5'
+                      >
+                        <span className='min-w-0 flex-1 truncate'>
+                          <RefLink
+                            node={{
+                              id: person.id,
+                              kind: 'entity',
+                              name: person.name,
+                            }}
+                          />
+                        </span>
+                        {person.sex && (
+                          <Badge size='sm' variant='outline'>
+                            {named(SEXES, person.sex).label}
+                          </Badge>
+                        )}
+                        {!person.living && (
+                          <Badge size='sm' variant='secondary'>
+                            Dead
+                          </Badge>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </Paged>
           </Panel>
           <div className='grid min-w-0 grid-cols-1 gap-3 @xl/kin:grid-cols-2'>
             <Panel
@@ -801,28 +814,30 @@ export function KinSection({
             >
               {profile.marriages.length === 0 && <Muted>Never wed.</Muted>}
               <ul className='flex min-w-0 flex-col gap-2'>
-                {profile.marriages.map((item) => (
-                  <li
-                    key={item.id}
-                    className='flex min-w-0 flex-wrap items-center gap-2'
-                  >
-                    <Tag spec={named(MARRIAGE_KINDS, item.kind)} />
-                    {item.spouse && <RefLink node={item.spouse} />}
-                    <Muted variant='caption'>
-                      {item.end_epoch === null
-                        ? `since epoch ${item.start_epoch}`
-                        : `epoch ${item.start_epoch}–${item.end_epoch}`}
-                    </Muted>
-                    {item.cause_end && (
-                      <Tag spec={named(MARRIAGE_ENDS, item.cause_end)} />
-                    )}
-                    {item.forced && (
-                      <Badge size='sm' variant='destructive'>
-                        Forced
-                      </Badge>
-                    )}
-                  </li>
-                ))}
+                <Paged items={profile.marriages} as='li'>
+                  {(item) => (
+                    <li
+                      key={item.id}
+                      className='flex min-w-0 flex-wrap items-center gap-2'
+                    >
+                      <Tag spec={named(MARRIAGE_KINDS, item.kind)} />
+                      {item.spouse && <RefLink node={item.spouse} />}
+                      <Muted variant='caption'>
+                        {item.end_epoch === null
+                          ? `since epoch ${item.start_epoch}`
+                          : `epoch ${item.start_epoch}–${item.end_epoch}`}
+                      </Muted>
+                      {item.cause_end && (
+                        <Tag spec={named(MARRIAGE_ENDS, item.cause_end)} />
+                      )}
+                      {item.forced && (
+                        <Badge size='sm' variant='destructive'>
+                          Forced
+                        </Badge>
+                      )}
+                    </li>
+                  )}
+                </Paged>
               </ul>
             </Panel>
             <Panel
@@ -833,45 +848,47 @@ export function KinSection({
             >
               {profile.kin.length === 0 && <Muted>No kin bonds.</Muted>}
               <ul className='flex min-w-0 flex-col gap-2'>
-                {profile.kin.map((link) => {
-                  const spec = named(KIN_KINDS, link.kind)
-                  const role = KIN_KINDS[link.kind]
-                  return (
-                    <li
-                      key={link.bond_id}
-                      className='flex min-w-0 items-center gap-2'
-                    >
-                      <Tag
-                        spec={spec}
-                        text={
-                          role
-                            ? link.outgoing
-                              ? role.out
-                              : role.in
-                            : undefined
-                        }
-                      />
-                      <span className='min-w-0 flex-1 truncate'>
-                        <RefLink node={link.other} />
-                      </span>
-                      <Button
-                        size='icon'
-                        variant='ghost'
-                        aria-label='Undo this bond'
-                        disabled={blocked !== null || action.isPending}
-                        disabledReason={blocked ?? undefined}
-                        onClick={() =>
-                          void action.mutateAsync({
-                            path: '/api/actions/kin:unbond',
-                            body: { bond_id: link.bond_id },
-                          })
-                        }
+                <Paged items={profile.kin} as='li'>
+                  {(link) => {
+                    const spec = named(KIN_KINDS, link.kind)
+                    const role = KIN_KINDS[link.kind]
+                    return (
+                      <li
+                        key={link.bond_id}
+                        className='flex min-w-0 items-center gap-2'
                       >
-                        <X />
-                      </Button>
-                    </li>
-                  )
-                })}
+                        <Tag
+                          spec={spec}
+                          text={
+                            role
+                              ? link.outgoing
+                                ? role.out
+                                : role.in
+                              : undefined
+                          }
+                        />
+                        <span className='min-w-0 flex-1 truncate'>
+                          <RefLink node={link.other} />
+                        </span>
+                        <Button
+                          size='icon'
+                          variant='ghost'
+                          aria-label='Undo this bond'
+                          disabled={blocked !== null || action.isPending}
+                          disabledReason={blocked ?? undefined}
+                          onClick={() =>
+                            void action.mutateAsync({
+                              path: '/api/actions/kin:unbond',
+                              body: { bond_id: link.bond_id },
+                            })
+                          }
+                        >
+                          <X />
+                        </Button>
+                      </li>
+                    )
+                  }}
+                </Paged>
               </ul>
             </Panel>
           </div>
@@ -915,34 +932,36 @@ export function EquipmentSection({
       ) : (
         <div className='@container/gear flex min-w-0 flex-col gap-4'>
           <ul className='grid min-w-0 grid-cols-1 gap-2 @md/gear:grid-cols-2 @2xl/gear:grid-cols-3'>
-            {profile.equipment.map((entry) => {
-              const spec = named(SLOTS, entry.slot)
-              return (
-                <li
-                  key={entry.slot}
-                  className='flex min-w-0 items-center gap-2 rounded-md border bg-background p-2'
-                >
-                  <spec.icon
-                    aria-hidden='true'
-                    className='size-icon-sm shrink-0 text-muted-foreground'
-                  />
-                  <div className='flex min-w-0 flex-1 flex-col'>
-                    <Label variant='overline'>{spec.label}</Label>
-                    {entry.item ? (
-                      <RefLink node={entry.item} />
-                    ) : (
-                      <Muted>Empty</Muted>
-                    )}
-                  </div>
-                  {entry.held && (
-                    <Lock
-                      aria-label='Held'
+            <Paged items={profile.equipment} as='li'>
+              {(entry) => {
+                const spec = named(SLOTS, entry.slot)
+                return (
+                  <li
+                    key={entry.slot}
+                    className='flex min-w-0 items-center gap-2 rounded-md border bg-background p-2'
+                  >
+                    <spec.icon
+                      aria-hidden='true'
                       className='size-icon-sm shrink-0 text-muted-foreground'
                     />
-                  )}
-                </li>
-              )
-            })}
+                    <div className='flex min-w-0 flex-1 flex-col'>
+                      <Label variant='overline'>{spec.label}</Label>
+                      {entry.item ? (
+                        <RefLink node={entry.item} />
+                      ) : (
+                        <Muted>Empty</Muted>
+                      )}
+                    </div>
+                    {entry.held && (
+                      <Lock
+                        aria-label='Held'
+                        className='size-icon-sm shrink-0 text-muted-foreground'
+                      />
+                    )}
+                  </li>
+                )
+              }}
+            </Paged>
           </ul>
           <AdjustPanel
             title='Arm and outfit'

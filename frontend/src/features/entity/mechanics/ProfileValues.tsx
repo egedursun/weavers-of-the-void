@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { EmptyState, Medallion } from '@/components/domain'
+import { EmptyState, Medallion, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { humanize } from '../actions/schema'
@@ -212,15 +212,17 @@ function TableCard({
         trigger='Adjust values'
       >
         <ul className='flex min-w-0 flex-col gap-1.5'>
-          {table.columns.map((column) => (
-            <ColumnRow
-              key={column.name}
-              nodeId={nodeId}
-              table={table.table}
-              column={column}
-              blocked={blocked}
-            />
-          ))}
+          <Paged items={table.columns} as='li'>
+            {(column) => (
+              <ColumnRow
+                key={column.name}
+                nodeId={nodeId}
+                table={table.table}
+                column={column}
+                blocked={blocked}
+              />
+            )}
+          </Paged>
         </ul>
       </AdjustPanel>
     </div>
@@ -264,14 +266,16 @@ export function ProfileValues({
         />
       ) : (
         <div className='grid min-w-0 grid-cols-1 gap-2'>
-          {tables.map((table) => (
-            <TableCard
-              key={table.table}
-              nodeId={nodeId}
-              table={table}
-              blocked={blocked}
-            />
-          ))}
+          <Paged items={tables}>
+            {(table) => (
+              <TableCard
+                key={table.table}
+                nodeId={nodeId}
+                table={table}
+                blocked={blocked}
+              />
+            )}
+          </Paged>
         </div>
       )}
     </div>

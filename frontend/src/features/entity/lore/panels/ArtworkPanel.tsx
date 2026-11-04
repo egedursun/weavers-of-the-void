@@ -9,7 +9,7 @@ import {
   Sprout,
   Target,
 } from 'lucide-react'
-import { KpiTile } from '@/components/domain'
+import { KpiTile, Paged } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import {
   AdjustBlock,
@@ -119,14 +119,16 @@ export function ArtworkPanel({
             <div className='flex min-w-0 flex-col gap-1.5'>
               <Label>Translated into</Label>
               <div className='flex min-w-0 flex-wrap gap-1.5'>
-                {card.translations.map((item) => (
-                  <RefChip
-                    key={item.id}
-                    icon={Languages}
-                    label=''
-                    item={item}
-                  />
-                ))}
+                <Paged items={card.translations}>
+                  {(item) => (
+                    <RefChip
+                      key={item.id}
+                      icon={Languages}
+                      label=''
+                      item={item}
+                    />
+                  )}
+                </Paged>
               </div>
             </div>
           )}

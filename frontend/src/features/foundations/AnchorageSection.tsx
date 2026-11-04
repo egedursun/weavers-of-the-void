@@ -20,6 +20,7 @@ import {
   KpiTile,
   Medallion,
   Section,
+  Paged,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
@@ -220,16 +221,18 @@ export function AnchorageSection({
               hint='Any of these can anchor them'
             >
               <ul className='flex min-w-0 flex-wrap gap-2'>
-                {data.shrines.map((item) => (
-                  <li key={item.id}>
-                    <Badge size='default' variant='secondary'>
-                      <Church aria-hidden='true' />
-                      <EntityLink kind='entity' id={String(item.id)}>
-                        {item.name}
-                      </EntityLink>
-                    </Badge>
-                  </li>
-                ))}
+                <Paged items={data.shrines} as='li'>
+                  {(item) => (
+                    <li key={item.id}>
+                      <Badge size='default' variant='secondary'>
+                        <Church aria-hidden='true' />
+                        <EntityLink kind='entity' id={String(item.id)}>
+                          {item.name}
+                        </EntityLink>
+                      </Badge>
+                    </li>
+                  )}
+                </Paged>
               </ul>
             </Panel>
           )}
@@ -241,36 +244,38 @@ export function AnchorageSection({
               count={data.incited.length}
             >
               <ul className='flex min-w-0 flex-col gap-2'>
-                {data.incited.map((war) => (
-                  <li
-                    key={war.war_id}
-                    className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-2.5'
-                  >
-                    <Medallion
-                      icon={war.ending ? Swords : Flame}
-                      tone={war.ending ? 'muted' : 'danger'}
-                      size='sm'
-                    />
-                    <div className='flex min-w-0 flex-1 flex-col'>
-                      {war.event ? (
-                        <EntityLink kind='entity' id={String(war.event.id)}>
-                          {war.event.name}
-                        </EntityLink>
-                      ) : (
-                        <Text>War #{war.war_id}</Text>
+                <Paged items={data.incited} as='li'>
+                  {(war) => (
+                    <li
+                      key={war.war_id}
+                      className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-2.5'
+                    >
+                      <Medallion
+                        icon={war.ending ? Swords : Flame}
+                        tone={war.ending ? 'muted' : 'danger'}
+                        size='sm'
+                      />
+                      <div className='flex min-w-0 flex-1 flex-col'>
+                        {war.event ? (
+                          <EntityLink kind='entity' id={String(war.event.id)}>
+                            {war.event.name}
+                          </EntityLink>
+                        ) : (
+                          <Text>War #{war.war_id}</Text>
+                        )}
+                        <Muted variant='caption' truncate>
+                          {`Begun in age ${war.started_epoch} · ${endingText(war)}`}
+                        </Muted>
+                      </div>
+                      {war.held && (
+                        <Badge size='sm' variant='outline'>
+                          <Lock aria-hidden='true' />
+                          Held
+                        </Badge>
                       )}
-                      <Muted variant='caption' truncate>
-                        {`Begun in age ${war.started_epoch} · ${endingText(war)}`}
-                      </Muted>
-                    </div>
-                    {war.held && (
-                      <Badge size='sm' variant='outline'>
-                        <Lock aria-hidden='true' />
-                        Held
-                      </Badge>
-                    )}
-                  </li>
-                ))}
+                    </li>
+                  )}
+                </Paged>
               </ul>
             </Panel>
           )}

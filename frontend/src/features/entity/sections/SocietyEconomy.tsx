@@ -1,7 +1,7 @@
 import { formatDecimal, formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { Section } from '@/components/domain'
+import { Section, Paged } from '@/components/domain'
 import { Label, Muted, Stat } from '@/components/typography'
 import { humanize } from '../actions/schema'
 import { RULE, useRuleLookup } from '../api/rules'
@@ -121,22 +121,24 @@ export function SocietyEconomy({ detail }: { detail: EntityDetail }) {
       )}
       {Object.keys(society.stocks).length > 0 && (
         <div className='flex min-w-0 flex-wrap gap-2'>
-          {Object.entries(society.stocks).map(([good, amount]) => {
-            const price = society.prices[good]
-            return (
-              <Badge
-                key={good}
-                variant='outline'
-                title={
-                  price !== undefined
-                    ? `Price ×${formatDecimal(price / PERCENT_MAX)}`
-                    : undefined
-                }
-              >
-                {`${humanize(good)} ${formatInteger(amount)}${price !== undefined ? ` · ${priceBand(price, scarcity, plenty)}` : ''}`}
-              </Badge>
-            )
-          })}
+          <Paged items={Object.entries(society.stocks)}>
+            {([good, amount]) => {
+              const price = society.prices[good]
+              return (
+                <Badge
+                  key={good}
+                  variant='outline'
+                  title={
+                    price !== undefined
+                      ? `Price ×${formatDecimal(price / PERCENT_MAX)}`
+                      : undefined
+                  }
+                >
+                  {`${humanize(good)} ${formatInteger(amount)}${price !== undefined ? ` · ${priceBand(price, scarcity, plenty)}` : ''}`}
+                </Badge>
+              )
+            }}
+          </Paged>
         </div>
       )}
       <Muted variant='caption'>

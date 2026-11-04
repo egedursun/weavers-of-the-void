@@ -11,6 +11,7 @@ import {
   EmptyState,
   Medallion,
   Section,
+  Paged,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -155,24 +156,29 @@ function SlotCard({
       </div>
       {effects.length > 0 && (
         <ul className='grid min-w-0 grid-cols-1 gap-1.5 @lg/slot:grid-cols-2'>
-          {effects.map(([key, value]) => {
-            const effect = slotEffect(key, value)
-            return (
-              <li
-                key={key}
-                data-effect={key}
-                className='flex min-w-0 items-center gap-2 rounded-md border bg-muted/40 px-2 py-1.5'
-              >
-                <effect.icon
-                  aria-hidden='true'
-                  className={cn('size-icon-xs shrink-0', iconTone(effect.tone))}
-                />
-                <Text as='span' variant='caption'>
-                  {effect.text}
-                </Text>
-              </li>
-            )
-          })}
+          <Paged items={effects} as='li'>
+            {([key, value]) => {
+              const effect = slotEffect(key, value)
+              return (
+                <li
+                  key={key}
+                  data-effect={key}
+                  className='flex min-w-0 items-center gap-2 rounded-md border bg-muted/40 px-2 py-1.5'
+                >
+                  <effect.icon
+                    aria-hidden='true'
+                    className={cn(
+                      'size-icon-xs shrink-0',
+                      iconTone(effect.tone)
+                    )}
+                  />
+                  <Text as='span' variant='caption'>
+                    {effect.text}
+                  </Text>
+                </li>
+              )
+            }}
+          </Paged>
         </ul>
       )}
       <div className='grid min-w-0 grid-cols-2 gap-1.5 @md/slot:grid-cols-4'>
@@ -296,15 +302,17 @@ export function NodeMaterials({
               note='Holy weapons harm it more; sanctity in a blade bites deeper.'
               aside={
                 <div className='flex min-w-0 flex-wrap gap-1.5'>
-                  {view.data.foe_natures.map((nature) => {
-                    const look = FOE_NATURE[nature]
-                    return (
-                      <Badge key={nature} variant='destructive'>
-                        <look.icon />
-                        {look.label}
-                      </Badge>
-                    )
-                  })}
+                  <Paged items={view.data.foe_natures}>
+                    {(nature) => {
+                      const look = FOE_NATURE[nature]
+                      return (
+                        <Badge key={nature} variant='destructive'>
+                          <look.icon />
+                          {look.label}
+                        </Badge>
+                      )
+                    }}
+                  </Paged>
                 </div>
               }
             />
@@ -317,24 +325,28 @@ export function NodeMaterials({
             />
           ) : (
             <ul className='grid min-w-0 grid-cols-1 gap-3 @3xl/nodemat:grid-cols-2'>
-              {view.data.slots.map((slot) => (
-                <SlotCard
-                  key={slot.slot}
-                  nodeId={nodeId}
-                  worldId={view.data.world_id}
-                  slot={slot}
-                  readOnlyReason={readOnlyReason}
-                />
-              ))}
-              {view.data.open_slots.map((slot) => (
-                <OpenSlot
-                  key={slot}
-                  nodeId={nodeId}
-                  worldId={view.data.world_id}
-                  slot={slot}
-                  readOnlyReason={readOnlyReason}
-                />
-              ))}
+              <Paged items={view.data.slots} as='li'>
+                {(slot) => (
+                  <SlotCard
+                    key={slot.slot}
+                    nodeId={nodeId}
+                    worldId={view.data.world_id}
+                    slot={slot}
+                    readOnlyReason={readOnlyReason}
+                  />
+                )}
+              </Paged>
+              <Paged items={view.data.open_slots}>
+                {(slot) => (
+                  <OpenSlot
+                    key={slot}
+                    nodeId={nodeId}
+                    worldId={view.data.world_id}
+                    slot={slot}
+                    readOnlyReason={readOnlyReason}
+                  />
+                )}
+              </Paged>
             </ul>
           )}
         </div>

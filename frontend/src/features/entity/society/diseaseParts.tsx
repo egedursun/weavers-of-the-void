@@ -37,6 +37,7 @@ import {
   MiniStat,
   RangeField,
   StatBar,
+  Paged,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
@@ -245,51 +246,53 @@ export function HostsPanel({ view }: { view: Disease }) {
         <Muted>No beast carries it; it passes only between people.</Muted>
       ) : (
         <ul className='flex min-w-0 flex-col gap-2'>
-          {view.hosts.map((host) => (
-            <li
-              key={host.species_id}
-              className='flex min-w-0 items-center gap-2.5 rounded-lg border bg-muted/30 p-2'
-            >
-              <Medallion
-                icon={host.immune ? ShieldCheck : Bug}
-                tone={
-                  host.abundance === 0
-                    ? 'muted'
-                    : host.immune
-                      ? 'info'
-                      : 'warning'
-                }
-                size='sm'
-              />
-              <div className='flex min-w-0 flex-1 flex-col gap-1'>
-                <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-                  <EntityLink kind='entity' id={String(host.species_id)}>
-                    {host.name}
-                  </EntityLink>
-                  {host.primary && (
-                    <Badge size='sm' variant='default'>
-                      Main host
-                    </Badge>
-                  )}
-                  {host.immune && (
-                    <Badge size='sm' variant='info'>
-                      Immune
-                    </Badge>
-                  )}
-                </div>
-                <StatBar
-                  label={
-                    host.lands > 0
-                      ? `Most abundant, in ${host.lands} lands`
-                      : 'Gone from every land'
+          <Paged items={view.hosts} as='li'>
+            {(host) => (
+              <li
+                key={host.species_id}
+                className='flex min-w-0 items-center gap-2.5 rounded-lg border bg-muted/30 p-2'
+              >
+                <Medallion
+                  icon={host.immune ? ShieldCheck : Bug}
+                  tone={
+                    host.abundance === 0
+                      ? 'muted'
+                      : host.immune
+                        ? 'info'
+                        : 'warning'
                   }
-                  value={host.abundance}
-                  max={PERCENT}
-                  tone={host.abundance > 0 ? 'warning' : 'muted'}
+                  size='sm'
                 />
-              </div>
-            </li>
-          ))}
+                <div className='flex min-w-0 flex-1 flex-col gap-1'>
+                  <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+                    <EntityLink kind='entity' id={String(host.species_id)}>
+                      {host.name}
+                    </EntityLink>
+                    {host.primary && (
+                      <Badge size='sm' variant='default'>
+                        Main host
+                      </Badge>
+                    )}
+                    {host.immune && (
+                      <Badge size='sm' variant='info'>
+                        Immune
+                      </Badge>
+                    )}
+                  </div>
+                  <StatBar
+                    label={
+                      host.lands > 0
+                        ? `Most abundant, in ${host.lands} lands`
+                        : 'Gone from every land'
+                    }
+                    value={host.abundance}
+                    max={PERCENT}
+                    tone={host.abundance > 0 ? 'warning' : 'muted'}
+                  />
+                </div>
+              </li>
+            )}
+          </Paged>
         </ul>
       )}
     </Panel>
@@ -719,27 +722,29 @@ export function EndemicControls({
           <Muted>It has settled nowhere.</Muted>
         ) : (
           <ul className='flex min-w-0 flex-col gap-2'>
-            {view.endemic.map((row) => (
-              <li
-                key={row.region_id}
-                className='flex min-w-0 items-center gap-2'
-              >
-                <div className='min-w-0 flex-1'>
-                  <StatBar
-                    label={row.region}
-                    value={row.load}
-                    max={PERCENT}
-                    tone={METER_TONE[badTone(row.load)]}
-                  />
-                </div>
-                {row.locked && (
-                  <Badge size='sm' variant='default'>
-                    <Lock />
-                    Held
-                  </Badge>
-                )}
-              </li>
-            ))}
+            <Paged items={view.endemic} as='li'>
+              {(row) => (
+                <li
+                  key={row.region_id}
+                  className='flex min-w-0 items-center gap-2'
+                >
+                  <div className='min-w-0 flex-1'>
+                    <StatBar
+                      label={row.region}
+                      value={row.load}
+                      max={PERCENT}
+                      tone={METER_TONE[badTone(row.load)]}
+                    />
+                  </div>
+                  {row.locked && (
+                    <Badge size='sm' variant='default'>
+                      <Lock />
+                      Held
+                    </Badge>
+                  )}
+                </li>
+              )}
+            </Paged>
           </ul>
         )}
       </Panel>

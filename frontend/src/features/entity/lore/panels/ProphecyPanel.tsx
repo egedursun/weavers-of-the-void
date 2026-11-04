@@ -13,7 +13,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { KpiTile } from '@/components/domain'
+import { KpiTile, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import {
@@ -163,11 +163,13 @@ export function ProphecyPanel({
             <Muted>No one has heard it spoken.</Muted>
           ) : (
             <ul className='flex min-w-0 flex-wrap gap-1.5'>
-              {card.audience.map((item) => (
-                <li key={item.id}>
-                  <RefChip icon={Users} label='' item={item} />
-                </li>
-              ))}
+              <Paged items={card.audience} as='li'>
+                {(item) => (
+                  <li key={item.id}>
+                    <RefChip icon={Users} label='' item={item} />
+                  </li>
+                )}
+              </Paged>
             </ul>
           )}
         </LoreCard>

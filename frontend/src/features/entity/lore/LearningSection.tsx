@@ -29,6 +29,7 @@ import {
   type KpiTone,
   Medallion,
   Section,
+  Paged,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { tierNumeral } from '@/features/languages/languageIcons'
@@ -290,15 +291,17 @@ function TechniqueGroup({
         </div>
       </div>
       <ul className='grid min-w-0 grid-cols-1 gap-2 @md/lore:grid-cols-2'>
-        {rows.map((row) => (
-          <TechniqueTile
-            key={row.technique}
-            holderId={holderId}
-            row={row}
-            reached={level}
-            blocked={blocked}
-          />
-        ))}
+        <Paged items={rows} as='li'>
+          {(row) => (
+            <TechniqueTile
+              key={row.technique}
+              holderId={holderId}
+              row={row}
+              reached={level}
+              blocked={blocked}
+            />
+          )}
+        </Paged>
       </ul>
     </div>
   )
@@ -369,20 +372,24 @@ function LearningControls({
       {card.levels.length > 0 && (
         <AdjustBlock title='Levels' icon={GraduationCap}>
           <RowEditors>
-            {card.levels.map((row) => {
-              const spec = branchOf(row.branch)
-              return (
-                <RowEditor
-                  key={`${row.branch}-${row.level}`}
-                  label={`${spec.label} level`}
-                  icon={spec.icon}
-                  value={row.level}
-                  max={MAX_LEVEL}
-                  blocked={busy}
-                  onSave={(level) => set.mutate({ branch: row.branch, level })}
-                />
-              )
-            })}
+            <Paged items={card.levels}>
+              {(row) => {
+                const spec = branchOf(row.branch)
+                return (
+                  <RowEditor
+                    key={`${row.branch}-${row.level}`}
+                    label={`${spec.label} level`}
+                    icon={spec.icon}
+                    value={row.level}
+                    max={MAX_LEVEL}
+                    blocked={busy}
+                    onSave={(level) =>
+                      set.mutate({ branch: row.branch, level })
+                    }
+                  />
+                )
+              }}
+            </Paged>
           </RowEditors>
         </AdjustBlock>
       )}
@@ -497,9 +504,9 @@ function Body({
           <Muted>They have learned nothing yet.</Muted>
         ) : (
           <ul className='grid min-w-0 grid-cols-1 gap-2 @xl/lore:grid-cols-2'>
-            {ordered.map((row) => (
-              <BranchRow key={row.branch} row={row} />
-            ))}
+            <Paged items={ordered} as='li'>
+              {(row) => <BranchRow key={row.branch} row={row} />}
+            </Paged>
           </ul>
         )}
       </LoreCard>
@@ -519,11 +526,13 @@ function Body({
             data-surface='HolderBooks'
             className='flex min-w-0 flex-wrap gap-1.5'
           >
-            {card.books.map((book) => (
-              <li key={book.id}>
-                <RefChip icon={Book} label='' item={book} />
-              </li>
-            ))}
+            <Paged items={card.books} as='li'>
+              {(book) => (
+                <li key={book.id}>
+                  <RefChip icon={Book} label='' item={book} />
+                </li>
+              )}
+            </Paged>
           </ul>
         )}
       </LoreCard>
@@ -541,16 +550,18 @@ function Body({
             {`${reach} within reach`}
           </Badge>
         </div>
-        {groups.map(([branch, rows]) => (
-          <TechniqueGroup
-            key={branch}
-            branch={branch}
-            rows={rows}
-            level={levels.get(branch) ?? 0}
-            holderId={card.holder_id}
-            blocked={blocked}
-          />
-        ))}
+        <Paged items={groups}>
+          {([branch, rows]) => (
+            <TechniqueGroup
+              key={branch}
+              branch={branch}
+              rows={rows}
+              level={levels.get(branch) ?? 0}
+              holderId={card.holder_id}
+              blocked={blocked}
+            />
+          )}
+        </Paged>
       </div>
       <LearningControls card={card} blocked={blocked} />
     </div>

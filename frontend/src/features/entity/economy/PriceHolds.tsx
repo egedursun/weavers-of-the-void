@@ -6,7 +6,7 @@ import { formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { EmptyState, IconStat, Medallion } from '@/components/domain'
+import { EmptyState, IconStat, Medallion, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import {
@@ -162,14 +162,16 @@ export function PriceHolds({
       )}
       {rows.length > 0 && (
         <ul className='grid min-w-0 grid-cols-1 gap-2 @3xl/holds:grid-cols-2'>
-          {rows.map((row) => (
-            <PremiumRow
-              key={row.commodity}
-              row={row}
-              busy={busy}
-              onRelease={() => release.mutate(row.commodity)}
-            />
-          ))}
+          <Paged items={rows} as='li'>
+            {(row) => (
+              <PremiumRow
+                key={row.commodity}
+                row={row}
+                busy={busy}
+                onRelease={() => release.mutate(row.commodity)}
+              />
+            )}
+          </Paged>
         </ul>
       )}
       <AdjustPanel

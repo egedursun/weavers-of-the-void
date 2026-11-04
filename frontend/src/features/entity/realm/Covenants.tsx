@@ -17,7 +17,7 @@ import type { components } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { EntityLink, Medallion, RangeField } from '@/components/domain'
+import { EntityLink, Medallion, RangeField, Paged } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { CLAUSES, PARTY_ROLES, TREATY_KINDS, type Named, named } from './labels'
@@ -461,47 +461,49 @@ export function SealTreaty({
             Without clauses the treaty takes the usual terms of its kind.
           </Muted>
         )}
-        {clauses.map((clause, index) => {
-          const spec = named(CLAUSES, clause.kind)
-          return (
-            <div
-              key={`${clause.kind}-${index}`}
-              className='flex min-w-0 flex-wrap items-end gap-2 rounded-md border p-2'
-            >
-              <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
-              <Badge size='sm' variant='secondary'>
-                {spec.label}
-              </Badge>
-              <NumberField
-                label='Amount'
-                value={clause.amount}
-                min={0}
-                blocked={busy}
-                onChange={(value) =>
-                  setClauses((current) =>
-                    current.map((item, at) =>
-                      at === index ? { ...item, amount: value } : item
-                    )
-                  )
-                }
-              />
-              <Button
-                size='sm'
-                variant='outline'
-                disabled={busy !== null}
-                disabledReason={busy ?? 'Choose every field first'}
-                onClick={() =>
-                  setClauses((current) =>
-                    current.filter((_, at) => at !== index)
-                  )
-                }
+        <Paged items={clauses}>
+          {(clause, index) => {
+            const spec = named(CLAUSES, clause.kind)
+            return (
+              <div
+                key={`${clause.kind}-${index}`}
+                className='flex min-w-0 flex-wrap items-end gap-2 rounded-md border p-2'
               >
-                <Trash2 />
-                Strike
-              </Button>
-            </div>
-          )
-        })}
+                <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
+                <Badge size='sm' variant='secondary'>
+                  {spec.label}
+                </Badge>
+                <NumberField
+                  label='Amount'
+                  value={clause.amount}
+                  min={0}
+                  blocked={busy}
+                  onChange={(value) =>
+                    setClauses((current) =>
+                      current.map((item, at) =>
+                        at === index ? { ...item, amount: value } : item
+                      )
+                    )
+                  }
+                />
+                <Button
+                  size='sm'
+                  variant='outline'
+                  disabled={busy !== null}
+                  disabledReason={busy ?? 'Choose every field first'}
+                  onClick={() =>
+                    setClauses((current) =>
+                      current.filter((_, at) => at !== index)
+                    )
+                  }
+                >
+                  <Trash2 />
+                  Strike
+                </Button>
+              </div>
+            )
+          }}
+        </Paged>
         <div className='flex min-w-0 flex-wrap gap-1.5'>
           {Object.entries(CLAUSES).map(([key, spec]) => (
             <Button
@@ -624,44 +626,48 @@ export function TreatyBuilder({
       hint='Write clauses in or out, bind guarantors, release its holds'
     >
       <ul className='flex min-w-0 flex-col gap-1.5'>
-        {treaty.clauses.map((clause) => (
-          <li key={clause.id} className='flex min-w-0 items-center gap-2'>
-            <Tag spec={named(CLAUSES, clause.kind)} />
-            <Muted
-              truncate
-            >{`${clause.obligor ?? 'someone'} → ${clause.beneficiary ?? 'someone'}`}</Muted>
-            <Button
-              size='sm'
-              variant='outline'
-              className='ml-auto'
-              disabled={busy !== null}
-              disabledReason={busy ?? 'Choose every field first'}
-              onClick={() => remove.mutate(clause.id)}
-            >
-              <Trash2 />
-              Strike
-            </Button>
-          </li>
-        ))}
-        {treaty.parties.map((item) => (
-          <li key={item.id} className='flex min-w-0 items-center gap-2'>
-            <Tag spec={named(PARTY_ROLES, item.role)} />
-            <EntityLink kind='entity' id={String(item.id)}>
-              {item.name}
-            </EntityLink>
-            <Button
-              size='sm'
-              variant='outline'
-              className='ml-auto'
-              disabled={busy !== null}
-              disabledReason={busy ?? 'Choose every field first'}
-              onClick={() => release.mutate(item.id)}
-            >
-              <LockOpen />
-              Release
-            </Button>
-          </li>
-        ))}
+        <Paged items={treaty.clauses} as='li'>
+          {(clause) => (
+            <li key={clause.id} className='flex min-w-0 items-center gap-2'>
+              <Tag spec={named(CLAUSES, clause.kind)} />
+              <Muted
+                truncate
+              >{`${clause.obligor ?? 'someone'} → ${clause.beneficiary ?? 'someone'}`}</Muted>
+              <Button
+                size='sm'
+                variant='outline'
+                className='ml-auto'
+                disabled={busy !== null}
+                disabledReason={busy ?? 'Choose every field first'}
+                onClick={() => remove.mutate(clause.id)}
+              >
+                <Trash2 />
+                Strike
+              </Button>
+            </li>
+          )}
+        </Paged>
+        <Paged items={treaty.parties}>
+          {(item) => (
+            <li key={item.id} className='flex min-w-0 items-center gap-2'>
+              <Tag spec={named(PARTY_ROLES, item.role)} />
+              <EntityLink kind='entity' id={String(item.id)}>
+                {item.name}
+              </EntityLink>
+              <Button
+                size='sm'
+                variant='outline'
+                className='ml-auto'
+                disabled={busy !== null}
+                disabledReason={busy ?? 'Choose every field first'}
+                onClick={() => release.mutate(item.id)}
+              >
+                <LockOpen />
+                Release
+              </Button>
+            </li>
+          )}
+        </Paged>
       </ul>
       <AdjustPanel
         trigger='Add a clause'

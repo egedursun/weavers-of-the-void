@@ -28,6 +28,7 @@ import {
   Timeline,
   TimelineItem,
   type TimelineTone,
+  Paged,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -314,37 +315,43 @@ export function CultureDriftSection({
               />
             </div>
             <div className='grid min-w-0 grid-cols-1 gap-2 @xl/drift:grid-cols-2'>
-              {causes.map(({ cause, rows, total }) => {
-                const spec = CAUSE_SPEC[cause]
-                return (
-                  <Panel
-                    key={cause}
-                    title={spec.label}
-                    icon={spec.icon}
-                    tone={spec.tone}
-                    hint={`${formatInteger(total)} points of change so far`}
-                  >
-                    <div className='flex min-w-0 flex-wrap gap-1.5'>
-                      {rows.length === 0 && (
-                        <Muted variant='caption'>Quiet this epoch.</Muted>
-                      )}
-                      {rows.map((row) => {
-                        const axis = named(VALUE_ICONS, row.axis)
-                        return (
-                          <Badge
-                            key={row.axis}
-                            size='sm'
-                            variant={row.amount > 0 ? 'success' : 'destructive'}
-                          >
-                            <axis.icon />
-                            {`${axis.label} ${signed(row.amount)}`}
-                          </Badge>
-                        )
-                      })}
-                    </div>
-                  </Panel>
-                )
-              })}
+              <Paged items={causes}>
+                {({ cause, rows, total }) => {
+                  const spec = CAUSE_SPEC[cause]
+                  return (
+                    <Panel
+                      key={cause}
+                      title={spec.label}
+                      icon={spec.icon}
+                      tone={spec.tone}
+                      hint={`${formatInteger(total)} points of change so far`}
+                    >
+                      <div className='flex min-w-0 flex-wrap gap-1.5'>
+                        {rows.length === 0 && (
+                          <Muted variant='caption'>Quiet this epoch.</Muted>
+                        )}
+                        <Paged items={rows}>
+                          {(row) => {
+                            const axis = named(VALUE_ICONS, row.axis)
+                            return (
+                              <Badge
+                                key={row.axis}
+                                size='sm'
+                                variant={
+                                  row.amount > 0 ? 'success' : 'destructive'
+                                }
+                              >
+                                <axis.icon />
+                                {`${axis.label} ${signed(row.amount)}`}
+                              </Badge>
+                            )
+                          }}
+                        </Paged>
+                      </div>
+                    </Panel>
+                  )
+                }}
+              </Paged>
             </div>
           </>
         )}
@@ -354,9 +361,11 @@ export function CultureDriftSection({
         >
           {data.impositions.length > 0 && (
             <div className='flex min-w-0 flex-col gap-2'>
-              {data.impositions.map((row) => (
-                <ImpositionRow key={row.id} row={row} blocked={blocked} />
-              ))}
+              <Paged items={data.impositions}>
+                {(row) => (
+                  <ImpositionRow key={row.id} row={row} blocked={blocked} />
+                )}
+              </Paged>
             </div>
           )}
           <ImposeDrift view={data} blocked={blocked} />
@@ -470,19 +479,21 @@ function LoyaltyCard({
               No grievance or benefit weighs on them.
             </Muted>
           )}
-          {row.parts.map((part) => {
-            const spec = PART_SPEC[part.part]
-            return (
-              <Badge
-                key={part.part}
-                size='sm'
-                variant={part.grievance ? 'destructive' : 'success'}
-              >
-                <spec.icon />
-                {`${spec.label} ${part.grievance ? '−' : '+'}${part.value}`}
-              </Badge>
-            )
-          })}
+          <Paged items={row.parts}>
+            {(part) => {
+              const spec = PART_SPEC[part.part]
+              return (
+                <Badge
+                  key={part.part}
+                  size='sm'
+                  variant={part.grievance ? 'destructive' : 'success'}
+                >
+                  <spec.icon />
+                  {`${spec.label} ${part.grievance ? '−' : '+'}${part.value}`}
+                </Badge>
+              )
+            }}
+          </Paged>
         </div>
       </Panel>
       <AdjustPanel
@@ -548,14 +559,16 @@ export function LoyaltySection({
         data-surface='LoyaltyBreakdown'
         className='@container/loyal flex min-w-0 flex-col gap-5'
       >
-        {data.loyalty.map((row) => (
-          <LoyaltyCard
-            key={row.polity_id}
-            view={data}
-            row={row}
-            blocked={blocked}
-          />
-        ))}
+        <Paged items={data.loyalty}>
+          {(row) => (
+            <LoyaltyCard
+              key={row.polity_id}
+              view={data}
+              row={row}
+              blocked={blocked}
+            />
+          )}
+        </Paged>
       </div>
     </Section>
   )
@@ -747,31 +760,33 @@ export function MobilitySection({
           />
         ) : (
           <Timeline label='Rise and fall'>
-            {data.mobility.map((row, index) => {
-              const spec = EVENT_SPEC[row.event]
-              const who = row.mortal || `${formatInteger(row.count)} people`
-              return (
-                <TimelineItem
-                  key={row.id}
-                  icon={spec.icon}
-                  tone={TIMELINE_TONE[spec.tone ?? 'muted'] ?? 'default'}
-                  title={`${spec.label}: ${who}`}
-                  timestamp={`Epoch ${row.epoch}${row.by_hand ? ' · by your hand' : ''}`}
-                  last={index === data.mobility.length - 1}
-                >
-                  {(row.house || row.other) && (
-                    <Muted variant='caption'>
-                      {[
-                        row.house && `founded ${row.house}`,
-                        row.other && `with ${row.other}`,
-                      ]
-                        .filter(Boolean)
-                        .join('; ')}
-                    </Muted>
-                  )}
-                </TimelineItem>
-              )
-            })}
+            <Paged items={data.mobility} as='li'>
+              {(row, index) => {
+                const spec = EVENT_SPEC[row.event]
+                const who = row.mortal || `${formatInteger(row.count)} people`
+                return (
+                  <TimelineItem
+                    key={row.id}
+                    icon={spec.icon}
+                    tone={TIMELINE_TONE[spec.tone ?? 'muted'] ?? 'default'}
+                    title={`${spec.label}: ${who}`}
+                    timestamp={`Epoch ${row.epoch}${row.by_hand ? ' · by your hand' : ''}`}
+                    last={index === data.mobility.length - 1}
+                  >
+                    {(row.house || row.other) && (
+                      <Muted variant='caption'>
+                        {[
+                          row.house && `founded ${row.house}`,
+                          row.other && `with ${row.other}`,
+                        ]
+                          .filter(Boolean)
+                          .join('; ')}
+                      </Muted>
+                    )}
+                  </TimelineItem>
+                )
+              }}
+            </Paged>
           </Timeline>
         )}
         <AdjustPanel

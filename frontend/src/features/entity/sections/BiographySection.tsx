@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { BookUser } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
-import { Section, Timeline } from '@/components/domain'
+import { Section, Timeline, Paged } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { loreKeys } from '../api/keys'
 import { IncidentEntry } from '../mechanics/parts'
@@ -38,24 +38,28 @@ export function BiographySection({
         <Muted>Its story has not begun yet.</Muted>
       )}
       <div className='flex min-w-0 flex-col gap-4'>
-        {epochs.map((epoch) => {
-          const items = incidents.filter((item) => item.epoch === epoch)
-          return (
-            <div key={epoch} className='flex min-w-0 flex-col gap-2'>
-              <Label variant='overline'>{`Epoch ${epoch}`}</Label>
-              <Timeline label={`Epoch ${epoch}`}>
-                {items.map((incident, index) => (
-                  <IncidentEntry
-                    key={incident.id}
-                    incident={incident}
-                    last={index === items.length - 1}
-                    blocked={readOnlyReason ?? undefined}
-                  />
-                ))}
-              </Timeline>
-            </div>
-          )
-        })}
+        <Paged items={epochs}>
+          {(epoch) => {
+            const items = incidents.filter((item) => item.epoch === epoch)
+            return (
+              <div key={epoch} className='flex min-w-0 flex-col gap-2'>
+                <Label variant='overline'>{`Epoch ${epoch}`}</Label>
+                <Timeline label={`Epoch ${epoch}`}>
+                  <Paged items={items} as='li'>
+                    {(incident, index) => (
+                      <IncidentEntry
+                        key={incident.id}
+                        incident={incident}
+                        last={index === items.length - 1}
+                        blocked={readOnlyReason ?? undefined}
+                      />
+                    )}
+                  </Paged>
+                </Timeline>
+              </div>
+            )
+          }}
+        </Paged>
       </div>
     </Section>
   )

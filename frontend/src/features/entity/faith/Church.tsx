@@ -19,7 +19,13 @@ import { clergyOfficeValues } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { IconStat, Medallion, RangeField, StatBar } from '@/components/domain'
+import {
+  IconStat,
+  Medallion,
+  RangeField,
+  StatBar,
+  Paged,
+} from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { goodBand, named } from '../realm/labels'
@@ -229,14 +235,16 @@ export function ClergyOffices({
       <div data-surface='ClergyOffices' className='flex min-w-0 flex-col gap-2'>
         {doctrine.clergy.length === 0 && <Muted>No office is founded.</Muted>}
         <ul className='flex min-w-0 flex-col gap-2'>
-          {doctrine.clergy.map((office) => (
-            <OfficeRow
-              key={`${office.kind}.${office.holder?.id ?? 0}.${office.locked}`}
-              cultId={id}
-              office={office}
-              blocked={blocked}
-            />
-          ))}
+          <Paged items={doctrine.clergy} as='li'>
+            {(office) => (
+              <OfficeRow
+                key={`${office.kind}.${office.holder?.id ?? 0}.${office.locked}`}
+                cultId={id}
+                office={office}
+                blocked={blocked}
+              />
+            )}
+          </Paged>
         </ul>
         {missing.length > 0 && (
           <AdjustPanel

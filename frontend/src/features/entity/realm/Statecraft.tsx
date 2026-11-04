@@ -36,6 +36,7 @@ import {
   RangeField,
   StatBar,
   type KpiTone,
+  Paged,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -576,57 +577,62 @@ function Purse({ realm, blocked }: { realm: Realm; blocked: string | null }) {
     >
       {realm.loans.length === 0 && <Muted>The crown owes no one.</Muted>}
       <ul className='flex min-w-0 flex-col gap-2'>
-        {realm.loans.map((loan) => (
-          <li
-            key={loan.id}
-            className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border p-2'
-          >
-            <Medallion
-              icon={Coins}
-              tone={
-                loan.status === 'defaulted'
-                  ? 'danger'
-                  : loan.status === 'open'
-                    ? 'warning'
-                    : 'success'
-              }
-              size='sm'
-            />
-            <EntityLink kind='entity' id={String(loan.lender_id)}>
-              {loan.lender}
-            </EntityLink>
-            <Badge
-              size='sm'
-              variant='secondary'
-            >{`${loan.principal} at ${loan.interest_pct}%`}</Badge>
-            <Badge size='sm' variant='outline'>{`Repaid ${loan.repaid}`}</Badge>
-            <Badge
-              size='sm'
-              variant='outline'
-            >{`Due epoch ${loan.due_epoch}`}</Badge>
-            <Badge
-              size='sm'
-              variant={
-                loan.status === 'defaulted' ? 'destructive' : 'secondary'
-              }
+        <Paged items={realm.loans} as='li'>
+          {(loan) => (
+            <li
+              key={loan.id}
+              className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border p-2'
             >
-              {plain({}, loan.status)}
-            </Badge>
-            {loan.status === 'open' && (
-              <Button
+              <Medallion
+                icon={Coins}
+                tone={
+                  loan.status === 'defaulted'
+                    ? 'danger'
+                    : loan.status === 'open'
+                      ? 'warning'
+                      : 'success'
+                }
+                size='sm'
+              />
+              <EntityLink kind='entity' id={String(loan.lender_id)}>
+                {loan.lender}
+              </EntityLink>
+              <Badge
+                size='sm'
+                variant='secondary'
+              >{`${loan.principal} at ${loan.interest_pct}%`}</Badge>
+              <Badge
                 size='sm'
                 variant='outline'
-                className='ml-auto'
-                disabled={busy !== null}
-                disabledReason={busy ?? 'Choose every field first'}
-                onClick={() => forgive.mutate(loan.id)}
+              >{`Repaid ${loan.repaid}`}</Badge>
+              <Badge
+                size='sm'
+                variant='outline'
+              >{`Due epoch ${loan.due_epoch}`}</Badge>
+              <Badge
+                size='sm'
+                variant={
+                  loan.status === 'defaulted' ? 'destructive' : 'secondary'
+                }
               >
-                <Ban />
-                Forgive
-              </Button>
-            )}
-          </li>
-        ))}
+                {plain({}, loan.status)}
+              </Badge>
+              {loan.status === 'open' && (
+                <Button
+                  size='sm'
+                  variant='outline'
+                  className='ml-auto'
+                  disabled={busy !== null}
+                  disabledReason={busy ?? 'Choose every field first'}
+                  onClick={() => forgive.mutate(loan.id)}
+                >
+                  <Ban />
+                  Forgive
+                </Button>
+              )}
+            </li>
+          )}
+        </Paged>
       </ul>
       <AdjustPanel
         trigger='Borrow'
@@ -962,26 +968,28 @@ function Sentences({ realm }: { realm: Realm }) {
     >
       {realm.sentences.length === 0 && <Muted>No one has been judged.</Muted>}
       <ul className='flex min-w-0 flex-col gap-1.5'>
-        {realm.sentences.map((item) => (
-          <li
-            key={item.id}
-            className='flex min-w-0 flex-wrap items-center gap-2'
-          >
-            <Badge size='sm' variant='outline'>{`Epoch ${item.epoch}`}</Badge>
-            <EntityLink kind='entity' id={String(item.mortal_id)}>
-              {item.mortal}
-            </EntityLink>
-            <Badge size='sm' variant='secondary'>
-              {plain({}, item.crime)}
-            </Badge>
-            <Badge
-              size='sm'
-              variant={item.penalty === 'death' ? 'destructive' : 'warning'}
+        <Paged items={realm.sentences} as='li'>
+          {(item) => (
+            <li
+              key={item.id}
+              className='flex min-w-0 flex-wrap items-center gap-2'
             >
-              {plain({}, item.penalty)}
-            </Badge>
-          </li>
-        ))}
+              <Badge size='sm' variant='outline'>{`Epoch ${item.epoch}`}</Badge>
+              <EntityLink kind='entity' id={String(item.mortal_id)}>
+                {item.mortal}
+              </EntityLink>
+              <Badge size='sm' variant='secondary'>
+                {plain({}, item.crime)}
+              </Badge>
+              <Badge
+                size='sm'
+                variant={item.penalty === 'death' ? 'destructive' : 'warning'}
+              >
+                {plain({}, item.penalty)}
+              </Badge>
+            </li>
+          )}
+        </Paged>
       </ul>
     </Panel>
   )
@@ -1067,24 +1075,26 @@ function SplitRealm({
         <Muted>Only the heartland remains; nothing can break away.</Muted>
       )}
       <div className='flex min-w-0 flex-wrap gap-2'>
-        {lands.map((member) => (
-          <Button
-            key={member.id}
-            size='sm'
-            variant={picked.includes(member.id) ? 'default' : 'outline'}
-            disabled={busy !== null}
-            disabledReason={busy ?? 'Choose every field first'}
-            onClick={() =>
-              setPicked((current) =>
-                current.includes(member.id)
-                  ? current.filter((item) => item !== member.id)
-                  : [...current, member.id]
-              )
-            }
-          >
-            {member.name}
-          </Button>
-        ))}
+        <Paged items={lands}>
+          {(member) => (
+            <Button
+              key={member.id}
+              size='sm'
+              variant={picked.includes(member.id) ? 'default' : 'outline'}
+              disabled={busy !== null}
+              disabledReason={busy ?? 'Choose every field first'}
+              onClick={() =>
+                setPicked((current) =>
+                  current.includes(member.id)
+                    ? current.filter((item) => item !== member.id)
+                    : [...current, member.id]
+                )
+              }
+            >
+              {member.name}
+            </Button>
+          )}
+        </Paged>
       </div>
       <Button
         size='sm'
@@ -1178,9 +1188,11 @@ export function Statecraft({
         count={realm.offices.length}
       >
         <ul className='grid min-w-0 grid-cols-1 gap-2 @2xl/realm:grid-cols-2'>
-          {realm.offices.map((office) => (
-            <OfficeEditor key={office.id} office={office} blocked={blocked} />
-          ))}
+          <Paged items={realm.offices} as='li'>
+            {(office) => (
+              <OfficeEditor key={office.id} office={office} blocked={blocked} />
+            )}
+          </Paged>
         </ul>
         <CreateOffice realm={realm} blocked={blocked} />
       </Panel>

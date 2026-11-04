@@ -39,6 +39,7 @@ import {
   Section,
   ShowMore,
   useShowMore,
+  Paged,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -492,22 +493,24 @@ function DoctrineForm({
           </div>
           <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
             {outcasts.length === 0 && <Muted>No one is cast out.</Muted>}
-            {outcasts.map((item) => (
-              <Button
-                key={item}
-                size='sm'
-                variant='outline'
-                disabled={busy !== null}
-                disabledReason={busy ?? undefined}
-                onClick={() =>
-                  setOutcasts(outcasts.filter((other) => other !== item))
-                }
-              >
-                <Trash2 />
-                {doctrine.excommunicated.find((node) => node.id === item)
-                  ?.name ?? `#${item}`}
-              </Button>
-            ))}
+            <Paged items={outcasts}>
+              {(item) => (
+                <Button
+                  key={item}
+                  size='sm'
+                  variant='outline'
+                  disabled={busy !== null}
+                  disabledReason={busy ?? undefined}
+                  onClick={() =>
+                    setOutcasts(outcasts.filter((other) => other !== item))
+                  }
+                >
+                  <Trash2 />
+                  {doctrine.excommunicated.find((node) => node.id === item)
+                    ?.name ?? `#${item}`}
+                </Button>
+              )}
+            </Paged>
           </div>
           <div className='flex min-w-0 flex-wrap items-end gap-2'>
             <div className='min-w-48 flex-1'>
@@ -758,13 +761,15 @@ function Heresies({
           <Muted>No sect has broken away.</Muted>
         ) : (
           <ul className='flex min-w-0 flex-col gap-2'>
-            {doctrine.heresies.map((heresy) => (
-              <HeresyRow
-                key={heresy.heresy?.id}
-                heresy={heresy}
-                blocked={blocked}
-              />
-            ))}
+            <Paged items={doctrine.heresies} as='li'>
+              {(heresy) => (
+                <HeresyRow
+                  key={heresy.heresy?.id}
+                  heresy={heresy}
+                  blocked={blocked}
+                />
+              )}
+            </Paged>
           </ul>
         )}
         <AdjustPanel
@@ -831,13 +836,15 @@ function Saints({
           <Muted>No saint has been raised yet.</Muted>
         ) : (
           <ul className='flex min-w-0 flex-col gap-2'>
-            {doctrine.relics.map((relic) => (
-              <RelicShrine
-                key={`${relic.item?.id ?? relic.saint?.id}.${relic.sanctity}.${relic.pilgrims}.${relic.shrine?.id ?? 0}`}
-                relic={relic}
-                blocked={blocked}
-              />
-            ))}
+            <Paged items={doctrine.relics} as='li'>
+              {(relic) => (
+                <RelicShrine
+                  key={`${relic.item?.id ?? relic.saint?.id}.${relic.sanctity}.${relic.pilgrims}.${relic.shrine?.id ?? 0}`}
+                  relic={relic}
+                  blocked={blocked}
+                />
+              )}
+            </Paged>
           </ul>
         )}
         <AdjustPanel
@@ -1017,13 +1024,15 @@ function DoctrineBody({
             text={`${doctrine.god_king.name} is god-king and high priest`}
           />
         )}
-        {doctrine.excommunicated.map((item) => (
-          <Tag
-            key={item.id}
-            spec={{ label: 'Cast out', icon: UserX, tone: 'danger' }}
-            text={`Cast out: ${item.name}`}
-          />
-        ))}
+        <Paged items={doctrine.excommunicated}>
+          {(item) => (
+            <Tag
+              key={item.id}
+              spec={{ label: 'Cast out', icon: UserX, tone: 'danger' }}
+              text={`Cast out: ${item.name}`}
+            />
+          )}
+        </Paged>
       </Hero>
       <div className='grid min-w-0 grid-cols-1 gap-3 @xs/faith:grid-cols-2 @xl/faith:grid-cols-4'>
         <KpiTile
@@ -1176,14 +1185,16 @@ function DoctrineBody({
           <Muted>The faith holds no tenets yet.</Muted>
         ) : (
           <ul className='grid min-w-0 grid-cols-1 gap-2 @xl/faith:grid-cols-2'>
-            {doctrine.tenets.map((tenet) => (
-              <TenetCard
-                key={tenet.tenet}
-                cultId={id}
-                tenet={tenet}
-                blocked={blocked}
-              />
-            ))}
+            <Paged items={doctrine.tenets} as='li'>
+              {(tenet) => (
+                <TenetCard
+                  key={tenet.tenet}
+                  cultId={id}
+                  tenet={tenet}
+                  blocked={blocked}
+                />
+              )}
+            </Paged>
           </ul>
         )}
         <AddTenet

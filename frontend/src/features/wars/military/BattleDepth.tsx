@@ -1,7 +1,7 @@
 import { Flag, Skull, Swords } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
-import { EntityLink, MiniStat, StatBar } from '@/components/domain'
+import { EntityLink, MiniStat, StatBar, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import {
   FATE_OF,
@@ -123,36 +123,38 @@ export function BattleDepthPanel({
         <div className='flex min-w-0 flex-col gap-1.5'>
           <Label>Losses by stack</Label>
           <div className='grid min-w-0 grid-cols-1 gap-1.5 @lg/mil:grid-cols-2'>
-            {depth.stacks.map((stack, index) => (
-              <div
-                key={`${stack.kind}.${index}`}
-                className='flex min-w-0 flex-col gap-1 rounded-md border p-2'
-              >
-                <div className='flex min-w-0 items-center gap-1.5'>
-                  <Swords
-                    aria-hidden='true'
-                    className='size-icon-xs shrink-0 text-muted-foreground'
+            <Paged items={depth.stacks}>
+              {(stack, index) => (
+                <div
+                  key={`${stack.kind}.${index}`}
+                  className='flex min-w-0 flex-col gap-1 rounded-md border p-2'
+                >
+                  <div className='flex min-w-0 items-center gap-1.5'>
+                    <Swords
+                      aria-hidden='true'
+                      className='size-icon-xs shrink-0 text-muted-foreground'
+                    />
+                    <Text as='span' truncate>
+                      {stack.label}
+                    </Text>
+                    <Muted as='span' variant='caption' truncate>
+                      {stack.side?.name}
+                    </Muted>
+                    {stack.routed && (
+                      <Badge size='sm' variant='destructive'>
+                        Routed
+                      </Badge>
+                    )}
+                  </div>
+                  <StatBar
+                    label={`Lost of ${formatInteger(stack.start)}`}
+                    value={stack.lost}
+                    max={Math.max(1, stack.start)}
+                    tone='destructive'
                   />
-                  <Text as='span' truncate>
-                    {stack.label}
-                  </Text>
-                  <Muted as='span' variant='caption' truncate>
-                    {stack.side?.name}
-                  </Muted>
-                  {stack.routed && (
-                    <Badge size='sm' variant='destructive'>
-                      Routed
-                    </Badge>
-                  )}
                 </div>
-                <StatBar
-                  label={`Lost of ${formatInteger(stack.start)}`}
-                  value={stack.lost}
-                  max={Math.max(1, stack.start)}
-                  tone='destructive'
-                />
-              </div>
-            ))}
+              )}
+            </Paged>
           </div>
         </div>
       )}
@@ -160,35 +162,37 @@ export function BattleDepthPanel({
         <div className='flex min-w-0 flex-col gap-1.5'>
           <Label>Named casualties</Label>
           <ul className='flex min-w-0 flex-col gap-1'>
-            {depth.casualties.map((casualty, index) => {
-              const fate = nameOf(FATE_OF, casualty.fate)
-              return (
-                <li
-                  key={`${casualty.mortal?.id}.${index}`}
-                  className='flex min-w-0 flex-wrap items-center gap-1.5'
-                >
-                  <Tag item={fate} />
-                  {casualty.mortal && (
-                    <EntityLink kind='entity' id={String(casualty.mortal.id)}>
-                      {casualty.mortal.name}
-                    </EntityLink>
-                  )}
-                  {casualty.harm > 0 && (
-                    <MiniStat
-                      icon={Skull}
-                      label='Harm'
-                      value={casualty.harm}
-                      tone='danger'
-                    />
-                  )}
-                  {casualty.note && (
-                    <Muted as='span' variant='caption' truncate>
-                      {casualty.note}
-                    </Muted>
-                  )}
-                </li>
-              )
-            })}
+            <Paged items={depth.casualties} as='li'>
+              {(casualty, index) => {
+                const fate = nameOf(FATE_OF, casualty.fate)
+                return (
+                  <li
+                    key={`${casualty.mortal?.id}.${index}`}
+                    className='flex min-w-0 flex-wrap items-center gap-1.5'
+                  >
+                    <Tag item={fate} />
+                    {casualty.mortal && (
+                      <EntityLink kind='entity' id={String(casualty.mortal.id)}>
+                        {casualty.mortal.name}
+                      </EntityLink>
+                    )}
+                    {casualty.harm > 0 && (
+                      <MiniStat
+                        icon={Skull}
+                        label='Harm'
+                        value={casualty.harm}
+                        tone='danger'
+                      />
+                    )}
+                    {casualty.note && (
+                      <Muted as='span' variant='caption' truncate>
+                        {casualty.note}
+                      </Muted>
+                    )}
+                  </li>
+                )
+              }}
+            </Paged>
           </ul>
         </div>
       )}

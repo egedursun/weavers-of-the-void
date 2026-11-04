@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
 import { Label as FieldLabel } from '@/components/ui/label'
-import { EntityLink, Medallion, MiniStat } from '@/components/domain'
+import { EntityLink, Medallion, MiniStat, Paged } from '@/components/domain'
 import { MultiSelect } from '@/components/domain/MultiSelect'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted, Text } from '@/components/typography'
@@ -251,9 +251,9 @@ export function FolkBody({ biology }: { biology: Biology }) {
         {biology.traits.length > 0 && (
           <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
             <Label variant='overline'>Natural gifts</Label>
-            {biology.traits.map((trait) => (
-              <SpecChip key={trait} spec={TRAIT_SPEC[trait]} />
-            ))}
+            <Paged items={biology.traits}>
+              {(trait) => <SpecChip key={trait} spec={TRAIT_SPEC[trait]} />}
+            </Paged>
           </div>
         )}
         {effects.work.length > 0 && (
@@ -298,16 +298,18 @@ export function FolkBody({ biology }: { biology: Biology }) {
               No sickness of their homeland spares them
             </Muted>
           ) : (
-            biology.immunities.map((item) => (
-              <EntityLink
-                key={item.id}
-                kind='entity'
-                id={String(item.id)}
-                showIcon
-              >
-                {item.name}
-              </EntityLink>
-            ))
+            <Paged items={biology.immunities}>
+              {(item) => (
+                <EntityLink
+                  key={item.id}
+                  kind='entity'
+                  id={String(item.id)}
+                  showIcon
+                >
+                  {item.name}
+                </EntityLink>
+              )}
+            </Paged>
           )}
         </div>
       </div>
@@ -398,22 +400,24 @@ export function FolkWays({ culture }: { culture: Culture }) {
       {culture.martial_record.length > 0 && (
         <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
           <Label variant='overline'>Ways of war tried</Label>
-          {culture.martial_record.map((item) => {
-            const spec = MARTIAL_SPEC[item.style]
-            const Icon = spec.icon
-            return (
-              <Badge
-                key={item.style}
-                size='sm'
-                variant={
-                  item.style === culture.martial_style ? 'default' : 'outline'
-                }
-              >
-                <Icon />
-                {`${spec.label} ${item.wins}–${item.losses}`}
-              </Badge>
-            )
-          })}
+          <Paged items={culture.martial_record}>
+            {(item) => {
+              const spec = MARTIAL_SPEC[item.style]
+              const Icon = spec.icon
+              return (
+                <Badge
+                  key={item.style}
+                  size='sm'
+                  variant={
+                    item.style === culture.martial_style ? 'default' : 'outline'
+                  }
+                >
+                  <Icon />
+                  {`${spec.label} ${item.wins}–${item.losses}`}
+                </Badge>
+              )
+            }}
+          </Paged>
         </div>
       )}
     </Panel>

@@ -23,6 +23,7 @@ import {
   LevelMeter,
   MiniStat,
   RarityBadge,
+  Paged,
 } from '@/components/domain'
 import { MentionText } from '@/components/domain/MentionText'
 import { RecordNavLink } from '@/components/domain/RecordNavLink'
@@ -170,15 +171,17 @@ export function SonHero({
                 </EntityLink>
               </Badge>
             )}
-            {detail.children.map((child) => (
-              <Badge key={child.id} size='sm' variant='outline'>
-                <Baby />
-                Child
-                <EntityLink kind='son' id={String(child.id)}>
-                  {child.name}
-                </EntityLink>
-              </Badge>
-            ))}
+            <Paged items={detail.children}>
+              {(child) => (
+                <Badge key={child.id} size='sm' variant='outline'>
+                  <Baby />
+                  Child
+                  <EntityLink kind='son' id={String(child.id)}>
+                    {child.name}
+                  </EntityLink>
+                </Badge>
+              )}
+            </Paged>
           </div>
         )}
         {son.plan && (

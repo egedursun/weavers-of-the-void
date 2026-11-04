@@ -34,6 +34,7 @@ import {
   Medallion,
   MiniStat,
   type KpiTone,
+  Paged,
 } from '@/components/domain'
 import { Muted, Stat, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -72,16 +73,18 @@ function Breakdown({
         <Stat value={total} />
       </div>
       <div className='grid min-w-0 grid-cols-1 gap-1.5 @md/city:grid-cols-2'>
-        {rows.map((row) => (
-          <MiniStat
-            key={row.label}
-            icon={row.icon}
-            label={row.label}
-            value={row.value}
-            tone={tone}
-            hint={row.hint}
-          />
-        ))}
+        <Paged items={rows}>
+          {(row) => (
+            <MiniStat
+              key={row.label}
+              icon={row.icon}
+              label={row.label}
+              value={row.value}
+              tone={tone}
+              hint={row.hint}
+            />
+          )}
+        </Paged>
       </div>
     </div>
   )
@@ -237,21 +240,25 @@ export function CityWorkings({ plan }: { plan: Plan }) {
             </Muted>
           ) : (
             <div className='grid min-w-0 grid-cols-1 gap-1.5 @md/city:grid-cols-2'>
-              {quarters.map((item) => (
-                <MiniStat
-                  key={item.key}
-                  icon={item.icon}
-                  label={fieldLabel(item.key)}
-                  value={
-                    item.unit === '%'
-                      ? `${signed(effects[item.key])}%`
-                      : signed(effects[item.key])
-                  }
-                  tone={
-                    item.signed && effects[item.key] < 0 ? 'danger' : item.tone
-                  }
-                />
-              ))}
+              <Paged items={quarters}>
+                {(item) => (
+                  <MiniStat
+                    key={item.key}
+                    icon={item.icon}
+                    label={fieldLabel(item.key)}
+                    value={
+                      item.unit === '%'
+                        ? `${signed(effects[item.key])}%`
+                        : signed(effects[item.key])
+                    }
+                    tone={
+                      item.signed && effects[item.key] < 0
+                        ? 'danger'
+                        : item.tone
+                    }
+                  />
+                )}
+              </Paged>
             </div>
           )}
         </div>
@@ -599,14 +606,16 @@ export function DistrictDesigns({
           data-surface='DistrictDesigns'
           className='grid min-w-0 grid-cols-1 gap-3 @xl/city:grid-cols-2'
         >
-          {plan.designs.map((design) => (
-            <DesignCard
-              key={design.id}
-              design={design}
-              plan={plan}
-              blocked={blocked}
-            />
-          ))}
+          <Paged items={plan.designs} as='li'>
+            {(design) => (
+              <DesignCard
+                key={design.id}
+                design={design}
+                plan={plan}
+                blocked={blocked}
+              />
+            )}
+          </Paged>
         </ul>
       )}
     </Panel>

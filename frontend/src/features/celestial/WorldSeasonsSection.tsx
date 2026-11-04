@@ -41,6 +41,7 @@ import {
   StatBar,
   Timeline,
   TimelineItem,
+  Paged,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import {
@@ -386,11 +387,13 @@ function CalendarCard({
       </div>
       {calendar.holy_days.length > 0 && (
         <div className='flex min-w-0 flex-wrap gap-1.5'>
-          {calendar.holy_days.map((day) => (
-            <Badge key={day.name} size='sm' variant='warning'>
-              {day.name}
-            </Badge>
-          ))}
+          <Paged items={calendar.holy_days}>
+            {(day) => (
+              <Badge key={day.name} size='sm' variant='warning'>
+                {day.name}
+              </Badge>
+            )}
+          </Paged>
         </div>
       )}
       <div className='flex min-w-0 items-end gap-2'>
@@ -447,13 +450,15 @@ function Calendars({
         </Muted>
       ) : (
         <div className='grid min-w-0 grid-cols-1 gap-3 @xl/year:grid-cols-2'>
-          {data.calendars.map((calendar) => (
-            <CalendarCard
-              key={`${calendar.knowledge_id}-${calendar.month_names.join()}`}
-              calendar={calendar}
-              blocked={blocked}
-            />
-          ))}
+          <Paged items={data.calendars}>
+            {(calendar) => (
+              <CalendarCard
+                key={`${calendar.knowledge_id}-${calendar.month_names.join()}`}
+                calendar={calendar}
+                blocked={blocked}
+              />
+            )}
+          </Paged>
         </div>
       )}
       {data.astronomy_records.length > 0 && (
@@ -735,27 +740,29 @@ export function WorldSeasonsSection({ worldId }: { worldId: number }) {
               </Muted>
             ) : (
               <Timeline label='Years remembered'>
-                {data.notable_years.map((year, index) => {
-                  const kind = named(NOTABLE, year.kind)
-                  return (
-                    <TimelineItem
-                      key={year.id}
-                      icon={kind.icon}
-                      tone={
-                        kind.tone === 'danger'
-                          ? 'destructive'
-                          : kind.tone === 'success'
-                            ? 'success'
-                            : 'warning'
-                      }
-                      title={year.name}
-                      timestamp={`Year ${year.year} · epoch ${year.epoch}`}
-                      last={index === data.notable_years.length - 1}
-                    >
-                      <Muted variant='caption'>{kind.label}</Muted>
-                    </TimelineItem>
-                  )
-                })}
+                <Paged items={data.notable_years} as='li'>
+                  {(year, index) => {
+                    const kind = named(NOTABLE, year.kind)
+                    return (
+                      <TimelineItem
+                        key={year.id}
+                        icon={kind.icon}
+                        tone={
+                          kind.tone === 'danger'
+                            ? 'destructive'
+                            : kind.tone === 'success'
+                              ? 'success'
+                              : 'warning'
+                        }
+                        title={year.name}
+                        timestamp={`Year ${year.year} · epoch ${year.epoch}`}
+                        last={index === data.notable_years.length - 1}
+                      >
+                        <Muted variant='caption'>{kind.label}</Muted>
+                      </TimelineItem>
+                    )
+                  }}
+                </Paged>
               </Timeline>
             )}
           </div>

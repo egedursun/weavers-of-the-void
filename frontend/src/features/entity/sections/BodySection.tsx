@@ -40,6 +40,7 @@ import {
   Timeline,
   TimelineItem,
   type TimelineTone,
+  Paged,
 } from '@/components/domain'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
 import { Label, Muted, Text } from '@/components/typography'
@@ -272,26 +273,28 @@ function Vitals({ body }: { body: Body }) {
           }}
         />
       )}
-      {body.capacities.map((capacity) => {
-        const spec = named(CAPACITIES, capacity.key)
-        const hint = CAPACITIES[capacity.key]?.hint ?? ''
-        return (
-          <KpiTile
-            key={capacity.key}
-            label={capacity.locked ? `${spec.label} (held)` : spec.label}
-            value={capacity.value}
-            icon={spec.icon}
-            tone={spec.tone ?? 'gold'}
-            change={capacity.factor - PERCENT}
-            hint={`${hint} Whole: ${capacity.base}; now ${capacity.factor}% of that.`}
-            meter={{
-              value: Math.min(capacity.factor, PERCENT),
-              max: PERCENT,
-              label: spec.label,
-            }}
-          />
-        )
-      })}
+      <Paged items={body.capacities}>
+        {(capacity) => {
+          const spec = named(CAPACITIES, capacity.key)
+          const hint = CAPACITIES[capacity.key]?.hint ?? ''
+          return (
+            <KpiTile
+              key={capacity.key}
+              label={capacity.locked ? `${spec.label} (held)` : spec.label}
+              value={capacity.value}
+              icon={spec.icon}
+              tone={spec.tone ?? 'gold'}
+              change={capacity.factor - PERCENT}
+              hint={`${hint} Whole: ${capacity.base}; now ${capacity.factor}% of that.`}
+              meter={{
+                value: Math.min(capacity.factor, PERCENT),
+                max: PERCENT,
+                label: spec.label,
+              }}
+            />
+          )
+        }}
+      </Paged>
     </div>
   )
 }
@@ -299,25 +302,27 @@ function Vitals({ body }: { body: Body }) {
 function Functions({ body }: { body: Body }) {
   return (
     <Card title='What the body can do' icon={Activity}>
-      {body.functions.map((item) => {
-        const spec = named(FUNCTIONS, item.key)
-        return (
-          <StatBar
-            key={item.key}
-            label={spec.label}
-            value={item.level}
-            max={PERCENT}
-            icon={spec.icon}
-            tone={
-              item.level < PERCENT / 2
-                ? 'destructive'
-                : item.level < PERCENT
-                  ? 'warning'
-                  : 'success'
-            }
-          />
-        )
-      })}
+      <Paged items={body.functions}>
+        {(item) => {
+          const spec = named(FUNCTIONS, item.key)
+          return (
+            <StatBar
+              key={item.key}
+              label={spec.label}
+              value={item.level}
+              max={PERCENT}
+              icon={spec.icon}
+              tone={
+                item.level < PERCENT / 2
+                  ? 'destructive'
+                  : item.level < PERCENT
+                    ? 'warning'
+                    : 'success'
+              }
+            />
+          )
+        }}
+      </Paged>
     </Card>
   )
 }
@@ -380,94 +385,98 @@ function Conditions({ body, blocked }: { body: Body; blocked: string | null }) {
   return (
     <Card title='Lives with' icon={Sparkles}>
       <ul className='flex min-w-0 flex-col gap-2'>
-        {body.conditions.map((row: Condition) => {
-          const spec = named(CONDITIONS, row.kind)
-          const source = linkKind(row.source_link)
-          return (
-            <li
-              key={row.id}
-              className='flex min-w-0 flex-wrap items-center gap-3 rounded-lg border bg-muted/30 p-2'
-            >
-              <Medallion
-                icon={spec.icon}
-                tone={
-                  row.ended_epoch === null ? (spec.tone ?? 'muted') : 'muted'
-                }
-                size='sm'
-              />
-              <div className='flex min-w-0 flex-1 flex-col gap-1'>
-                <div className='flex min-w-0 flex-wrap items-center gap-2'>
-                  <Text weight='medium'>{spec.label}</Text>
-                  <Badge size='sm' variant='secondary'>
-                    {`Severity ${row.severity}/5`}
-                  </Badge>
-                  {row.ended_epoch !== null && (
-                    <Badge size='sm' variant='success'>
-                      {`Ended epoch ${row.ended_epoch}`}
-                    </Badge>
-                  )}
-                  {!row.visible && (
-                    <Badge size='sm' variant='outline'>
-                      Hidden from others
-                    </Badge>
-                  )}
-                </div>
-                <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-                  <Muted variant='caption'>{`Since epoch ${row.since_epoch} · ${plain(CAUSES, row.source)}`}</Muted>
-                  {source && row.source_node_id !== null && row.source_name && (
-                    <EntityLink
-                      kind={source}
-                      id={String(row.source_node_id)}
-                      showIcon
-                    >
-                      {row.source_name}
-                    </EntityLink>
-                  )}
-                </div>
-              </div>
-              {row.ended_epoch === null && (
-                <div className='flex shrink-0 items-center gap-1'>
-                  <Button
-                    size='icon'
-                    variant='ghost'
-                    aria-label='Lighten it'
-                    disabled={reason !== null || row.severity <= 1}
-                    disabledReason={reason ?? 'It is as light as it can be.'}
-                    onClick={() =>
-                      weigh.mutate({ id: row.id, severity: row.severity - 1 })
-                    }
-                  >
-                    <Minus />
-                  </Button>
-                  <Button
-                    size='icon'
-                    variant='ghost'
-                    aria-label='Deepen it'
-                    disabled={reason !== null || row.severity >= SEVERITY_CAP}
-                    disabledReason={reason ?? 'It is as heavy as it can be.'}
-                    onClick={() =>
-                      weigh.mutate({ id: row.id, severity: row.severity + 1 })
-                    }
-                  >
-                    <Plus />
-                  </Button>
-                </div>
-              )}
-              {row.ended_epoch === null && (
-                <Button
+        <Paged items={body.conditions} as='li'>
+          {(row: Condition) => {
+            const spec = named(CONDITIONS, row.kind)
+            const source = linkKind(row.source_link)
+            return (
+              <li
+                key={row.id}
+                className='flex min-w-0 flex-wrap items-center gap-3 rounded-lg border bg-muted/30 p-2'
+              >
+                <Medallion
+                  icon={spec.icon}
+                  tone={
+                    row.ended_epoch === null ? (spec.tone ?? 'muted') : 'muted'
+                  }
                   size='sm'
-                  variant='outline'
-                  disabled={reason !== null}
-                  disabledReason={reason ?? undefined}
-                  onClick={() => end.mutate(row.id)}
-                >
-                  <RotateCcw />
-                  Lift it
-                </Button>
-              )}
-            </li>
-          )
-        })}
+                />
+                <div className='flex min-w-0 flex-1 flex-col gap-1'>
+                  <div className='flex min-w-0 flex-wrap items-center gap-2'>
+                    <Text weight='medium'>{spec.label}</Text>
+                    <Badge size='sm' variant='secondary'>
+                      {`Severity ${row.severity}/5`}
+                    </Badge>
+                    {row.ended_epoch !== null && (
+                      <Badge size='sm' variant='success'>
+                        {`Ended epoch ${row.ended_epoch}`}
+                      </Badge>
+                    )}
+                    {!row.visible && (
+                      <Badge size='sm' variant='outline'>
+                        Hidden from others
+                      </Badge>
+                    )}
+                  </div>
+                  <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+                    <Muted variant='caption'>{`Since epoch ${row.since_epoch} · ${plain(CAUSES, row.source)}`}</Muted>
+                    {source &&
+                      row.source_node_id !== null &&
+                      row.source_name && (
+                        <EntityLink
+                          kind={source}
+                          id={String(row.source_node_id)}
+                          showIcon
+                        >
+                          {row.source_name}
+                        </EntityLink>
+                      )}
+                  </div>
+                </div>
+                {row.ended_epoch === null && (
+                  <div className='flex shrink-0 items-center gap-1'>
+                    <Button
+                      size='icon'
+                      variant='ghost'
+                      aria-label='Lighten it'
+                      disabled={reason !== null || row.severity <= 1}
+                      disabledReason={reason ?? 'It is as light as it can be.'}
+                      onClick={() =>
+                        weigh.mutate({ id: row.id, severity: row.severity - 1 })
+                      }
+                    >
+                      <Minus />
+                    </Button>
+                    <Button
+                      size='icon'
+                      variant='ghost'
+                      aria-label='Deepen it'
+                      disabled={reason !== null || row.severity >= SEVERITY_CAP}
+                      disabledReason={reason ?? 'It is as heavy as it can be.'}
+                      onClick={() =>
+                        weigh.mutate({ id: row.id, severity: row.severity + 1 })
+                      }
+                    >
+                      <Plus />
+                    </Button>
+                  </div>
+                )}
+                {row.ended_epoch === null && (
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    disabled={reason !== null}
+                    disabledReason={reason ?? undefined}
+                    onClick={() => end.mutate(row.id)}
+                  >
+                    <RotateCcw />
+                    Lift it
+                  </Button>
+                )}
+              </li>
+            )
+          }}
+        </Paged>
       </ul>
     </Card>
   )
@@ -771,15 +780,17 @@ function Wounds({ body, blocked }: { body: Body; blocked: string | null }) {
   return (
     <Card title='Wounds' icon={Swords} wide>
       <Timeline label='Wounds'>
-        {body.injuries.map((row) => (
-          <WoundItem
-            key={row.id}
-            row={row}
-            bearerId={body.node_id}
-            worldId={body.world_id ?? null}
-            blocked={blocked}
-          />
-        ))}
+        <Paged items={body.injuries} as='li'>
+          {(row) => (
+            <WoundItem
+              key={row.id}
+              row={row}
+              bearerId={body.node_id}
+              worldId={body.world_id ?? null}
+              blocked={blocked}
+            />
+          )}
+        </Paged>
       </Timeline>
     </Card>
   )

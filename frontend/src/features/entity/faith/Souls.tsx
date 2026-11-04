@@ -17,7 +17,7 @@ import { unwrap } from '@/api/errors'
 import { traitKindValues, valueAxisValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Medallion, RangeField, StatBar } from '@/components/domain'
+import { Medallion, RangeField, StatBar, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useSons } from '@/features/pantheon/api'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -650,16 +650,18 @@ export function RealmGods({
       hint='Each god’s faithful dead; death gods draw strength from them'
     >
       <ul data-surface='RealmGods' className='flex min-w-0 flex-col gap-2'>
-        {gods.map((god) => (
-          <li key={god.son_id} className='min-w-0'>
-            <StatBar
-              label={god.name}
-              value={god.souls}
-              max={most}
-              icon={RefreshCw}
-            />
-          </li>
-        ))}
+        <Paged items={gods} as='li'>
+          {(god) => (
+            <li key={god.son_id} className='min-w-0'>
+              <StatBar
+                label={god.name}
+                value={god.souls}
+                max={most}
+                icon={RefreshCw}
+              />
+            </li>
+          )}
+        </Paged>
       </ul>
     </Panel>
   )

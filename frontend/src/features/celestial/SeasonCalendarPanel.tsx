@@ -26,7 +26,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { KpiTile, MiniStat, ShowMore, useShowMore } from '@/components/domain'
+import {
+  KpiTile,
+  MiniStat,
+  ShowMore,
+  useShowMore,
+  Paged,
+} from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { NOTABLE, named } from '@/features/entity/environment/labels'
 import {
@@ -469,37 +475,41 @@ function HolyDays({
     )
   return (
     <div className='grid min-w-0 grid-cols-1 gap-3'>
-      {view.calendars.map((calendar) => (
-        <Card
-          key={calendar.knowledge_id}
-          title={calendar.name}
-          icon={CalendarPlus}
-          tone='verdigris'
-          hint={`Counts from year ${calendar.anchor_year} · kept by ${calendar.keepers}`}
-        >
-          {calendar.holy_days.length === 0 ? (
-            <Muted variant='caption'>No holy day yet.</Muted>
-          ) : (
-            <ul className='flex min-w-0 flex-col gap-2'>
-              {calendar.holy_days.map((day) => (
-                <HolyDayRow
-                  key={`${day.index}-${day.name}-${day.season_position}`}
-                  day={day}
-                  calendar={calendar}
-                  seasons={data.seasons}
-                  blocked={blocked}
-                />
-              ))}
-            </ul>
-          )}
-          <NewHolyDay calendar={calendar} data={data} blocked={blocked} />
-          <AnchorField
-            key={calendar.anchor_year}
-            calendar={calendar}
-            blocked={blocked}
-          />
-        </Card>
-      ))}
+      <Paged items={view.calendars}>
+        {(calendar) => (
+          <Card
+            key={calendar.knowledge_id}
+            title={calendar.name}
+            icon={CalendarPlus}
+            tone='verdigris'
+            hint={`Counts from year ${calendar.anchor_year} · kept by ${calendar.keepers}`}
+          >
+            {calendar.holy_days.length === 0 ? (
+              <Muted variant='caption'>No holy day yet.</Muted>
+            ) : (
+              <ul className='flex min-w-0 flex-col gap-2'>
+                <Paged items={calendar.holy_days} as='li'>
+                  {(day) => (
+                    <HolyDayRow
+                      key={`${day.index}-${day.name}-${day.season_position}`}
+                      day={day}
+                      calendar={calendar}
+                      seasons={data.seasons}
+                      blocked={blocked}
+                    />
+                  )}
+                </Paged>
+              </ul>
+            )}
+            <NewHolyDay calendar={calendar} data={data} blocked={blocked} />
+            <AnchorField
+              key={calendar.anchor_year}
+              calendar={calendar}
+              blocked={blocked}
+            />
+          </Card>
+        )}
+      </Paged>
     </div>
   )
 }
@@ -879,13 +889,15 @@ export function SeasonCalendarPanel({ data }: { data: WorldSeasons }) {
           <Muted>No year is remembered yet.</Muted>
         ) : (
           <ul className='flex min-w-0 flex-col gap-2'>
-            {data.notable_years.map((year) => (
-              <NotableRow
-                key={`${year.id}-${year.name}-${year.magnitude}`}
-                year={year}
-                blocked={blocked}
-              />
-            ))}
+            <Paged items={data.notable_years} as='li'>
+              {(year) => (
+                <NotableRow
+                  key={`${year.id}-${year.name}-${year.magnitude}`}
+                  year={year}
+                  blocked={blocked}
+                />
+              )}
+            </Paged>
           </ul>
         )}
       </AdjustPanel>

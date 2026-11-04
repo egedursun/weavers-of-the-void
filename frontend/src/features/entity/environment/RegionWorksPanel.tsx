@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { KpiTile } from '@/components/domain'
+import { KpiTile, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import {
   AdjustPanel,
@@ -453,13 +453,15 @@ export function RegionWorksPanel({
             <Muted>No settlement stands in this land.</Muted>
           ) : (
             <ul className='flex min-w-0 flex-col gap-2'>
-              {works.settlements.map((item) => (
-                <SettlementRow
-                  key={`${item.settlement_id}-${item.bridges}-${item.irrigation}`}
-                  item={item}
-                  blocked={blocked}
-                />
-              ))}
+              <Paged items={works.settlements} as='li'>
+                {(item) => (
+                  <SettlementRow
+                    key={`${item.settlement_id}-${item.bridges}-${item.irrigation}`}
+                    item={item}
+                    blocked={blocked}
+                  />
+                )}
+              </Paged>
             </ul>
           )}
         </Card>
@@ -468,13 +470,15 @@ export function RegionWorksPanel({
             <Muted>No structure stands in this land.</Muted>
           ) : (
             <ul className='flex min-w-0 flex-col gap-2'>
-              {works.ley_works.map((item) => (
-                <LeyWorkRow
-                  key={item.structure_id}
-                  item={item}
-                  blocked={blocked}
-                />
-              ))}
+              <Paged items={works.ley_works} as='li'>
+                {(item) => (
+                  <LeyWorkRow
+                    key={item.structure_id}
+                    item={item}
+                    blocked={blocked}
+                  />
+                )}
+              </Paged>
             </ul>
           )}
         </Card>
@@ -490,13 +494,15 @@ export function RegionWorksPanel({
             <Muted>No ley line runs through this land.</Muted>
           ) : (
             <ul className='flex min-w-0 flex-col gap-2'>
-              {ground.ley_lines.map((line) => (
-                <LeyLineRow
-                  key={`${line.id}-${line.strength}`}
-                  line={line}
-                  blocked={blocked}
-                />
-              ))}
+              <Paged items={ground.ley_lines} as='li'>
+                {(line) => (
+                  <LeyLineRow
+                    key={`${line.id}-${line.strength}`}
+                    line={line}
+                    blocked={blocked}
+                  />
+                )}
+              </Paged>
             </ul>
           )}
         </div>
@@ -506,13 +512,15 @@ export function RegionWorksPanel({
             <Muted>No weather is held over this land.</Muted>
           ) : (
             <ul className='flex min-w-0 flex-col gap-2'>
-              {ground.forced_weather.map((item) => (
-                <ForcedRow
-                  key={`${item.id}-${item.kind}-${item.until_epoch}`}
-                  item={item}
-                  blocked={blocked}
-                />
-              ))}
+              <Paged items={ground.forced_weather} as='li'>
+                {(item) => (
+                  <ForcedRow
+                    key={`${item.id}-${item.kind}-${item.until_epoch}`}
+                    item={item}
+                    blocked={blocked}
+                  />
+                )}
+              </Paged>
             </ul>
           )}
         </div>

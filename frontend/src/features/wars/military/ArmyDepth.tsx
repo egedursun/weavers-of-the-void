@@ -17,7 +17,13 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { EmptyState, EntityLink, Medallion, StatBar } from '@/components/domain'
+import {
+  EmptyState,
+  EntityLink,
+  Medallion,
+  StatBar,
+  Paged,
+} from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { EntityPicker, Held, RecordButtons } from './controls'
@@ -354,14 +360,16 @@ function Officers({
         />
       ) : (
         <ul className='grid min-w-0 grid-cols-1 gap-2 @xl/mil:grid-cols-2 @5xl/mil:grid-cols-3'>
-          {rows.map((row) => (
-            <OfficerCard
-              key={row.id}
-              row={row}
-              armyId={armyId}
-              blocked={blocked}
-            />
-          ))}
+          <Paged items={rows} as='li'>
+            {(row) => (
+              <OfficerCard
+                key={row.id}
+                row={row}
+                armyId={armyId}
+                blocked={blocked}
+              />
+            )}
+          </Paged>
         </ul>
       )}
       <Adjust

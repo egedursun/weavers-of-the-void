@@ -38,6 +38,7 @@ import {
   Medallion,
   Section,
   StatBar,
+  Paged,
 } from '@/components/domain'
 import {
   type ComboboxOption,
@@ -559,74 +560,78 @@ export function TollControls({
     <div data-surface='TollControls' className='flex min-w-0 flex-col gap-3'>
       {route.tolls.length > 0 && (
         <ul className='flex min-w-0 flex-col gap-2'>
-          {route.tolls.map((toll) => (
-            <li
-              key={toll.region_id}
-              className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-background p-2.5'
-            >
-              <Landmark
-                aria-hidden='true'
-                className='size-icon-sm shrink-0 text-muted-foreground'
-              />
-              <Text weight='medium' truncate>
-                {toll.region_name}
-              </Text>
-              {toll.controller_held && (
-                <Badge size='sm' variant='info'>
-                  <Lock />
-                  {`Kept by ${toll.controller_name} by your word`}
-                </Badge>
-              )}
-              <div className='ms-auto flex min-w-0 flex-wrap gap-2'>
+          <Paged items={route.tolls} as='li'>
+            {(toll) => (
+              <li
+                key={toll.region_id}
+                className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-background p-2.5'
+              >
+                <Landmark
+                  aria-hidden='true'
+                  className='size-icon-sm shrink-0 text-muted-foreground'
+                />
+                <Text weight='medium' truncate>
+                  {toll.region_name}
+                </Text>
                 {toll.controller_held && (
+                  <Badge size='sm' variant='info'>
+                    <Lock />
+                    {`Kept by ${toll.controller_name} by your word`}
+                  </Badge>
+                )}
+                <div className='ms-auto flex min-w-0 flex-wrap gap-2'>
+                  {toll.controller_held && (
+                    <Button
+                      size='sm'
+                      variant='outline'
+                      disabled={blocked !== null}
+                      disabledReason={blocked ?? undefined}
+                      onClick={() =>
+                        raise.mutate({
+                          region: toll.region_id,
+                          controller: null,
+                          rate: null,
+                          release: ['controller_entity_id'],
+                        })
+                      }
+                    >
+                      <Unlock />
+                      Let the land choose its keeper
+                    </Button>
+                  )}
                   <Button
                     size='sm'
                     variant='outline'
                     disabled={blocked !== null}
                     disabledReason={blocked ?? undefined}
-                    onClick={() =>
-                      raise.mutate({
-                        region: toll.region_id,
-                        controller: null,
-                        rate: null,
-                        release: ['controller_entity_id'],
-                      })
-                    }
+                    onClick={() => forbid.mutate(toll.region_id)}
                   >
-                    <Unlock />
-                    Let the land choose its keeper
+                    <Ban />
+                    Forbid any toll here
                   </Button>
-                )}
-                <Button
-                  size='sm'
-                  variant='outline'
-                  disabled={blocked !== null}
-                  disabledReason={blocked ?? undefined}
-                  onClick={() => forbid.mutate(toll.region_id)}
-                >
-                  <Ban />
-                  Forbid any toll here
-                </Button>
-              </div>
-            </li>
-          ))}
+                </div>
+              </li>
+            )}
+          </Paged>
         </ul>
       )}
       {route.untolled.length > 0 && (
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
-          {route.untolled.map((id) => (
-            <Button
-              key={id}
-              size='sm'
-              variant='outline'
-              disabled={blocked !== null}
-              disabledReason={blocked ?? undefined}
-              onClick={() => allow.mutate(id)}
-            >
-              <Unlock />
-              {`Allow tolls in ${regionName(id)} again`}
-            </Button>
-          ))}
+          <Paged items={route.untolled}>
+            {(id) => (
+              <Button
+                key={id}
+                size='sm'
+                variant='outline'
+                disabled={blocked !== null}
+                disabledReason={blocked ?? undefined}
+                onClick={() => allow.mutate(id)}
+              >
+                <Unlock />
+                {`Allow tolls in ${regionName(id)} again`}
+              </Button>
+            )}
+          </Paged>
         </div>
       )}
       {free.length > 0 && (
@@ -895,71 +900,77 @@ export function CommunityRoutes({ communityId }: { communityId: number }) {
           />
         ) : (
           <ul className='grid min-w-0 grid-cols-1 gap-2 @xl/route:grid-cols-2'>
-            {mine.map((route) => {
-              const other =
-                route.first_id === communityId
-                  ? { id: route.second_id, name: route.second_name }
-                  : { id: route.first_id, name: route.first_name }
-              const mode = MODE[route.mode]
-              const status = ROUTE_STATUS[route.status]
-              return (
-                <li
-                  key={route.route_id}
-                  data-route={route.route_id}
-                  className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'
-                >
-                  <div className='flex min-w-0 items-center gap-2.5'>
-                    <Medallion icon={mode.icon} tone={status.tone} size='sm' />
-                    <div className='flex min-w-0 flex-1 flex-col'>
-                      <EntityLink kind='entity' id={String(route.route_id)}>
-                        {route.name}
-                      </EntityLink>
-                      <Muted variant='caption' truncate>
-                        {'To '}
-                        <EntityLink kind='entity' id={String(other.id)}>
-                          {other.name}
-                        </EntityLink>
-                        {` by ${mode.label.toLowerCase()}`}
-                      </Muted>
-                    </div>
-                    <Badge size='sm' variant={status.variant}>
-                      <status.icon />
-                      {status.label}
-                    </Badge>
-                  </div>
-                  <div className='flex min-w-0 flex-wrap gap-1.5'>
-                    {DANGER_KEYS.filter((key) => route.dangers[key] > 0).map(
-                      (key) => {
-                        const spec = DANGERS[key]
-                        return (
-                          <IconStat
-                            key={key}
-                            icon={spec.icon}
-                            label={spec.hint}
-                            value={`${spec.label} ${route.dangers[key]}`}
-                            tone={spec.tone}
-                          />
-                        )
-                      }
-                    )}
-                    <IconStat
-                      icon={CalendarRange}
-                      label='Share of cargo still moving in the worst season'
-                      value={`${route.season_pct}% worst season`}
-                      tone={seasonTone(route.season_pct)}
-                    />
-                    {route.chokepoint && (
-                      <IconStat
-                        icon={Mountain}
-                        label='A chokepoint for strategic goods'
-                        value='Chokepoint'
-                        tone='warning'
+            <Paged items={mine} as='li'>
+              {(route) => {
+                const other =
+                  route.first_id === communityId
+                    ? { id: route.second_id, name: route.second_name }
+                    : { id: route.first_id, name: route.first_name }
+                const mode = MODE[route.mode]
+                const status = ROUTE_STATUS[route.status]
+                return (
+                  <li
+                    key={route.route_id}
+                    data-route={route.route_id}
+                    className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'
+                  >
+                    <div className='flex min-w-0 items-center gap-2.5'>
+                      <Medallion
+                        icon={mode.icon}
+                        tone={status.tone}
+                        size='sm'
                       />
-                    )}
-                  </div>
-                </li>
-              )
-            })}
+                      <div className='flex min-w-0 flex-1 flex-col'>
+                        <EntityLink kind='entity' id={String(route.route_id)}>
+                          {route.name}
+                        </EntityLink>
+                        <Muted variant='caption' truncate>
+                          {'To '}
+                          <EntityLink kind='entity' id={String(other.id)}>
+                            {other.name}
+                          </EntityLink>
+                          {` by ${mode.label.toLowerCase()}`}
+                        </Muted>
+                      </div>
+                      <Badge size='sm' variant={status.variant}>
+                        <status.icon />
+                        {status.label}
+                      </Badge>
+                    </div>
+                    <div className='flex min-w-0 flex-wrap gap-1.5'>
+                      {DANGER_KEYS.filter((key) => route.dangers[key] > 0).map(
+                        (key) => {
+                          const spec = DANGERS[key]
+                          return (
+                            <IconStat
+                              key={key}
+                              icon={spec.icon}
+                              label={spec.hint}
+                              value={`${spec.label} ${route.dangers[key]}`}
+                              tone={spec.tone}
+                            />
+                          )
+                        }
+                      )}
+                      <IconStat
+                        icon={CalendarRange}
+                        label='Share of cargo still moving in the worst season'
+                        value={`${route.season_pct}% worst season`}
+                        tone={seasonTone(route.season_pct)}
+                      />
+                      {route.chokepoint && (
+                        <IconStat
+                          icon={Mountain}
+                          label='A chokepoint for strategic goods'
+                          value='Chokepoint'
+                          tone='warning'
+                        />
+                      )}
+                    </div>
+                  </li>
+                )
+              }}
+            </Paged>
           </ul>
         )}
       </div>

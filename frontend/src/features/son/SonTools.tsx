@@ -10,7 +10,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Section, ToolList, toolTitle } from '@/components/domain'
+import { Section, ToolList, toolTitle, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -69,11 +69,13 @@ export function SonTools({ sonId, name }: { sonId: number; name: string }) {
                 <Muted>No limited tool has been used this epoch.</Muted>
               ) : (
                 <div className='flex min-w-0 flex-wrap gap-2'>
-                  {data.counters.map((counter) => (
-                    <Badge key={counter.counter} variant='secondary'>
-                      {`${humanize(counter.counter)}: ${counter.value}`}
-                    </Badge>
-                  ))}
+                  <Paged items={data.counters}>
+                    {(counter) => (
+                      <Badge key={counter.counter} variant='secondary'>
+                        {`${humanize(counter.counter)}: ${counter.value}`}
+                      </Badge>
+                    )}
+                  </Paged>
                 </div>
               )}
               <div className='flex min-w-0 flex-wrap items-center gap-2'>
@@ -116,21 +118,23 @@ export function SonTools({ sonId, name }: { sonId: number; name: string }) {
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
-                  {data.blocked.map((tool) => (
-                    <div
-                      key={tool.name}
-                      className='flex min-w-0 items-center justify-between gap-2 rounded-md border border-dashed px-2.5 py-1.5'
-                    >
-                      <Text as='span' truncate>
-                        {toolTitle(tool.name)}
-                      </Text>
-                      <Badge size='sm' variant='outline'>
-                        {tool.minimum_rarity
-                          ? `${BLOCK_REASON[tool.reason]}: ${RARITY_LABEL[tool.minimum_rarity]}`
-                          : BLOCK_REASON[tool.reason]}
-                      </Badge>
-                    </div>
-                  ))}
+                  <Paged items={data.blocked}>
+                    {(tool) => (
+                      <div
+                        key={tool.name}
+                        className='flex min-w-0 items-center justify-between gap-2 rounded-md border border-dashed px-2.5 py-1.5'
+                      >
+                        <Text as='span' truncate>
+                          {toolTitle(tool.name)}
+                        </Text>
+                        <Badge size='sm' variant='outline'>
+                          {tool.minimum_rarity
+                            ? `${BLOCK_REASON[tool.reason]}: ${RARITY_LABEL[tool.minimum_rarity]}`
+                            : BLOCK_REASON[tool.reason]}
+                        </Badge>
+                      </div>
+                    )}
+                  </Paged>
                 </CollapsibleContent>
               </Collapsible>
             )}

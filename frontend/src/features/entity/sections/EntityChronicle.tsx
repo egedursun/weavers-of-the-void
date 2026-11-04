@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ScrollText } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState, Section } from '@/components/domain'
+import { EmptyState, Section, Paged } from '@/components/domain'
 import { PageControls } from '@/components/domain/PageControls'
 import { Text } from '@/components/typography'
 import { ChronicleEntry } from '@/features/chronicle/ChronicleEntry'
@@ -44,18 +44,20 @@ export function EntityChronicle({
       )}
       {items.length > 0 && (
         <ol className='flex min-w-0 flex-col gap-1'>
-          {items.map((line, index) => (
-            <ChronicleEntry
-              key={line.id}
-              line={line}
-              selfId={entityId}
-              kindLabel={labels.get(line.kind)}
-              highlighted={
-                highlightEpoch === line.epoch &&
-                items[index - 1]?.epoch !== line.epoch
-              }
-            />
-          ))}
+          <Paged items={items} as='li'>
+            {(line, index) => (
+              <ChronicleEntry
+                key={line.id}
+                line={line}
+                selfId={entityId}
+                kindLabel={labels.get(line.kind)}
+                highlighted={
+                  highlightEpoch === line.epoch &&
+                  items[index - 1]?.epoch !== line.epoch
+                }
+              />
+            )}
+          </Paged>
         </ol>
       )}
       <PageControls

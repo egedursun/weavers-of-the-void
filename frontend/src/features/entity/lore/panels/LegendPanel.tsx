@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { KpiTile } from '@/components/domain'
+import { KpiTile, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { CustomKindChoice } from '../CultureParts'
@@ -151,16 +151,20 @@ export function LegendPanel({
             <Muted>No one tells it any more.</Muted>
           ) : (
             <ul className='flex min-w-0 flex-wrap gap-1.5'>
-              {card.tellers.map((teller) => (
-                <li key={teller.id}>
-                  <RefChip icon={Users} label='' item={teller} />
-                </li>
-              ))}
-              {card.bards.map((bard) => (
-                <li key={bard.id}>
-                  <RefChip icon={Mic} label='Bard' item={bard} />
-                </li>
-              ))}
+              <Paged items={card.tellers} as='li'>
+                {(teller) => (
+                  <li key={teller.id}>
+                    <RefChip icon={Users} label='' item={teller} />
+                  </li>
+                )}
+              </Paged>
+              <Paged items={card.bards}>
+                {(bard) => (
+                  <li key={bard.id}>
+                    <RefChip icon={Mic} label='Bard' item={bard} />
+                  </li>
+                )}
+              </Paged>
             </ul>
           )}
         </LoreCard>

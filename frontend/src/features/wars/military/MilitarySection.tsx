@@ -28,6 +28,7 @@ import {
   MiniStat,
   Section,
   StatBar,
+  Paged,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -408,9 +409,11 @@ function Overview({
           />
         </div>
       )}
-      {data.armies.map((army) => (
-        <ArmyPanel key={army.army?.id} army={army} blocked={blocked} />
-      ))}
+      <Paged items={data.armies}>
+        {(army) => (
+          <ArmyPanel key={army.army?.id} army={army} blocked={blocked} />
+        )}
+      </Paged>
       {captives.length > 0 && (
         <Panel
           title='Captives'
@@ -420,22 +423,26 @@ function Overview({
           hint='Cohorts taken in war and what became of them'
         >
           <ul className={cardGrid(captives.length)}>
-            {data.captives_held.map((cohort) => (
-              <CohortCard
-                key={cohort.id}
-                cohort={cohort}
-                blocked={blocked}
-                perspective='Held by this record'
-              />
-            ))}
-            {data.captives_lost.map((cohort) => (
-              <CohortCard
-                key={cohort.id}
-                cohort={cohort}
-                blocked={blocked}
-                perspective='Its own people in chains'
-              />
-            ))}
+            <Paged items={data.captives_held} as='li'>
+              {(cohort) => (
+                <CohortCard
+                  key={cohort.id}
+                  cohort={cohort}
+                  blocked={blocked}
+                  perspective='Held by this record'
+                />
+              )}
+            </Paged>
+            <Paged items={data.captives_lost}>
+              {(cohort) => (
+                <CohortCard
+                  key={cohort.id}
+                  cohort={cohort}
+                  blocked={blocked}
+                  perspective='Its own people in chains'
+                />
+              )}
+            </Paged>
           </ul>
         </Panel>
       )}
@@ -448,22 +455,26 @@ function Overview({
           hint='Agents, their cover and what they have learned'
         >
           <ul className={cardGrid(networks.length)}>
-            {data.networks.map((network) => (
-              <NetworkCard
-                key={network.id}
-                network={network}
-                watching={false}
-                blocked={blocked}
-              />
-            ))}
-            {data.watched_by.map((network) => (
-              <NetworkCard
-                key={network.id}
-                network={network}
-                watching
-                blocked={blocked}
-              />
-            ))}
+            <Paged items={data.networks} as='li'>
+              {(network) => (
+                <NetworkCard
+                  key={network.id}
+                  network={network}
+                  watching={false}
+                  blocked={blocked}
+                />
+              )}
+            </Paged>
+            <Paged items={data.watched_by}>
+              {(network) => (
+                <NetworkCard
+                  key={network.id}
+                  network={network}
+                  watching
+                  blocked={blocked}
+                />
+              )}
+            </Paged>
           </ul>
         </Panel>
       )}
@@ -476,22 +487,26 @@ function Overview({
           hint='Lands held by the sword'
         >
           <ul className={cardGrid(occupations.length)}>
-            {data.occupying.map((item) => (
-              <OccupationCard
-                key={`held.${item.region?.id}`}
-                occupation={item}
-                blocked={blocked}
-                perspective='Held by this record'
-              />
-            ))}
-            {data.occupied.map((item) => (
-              <OccupationCard
-                key={`lost.${item.region?.id}`}
-                occupation={item}
-                blocked={blocked}
-                perspective='Occupied by an enemy'
-              />
-            ))}
+            <Paged items={data.occupying} as='li'>
+              {(item) => (
+                <OccupationCard
+                  key={`held.${item.region?.id}`}
+                  occupation={item}
+                  blocked={blocked}
+                  perspective='Held by this record'
+                />
+              )}
+            </Paged>
+            <Paged items={data.occupied}>
+              {(item) => (
+                <OccupationCard
+                  key={`lost.${item.region?.id}`}
+                  occupation={item}
+                  blocked={blocked}
+                  perspective='Occupied by an enemy'
+                />
+              )}
+            </Paged>
           </ul>
         </Panel>
       )}

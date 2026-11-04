@@ -31,6 +31,7 @@ import {
   KpiTile,
   Medallion,
   Section,
+  Paged,
 } from '@/components/domain'
 import { LineChart } from '@/components/domain/LineChart'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
@@ -756,32 +757,34 @@ function Summary({
                 : `${profile.workers.length} ${profile.workers.length === 1 ? 'community' : 'communities'} at work`
             }
           />
-          {profile.workers.map((row) => (
-            <div
-              key={row.community_id}
-              className='flex min-w-0 items-center gap-2'
-            >
-              <EntityLink
-                kind='entity'
-                id={String(row.community_id)}
-                className='min-w-0 flex-1 truncate'
+          <Paged items={profile.workers}>
+            {(row) => (
+              <div
+                key={row.community_id}
+                className='flex min-w-0 items-center gap-2'
               >
-                {row.community_name}
-              </EntityLink>
-              <IconStat
-                icon={Users}
-                label='Workers'
-                value={`${formatInteger(row.workers)} workers`}
-                tone='info'
-              />
-              <HeldBadge held={row.held} />
-              <ReleaseButton
-                held={row.held}
-                busy={busy}
-                onRelease={() => freeWorker.mutate(row.community_id)}
-              />
-            </div>
-          ))}
+                <EntityLink
+                  kind='entity'
+                  id={String(row.community_id)}
+                  className='min-w-0 flex-1 truncate'
+                >
+                  {row.community_name}
+                </EntityLink>
+                <IconStat
+                  icon={Users}
+                  label='Workers'
+                  value={`${formatInteger(row.workers)} workers`}
+                  tone='info'
+                />
+                <HeldBadge held={row.held} />
+                <ReleaseButton
+                  held={row.held}
+                  busy={busy}
+                  onRelease={() => freeWorker.mutate(row.community_id)}
+                />
+              </div>
+            )}
+          </Paged>
         </div>
         <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
           <PartHeader
@@ -794,17 +797,19 @@ function Summary({
                 : 'Who holds the right to work it'
             }
           />
-          {profile.owners.map((id) => (
-            <div key={id} className='flex min-w-0 items-center gap-2'>
-              <Check
-                aria-hidden='true'
-                className='size-icon-sm shrink-0 text-primary'
-              />
-              <EntityLink kind='entity' id={String(id)}>
-                {ownerName(id)}
-              </EntityLink>
-            </div>
-          ))}
+          <Paged items={profile.owners}>
+            {(id) => (
+              <div key={id} className='flex min-w-0 items-center gap-2'>
+                <Check
+                  aria-hidden='true'
+                  className='size-icon-sm shrink-0 text-primary'
+                />
+                <EntityLink kind='entity' id={String(id)}>
+                  {ownerName(id)}
+                </EntityLink>
+              </div>
+            )}
+          </Paged>
         </div>
       </div>
     </div>

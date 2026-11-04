@@ -9,7 +9,7 @@ import {
   UserRound,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { EntityLink, Medallion, StatBar } from '@/components/domain'
+import { EntityLink, Medallion, StatBar, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker, Held, RecordButtons } from './controls'
 import {
@@ -231,14 +231,16 @@ export function NetworkAgents({
         </Muted>
       ) : (
         <ul className='grid min-w-0 grid-cols-1 gap-2'>
-          {rows.map((row) => (
-            <AgentCard
-              key={row.id}
-              row={row}
-              networkId={networkId}
-              blocked={blocked}
-            />
-          ))}
+          <Paged items={rows} as='li'>
+            {(row) => (
+              <AgentCard
+                key={row.id}
+                row={row}
+                networkId={networkId}
+                blocked={blocked}
+              />
+            )}
+          </Paged>
         </ul>
       )}
       <div className='flex min-w-0 flex-col gap-2'>

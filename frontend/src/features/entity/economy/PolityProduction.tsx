@@ -20,6 +20,7 @@ import {
   Medallion,
   MiniStat,
   Section,
+  Paged,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { GoodChip, PartHeader } from './EntityEconomy'
@@ -81,15 +82,17 @@ function MemberNames({ ids, members }: { ids: number[]; members: Member[] }) {
   const named = members.filter((member) => ids.includes(member.community_id))
   return (
     <span className='inline-flex min-w-0 flex-wrap gap-x-1.5'>
-      {named.map((member) => (
-        <EntityLink
-          key={member.community_id}
-          kind='entity'
-          id={String(member.community_id)}
-        >
-          {member.name}
-        </EntityLink>
-      ))}
+      <Paged items={named}>
+        {(member) => (
+          <EntityLink
+            key={member.community_id}
+            kind='entity'
+            id={String(member.community_id)}
+          >
+            {member.name}
+          </EntityLink>
+        )}
+      </Paged>
     </span>
   )
 }
@@ -313,9 +316,11 @@ export function PolityProduction({ polityId }: { polityId: number }) {
                 note='What each member made last and how often a missing good stopped it.'
               />
               <ul className='grid min-w-0 grid-cols-1 gap-2 @xl/realm-econ:grid-cols-2'>
-                {view.data.members.map((member) => (
-                  <MemberRow key={member.community_id} member={member} />
-                ))}
+                <Paged items={view.data.members} as='li'>
+                  {(member) => (
+                    <MemberRow key={member.community_id} member={member} />
+                  )}
+                </Paged>
               </ul>
               {view.data.stocks.length > 0 && (
                 <>
@@ -325,28 +330,32 @@ export function PolityProduction({ polityId }: { polityId: number }) {
                     note='All members together, with the average quality of each good.'
                   />
                   <div className='flex min-w-0 flex-wrap gap-1.5'>
-                    {view.data.stocks.map((stock) => (
-                      <GoodChip
-                        key={stock.commodity}
-                        kind={stock.commodity}
-                        quantity={stock.quantity}
-                        suffix={`, quality ${stock.quality}`}
-                      />
-                    ))}
+                    <Paged items={view.data.stocks}>
+                      {(stock) => (
+                        <GoodChip
+                          key={stock.commodity}
+                          kind={stock.commodity}
+                          quantity={stock.quantity}
+                          suffix={`, quality ${stock.quality}`}
+                        />
+                      )}
+                    </Paged>
                   </div>
                 </>
               )}
               {Object.keys(view.data.workshops).length > 0 && (
                 <div className='flex min-w-0 flex-wrap gap-1.5'>
-                  {Object.entries(view.data.workshops).map(([kind, level]) => {
-                    const spec = WORKSHOP[kind as WorkshopKind]
-                    return (
-                      <Badge key={kind} variant='outline'>
-                        <spec.icon />
-                        {`${spec.label} ${level}`}
-                      </Badge>
-                    )
-                  })}
+                  <Paged items={Object.entries(view.data.workshops)}>
+                    {([kind, level]) => {
+                      const spec = WORKSHOP[kind as WorkshopKind]
+                      return (
+                        <Badge key={kind} variant='outline'>
+                          <spec.icon />
+                          {`${spec.label} ${level}`}
+                        </Badge>
+                      )
+                    }}
+                  </Paged>
                 </div>
               )}
             </>

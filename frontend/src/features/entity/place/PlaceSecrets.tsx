@@ -8,7 +8,7 @@ import {
 } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { EntityLink, Medallion } from '@/components/domain'
+import { EntityLink, Medallion, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { plain } from '../environment/labels'
@@ -292,13 +292,15 @@ export function PlaceSecrets({ profile }: { profile: PlaceProfile }) {
         <Muted>Nothing lies hidden here, that anyone knows.</Muted>
       ) : (
         <div className='grid min-w-0 grid-cols-1 gap-2 @3xl/card:grid-cols-2'>
-          {profile.secrets.map((secret) => (
-            <SecretTile
-              key={secret.id}
-              secret={secret}
-              placeId={profile.place_id}
-            />
-          ))}
+          <Paged items={profile.secrets}>
+            {(secret) => (
+              <SecretTile
+                key={secret.id}
+                secret={secret}
+                placeId={profile.place_id}
+              />
+            )}
+          </Paged>
         </div>
       )}
       <HideSecret placeId={profile.place_id} />

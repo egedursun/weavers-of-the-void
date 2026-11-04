@@ -22,6 +22,7 @@ import {
   EntityLink,
   type KpiTone,
   Medallion,
+  Paged,
 } from '@/components/domain'
 import { PageControls } from '@/components/domain/PageControls'
 import { Muted, Text } from '@/components/typography'
@@ -175,14 +176,16 @@ function PagedList<T>({
   return (
     <div className='flex min-w-0 flex-col gap-2'>
       <ul aria-label={label} className='flex min-w-0 flex-col gap-2'>
-        {data.items.map((item) => (
-          <li
-            key={keyOf(item)}
-            className='flex min-w-0 items-start gap-3 rounded-lg border bg-background p-3'
-          >
-            {row(item)}
-          </li>
-        ))}
+        <Paged items={data.items} as='li'>
+          {(item) => (
+            <li
+              key={keyOf(item)}
+              className='flex min-w-0 items-start gap-3 rounded-lg border bg-background p-3'
+            >
+              {row(item)}
+            </li>
+          )}
+        </Paged>
       </ul>
       <PageControls
         offset={offset}

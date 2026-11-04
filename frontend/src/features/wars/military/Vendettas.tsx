@@ -16,6 +16,7 @@ import {
   Medallion,
   MiniStat,
   StatBar,
+  Paged,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { EntityPicker, Held, RecordButtons, TextField } from './controls'
@@ -283,14 +284,16 @@ export function Vendettas({
           />
         ) : (
           <ul className={cardGrid(feuds.length)}>
-            {feuds.map((feud) => (
-              <FeudCard
-                key={feud.id}
-                feud={feud}
-                scope={entityId}
-                blocked={blocked}
-              />
-            ))}
+            <Paged items={feuds} as='li'>
+              {(feud) => (
+                <FeudCard
+                  key={feud.id}
+                  feud={feud}
+                  scope={entityId}
+                  blocked={blocked}
+                />
+              )}
+            </Paged>
           </ul>
         )}
         {entityId !== null && (

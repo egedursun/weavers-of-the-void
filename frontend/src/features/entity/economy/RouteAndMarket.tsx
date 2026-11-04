@@ -40,6 +40,7 @@ import {
   Section,
   Timeline,
   TimelineItem,
+  Paged,
 } from '@/components/domain'
 import { LineChart } from '@/components/domain/LineChart'
 import { Muted, Stat, Text } from '@/components/typography'
@@ -349,18 +350,20 @@ function CargoEpoch({
       framed
     >
       <div className='flex min-w-0 flex-wrap gap-1.5'>
-        {flows.map((row, index) => (
-          <GoodChip
-            key={`${row.commodity}-${row.material ?? ''}-${index}`}
-            kind={row.commodity}
-            quantity={row.volume}
-            suffix={
-              row.material
-                ? ` of ${MATERIAL_LABEL[row.material].toLowerCase()}`
-                : undefined
-            }
-          />
-        ))}
+        <Paged items={flows}>
+          {(row, index) => (
+            <GoodChip
+              key={`${row.commodity}-${row.material ?? ''}-${index}`}
+              kind={row.commodity}
+              quantity={row.volume}
+              suffix={
+                row.material
+                  ? ` of ${MATERIAL_LABEL[row.material].toLowerCase()}`
+                  : undefined
+              }
+            />
+          )}
+        </Paged>
         {flows
           .filter((row) => row.lost > 0)
           .map((row, index) => {
@@ -497,9 +500,9 @@ export function TradeRouteSection({
             />
             {route.tolls.length > 0 && (
               <ul className='grid min-w-0 grid-cols-1 gap-2 @xl/route:grid-cols-2'>
-                {route.tolls.map((item) => (
-                  <TollStop key={item.region_id} toll={item} />
-                ))}
+                <Paged items={route.tolls} as='li'>
+                  {(item) => <TollStop key={item.region_id} toll={item} />}
+                </Paged>
               </ul>
             )}
           </div>
@@ -517,14 +520,16 @@ export function TradeRouteSection({
               />
             ) : (
               <Timeline label='Cargo by epoch'>
-                {epochs.map((epoch, index) => (
-                  <CargoEpoch
-                    key={epoch}
-                    epoch={epoch}
-                    flows={route.flows.filter((row) => row.epoch === epoch)}
-                    last={index === epochs.length - 1}
-                  />
-                ))}
+                <Paged items={epochs} as='li'>
+                  {(epoch, index) => (
+                    <CargoEpoch
+                      key={epoch}
+                      epoch={epoch}
+                      flows={route.flows.filter((row) => row.epoch === epoch)}
+                      last={index === epochs.length - 1}
+                    />
+                  )}
+                </Paged>
               </Timeline>
             )}
           </div>
@@ -564,16 +569,18 @@ export function TradeRouteSection({
             </div>
             {route.tolls.length > 0 && (
               <div className={FIELD_GRID}>
-                {route.tolls.map((item) => (
-                  <TollEditor
-                    key={`${item.region_id}-${item.rate_pct}`}
-                    toll={item}
-                    busy={busy}
-                    onSet={(rate) =>
-                      toll.mutate({ region: item.region_id, rate })
-                    }
-                  />
-                ))}
+                <Paged items={route.tolls}>
+                  {(item) => (
+                    <TollEditor
+                      key={`${item.region_id}-${item.rate_pct}`}
+                      toll={item}
+                      busy={busy}
+                      onSet={(rate) =>
+                        toll.mutate({ region: item.region_id, rate })
+                      }
+                    />
+                  )}
+                </Paged>
               </div>
             )}
             <TollControls route={route} busy={busy} />

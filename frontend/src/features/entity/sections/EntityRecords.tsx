@@ -15,6 +15,7 @@ import {
   Section,
   ShowMore,
   useShowMore,
+  Paged,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { type EntityContext } from '../actions/context'
@@ -165,39 +166,43 @@ export function EntityRecords({ ctx }: { ctx: EntityContext }) {
       {(ancestors.length > 0 || descendants.length > 0) && (
         <Section id='section-lineage' title='Lineage'>
           <ol className='flex min-w-0 flex-col items-start gap-1'>
-            {ancestors.map((ref) => (
-              <li
-                key={`a-${ref.id}`}
-                className='flex min-w-0 items-center gap-2'
-              >
-                <EntityLink kind='entity' id={String(ref.id)}>
-                  {ref.name}
-                </EntityLink>
-                <ArrowDown
-                  aria-hidden='true'
-                  className='size-icon-xs text-muted-foreground'
-                />
-              </li>
-            ))}
+            <Paged items={ancestors} as='li'>
+              {(ref) => (
+                <li
+                  key={`a-${ref.id}`}
+                  className='flex min-w-0 items-center gap-2'
+                >
+                  <EntityLink kind='entity' id={String(ref.id)}>
+                    {ref.name}
+                  </EntityLink>
+                  <ArrowDown
+                    aria-hidden='true'
+                    className='size-icon-xs text-muted-foreground'
+                  />
+                </li>
+              )}
+            </Paged>
             <li>
               <Text as='strong' weight='semibold'>
                 {ctx.entity.name}
               </Text>
             </li>
-            {descendants.map((ref) => (
-              <li
-                key={`d-${ref.id}`}
-                className='flex min-w-0 items-center gap-2'
-              >
-                <ArrowDown
-                  aria-hidden='true'
-                  className='size-icon-xs text-muted-foreground'
-                />
-                <EntityLink kind='entity' id={String(ref.id)}>
-                  {ref.name}
-                </EntityLink>
-              </li>
-            ))}
+            <Paged items={descendants}>
+              {(ref) => (
+                <li
+                  key={`d-${ref.id}`}
+                  className='flex min-w-0 items-center gap-2'
+                >
+                  <ArrowDown
+                    aria-hidden='true'
+                    className='size-icon-xs text-muted-foreground'
+                  />
+                  <EntityLink kind='entity' id={String(ref.id)}>
+                    {ref.name}
+                  </EntityLink>
+                </li>
+              )}
+            </Paged>
           </ol>
         </Section>
       )}

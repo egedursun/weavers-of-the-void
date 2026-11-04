@@ -25,7 +25,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { EntityLink, type KpiTone, Medallion } from '@/components/domain'
+import { EntityLink, type KpiTone, Medallion, Paged } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { MindPicker } from '../mind/parts'
 import { type Named, STAGE, named } from './labels'
@@ -479,50 +479,52 @@ export function ShareEditor({
         <Muted variant='caption'>{`Each number is ${amount}.`}</Muted>
       )}
       <ul className='grid min-w-0 grid-cols-1 gap-2 @xl/wild:grid-cols-2'>
-        {rows.map(([key, share], index) => {
-          const spec = named(table, key)
-          return (
-            <li
-              key={key}
-              className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
-            >
-              <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
-              <Text as='span' weight='medium' truncate className='flex-1'>
-                {spec.label}
-              </Text>
-              <Input
-                className='w-20'
-                type='number'
-                inputMode='numeric'
-                min={0}
-                max={max}
-                value={share}
-                aria-label={spec.label}
-                onChange={(event) =>
-                  setRows((before) =>
-                    before.map((row, at) =>
-                      at === index ? [row[0], event.target.value] : row
-                    )
-                  )
-                }
-              />
-              <Button
-                size='icon-sm'
-                variant='ghost'
-                aria-label={`Remove ${spec.label}`}
-                disabled={busy !== null}
-                disabledReason={busy ?? undefined}
-                onClick={() => {
-                  const next = rows.filter((_, at) => at !== index)
-                  setRows(next)
-                  onSave(whole(next))
-                }}
+        <Paged items={rows} as='li'>
+          {([key, share], index) => {
+            const spec = named(table, key)
+            return (
+              <li
+                key={key}
+                className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
               >
-                <Trash2 />
-              </Button>
-            </li>
-          )
-        })}
+                <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
+                <Text as='span' weight='medium' truncate className='flex-1'>
+                  {spec.label}
+                </Text>
+                <Input
+                  className='w-20'
+                  type='number'
+                  inputMode='numeric'
+                  min={0}
+                  max={max}
+                  value={share}
+                  aria-label={spec.label}
+                  onChange={(event) =>
+                    setRows((before) =>
+                      before.map((row, at) =>
+                        at === index ? [row[0], event.target.value] : row
+                      )
+                    )
+                  }
+                />
+                <Button
+                  size='icon-sm'
+                  variant='ghost'
+                  aria-label={`Remove ${spec.label}`}
+                  disabled={busy !== null}
+                  disabledReason={busy ?? undefined}
+                  onClick={() => {
+                    const next = rows.filter((_, at) => at !== index)
+                    setRows(next)
+                    onSave(whole(next))
+                  }}
+                >
+                  <Trash2 />
+                </Button>
+              </li>
+            )
+          }}
+        </Paged>
       </ul>
       <div className='flex min-w-0 flex-wrap items-end gap-2'>
         <MindPicker

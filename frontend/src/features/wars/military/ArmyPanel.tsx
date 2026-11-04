@@ -44,6 +44,7 @@ import {
   StatBar,
   Timeline,
   TimelineItem,
+  Paged,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -586,34 +587,36 @@ function ArmyOrders({
 function Marches({ army }: { army: ArmyCard }) {
   return (
     <Timeline label='Marches by season'>
-      {army.movements.map((move, index) => {
-        const stance = named(STANCE, move.stance)
-        const from = move.from_region?.name ?? '—'
-        const to = move.to_region?.name ?? '—'
-        return (
-          <TimelineItem
-            key={`${move.epoch}.${move.season}`}
-            icon={stance.icon}
-            tone={move.attrition > 0 ? 'warning' : 'default'}
-            title={from === to ? `Held ${to}` : `${from} → ${to}`}
-            timestamp={`Epoch ${move.epoch} · season ${move.season + 1}`}
-            last={index === army.movements.length - 1}
-          >
-            <div className='flex min-w-0 flex-wrap gap-1'>
-              <Tag item={stance} />
-              <Plain icon={Wheat}>{`${move.supply_days} days of food`}</Plain>
-              <Badge
-                size='sm'
-                variant={move.attrition > 0 ? 'destructive' : 'outline'}
-              >
-                <Users />
-                {`${formatInteger(move.attrition)} lost`}
-              </Badge>
-              {move.note && <Plain icon={Flag}>{move.note}</Plain>}
-            </div>
-          </TimelineItem>
-        )
-      })}
+      <Paged items={army.movements} as='li'>
+        {(move, index) => {
+          const stance = named(STANCE, move.stance)
+          const from = move.from_region?.name ?? '—'
+          const to = move.to_region?.name ?? '—'
+          return (
+            <TimelineItem
+              key={`${move.epoch}.${move.season}`}
+              icon={stance.icon}
+              tone={move.attrition > 0 ? 'warning' : 'default'}
+              title={from === to ? `Held ${to}` : `${from} → ${to}`}
+              timestamp={`Epoch ${move.epoch} · season ${move.season + 1}`}
+              last={index === army.movements.length - 1}
+            >
+              <div className='flex min-w-0 flex-wrap gap-1'>
+                <Tag item={stance} />
+                <Plain icon={Wheat}>{`${move.supply_days} days of food`}</Plain>
+                <Badge
+                  size='sm'
+                  variant={move.attrition > 0 ? 'destructive' : 'outline'}
+                >
+                  <Users />
+                  {`${formatInteger(move.attrition)} lost`}
+                </Badge>
+                {move.note && <Plain icon={Flag}>{move.note}</Plain>}
+              </div>
+            </TimelineItem>
+          )
+        }}
+      </Paged>
     </Timeline>
   )
 }
@@ -766,20 +769,22 @@ export function ArmyPanel({
             className='size-icon-sm shrink-0 text-muted-foreground'
           />
           <Label>Supply line</Label>
-          {army.supply_line.map((item, index) => (
-            <span
-              key={`${item.id}.${index}`}
-              className='flex items-center gap-1.5'
-            >
-              {index > 0 && (
-                <ChevronRight
-                  aria-hidden='true'
-                  className='size-icon-xs text-muted-foreground'
-                />
-              )}
-              <Plain icon={MapPin}>{item.name}</Plain>
-            </span>
-          ))}
+          <Paged items={army.supply_line}>
+            {(item, index) => (
+              <span
+                key={`${item.id}.${index}`}
+                className='flex items-center gap-1.5'
+              >
+                {index > 0 && (
+                  <ChevronRight
+                    aria-hidden='true'
+                    className='size-icon-xs text-muted-foreground'
+                  />
+                )}
+                <Plain icon={MapPin}>{item.name}</Plain>
+              </span>
+            )}
+          </Paged>
         </div>
       )}
       <div className='flex min-w-0 flex-col gap-2'>
@@ -798,14 +803,16 @@ export function ArmyPanel({
           />
         ) : (
           <ul className='grid min-w-0 grid-cols-1 gap-3 @xl/mil:grid-cols-2 @6xl/mil:grid-cols-3'>
-            {army.stacks.map((stack) => (
-              <StackCard
-                key={stack.id}
-                stack={stack}
-                armyId={army.army?.id ?? 0}
-                blocked={blocked}
-              />
-            ))}
+            <Paged items={army.stacks} as='li'>
+              {(stack) => (
+                <StackCard
+                  key={stack.id}
+                  stack={stack}
+                  armyId={army.army?.id ?? 0}
+                  blocked={blocked}
+                />
+              )}
+            </Paged>
           </ul>
         )}
       </div>

@@ -47,6 +47,7 @@ import {
   RangeField,
   Section,
   StatBar,
+  Paged,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -211,76 +212,78 @@ function AgendaCard({
         {faction.goals.length === 0 && (
           <Muted>The faction wants nothing it has named.</Muted>
         )}
-        {faction.goals.map((goal) => {
-          const spec = named(FACTION_GOALS, goal.kind)
-          return (
-            <div
-              key={goal.id}
-              className='flex min-w-0 flex-col gap-1.5 rounded-md border p-2'
-            >
-              <div className='flex min-w-0 items-center gap-2'>
-                <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
-                <Text truncate>{spec.label}</Text>
-                {goal.target_id !== null && goal.target && (
-                  <EntityLink kind='entity' id={String(goal.target_id)}>
-                    {goal.target}
-                  </EntityLink>
-                )}
-                {goal.target_key && (
-                  <Badge size='sm' variant='outline'>
-                    {plain({}, goal.target_key)}
-                  </Badge>
-                )}
-                {goal.set_by_player && (
-                  <Badge size='sm' variant='secondary'>
-                    By your will
-                  </Badge>
-                )}
-                <Button
-                  size='sm'
-                  variant='outline'
-                  className='ml-auto'
-                  disabled={busy !== null}
-                  disabledReason={busy ?? 'Choose every field first'}
-                  onClick={() =>
+        <Paged items={faction.goals}>
+          {(goal) => {
+            const spec = named(FACTION_GOALS, goal.kind)
+            return (
+              <div
+                key={goal.id}
+                className='flex min-w-0 flex-col gap-1.5 rounded-md border p-2'
+              >
+                <div className='flex min-w-0 items-center gap-2'>
+                  <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
+                  <Text truncate>{spec.label}</Text>
+                  {goal.target_id !== null && goal.target && (
+                    <EntityLink kind='entity' id={String(goal.target_id)}>
+                      {goal.target}
+                    </EntityLink>
+                  )}
+                  {goal.target_key && (
+                    <Badge size='sm' variant='outline'>
+                      {plain({}, goal.target_key)}
+                    </Badge>
+                  )}
+                  {goal.set_by_player && (
+                    <Badge size='sm' variant='secondary'>
+                      By your will
+                    </Badge>
+                  )}
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    className='ml-auto'
+                    disabled={busy !== null}
+                    disabledReason={busy ?? 'Choose every field first'}
+                    onClick={() =>
+                      set.mutate({
+                        goalId: goal.id,
+                        kind: goal.kind,
+                        remove: true,
+                      })
+                    }
+                  >
+                    <Trash2 />
+                    Strike
+                  </Button>
+                </div>
+                <StatBar
+                  label='Progress'
+                  value={goal.progress}
+                  max={PERCENT}
+                  icon={Target}
+                  tone='success'
+                />
+                <RangeField
+                  label='Priority'
+                  icon={Flag}
+                  value={goal.priority}
+                  min={0}
+                  max={PERCENT}
+                  level={`${goal.priority}`}
+                  lowLabel='Idle wish'
+                  highLabel='Overriding aim'
+                  onChange={(value) =>
                     set.mutate({
                       goalId: goal.id,
                       kind: goal.kind,
-                      remove: true,
+                      priority: value,
                     })
                   }
-                >
-                  <Trash2 />
-                  Strike
-                </Button>
+                />
               </div>
-              <StatBar
-                label='Progress'
-                value={goal.progress}
-                max={PERCENT}
-                icon={Target}
-                tone='success'
-              />
-              <RangeField
-                label='Priority'
-                icon={Flag}
-                value={goal.priority}
-                min={0}
-                max={PERCENT}
-                level={`${goal.priority}`}
-                lowLabel='Idle wish'
-                highLabel='Overriding aim'
-                onChange={(value) =>
-                  set.mutate({
-                    goalId: goal.id,
-                    kind: goal.kind,
-                    priority: value,
-                  })
-                }
-              />
-            </div>
-          )
-        })}
+            )
+          }}
+        </Paged>
       </div>
       <AdjustPanel
         trigger='Set a goal'
@@ -351,33 +354,41 @@ function FactionActionLog({ faction }: { faction: Faction }) {
         {faction.actions.length === 0 && (
           <Muted>The faction has not yet moved.</Muted>
         )}
-        {faction.actions.map((item) => {
-          const spec = named(FACTION_ACTIONS, item.kind)
-          return (
-            <li
-              key={item.id}
-              className='flex min-w-0 flex-wrap items-center gap-2'
-            >
-              <Badge size='sm' variant='outline'>{`Epoch ${item.epoch}`}</Badge>
-              <Tag spec={spec} />
-              {item.target_id !== null && item.target && (
-                <EntityLink kind='entity' id={String(item.target_id)}>
-                  {item.target}
-                </EntityLink>
-              )}
-              {item.amount > 0 && (
-                <Badge size='sm' variant='secondary'>{`${item.amount}`}</Badge>
-              )}
-              <Badge
-                size='sm'
-                variant={item.success ? 'success' : 'destructive'}
+        <Paged items={faction.actions} as='li'>
+          {(item) => {
+            const spec = named(FACTION_ACTIONS, item.kind)
+            return (
+              <li
+                key={item.id}
+                className='flex min-w-0 flex-wrap items-center gap-2'
               >
-                {item.success ? 'Done' : 'Failed'}
-              </Badge>
-              {item.note && <Muted truncate>{item.note}</Muted>}
-            </li>
-          )
-        })}
+                <Badge
+                  size='sm'
+                  variant='outline'
+                >{`Epoch ${item.epoch}`}</Badge>
+                <Tag spec={spec} />
+                {item.target_id !== null && item.target && (
+                  <EntityLink kind='entity' id={String(item.target_id)}>
+                    {item.target}
+                  </EntityLink>
+                )}
+                {item.amount > 0 && (
+                  <Badge
+                    size='sm'
+                    variant='secondary'
+                  >{`${item.amount}`}</Badge>
+                )}
+                <Badge
+                  size='sm'
+                  variant={item.success ? 'success' : 'destructive'}
+                >
+                  {item.success ? 'Done' : 'Failed'}
+                </Badge>
+                {item.note && <Muted truncate>{item.note}</Muted>}
+              </li>
+            )
+          }}
+        </Paged>
       </ol>
     </Panel>
   )
@@ -414,52 +425,54 @@ function Members({
       count={faction.members.length}
     >
       <ul className='flex min-w-0 flex-col gap-1.5'>
-        {faction.members.map((member) => (
-          <li
-            key={member.id}
-            className='flex min-w-0 flex-wrap items-center gap-2'
-          >
-            <Tag spec={named(RANKS, member.rank)} />
-            <EntityLink kind='entity' id={String(member.id)}>
-              {member.name}
-            </EntityLink>
-            {!member.alive && (
-              <Badge size='sm' variant='outline'>
-                Dead
-              </Badge>
-            )}
-            <div className='ml-auto flex gap-1'>
-              {Object.keys(RANKS)
-                .filter((rank) => rank !== member.rank)
-                .map((rank) => (
-                  <Button
-                    key={rank}
-                    size='sm'
-                    variant='outline'
-                    disabled={busy !== null}
-                    disabledReason={busy ?? 'Choose every field first'}
-                    onClick={() =>
-                      change.mutate({ mortal: member.id, rank: rank as Rank })
-                    }
-                  >
-                    {named(RANKS, rank).label}
-                  </Button>
-                ))}
-              <Button
-                size='sm'
-                variant='outline'
-                disabled={busy !== null}
-                disabledReason={busy ?? 'Choose every field first'}
-                onClick={() =>
-                  change.mutate({ mortal: member.id, remove: true })
-                }
-              >
-                <UserMinus />
-                Cast out
-              </Button>
-            </div>
-          </li>
-        ))}
+        <Paged items={faction.members} as='li'>
+          {(member) => (
+            <li
+              key={member.id}
+              className='flex min-w-0 flex-wrap items-center gap-2'
+            >
+              <Tag spec={named(RANKS, member.rank)} />
+              <EntityLink kind='entity' id={String(member.id)}>
+                {member.name}
+              </EntityLink>
+              {!member.alive && (
+                <Badge size='sm' variant='outline'>
+                  Dead
+                </Badge>
+              )}
+              <div className='ml-auto flex gap-1'>
+                {Object.keys(RANKS)
+                  .filter((rank) => rank !== member.rank)
+                  .map((rank) => (
+                    <Button
+                      key={rank}
+                      size='sm'
+                      variant='outline'
+                      disabled={busy !== null}
+                      disabledReason={busy ?? 'Choose every field first'}
+                      onClick={() =>
+                        change.mutate({ mortal: member.id, rank: rank as Rank })
+                      }
+                    >
+                      {named(RANKS, rank).label}
+                    </Button>
+                  ))}
+                <Button
+                  size='sm'
+                  variant='outline'
+                  disabled={busy !== null}
+                  disabledReason={busy ?? 'Choose every field first'}
+                  onClick={() =>
+                    change.mutate({ mortal: member.id, remove: true })
+                  }
+                >
+                  <UserMinus />
+                  Cast out
+                </Button>
+              </div>
+            </li>
+          )}
+        </Paged>
       </ul>
       <div className='flex min-w-0 items-end gap-2'>
         <RecordField

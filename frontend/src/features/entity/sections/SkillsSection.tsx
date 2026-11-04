@@ -5,7 +5,7 @@ import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { EmptyState, Section, StatBar } from '@/components/domain'
+import { EmptyState, Section, StatBar, Paged } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -295,14 +295,16 @@ export function SkillsSection({ nodeId }: { nodeId: number }) {
                 const spec = named(SKILL_FAMILIES, family)
                 return (
                   <MindCard key={family} title={spec.label} icon={spec.icon}>
-                    {rows.map((skill) => (
-                      <SkillRow
-                        key={skill.skill}
-                        skill={skill}
-                        blocked={blocked}
-                        onForget={() => forget.mutate(skill.skill)}
-                      />
-                    ))}
+                    <Paged items={rows}>
+                      {(skill) => (
+                        <SkillRow
+                          key={skill.skill}
+                          skill={skill}
+                          blocked={blocked}
+                          onForget={() => forget.mutate(skill.skill)}
+                        />
+                      )}
+                    </Paged>
                   </MindCard>
                 )
               })}

@@ -14,7 +14,7 @@ import type { components } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { FormRow, Medallion, TimelineItem } from '@/components/domain'
+import { FormRow, Medallion, TimelineItem, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -199,34 +199,36 @@ export function HoldWeather({
   }
   return (
     <div className='flex min-w-0 flex-col gap-3'>
-      {ground.forced_weather.map((item) => (
-        <div
-          key={item.id}
-          className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2'
-        >
-          <Medallion
-            icon={named(WEATHER, item.kind).icon}
-            tone='info'
-            size='sm'
-          />
-          <div className='flex min-w-0 flex-1 flex-col'>
-            <Text weight='semibold'>{item.label}</Text>
-            <Muted variant='caption'>
-              {`${item.season_position === null ? 'Every season' : (seasons[String(item.season_position)] ?? 'One season')}, epochs ${item.from_epoch} to ${item.until_epoch}${item.son_id !== null ? ', held by a son' : ''}`}
-            </Muted>
-          </div>
-          <Button
-            size='sm'
-            variant='outline'
-            disabled={busy !== null}
-            disabledReason={busy ?? undefined}
-            onClick={() => release.mutate(item.id)}
+      <Paged items={ground.forced_weather}>
+        {(item) => (
+          <div
+            key={item.id}
+            className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2'
           >
-            <Undo2 />
-            Release
-          </Button>
-        </div>
-      ))}
+            <Medallion
+              icon={named(WEATHER, item.kind).icon}
+              tone='info'
+              size='sm'
+            />
+            <div className='flex min-w-0 flex-1 flex-col'>
+              <Text weight='semibold'>{item.label}</Text>
+              <Muted variant='caption'>
+                {`${item.season_position === null ? 'Every season' : (seasons[String(item.season_position)] ?? 'One season')}, epochs ${item.from_epoch} to ${item.until_epoch}${item.son_id !== null ? ', held by a son' : ''}`}
+              </Muted>
+            </div>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => release.mutate(item.id)}
+            >
+              <Undo2 />
+              Release
+            </Button>
+          </div>
+        )}
+      </Paged>
       <div className='flex min-w-0 flex-wrap items-end gap-3'>
         <div className='min-w-40 flex-1'>
           <MindPicker
@@ -308,31 +310,33 @@ export function NotableYears({
         <Muted>This land remembers no year above the others.</Muted>
       ) : (
         <div className='flex min-w-0 flex-col'>
-          {ground.notable_years.map((year, index) => {
-            const item = named(NOTABLE, year.kind)
-            return (
-              <TimelineItem
-                key={year.id}
-                icon={item.icon}
-                tone={
-                  item.tone === 'danger'
-                    ? 'destructive'
-                    : item.tone === 'success'
-                      ? 'success'
-                      : 'warning'
-                }
-                title={year.name}
-                timestamp={`Year ${year.year} · epoch ${year.epoch}`}
-                last={index === ground.notable_years.length - 1}
-              >
-                <Muted variant='caption'>
-                  {year.legend_id !== null
-                    ? `${item.label}; told as a legend`
-                    : item.label}
-                </Muted>
-              </TimelineItem>
-            )
-          })}
+          <Paged items={ground.notable_years}>
+            {(year, index) => {
+              const item = named(NOTABLE, year.kind)
+              return (
+                <TimelineItem
+                  key={year.id}
+                  icon={item.icon}
+                  tone={
+                    item.tone === 'danger'
+                      ? 'destructive'
+                      : item.tone === 'success'
+                        ? 'success'
+                        : 'warning'
+                  }
+                  title={year.name}
+                  timestamp={`Year ${year.year} · epoch ${year.epoch}`}
+                  last={index === ground.notable_years.length - 1}
+                >
+                  <Muted variant='caption'>
+                    {year.legend_id !== null
+                      ? `${item.label}; told as a legend`
+                      : item.label}
+                  </Muted>
+                </TimelineItem>
+              )
+            }}
+          </Paged>
         </div>
       )}
       <Label variant='overline'>Set down a year</Label>

@@ -54,6 +54,7 @@ import {
   MiniStat,
   Section,
   StatBar,
+  Paged,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
@@ -222,9 +223,9 @@ function Hero({ card }: { card: SpeciesCard }) {
             <Muted as='span' variant='caption'>
               Totem of
             </Muted>
-            {card.totem_of.map((people) => (
-              <Name key={people.id} item={people} />
-            ))}
+            <Paged items={card.totem_of}>
+              {(people) => <Name key={people.id} item={people} />}
+            </Paged>
           </div>
         )}
         {(card.sacred_to || card.domesticated_from) && (
@@ -460,25 +461,27 @@ function Traits({ card }: { card: SpeciesCard }) {
         <Muted>An ordinary kind, with no gift worth naming.</Muted>
       ) : (
         <TileGrid>
-          {card.traits.map((trait) => (
-            <Tile key={trait} spec={named(TRAIT, trait)} />
-          ))}
+          <Paged items={card.traits}>
+            {(trait) => <Tile key={trait} spec={named(TRAIT, trait)} />}
+          </Paged>
         </TileGrid>
       )}
       {card.hosts.length > 0 && (
         <div className='flex min-w-0 flex-col gap-2'>
           <Label variant='overline'>Sicknesses it carries</Label>
           <div className='flex min-w-0 flex-wrap gap-1.5'>
-            {card.hosts.map((row) => (
-              <Badge
-                key={row.disease?.id}
-                size='sm'
-                variant={row.immune ? 'success' : 'destructive'}
-              >
-                <Biohazard />
-                {`${row.disease?.name ?? 'A sickness'}${row.immune ? ', unharmed by it' : ''}`}
-              </Badge>
-            ))}
+            <Paged items={card.hosts}>
+              {(row) => (
+                <Badge
+                  key={row.disease?.id}
+                  size='sm'
+                  variant={row.immune ? 'success' : 'destructive'}
+                >
+                  <Biohazard />
+                  {`${row.disease?.name ?? 'A sickness'}${row.immune ? ', unharmed by it' : ''}`}
+                </Badge>
+              )}
+            </Paged>
           </div>
         </div>
       )}
@@ -515,9 +518,9 @@ function Kin({
         <Muted variant='caption'>{empty}</Muted>
       ) : (
         <div className='flex min-w-0 flex-wrap gap-x-3 gap-y-1'>
-          {items.map((item) => (
-            <Name key={item.id} item={item} />
-          ))}
+          <Paged items={items}>
+            {(item) => <Name key={item.id} item={item} />}
+          </Paged>
         </div>
       )}
     </div>
@@ -548,18 +551,22 @@ function FoodChain({ card }: { card: SpeciesCard }) {
         />
         {(card.pinned_prey.length > 0 || card.barred_prey.length > 0) && (
           <div className='flex min-w-0 flex-wrap items-center gap-1.5 @md/card:col-span-2'>
-            {card.pinned_prey.map((item) => (
-              <Badge key={`pin-${item.id}`} variant='default'>
-                <Pin />
-                {`Always hunts ${item.name}`}
-              </Badge>
-            ))}
-            {card.barred_prey.map((item) => (
-              <Badge key={`bar-${item.id}`} variant='destructive'>
-                <Ban />
-                {`Never hunts ${item.name}`}
-              </Badge>
-            ))}
+            <Paged items={card.pinned_prey}>
+              {(item) => (
+                <Badge key={`pin-${item.id}`} variant='default'>
+                  <Pin />
+                  {`Always hunts ${item.name}`}
+                </Badge>
+              )}
+            </Paged>
+            <Paged items={card.barred_prey}>
+              {(item) => (
+                <Badge key={`bar-${item.id}`} variant='destructive'>
+                  <Ban />
+                  {`Never hunts ${item.name}`}
+                </Badge>
+              )}
+            </Paged>
           </div>
         )}
         <Kin
@@ -614,37 +621,39 @@ function UsesAndYields({ card }: { card: SpeciesCard }) {
       ) : (
         <div data-surface='SpeciesYields' className='min-w-0'>
           <TileGrid>
-            {card.yields.map((row) => {
-              const goods = row.commodity ? COMMODITY[row.commodity] : null
-              return (
-                <Tile
-                  key={row.product}
-                  spec={{
-                    label: titled(row.product),
-                    icon: goods?.icon ?? Package,
-                    tone: 'gold',
-                  }}
-                  caption={[
-                    goods?.label,
-                    row.material &&
-                    plain(MATERIAL, row.material) !== goods?.label
-                      ? plain(MATERIAL, row.material)
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
-                  aside={
-                    <span className='flex items-center gap-1'>
-                      <WorldMaterialBadge name={row.world_material} />
-                      <Badge
-                        size='sm'
-                        variant='default'
-                      >{`×${row.rate}`}</Badge>
-                    </span>
-                  }
-                />
-              )
-            })}
+            <Paged items={card.yields}>
+              {(row) => {
+                const goods = row.commodity ? COMMODITY[row.commodity] : null
+                return (
+                  <Tile
+                    key={row.product}
+                    spec={{
+                      label: titled(row.product),
+                      icon: goods?.icon ?? Package,
+                      tone: 'gold',
+                    }}
+                    caption={[
+                      goods?.label,
+                      row.material &&
+                      plain(MATERIAL, row.material) !== goods?.label
+                        ? plain(MATERIAL, row.material)
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                    aside={
+                      <span className='flex items-center gap-1'>
+                        <WorldMaterialBadge name={row.world_material} />
+                        <Badge
+                          size='sm'
+                          variant='default'
+                        >{`×${row.rate}`}</Badge>
+                      </span>
+                    }
+                  />
+                )
+              }}
+            </Paged>
           </TileGrid>
         </div>
       )}
@@ -682,41 +691,43 @@ function Taming({ id, card, blocked }: Blocked) {
       </div>
       {card.herds.length > 0 && (
         <ul className='flex min-w-0 flex-col gap-2'>
-          {card.herds.map((row) => {
-            const stage = named(STAGE, row.stage)
-            return (
-              <li
-                key={row.community?.id}
-                className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
-              >
-                <Medallion icon={stage.icon} tone={stage.tone} size='sm' />
-                <div className='flex min-w-0 flex-1 flex-col gap-1'>
-                  <Name item={row.community} />
-                  <div className='flex min-w-0 flex-wrap gap-1'>
-                    <Badge size='sm' variant={BADGE_OF[stage.tone ?? 'gold']}>
-                      {stage.label}
-                    </Badge>
-                    <Badge size='sm' variant='secondary'>
-                      <LIFE_ICONS.herd />
-                      {`${row.head} head`}
-                    </Badge>
-                    <Badge size='sm' variant='secondary'>
-                      <Wheat />
-                      {`Fed ${row.fed_epochs} ${row.fed_epochs === 1 ? 'epoch' : 'epochs'}`}
-                    </Badge>
+          <Paged items={card.herds} as='li'>
+            {(row) => {
+              const stage = named(STAGE, row.stage)
+              return (
+                <li
+                  key={row.community?.id}
+                  className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
+                >
+                  <Medallion icon={stage.icon} tone={stage.tone} size='sm' />
+                  <div className='flex min-w-0 flex-1 flex-col gap-1'>
+                    <Name item={row.community} />
+                    <div className='flex min-w-0 flex-wrap gap-1'>
+                      <Badge size='sm' variant={BADGE_OF[stage.tone ?? 'gold']}>
+                        {stage.label}
+                      </Badge>
+                      <Badge size='sm' variant='secondary'>
+                        <LIFE_ICONS.herd />
+                        {`${row.head} head`}
+                      </Badge>
+                      <Badge size='sm' variant='secondary'>
+                        <Wheat />
+                        {`Fed ${row.fed_epochs} ${row.fed_epochs === 1 ? 'epoch' : 'epochs'}`}
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-                {row.community && (
-                  <HerdDrop
-                    communityId={row.community.id}
-                    speciesId={id}
-                    name={row.community.name}
-                    blocked={blocked}
-                  />
-                )}
-              </li>
-            )
-          })}
+                  {row.community && (
+                    <HerdDrop
+                      communityId={row.community.id}
+                      speciesId={id}
+                      name={row.community.name}
+                      blocked={blocked}
+                    />
+                  )}
+                </li>
+              )
+            }}
+          </Paged>
         </ul>
       )}
     </Card>
@@ -814,9 +825,9 @@ function Ranges({ card }: { card: SpeciesCard }) {
           data-surface='SpeciesRanges'
           className='grid min-w-0 grid-cols-1 gap-2 @lg/card:grid-cols-2'
         >
-          {card.ranges.map((row) => (
-            <RangeCard key={row.region?.id} row={row} />
-          ))}
+          <Paged items={card.ranges} as='li'>
+            {(row) => <RangeCard key={row.region?.id} row={row} />}
+          </Paged>
         </ul>
       )}
     </Card>
@@ -1066,14 +1077,16 @@ function LandControls({ id, card, blocked }: Blocked) {
       <Group title='Where it ranges' icon={MapPinned}>
         {card.ranges.length === 0 && <Muted>It ranges nowhere yet.</Muted>}
         <ul className='flex min-w-0 flex-col gap-2'>
-          {card.ranges.map((row) => (
-            <RangeEditor
-              key={`${row.region?.id}-${row.abundance}-${row.fit}-${row.hunted}-${row.trend}`}
-              id={id}
-              row={row}
-              blocked={blocked}
-            />
-          ))}
+          <Paged items={card.ranges} as='li'>
+            {(row) => (
+              <RangeEditor
+                key={`${row.region?.id}-${row.abundance}-${row.fit}-${row.hunted}-${row.trend}`}
+                id={id}
+                row={row}
+                blocked={blocked}
+              />
+            )}
+          </Paged>
         </ul>
         <div className='grid min-w-0 grid-cols-1 items-end gap-3 @xl/wild:grid-cols-2'>
           <div className='flex min-w-0 flex-col gap-2'>
@@ -1204,22 +1217,24 @@ function YieldControls({ id, card, blocked }: Blocked) {
       </Group>
       <Group title='What it yields' icon={Package}>
         <ul className='flex min-w-0 flex-col gap-2'>
-          {card.yields.map((row) => (
-            <YieldRow
-              key={`${row.product}-${row.rate}`}
-              row={row}
-              busy={busy}
-              onSet={(next) =>
-                set.mutate({
-                  product: row.product,
-                  commodity: row.commodity ?? null,
-                  material: row.material ?? null,
-                  stuff: row.world_material_id ?? null,
-                  rate: next,
-                })
-              }
-            />
-          ))}
+          <Paged items={card.yields} as='li'>
+            {(row) => (
+              <YieldRow
+                key={`${row.product}-${row.rate}`}
+                row={row}
+                busy={busy}
+                onSet={(next) =>
+                  set.mutate({
+                    product: row.product,
+                    commodity: row.commodity ?? null,
+                    material: row.material ?? null,
+                    stuff: row.world_material_id ?? null,
+                    rate: next,
+                  })
+                }
+              />
+            )}
+          </Paged>
         </ul>
         <div className='grid min-w-0 grid-cols-1 items-end gap-3 @md/wild:grid-cols-2 @3xl/wild:grid-cols-4'>
           <div className='flex min-w-0 flex-col gap-1'>

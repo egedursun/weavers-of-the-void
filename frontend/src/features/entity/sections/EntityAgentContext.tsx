@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/collapsible'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
-import { Section, ToolList, toolTitle } from '@/components/domain'
+import { Section, ToolList, toolTitle, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { humanize } from '../actions/schema'
 import { useEntityAgentContext } from '../api/queries'
@@ -39,11 +39,13 @@ export function EntityAgentContext({
             <div className='flex min-w-0 flex-wrap items-center gap-2'>
               <Badge variant='secondary'>{`${data.action_points} actions`}</Badge>
               <Badge variant='outline'>{`${data.available.length} usable tools`}</Badge>
-              {data.counters.map((counter) => (
-                <Badge key={counter.counter} variant='outline'>
-                  {`${humanize(counter.counter)}: ${counter.value}`}
-                </Badge>
-              ))}
+              <Paged items={data.counters}>
+                {(counter) => (
+                  <Badge key={counter.counter} variant='outline'>
+                    {`${humanize(counter.counter)}: ${counter.value}`}
+                  </Badge>
+                )}
+              </Paged>
             </div>
             <Collapsible className='flex min-w-0 flex-col gap-2'>
               <CollapsibleTrigger asChild>

@@ -15,7 +15,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
-import { MiniStat, StatBar } from '@/components/domain'
+import { MiniStat, StatBar, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { EntityPicker, Held, RecordButtons, TextField } from './controls'
@@ -271,14 +271,16 @@ export function SiegeDepth({
       hint='Walls, works, relief and the fate of the city'
     >
       <div className='flex min-w-0 flex-col gap-2'>
-        {rows.map((siege) => (
-          <SiegeDepthCard
-            key={siege.id}
-            siege={siege}
-            warId={warId}
-            blocked={blocked}
-          />
-        ))}
+        <Paged items={rows}>
+          {(siege) => (
+            <SiegeDepthCard
+              key={siege.id}
+              siege={siege}
+              warId={warId}
+              blocked={blocked}
+            />
+          )}
+        </Paged>
       </div>
     </Panel>
   )

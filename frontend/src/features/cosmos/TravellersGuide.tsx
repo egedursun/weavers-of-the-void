@@ -13,6 +13,7 @@ import {
   PageHeader,
   Section,
   StatBar,
+  Paged,
 } from '@/components/domain'
 import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
 import { Muted, Text } from '@/components/typography'
@@ -313,11 +314,13 @@ export function TravellersGuide({ id }: DrawerPageProps) {
           <Muted>The sky of this world holds nothing named.</Muted>
         ) : (
           <div className='flex min-w-0 flex-wrap gap-2'>
-            {data.sky.map((body) => (
-              <EntityLink key={body.id} kind='entity' id={String(body.id)}>
-                {body.name}
-              </EntityLink>
-            ))}
+            <Paged items={data.sky}>
+              {(body) => (
+                <EntityLink key={body.id} kind='entity' id={String(body.id)}>
+                  {body.name}
+                </EntityLink>
+              )}
+            </Paged>
           </div>
         )}
       </Section>

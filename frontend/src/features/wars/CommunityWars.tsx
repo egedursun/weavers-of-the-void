@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EntityLink, Section } from '@/components/domain'
+import { EntityLink, Section, Paged } from '@/components/domain'
 import { Label, Text } from '@/components/typography'
 import { WarsPanel } from './WarsPanel'
 import { CaptivesList, TributesList } from './WarsTables'
@@ -16,18 +16,20 @@ function Heroes({ entityId }: { entityId: number }) {
     return <Text>No living heroes stand for this community.</Text>
   return (
     <ul aria-label='Heroes' className='flex min-w-0 flex-wrap gap-2'>
-      {heroes.data.map((hero) => (
-        <li key={hero.hero.id} className='flex min-w-0 items-center gap-2'>
-          <EntityLink kind='entity' id={String(hero.hero.id)}>
-            {hero.hero.name}
-          </EntityLink>
-          {hero.role && (
-            <Badge size='sm' variant='outline'>
-              {hero.role.replaceAll('_', ' ')}
-            </Badge>
-          )}
-        </li>
-      ))}
+      <Paged items={heroes.data} as='li'>
+        {(hero) => (
+          <li key={hero.hero.id} className='flex min-w-0 items-center gap-2'>
+            <EntityLink kind='entity' id={String(hero.hero.id)}>
+              {hero.hero.name}
+            </EntityLink>
+            {hero.role && (
+              <Badge size='sm' variant='outline'>
+                {hero.role.replaceAll('_', ' ')}
+              </Badge>
+            )}
+          </li>
+        )}
+      </Paged>
     </ul>
   )
 }

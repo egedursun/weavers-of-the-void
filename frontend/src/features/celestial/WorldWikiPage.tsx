@@ -35,6 +35,7 @@ import {
   PagedList,
   Portrait,
   Section,
+  Paged,
 } from '@/components/domain'
 import { RecordNavLink } from '@/components/domain/RecordNavLink'
 import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
@@ -253,22 +254,26 @@ function WorldPeoples({ wiki }: { wiki: WorldWiki }) {
       )}
       {(wiki.sons.length > 0 || wiki.foreign_gods.length > 0) && (
         <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-          {wiki.sons.map((son) => (
-            <Badge key={son.id} size='sm' variant='default'>
-              <Crown />
-              <EntityLink kind='son' id={String(son.id)}>
-                {son.name}
-              </EntityLink>
-            </Badge>
-          ))}
-          {wiki.foreign_gods.map((god) => (
-            <Badge key={god.id} size='sm' variant='outline'>
-              <Ghost />
-              <EntityLink kind='foreign-god' id={String(god.id)}>
-                {god.name}
-              </EntityLink>
-            </Badge>
-          ))}
+          <Paged items={wiki.sons}>
+            {(son) => (
+              <Badge key={son.id} size='sm' variant='default'>
+                <Crown />
+                <EntityLink kind='son' id={String(son.id)}>
+                  {son.name}
+                </EntityLink>
+              </Badge>
+            )}
+          </Paged>
+          <Paged items={wiki.foreign_gods}>
+            {(god) => (
+              <Badge key={god.id} size='sm' variant='outline'>
+                <Ghost />
+                <EntityLink kind='foreign-god' id={String(god.id)}>
+                  {god.name}
+                </EntityLink>
+              </Badge>
+            )}
+          </Paged>
         </div>
       )}
     </Section>

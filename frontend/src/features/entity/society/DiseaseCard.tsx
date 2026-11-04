@@ -50,6 +50,7 @@ import {
   Timeline,
   TimelineItem,
   type TimelineTone,
+  Paged,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
@@ -290,36 +291,38 @@ function Reach({ view }: { view: Disease }) {
                 </EntityLink>
               </Row>
             )}
-            {view.strains.map((strain) => (
-              <Row
-                key={strain.id}
-                icon={Dna}
-                tone='verdigris'
-                aside={
-                  <div className='flex shrink-0 items-center gap-1.5'>
-                    <IconStat
-                      icon={Activity}
-                      label='Virulence'
-                      value={strain.virulence}
-                      tone='warning'
-                    />
-                    <IconStat
-                      icon={Skull}
-                      label='Lethality'
-                      value={strain.lethality}
-                      tone='danger'
-                    />
-                  </div>
-                }
-              >
-                <EntityLink kind='entity' id={String(strain.id)}>
-                  {strain.name}
-                </EntityLink>
-                <Muted as='span' variant='caption'>
-                  {`Generation ${strain.generation}`}
-                </Muted>
-              </Row>
-            ))}
+            <Paged items={view.strains} as='li'>
+              {(strain) => (
+                <Row
+                  key={strain.id}
+                  icon={Dna}
+                  tone='verdigris'
+                  aside={
+                    <div className='flex shrink-0 items-center gap-1.5'>
+                      <IconStat
+                        icon={Activity}
+                        label='Virulence'
+                        value={strain.virulence}
+                        tone='warning'
+                      />
+                      <IconStat
+                        icon={Skull}
+                        label='Lethality'
+                        value={strain.lethality}
+                        tone='danger'
+                      />
+                    </div>
+                  }
+                >
+                  <EntityLink kind='entity' id={String(strain.id)}>
+                    {strain.name}
+                  </EntityLink>
+                  <Muted as='span' variant='caption'>
+                    {`Generation ${strain.generation}`}
+                  </Muted>
+                </Row>
+              )}
+            </Paged>
           </ul>
         )}
       </Panel>
@@ -333,19 +336,21 @@ function Reach({ view }: { view: Disease }) {
           <Muted>It has settled nowhere.</Muted>
         ) : (
           <ul className='flex min-w-0 flex-col gap-2'>
-            {view.endemic.map((item) => (
-              <Row key={item.region_id} icon={MapPin} tone='warning'>
-                <EntityLink kind='entity' id={String(item.region_id)}>
-                  {item.region}
-                </EntityLink>
-                <StatBar
-                  label={`Load, since epoch ${item.since_epoch}`}
-                  value={item.load}
-                  max={PERCENT}
-                  tone={METER_TONE[badTone(item.load)]}
-                />
-              </Row>
-            ))}
+            <Paged items={view.endemic} as='li'>
+              {(item) => (
+                <Row key={item.region_id} icon={MapPin} tone='warning'>
+                  <EntityLink kind='entity' id={String(item.region_id)}>
+                    {item.region}
+                  </EntityLink>
+                  <StatBar
+                    label={`Load, since epoch ${item.since_epoch}`}
+                    value={item.load}
+                    max={PERCENT}
+                    tone={METER_TONE[badTone(item.load)]}
+                  />
+                </Row>
+              )}
+            </Paged>
           </ul>
         )}
       </Panel>
@@ -359,19 +364,25 @@ function Reach({ view }: { view: Disease }) {
           <Muted>No healer has found the cure.</Muted>
         ) : (
           <ul className='flex min-w-0 flex-col gap-2'>
-            {view.cures.map((item) => {
-              const spec = CURE_SPEC[item.source]
-              return (
-                <Row key={item.community_id} icon={spec.icon} tone={spec.tone}>
-                  <EntityLink kind='entity' id={String(item.community_id)}>
-                    {item.community}
-                  </EntityLink>
-                  <Muted as='span' variant='caption'>
-                    {`${spec.label}, epoch ${item.since_epoch}`}
-                  </Muted>
-                </Row>
-              )
-            })}
+            <Paged items={view.cures} as='li'>
+              {(item) => {
+                const spec = CURE_SPEC[item.source]
+                return (
+                  <Row
+                    key={item.community_id}
+                    icon={spec.icon}
+                    tone={spec.tone}
+                  >
+                    <EntityLink kind='entity' id={String(item.community_id)}>
+                      {item.community}
+                    </EntityLink>
+                    <Muted as='span' variant='caption'>
+                      {`${spec.label}, epoch ${item.since_epoch}`}
+                    </Muted>
+                  </Row>
+                )
+              }}
+            </Paged>
           </ul>
         )}
       </Panel>
@@ -385,26 +396,28 @@ function Reach({ view }: { view: Disease }) {
           <Muted>No one has grown immune.</Muted>
         ) : (
           <ul className='flex min-w-0 flex-col gap-2'>
-            {view.immunities.map((item) => {
-              const age = AGE_SPEC[item.age_band]
-              return (
-                <Row
-                  key={`${item.community_id}-${item.age_band}`}
-                  icon={age.icon}
-                  tone='info'
-                >
-                  <EntityLink kind='entity' id={String(item.community_id)}>
-                    {item.community}
-                  </EntityLink>
-                  <StatBar
-                    label={`${age.label} immune`}
-                    value={item.immune_pct}
-                    max={PERCENT}
+            <Paged items={view.immunities} as='li'>
+              {(item) => {
+                const age = AGE_SPEC[item.age_band]
+                return (
+                  <Row
+                    key={`${item.community_id}-${item.age_band}`}
+                    icon={age.icon}
                     tone='info'
-                  />
-                </Row>
-              )
-            })}
+                  >
+                    <EntityLink kind='entity' id={String(item.community_id)}>
+                      {item.community}
+                    </EntityLink>
+                    <StatBar
+                      label={`${age.label} immune`}
+                      value={item.immune_pct}
+                      max={PERCENT}
+                      tone='info'
+                    />
+                  </Row>
+                )
+              }}
+            </Paged>
           </ul>
         )}
       </Panel>
@@ -797,12 +810,18 @@ export function DiseaseSection({
               </div>
               {data.hosts.length > 0 && (
                 <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-                  {data.hosts.map((host) => (
-                    <Badge key={host.species_id} size='sm' variant='secondary'>
-                      <PawPrint />
-                      {`Carried by ${host.name}`}
-                    </Badge>
-                  ))}
+                  <Paged items={data.hosts}>
+                    {(host) => (
+                      <Badge
+                        key={host.species_id}
+                        size='sm'
+                        variant='secondary'
+                      >
+                        <PawPrint />
+                        {`Carried by ${host.name}`}
+                      </Badge>
+                    )}
+                  </Paged>
                 </div>
               )}
               <OriginLine view={data} />
@@ -918,15 +937,17 @@ export function DiseaseSection({
               <Muted>It has broken out nowhere yet.</Muted>
             ) : (
               <Timeline label='Outbreaks'>
-                {data.outbreaks.map((item, index) => (
-                  <OutbreakItem
-                    key={item.id}
-                    item={item}
-                    last={index === data.outbreaks.length - 1}
-                    blocked={blocked ?? (end.isPending ? WORKING : null)}
-                    onEnd={() => end.mutate(item.id)}
-                  />
-                ))}
+                <Paged items={data.outbreaks} as='li'>
+                  {(item, index) => (
+                    <OutbreakItem
+                      key={item.id}
+                      item={item}
+                      last={index === data.outbreaks.length - 1}
+                      blocked={blocked ?? (end.isPending ? WORKING : null)}
+                      onEnd={() => end.mutate(item.id)}
+                    />
+                  )}
+                </Paged>
               </Timeline>
             )}
           </Panel>

@@ -28,6 +28,7 @@ import {
   Medallion,
   Section,
   StatBar,
+  Paged,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -490,25 +491,27 @@ export function NeedsSection({
             hint='Each missing good has its own effect'
           >
             <div className='grid min-w-0 grid-cols-1 gap-3 @xl/needs:grid-cols-3'>
-              {effects.map(({ effect, short }) => {
-                const spec = EFFECT_SPEC[effect]
-                return (
-                  <Tooltip key={effect}>
-                    <TooltipTrigger asChild>
-                      <div tabIndex={0} className='min-w-0'>
-                        <StatBar
-                          label={spec.label}
-                          icon={spec.icon}
-                          value={short}
-                          max={PERCENT}
-                          tone={METER_TONE[badTone(short)]}
-                        />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>{spec.hint}</TooltipContent>
-                  </Tooltip>
-                )
-              })}
+              <Paged items={effects}>
+                {({ effect, short }) => {
+                  const spec = EFFECT_SPEC[effect]
+                  return (
+                    <Tooltip key={effect}>
+                      <TooltipTrigger asChild>
+                        <div tabIndex={0} className='min-w-0'>
+                          <StatBar
+                            label={spec.label}
+                            icon={spec.icon}
+                            value={short}
+                            max={PERCENT}
+                            tone={METER_TONE[badTone(short)]}
+                          />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>{spec.hint}</TooltipContent>
+                    </Tooltip>
+                  )
+                }}
+              </Paged>
             </div>
           </Panel>
           <Panel
@@ -653,28 +656,30 @@ function WealthControls({
           }
         />
       </div>
-      {present.map((row) => (
-        <NumberEditor
-          key={`${row.social_class}-${row.wealth}`}
-          id={`wealth-${view.entity_id}`}
-          field={{
-            key: row.social_class,
-            label: CLASS_SPEC[row.social_class].label,
-            icon: CLASS_SPEC[row.social_class].icon,
-            value: row.wealth,
-            min: 0,
-            max: WEALTH_MAX,
-          }}
-          held={row.locked.includes('wealth')}
-          blocked={blocked}
-          pending={
-            edit.isPending && edit.variables?.socialClass === row.social_class
-          }
-          onSet={(wealth) =>
-            edit.mutate({ socialClass: row.social_class, wealth })
-          }
-        />
-      ))}
+      <Paged items={present}>
+        {(row) => (
+          <NumberEditor
+            key={`${row.social_class}-${row.wealth}`}
+            id={`wealth-${view.entity_id}`}
+            field={{
+              key: row.social_class,
+              label: CLASS_SPEC[row.social_class].label,
+              icon: CLASS_SPEC[row.social_class].icon,
+              value: row.wealth,
+              min: 0,
+              max: WEALTH_MAX,
+            }}
+            held={row.locked.includes('wealth')}
+            blocked={blocked}
+            pending={
+              edit.isPending && edit.variables?.socialClass === row.social_class
+            }
+            onSet={(wealth) =>
+              edit.mutate({ socialClass: row.social_class, wealth })
+            }
+          />
+        )}
+      </Paged>
     </EditorGroup>
   )
 }
@@ -758,33 +763,39 @@ export function ClassWealthSection({
               hint='The change is what each class gained or lost this epoch'
             >
               <div className='flex min-w-0 flex-col gap-3'>
-                {ranked.map((row) => {
-                  const spec = CLASS_SPEC[row.social_class]
-                  return (
-                    <div
-                      key={row.social_class}
-                      className='flex min-w-0 items-center gap-2.5'
-                    >
-                      <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
-                      <div className='min-w-0 flex-1'>
-                        <StatBar
-                          label={spec.label}
-                          value={row.per_head}
-                          max={top}
-                          showMax={false}
-                          tone={METER_TONE[spec.tone ?? 'muted']}
+                <Paged items={ranked}>
+                  {(row) => {
+                    const spec = CLASS_SPEC[row.social_class]
+                    return (
+                      <div
+                        key={row.social_class}
+                        className='flex min-w-0 items-center gap-2.5'
+                      >
+                        <Medallion
+                          icon={spec.icon}
+                          tone={spec.tone}
+                          size='sm'
                         />
+                        <div className='min-w-0 flex-1'>
+                          <StatBar
+                            label={spec.label}
+                            value={row.per_head}
+                            max={top}
+                            showMax={false}
+                            tone={METER_TONE[spec.tone ?? 'muted']}
+                          />
+                        </div>
+                        {row.income !== 0 && <ChangeChip value={row.income} />}
+                        {row.locked.includes('wealth') && (
+                          <Badge size='sm'>
+                            <Lock />
+                            Held
+                          </Badge>
+                        )}
                       </div>
-                      {row.income !== 0 && <ChangeChip value={row.income} />}
-                      {row.locked.includes('wealth') && (
-                        <Badge size='sm'>
-                          <Lock />
-                          Held
-                        </Badge>
-                      )}
-                    </div>
-                  )
-                })}
+                    )
+                  }}
+                </Paged>
               </div>
             </Panel>
           </div>

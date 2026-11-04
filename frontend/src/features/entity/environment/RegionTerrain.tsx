@@ -41,6 +41,7 @@ import {
   Medallion,
   Section,
   StatBar,
+  Paged,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -283,30 +284,32 @@ function DangerCard({ regionId, view }: { regionId: number; view: Terrain }) {
           </Muted>
         ) : (
           <TileGrid>
-            {view.dangers.map((danger) => {
-              const spec = named(DANGER_SOURCE, danger.source)
-              return (
-                <Tile
-                  key={danger.id}
-                  spec={spec}
-                  caption={
-                    danger.source_node_name
-                      ? `${danger.strength} · ${danger.source_node_name}`
-                      : `${danger.strength} · ${DANGER_SOURCE[danger.source]?.hint ?? ''}`
-                  }
-                  aside={
-                    <Badge
-                      size='sm'
-                      variant={
-                        danger.held ? 'default' : ORIGIN[danger.origin]?.tone
-                      }
-                    >
-                      {danger.held ? 'Held' : ORIGIN[danger.origin]?.label}
-                    </Badge>
-                  }
-                />
-              )
-            })}
+            <Paged items={view.dangers}>
+              {(danger) => {
+                const spec = named(DANGER_SOURCE, danger.source)
+                return (
+                  <Tile
+                    key={danger.id}
+                    spec={spec}
+                    caption={
+                      danger.source_node_name
+                        ? `${danger.strength} · ${danger.source_node_name}`
+                        : `${danger.strength} · ${DANGER_SOURCE[danger.source]?.hint ?? ''}`
+                    }
+                    aside={
+                      <Badge
+                        size='sm'
+                        variant={
+                          danger.held ? 'default' : ORIGIN[danger.origin]?.tone
+                        }
+                      >
+                        {danger.held ? 'Held' : ORIGIN[danger.origin]?.label}
+                      </Badge>
+                    }
+                  />
+                )
+              }}
+            </Paged>
           </TileGrid>
         )}
         <div className='grid min-w-0 grid-cols-1 gap-2 @md/card:grid-cols-2 @2xl/card:grid-cols-3'>
@@ -326,9 +329,11 @@ function DangerCard({ regionId, view }: { regionId: number; view: Terrain }) {
           note='Loose a danger of any kind, set its strength, hold it against the land or drive it out. A danger the land still breeds returns unless you hold it at nothing.'
         >
           <CreateDanger regionId={regionId} busy={busy} />
-          {view.dangers.map((danger) => (
-            <DangerRow key={danger.id} danger={danger} busy={busy} />
-          ))}
+          <Paged items={view.dangers}>
+            {(danger) => (
+              <DangerRow key={danger.id} danger={danger} busy={busy} />
+            )}
+          </Paged>
         </AdjustPanel>
       </Card>
     </div>
@@ -567,9 +572,11 @@ function SanctityControls({
           Write it into the land
         </Button>
       </div>
-      {view.memories.map((memory) => (
-        <MemoryRow key={memory.id} memory={memory} busy={blocked} />
-      ))}
+      <Paged items={view.memories}>
+        {(memory) => (
+          <MemoryRow key={memory.id} memory={memory} busy={blocked} />
+        )}
+      </Paged>
     </AdjustPanel>
   )
 }
@@ -618,20 +625,22 @@ function SanctityCard({ regionId, view }: { regionId: number; view: Terrain }) {
           <Muted>The land remembers nothing yet.</Muted>
         ) : (
           <TileGrid>
-            {view.memories.map((memory) => (
-              <Tile
-                key={memory.id}
-                spec={named(MEMORY, memory.kind)}
-                caption={`${memory.title} · ${memory.magnitude} · epoch ${memory.epoch}${memory.fades && !memory.held ? ' · fading' : ''}`}
-                aside={
-                  memory.held ? (
-                    <Badge size='sm' variant='default'>
-                      Held
-                    </Badge>
-                  ) : undefined
-                }
-              />
-            ))}
+            <Paged items={view.memories}>
+              {(memory) => (
+                <Tile
+                  key={memory.id}
+                  spec={named(MEMORY, memory.kind)}
+                  caption={`${memory.title} · ${memory.magnitude} · epoch ${memory.epoch}${memory.fades && !memory.held ? ' · fading' : ''}`}
+                  aside={
+                    memory.held ? (
+                      <Badge size='sm' variant='default'>
+                        Held
+                      </Badge>
+                    ) : undefined
+                  }
+                />
+              )}
+            </Paged>
           </TileGrid>
         )}
         <SanctityControls regionId={regionId} view={view} busy={busy} />
@@ -672,28 +681,30 @@ function KnowledgeRow({
       <div className='min-w-32 flex-1 truncate'>
         <Name item={{ id: row.polity_id, name: row.polity_name }} />
       </div>
-      {reveals.map((item) => (
-        <Tooltip key={item.label}>
-          <TooltipTrigger asChild>
-            <span
-              tabIndex={0}
-              aria-label={`${item.known ? 'Knows' : 'Does not know'} the ${item.label}`}
-            >
-              <item.icon
-                aria-hidden='true'
-                className={
-                  item.known
-                    ? 'size-icon-sm text-success'
-                    : 'size-icon-sm text-muted-foreground/40'
-                }
-              />
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            {`${item.known ? 'Knows' : 'Does not know'} the ${item.label}`}
-          </TooltipContent>
-        </Tooltip>
-      ))}
+      <Paged items={reveals}>
+        {(item) => (
+          <Tooltip key={item.label}>
+            <TooltipTrigger asChild>
+              <span
+                tabIndex={0}
+                aria-label={`${item.known ? 'Knows' : 'Does not know'} the ${item.label}`}
+              >
+                <item.icon
+                  aria-hidden='true'
+                  className={
+                    item.known
+                      ? 'size-icon-sm text-success'
+                      : 'size-icon-sm text-muted-foreground/40'
+                  }
+                />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              {`${item.known ? 'Knows' : 'Does not know'} the ${item.label}`}
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </Paged>
       <Badge size='sm' variant={row.unmapped ? 'warning' : 'info'}>
         {row.unmapped ? `Unmapped ${row.level}` : `Known ${row.level}`}
       </Badge>
@@ -753,14 +764,16 @@ function KnowledgeCard({
         {view.knowledge.length === 0 ? (
           <Muted>No realm has mapped this land.</Muted>
         ) : (
-          view.knowledge.map((row) => (
-            <KnowledgeRow
-              key={row.polity_id}
-              regionId={regionId}
-              row={row}
-              busy={blocked}
-            />
-          ))
+          <Paged items={view.knowledge}>
+            {(row) => (
+              <KnowledgeRow
+                key={row.polity_id}
+                regionId={regionId}
+                row={row}
+                busy={blocked}
+              />
+            )}
+          </Paged>
         )}
         <AdjustPanel
           title='Reveal or hide this land'
@@ -836,25 +849,29 @@ function HazardCard({ view }: { view: Terrain }) {
           </Muted>
         ) : (
           <TileGrid>
-            {view.exposure.map((item) => (
-              <Tile
-                key={item.hazard}
-                spec={named(HAZARD, item.hazard)}
-                caption={HAZARD[item.hazard]?.season ?? item.season}
-              />
-            ))}
+            <Paged items={view.exposure}>
+              {(item) => (
+                <Tile
+                  key={item.hazard}
+                  spec={named(HAZARD, item.hazard)}
+                  caption={HAZARD[item.hazard]?.season ?? item.season}
+                />
+              )}
+            </Paged>
           </TileGrid>
         )}
         {view.hazards.length > 0 && (
           <div className='flex min-w-0 flex-col gap-2'>
             <Label variant='overline'>Struck</Label>
-            {view.hazards.map((item) => (
-              <Tile
-                key={item.id}
-                spec={named(HAZARD, item.hazard)}
-                caption={`Epoch ${item.epoch}${item.year != null ? `, year ${item.year}` : ''}${item.season_name ? `, ${item.season_name}` : ''}: ${item.deaths} died, ${item.injured} hurt${item.soldiers_lost ? `, ${item.soldiers_lost} soldiers lost` : ''}`}
-              />
-            ))}
+            <Paged items={view.hazards}>
+              {(item) => (
+                <Tile
+                  key={item.id}
+                  spec={named(HAZARD, item.hazard)}
+                  caption={`Epoch ${item.epoch}${item.year != null ? `, year ${item.year}` : ''}${item.season_name ? `, ${item.season_name}` : ''}: ${item.deaths} died, ${item.injured} hurt${item.soldiers_lost ? `, ${item.soldiers_lost} soldiers lost` : ''}`}
+                />
+              )}
+            </Paged>
           </div>
         )}
       </Card>

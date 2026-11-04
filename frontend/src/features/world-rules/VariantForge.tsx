@@ -15,7 +15,7 @@ import type { components } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { EmptyState, Medallion } from '@/components/domain'
+import { EmptyState, Medallion, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { CONDITIONS } from '@/features/entity/body/labels'
 import { SKILL_ICONS, TRAIT_ICONS } from '@/features/entity/mind/labels'
@@ -281,9 +281,15 @@ export function VariantForge() {
         />
       ) : (
         <ul className='flex min-w-0 flex-col gap-2'>
-          {(variants.data ?? []).map((variant) => (
-            <VariantRow key={variant.id} variant={variant} blocked={blocked} />
-          ))}
+          <Paged items={variants.data ?? []} as='li'>
+            {(variant) => (
+              <VariantRow
+                key={variant.id}
+                variant={variant}
+                blocked={blocked}
+              />
+            )}
+          </Paged>
         </ul>
       )}
     </div>

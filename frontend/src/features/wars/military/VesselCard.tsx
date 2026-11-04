@@ -24,6 +24,7 @@ import {
   MiniStat,
   Section,
   StatBar,
+  Paged,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -323,9 +324,9 @@ export function VesselCard({
         <Tag item={nameOf(HULL, vessel.hull.hull)} />
         <Tag item={status} />
         <Held locked={vessel.locked} />
-        {vessel.armament.map((arm) => (
-          <Tag key={arm} item={nameOf(ARMAMENT, arm)} />
-        ))}
+        <Paged items={vessel.armament}>
+          {(arm) => <Tag key={arm} item={nameOf(ARMAMENT, arm)} />}
+        </Paged>
       </div>
       <StatBar
         label='Hull'

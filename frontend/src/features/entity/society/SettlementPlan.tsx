@@ -54,6 +54,7 @@ import {
   RangeField,
   Section,
   StatBar,
+  Paged,
 } from '@/components/domain'
 import { LineChart } from '@/components/domain/LineChart'
 import { Muted, Stat, Text } from '@/components/typography'
@@ -349,12 +350,14 @@ function CityHero({ plan }: { plan: Plan }) {
               Rationing
             </Badge>
           )}
-          {plan.foreigners.map((item) => (
-            <Badge key={item.people_id} size='sm' variant='outline'>
-              <Users />
-              {`${item.name} ${item.share}%`}
-            </Badge>
-          ))}
+          <Paged items={plan.foreigners}>
+            {(item) => (
+              <Badge key={item.people_id} size='sm' variant='outline'>
+                <Users />
+                {`${item.name} ${item.share}%`}
+              </Badge>
+            )}
+          </Paged>
         </div>
       </div>
     </div>
@@ -856,34 +859,36 @@ function PlanControls({
             edit.mutate({ key: 'garrison_entity_id', value: Number(value) })
           }
         />
-        {plan.foreigners.map((item) => (
-          <NumberEditor
-            key={`foreign-${item.people_id}-${item.share}`}
-            id={`settlement-${plan.entity_id}-foreign`}
-            field={{
-              key: `foreign-${item.people_id}`,
-              label: item.name || 'Foreign people',
-              icon: Users,
-              value: item.share,
-              min: 0,
-              max: PERCENT,
-              unit: '% of the city',
-            }}
-            held={locked.includes('foreigners')}
-            blocked={busy}
-            pending={foreign.isPending}
-            onSet={(value) =>
-              foreign.mutate(
-                Object.fromEntries(
-                  plan.foreigners.map((entry) => [
-                    String(entry.people_id),
-                    entry.people_id === item.people_id ? value : entry.share,
-                  ])
+        <Paged items={plan.foreigners}>
+          {(item) => (
+            <NumberEditor
+              key={`foreign-${item.people_id}-${item.share}`}
+              id={`settlement-${plan.entity_id}-foreign`}
+              field={{
+                key: `foreign-${item.people_id}`,
+                label: item.name || 'Foreign people',
+                icon: Users,
+                value: item.share,
+                min: 0,
+                max: PERCENT,
+                unit: '% of the city',
+              }}
+              held={locked.includes('foreigners')}
+              blocked={busy}
+              pending={foreign.isPending}
+              onSet={(value) =>
+                foreign.mutate(
+                  Object.fromEntries(
+                    plan.foreigners.map((entry) => [
+                      String(entry.people_id),
+                      entry.people_id === item.people_id ? value : entry.share,
+                    ])
+                  )
                 )
-              )
-            }
-          />
-        ))}
+              }
+            />
+          )}
+        </Paged>
         {plan.foreigners.length === 0 && (
           <Muted variant='caption'>
             No foreign people lives here; they arrive as migrants and traders.
@@ -1089,17 +1094,20 @@ export function SettlementPlanSection({
               data-surface='SettlementPlanTiles'
               className='grid min-w-0 grid-cols-1 gap-3 @md/city:grid-cols-2 @3xl/city:grid-cols-3'
             >
-              {plan.districts.map((district) => (
-                <DistrictTile
-                  key={district.id}
-                  district={district}
-                  design={
-                    plan.designs.find((item) => item.id === district.design_id)
-                      ?.name ?? null
-                  }
-                  blocked={blocked}
-                />
-              ))}
+              <Paged items={plan.districts} as='li'>
+                {(district) => (
+                  <DistrictTile
+                    key={district.id}
+                    district={district}
+                    design={
+                      plan.designs.find(
+                        (item) => item.id === district.design_id
+                      )?.name ?? null
+                    }
+                    blocked={blocked}
+                  />
+                )}
+              </Paged>
               {plan.district_slots > plan.districts.length && (
                 <OpenPlots
                   count={plan.district_slots - plan.districts.length}
@@ -1186,41 +1194,43 @@ export function TreasurySection({ settlementId }: { settlementId: number }) {
                 data-surface='TreasuryLedger'
                 className='flex min-w-0 flex-col divide-y'
               >
-                {plan.treasury_ledger.map((line, index) => {
-                  const spec = TREASURY_SPEC[line.entry]
-                  return (
-                    <li
-                      key={`${line.epoch}-${index}`}
-                      className='flex min-w-0 items-center gap-3 py-2 first:pt-0 last:pb-0'
-                    >
-                      <Medallion
-                        icon={spec.icon}
-                        tone={line.amount < 0 ? 'danger' : spec.tone}
-                        size='sm'
-                      />
-                      <div className='flex min-w-0 flex-1 flex-col'>
-                        <Text as='span' weight='medium' truncate>
-                          {spec.label}
-                        </Text>
-                        <Muted as='span' variant='caption' truncate>
-                          {line.note &&
-                          line.note.toLowerCase() !== spec.label.toLowerCase()
-                            ? `Epoch ${line.epoch} · ${line.note}`
-                            : `Epoch ${line.epoch}`}
-                        </Muted>
-                      </div>
-                      <div className='flex shrink-0 flex-col items-end'>
-                        <Stat
-                          value={`${line.amount > 0 ? '+' : ''}${formatInteger(line.amount)}`}
-                          tone={line.amount < 0 ? 'destructive' : 'success'}
+                <Paged items={plan.treasury_ledger} as='li'>
+                  {(line, index) => {
+                    const spec = TREASURY_SPEC[line.entry]
+                    return (
+                      <li
+                        key={`${line.epoch}-${index}`}
+                        className='flex min-w-0 items-center gap-3 py-2 first:pt-0 last:pb-0'
+                      >
+                        <Medallion
+                          icon={spec.icon}
+                          tone={line.amount < 0 ? 'danger' : spec.tone}
+                          size='sm'
                         />
-                        <Muted as='span' variant='caption'>
-                          {`Balance ${formatInteger(line.balance)}`}
-                        </Muted>
-                      </div>
-                    </li>
-                  )
-                })}
+                        <div className='flex min-w-0 flex-1 flex-col'>
+                          <Text as='span' weight='medium' truncate>
+                            {spec.label}
+                          </Text>
+                          <Muted as='span' variant='caption' truncate>
+                            {line.note &&
+                            line.note.toLowerCase() !== spec.label.toLowerCase()
+                              ? `Epoch ${line.epoch} · ${line.note}`
+                              : `Epoch ${line.epoch}`}
+                          </Muted>
+                        </div>
+                        <div className='flex shrink-0 flex-col items-end'>
+                          <Stat
+                            value={`${line.amount > 0 ? '+' : ''}${formatInteger(line.amount)}`}
+                            tone={line.amount < 0 ? 'destructive' : 'success'}
+                          />
+                          <Muted as='span' variant='caption'>
+                            {`Balance ${formatInteger(line.balance)}`}
+                          </Muted>
+                        </div>
+                      </li>
+                    )
+                  }}
+                </Paged>
               </ul>
             </Panel>
           )}

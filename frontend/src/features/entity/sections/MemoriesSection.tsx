@@ -14,6 +14,7 @@ import {
   Timeline,
   TimelineItem,
   type TimelineTone,
+  Paged,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
@@ -296,11 +297,13 @@ export function OpinionBreakdown({ opinion }: { opinion: MindOpinion }) {
       </div>
       {opinion.memories.length > 0 && (
         <ul className='flex min-w-0 flex-col gap-0.5'>
-          {opinion.memories.map((item) => (
-            <li key={item.id}>
-              <Muted variant='caption'>{`Epoch ${item.epoch}: ${item.note ?? item.label} — ${signed(item.strength)}, weighed ${item.weight_pct}% by their values → ${signed(item.contribution)}`}</Muted>
-            </li>
-          ))}
+          <Paged items={opinion.memories} as='li'>
+            {(item) => (
+              <li key={item.id}>
+                <Muted variant='caption'>{`Epoch ${item.epoch}: ${item.note ?? item.label} — ${signed(item.strength)}, weighed ${item.weight_pct}% by their values → ${signed(item.contribution)}`}</Muted>
+              </li>
+            )}
+          </Paged>
         </ul>
       )}
     </div>
@@ -461,12 +464,14 @@ export function MemoriesSection({ nodeId }: { nodeId: number }) {
               hint='Each opinion is built from memories, how close their values are and the bonds they share.'
             >
               <div className='flex min-w-0 flex-col gap-2'>
-                {mind.opinions.map((opinion) => (
-                  <OpinionBreakdown
-                    key={opinion.subject?.id ?? opinion.value}
-                    opinion={opinion}
-                  />
-                ))}
+                <Paged items={mind.opinions}>
+                  {(opinion) => (
+                    <OpinionBreakdown
+                      key={opinion.subject?.id ?? opinion.value}
+                      opinion={opinion}
+                    />
+                  )}
+                </Paged>
               </div>
             </MindCard>
           )}
@@ -482,14 +487,16 @@ export function MemoriesSection({ nodeId }: { nodeId: number }) {
               icon={MEMORY_ICON}
             >
               <Timeline label='Memories'>
-                {mind.memories.map((memory, index) => (
-                  <MemoryItem
-                    key={memory.id}
-                    memory={memory}
-                    last={index === mind.memories.length - 1}
-                    blocked={reason()}
-                  />
-                ))}
+                <Paged items={mind.memories} as='li'>
+                  {(memory, index) => (
+                    <MemoryItem
+                      key={memory.id}
+                      memory={memory}
+                      last={index === mind.memories.length - 1}
+                      blocked={reason()}
+                    />
+                  )}
+                </Paged>
               </Timeline>
             </MindCard>
           )}

@@ -14,7 +14,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ChangeChip, KpiTile } from '@/components/domain'
+import { ChangeChip, KpiTile, Paged } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -192,21 +192,23 @@ export function LanguagePanel({
             <Muted>No community has taken it as a second tongue.</Muted>
           ) : (
             <MeterList surface='SpeakerCohorts'>
-              {card.speakers.map((row) => {
-                const kind = lookup(SPEAKER_KINDS, row.kind)
-                return (
-                  <MeterRow
-                    key={`${row.community?.id}.${row.kind}`}
-                    item={row.community}
-                    label={`Share of its people, since epoch ${row.since_epoch}`}
-                    value={row.share}
-                    icon={kind.icon}
-                    tone={kind.tone}
-                  >
-                    <NamedChip spec={kind} />
-                  </MeterRow>
-                )
-              })}
+              <Paged items={card.speakers}>
+                {(row) => {
+                  const kind = lookup(SPEAKER_KINDS, row.kind)
+                  return (
+                    <MeterRow
+                      key={`${row.community?.id}.${row.kind}`}
+                      item={row.community}
+                      label={`Share of its people, since epoch ${row.since_epoch}`}
+                      value={row.share}
+                      icon={kind.icon}
+                      tone={kind.tone}
+                    >
+                      <NamedChip spec={kind} />
+                    </MeterRow>
+                  )
+                }}
+              </Paged>
             </MeterList>
           )}
         </LoreCard>
@@ -242,31 +244,35 @@ export function LanguagePanel({
             >
               {near.length > 0 && (
                 <MeterList surface='KinNear'>
-                  {near.map((row) => (
-                    <MeterRow
-                      key={row.language?.id}
-                      item={row.language}
-                      label='How much its speakers understand'
-                      value={row.value}
-                      icon={Languages}
-                      tone='verdigris'
-                    />
-                  ))}
+                  <Paged items={near}>
+                    {(row) => (
+                      <MeterRow
+                        key={row.language?.id}
+                        item={row.language}
+                        label='How much its speakers understand'
+                        value={row.value}
+                        icon={Languages}
+                        tone='verdigris'
+                      />
+                    )}
+                  </Paged>
                 </MeterList>
               )}
               {far.length > 0 && (
                 <div className='flex min-w-0 flex-col gap-1.5'>
                   <Label>{`No word in common with ${far.length}`}</Label>
                   <ul className='flex min-w-0 flex-wrap gap-1.5'>
-                    {far.map((row) => (
-                      <li key={row.language?.id}>
-                        <RefChip
-                          icon={Languages}
-                          label=''
-                          item={row.language}
-                        />
-                      </li>
-                    ))}
+                    <Paged items={far} as='li'>
+                      {(row) => (
+                        <li key={row.language?.id}>
+                          <RefChip
+                            icon={Languages}
+                            label=''
+                            item={row.language}
+                          />
+                        </li>
+                      )}
+                    </Paged>
                   </ul>
                 </div>
               )}
@@ -309,42 +315,44 @@ export function LanguagePanel({
         <AdjustBlock title='Speakers' icon={Users}>
           {card.speakers.length > 0 && (
             <RowEditors>
-              {card.speakers.map((row) => (
-                <RowEditor
-                  key={`${row.community?.id}.${row.kind}`}
-                  label={`${row.community?.name ?? 'Unknown'} share`}
-                  icon={lookup(SPEAKER_KINDS, row.kind).icon}
-                  value={row.share}
-                  max={PERCENT}
-                  blocked={busy}
-                  onSave={(share) =>
-                    speakers.mutate({
-                      community: row.community?.id ?? 0,
-                      share,
-                      kind: row.kind,
-                    })
-                  }
-                >
-                  <HeldBadge held={row.held} />
-                  {row.held && (
-                    <Button
-                      size='icon'
-                      variant='ghost'
-                      aria-label={`Let the share in ${row.community?.name ?? 'it'} move again`}
-                      disabled={busy !== null}
-                      disabledReason={busy ?? undefined}
-                      onClick={() =>
-                        releaseSpeakers.mutate({
-                          community: row.community?.id ?? 0,
-                          kind: row.kind,
-                        })
-                      }
-                    >
-                      <Unlock />
-                    </Button>
-                  )}
-                </RowEditor>
-              ))}
+              <Paged items={card.speakers}>
+                {(row) => (
+                  <RowEditor
+                    key={`${row.community?.id}.${row.kind}`}
+                    label={`${row.community?.name ?? 'Unknown'} share`}
+                    icon={lookup(SPEAKER_KINDS, row.kind).icon}
+                    value={row.share}
+                    max={PERCENT}
+                    blocked={busy}
+                    onSave={(share) =>
+                      speakers.mutate({
+                        community: row.community?.id ?? 0,
+                        share,
+                        kind: row.kind,
+                      })
+                    }
+                  >
+                    <HeldBadge held={row.held} />
+                    {row.held && (
+                      <Button
+                        size='icon'
+                        variant='ghost'
+                        aria-label={`Let the share in ${row.community?.name ?? 'it'} move again`}
+                        disabled={busy !== null}
+                        disabledReason={busy ?? undefined}
+                        onClick={() =>
+                          releaseSpeakers.mutate({
+                            community: row.community?.id ?? 0,
+                            kind: row.kind,
+                          })
+                        }
+                      >
+                        <Unlock />
+                      </Button>
+                    )}
+                  </RowEditor>
+                )}
+              </Paged>
             </RowEditors>
           )}
           <div className='flex min-w-0 flex-wrap items-end gap-2'>
@@ -384,35 +392,37 @@ export function LanguagePanel({
         {card.kin.length > 0 && (
           <AdjustBlock title='Understanding' icon={Languages}>
             <RowEditors>
-              {card.kin.map((row) => (
-                <RowEditor
-                  key={row.language?.id}
-                  label={`${row.language?.name ?? 'Unknown'} understanding`}
-                  icon={Languages}
-                  value={row.value}
-                  max={PERCENT}
-                  blocked={busy}
-                  onSave={(value) =>
-                    kin.mutate({ other: row.language?.id ?? 0, value })
-                  }
-                >
-                  <HeldBadge held={row.held} />
-                  {row.held && (
-                    <Button
-                      size='icon'
-                      variant='ghost'
-                      aria-label={`Let the world measure ${row.language?.name ?? 'it'} again`}
-                      disabled={busy !== null}
-                      disabledReason={busy ?? undefined}
-                      onClick={() =>
-                        releaseKin.mutate({ other: row.language?.id ?? 0 })
-                      }
-                    >
-                      <Unlock />
-                    </Button>
-                  )}
-                </RowEditor>
-              ))}
+              <Paged items={card.kin}>
+                {(row) => (
+                  <RowEditor
+                    key={row.language?.id}
+                    label={`${row.language?.name ?? 'Unknown'} understanding`}
+                    icon={Languages}
+                    value={row.value}
+                    max={PERCENT}
+                    blocked={busy}
+                    onSave={(value) =>
+                      kin.mutate({ other: row.language?.id ?? 0, value })
+                    }
+                  >
+                    <HeldBadge held={row.held} />
+                    {row.held && (
+                      <Button
+                        size='icon'
+                        variant='ghost'
+                        aria-label={`Let the world measure ${row.language?.name ?? 'it'} again`}
+                        disabled={busy !== null}
+                        disabledReason={busy ?? undefined}
+                        onClick={() =>
+                          releaseKin.mutate({ other: row.language?.id ?? 0 })
+                        }
+                      >
+                        <Unlock />
+                      </Button>
+                    )}
+                  </RowEditor>
+                )}
+              </Paged>
             </RowEditors>
           </AdjustBlock>
         )}

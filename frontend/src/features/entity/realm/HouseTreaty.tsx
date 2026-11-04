@@ -41,6 +41,7 @@ import {
   StatBar,
   Timeline,
   TimelineItem,
+  Paged,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -191,22 +192,24 @@ function FamilyTree({ members }: { members: Member[] }) {
     >
       <div data-surface='FamilyTree' className='flex min-w-0 flex-col gap-3'>
         {members.length === 0 && <Muted>The house has no members left.</Muted>}
-        {rows.map((row, index) => (
-          <div key={index} className='flex min-w-0 flex-col gap-1.5'>
-            <div className='flex min-w-0 items-center gap-2'>
-              <Sprout
-                aria-hidden='true'
-                className='size-icon-sm shrink-0 text-muted-foreground'
-              />
-              <Label variant='overline'>{`Generation ${index + 1}`}</Label>
+        <Paged items={rows}>
+          {(row, index) => (
+            <div key={index} className='flex min-w-0 flex-col gap-1.5'>
+              <div className='flex min-w-0 items-center gap-2'>
+                <Sprout
+                  aria-hidden='true'
+                  className='size-icon-sm shrink-0 text-muted-foreground'
+                />
+                <Label variant='overline'>{`Generation ${index + 1}`}</Label>
+              </div>
+              <ul className='grid min-w-0 grid-cols-1 gap-2 @xs/realm:grid-cols-2 @2xl/realm:grid-cols-3'>
+                {row.map((member) => (
+                  <MemberCard key={member.id} member={member} />
+                ))}
+              </ul>
             </div>
-            <ul className='grid min-w-0 grid-cols-1 gap-2 @xs/realm:grid-cols-2 @2xl/realm:grid-cols-3'>
-              {row.map((member) => (
-                <MemberCard key={member.id} member={member} />
-              ))}
-            </ul>
-          </div>
-        ))}
+          )}
+        </Paged>
       </div>
     </Panel>
   )
@@ -386,15 +389,17 @@ export function HouseSection({
                 {house.branches.length === 0 ? (
                   <Muted>None</Muted>
                 ) : (
-                  house.branches.map((item) => (
-                    <EntityLink
-                      key={item.id}
-                      kind='entity'
-                      id={String(item.id)}
-                    >
-                      {item.name}
-                    </EntityLink>
-                  ))
+                  <Paged items={house.branches}>
+                    {(item) => (
+                      <EntityLink
+                        key={item.id}
+                        kind='entity'
+                        id={String(item.id)}
+                      >
+                        {item.name}
+                      </EntityLink>
+                    )}
+                  </Paged>
                 )}
               </Fact>
             </div>
@@ -412,44 +417,49 @@ export function HouseSection({
                   <Muted>The house presses no claim.</Muted>
                 )}
                 <ul className='flex min-w-0 flex-col gap-2'>
-                  {house.claims.map((claim) => (
-                    <li
-                      key={claim.id}
-                      className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2'
-                    >
-                      <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-                        <EntityLink
-                          kind='entity'
-                          id={String(claim.claimant_id)}
-                        >
-                          {claim.claimant}
-                        </EntityLink>
-                        <ArrowRight
-                          aria-hidden='true'
-                          className='size-icon-xs text-muted-foreground'
-                        />
-                        <EntityLink kind='entity' id={String(claim.polity_id)}>
-                          the realm
-                        </EntityLink>
-                        <Tag spec={named(CLAIM_BASES, claim.basis)} />
-                        {claim.pressed && (
-                          <Tag
-                            spec={{
-                              label: 'Pressed',
-                              icon: Swords,
-                              tone: 'danger',
-                            }}
+                  <Paged items={house.claims} as='li'>
+                    {(claim) => (
+                      <li
+                        key={claim.id}
+                        className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2'
+                      >
+                        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+                          <EntityLink
+                            kind='entity'
+                            id={String(claim.claimant_id)}
+                          >
+                            {claim.claimant}
+                          </EntityLink>
+                          <ArrowRight
+                            aria-hidden='true'
+                            className='size-icon-xs text-muted-foreground'
                           />
-                        )}
-                      </div>
-                      <StatBar
-                        label={`Strength: ${strengthWord(claim.strength)}`}
-                        value={claim.strength}
-                        max={PERCENT}
-                        tone={claim.pressed ? 'destructive' : 'default'}
-                      />
-                    </li>
-                  ))}
+                          <EntityLink
+                            kind='entity'
+                            id={String(claim.polity_id)}
+                          >
+                            the realm
+                          </EntityLink>
+                          <Tag spec={named(CLAIM_BASES, claim.basis)} />
+                          {claim.pressed && (
+                            <Tag
+                              spec={{
+                                label: 'Pressed',
+                                icon: Swords,
+                                tone: 'danger',
+                              }}
+                            />
+                          )}
+                        </div>
+                        <StatBar
+                          label={`Strength: ${strengthWord(claim.strength)}`}
+                          value={claim.strength}
+                          max={PERCENT}
+                          tone={claim.pressed ? 'destructive' : 'default'}
+                        />
+                      </li>
+                    )}
+                  </Paged>
                 </ul>
               </Panel>
               <Panel
@@ -462,20 +472,22 @@ export function HouseSection({
                   <Muted>No treasure is handed down.</Muted>
                 )}
                 <ul className='flex min-w-0 flex-col gap-2'>
-                  {house.heirlooms.map((item) => (
-                    <li
-                      key={item.id}
-                      className='flex min-w-0 items-center gap-2'
-                    >
-                      <Medallion icon={Gem} tone='verdigris' size='sm' />
-                      <div className='flex min-w-0 flex-1 flex-col'>
-                        <EntityLink kind='entity' id={String(item.id)}>
-                          {item.name}
-                        </EntityLink>
-                        <Muted variant='caption'>{`Kept since epoch ${item.since_epoch}`}</Muted>
-                      </div>
-                    </li>
-                  ))}
+                  <Paged items={house.heirlooms} as='li'>
+                    {(item) => (
+                      <li
+                        key={item.id}
+                        className='flex min-w-0 items-center gap-2'
+                      >
+                        <Medallion icon={Gem} tone='verdigris' size='sm' />
+                        <div className='flex min-w-0 flex-1 flex-col'>
+                          <EntityLink kind='entity' id={String(item.id)}>
+                            {item.name}
+                          </EntityLink>
+                          <Muted variant='caption'>{`Kept since epoch ${item.since_epoch}`}</Muted>
+                        </div>
+                      </li>
+                    )}
+                  </Paged>
                 </ul>
               </Panel>
             </div>
@@ -654,34 +666,36 @@ export function TreatySection({
             hint='Who is bound by it'
           >
             <ul className='grid min-w-0 grid-cols-1 gap-2 @xl/realm:grid-cols-2'>
-              {treaty.parties.map((party) => (
-                <li
-                  key={party.id}
-                  className='flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'
-                >
-                  <Portrait name={party.name} size='sm' />
-                  <div className='flex min-w-0 flex-1 flex-col gap-1'>
-                    <EntityLink kind='entity' id={String(party.id)}>
-                      {party.name}
-                    </EntityLink>
-                    <div className='flex min-w-0'>
-                      <Tag spec={named(PARTY_ROLES, party.role)} />
+              <Paged items={treaty.parties} as='li'>
+                {(party) => (
+                  <li
+                    key={party.id}
+                    className='flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'
+                  >
+                    <Portrait name={party.name} size='sm' />
+                    <div className='flex min-w-0 flex-1 flex-col gap-1'>
+                      <EntityLink kind='entity' id={String(party.id)}>
+                        {party.name}
+                      </EntityLink>
+                      <div className='flex min-w-0'>
+                        <Tag spec={named(PARTY_ROLES, party.role)} />
+                      </div>
                     </div>
-                  </div>
-                  {treaty.status === 'in_force' && (
-                    <Button
-                      size='sm'
-                      variant='ghost'
-                      disabled={busy !== null}
-                      disabledReason={busy ?? undefined}
-                      onClick={() => breakIt.mutate(party.id)}
-                    >
-                      <HeartCrack />
-                      Break it
-                    </Button>
-                  )}
-                </li>
-              ))}
+                    {treaty.status === 'in_force' && (
+                      <Button
+                        size='sm'
+                        variant='ghost'
+                        disabled={busy !== null}
+                        disabledReason={busy ?? undefined}
+                        onClick={() => breakIt.mutate(party.id)}
+                      >
+                        <HeartCrack />
+                        Break it
+                      </Button>
+                    )}
+                  </li>
+                )}
+              </Paged>
             </ul>
           </Panel>
           <Panel
@@ -694,70 +708,74 @@ export function TreatySection({
               <Muted>It binds no one to anything.</Muted>
             )}
             <ul className='flex min-w-0 flex-col gap-2'>
-              {treaty.clauses.map((clause) => {
-                const spec = named(CLAUSES, clause.kind)
-                const terms = Object.entries(clause.params)
-                return (
-                  <li
-                    key={clause.id}
-                    className='flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'
-                  >
-                    <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
-                    <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
-                      <Text as='span' weight='medium' truncate>
-                        {spec.label}
-                      </Text>
-                      {(clause.obligor || clause.beneficiary) && (
-                        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-                          {clause.obligor_id !== null && (
-                            <EntityLink
-                              kind='entity'
-                              id={String(clause.obligor_id)}
-                            >
-                              {clause.obligor ?? ''}
-                            </EntityLink>
-                          )}
-                          {clause.beneficiary_id !== null && (
-                            <>
-                              <ArrowRight
-                                aria-label='owes'
-                                className='size-icon-xs text-muted-foreground'
-                              />
+              <Paged items={treaty.clauses} as='li'>
+                {(clause) => {
+                  const spec = named(CLAUSES, clause.kind)
+                  const terms = Object.entries(clause.params)
+                  return (
+                    <li
+                      key={clause.id}
+                      className='flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'
+                    >
+                      <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
+                      <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
+                        <Text as='span' weight='medium' truncate>
+                          {spec.label}
+                        </Text>
+                        {(clause.obligor || clause.beneficiary) && (
+                          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+                            {clause.obligor_id !== null && (
                               <EntityLink
                                 kind='entity'
-                                id={String(clause.beneficiary_id)}
+                                id={String(clause.obligor_id)}
                               >
-                                {clause.beneficiary ?? ''}
+                                {clause.obligor ?? ''}
                               </EntityLink>
-                            </>
-                          )}
-                        </div>
-                      )}
-                      {terms.length > 0 && (
-                        <Muted variant='caption' truncate>
-                          {terms
-                            .map(
-                              ([key, value]) =>
-                                `${sentence(key)}: ${typeof value === 'boolean' ? (value ? 'yes' : 'no') : String(value)}`
-                            )
-                            .join(' · ')}
-                        </Muted>
-                      )}
-                    </div>
-                    <Badge
-                      size='sm'
-                      variant={
-                        clause.last_kept_epoch !== null ? 'success' : 'outline'
-                      }
-                    >
-                      <CalendarClock aria-hidden='true' />
-                      {clause.last_kept_epoch !== null
-                        ? `Kept in epoch ${clause.last_kept_epoch}`
-                        : 'Not yet called'}
-                    </Badge>
-                  </li>
-                )
-              })}
+                            )}
+                            {clause.beneficiary_id !== null && (
+                              <>
+                                <ArrowRight
+                                  aria-label='owes'
+                                  className='size-icon-xs text-muted-foreground'
+                                />
+                                <EntityLink
+                                  kind='entity'
+                                  id={String(clause.beneficiary_id)}
+                                >
+                                  {clause.beneficiary ?? ''}
+                                </EntityLink>
+                              </>
+                            )}
+                          </div>
+                        )}
+                        {terms.length > 0 && (
+                          <Muted variant='caption' truncate>
+                            {terms
+                              .map(
+                                ([key, value]) =>
+                                  `${sentence(key)}: ${typeof value === 'boolean' ? (value ? 'yes' : 'no') : String(value)}`
+                              )
+                              .join(' · ')}
+                          </Muted>
+                        )}
+                      </div>
+                      <Badge
+                        size='sm'
+                        variant={
+                          clause.last_kept_epoch !== null
+                            ? 'success'
+                            : 'outline'
+                        }
+                      >
+                        <CalendarClock aria-hidden='true' />
+                        {clause.last_kept_epoch !== null
+                          ? `Kept in epoch ${clause.last_kept_epoch}`
+                          : 'Not yet called'}
+                      </Badge>
+                    </li>
+                  )
+                }}
+              </Paged>
             </ul>
           </Panel>
           {treaty.breaches.length > 0 && (
@@ -768,27 +786,32 @@ export function TreatySection({
               count={treaty.breaches.length}
             >
               <Timeline label='Breaches'>
-                {treaty.breaches.map((item, index) => (
-                  <TimelineItem
-                    key={index}
-                    icon={HeartCrack}
-                    tone='destructive'
-                    framed
-                    title={
-                      item.breaker_id !== null ? (
-                        <EntityLink kind='entity' id={String(item.breaker_id)}>
-                          {item.breaker ?? 'Someone'}
-                        </EntityLink>
-                      ) : (
-                        'Someone broke it'
-                      )
-                    }
-                    timestamp={`Epoch ${item.epoch}`}
-                    last={index === treaty.breaches.length - 1}
-                  >
-                    {item.note && <Muted>{sentence(item.note)}</Muted>}
-                  </TimelineItem>
-                ))}
+                <Paged items={treaty.breaches} as='li'>
+                  {(item, index) => (
+                    <TimelineItem
+                      key={index}
+                      icon={HeartCrack}
+                      tone='destructive'
+                      framed
+                      title={
+                        item.breaker_id !== null ? (
+                          <EntityLink
+                            kind='entity'
+                            id={String(item.breaker_id)}
+                          >
+                            {item.breaker ?? 'Someone'}
+                          </EntityLink>
+                        ) : (
+                          'Someone broke it'
+                        )
+                      }
+                      timestamp={`Epoch ${item.epoch}`}
+                      last={index === treaty.breaches.length - 1}
+                    >
+                      {item.note && <Muted>{sentence(item.note)}</Muted>}
+                    </TimelineItem>
+                  )}
+                </Paged>
               </Timeline>
             </Panel>
           )}
@@ -982,14 +1005,16 @@ export function OathsSection({
                     : 'grid min-w-0 grid-cols-1 gap-2'
                 }
               >
-                {oaths.map((oath) => (
-                  <OathCard
-                    key={oath.id}
-                    oath={oath}
-                    blocked={busy}
-                    onBreak={() => breakIt.mutate(oath.id)}
-                  />
-                ))}
+                <Paged items={oaths} as='li'>
+                  {(oath) => (
+                    <OathCard
+                      key={oath.id}
+                      oath={oath}
+                      blocked={busy}
+                      onBreak={() => breakIt.mutate(oath.id)}
+                    />
+                  )}
+                </Paged>
               </ul>
             </div>
           )

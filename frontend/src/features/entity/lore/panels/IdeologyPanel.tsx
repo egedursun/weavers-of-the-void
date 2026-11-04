@@ -15,7 +15,7 @@ import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { KpiTile, StatBar } from '@/components/domain'
+import { KpiTile, StatBar, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -96,9 +96,9 @@ export function IdeologyPanel({
         hint='Its tenets press values on its adherents; a realm that takes it as its own leans its decisions toward it.'
       >
         <RefChip icon={PenLine} label='Taught by' item={card.founder} />
-        {card.tenets.map((item) => (
-          <NamedChip key={item} spec={lookup(TENETS, item)} />
-        ))}
+        <Paged items={card.tenets}>
+          {(item) => <NamedChip key={item} spec={lookup(TENETS, item)} />}
+        </Paged>
       </LoreHero>
       <div className={KPI_GRID}>
         <KpiTile
@@ -175,22 +175,24 @@ export function IdeologyPanel({
             <Muted>No community holds it yet.</Muted>
           ) : (
             <MeterList surface='CreedAdherents'>
-              {card.adherents.map((row) => (
-                <MeterRow
-                  key={row.community?.id}
-                  item={row.community}
-                  label={`Adherence, since epoch ${row.since_epoch}`}
-                  value={row.strength}
-                  icon={row.state ? Crown : Users}
-                  tone={row.state ? 'gold' : 'info'}
-                >
-                  {row.state && (
-                    <Badge size='sm' variant='default'>
-                      State creed
-                    </Badge>
-                  )}
-                </MeterRow>
-              ))}
+              <Paged items={card.adherents}>
+                {(row) => (
+                  <MeterRow
+                    key={row.community?.id}
+                    item={row.community}
+                    label={`Adherence, since epoch ${row.since_epoch}`}
+                    value={row.strength}
+                    icon={row.state ? Crown : Users}
+                    tone={row.state ? 'gold' : 'info'}
+                  >
+                    {row.state && (
+                      <Badge size='sm' variant='default'>
+                        State creed
+                      </Badge>
+                    )}
+                  </MeterRow>
+                )}
+              </Paged>
             </MeterList>
           )}
         </LoreCard>
@@ -207,34 +209,36 @@ export function IdeologyPanel({
             className='flex min-w-0 flex-wrap gap-2'
           >
             {card.tenets.length === 0 && <Muted>It holds no tenet yet.</Muted>}
-            {card.tenets.map((item) => {
-              const spec = lookup(TENETS, item)
-              const Icon = spec.icon
-              return (
-                <li
-                  key={item}
-                  className='flex items-center gap-1 rounded-md border bg-muted/30 py-0.5 pr-0.5 pl-2'
-                >
-                  <Icon
-                    aria-hidden='true'
-                    className='size-icon-xs text-muted-foreground'
-                  />
-                  <Text as='span' variant='caption' weight='medium'>
-                    {spec.label}
-                  </Text>
-                  <Button
-                    size='icon-sm'
-                    variant='ghost'
-                    aria-label={`Cast off ${spec.label}`}
-                    disabled={busy !== null}
-                    disabledReason={busy ?? undefined}
-                    onClick={() => teach.mutate({ tenet: item, held: false })}
+            <Paged items={card.tenets} as='li'>
+              {(item) => {
+                const spec = lookup(TENETS, item)
+                const Icon = spec.icon
+                return (
+                  <li
+                    key={item}
+                    className='flex items-center gap-1 rounded-md border bg-muted/30 py-0.5 pr-0.5 pl-2'
                   >
-                    <X />
-                  </Button>
-                </li>
-              )
-            })}
+                    <Icon
+                      aria-hidden='true'
+                      className='size-icon-xs text-muted-foreground'
+                    />
+                    <Text as='span' variant='caption' weight='medium'>
+                      {spec.label}
+                    </Text>
+                    <Button
+                      size='icon-sm'
+                      variant='ghost'
+                      aria-label={`Cast off ${spec.label}`}
+                      disabled={busy !== null}
+                      disabledReason={busy ?? undefined}
+                      onClick={() => teach.mutate({ tenet: item, held: false })}
+                    >
+                      <X />
+                    </Button>
+                  </li>
+                )
+              }}
+            </Paged>
           </ul>
           <div className='flex min-w-0 flex-wrap items-end gap-2'>
             <div className='min-w-0 flex-1 basis-48'>
@@ -290,42 +294,44 @@ export function IdeologyPanel({
         <AdjustBlock title='Adherents' icon={Users}>
           {card.adherents.length > 0 && (
             <RowEditors>
-              {card.adherents.map((row) => (
-                <RowEditor
-                  key={row.community?.id}
-                  label={row.community?.name ?? 'Unknown'}
-                  icon={Users}
-                  value={row.strength}
-                  max={PERCENT}
-                  blocked={busy}
-                  onSave={(strength) =>
-                    adhere.mutate({
-                      community: row.community?.id ?? 0,
-                      strength,
-                      state: row.state,
-                    })
-                  }
-                >
-                  <label className='flex h-control-md shrink-0 items-center gap-1.5'>
-                    <Switch
-                      checked={row.state}
-                      disabled={busy !== null}
-                      aria-label='State creed'
-                      onCheckedChange={(next) =>
-                        adhere.mutate({
-                          community: row.community?.id ?? 0,
-                          strength: row.strength,
-                          state: next,
-                        })
-                      }
-                    />
-                    <Crown
-                      aria-hidden='true'
-                      className='size-icon-sm text-primary'
-                    />
-                  </label>
-                </RowEditor>
-              ))}
+              <Paged items={card.adherents}>
+                {(row) => (
+                  <RowEditor
+                    key={row.community?.id}
+                    label={row.community?.name ?? 'Unknown'}
+                    icon={Users}
+                    value={row.strength}
+                    max={PERCENT}
+                    blocked={busy}
+                    onSave={(strength) =>
+                      adhere.mutate({
+                        community: row.community?.id ?? 0,
+                        strength,
+                        state: row.state,
+                      })
+                    }
+                  >
+                    <label className='flex h-control-md shrink-0 items-center gap-1.5'>
+                      <Switch
+                        checked={row.state}
+                        disabled={busy !== null}
+                        aria-label='State creed'
+                        onCheckedChange={(next) =>
+                          adhere.mutate({
+                            community: row.community?.id ?? 0,
+                            strength: row.strength,
+                            state: next,
+                          })
+                        }
+                      />
+                      <Crown
+                        aria-hidden='true'
+                        className='size-icon-sm text-primary'
+                      />
+                    </label>
+                  </RowEditor>
+                )}
+              </Paged>
             </RowEditors>
           )}
           <div className='flex min-w-0 flex-wrap items-end gap-2'>

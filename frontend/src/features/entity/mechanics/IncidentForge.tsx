@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { ConfirmDialog, Medallion } from '@/components/domain'
+import { ConfirmDialog, Medallion, Paged } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -386,20 +386,22 @@ export function IncidentControls({
   return (
     <div className='flex min-w-0 flex-col gap-2'>
       <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-        {(incident.participants ?? []).map((item) => {
-          const spec = named(INCIDENT_ROLE, item.role)
-          const Icon = spec.icon
-          return (
-            <Badge
-              key={`${item.node_id}-${item.role}`}
-              size='sm'
-              variant={badgeVariant(spec.tone)}
-            >
-              <Icon aria-hidden='true' />
-              {`${item.name ?? `#${item.node_id}`} · ${spec.label.toLowerCase()}`}
-            </Badge>
-          )
-        })}
+        <Paged items={incident.participants ?? []}>
+          {(item) => {
+            const spec = named(INCIDENT_ROLE, item.role)
+            const Icon = spec.icon
+            return (
+              <Badge
+                key={`${item.node_id}-${item.role}`}
+                size='sm'
+                variant={badgeVariant(spec.tone)}
+              >
+                <Icon aria-hidden='true' />
+                {`${item.name ?? `#${item.node_id}`} · ${spec.label.toLowerCase()}`}
+              </Badge>
+            )
+          }}
+        </Paged>
       </div>
       <div className='flex min-w-0 flex-wrap items-center gap-1'>
         <Button

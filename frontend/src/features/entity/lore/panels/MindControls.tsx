@@ -10,6 +10,7 @@ import {
 import { prophecyConsequenceValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Paged } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { AdjustBlock, ChoicePicker, NamedChip, Who } from '../LoreFields'
@@ -114,12 +115,14 @@ export function IdeologyControls({
       {card.texts.length > 0 && (
         <AdjustBlock title='Its books' icon={BookMarked}>
           <div className='flex min-w-0 flex-wrap gap-2'>
-            {card.texts.map((item) => (
-              <Badge key={item.id} variant='outline'>
-                <ScrollText aria-hidden='true' />
-                <Who item={item} />
-              </Badge>
-            ))}
+            <Paged items={card.texts}>
+              {(item) => (
+                <Badge key={item.id} variant='outline'>
+                  <ScrollText aria-hidden='true' />
+                  <Who item={item} />
+                </Badge>
+              )}
+            </Paged>
           </div>
         </AdjustBlock>
       )}

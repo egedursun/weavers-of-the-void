@@ -27,6 +27,7 @@ import {
   FormRow,
   PagedList,
   Section,
+  Paged,
 } from '@/components/domain'
 import { PageControls } from '@/components/domain/PageControls'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
@@ -315,44 +316,53 @@ export function EntityBonds({ ctx, readOnlyReason }: EntityBondsProps) {
           </PagedList>
         </div>
       )}
-      {groups.map((group) => (
-        <div key={group.key} className='flex min-w-0 flex-col gap-2'>
-          <div className='flex min-w-0 items-center gap-2'>
-            {group.outgoing ? (
-              <ArrowRight
-                aria-hidden='true'
-                className='size-icon-sm text-muted-foreground'
-              />
-            ) : (
-              <ArrowLeft
-                aria-hidden='true'
-                className='size-icon-sm text-muted-foreground'
-              />
-            )}
-            <Text as='span' weight='medium' className='min-w-0 flex-1' truncate>
-              {group.outgoing
-                ? labelOf(group.kind)
-                : `${labelOf(group.kind)} (toward it)`}
-            </Text>
-            <Muted variant='caption'>{formatInteger(group.bonds.length)}</Muted>
+      <Paged items={groups}>
+        {(group) => (
+          <div key={group.key} className='flex min-w-0 flex-col gap-2'>
+            <div className='flex min-w-0 items-center gap-2'>
+              {group.outgoing ? (
+                <ArrowRight
+                  aria-hidden='true'
+                  className='size-icon-sm text-muted-foreground'
+                />
+              ) : (
+                <ArrowLeft
+                  aria-hidden='true'
+                  className='size-icon-sm text-muted-foreground'
+                />
+              )}
+              <Text
+                as='span'
+                weight='medium'
+                className='min-w-0 flex-1'
+                truncate
+              >
+                {group.outgoing
+                  ? labelOf(group.kind)
+                  : `${labelOf(group.kind)} (toward it)`}
+              </Text>
+              <Muted variant='caption'>
+                {formatInteger(group.bonds.length)}
+              </Muted>
+            </div>
+            <PagedList
+              items={group.bonds}
+              initial={6}
+              noun={['bond', 'bonds']}
+              className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'
+              itemKey={(bond) => bond.id}
+            >
+              {(bond) => (
+                <BondChip
+                  bond={bond}
+                  blocked={blocked}
+                  onBreak={() => setBreaking(bond)}
+                />
+              )}
+            </PagedList>
           </div>
-          <PagedList
-            items={group.bonds}
-            initial={6}
-            noun={['bond', 'bonds']}
-            className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'
-            itemKey={(bond) => bond.id}
-          >
-            {(bond) => (
-              <BondChip
-                bond={bond}
-                blocked={blocked}
-                onBreak={() => setBreaking(bond)}
-              />
-            )}
-          </PagedList>
-        </div>
-      ))}
+        )}
+      </Paged>
       <PageControls
         offset={offset}
         limit={BOND_PAGE_SIZE}

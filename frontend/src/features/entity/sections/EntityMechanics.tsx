@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Section, Timeline } from '@/components/domain'
+import { Section, Timeline, Paged } from '@/components/domain'
 import { ChoiceTiles } from '@/components/domain/SettingsKit'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -203,46 +203,54 @@ export function EntityMechanics({
               <Muted>Nothing is bending this record's values.</Muted>
             ) : (
               <ul className='flex min-w-0 flex-col gap-2'>
-                {data.modifiers.map((modifier) => (
-                  <ModifierCard
-                    key={modifier.id}
-                    modifier={modifier}
-                    blocked={needs(null)}
-                  />
-                ))}
+                <Paged items={data.modifiers} as='li'>
+                  {(modifier) => (
+                    <ModifierCard
+                      key={modifier.id}
+                      modifier={modifier}
+                      blocked={needs(null)}
+                    />
+                  )}
+                </Paged>
               </ul>
             )}
           </div>
           {(data.pins.length > 0 || data.suppressions.length > 0) && (
             <div className='flex min-w-0 flex-wrap items-center gap-2'>
-              {data.pins.map((guard) => (
-                <Button
-                  key={`pin-${guard.id}`}
-                  size='sm'
-                  variant='outline'
-                  disabled={needs(null) !== undefined}
-                  disabledReason={needs(null)}
-                  onClick={() => unpin.mutate(guard.key)}
-                >
-                  <Unlock />
-                  {`Release ${humanize(guard.key).toLowerCase()}${guard.end_epoch !== null ? ` (pinned to epoch ${guard.end_epoch})` : ''}`}
-                </Button>
-              ))}
-              {data.suppressions.map((guard) => (
-                <Button
-                  key={`suppression-${guard.id}`}
-                  size='sm'
-                  variant='outline'
-                  disabled={needs(null) !== undefined}
-                  disabledReason={needs(null)}
-                  onClick={() =>
-                    unsuppress.mutate(guard.key.replace(SUPPRESSION_PREFIX, ''))
-                  }
-                >
-                  <Play />
-                  {`Let ${mechanicName(guard.key)} act`}
-                </Button>
-              ))}
+              <Paged items={data.pins}>
+                {(guard) => (
+                  <Button
+                    key={`pin-${guard.id}`}
+                    size='sm'
+                    variant='outline'
+                    disabled={needs(null) !== undefined}
+                    disabledReason={needs(null)}
+                    onClick={() => unpin.mutate(guard.key)}
+                  >
+                    <Unlock />
+                    {`Release ${humanize(guard.key).toLowerCase()}${guard.end_epoch !== null ? ` (pinned to epoch ${guard.end_epoch})` : ''}`}
+                  </Button>
+                )}
+              </Paged>
+              <Paged items={data.suppressions}>
+                {(guard) => (
+                  <Button
+                    key={`suppression-${guard.id}`}
+                    size='sm'
+                    variant='outline'
+                    disabled={needs(null) !== undefined}
+                    disabledReason={needs(null)}
+                    onClick={() =>
+                      unsuppress.mutate(
+                        guard.key.replace(SUPPRESSION_PREFIX, '')
+                      )
+                    }
+                  >
+                    <Play />
+                    {`Let ${mechanicName(guard.key)} act`}
+                  </Button>
+                )}
+              </Paged>
             </div>
           )}
           <div className='flex min-w-0 flex-col gap-2'>
@@ -251,15 +259,17 @@ export function EntityMechanics({
               <Muted>It has not taken part in anything yet.</Muted>
             ) : (
               <Timeline label='Recent incidents'>
-                {data.incidents.map((incident, index) => (
-                  <IncidentEntry
-                    key={incident.id}
-                    incident={incident}
-                    incidents={data.incidents}
-                    last={index === data.incidents.length - 1}
-                    blocked={needs(null)}
-                  />
-                ))}
+                <Paged items={data.incidents} as='li'>
+                  {(incident, index) => (
+                    <IncidentEntry
+                      key={incident.id}
+                      incident={incident}
+                      incidents={data.incidents}
+                      last={index === data.incidents.length - 1}
+                      blocked={needs(null)}
+                    />
+                  )}
+                </Paged>
               </Timeline>
             )}
           </div>

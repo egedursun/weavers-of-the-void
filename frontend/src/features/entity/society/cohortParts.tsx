@@ -20,7 +20,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label as FieldLabel } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { EntityLink, Medallion, MiniStat, StatBar } from '@/components/domain'
+import {
+  EntityLink,
+  Medallion,
+  MiniStat,
+  StatBar,
+  Paged,
+} from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { TargetBadges } from './diseaseParts'
@@ -110,42 +116,48 @@ export function SickCohorts({
           <Muted>No outbreak rages in their land.</Muted>
         ) : (
           <ul className='flex min-w-0 flex-col gap-2'>
-            {view.afflictions.map((item) => {
-              const vector = VECTOR_SPEC[item.vector]
-              const status = STATUS_SPEC[item.status]
-              return (
-                <li
-                  key={item.outbreak_id}
-                  className='flex min-w-0 items-start gap-2.5 rounded-lg border bg-muted/30 p-2'
-                >
-                  <Medallion icon={vector.icon} tone={vector.tone} size='sm' />
-                  <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
-                    <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-                      <EntityLink kind='entity' id={String(item.disease_id)}>
-                        {item.disease}
-                      </EntityLink>
-                      <Badge
-                        size='sm'
-                        variant={
-                          item.status === 'active' ? 'destructive' : 'warning'
-                        }
-                      >
-                        <status.icon />
-                        {status.label}
-                      </Badge>
-                    </div>
-                    <TargetBadges targets={item.target_functions} />
-                    <StatBar
-                      label='Severity'
-                      icon={Biohazard}
-                      value={item.severity}
-                      max={PERCENT}
-                      tone={METER_TONE[badTone(item.severity)]}
+            <Paged items={view.afflictions} as='li'>
+              {(item) => {
+                const vector = VECTOR_SPEC[item.vector]
+                const status = STATUS_SPEC[item.status]
+                return (
+                  <li
+                    key={item.outbreak_id}
+                    className='flex min-w-0 items-start gap-2.5 rounded-lg border bg-muted/30 p-2'
+                  >
+                    <Medallion
+                      icon={vector.icon}
+                      tone={vector.tone}
+                      size='sm'
                     />
-                  </div>
-                </li>
-              )
-            })}
+                    <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
+                      <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+                        <EntityLink kind='entity' id={String(item.disease_id)}>
+                          {item.disease}
+                        </EntityLink>
+                        <Badge
+                          size='sm'
+                          variant={
+                            item.status === 'active' ? 'destructive' : 'warning'
+                          }
+                        >
+                          <status.icon />
+                          {status.label}
+                        </Badge>
+                      </div>
+                      <TargetBadges targets={item.target_functions} />
+                      <StatBar
+                        label='Severity'
+                        icon={Biohazard}
+                        value={item.severity}
+                        max={PERCENT}
+                        tone={METER_TONE[badTone(item.severity)]}
+                      />
+                    </div>
+                  </li>
+                )
+              }}
+            </Paged>
           </ul>
         )}
         <div className='grid min-w-0 grid-cols-1 gap-2'>
@@ -336,64 +348,66 @@ export function DormancyPanel({
           <Muted>No named mortal lives here.</Muted>
         ) : (
           <ul className='flex min-w-0 flex-col gap-2'>
-            {view.named.map((mortal) => (
-              <li
-                key={mortal.id}
-                className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2'
-              >
-                <Medallion
-                  icon={mortal.dormant ? Moon : Sun}
-                  tone={mortal.dormant ? 'muted' : 'gold'}
-                  size='sm'
-                />
-                <div className='flex min-w-0 flex-1 basis-40 flex-col'>
-                  <EntityLink kind='entity' id={String(mortal.id)}>
-                    {mortal.name}
-                  </EntityLink>
-                  <Muted as='span' variant='caption'>
-                    {`${mortal.dormant ? 'Dormant' : 'Awake'}, importance ${mortal.importance}`}
-                  </Muted>
-                </div>
-                {mortal.held && (
-                  <Badge size='sm' variant='default'>
-                    <Lock />
-                    Held
-                  </Badge>
-                )}
-                <Button
-                  size='sm'
-                  variant='outline'
-                  disabled={busy !== null}
-                  disabledReason={busy ?? undefined}
-                  onClick={() =>
-                    act.mutate({
-                      mortal_id: mortal.id,
-                      dormant: !mortal.dormant,
-                      hold: null,
-                    })
-                  }
+            <Paged items={view.named} as='li'>
+              {(mortal) => (
+                <li
+                  key={mortal.id}
+                  className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2'
                 >
-                  {mortal.dormant ? <Sun /> : <Moon />}
-                  {mortal.dormant ? 'Wake' : 'Doze'}
-                </Button>
-                <Button
-                  size='sm'
-                  variant={mortal.held ? 'secondary' : 'outline'}
-                  disabled={busy !== null}
-                  disabledReason={busy ?? undefined}
-                  onClick={() =>
-                    act.mutate({
-                      mortal_id: mortal.id,
-                      dormant: null,
-                      hold: !mortal.held,
-                    })
-                  }
-                >
-                  {mortal.held ? <Unlock /> : <Lock />}
-                  {mortal.held ? 'Release' : 'Hold'}
-                </Button>
-              </li>
-            ))}
+                  <Medallion
+                    icon={mortal.dormant ? Moon : Sun}
+                    tone={mortal.dormant ? 'muted' : 'gold'}
+                    size='sm'
+                  />
+                  <div className='flex min-w-0 flex-1 basis-40 flex-col'>
+                    <EntityLink kind='entity' id={String(mortal.id)}>
+                      {mortal.name}
+                    </EntityLink>
+                    <Muted as='span' variant='caption'>
+                      {`${mortal.dormant ? 'Dormant' : 'Awake'}, importance ${mortal.importance}`}
+                    </Muted>
+                  </div>
+                  {mortal.held && (
+                    <Badge size='sm' variant='default'>
+                      <Lock />
+                      Held
+                    </Badge>
+                  )}
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    disabled={busy !== null}
+                    disabledReason={busy ?? undefined}
+                    onClick={() =>
+                      act.mutate({
+                        mortal_id: mortal.id,
+                        dormant: !mortal.dormant,
+                        hold: null,
+                      })
+                    }
+                  >
+                    {mortal.dormant ? <Sun /> : <Moon />}
+                    {mortal.dormant ? 'Wake' : 'Doze'}
+                  </Button>
+                  <Button
+                    size='sm'
+                    variant={mortal.held ? 'secondary' : 'outline'}
+                    disabled={busy !== null}
+                    disabledReason={busy ?? undefined}
+                    onClick={() =>
+                      act.mutate({
+                        mortal_id: mortal.id,
+                        dormant: null,
+                        hold: !mortal.held,
+                      })
+                    }
+                  >
+                    {mortal.held ? <Unlock /> : <Lock />}
+                    {mortal.held ? 'Release' : 'Hold'}
+                  </Button>
+                </li>
+              )}
+            </Paged>
           </ul>
         )}
         <Text as='span' variant='caption' className='text-muted-foreground'>

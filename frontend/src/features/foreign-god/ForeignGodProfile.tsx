@@ -1,5 +1,5 @@
 import { Sparkles } from 'lucide-react'
-import { KeyValueList, Section, StatBar } from '@/components/domain'
+import { KeyValueList, Section, StatBar, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import {
@@ -90,30 +90,32 @@ export function ForeignGodProfile({ detail }: { detail: ForeignGodDetail }) {
           </Muted>
         ) : (
           <ul className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2'>
-            {detail.powers.map((power) => (
-              <li
-                key={power.slot}
-                className='flex min-w-0 flex-col gap-1 rounded-lg border p-3'
-              >
-                <div className='flex min-w-0 items-center gap-2'>
-                  <Sparkles
-                    aria-hidden='true'
-                    className='size-icon-sm shrink-0 text-primary'
-                  />
-                  <Text weight='semibold' truncate>
-                    {power.name}
-                  </Text>
-                </div>
-                <Label>
-                  {FOREIGN_EFFECT_LABEL[
-                    power.effect as keyof typeof FOREIGN_EFFECT_LABEL
-                  ] ?? humanize(power.effect)}
-                </Label>
-                {power.description && (
-                  <Muted variant='caption'>{power.description}</Muted>
-                )}
-              </li>
-            ))}
+            <Paged items={detail.powers} as='li'>
+              {(power) => (
+                <li
+                  key={power.slot}
+                  className='flex min-w-0 flex-col gap-1 rounded-lg border p-3'
+                >
+                  <div className='flex min-w-0 items-center gap-2'>
+                    <Sparkles
+                      aria-hidden='true'
+                      className='size-icon-sm shrink-0 text-primary'
+                    />
+                    <Text weight='semibold' truncate>
+                      {power.name}
+                    </Text>
+                  </div>
+                  <Label>
+                    {FOREIGN_EFFECT_LABEL[
+                      power.effect as keyof typeof FOREIGN_EFFECT_LABEL
+                    ] ?? humanize(power.effect)}
+                  </Label>
+                  {power.description && (
+                    <Muted variant='caption'>{power.description}</Muted>
+                  )}
+                </li>
+              )}
+            </Paged>
           </ul>
         )}
       </Section>

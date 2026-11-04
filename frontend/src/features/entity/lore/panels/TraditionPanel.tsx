@@ -20,7 +20,7 @@ import { commodityKindValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { KpiTile } from '@/components/domain'
+import { KpiTile, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { CustomKindChoice, HeldBadge, OptionalChoice } from '../CultureParts'
@@ -353,14 +353,16 @@ export function TraditionPanel({
             <Muted>It brings nothing but habit.</Muted>
           ) : (
             <div className='flex min-w-0 flex-wrap gap-2'>
-              {card.effects.map((row) => (
-                <NamedChip
-                  key={`${row.effect}.${row.target}`}
-                  spec={lookup(TRADITION_EFFECTS, row.effect)}
-                >
-                  {`${effectLabel(row)} ${signed(row.magnitude)}`}
-                </NamedChip>
-              ))}
+              <Paged items={card.effects}>
+                {(row) => (
+                  <NamedChip
+                    key={`${row.effect}.${row.target}`}
+                    spec={lookup(TRADITION_EFFECTS, row.effect)}
+                  >
+                    {`${effectLabel(row)} ${signed(row.magnitude)}`}
+                  </NamedChip>
+                )}
+              </Paged>
             </div>
           )}
         </LoreCard>
@@ -375,27 +377,29 @@ export function TraditionPanel({
             <Muted>No one keeps it any more.</Muted>
           ) : (
             <MeterList surface='TraditionKeepers'>
-              {card.keepers.map((row) => (
-                <MeterRow
-                  key={row.community?.id}
-                  item={row.community}
-                  label={
-                    row.last_celebrated_epoch !== null
-                      ? `Takes part · last kept in epoch ${row.last_celebrated_epoch}`
-                      : 'Takes part'
-                  }
-                  value={row.participation}
-                  icon={kind.icon}
-                  tone={kind.tone}
-                >
-                  <HeldBadge held={row.held} />
-                  {row.skipped > 0 && (
-                    <Badge size='sm' variant='warning'>
-                      {`Skipped ${row.skipped}×`}
-                    </Badge>
-                  )}
-                </MeterRow>
-              ))}
+              <Paged items={card.keepers}>
+                {(row) => (
+                  <MeterRow
+                    key={row.community?.id}
+                    item={row.community}
+                    label={
+                      row.last_celebrated_epoch !== null
+                        ? `Takes part · last kept in epoch ${row.last_celebrated_epoch}`
+                        : 'Takes part'
+                    }
+                    value={row.participation}
+                    icon={kind.icon}
+                    tone={kind.tone}
+                  >
+                    <HeldBadge held={row.held} />
+                    {row.skipped > 0 && (
+                      <Badge size='sm' variant='warning'>
+                        {`Skipped ${row.skipped}×`}
+                      </Badge>
+                    )}
+                  </MeterRow>
+                )}
+              </Paged>
             </MeterList>
           )}
         </LoreCard>
@@ -489,34 +493,36 @@ export function TraditionPanel({
         {card.keepers.length > 0 && (
           <AdjustBlock title='How many take part' icon={Users}>
             <RowEditors>
-              {card.keepers.map((row) => (
-                <RowEditor
-                  key={row.community?.id}
-                  label={row.community?.name ?? 'Unknown'}
-                  icon={Users}
-                  value={row.participation}
-                  max={PERCENT}
-                  blocked={busy}
-                  onSave={(value) =>
-                    keep.mutate({ community: row.community?.id ?? 0, value })
-                  }
-                >
-                  {row.held && (
-                    <Button
-                      size='icon'
-                      variant='ghost'
-                      aria-label={`Let ${row.community?.name ?? 'them'} decide again`}
-                      disabled={busy !== null}
-                      disabledReason={busy ?? undefined}
-                      onClick={() =>
-                        release.mutate({ community: row.community?.id ?? 0 })
-                      }
-                    >
-                      <Unlock />
-                    </Button>
-                  )}
-                </RowEditor>
-              ))}
+              <Paged items={card.keepers}>
+                {(row) => (
+                  <RowEditor
+                    key={row.community?.id}
+                    label={row.community?.name ?? 'Unknown'}
+                    icon={Users}
+                    value={row.participation}
+                    max={PERCENT}
+                    blocked={busy}
+                    onSave={(value) =>
+                      keep.mutate({ community: row.community?.id ?? 0, value })
+                    }
+                  >
+                    {row.held && (
+                      <Button
+                        size='icon'
+                        variant='ghost'
+                        aria-label={`Let ${row.community?.name ?? 'them'} decide again`}
+                        disabled={busy !== null}
+                        disabledReason={busy ?? undefined}
+                        onClick={() =>
+                          release.mutate({ community: row.community?.id ?? 0 })
+                        }
+                      >
+                        <Unlock />
+                      </Button>
+                    )}
+                  </RowEditor>
+                )}
+              </Paged>
             </RowEditors>
           </AdjustBlock>
         )}

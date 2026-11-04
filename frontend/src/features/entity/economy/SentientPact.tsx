@@ -23,6 +23,7 @@ import {
   IconStat,
   Medallion,
   Section,
+  Paged,
 } from '@/components/domain'
 import {
   type ComboboxOption,
@@ -402,9 +403,11 @@ export function SentientPacts({
         )}
         {pacts.data && pacts.data.length > 0 && (
           <ul className='grid min-w-0 grid-cols-1 gap-2 @3xl/pact:grid-cols-2'>
-            {pacts.data.map((pact) => (
-              <PactCard key={pact.treaty_id} pact={pact} busy={busy} />
-            ))}
+            <Paged items={pacts.data} as='li'>
+              {(pact) => (
+                <PactCard key={pact.treaty_id} pact={pact} busy={busy} />
+              )}
+            </Paged>
           </ul>
         )}
         {live.length === 0 && (

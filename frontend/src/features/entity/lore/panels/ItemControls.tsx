@@ -12,6 +12,7 @@ import { itemDeedValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { AdjustBlock, ChoicePicker, NamedChip, Who } from '../LoreFields'
@@ -127,24 +128,26 @@ export function ItemControls({
       </AdjustBlock>
       <AdjustBlock title='Its story' icon={History}>
         <ul data-surface='ItemDeeds' className='flex min-w-0 flex-col gap-1.5'>
-          {card.history.map((entry) => (
-            <li key={entry.id} className='flex min-w-0 items-center gap-2'>
-              <NamedChip spec={lookup(DEEDS, entry.deed)} />
-              <Text as='span' className='min-w-0 flex-1' truncate>
-                {entry.note || `age ${entry.epoch}`}
-              </Text>
-              <Button
-                size='icon'
-                variant='ghost'
-                aria-label='Strike this deed'
-                disabled={busy !== null}
-                disabledReason={busy ?? undefined}
-                onClick={() => removeDeed.mutate(entry.id)}
-              >
-                <Trash2 />
-              </Button>
-            </li>
-          ))}
+          <Paged items={card.history} as='li'>
+            {(entry) => (
+              <li key={entry.id} className='flex min-w-0 items-center gap-2'>
+                <NamedChip spec={lookup(DEEDS, entry.deed)} />
+                <Text as='span' className='min-w-0 flex-1' truncate>
+                  {entry.note || `age ${entry.epoch}`}
+                </Text>
+                <Button
+                  size='icon'
+                  variant='ghost'
+                  aria-label='Strike this deed'
+                  disabled={busy !== null}
+                  disabledReason={busy ?? undefined}
+                  onClick={() => removeDeed.mutate(entry.id)}
+                >
+                  <Trash2 />
+                </Button>
+              </li>
+            )}
+          </Paged>
         </ul>
         <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
           <ChoicePicker
@@ -182,33 +185,35 @@ export function ItemControls({
             data-surface='BookPages'
             className='flex min-w-0 flex-col gap-1.5'
           >
-            {card.book_contents.map((page) => (
-              <li
-                key={page.knowledge?.id ?? 0}
-                className='flex min-w-0 items-center gap-2'
-              >
-                <Text as='span' className='min-w-0 flex-1' truncate>
-                  <Who item={page.knowledge} />
-                </Text>
-                <Badge variant='outline'>{`${page.fidelity}% faithful`}</Badge>
-                <Button
-                  size='icon'
-                  variant='ghost'
-                  aria-label='Scrape it out'
-                  disabled={busy !== null || !page.knowledge}
-                  disabledReason={busy ?? undefined}
-                  onClick={() =>
-                    page.knowledge &&
-                    content.mutate({
-                      knowledge: page.knowledge.id,
-                      fidelity: 0,
-                    })
-                  }
+            <Paged items={card.book_contents} as='li'>
+              {(page) => (
+                <li
+                  key={page.knowledge?.id ?? 0}
+                  className='flex min-w-0 items-center gap-2'
                 >
-                  <Trash2 />
-                </Button>
-              </li>
-            ))}
+                  <Text as='span' className='min-w-0 flex-1' truncate>
+                    <Who item={page.knowledge} />
+                  </Text>
+                  <Badge variant='outline'>{`${page.fidelity}% faithful`}</Badge>
+                  <Button
+                    size='icon'
+                    variant='ghost'
+                    aria-label='Scrape it out'
+                    disabled={busy !== null || !page.knowledge}
+                    disabledReason={busy ?? undefined}
+                    onClick={() =>
+                      page.knowledge &&
+                      content.mutate({
+                        knowledge: page.knowledge.id,
+                        fidelity: 0,
+                      })
+                    }
+                  >
+                    <Trash2 />
+                  </Button>
+                </li>
+              )}
+            </Paged>
           </ul>
           <EntityPicker
             types={['knowledge']}

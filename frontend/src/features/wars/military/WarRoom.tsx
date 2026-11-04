@@ -51,6 +51,7 @@ import {
   Timeline,
   TimelineItem,
   type TimelineTone,
+  Paged,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { TERRAIN, WEATHER } from '@/features/entity/environment/labels'
@@ -455,14 +456,16 @@ function WarControls({
         <Label variant='overline'>War aims</Label>
         {room.aims.length > 0 && (
           <ul className='grid min-w-0 grid-cols-1 gap-2 @xl/mil:grid-cols-2 @5xl/mil:grid-cols-4'>
-            {room.aims.map((aim) => (
-              <AimEditor
-                key={aim.id}
-                warId={room.war.id}
-                aim={aim}
-                blocked={blocked}
-              />
-            ))}
+            <Paged items={room.aims} as='li'>
+              {(aim) => (
+                <AimEditor
+                  key={aim.id}
+                  warId={room.war.id}
+                  aim={aim}
+                  blocked={blocked}
+                />
+              )}
+            </Paged>
           </ul>
         )}
         <AddAim room={room} blocked={blocked} />
@@ -545,53 +548,59 @@ function SideCard({
         <Muted variant='caption'>No one stands here.</Muted>
       ) : (
         <ul className='flex min-w-0 flex-col gap-2'>
-          {entries.map((entry) => {
-            const level = wearinessLevel(entry.weariness)
-            return (
-              <li
-                key={entry.id}
-                className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-background/70 p-2'
-              >
-                <div className='flex min-w-0 items-center gap-2'>
-                  {entry.id === victor && (
-                    <Crown
-                      aria-label='Victor'
-                      className='size-icon-sm shrink-0 text-primary'
+          <Paged items={entries} as='li'>
+            {(entry) => {
+              const level = wearinessLevel(entry.weariness)
+              return (
+                <li
+                  key={entry.id}
+                  className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-background/70 p-2'
+                >
+                  <div className='flex min-w-0 items-center gap-2'>
+                    {entry.id === victor && (
+                      <Crown
+                        aria-label='Victor'
+                        className='size-icon-sm shrink-0 text-primary'
+                      />
+                    )}
+                    <span className='min-w-0 flex-1 truncate'>
+                      <EntityLink kind='entity' id={String(entry.id)}>
+                        {entry.name}
+                      </EntityLink>
+                    </span>
+                    {entry.left !== null && (
+                      <Plain icon={Flag}>{`Left ${entry.left}`}</Plain>
+                    )}
+                    <Tag item={level} />
+                  </div>
+                  <div className='flex min-w-0 items-center gap-2'>
+                    <Label className='shrink-0'>Weariness</Label>
+                    <Progress
+                      size='sm'
+                      value={entry.weariness}
+                      tone={PROGRESS_TONE[level.tone ?? 'muted']}
+                      aria-label={`${entry.name} weariness`}
+                      className='flex-1'
                     />
-                  )}
-                  <span className='min-w-0 flex-1 truncate'>
-                    <EntityLink kind='entity' id={String(entry.id)}>
-                      {entry.name}
-                    </EntityLink>
-                  </span>
-                  {entry.left !== null && (
-                    <Plain icon={Flag}>{`Left ${entry.left}`}</Plain>
-                  )}
-                  <Tag item={level} />
-                </div>
-                <div className='flex min-w-0 items-center gap-2'>
-                  <Label className='shrink-0'>Weariness</Label>
-                  <Progress
-                    size='sm'
-                    value={entry.weariness}
-                    tone={PROGRESS_TONE[level.tone ?? 'muted']}
-                    aria-label={`${entry.name} weariness`}
-                    className='flex-1'
-                  />
-                  <Stat value={entry.weariness} unit='%' className='shrink-0' />
-                </div>
-              </li>
-            )
-          })}
+                    <Stat
+                      value={entry.weariness}
+                      unit='%'
+                      className='shrink-0'
+                    />
+                  </div>
+                </li>
+              )
+            }}
+          </Paged>
         </ul>
       )}
       {aims.length > 0 && (
         <div className='flex min-w-0 flex-col gap-1.5'>
           <Label>War aims</Label>
           <ul className='grid min-w-0 grid-cols-1 gap-1.5 @5xl/mil:grid-cols-2'>
-            {aims.map((aim) => (
-              <AimLine key={aim.id} aim={aim} />
-            ))}
+            <Paged items={aims} as='li'>
+              {(aim) => <AimLine key={aim.id} aim={aim} />}
+            </Paged>
           </ul>
         </div>
       )}
@@ -877,14 +886,16 @@ function SiegeCard({
         <Plain icon={Swords}>
           {`${siege.sallies} ${siege.sallies === 1 ? 'sally' : 'sallies'}`}
         </Plain>
-        {works.map(([key, value]) => (
-          <TableTag
-            key={key}
-            table={WORKS}
-            value={key}
-            text={`${named(WORKS, key).label} ${value}`}
-          />
-        ))}
+        <Paged items={works}>
+          {([key, value]) => (
+            <TableTag
+              key={key}
+              table={WORKS}
+              value={key}
+              text={`${named(WORKS, key).label} ${value}`}
+            />
+          )}
+        </Paged>
       </div>
       <div className='mt-auto flex min-w-0 flex-col'>
         <SiegeEditor siege={siege} blocked={blocked} />
@@ -1183,39 +1194,41 @@ function PhaseTimeline({ battle }: { battle: BattleReport }) {
       </CollapsibleTrigger>
       <CollapsibleContent className='min-w-0'>
         <Timeline label='Phases of the battle'>
-          {battle.phases.map((phase, index) => {
-            const item = named(PHASE, phase.phase)
-            const fallen = phase.attacker_losses + phase.defender_losses
-            return (
-              <TimelineItem
-                key={phase.position}
-                icon={item.icon}
-                tone={fallen > 0 ? 'destructive' : 'default'}
-                title={item.label}
-                last={index === battle.phases.length - 1}
-              >
-                {phase.summary && (
-                  <Muted variant='caption'>
-                    {phase.summary.charAt(0).toUpperCase() +
-                      phase.summary.slice(1)}
-                  </Muted>
-                )}
-                <div className='flex min-w-0 flex-wrap gap-1'>
-                  <Plain icon={Swords}>
-                    {`Attackers lost ${formatInteger(phase.attacker_losses)}`}
-                  </Plain>
-                  <Plain icon={Shield}>
-                    {`Defenders lost ${formatInteger(phase.defender_losses)}`}
-                  </Plain>
-                  {Object.entries(phase.details).map(([key, value]) => (
-                    <Badge key={key} size='sm' variant='secondary'>
-                      {detailText(key, value)}
-                    </Badge>
-                  ))}
-                </div>
-              </TimelineItem>
-            )
-          })}
+          <Paged items={battle.phases} as='li'>
+            {(phase, index) => {
+              const item = named(PHASE, phase.phase)
+              const fallen = phase.attacker_losses + phase.defender_losses
+              return (
+                <TimelineItem
+                  key={phase.position}
+                  icon={item.icon}
+                  tone={fallen > 0 ? 'destructive' : 'default'}
+                  title={item.label}
+                  last={index === battle.phases.length - 1}
+                >
+                  {phase.summary && (
+                    <Muted variant='caption'>
+                      {phase.summary.charAt(0).toUpperCase() +
+                        phase.summary.slice(1)}
+                    </Muted>
+                  )}
+                  <div className='flex min-w-0 flex-wrap gap-1'>
+                    <Plain icon={Swords}>
+                      {`Attackers lost ${formatInteger(phase.attacker_losses)}`}
+                    </Plain>
+                    <Plain icon={Shield}>
+                      {`Defenders lost ${formatInteger(phase.defender_losses)}`}
+                    </Plain>
+                    {Object.entries(phase.details).map(([key, value]) => (
+                      <Badge key={key} size='sm' variant='secondary'>
+                        {detailText(key, value)}
+                      </Badge>
+                    ))}
+                  </div>
+                </TimelineItem>
+              )
+            }}
+          </Paged>
         </Timeline>
       </CollapsibleContent>
     </Collapsible>
@@ -1303,9 +1316,9 @@ function BattleItem({ battle, last }: { battle: BattleReport; last: boolean }) {
             aria-label='Phases'
             className='flex min-w-0 flex-wrap items-center gap-1'
           >
-            {battle.phases.map((phase) => (
-              <PhaseChip key={phase.position} phase={phase} />
-            ))}
+            <Paged items={battle.phases} as='li'>
+              {(phase) => <PhaseChip key={phase.position} phase={phase} />}
+            </Paged>
           </ol>
         )}
         {kinds.length > 0 && (
@@ -1335,17 +1348,19 @@ function BattleItem({ battle, last }: { battle: BattleReport; last: boolean }) {
 function Fronts({ room }: { room: Room }) {
   return (
     <ul className='flex min-w-0 flex-wrap gap-1.5'>
-      {room.fronts.map((front) => {
-        const first = front.first_region?.name ?? '?'
-        const second = front.second_region?.name ?? '?'
-        return (
-          <li key={`${front.first_region?.id}.${front.second_region?.id}`}>
-            <Plain icon={MapIcon}>
-              {`${first === second ? first : `${first} – ${second}`} · epoch ${front.since_epoch === front.last_epoch ? front.since_epoch : `${front.since_epoch}–${front.last_epoch}`}`}
-            </Plain>
-          </li>
-        )
-      })}
+      <Paged items={room.fronts} as='li'>
+        {(front) => {
+          const first = front.first_region?.name ?? '?'
+          const second = front.second_region?.name ?? '?'
+          return (
+            <li key={`${front.first_region?.id}.${front.second_region?.id}`}>
+              <Plain icon={MapIcon}>
+                {`${first === second ? first : `${first} – ${second}`} · epoch ${front.since_epoch === front.last_epoch ? front.since_epoch : `${front.since_epoch}–${front.last_epoch}`}`}
+              </Plain>
+            </li>
+          )
+        }}
+      </Paged>
     </ul>
   )
 }
@@ -1425,13 +1440,15 @@ export function WarRoom({ warId }: { warId: number }) {
           hint='Every clash with its ground, plans, phases and dead'
         >
           <Timeline label='Battle reports'>
-            {data.battles.map((battle, index) => (
-              <BattleItem
-                key={battle.id}
-                battle={battle}
-                last={index === data.battles.length - 1}
-              />
-            ))}
+            <Paged items={data.battles} as='li'>
+              {(battle, index) => (
+                <BattleItem
+                  key={battle.id}
+                  battle={battle}
+                  last={index === data.battles.length - 1}
+                />
+              )}
+            </Paged>
           </Timeline>
         </Panel>
       )}
@@ -1444,9 +1461,11 @@ export function WarRoom({ warId }: { warId: number }) {
           hint='Stores, water, walls and hunger behind them'
         >
           <ul className={cardGrid(data.sieges.length)}>
-            {data.sieges.map((siege) => (
-              <SiegeCard key={siege.id} siege={siege} blocked={blocked} />
-            ))}
+            <Paged items={data.sieges} as='li'>
+              {(siege) => (
+                <SiegeCard key={siege.id} siege={siege} blocked={blocked} />
+              )}
+            </Paged>
           </ul>
         </Panel>
       )}
@@ -1459,9 +1478,11 @@ export function WarRoom({ warId }: { warId: number }) {
           hint='Stacks, stores and marches of every army in this war'
         >
           <div className='flex min-w-0 flex-col gap-3'>
-            {data.armies.map((army) => (
-              <ArmyPanel key={army.army?.id} army={army} blocked={blocked} />
-            ))}
+            <Paged items={data.armies}>
+              {(army) => (
+                <ArmyPanel key={army.army?.id} army={army} blocked={blocked} />
+              )}
+            </Paged>
           </div>
         </Panel>
       )}
@@ -1474,13 +1495,15 @@ export function WarRoom({ warId }: { warId: number }) {
           hint='Held by the sword, resisting or submitting'
         >
           <ul className={cardGrid(data.occupations.length)}>
-            {data.occupations.map((item) => (
-              <OccupationCard
-                key={item.region?.id}
-                occupation={item}
-                blocked={blocked}
-              />
-            ))}
+            <Paged items={data.occupations} as='li'>
+              {(item) => (
+                <OccupationCard
+                  key={item.region?.id}
+                  occupation={item}
+                  blocked={blocked}
+                />
+              )}
+            </Paged>
           </ul>
         </Panel>
       )}
@@ -1493,9 +1516,11 @@ export function WarRoom({ warId }: { warId: number }) {
           hint='Cohorts led away and what became of them'
         >
           <ul className={cardGrid(data.captives.length)}>
-            {data.captives.map((cohort) => (
-              <CohortCard key={cohort.id} cohort={cohort} blocked={blocked} />
-            ))}
+            <Paged items={data.captives} as='li'>
+              {(cohort) => (
+                <CohortCard key={cohort.id} cohort={cohort} blocked={blocked} />
+              )}
+            </Paged>
           </ul>
         </Panel>
       )}

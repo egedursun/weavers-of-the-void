@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { EmptyState, Medallion } from '@/components/domain'
+import { EmptyState, Medallion, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { busyOf } from '../lore/model'
@@ -195,12 +195,14 @@ export function FoodLinkControls({ id, card, blocked }: Blocked) {
           <Muted>No kind preys on it.</Muted>
         ) : (
           <div className='flex min-w-0 flex-wrap gap-2'>
-            {card.hunted_by.map((item) => (
-              <Badge key={item.id} variant='secondary'>
-                <Crosshair />
-                {item.name}
-              </Badge>
-            ))}
+            <Paged items={card.hunted_by}>
+              {(item) => (
+                <Badge key={item.id} variant='secondary'>
+                  <Crosshair />
+                  {item.name}
+                </Badge>
+              )}
+            </Paged>
           </div>
         )}
         <Muted variant='caption'>
@@ -245,82 +247,84 @@ export function HostControls({ id, card, blocked }: Blocked) {
         />
       ) : (
         <ul className='flex min-w-0 flex-col gap-2'>
-          {card.hosts.map((row) => {
-            const disease = row.disease?.id ?? 0
-            const held = row.locked.includes('immune')
-            return (
-              <li
-                key={disease}
-                className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2'
-              >
-                <Medallion
-                  icon={row.immune ? ShieldCheck : Biohazard}
-                  tone={row.immune ? 'success' : 'danger'}
-                  size='sm'
-                />
-                <div className='flex min-w-0 flex-1 flex-col gap-1'>
-                  <Name item={row.disease} />
-                  <div className='flex flex-wrap gap-1'>
-                    <Badge
-                      size='sm'
-                      variant={row.immune ? 'success' : 'destructive'}
-                    >
-                      {row.immune ? 'Immune' : 'Carries it'}
-                    </Badge>
-                    {held && (
-                      <Badge size='sm' variant='default'>
-                        Held by you
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                <label className='flex items-center gap-2'>
-                  <Text as='span' variant='caption'>
-                    Immune
-                  </Text>
-                  <Switch
-                    checked={row.immune}
-                    disabled={busy !== null}
-                    aria-label={`Immune to ${row.disease?.name ?? 'this sickness'}`}
-                    onCheckedChange={(immune) =>
-                      set.mutate({ disease, carried: true, immune })
-                    }
-                  />
-                </label>
-                {held && (
-                  <Button
+          <Paged items={card.hosts} as='li'>
+            {(row) => {
+              const disease = row.disease?.id ?? 0
+              const held = row.locked.includes('immune')
+              return (
+                <li
+                  key={disease}
+                  className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2'
+                >
+                  <Medallion
+                    icon={row.immune ? ShieldCheck : Biohazard}
+                    tone={row.immune ? 'success' : 'danger'}
                     size='sm'
-                    variant='outline'
+                  />
+                  <div className='flex min-w-0 flex-1 flex-col gap-1'>
+                    <Name item={row.disease} />
+                    <div className='flex flex-wrap gap-1'>
+                      <Badge
+                        size='sm'
+                        variant={row.immune ? 'success' : 'destructive'}
+                      >
+                        {row.immune ? 'Immune' : 'Carries it'}
+                      </Badge>
+                      {held && (
+                        <Badge size='sm' variant='default'>
+                          Held by you
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <label className='flex items-center gap-2'>
+                    <Text as='span' variant='caption'>
+                      Immune
+                    </Text>
+                    <Switch
+                      checked={row.immune}
+                      disabled={busy !== null}
+                      aria-label={`Immune to ${row.disease?.name ?? 'this sickness'}`}
+                      onCheckedChange={(immune) =>
+                        set.mutate({ disease, carried: true, immune })
+                      }
+                    />
+                  </label>
+                  {held && (
+                    <Button
+                      size='sm'
+                      variant='outline'
+                      disabled={busy !== null}
+                      disabledReason={busy ?? undefined}
+                      onClick={() =>
+                        set.mutate({
+                          disease,
+                          carried: true,
+                          immune: row.immune,
+                          release: true,
+                        })
+                      }
+                    >
+                      <Unlock />
+                      Let the world decide
+                    </Button>
+                  )}
+                  <Button
+                    size='icon-sm'
+                    variant='ghost'
+                    aria-label={`No longer carries ${row.disease?.name ?? 'it'}`}
                     disabled={busy !== null}
                     disabledReason={busy ?? undefined}
                     onClick={() =>
-                      set.mutate({
-                        disease,
-                        carried: true,
-                        immune: row.immune,
-                        release: true,
-                      })
+                      set.mutate({ disease, carried: false, immune: false })
                     }
                   >
-                    <Unlock />
-                    Let the world decide
+                    <Trash2 />
                   </Button>
-                )}
-                <Button
-                  size='icon-sm'
-                  variant='ghost'
-                  aria-label={`No longer carries ${row.disease?.name ?? 'it'}`}
-                  disabled={busy !== null}
-                  disabledReason={busy ?? undefined}
-                  onClick={() =>
-                    set.mutate({ disease, carried: false, immune: false })
-                  }
-                >
-                  <Trash2 />
-                </Button>
-              </li>
-            )
-          })}
+                </li>
+              )
+            }}
+          </Paged>
         </ul>
       )}
       <div className='flex min-w-0 flex-wrap items-end gap-2'>
@@ -588,16 +592,18 @@ export function CustomUseBadges({ card }: { card: SpeciesCard }) {
   if (card.custom_uses.length === 0) return null
   return (
     <div className='flex min-w-0 flex-wrap gap-1.5'>
-      {card.custom_uses.map((item) => {
-        const spec = named(USE, item.base_use)
-        return (
-          <Badge key={item.kind_id} variant='default'>
-            <Sparkles />
-            {`${item.name} · ${spec.label} ${item.output_pct}%`}
-            <spec.icon />
-          </Badge>
-        )
-      })}
+      <Paged items={card.custom_uses}>
+        {(item) => {
+          const spec = named(USE, item.base_use)
+          return (
+            <Badge key={item.kind_id} variant='default'>
+              <Sparkles />
+              {`${item.name} · ${spec.label} ${item.output_pct}%`}
+              <spec.icon />
+            </Badge>
+          )
+        }}
+      </Paged>
     </div>
   )
 }

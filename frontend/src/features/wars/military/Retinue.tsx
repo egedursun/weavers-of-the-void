@@ -26,6 +26,7 @@ import {
   MiniStat,
   Medallion,
   StatBar,
+  Paged,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -242,14 +243,16 @@ export function MercenaryContracts({
           />
         ) : (
           <ul className={cardGrid(rows.length)}>
-            {rows.map((row) => (
-              <ContractCard
-                key={row.id}
-                row={row}
-                employerId={employerId}
-                blocked={blocked}
-              />
-            ))}
+            <Paged items={rows} as='li'>
+              {(row) => (
+                <ContractCard
+                  key={row.id}
+                  row={row}
+                  employerId={employerId}
+                  blocked={blocked}
+                />
+              )}
+            </Paged>
           </ul>
         )}
         <Adjust
@@ -456,14 +459,16 @@ export function NamedPrisoners({
           />
         ) : (
           <ul className={cardGrid(rows.length)}>
-            {rows.map((row) => (
-              <PrisonerCard
-                key={row.id}
-                row={row}
-                captorId={captorId}
-                blocked={blocked}
-              />
-            ))}
+            <Paged items={rows} as='li'>
+              {(row) => (
+                <PrisonerCard
+                  key={row.id}
+                  row={row}
+                  captorId={captorId}
+                  blocked={blocked}
+                />
+              )}
+            </Paged>
           </ul>
         )}
         <Adjust

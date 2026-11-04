@@ -26,6 +26,7 @@ import {
   Section,
   ShowMore,
   useShowMore,
+  Paged,
 } from '@/components/domain'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
 import { Label, Muted, Text } from '@/components/typography'
@@ -124,55 +125,58 @@ export function BondList({
     )
   return (
     <div className='flex min-w-0 flex-col gap-4'>
-      {[...groups.entries()].map(([kind, list]) => (
-        <div key={kind} className='flex min-w-0 flex-col gap-2'>
-          <Label variant='overline'>{`${bondKind(kind)} · ${list.length}`}</Label>
-          <BondGroup
-            list={list}
-            renderBond={(bond) => (
-              <li
-                key={bond.id}
-                className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border bg-card px-2.5 py-1.5'
-              >
-                <Label>{bond.outgoing ? '→' : '←'}</Label>
-                {bond.other ? (
-                  <NodeLink node={bond.other} />
-                ) : (
-                  <Muted>Unknown</Muted>
-                )}
-                {bond.state !== 'active' && (
-                  <Badge size='sm' variant='secondary'>
-                    Past
-                  </Badge>
-                )}
-                <Label>{`Epoch ${bond.epoch}`}</Label>
-                {bond.description && (
-                  <div className='basis-full'>
-                    <ExpandableText variant='caption' tone='muted' lines={2}>
-                      {bond.description}
-                    </ExpandableText>
-                  </div>
-                )}
-                {editable && bond.state === 'active' && (
-                  <ActionButton
-                    label='Break'
-                    icon={Unlink}
-                    size='sm'
-                    variant='ghost'
-                    blocked={reason()}
-                    pending={remove.isPending}
-                    confirm={{
-                      title: 'Break this bond?',
-                      description: 'The bond ends now and is recorded as past.',
-                    }}
-                    onRun={() => remove.mutate(bond.id)}
-                  />
-                )}
-              </li>
-            )}
-          />
-        </div>
-      ))}
+      <Paged items={[...groups.entries()]}>
+        {([kind, list]) => (
+          <div key={kind} className='flex min-w-0 flex-col gap-2'>
+            <Label variant='overline'>{`${bondKind(kind)} · ${list.length}`}</Label>
+            <BondGroup
+              list={list}
+              renderBond={(bond) => (
+                <li
+                  key={bond.id}
+                  className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border bg-card px-2.5 py-1.5'
+                >
+                  <Label>{bond.outgoing ? '→' : '←'}</Label>
+                  {bond.other ? (
+                    <NodeLink node={bond.other} />
+                  ) : (
+                    <Muted>Unknown</Muted>
+                  )}
+                  {bond.state !== 'active' && (
+                    <Badge size='sm' variant='secondary'>
+                      Past
+                    </Badge>
+                  )}
+                  <Label>{`Epoch ${bond.epoch}`}</Label>
+                  {bond.description && (
+                    <div className='basis-full'>
+                      <ExpandableText variant='caption' tone='muted' lines={2}>
+                        {bond.description}
+                      </ExpandableText>
+                    </div>
+                  )}
+                  {editable && bond.state === 'active' && (
+                    <ActionButton
+                      label='Break'
+                      icon={Unlink}
+                      size='sm'
+                      variant='ghost'
+                      blocked={reason()}
+                      pending={remove.isPending}
+                      confirm={{
+                        title: 'Break this bond?',
+                        description:
+                          'The bond ends now and is recorded as past.',
+                      }}
+                      onRun={() => remove.mutate(bond.id)}
+                    />
+                  )}
+                </li>
+              )}
+            />
+          </div>
+        )}
+      </Paged>
       {total > bonds.length && (
         <Muted variant='caption'>{`Showing ${bonds.length} of ${total} bonds.`}</Muted>
       )}

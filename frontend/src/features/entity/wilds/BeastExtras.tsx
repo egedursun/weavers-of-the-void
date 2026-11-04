@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { KpiTile, Medallion } from '@/components/domain'
+import { KpiTile, Medallion, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { COMMODITY } from '../economy/labels'
@@ -117,15 +117,17 @@ export function Treasures({ card }: { card: BeastCard }) {
             <Muted>No treasured item lies in its hoard.</Muted>
           ) : (
             <ul className='flex min-w-0 flex-col gap-1.5'>
-              {card.treasures.map((item) => (
-                <li
-                  key={item.id}
-                  className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
-                >
-                  <Medallion icon={Gem} tone='gold' size='sm' />
-                  <Name item={item} />
-                </li>
-              ))}
+              <Paged items={card.treasures} as='li'>
+                {(item) => (
+                  <li
+                    key={item.id}
+                    className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
+                  >
+                    <Medallion icon={Gem} tone='gold' size='sm' />
+                    <Name item={item} />
+                  </li>
+                )}
+              </Paged>
             </ul>
           )}
         </div>
@@ -135,35 +137,37 @@ export function Treasures({ card }: { card: BeastCard }) {
             <Muted>No town has sworn it tribute.</Muted>
           ) : (
             <ul className='flex min-w-0 flex-col gap-1.5'>
-              {card.tributes.map((row) => {
-                const goods = named(
-                  COMMODITY as Record<string, (typeof COMMODITY)['grain']>,
-                  row.commodity
-                )
-                return (
-                  <li
-                    key={row.treaty?.id}
-                    className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2'
-                  >
-                    <Medallion icon={ScrollText} tone='warning' size='sm' />
-                    <div className='flex min-w-0 flex-1 flex-col gap-1'>
-                      <Name item={row.town} />
-                      <div className='flex flex-wrap gap-1'>
-                        <Badge size='sm' variant='default'>
-                          <goods.icon />
-                          {`${row.units} ${goods.label.toLowerCase()} each epoch`}
-                        </Badge>
-                        <Badge size='sm' variant='secondary'>
-                          {row.last_kept_epoch !== null
-                            ? `Paid in epoch ${row.last_kept_epoch}`
-                            : 'Not yet paid'}
-                        </Badge>
+              <Paged items={card.tributes} as='li'>
+                {(row) => {
+                  const goods = named(
+                    COMMODITY as Record<string, (typeof COMMODITY)['grain']>,
+                    row.commodity
+                  )
+                  return (
+                    <li
+                      key={row.treaty?.id}
+                      className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2'
+                    >
+                      <Medallion icon={ScrollText} tone='warning' size='sm' />
+                      <div className='flex min-w-0 flex-1 flex-col gap-1'>
+                        <Name item={row.town} />
+                        <div className='flex flex-wrap gap-1'>
+                          <Badge size='sm' variant='default'>
+                            <goods.icon />
+                            {`${row.units} ${goods.label.toLowerCase()} each epoch`}
+                          </Badge>
+                          <Badge size='sm' variant='secondary'>
+                            {row.last_kept_epoch !== null
+                              ? `Paid in epoch ${row.last_kept_epoch}`
+                              : 'Not yet paid'}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                    <Name item={row.treaty} />
-                  </li>
-                )
-              })}
+                      <Name item={row.treaty} />
+                    </li>
+                  )
+                }}
+              </Paged>
             </ul>
           )}
         </div>
@@ -225,17 +229,19 @@ export function TreasureControls({ id, card, blocked }: Blocked) {
             <Muted>Its hoard holds no item.</Muted>
           ) : (
             <div className='flex min-w-0 flex-wrap gap-1.5'>
-              {card.treasures.map((thing) => (
-                <Button
-                  key={thing.id}
-                  size='sm'
-                  variant={taken === String(thing.id) ? 'default' : 'outline'}
-                  onClick={() => setTaken(String(thing.id))}
-                >
-                  <Gem />
-                  {thing.name}
-                </Button>
-              ))}
+              <Paged items={card.treasures}>
+                {(thing) => (
+                  <Button
+                    key={thing.id}
+                    size='sm'
+                    variant={taken === String(thing.id) ? 'default' : 'outline'}
+                    onClick={() => setTaken(String(thing.id))}
+                  >
+                    <Gem />
+                    {thing.name}
+                  </Button>
+                )}
+              </Paged>
             </div>
           )}
           <EntityPicker

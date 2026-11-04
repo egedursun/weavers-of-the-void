@@ -42,6 +42,7 @@ import {
   Section,
   StatBar,
   ValueRadar,
+  Paged,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -692,27 +693,29 @@ export function DemographySection({
                 }
               >
                 <div className='flex min-w-0 flex-col gap-3'>
-                  {data.pressures.map((item) => {
-                    const spec = named(PRESSURE_ICONS, item.kind)
-                    return (
-                      <Tooltip key={item.kind}>
-                        <TooltipTrigger asChild>
-                          <div tabIndex={0} className='min-w-0'>
-                            <StatBar
-                              label={spec.label}
-                              icon={spec.icon}
-                              value={item.value}
-                              max={PERCENT}
-                              tone={METER_TONE[badTone(item.value)]}
-                            />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {PRESSURE_HINT[item.kind] ?? spec.label}
-                        </TooltipContent>
-                      </Tooltip>
-                    )
-                  })}
+                  <Paged items={data.pressures}>
+                    {(item) => {
+                      const spec = named(PRESSURE_ICONS, item.kind)
+                      return (
+                        <Tooltip key={item.kind}>
+                          <TooltipTrigger asChild>
+                            <div tabIndex={0} className='min-w-0'>
+                              <StatBar
+                                label={spec.label}
+                                icon={spec.icon}
+                                value={item.value}
+                                max={PERCENT}
+                                tone={METER_TONE[badTone(item.value)]}
+                              />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {PRESSURE_HINT[item.kind] ?? spec.label}
+                          </TooltipContent>
+                        </Tooltip>
+                      )
+                    }}
+                  </Paged>
                 </div>
               </Panel>
             )}
@@ -902,30 +905,32 @@ function Sankey({ flows, output }: { flows: Flow[]; output: Labour[] }) {
             />
           </g>
         ))}
-        {jobs.map((item) => {
-          const tone =
-            item === 'idle' ? 'muted' : outputTone(pct[item] ?? PERCENT)
-          return (
-            <g key={item}>
-              <rect
-                x={right}
-                y={to[item].top}
-                width={SANKEY_NODE}
-                height={to[item].size}
-                fill={TONE_COLOR[tone]}
-                rx={3}
-              />
-              <SankeyLabel
-                x={right + SANKEY_NODE + 6}
-                y={to[item].top + to[item].size / 2}
-                icon={JOB_SPEC[item].icon}
-                text={jobText(item)}
-                align='start'
-                color={TONE_COLOR[tone]}
-              />
-            </g>
-          )
-        })}
+        <Paged items={jobs}>
+          {(item) => {
+            const tone =
+              item === 'idle' ? 'muted' : outputTone(pct[item] ?? PERCENT)
+            return (
+              <g key={item}>
+                <rect
+                  x={right}
+                  y={to[item].top}
+                  width={SANKEY_NODE}
+                  height={to[item].size}
+                  fill={TONE_COLOR[tone]}
+                  rx={3}
+                />
+                <SankeyLabel
+                  x={right + SANKEY_NODE + 6}
+                  y={to[item].top + to[item].size / 2}
+                  icon={JOB_SPEC[item].icon}
+                  text={jobText(item)}
+                  align='start'
+                  color={TONE_COLOR[tone]}
+                />
+              </g>
+            )
+          }}
+        </Paged>
       </svg>
     </div>
   )
@@ -1351,18 +1356,24 @@ export function PeopleProfileSection({
                   />
                 )}
                 <Label variant='overline'>Held most strongly</Label>
-                {strongest.map((point) => {
-                  const spec = named(VALUE_ICONS, point.axis)
-                  return (
-                    <MiniStat
-                      key={point.axis}
-                      icon={spec.icon}
-                      label={spec.label}
-                      value={point.value > 0 ? `+${point.value}` : point.value}
-                      tone={point.value >= 0 ? (spec.tone ?? 'gold') : 'danger'}
-                    />
-                  )
-                })}
+                <Paged items={strongest}>
+                  {(point) => {
+                    const spec = named(VALUE_ICONS, point.axis)
+                    return (
+                      <MiniStat
+                        key={point.axis}
+                        icon={spec.icon}
+                        label={spec.label}
+                        value={
+                          point.value > 0 ? `+${point.value}` : point.value
+                        }
+                        tone={
+                          point.value >= 0 ? (spec.tone ?? 'gold') : 'danger'
+                        }
+                      />
+                    )
+                  }}
+                </Paged>
               </div>
             </div>
           </Panel>

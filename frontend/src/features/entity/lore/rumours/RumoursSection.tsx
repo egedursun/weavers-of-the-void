@@ -20,7 +20,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import { EmptyState, KpiTile, Section, StatBar } from '@/components/domain'
+import {
+  EmptyState,
+  KpiTile,
+  Section,
+  StatBar,
+  Paged,
+} from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -430,14 +436,16 @@ export function RumoursSection({
         )}
         {rumours.length > 0 && (
           <ul data-surface='RumourList' className='flex min-w-0 flex-col gap-2'>
-            {rumours.map((item) => (
-              <RumourCard
-                key={item.id}
-                communityId={communityId}
-                rumour={item}
-                blocked={blocked}
-              />
-            ))}
+            <Paged items={rumours} as='li'>
+              {(item) => (
+                <RumourCard
+                  key={item.id}
+                  communityId={communityId}
+                  rumour={item}
+                  blocked={blocked}
+                />
+              )}
+            </Paged>
           </ul>
         )}
         <PlantRumour communityId={communityId} blocked={blocked} />

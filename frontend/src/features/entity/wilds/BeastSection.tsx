@@ -44,6 +44,7 @@ import {
   StatBar,
   Timeline,
   TimelineItem,
+  Paged,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
@@ -243,18 +244,20 @@ function Domain({ card }: { card: BeastCard }) {
   return (
     <Card title='Lair and masters' icon={MapPin} tone='info'>
       <ul className='flex min-w-0 flex-col gap-2'>
-        {rows.map((row) => (
-          <li
-            key={row.label}
-            className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
-          >
-            <Medallion icon={row.icon} tone='info' size='sm' />
-            <div className='flex min-w-0 flex-1 flex-col'>
-              <Label truncate>{row.label}</Label>
-              <Name item={row.item} fallback={row.empty} />
-            </div>
-          </li>
-        ))}
+        <Paged items={rows} as='li'>
+          {(row) => (
+            <li
+              key={row.label}
+              className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
+            >
+              <Medallion icon={row.icon} tone='info' size='sm' />
+              <div className='flex min-w-0 flex-1 flex-col'>
+                <Label truncate>{row.label}</Label>
+                <Name item={row.item} fallback={row.empty} />
+              </div>
+            </li>
+          )}
+        </Paged>
       </ul>
     </Card>
   )
@@ -275,18 +278,20 @@ function Hoard({ card }: { card: BeastCard }) {
         <Muted>It hoards nothing.</Muted>
       ) : (
         <div className='grid min-w-0 grid-cols-1 gap-2 @sm/card:grid-cols-2 @xl/card:grid-cols-3'>
-          {rows.map(([key, amount]) => {
-            const goods = named(HOARD, key)
-            return (
-              <MiniStat
-                key={key}
-                icon={goods.icon}
-                label={goods.label}
-                value={amount}
-                tone='gold'
-              />
-            )
-          })}
+          <Paged items={rows}>
+            {([key, amount]) => {
+              const goods = named(HOARD, key)
+              return (
+                <MiniStat
+                  key={key}
+                  icon={goods.icon}
+                  label={goods.label}
+                  value={amount}
+                  tone='gold'
+                />
+              )
+            }}
+          </Paged>
         </div>
       )}
     </Card>
@@ -312,41 +317,43 @@ function Wounds({ card }: { card: BeastCard }) {
               data-surface='BeastBody'
               className='flex min-w-0 flex-col gap-2'
             >
-              {card.injuries.map((row, index) => {
-                const kind = named(INJURIES, row.kind)
-                const state = STATES[row.state]
-                return (
-                  <li
-                    key={`${row.part}.${index}`}
-                    className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-2'
-                  >
-                    <div className='flex min-w-0 items-center gap-2'>
-                      <Medallion
-                        icon={kind.icon}
-                        tone={kind.tone ?? 'danger'}
-                        size='sm'
-                      />
-                      <div className='flex min-w-0 flex-1 flex-col'>
-                        <Text as='span' weight='medium' truncate>
-                          {`${kind.label} on the ${titled(row.part).toLowerCase()}`}
-                        </Text>
-                        <Muted as='span' variant='caption'>
-                          {`Severity ${row.severity} of 100`}
-                        </Muted>
+              <Paged items={card.injuries} as='li'>
+                {(row, index) => {
+                  const kind = named(INJURIES, row.kind)
+                  const state = STATES[row.state]
+                  return (
+                    <li
+                      key={`${row.part}.${index}`}
+                      className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-2'
+                    >
+                      <div className='flex min-w-0 items-center gap-2'>
+                        <Medallion
+                          icon={kind.icon}
+                          tone={kind.tone ?? 'danger'}
+                          size='sm'
+                        />
+                        <div className='flex min-w-0 flex-1 flex-col'>
+                          <Text as='span' weight='medium' truncate>
+                            {`${kind.label} on the ${titled(row.part).toLowerCase()}`}
+                          </Text>
+                          <Muted as='span' variant='caption'>
+                            {`Severity ${row.severity} of 100`}
+                          </Muted>
+                        </div>
+                        <Badge size='sm' variant={state?.badge ?? 'secondary'}>
+                          {state?.label ?? titled(row.state)}
+                        </Badge>
                       </div>
-                      <Badge size='sm' variant={state?.badge ?? 'secondary'}>
-                        {state?.label ?? titled(row.state)}
-                      </Badge>
-                    </div>
-                    <StatBar
-                      label='Use lost'
-                      value={row.function_loss}
-                      max={PERCENT}
-                      tone='destructive'
-                    />
-                  </li>
-                )
-              })}
+                      <StatBar
+                        label='Use lost'
+                        value={row.function_loss}
+                        max={PERCENT}
+                        tone='destructive'
+                      />
+                    </li>
+                  )
+                }}
+              </Paged>
             </ul>
           )}
         </div>
@@ -356,16 +363,18 @@ function Wounds({ card }: { card: BeastCard }) {
             <Muted>No one has drawn its blood.</Muted>
           ) : (
             <Timeline label='Wounds'>
-              {card.wounds.map((row, index) => (
-                <TimelineItem
-                  key={`${row.epoch}.${index}`}
-                  icon={Swords}
-                  tone='destructive'
-                  title={row.by?.name ?? 'Someone unknown'}
-                  timestamp={`Epoch ${row.epoch}`}
-                  last={index === card.wounds.length - 1}
-                />
-              ))}
+              <Paged items={card.wounds} as='li'>
+                {(row, index) => (
+                  <TimelineItem
+                    key={`${row.epoch}.${index}`}
+                    icon={Swords}
+                    tone='destructive'
+                    title={row.by?.name ?? 'Someone unknown'}
+                    timestamp={`Epoch ${row.epoch}`}
+                    last={index === card.wounds.length - 1}
+                  />
+                )}
+              </Paged>
             </Timeline>
           )}
         </div>
@@ -807,14 +816,16 @@ export function HerdsSection({
       }
     >
       <ul className='@container/herd grid min-w-0 grid-cols-1 gap-3 @2xl/herd:grid-cols-2'>
-        {view.data.map((row) => (
-          <HerdCard
-            key={`${row.species?.id}-${row.head}-${row.stage}-${row.fed_epochs}`}
-            community={communityId}
-            row={row}
-            blocked={blocked}
-          />
-        ))}
+        <Paged items={view.data} as='li'>
+          {(row) => (
+            <HerdCard
+              key={`${row.species?.id}-${row.head}-${row.stage}-${row.fed_epochs}`}
+              community={communityId}
+              row={row}
+              blocked={blocked}
+            />
+          )}
+        </Paged>
       </ul>
     </Section>
   )
@@ -894,41 +905,43 @@ export function FoodWebSection({ regionId }: { regionId: number }) {
           data-surface='FoodWebNodes'
           className='grid min-w-0 grid-cols-1 gap-2 @xl/wild:grid-cols-2'
         >
-          {web.nodes.map((node) => {
-            const diet = named(DIET, node.diet)
-            const size = named(SIZE, node.size_class)
-            return (
-              <li
-                key={node.species.id}
-                className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'
-              >
-                <div className='flex min-w-0 items-center gap-2'>
-                  <Medallion icon={diet.icon} tone={diet.tone} size='sm' />
-                  <div className='flex min-w-0 flex-1 flex-col'>
-                    <span className='min-w-0 truncate'>
-                      <Name item={node.species} />
-                    </span>
-                    <Muted as='span' variant='caption' truncate>
-                      {`${size.label} ${diet.label.toLowerCase()}`}
-                    </Muted>
+          <Paged items={web.nodes} as='li'>
+            {(node) => {
+              const diet = named(DIET, node.diet)
+              const size = named(SIZE, node.size_class)
+              return (
+                <li
+                  key={node.species.id}
+                  className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2.5'
+                >
+                  <div className='flex min-w-0 items-center gap-2'>
+                    <Medallion icon={diet.icon} tone={diet.tone} size='sm' />
+                    <div className='flex min-w-0 flex-1 flex-col'>
+                      <span className='min-w-0 truncate'>
+                        <Name item={node.species} />
+                      </span>
+                      <Muted as='span' variant='caption' truncate>
+                        {`${size.label} ${diet.label.toLowerCase()}`}
+                      </Muted>
+                    </div>
+                    {hunters.has(node.species.id) && (
+                      <Badge size='sm' variant='destructive'>
+                        <Crosshair />
+                        Hunter
+                      </Badge>
+                    )}
+                    <Stat value={node.abundance} unit='/ 100' />
                   </div>
-                  {hunters.has(node.species.id) && (
-                    <Badge size='sm' variant='destructive'>
-                      <Crosshair />
-                      Hunter
-                    </Badge>
-                  )}
-                  <Stat value={node.abundance} unit='/ 100' />
-                </div>
-                <Progress
-                  size='sm'
-                  value={node.abundance}
-                  tone={barTone(node.abundance, 'success')}
-                  aria-label={`${node.species.name} abundance`}
-                />
-              </li>
-            )
-          })}
+                  <Progress
+                    size='sm'
+                    value={node.abundance}
+                    tone={barTone(node.abundance, 'success')}
+                    aria-label={`${node.species.name} abundance`}
+                  />
+                </li>
+              )
+            }}
+          </Paged>
         </ul>
       </div>
     </Section>

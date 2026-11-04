@@ -49,6 +49,7 @@ import {
   Timeline,
   TimelineItem,
   useShowMore,
+  Paged,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -329,11 +330,13 @@ function RealmSeat({ realm }: { realm: Realm }) {
             {realm.vassals.length === 0 ? (
               <Muted>None</Muted>
             ) : (
-              realm.vassals.map((item) => (
-                <EntityLink key={item.id} kind='entity' id={String(item.id)}>
-                  {item.name}
-                </EntityLink>
-              ))
+              <Paged items={realm.vassals}>
+                {(item) => (
+                  <EntityLink key={item.id} kind='entity' id={String(item.id)}>
+                    {item.name}
+                  </EntityLink>
+                )}
+              </Paged>
             )}
           </Fact>
         </div>
@@ -464,9 +467,9 @@ function Court({ realm, blocked }: { realm: Realm; blocked: string | null }) {
           <Medallion icon={Crown} tone='gold' />
         </div>
         <ul className='grid min-w-0 grid-cols-1 gap-2 @xs/realm:grid-cols-2 @2xl/realm:grid-cols-3'>
-          {below.map((item) => (
-            <OfficeCard key={item.id} item={item} />
-          ))}
+          <Paged items={below} as='li'>
+            {(item) => <OfficeCard key={item.id} item={item} />}
+          </Paged>
         </ul>
         <AdjustPanel
           trigger='Adjust the court'
@@ -548,64 +551,72 @@ function Succession({ realm }: { realm: Realm }) {
           </div>
         ) : (
           <ol className='flex min-w-0 flex-wrap items-center gap-2'>
-            {realm.succession.map((item, index) => (
-              <li key={item.id} className='flex min-w-0 items-center gap-2'>
-                {index > 0 && (
-                  <ChevronRight
-                    aria-hidden='true'
-                    className='size-icon-sm shrink-0 text-muted-foreground'
-                  />
-                )}
-                <div
-                  className={
-                    index === 0
-                      ? 'flex min-w-0 items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 p-2'
-                      : 'flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'
-                  }
-                >
-                  <Badge
-                    size='sm'
-                    variant={index === 0 ? 'default' : 'outline'}
+            <Paged items={realm.succession} as='li'>
+              {(item, index) => (
+                <li key={item.id} className='flex min-w-0 items-center gap-2'>
+                  {index > 0 && (
+                    <ChevronRight
+                      aria-hidden='true'
+                      className='size-icon-sm shrink-0 text-muted-foreground'
+                    />
+                  )}
+                  <div
+                    className={
+                      index === 0
+                        ? 'flex min-w-0 items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 p-2'
+                        : 'flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'
+                    }
                   >
-                    {index === 0 ? 'Heir' : `#${index + 1}`}
-                  </Badge>
-                  <Portrait name={item.name} size='xs' />
-                  <EntityLink kind='entity' id={String(item.id)}>
-                    {item.name}
-                  </EntityLink>
-                </div>
-              </li>
-            ))}
+                    <Badge
+                      size='sm'
+                      variant={index === 0 ? 'default' : 'outline'}
+                    >
+                      {index === 0 ? 'Heir' : `#${index + 1}`}
+                    </Badge>
+                    <Portrait name={item.name} size='xs' />
+                    <EntityLink kind='entity' id={String(item.id)}>
+                      {item.name}
+                    </EntityLink>
+                  </div>
+                </li>
+              )}
+            </Paged>
           </ol>
         )}
         {realm.claims.length > 0 && (
           <div className='flex min-w-0 flex-col gap-2'>
             <Label variant='overline'>Claims on the throne</Label>
             <ul className='grid min-w-0 grid-cols-1 gap-2 @xl/realm:grid-cols-2'>
-              {realm.claims.map((claim) => (
-                <li
-                  key={claim.id}
-                  className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2'
-                >
-                  <div className='flex min-w-0 flex-wrap items-center gap-2'>
-                    <EntityLink kind='entity' id={String(claim.claimant_id)}>
-                      {claim.claimant}
-                    </EntityLink>
-                    <Tag spec={named(CLAIM_BASES, claim.basis)} />
-                    {claim.pressed && (
-                      <Tag
-                        spec={{ label: 'Pressed', icon: Gavel, tone: 'danger' }}
-                      />
-                    )}
-                  </div>
-                  <StatBar
-                    label={`Strength, held since epoch ${claim.since_epoch}`}
-                    value={claim.strength}
-                    max={PERCENT}
-                    tone={claim.pressed ? 'destructive' : 'default'}
-                  />
-                </li>
-              ))}
+              <Paged items={realm.claims} as='li'>
+                {(claim) => (
+                  <li
+                    key={claim.id}
+                    className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2'
+                  >
+                    <div className='flex min-w-0 flex-wrap items-center gap-2'>
+                      <EntityLink kind='entity' id={String(claim.claimant_id)}>
+                        {claim.claimant}
+                      </EntityLink>
+                      <Tag spec={named(CLAIM_BASES, claim.basis)} />
+                      {claim.pressed && (
+                        <Tag
+                          spec={{
+                            label: 'Pressed',
+                            icon: Gavel,
+                            tone: 'danger',
+                          }}
+                        />
+                      )}
+                    </div>
+                    <StatBar
+                      label={`Strength, held since epoch ${claim.since_epoch}`}
+                      value={claim.strength}
+                      max={PERCENT}
+                      tone={claim.pressed ? 'destructive' : 'default'}
+                    />
+                  </li>
+                )}
+              </Paged>
             </ul>
           </div>
         )}
@@ -1078,14 +1089,16 @@ function LawCode({ realm, blocked }: { realm: Realm; blocked: string | null }) {
               </Badge>
             </div>
             <ul className='flex min-w-0 flex-col gap-2'>
-              {laws.map((law) => (
-                <LawCard
-                  key={`${law.id}-${JSON.stringify(law.params)}-${law.enforcement}`}
-                  law={law}
-                  spec={specs[law.kind]}
-                  blocked={blocked}
-                />
-              ))}
+              <Paged items={laws} as='li'>
+                {(law) => (
+                  <LawCard
+                    key={`${law.id}-${JSON.stringify(law.params)}-${law.enforcement}`}
+                    law={law}
+                    spec={specs[law.kind]}
+                    blocked={blocked}
+                  />
+                )}
+              </Paged>
             </ul>
           </div>
         )

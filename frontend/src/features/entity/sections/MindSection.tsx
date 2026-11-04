@@ -17,6 +17,7 @@ import {
   Section,
   StatBar,
   ValueRadar,
+  Paged,
 } from '@/components/domain'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
 import { Muted, Text } from '@/components/typography'
@@ -223,9 +224,9 @@ function Values({ mind }: { mind: Mind }) {
           referenceLabel={mind.reference?.name ?? null}
         />
         <div className='flex min-w-0 flex-col gap-2'>
-          {ordered.map((item) => (
-            <ValueBar key={item.axis} item={item} />
-          ))}
+          <Paged items={ordered}>
+            {(item) => <ValueBar key={item.axis} item={item} />}
+          </Paged>
         </div>
       </div>
     </MindCard>
@@ -258,14 +259,16 @@ function Temperament({
         <Muted variant='caption'>No marked traits yet.</Muted>
       ) : (
         <div className='flex min-w-0 flex-wrap gap-1.5'>
-          {mind.traits.map((trait) => (
-            <TraitChip
-              key={trait.trait}
-              trait={trait}
-              blocked={blocked ?? (remove.isPending ? WORKING : null)}
-              onRemove={() => remove.mutate(trait.trait)}
-            />
-          ))}
+          <Paged items={mind.traits}>
+            {(trait) => (
+              <TraitChip
+                key={trait.trait}
+                trait={trait}
+                blocked={blocked ?? (remove.isPending ? WORKING : null)}
+                onRemove={() => remove.mutate(trait.trait)}
+              />
+            )}
+          </Paged>
         </div>
       )}
     </MindCard>

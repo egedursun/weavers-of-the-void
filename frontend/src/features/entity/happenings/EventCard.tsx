@@ -30,6 +30,7 @@ import {
   ShowMore,
   StatBar,
   useShowMore,
+  Paged,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
@@ -88,39 +89,41 @@ function PhaseTrack({ view }: { view: EventView }) {
       aria-label='Phases'
       className='grid min-w-0 auto-cols-fr grid-flow-col gap-2'
     >
-      {view.steps.map((step) => {
-        const spec = PHASE_SPEC[step.phase]
-        return (
-          <li
-            key={step.phase}
-            className={cn(
-              'flex min-w-0 items-center gap-2 rounded-lg border p-2',
-              step.current && 'border-primary bg-primary/5',
-              !step.reached && 'opacity-50'
-            )}
-          >
-            <Medallion
-              icon={spec.icon}
-              tone={step.reached ? spec.tone : 'muted'}
-              size='sm'
-            />
-            <div className='flex min-w-0 flex-col'>
-              <Text as='span' weight='medium' truncate>
-                {spec.label}
-              </Text>
-              <Muted as='span' variant='caption' truncate>
-                {step.current
-                  ? `Now, since age ${step.since_epoch ?? view.phase_epoch}`
-                  : step.reached
-                    ? step.since_epoch !== null
-                      ? `Age ${step.since_epoch}`
-                      : 'Passed'
-                    : 'Not reached'}
-              </Muted>
-            </div>
-          </li>
-        )
-      })}
+      <Paged items={view.steps} as='li'>
+        {(step) => {
+          const spec = PHASE_SPEC[step.phase]
+          return (
+            <li
+              key={step.phase}
+              className={cn(
+                'flex min-w-0 items-center gap-2 rounded-lg border p-2',
+                step.current && 'border-primary bg-primary/5',
+                !step.reached && 'opacity-50'
+              )}
+            >
+              <Medallion
+                icon={spec.icon}
+                tone={step.reached ? spec.tone : 'muted'}
+                size='sm'
+              />
+              <div className='flex min-w-0 flex-col'>
+                <Text as='span' weight='medium' truncate>
+                  {spec.label}
+                </Text>
+                <Muted as='span' variant='caption' truncate>
+                  {step.current
+                    ? `Now, since age ${step.since_epoch ?? view.phase_epoch}`
+                    : step.reached
+                      ? step.since_epoch !== null
+                        ? `Age ${step.since_epoch}`
+                        : 'Passed'
+                      : 'Not reached'}
+                </Muted>
+              </div>
+            </li>
+          )
+        }}
+      </Paged>
     </ol>
   )
 }
@@ -237,32 +240,37 @@ function FootprintPanel({
       hint='The lands it touched'
     >
       <ul className='flex min-w-0 flex-col gap-1.5'>
-        {view.footprint.map((item) => (
-          <li
-            key={item.region_id}
-            className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
-          >
-            <MapPin aria-hidden='true' className='size-icon-xs text-warning' />
-            <EntityLink kind='entity' id={String(item.region_id)}>
-              {item.region || `#${item.region_id}`}
-            </EntityLink>
-            <Muted as='span' variant='caption' className='ms-auto'>
-              {`Since age ${item.joined_epoch}`}
-            </Muted>
-            <Button
-              size='icon'
-              variant='ghost'
-              aria-label={`Remove ${item.region}`}
-              disabled={busy !== null}
-              disabledReason={busy ?? undefined}
-              onClick={() =>
-                reach.mutate({ id: item.region_id, present: false })
-              }
+        <Paged items={view.footprint} as='li'>
+          {(item) => (
+            <li
+              key={item.region_id}
+              className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-2'
             >
-              <Minus />
-            </Button>
-          </li>
-        ))}
+              <MapPin
+                aria-hidden='true'
+                className='size-icon-xs text-warning'
+              />
+              <EntityLink kind='entity' id={String(item.region_id)}>
+                {item.region || `#${item.region_id}`}
+              </EntityLink>
+              <Muted as='span' variant='caption' className='ms-auto'>
+                {`Since age ${item.joined_epoch}`}
+              </Muted>
+              <Button
+                size='icon'
+                variant='ghost'
+                aria-label={`Remove ${item.region}`}
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() =>
+                  reach.mutate({ id: item.region_id, present: false })
+                }
+              >
+                <Minus />
+              </Button>
+            </li>
+          )}
+        </Paged>
       </ul>
       <div className='flex min-w-0 items-center gap-2'>
         <div className='min-w-0 flex-1'>

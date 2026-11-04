@@ -4,7 +4,7 @@ import { unwrap } from '@/api/errors'
 import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { EntityLink } from '@/components/domain'
+import { EntityLink, Paged } from '@/components/domain'
 import { DomainIcon } from '@/components/domain/DomainIcon'
 import { RecordNavLink } from '@/components/domain/RecordNavLink'
 import { Label, Muted, PageTitle } from '@/components/typography'
@@ -202,13 +202,15 @@ export function EntityHero({
           {detail.patron && (
             <Badge variant='outline'>{`Worships ${detail.patron.name}`}</Badge>
           )}
-          {detail.anchored_sons.map((son) => (
-            <Badge key={son.id} variant='outline' asChild>
-              <EntityLink kind='son' id={String(son.id)}>
-                {`${son.name}'s anchor`}
-              </EntityLink>
-            </Badge>
-          ))}
+          <Paged items={detail.anchored_sons}>
+            {(son) => (
+              <Badge key={son.id} variant='outline' asChild>
+                <EntityLink kind='son' id={String(son.id)}>
+                  {`${son.name}'s anchor`}
+                </EntityLink>
+              </Badge>
+            )}
+          </Paged>
           <TagChips detail={detail} />
         </div>
       </div>

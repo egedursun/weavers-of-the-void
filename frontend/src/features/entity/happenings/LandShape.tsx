@@ -24,6 +24,7 @@ import {
   Section,
   Timeline,
   TimelineItem,
+  Paged,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -148,36 +149,40 @@ function Shifts({ data }: { data: LandShape }) {
         <Muted>No river has left its bed here.</Muted>
       ) : (
         <Timeline label='River courses'>
-          {data.shifts.map((item, index) => {
-            const cause = CAUSE_SPEC[item.cause]
-            return (
-              <TimelineItem
-                key={item.id}
-                icon={cause.icon}
-                tone='primary'
-                title={`${RIVER_SPEC[item.river_class].label}: ${item.from_region} to ${item.to_region}`}
-                timestamp={
-                  item.year !== null ? `Year ${item.year}` : `Age ${item.epoch}`
-                }
-                last={index === data.shifts.length - 1}
-                framed
-              >
-                <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-                  <Badge size='sm' variant='secondary'>
-                    <cause.icon />
-                    {cause.label}
-                  </Badge>
-                  <EntityLink
-                    kind='entity'
-                    id={String(item.to_region_id)}
-                    showIcon
-                  >
-                    {item.to_region}
-                  </EntityLink>
-                </div>
-              </TimelineItem>
-            )
-          })}
+          <Paged items={data.shifts} as='li'>
+            {(item, index) => {
+              const cause = CAUSE_SPEC[item.cause]
+              return (
+                <TimelineItem
+                  key={item.id}
+                  icon={cause.icon}
+                  tone='primary'
+                  title={`${RIVER_SPEC[item.river_class].label}: ${item.from_region} to ${item.to_region}`}
+                  timestamp={
+                    item.year !== null
+                      ? `Year ${item.year}`
+                      : `Age ${item.epoch}`
+                  }
+                  last={index === data.shifts.length - 1}
+                  framed
+                >
+                  <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+                    <Badge size='sm' variant='secondary'>
+                      <cause.icon />
+                      {cause.label}
+                    </Badge>
+                    <EntityLink
+                      kind='entity'
+                      id={String(item.to_region_id)}
+                      showIcon
+                    >
+                      {item.to_region}
+                    </EntityLink>
+                  </div>
+                </TimelineItem>
+              )
+            }}
+          </Paged>
         </Timeline>
       )}
     </Panel>

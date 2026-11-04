@@ -11,7 +11,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
-import { EmptyState, EntityLink } from '@/components/domain'
+import { EmptyState, EntityLink, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { EntityPicker } from './controls'
@@ -139,34 +139,36 @@ export function PeaceTreaty({
         />
       ) : (
         <ul className='flex min-w-0 flex-col gap-1.5'>
-          {signed.map((term) => (
-            <li
-              key={term.id}
-              className='flex min-w-0 flex-wrap items-center gap-1.5 rounded-md border p-2'
-            >
-              <Tag item={nameOf(TERM, term.kind)} />
-              {termParamText(term.kind, term.params, names) && (
-                <Text as='span' variant='caption' weight='medium'>
-                  {termParamText(term.kind, term.params, names)}
-                </Text>
-              )}
-              {term.beneficiary && (
-                <Text as='span' variant='caption'>
-                  for {term.beneficiary.name}
-                </Text>
-              )}
-              {term.treaty && (
-                <EntityLink kind='entity' id={String(term.treaty.id)}>
-                  {term.treaty.name}
-                </EntityLink>
-              )}
-              {term.note && (
-                <Muted as='span' variant='caption' truncate>
-                  {term.note}
-                </Muted>
-              )}
-            </li>
-          ))}
+          <Paged items={signed} as='li'>
+            {(term) => (
+              <li
+                key={term.id}
+                className='flex min-w-0 flex-wrap items-center gap-1.5 rounded-md border p-2'
+              >
+                <Tag item={nameOf(TERM, term.kind)} />
+                {termParamText(term.kind, term.params, names) && (
+                  <Text as='span' variant='caption' weight='medium'>
+                    {termParamText(term.kind, term.params, names)}
+                  </Text>
+                )}
+                {term.beneficiary && (
+                  <Text as='span' variant='caption'>
+                    for {term.beneficiary.name}
+                  </Text>
+                )}
+                {term.treaty && (
+                  <EntityLink kind='entity' id={String(term.treaty.id)}>
+                    {term.treaty.name}
+                  </EntityLink>
+                )}
+                {term.note && (
+                  <Muted as='span' variant='caption' truncate>
+                    {term.note}
+                  </Muted>
+                )}
+              </li>
+            )}
+          </Paged>
         </ul>
       )}
       <Adjust

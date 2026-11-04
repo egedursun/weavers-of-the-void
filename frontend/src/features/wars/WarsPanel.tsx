@@ -1,6 +1,6 @@
 import { Swords } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState } from '@/components/domain'
+import { EmptyState, Paged } from '@/components/domain'
 import { PageControls } from '@/components/domain/PageControls'
 import { Text } from '@/components/typography'
 import { WarCard } from './WarCard'
@@ -36,9 +36,9 @@ export function WarsPanel({
     )
   return (
     <div className='flex min-w-0 flex-col gap-4'>
-      {data.items.map((war) => (
-        <WarCard key={war.id} war={war} />
-      ))}
+      <Paged items={data.items}>
+        {(war) => <WarCard key={war.id} war={war} />}
+      </Paged>
       <PageControls
         offset={offset}
         limit={WAR_PAGE_SIZE}

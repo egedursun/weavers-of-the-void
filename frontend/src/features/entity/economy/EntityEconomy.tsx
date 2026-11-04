@@ -41,6 +41,7 @@ import {
   Medallion,
   MiniStat,
   Section,
+  Paged,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -622,31 +623,35 @@ export function StockTable({
       ) : (
         <>
           <div className='grid min-w-0 grid-cols-2 gap-2 @xl/econ:grid-cols-4'>
-            {totals.map(({ family, lots: held }) => {
-              const spec = GOODS_FAMILY[family]
-              return (
-                <MiniStat
-                  key={family}
-                  icon={spec.icon}
-                  tone={held.length > 0 ? spec.tone : 'muted'}
-                  label={spec.label}
-                  value={formatInteger(
-                    held.reduce((sum, lot) => sum + lot.quantity, 0)
-                  )}
-                  hint={`${spec.note}: ${held.length} ${held.length === 1 ? 'lot' : 'lots'} in store`}
-                />
-              )
-            })}
+            <Paged items={totals}>
+              {({ family, lots: held }) => {
+                const spec = GOODS_FAMILY[family]
+                return (
+                  <MiniStat
+                    key={family}
+                    icon={spec.icon}
+                    tone={held.length > 0 ? spec.tone : 'muted'}
+                    label={spec.label}
+                    value={formatInteger(
+                      held.reduce((sum, lot) => sum + lot.quantity, 0)
+                    )}
+                    hint={`${spec.note}: ${held.length} ${held.length === 1 ? 'lot' : 'lots'} in store`}
+                  />
+                )
+              }}
+            </Paged>
           </div>
           <ul className='grid min-w-0 grid-cols-1 gap-2 @sm/econ:grid-cols-2 @3xl/econ:grid-cols-3'>
-            {lots.map((lot) => (
-              <GoodTile
-                key={lot.id}
-                communityId={economy.community_id}
-                lot={lot}
-                busy={busy}
-              />
-            ))}
+            <Paged items={lots} as='li'>
+              {(lot) => (
+                <GoodTile
+                  key={lot.id}
+                  communityId={economy.community_id}
+                  lot={lot}
+                  busy={busy}
+                />
+              )}
+            </Paged>
           </ul>
         </>
       )}
@@ -1129,15 +1134,17 @@ export function ProductionChain({
         <>
           {active.length > 0 && (
             <ul className='grid min-w-0 grid-cols-1 gap-2 @3xl/econ:grid-cols-2'>
-              {active.map((step) => (
-                <StepRow
-                  key={step.key}
-                  step={step}
-                  workshopLevel={
-                    step.workshop ? (levels.get(step.workshop) ?? null) : null
-                  }
-                />
-              ))}
+              <Paged items={active} as='li'>
+                {(step) => (
+                  <StepRow
+                    key={step.key}
+                    step={step}
+                    workshopLevel={
+                      step.workshop ? (levels.get(step.workshop) ?? null) : null
+                    }
+                  />
+                )}
+              </Paged>
             </ul>
           )}
           {idle.length > 0 && (
@@ -1152,15 +1159,19 @@ export function ProductionChain({
                 </Text>
               </div>
               <ul className='grid min-w-0 grid-cols-1 gap-2 @xl/econ:grid-cols-2'>
-                {idle.map((step) => (
-                  <StepRow
-                    key={step.key}
-                    step={step}
-                    workshopLevel={
-                      step.workshop ? (levels.get(step.workshop) ?? null) : null
-                    }
-                  />
-                ))}
+                <Paged items={idle} as='li'>
+                  {(step) => (
+                    <StepRow
+                      key={step.key}
+                      step={step}
+                      workshopLevel={
+                        step.workshop
+                          ? (levels.get(step.workshop) ?? null)
+                          : null
+                      }
+                    />
+                  )}
+                </Paged>
               </ul>
             </div>
           )}
@@ -1179,16 +1190,18 @@ export function ProductionChain({
         />
       ) : (
         <ul className='grid min-w-0 grid-cols-1 gap-2 @sm/econ:grid-cols-2 @xl/econ:grid-cols-3'>
-          {workshops.map((row) => (
-            <WorkshopCard
-              key={row.kind}
-              communityId={economy.community_id}
-              worldId={worldId}
-              row={row}
-              designs={designs}
-              busy={busy}
-            />
-          ))}
+          <Paged items={workshops} as='li'>
+            {(row) => (
+              <WorkshopCard
+                key={row.kind}
+                communityId={economy.community_id}
+                worldId={worldId}
+                row={row}
+                designs={designs}
+                busy={busy}
+              />
+            )}
+          </Paged>
         </ul>
       )}
       <WorkshopControls economy={economy} busy={busy} />

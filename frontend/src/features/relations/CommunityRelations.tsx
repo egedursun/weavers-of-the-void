@@ -5,7 +5,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState, EntityLink, FormRow, Section } from '@/components/domain'
+import {
+  EmptyState,
+  EntityLink,
+  FormRow,
+  Section,
+  Paged,
+} from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted, Text } from '@/components/typography'
 import { type EntityContext } from '@/features/entity/actions/context'
@@ -176,12 +182,14 @@ function PairStanding({
         <Muted variant='caption'>{`${data.first.name} and ${data.second.name} remember nothing of each other yet.`}</Muted>
       )}
       <div className='@container/mind flex min-w-0 flex-col gap-2'>
-        {data.opinions.map((opinion) => (
-          <OpinionBreakdown
-            key={opinion.holder?.id ?? opinion.value}
-            opinion={opinion}
-          />
-        ))}
+        <Paged items={data.opinions}>
+          {(opinion) => (
+            <OpinionBreakdown
+              key={opinion.holder?.id ?? opinion.value}
+              opinion={opinion}
+            />
+          )}
+        </Paged>
       </div>
     </div>
   )
@@ -350,14 +358,16 @@ export function CommunityRelations({
           />
         ) : (
           <ul aria-label='Relations' className='flex min-w-0 flex-col'>
-            {query.data.relations.map((entry) => (
-              <RelationRow
-                key={entry.other.id}
-                entry={entry}
-                selfId={ctx.entity.id}
-                readOnlyReason={readOnlyReason}
-              />
-            ))}
+            <Paged items={query.data.relations} as='li'>
+              {(entry) => (
+                <RelationRow
+                  key={entry.other.id}
+                  entry={entry}
+                  selfId={ctx.entity.id}
+                  readOnlyReason={readOnlyReason}
+                />
+              )}
+            </Paged>
           </ul>
         ))}
       <NewRelation ctx={ctx} readOnlyReason={readOnlyReason} />

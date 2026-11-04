@@ -3,7 +3,7 @@ import { Star, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ConfirmDialog } from '@/components/domain'
+import { ConfirmDialog, Paged } from '@/components/domain'
 import { type ImageRecord, deleteImage, setCover, useImageAction } from './api'
 import { mediaUrl } from './media'
 
@@ -40,74 +40,76 @@ export function Gallery({
         data-domain='image-gallery'
         className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3'
       >
-        {images.map((image, index) => (
-          <li
-            key={image.id}
-            className='group relative min-w-0 overflow-hidden rounded-md border bg-muted'
-          >
-            <a
-              href={mediaUrl(image.file_name) ?? undefined}
-              onClick={(event) => {
-                event.preventDefault()
-                onOpen(index)
-              }}
-              aria-label={
-                captionOf?.(image) ??
-                image.caption ??
-                `${title}, image ${index + 1}`
-              }
-              className='block outline-none focus-visible:ring-2 focus-visible:ring-ring'
+        <Paged items={images} as='li'>
+          {(image, index) => (
+            <li
+              key={image.id}
+              className='group relative min-w-0 overflow-hidden rounded-md border bg-muted'
             >
-              <img
-                src={mediaUrl(image.file_name, 320) ?? undefined}
-                alt={image.caption ?? title}
-                loading='lazy'
-                className={cn(
-                  'aspect-square w-full object-cover transition-transform group-hover:scale-105',
-                  (veiled || veiledOf?.(image)) && 'blur-lg'
-                )}
-              />
-            </a>
-            {image.is_cover && (
-              <Badge
-                size='sm'
-                className='pointer-events-none absolute top-2 left-2'
+              <a
+                href={mediaUrl(image.file_name) ?? undefined}
+                onClick={(event) => {
+                  event.preventDefault()
+                  onOpen(index)
+                }}
+                aria-label={
+                  captionOf?.(image) ??
+                  image.caption ??
+                  `${title}, image ${index + 1}`
+                }
+                className='block outline-none focus-visible:ring-2 focus-visible:ring-ring'
               >
-                <Star />
-                Cover
-              </Badge>
-            )}
-            {manage && (
-              <div className='absolute right-2 bottom-2 flex gap-1 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-within:opacity-100'>
-                {!image.is_cover && (
+                <img
+                  src={mediaUrl(image.file_name, 320) ?? undefined}
+                  alt={image.caption ?? title}
+                  loading='lazy'
+                  className={cn(
+                    'aspect-square w-full object-cover transition-transform group-hover:scale-105',
+                    (veiled || veiledOf?.(image)) && 'blur-lg'
+                  )}
+                />
+              </a>
+              {image.is_cover && (
+                <Badge
+                  size='sm'
+                  className='pointer-events-none absolute top-2 left-2'
+                >
+                  <Star />
+                  Cover
+                </Badge>
+              )}
+              {manage && (
+                <div className='absolute right-2 bottom-2 flex gap-1 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-within:opacity-100'>
+                  {!image.is_cover && (
+                    <Button
+                      variant='secondary'
+                      size='icon-sm'
+                      aria-label='Make this the cover'
+                      title='Make this the cover'
+                      disabled={blocked !== null}
+                      disabledReason={blocked ?? undefined}
+                      onClick={() => cover.mutate(image.id)}
+                    >
+                      <Star />
+                    </Button>
+                  )}
                   <Button
                     variant='secondary'
                     size='icon-sm'
-                    aria-label='Make this the cover'
-                    title='Make this the cover'
+                    className='hover:bg-destructive hover:text-destructive-foreground'
+                    aria-label='Delete this image'
+                    title='Delete this image'
                     disabled={blocked !== null}
                     disabledReason={blocked ?? undefined}
-                    onClick={() => cover.mutate(image.id)}
+                    onClick={() => setDoomed(image)}
                   >
-                    <Star />
+                    <Trash2 />
                   </Button>
-                )}
-                <Button
-                  variant='secondary'
-                  size='icon-sm'
-                  className='hover:bg-destructive hover:text-destructive-foreground'
-                  aria-label='Delete this image'
-                  title='Delete this image'
-                  disabled={blocked !== null}
-                  disabledReason={blocked ?? undefined}
-                  onClick={() => setDoomed(image)}
-                >
-                  <Trash2 />
-                </Button>
-              </div>
-            )}
-          </li>
-        ))}
+                </div>
+              )}
+            </li>
+          )}
+        </Paged>
       </ul>
       <ConfirmDialog
         open={doomed !== null}

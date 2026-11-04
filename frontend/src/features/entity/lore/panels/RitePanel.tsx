@@ -16,7 +16,13 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { KpiTile, StatBar, Timeline, TimelineItem } from '@/components/domain'
+import {
+  KpiTile,
+  StatBar,
+  Timeline,
+  TimelineItem,
+  Paged,
+} from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -154,24 +160,26 @@ export function RitePanel({
               data-surface='RiteEffects'
               className='flex min-w-0 flex-col gap-2'
             >
-              {card.effects.map((row) => {
-                const spec = lookup(EFFECTS, row.effect)
-                return (
-                  <li key={row.effect}>
-                    <StatBar
-                      label={
-                        row.detail
-                          ? `${spec.label} · ${row.detail}`
-                          : spec.label
-                      }
-                      value={row.magnitude}
-                      max={MAX_POWER}
-                      icon={spec.icon}
-                      tone='verdigris'
-                    />
-                  </li>
-                )
-              })}
+              <Paged items={card.effects} as='li'>
+                {(row) => {
+                  const spec = lookup(EFFECTS, row.effect)
+                  return (
+                    <li key={row.effect}>
+                      <StatBar
+                        label={
+                          row.detail
+                            ? `${spec.label} · ${row.detail}`
+                            : spec.label
+                        }
+                        value={row.magnitude}
+                        max={MAX_POWER}
+                        icon={spec.icon}
+                        tone='verdigris'
+                      />
+                    </li>
+                  )
+                }}
+              </Paged>
             </ul>
           )}
         </LoreCard>
@@ -244,31 +252,35 @@ export function RitePanel({
           ) : (
             <div data-surface='Castings'>
               <Timeline label='Castings'>
-                {card.castings.map((row, index) => {
-                  const spec = lookup(EFFECTS, row.effect)
-                  return (
-                    <TimelineItem
-                      key={row.id}
-                      icon={row.succeeded ? spec.icon : TriangleAlert}
-                      tone={row.succeeded ? 'success' : 'destructive'}
-                      title={
-                        row.succeeded
-                          ? `${spec.label} took hold`
-                          : `${spec.label} failed`
-                      }
-                      timestamp={`Epoch ${row.epoch}`}
-                      last={index === card.castings.length - 1}
-                    >
-                      <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-                        <RefChip icon={User} label='By' item={row.caster} />
-                        <RefChip icon={Target} label='On' item={row.target} />
-                        {row.backlash && (
-                          <NamedChip spec={lookup(BACKLASHES, row.backlash)} />
-                        )}
-                      </div>
-                    </TimelineItem>
-                  )
-                })}
+                <Paged items={card.castings} as='li'>
+                  {(row, index) => {
+                    const spec = lookup(EFFECTS, row.effect)
+                    return (
+                      <TimelineItem
+                        key={row.id}
+                        icon={row.succeeded ? spec.icon : TriangleAlert}
+                        tone={row.succeeded ? 'success' : 'destructive'}
+                        title={
+                          row.succeeded
+                            ? `${spec.label} took hold`
+                            : `${spec.label} failed`
+                        }
+                        timestamp={`Epoch ${row.epoch}`}
+                        last={index === card.castings.length - 1}
+                      >
+                        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+                          <RefChip icon={User} label='By' item={row.caster} />
+                          <RefChip icon={Target} label='On' item={row.target} />
+                          {row.backlash && (
+                            <NamedChip
+                              spec={lookup(BACKLASHES, row.backlash)}
+                            />
+                          )}
+                        </div>
+                      </TimelineItem>
+                    )
+                  }}
+                </Paged>
               </Timeline>
             </div>
           )}
@@ -308,34 +320,36 @@ export function RitePanel({
         <AdjustBlock title='What it does' icon={Sparkles}>
           {card.effects.length > 0 && (
             <RowEditors>
-              {card.effects.map((row) => {
-                const spec = lookup(EFFECTS, row.effect)
-                return (
-                  <RowEditor
-                    key={row.effect}
-                    label={`${spec.label} magnitude`}
-                    icon={spec.icon}
-                    value={row.magnitude}
-                    blocked={busy}
-                    onSave={(magnitude) =>
-                      shape.mutate({ effect: row.effect, magnitude })
-                    }
-                  >
-                    <Button
-                      size='icon'
-                      variant='ghost'
-                      aria-label={`Remove ${spec.label}`}
-                      disabled={busy !== null}
-                      disabledReason={busy ?? undefined}
-                      onClick={() =>
-                        shape.mutate({ effect: row.effect, magnitude: 0 })
+              <Paged items={card.effects}>
+                {(row) => {
+                  const spec = lookup(EFFECTS, row.effect)
+                  return (
+                    <RowEditor
+                      key={row.effect}
+                      label={`${spec.label} magnitude`}
+                      icon={spec.icon}
+                      value={row.magnitude}
+                      blocked={busy}
+                      onSave={(magnitude) =>
+                        shape.mutate({ effect: row.effect, magnitude })
                       }
                     >
-                      <Trash2 />
-                    </Button>
-                  </RowEditor>
-                )
-              })}
+                      <Button
+                        size='icon'
+                        variant='ghost'
+                        aria-label={`Remove ${spec.label}`}
+                        disabled={busy !== null}
+                        disabledReason={busy ?? undefined}
+                        onClick={() =>
+                          shape.mutate({ effect: row.effect, magnitude: 0 })
+                        }
+                      >
+                        <Trash2 />
+                      </Button>
+                    </RowEditor>
+                  )
+                }}
+              </Paged>
             </RowEditors>
           )}
           <div className='flex min-w-0 flex-wrap items-end gap-2'>

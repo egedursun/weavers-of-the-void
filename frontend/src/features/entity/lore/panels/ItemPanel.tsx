@@ -25,6 +25,7 @@ import {
   StatBar,
   Timeline,
   TimelineItem,
+  Paged,
 } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -183,20 +184,22 @@ export function ItemPanel({
               data-surface='Enchantments'
               className='flex min-w-0 flex-col gap-2'
             >
-              {card.enchantments.map((row) => {
-                const spec = lookup(EFFECTS, row.effect)
-                return (
-                  <li key={row.effect}>
-                    <StatBar
-                      label={spec.label}
-                      value={row.strength}
-                      max={PERCENT}
-                      icon={spec.icon}
-                      tone='verdigris'
-                    />
-                  </li>
-                )
-              })}
+              <Paged items={card.enchantments} as='li'>
+                {(row) => {
+                  const spec = lookup(EFFECTS, row.effect)
+                  return (
+                    <li key={row.effect}>
+                      <StatBar
+                        label={spec.label}
+                        value={row.strength}
+                        max={PERCENT}
+                        icon={spec.icon}
+                        tone='verdigris'
+                      />
+                    </li>
+                  )
+                }}
+              </Paged>
             </ul>
           )}
         </LoreCard>
@@ -206,11 +209,13 @@ export function ItemPanel({
               data-surface='BookContents'
               className='flex min-w-0 flex-wrap gap-1.5'
             >
-              {card.contents.map((item) => (
-                <li key={item.id}>
-                  <RefChip icon={ScrollText} label='' item={item} />
-                </li>
-              ))}
+              <Paged items={card.contents} as='li'>
+                {(item) => (
+                  <li key={item.id}>
+                    <RefChip icon={ScrollText} label='' item={item} />
+                  </li>
+                )}
+              </Paged>
             </ul>
           </LoreCard>
         )}
@@ -226,38 +231,44 @@ export function ItemPanel({
           ) : (
             <div data-surface='ItemHistory'>
               <Timeline label='Item history'>
-                {card.history.map((row, index) => {
-                  const spec = lookup(DEEDS, row.deed)
-                  return (
-                    <TimelineItem
-                      key={`${row.epoch}.${index}`}
-                      icon={spec.icon}
-                      tone={
-                        spec.tone === 'danger'
-                          ? 'destructive'
-                          : spec.tone === 'gold'
-                            ? 'primary'
-                            : spec.tone === 'success'
-                              ? 'success'
-                              : spec.tone === 'warning'
-                                ? 'warning'
-                                : 'default'
-                      }
-                      title={spec.label}
-                      timestamp={`Epoch ${row.epoch}`}
-                      last={index === card.history.length - 1}
-                    >
-                      <div className='flex min-w-0 flex-col gap-1'>
-                        {row.actor && (
-                          <div>
-                            <RefChip icon={User} label='By' item={row.actor} />
-                          </div>
-                        )}
-                        {row.note && <Muted>{row.note}</Muted>}
-                      </div>
-                    </TimelineItem>
-                  )
-                })}
+                <Paged items={card.history} as='li'>
+                  {(row, index) => {
+                    const spec = lookup(DEEDS, row.deed)
+                    return (
+                      <TimelineItem
+                        key={`${row.epoch}.${index}`}
+                        icon={spec.icon}
+                        tone={
+                          spec.tone === 'danger'
+                            ? 'destructive'
+                            : spec.tone === 'gold'
+                              ? 'primary'
+                              : spec.tone === 'success'
+                                ? 'success'
+                                : spec.tone === 'warning'
+                                  ? 'warning'
+                                  : 'default'
+                        }
+                        title={spec.label}
+                        timestamp={`Epoch ${row.epoch}`}
+                        last={index === card.history.length - 1}
+                      >
+                        <div className='flex min-w-0 flex-col gap-1'>
+                          {row.actor && (
+                            <div>
+                              <RefChip
+                                icon={User}
+                                label='By'
+                                item={row.actor}
+                              />
+                            </div>
+                          )}
+                          {row.note && <Muted>{row.note}</Muted>}
+                        </div>
+                      </TimelineItem>
+                    )
+                  }}
+                </Paged>
               </Timeline>
             </div>
           )}
@@ -293,22 +304,24 @@ export function ItemPanel({
         <AdjustBlock title='Enchantments' icon={Sparkles}>
           {card.enchantments.length > 0 && (
             <RowEditors>
-              {card.enchantments.map((row) => {
-                const spec = lookup(EFFECTS, row.effect)
-                return (
-                  <RowEditor
-                    key={row.effect}
-                    label={`${spec.label} strength`}
-                    icon={spec.icon}
-                    value={row.strength}
-                    max={PERCENT}
-                    blocked={busy}
-                    onSave={(strength) =>
-                      enchant.mutate({ effect: row.effect, strength })
-                    }
-                  />
-                )
-              })}
+              <Paged items={card.enchantments}>
+                {(row) => {
+                  const spec = lookup(EFFECTS, row.effect)
+                  return (
+                    <RowEditor
+                      key={row.effect}
+                      label={`${spec.label} strength`}
+                      icon={spec.icon}
+                      value={row.strength}
+                      max={PERCENT}
+                      blocked={busy}
+                      onSave={(strength) =>
+                        enchant.mutate({ effect: row.effect, strength })
+                      }
+                    />
+                  )
+                }}
+              </Paged>
             </RowEditors>
           )}
           <div className='flex min-w-0 flex-wrap items-end gap-2'>

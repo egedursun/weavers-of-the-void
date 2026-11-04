@@ -13,7 +13,7 @@ import {
   Weight,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { EmptyState, Medallion, StatBar } from '@/components/domain'
+import { EmptyState, Medallion, StatBar, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useUnitKinds } from './api'
 import { Held, RecordButtons, TextField } from './controls'
@@ -373,14 +373,16 @@ export function UnitDesigns({
           />
         ) : (
           <ul className={cardGrid(rows.length)}>
-            {rows.map((row) => (
-              <DesignCard
-                key={row.id}
-                row={row}
-                ownerId={ownerId}
-                blocked={blocked}
-              />
-            ))}
+            <Paged items={rows} as='li'>
+              {(row) => (
+                <DesignCard
+                  key={row.id}
+                  row={row}
+                  ownerId={ownerId}
+                  blocked={blocked}
+                />
+              )}
+            </Paged>
           </ul>
         )}
         <NewDesign ownerId={ownerId} blocked={blocked} />

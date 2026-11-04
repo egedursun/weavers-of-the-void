@@ -3,7 +3,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EntityLink, Section, StatBar } from '@/components/domain'
+import { EntityLink, Section, StatBar, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { type SonRecord } from '@/features/pantheon/api'
@@ -91,19 +91,21 @@ export function DeadSonPanel({ son }: { son: SonRecord }) {
             <div className='flex min-w-0 flex-col gap-1.5'>
               <Label variant='overline'>Resurrection cults</Label>
               <ul className='flex min-w-0 flex-col gap-1.5'>
-                {rite.data.orders.map((order) => (
-                  <li
-                    key={order.id}
-                    className='flex min-w-0 items-baseline gap-2'
-                  >
-                    <EntityLink kind='entity' id={String(order.id)}>
-                      {order.name}
-                    </EntityLink>
-                    <Muted as='span' variant='caption'>
-                      {`${order.followers} followers · devotion ${order.devotion}`}
-                    </Muted>
-                  </li>
-                ))}
+                <Paged items={rite.data.orders} as='li'>
+                  {(order) => (
+                    <li
+                      key={order.id}
+                      className='flex min-w-0 items-baseline gap-2'
+                    >
+                      <EntityLink kind='entity' id={String(order.id)}>
+                        {order.name}
+                      </EntityLink>
+                      <Muted as='span' variant='caption'>
+                        {`${order.followers} followers · devotion ${order.devotion}`}
+                      </Muted>
+                    </li>
+                  )}
+                </Paged>
               </ul>
             </div>
           )}
@@ -111,13 +113,15 @@ export function DeadSonPanel({ son }: { son: SonRecord }) {
             <div className='flex min-w-0 flex-col gap-1.5'>
               <Label variant='overline'>Loyal communities</Label>
               <ul className='flex min-w-0 flex-wrap gap-x-3 gap-y-1'>
-                {rite.data.loyal_communities.map((community) => (
-                  <li key={community.id} className='min-w-0'>
-                    <EntityLink kind='entity' id={String(community.id)}>
-                      {community.name}
-                    </EntityLink>
-                  </li>
-                ))}
+                <Paged items={rite.data.loyal_communities} as='li'>
+                  {(community) => (
+                    <li key={community.id} className='min-w-0'>
+                      <EntityLink kind='entity' id={String(community.id)}>
+                        {community.name}
+                      </EntityLink>
+                    </li>
+                  )}
+                </Paged>
               </ul>
             </div>
           )}

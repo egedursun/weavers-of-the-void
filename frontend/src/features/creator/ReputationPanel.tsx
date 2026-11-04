@@ -7,6 +7,7 @@ import {
   Portrait,
   Section,
   StatBar,
+  Paged,
 } from '@/components/domain'
 import { Label } from '@/components/typography'
 import { useSons } from '@/features/pantheon/api'
@@ -91,62 +92,64 @@ export function ReputationPanel({
         />
       ) : (
         <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
-          {reputation.sons.map((son) => {
-            const view = sonOf(son.son_id)
-            return (
-              <li
-                key={son.son_id}
-                className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-2'
-              >
-                <Portrait
-                  name={son.name}
-                  src={mediaUrl(view?.cover)}
-                  size='sm'
-                  rarity={view?.son.rarity}
-                />
-                <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
-                  <div className='flex min-w-0 items-center gap-2'>
-                    <span className='min-w-0 flex-1 truncate'>
-                      <EntityLink
-                        kind='son'
-                        id={String(son.son_id)}
-                        rarity={view?.son.rarity}
-                      >
-                        {son.name}
-                      </EntityLink>
-                    </span>
-                    <Badge size='sm' variant={REPUTATION_BADGE[son.label]}>
-                      {REPUTATION_LABEL[son.label]}
-                    </Badge>
-                  </div>
-                  <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-                    <IconStat
-                      icon={Heart}
-                      tone='success'
-                      label='Love'
-                      value={son.love}
-                    />
-                    <IconStat
-                      icon={Skull}
-                      tone='danger'
-                      label='Fear'
-                      value={son.fear}
-                    />
-                    <IconStat
-                      icon={CloudFog}
-                      label='Forgotten'
-                      value={son.forgotten}
-                    />
-                    {son.unanswered > 0 && (
-                      <Badge size='sm' variant='warning'>
-                        {plural(son.unanswered, 'unanswered prayer')}
+          <Paged items={reputation.sons} as='li'>
+            {(son) => {
+              const view = sonOf(son.son_id)
+              return (
+                <li
+                  key={son.son_id}
+                  className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-2'
+                >
+                  <Portrait
+                    name={son.name}
+                    src={mediaUrl(view?.cover)}
+                    size='sm'
+                    rarity={view?.son.rarity}
+                  />
+                  <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
+                    <div className='flex min-w-0 items-center gap-2'>
+                      <span className='min-w-0 flex-1 truncate'>
+                        <EntityLink
+                          kind='son'
+                          id={String(son.son_id)}
+                          rarity={view?.son.rarity}
+                        >
+                          {son.name}
+                        </EntityLink>
+                      </span>
+                      <Badge size='sm' variant={REPUTATION_BADGE[son.label]}>
+                        {REPUTATION_LABEL[son.label]}
                       </Badge>
-                    )}
+                    </div>
+                    <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+                      <IconStat
+                        icon={Heart}
+                        tone='success'
+                        label='Love'
+                        value={son.love}
+                      />
+                      <IconStat
+                        icon={Skull}
+                        tone='danger'
+                        label='Fear'
+                        value={son.fear}
+                      />
+                      <IconStat
+                        icon={CloudFog}
+                        label='Forgotten'
+                        value={son.forgotten}
+                      />
+                      {son.unanswered > 0 && (
+                        <Badge size='sm' variant='warning'>
+                          {plural(son.unanswered, 'unanswered prayer')}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </li>
-            )
-          })}
+                </li>
+              )
+            }}
+          </Paged>
         </ul>
       )}
       <PassionsForm reputation={reputation} />
