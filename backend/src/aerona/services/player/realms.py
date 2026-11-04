@@ -126,6 +126,11 @@ class EditTreaty(Command):
     treaty_id: int
     until_epoch: int | None = None
     status: TreatyStatus | None = None
+    kind: TreatyKind | None = None
+    witness_son_id: int | None = None
+    renewals: int | None = Field(default=None, ge=0)
+    hold: list[str] = Field(default_factory=list)
+    release: list[str] = Field(default_factory=list)
 
 
 class SwearOath(Command):
@@ -266,7 +271,17 @@ async def break_treaty(scope: PlayerScope, command: BreakTreaty) -> Effect:
 
 @player_action("treaty:edit", ActionKind.EDIT_RECORD)
 async def edit_treaty(scope: PlayerScope, command: EditTreaty) -> Effect:
-    profile = await control.edit_treaty(await scope.context("treaty_edit"), command.treaty_id, until_epoch=command.until_epoch, status=command.status)
+    profile = await control.edit_treaty(
+        await scope.context("treaty_edit"),
+        command.treaty_id,
+        until_epoch=command.until_epoch,
+        status=command.status,
+        kind=command.kind,
+        witness_son_id=command.witness_son_id,
+        renewals=command.renewals,
+        hold=command.hold,
+        release=command.release,
+    )
     return Effect(f"The treaty is {profile.status.value.replace('_', ' ')}.", command.treaty_id)
 
 
@@ -488,3 +503,114 @@ async def edit_loan(scope: PlayerScope, command: EditLoan) -> Effect:
         status=command.status,
     )
     return Effect(f"The loan is {loan.status.value}.", loan.borrower_entity_id)
+
+
+class AddClause(Command):
+    treaty_id: int
+    kind: ClauseKind
+    obligor_id: int | None = None
+    beneficiary_id: int | None = None
+    params: dict[str, int | str | bool] = Field(default_factory=dict)
+
+
+class EditClause(Command):
+    clause_id: int
+    params: dict[str, int | str | bool] | None = None
+    obligor_id: int | None = None
+    beneficiary_id: int | None = None
+    release: list[str] = Field(default_factory=list)
+
+
+class ClauseTarget(Command):
+    clause_id: int
+
+
+class TreatyPartyChange(Command):
+    treaty_id: int
+    party_id: int
+    role: PartyRole = PartyRole.GUARANTOR
+
+
+class TreatyPartyTarget(Command):
+    treaty_id: int
+    party_id: int
+
+
+class CreateVassalage(Command):
+    vassal_id: int
+    overlord_id: int
+    tribute_pct: int = Field(default=10, ge=0, le=100)
+    levy_pct: int = Field(default=10, ge=0, le=100)
+
+
+class EditVassalage(Command):
+    vassal_id: int
+    tribute_pct: int | None = Field(default=None, ge=0, le=100)
+    levy_pct: int | None = Field(default=None, ge=0, le=100)
+    loyalty: int | None = Field(default=None, ge=0, le=100)
+    release: list[str] = Field(default_factory=list)
+
+
+@player_action("treaty:clause_add", ActionKind.EDIT_RECORD)
+async def add_clause(scope: PlayerScope, command: AddClause) -> Effect:
+    row = await control.add_clause(
+        await scope.context("treaty_clause_add"),
+        command.treaty_id,
+        command.kind,
+        obligor_id=command.obligor_id,
+        beneficiary_id=command.beneficiary_id,
+        params=command.params,
+    )
+    return Effect(f"A {row.kind.value.replace('_', ' ')} clause is written in.", command.treaty_id, values={"clause_id": row.id})
+
+
+@player_action("treaty:clause_edit", ActionKind.EDIT_RECORD)
+async def edit_clause(scope: PlayerScope, command: EditClause) -> Effect:
+    row = await control.edit_clause(
+        await scope.context("treaty_clause_edit"),
+        command.clause_id,
+        params=command.params,
+        obligor_id=command.obligor_id,
+        beneficiary_id=command.beneficiary_id,
+        release=command.release,
+    )
+    return Effect(f"The {row.kind.value.replace('_', ' ')} clause now reads as you set it.", row.treaty_entity_id)
+
+
+@player_action("treaty:clause_remove", ActionKind.EDIT_RECORD)
+async def remove_clause(scope: PlayerScope, command: ClauseTarget) -> Effect:
+    row = await control.remove_clause(await scope.context("treaty_clause_remove"), command.clause_id)
+    return Effect(f"The {row.kind.value.replace('_', ' ')} clause is struck out.", row.treaty_entity_id)
+
+
+@player_action("treaty:party_add", ActionKind.EDIT_RECORD)
+async def add_party(scope: PlayerScope, command: TreatyPartyChange) -> Effect:
+    row = await control.add_party(await scope.context("treaty_party_add"), command.treaty_id, command.party_id, command.role)
+    return Effect(f"A new {row.role.value} is bound by the treaty.", command.treaty_id)
+
+
+@player_action("treaty:party_remove", ActionKind.EDIT_RECORD)
+async def remove_party(scope: PlayerScope, command: TreatyPartyTarget) -> Effect:
+    await control.remove_party(await scope.context("treaty_party_remove"), command.treaty_id, command.party_id)
+    return Effect("The party is released from the treaty.", command.treaty_id)
+
+
+@player_action("vassal:create", ActionKind.CREATE_ENTITY)
+async def create_vassalage(scope: PlayerScope, command: CreateVassalage) -> Effect:
+    row = await control.create_vassalage(
+        await scope.context("vassal_create"), command.vassal_id, command.overlord_id, tribute_pct=command.tribute_pct, levy_pct=command.levy_pct
+    )
+    return Effect("The lesser realm bends the knee.", command.vassal_id, created_ids=(row.treaty_entity_id,) if row.treaty_entity_id else ())
+
+
+@player_action("vassal:edit", ActionKind.EDIT_RECORD)
+async def edit_vassalage(scope: PlayerScope, command: EditVassalage) -> Effect:
+    row = await control.edit_vassalage(
+        await scope.context("vassal_edit"),
+        command.vassal_id,
+        tribute_pct=command.tribute_pct,
+        levy_pct=command.levy_pct,
+        loyalty=command.loyalty,
+        release=command.release,
+    )
+    return Effect(f"The vassal pays {row.tribute_pct}% and sends {row.levy_pct}% of its levies; loyalty {row.loyalty}.", command.vassal_id)

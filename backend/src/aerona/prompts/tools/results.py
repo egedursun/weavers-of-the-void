@@ -215,6 +215,9 @@ class SonResult(StrEnum):
     ONE_PLACE_ONLY = "Choose only one place: star_id, parent_world_id or new_star."
     WORLD_BORN = "A new world was born: world#{{ id }} {{ name }} ({{ type }}). You are there now.{% if level %} {{ level }}{% endif %}"
     WORLD_BIRTH_FAILED = "The world could not be born"
+    TREATY_SEALED = "{{ name }} is sealed in your name."
+    NO_TREATY = "There is no such treaty in force."
+    TREATY_VOIDED = "{{ name }} broke faith at your word."
 
 
 class MortalResult(StrEnum):
@@ -260,6 +263,12 @@ class MortalResult(StrEnum):
     TAX_LIMIT = "You already set the taxes this age."
     TAX_HELD = "The tax law is held fast by a higher will; you cannot change it."
     TAX_SET = "{{ realm }} now taxes its cities at {{ rate }}%."
+    NO_TREATY_VOICE = "Only a community, or a ruler speaking for a realm, can bind itself by treaty to another."
+    TREATY_LIMIT = "You already offered a treaty this age."
+    TREATY_PROPOSED = "{{ name }} is offered to {{ target }}; it takes force when they accept."
+    NO_SUCH_TREATY = "There is no such treaty waiting on you."
+    TREATY_ACCEPTED = "{{ name }} is sealed."
+    TREATY_BROKEN = "The treaty is broken; the betrayed will remember."
     SEIZE_REPELLED = "The seizure was repelled ({{ mine }} against {{ theirs }}); {{ name }} is still held by {{ owners }}."
     CLAIM_ACTIONS = "Claiming costs {{ cost }} action(s){% if seizing %} because the resource has an owner (a seizure){% endif %}; you do not have enough left."
     SETTLE_NEAR = "You can only settle in your own or a neighbouring region."

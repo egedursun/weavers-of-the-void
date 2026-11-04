@@ -48,8 +48,12 @@ async def _note(ctx: TickContext, text: str, key: str, ids: tuple[int, ...]) -> 
     "table.memories",
     "table.minds",
     "table.nodes",
+    "table.oaths",
     "table.personality_values",
     "table.traits",
+    "table.treaty_clauses",
+    "table.treaty_parties",
+    "table.treaty_profiles",
     "table.tributes",
 )
 @writes(
@@ -68,6 +72,10 @@ async def _note(ctx: TickContext, text: str, key: str, ids: tuple[int, ...]) -> 
     "table.incident_participants",
     "table.incidents",
     "table.memories",
+    "table.mortal_repute",
+    "table.oaths",
+    "table.treaty_breaches",
+    "table.treaty_profiles",
     "table.tributes",
 )
 async def tribute(ctx: TickContext) -> None:

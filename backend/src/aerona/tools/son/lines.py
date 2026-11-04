@@ -102,6 +102,7 @@ TRANSFORM_BOND = "transformed: {reason}"
 RENAMED = "; its name is now {new}"
 DESTROY_NOTE = "Age {epoch}: {son} destroyed it; {reason}"
 TREATY_BOND = "interworld treaty ({son}): {terms}"
+SEALED = Line("tools.son.sealed", "{son} sealed {treaty}.")
 TREATY_EVENT = "interworld treaty"
 TREATY_LABELS = {"alliance": "an alliance", "trade": "trade"}
 TALK_OUTCOMES = {

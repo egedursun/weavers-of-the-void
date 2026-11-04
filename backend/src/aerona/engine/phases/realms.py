@@ -11,8 +11,9 @@ from aerona.engine.polity.law_effects import realm_coinage
 from aerona.engine.polity.laws import LawBook, backfill_kinds, ensure_profile
 from aerona.engine.polity.oaths import lapse, pledges
 from aerona.engine.polity.offices import coups, name_heir, office_effects, press_claims, purge, regency, staff, succession_line
+from aerona.engine.polity.pacts import outer_pacts
 from aerona.engine.polity.standing import administration, legitimacy, overreach, rank, realm_tier, secede, settle, stability
-from aerona.engine.polity.treaties import adopt_bonds, hostilities, keep_clauses, tribute_ledger, vassal_duties
+from aerona.engine.polity.treaties import adopt_bonds, answer_proposals, hostilities, keep_clauses, tribute_ledger, vassal_duties
 from aerona.engine.polity.wars import champions, join_wars
 from aerona.engine.primitives.knowledge import KnowledgeMap
 
@@ -217,6 +218,8 @@ async def polity_cycles(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
+    "table.oaths",
+    "table.treaty_breaches",
     "table.treaty_clauses",
     "table.treaty_parties",
     "table.treaty_profiles",
@@ -234,10 +237,11 @@ async def house_cycles(ctx: TickContext) -> None:
         if first_realm is not None and second_realm is not None and first_realm.entity.id != second_realm.entity.id:
             first_core, second_core = first_realm.profile.core_entity_id, second_realm.profile.core_entity_id
             if first_core is not None and second_core is not None:
+                houses = [house for house in (book.house_of.get(first.id), book.house_of.get(second.id)) if house is not None]
                 await sign(
                     ctx,
                     TreatyKind.MARRIAGE_PACT,
-                    [(first_core, PartyRole.SIGNATORY), (second_core, PartyRole.SIGNATORY)],
+                    [(first_core, PartyRole.SIGNATORY), (second_core, PartyRole.SIGNATORY), *((house, PartyRole.SIGNATORY) for house in dict.fromkeys(houses))],
                     clauses=[
                         Clause(ClauseKind.MARRIAGE, first_core, second_core, {"first_id": first.id, "second_id": second.id}),
                         Clause(ClauseKind.CALL_TO_ARMS, first_core, second_core),
@@ -249,12 +253,24 @@ async def house_cycles(ctx: TickContext) -> None:
 
 
 @reads(
+    "faction.wealth",
+    "people.prosperity",
+    "people.wealth",
+    "settlement.prosperity",
+    "table.applied_fixups",
     "table.armies",
+    "table.beast_profiles",
     "table.bonds",
     "table.community_relations",
+    "table.community_societies",
+    "table.community_stocks",
+    "table.foreign_gods",
     "table.language_intelligibility",
+    "table.law_jurisdictions",
+    "table.law_profiles",
     "table.memories",
     "table.minds",
+    "table.mortal_repute",
     "table.name_registry",
     "table.nodes",
     "table.oaths",
@@ -264,25 +280,43 @@ async def house_cycles(ctx: TickContext) -> None:
     "table.polity_territories",
     "table.skills",
     "table.speaker_cohorts",
+    "table.trade_route_tolls",
     "table.traits",
     "table.treaty_clauses",
     "table.treaty_parties",
     "table.treaty_profiles",
+    "table.tributes",
     "table.vassalages",
     "table.war_sides",
     "table.wars",
     "table.world_maps",
 )
 @writes(
+    "faction.wealth",
+    "people.prosperity",
+    "people.wealth",
+    "settlement.prosperity",
+    "table.applied_fixups",
     "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_relations",
+    "table.community_societies",
+    "table.community_stocks",
     "table.entities",
+    "table.goods_flows",
+    "table.incident_participants",
+    "table.incidents",
     "table.memories",
+    "table.mortal_repute",
     "table.name_registry",
     "table.oaths",
+    "table.polity_profiles",
     "table.treaty_breaches",
     "table.treaty_clauses",
     "table.treaty_parties",
     "table.treaty_profiles",
+    "table.tributes",
     "table.vassalages",
     "table.war_sides",
     "table.wars",
@@ -290,12 +324,16 @@ async def house_cycles(ctx: TickContext) -> None:
 async def treaty_cycles(ctx: TickContext) -> None:
     book = await RealmBook.load(ctx.session)
     ctx.count("treaties_adopted", await adopt_bonds(ctx))
+    for key, value in (await answer_proposals(ctx)).items():
+        ctx.count(f"proposals_{key}", value)
     ctx.count("treaties_breached", await hostilities(ctx))
     for key, value in (await keep_clauses(ctx, book)).items():
         ctx.count(f"treaties_{key}", value)
     for key, value in (await vassal_duties(ctx, book)).items():
         ctx.count(f"vassal_{key}", value)
     ctx.count("tributes_closed", await tribute_ledger(ctx))
+    for key, value in (await outer_pacts(ctx, book)).items():
+        ctx.count(f"pacts_{key}", value)
     ctx.count("joined_wars", await join_wars(ctx, book))
     ctx.count("champions", await champions(ctx))
     rulers = {member: realm.ruler_id for realm in book.realms.values() if realm.ruler_id is not None for member in realm.members}

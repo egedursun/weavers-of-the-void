@@ -6,6 +6,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
 from aerona.db.tables.polity import (
     ClaimRow,
@@ -18,7 +19,10 @@ from aerona.db.tables.polity import (
     PolityMemberRow,
     PolityProfileRow,
     PolityTerritoryRow,
+    TreatyClauseRow,
+    TreatyPartyRow,
     TreatyProfileRow,
+    VassalageRow,
 )
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import LoanStatus
@@ -41,7 +45,7 @@ from aerona.domain.enums.polity import (
 )
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.succession import pass_rule
-from aerona.engine.polity.accords import Clause, end_treaty, sign
+from aerona.engine.polity.accords import PARTY_TYPES, Clause, accept, end_treaty, reject, sign
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.formation import found_polity, refresh_realms
 from aerona.engine.polity.houses import HouseBook, extinguish, found_house, join
@@ -53,6 +57,7 @@ from aerona.engine.polity.treaties import breach
 from aerona.engine.primitives.queries import active_bonds, add_flag, close, connect, living_entity, remove_flag
 from aerona.engine.primitives.records import retire_in
 
+TREATY_LOCKS = ("until_epoch", "status")
 LAW_LOCKS = ("repeal", "params", "enforcement", "basis")
 PROFILE_NUMBERS = ("legitimacy", "stability", "war_weariness")
 PROFILE_POSITIVE = ("treasury", "debt", "war_chest")
@@ -390,8 +395,7 @@ async def sign_treaty(
     if len(parties) < 2:
         raise ValidationFailedError("A treaty needs at least two parties.")
     for party, _ in parties:
-        if await living_entity(ctx.session, party) is None:
-            raise NotFoundError("Every party must be alive.")
+        await require_party(ctx, party)
     return await sign(
         ctx,
         kind,
@@ -408,21 +412,163 @@ async def break_treaty(ctx: TickContext, treaty_id: int, breaker_id: int) -> Non
     await breach(ctx, profile, breaker_id, clause=None, reason="the Creator bade it")
 
 
-async def edit_treaty(ctx: TickContext, treaty_id: int, *, until_epoch: int | None, status: TreatyStatus | None) -> TreatyProfileRow:
+async def edit_treaty(
+    ctx: TickContext,
+    treaty_id: int,
+    *,
+    until_epoch: int | None,
+    status: TreatyStatus | None,
+    kind: TreatyKind | None = None,
+    witness_son_id: int | None = None,
+    renewals: int | None = None,
+    hold: Sequence[str] = (),
+    release: Sequence[str] = (),
+) -> TreatyProfileRow:
     profile = await ctx.session.get(TreatyProfileRow, treaty_id)
     if profile is None:
         raise NotFoundError("No such treaty.")
     if until_epoch is not None:
         profile.until_epoch = until_epoch
         profile.locked = lock(profile.locked, "until_epoch")
+    if kind is not None:
+        profile.kind = kind
+    if witness_son_id is not None:
+        profile.witness_son_id = witness_son_id or None
+    if renewals is not None:
+        profile.renewals = counted("renewals", renewals, cap=None)
     if status is not None and status is not profile.status:
-        if status is TreatyStatus.IN_FORCE:
+        if status is TreatyStatus.IN_FORCE and profile.status is TreatyStatus.PROPOSED:
+            await accept(ctx, profile)
+        elif status is TreatyStatus.IN_FORCE:
             profile.status = status
             profile.ended_epoch = None
+        elif status is TreatyStatus.REJECTED:
+            reject(ctx, profile)
         else:
             await end_treaty(ctx, profile, status, "ended by the Creator")
+        profile.locked = lock(profile.locked, "status")
+    profile.locked = sorted({*profile.locked, *(key for key in hold if key in TREATY_LOCKS)} - set(release))
     await ctx.session.flush()
     return profile
+
+
+async def require_party(ctx: TickContext, party_id: int) -> None:
+    entity = await living_entity(ctx.session, party_id)
+    if entity is not None and entity.entity_type in PARTY_TYPES:
+        return
+    if entity is None and await ctx.session.get(ForeignGodRow, party_id) is not None:
+        return
+    raise NotFoundError("A party must be a living realm, community, house, cult, beast, mortal or foreign god.")
+
+
+async def add_clause(
+    ctx: TickContext, treaty_id: int, kind: ClauseKind, *, obligor_id: int | None, beneficiary_id: int | None, params: Mapping[str, int | str | bool]
+) -> TreatyClauseRow:
+    if await ctx.session.get(TreatyProfileRow, treaty_id) is None:
+        raise NotFoundError("No such treaty.")
+    row = TreatyClauseRow(treaty_entity_id=treaty_id, kind=kind, obligor_node_id=obligor_id, beneficiary_node_id=beneficiary_id, params=dict(params), locked=[])
+    ctx.session.add(row)
+    await ctx.session.flush()
+    return row
+
+
+async def edit_clause(
+    ctx: TickContext,
+    clause_id: int,
+    *,
+    params: Mapping[str, int | str | bool] | None,
+    obligor_id: int | None,
+    beneficiary_id: int | None,
+    release: Sequence[str],
+) -> TreatyClauseRow:
+    row = await ctx.session.get(TreatyClauseRow, clause_id)
+    if row is None:
+        raise NotFoundError("No such clause.")
+    if params is not None:
+        row.params = {**row.params, **params}
+        row.locked = lock(row.locked, "params")
+    if obligor_id is not None:
+        row.obligor_node_id = obligor_id
+    if beneficiary_id is not None:
+        row.beneficiary_node_id = beneficiary_id
+    row.locked = release_keys(row.locked, release)
+    await ctx.session.flush()
+    return row
+
+
+async def remove_clause(ctx: TickContext, clause_id: int) -> TreatyClauseRow:
+    row = await ctx.session.get(TreatyClauseRow, clause_id)
+    if row is None:
+        raise NotFoundError("No such clause.")
+    await ctx.session.delete(row)
+    await ctx.session.flush()
+    return row
+
+
+async def add_party(ctx: TickContext, treaty_id: int, party_id: int, role: PartyRole) -> TreatyPartyRow:
+    if await ctx.session.get(TreatyProfileRow, treaty_id) is None:
+        raise NotFoundError("No such treaty.")
+    await require_party(ctx, party_id)
+    row = await ctx.session.get(TreatyPartyRow, (treaty_id, party_id))
+    if row is None:
+        row = TreatyPartyRow(treaty_entity_id=treaty_id, party_node_id=party_id, role=role)
+        ctx.session.add(row)
+    row.role = role
+    await ctx.session.flush()
+    return row
+
+
+async def remove_party(ctx: TickContext, treaty_id: int, party_id: int) -> None:
+    row = await ctx.session.get(TreatyPartyRow, (treaty_id, party_id))
+    if row is None:
+        raise NotFoundError("That party is not bound by the treaty.")
+    left = await ctx.session.scalars(select(TreatyPartyRow).where(TreatyPartyRow.treaty_entity_id == treaty_id))
+    if len([item for item in left if item.role is not PartyRole.GUARANTOR and item.party_node_id != party_id]) < 2 and row.role is not PartyRole.GUARANTOR:
+        raise ValidationFailedError("A treaty needs at least two parties bound by it.")
+    await ctx.session.delete(row)
+    await ctx.session.flush()
+
+
+async def create_vassalage(ctx: TickContext, vassal_id: int, overlord_id: int, *, tribute_pct: int, levy_pct: int) -> VassalageRow:
+    book = await RealmBook.load(ctx.session)
+    vassal, overlord = book.realms.get(vassal_id), book.realms.get(overlord_id)
+    if vassal is None or overlord is None or vassal_id == overlord_id:
+        raise NotFoundError("Choose two different realms.")
+    if vassal.profile.core_entity_id is None or overlord.profile.core_entity_id is None:
+        raise ValidationFailedError("Both realms need a heartland.")
+    treaty = await sign(
+        ctx,
+        TreatyKind.VASSALAGE,
+        [(vassal.profile.core_entity_id, PartyRole.VASSAL), (overlord.profile.core_entity_id, PartyRole.OVERLORD)],
+        clauses=[
+            Clause(ClauseKind.TRIBUTE, vassal.profile.core_entity_id, overlord.profile.core_entity_id, {"amount": tribute_pct}),
+            Clause(ClauseKind.CALL_TO_ARMS, vassal.profile.core_entity_id, overlord.profile.core_entity_id),
+        ],
+    )
+    row = book.vassals.get(vassal_id)
+    if row is None:
+        row = VassalageRow(vassal_entity_id=vassal_id, overlord_entity_id=overlord_id, since_epoch=ctx.epoch, locked=[])
+        ctx.session.add(row)
+    row.overlord_entity_id, row.treaty_entity_id = overlord_id, treaty.id
+    row.tribute_pct = counted("tribute", tribute_pct, cap=PERCENT)
+    row.levy_pct = counted("levy", levy_pct, cap=PERCENT)
+    await ctx.session.flush()
+    return row
+
+
+async def edit_vassalage(
+    ctx: TickContext, vassal_id: int, *, tribute_pct: int | None, levy_pct: int | None, loyalty: int | None, release: Sequence[str]
+) -> VassalageRow:
+    row = await ctx.session.get(VassalageRow, vassal_id)
+    if row is None:
+        raise NotFoundError("That realm is no one's vassal.")
+    for key, value in (("tribute_pct", tribute_pct), ("levy_pct", levy_pct), ("loyalty", loyalty)):
+        if value is not None:
+            setattr(row, key, counted(key, value, cap=PERCENT))
+            row.locked = lock(row.locked, key)
+    row.locked = release_keys(row.locked, release)
+    await ctx.session.flush()
+    return row
 
 
 async def swear_oath(ctx: TickContext, swearer_id: int, kind: OathKind, recipient_id: int | None) -> OathRow:

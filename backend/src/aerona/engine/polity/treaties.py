@@ -23,10 +23,12 @@ from aerona.engine.mind.drives import greed_drive
 from aerona.engine.polity.accords import (
     DEFAULT_CLAUSES,
     Clause,
+    accept,
     clause_pairs,
     derive_bond,
     end_treaty,
     parties_of,
+    reject,
     sign,
     sworn_by,
     treaty_between,
@@ -544,3 +546,22 @@ async def sign_derived(
 
 async def treaty_bond(ctx: TickContext, treaty: EntityRow, kind: TreatyKind, ends: tuple[int, int], until: int | None) -> BondRow | None:
     return await derive_bond(ctx, treaty, kind, ends, until)
+
+
+async def answer_proposals(ctx: TickContext) -> dict[str, int]:
+    table = ctx.rules.treaties
+    counts = {"accepted": 0, "rejected": 0}
+    for profile in list(await ctx.session.scalars(select(TreatyProfileRow).where(TreatyProfileRow.status == TreatyStatus.PROPOSED))):
+        if profile.signed_epoch >= ctx.epoch:
+            continue
+        parties = [row.party_node_id for row in await parties_of(ctx.session, profile.treaty_entity_id)]
+        others = [party for party in parties if party != profile.proposed_by_node_id]
+        proposer = profile.proposed_by_node_id
+        warm = proposer is not None and all([await relation(ctx.session, ctx.rules, proposer, other) >= table.accept_relation for other in others])
+        if warm:
+            await accept(ctx, profile)
+            counts["accepted"] += 1
+        elif ctx.epoch - profile.signed_epoch >= table.proposal_epochs:
+            reject(ctx, profile)
+            counts["rejected"] += 1
+    return counts

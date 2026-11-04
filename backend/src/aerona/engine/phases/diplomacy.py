@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from sqlalchemy import and_, or_, select
 
@@ -11,7 +11,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.polity import ClauseKind, LawKind, PartyRole, TreatyKind, TreatyStatus
+from aerona.domain.enums.polity import ClauseKind, LawKind, PartyRole, RegionalStanding, TreatyKind, TreatyStatus
 from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.engine.body.cohorts import war_appetite
 from aerona.engine.context import TickContext
@@ -21,6 +21,7 @@ from aerona.engine.mind.drives import betrayal_drive, closeness, war_drive
 from aerona.engine.phase import Phase
 from aerona.engine.phases.afterlife import cosmic_court
 from aerona.engine.polity.accords import Clause, end_treaty, sign, treaty_between
+from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.laws import law_param
 from aerona.engine.polity.treaties import breach
 from aerona.engine.primitives.queries import BondIndex, active_bonds, canon, living_entity
@@ -243,11 +244,46 @@ async def betray(ctx: TickContext, first: EntityRow, second: EntityRow, neighbou
 class PairContext:
     bonds: BondIndex
     feuds: set[tuple[int, int]]
+    standing: dict[int, RegionalStanding] = field(default_factory=dict)
+    weights: dict[RegionalStanding, int] = field(default_factory=dict)
+    balance_pct: int = PERCENT
+
+    def war_weight(self, first: int, second: int) -> float:
+        return max(self.weights.get(self.standing.get(item, RegionalStanding.MINOR_POWER), PERCENT) for item in (first, second)) / PERCENT
+
+    def alliance_weight(self, first: int, second: int) -> float:
+        threatened = any(self.standing.get(item) is RegionalStanding.HEGEMON for item in self.standing if item not in (first, second))
+        return self.balance_pct / PERCENT if threatened else 1.0
 
 
-async def _pair_context(ctx: TickContext) -> PairContext:
+async def _pair_context(ctx: TickContext, book: RealmBook | None = None) -> PairContext:
     bonds = await BondIndex.load(ctx.session, [BondKind.TRADES_WITH, BondKind.ALLY, BondKind.ENEMY, BondKind.PAYS_TRIBUTE])
-    return PairContext(bonds, await blood_feud_pairs(ctx.session))
+    table = ctx.rules.treaties
+    standing = (
+        {realm.profile.core_entity_id: realm.profile.standing for realm in book.realms.values() if realm.profile.core_entity_id is not None}
+        if book is not None
+        else {}
+    )
+    weights = {
+        RegionalStanding.HEGEMON: table.hegemon_war_pct,
+        RegionalStanding.GREAT_POWER: table.great_war_pct,
+        RegionalStanding.MINOR_POWER: table.minor_war_pct,
+        RegionalStanding.CLIENT: table.client_war_pct,
+    }
+    return PairContext(bonds, await blood_feud_pairs(ctx.session), standing, weights, table.balance_alliance_pct)
+
+
+def realm_actors(communities: list[EntityRow], book: RealmBook) -> tuple[list[EntityRow], dict[int, list[int]]]:
+    actors: list[EntityRow] = []
+    lands: dict[int, list[int]] = {}
+    for community in communities:
+        realm = book.realm_of(community.id)
+        core = realm.profile.core_entity_id if realm is not None else None
+        if realm is not None and core is not None and core != community.id and core in {item.id for item in communities}:
+            continue
+        actors.append(community)
+        lands[community.id] = sorted(realm.members) if realm is not None and core == community.id else [community.id]
+    return actors, lands
 
 
 async def settled_by_wergild(ctx: TickContext, first: EntityRow, second: EntityRow) -> bool:
@@ -293,6 +329,7 @@ async def _neighbour_pair(
         and await ongoing_war_count(ctx.session, second.id) < cap
         and rng.chance(
             rules.war_declaration_chance
+            * pair.war_weight(first.id, second.id)
             * min(await war_appetite(ctx, first), await war_appetite(ctx, second))
             * max(await war_drive(ctx.session, ctx.rules, first.id), await war_drive(ctx.session, ctx.rules, second.id))
         )
@@ -313,7 +350,13 @@ async def _neighbour_pair(
         counters.peaces += 1
         how = f"worn out by {duration} epochs of war the two sides made a truce" if tired else "envoys swore a peace oath"
         await _note(ctx, f"{first.name} and {second.name} laid down arms; {how}.", "diplomacy.peace", (first.id, second.id))
-    elif not enemy and not ally and value >= rules.alliance_threshold and counters.alliances < rules.alliance_cap and rng.chance(rules.alliance_chance):
+    elif (
+        not enemy
+        and not ally
+        and value >= rules.alliance_threshold
+        and counters.alliances < rules.alliance_cap
+        and rng.chance(min(PERCENT, rules.alliance_chance * pair.alliance_weight(first.id, second.id)))
+    ):
         marriage = (
             bool(_marriageable(ctx, sides, first.id))
             and bool(_marriageable(ctx, sides, second.id))
@@ -392,13 +435,19 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.memories",
     "table.minds",
     "table.nodes",
+    "table.offices",
     "table.personality_values",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.polity_territories",
     "table.pressures",
     "table.routes",
     "table.sieges",
     "table.speaker_cohorts",
     "table.trade_route_profiles",
     "table.traits",
+    "table.treaty_parties",
+    "table.treaty_profiles",
     "table.war_sides",
     "table.wars",
     "table.world_maps",
@@ -419,6 +468,13 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.incident_participants",
     "table.incidents",
     "table.memories",
+    "table.mortal_repute",
+    "table.name_registry",
+    "table.oaths",
+    "table.treaty_breaches",
+    "table.treaty_clauses",
+    "table.treaty_parties",
+    "table.treaty_profiles",
     "table.war_sides",
     "table.wars",
 )
@@ -432,10 +488,12 @@ async def diplomacy(ctx: TickContext) -> None:
     communities = await canon(ctx.session, COMMUNITY_TYPES)
     neighbourhood = await Neighbourhood.load(ctx.session, ctx.rules)
     sides = await SideIndex.load(ctx.session, neighbourhood)
-    pair = await _pair_context(ctx)
-    for index, first in enumerate(communities):
-        for second in communities[index + 1 :]:
-            if neighbourhood.are_neighbours(first.id, second.id):
+    book = await RealmBook.load(ctx.session)
+    pair = await _pair_context(ctx, book)
+    actors, lands = realm_actors(communities, book)
+    for index, first in enumerate(actors):
+        for second in actors[index + 1 :]:
+            if any(neighbourhood.are_neighbours(one, two) for one in lands[first.id] for two in lands[second.id]):
                 await _neighbour_pair(ctx, first, second, pair=pair, sides=sides, neighbourhood=neighbourhood, counters=counters)
     ctx.count("wars_declared", counters.declared)
     ctx.count("peaces", counters.peaces)

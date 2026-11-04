@@ -294,3 +294,89 @@ async def clause_pairs(session: AsyncSession, kind: ClauseKind) -> set[frozenset
             for second in parties[index + 1 :]:
                 pairs.add(frozenset((first, second)))
     return pairs
+
+
+async def propose(
+    ctx: TickContext,
+    kind: TreatyKind,
+    parties: Sequence[tuple[int, PartyRole]],
+    *,
+    proposer_id: int,
+    clauses: Sequence[Clause] = (),
+    epochs: int | None = None,
+) -> EntityRow:
+    names = [entity.name for party, _ in parties if (entity := await ctx.session.get(EntityRow, party)) is not None]
+    first = await ctx.session.get(EntityRow, parties[0][0])
+    treaty = await create_record(
+        ctx,
+        RecordSpec(
+            entity_type=EntityType.TREATY,
+            name=f"{TREATY_WORDS[kind]} of {' and '.join(names[:3])}",
+            body=f"{TREATY_WORDS[kind]} offered to {', '.join(names)}.",
+            stats=TreatyStats(parties=len(parties), trust=50),
+            power=2,
+            location_id=None,
+            world_id=first.world_id if first is not None else None,
+            subtype=kind.value.replace("_", " "),
+            pending=False,
+        ),
+    )
+    ctx.session.add(
+        TreatyProfileRow(
+            treaty_entity_id=treaty.id,
+            kind=kind,
+            status=TreatyStatus.PROPOSED,
+            signed_epoch=ctx.epoch,
+            until_epoch=epochs,
+            proposed_by_node_id=proposer_id,
+            locked=[],
+        )
+    )
+    for party, role in parties:
+        ctx.session.add(TreatyPartyRow(treaty_entity_id=treaty.id, party_node_id=party, role=role))
+    for clause in list(clauses) or [Clause(item, parties[0][0], parties[-1][0]) for item in DEFAULT_CLAUSES.get(kind, ())]:
+        ctx.session.add(
+            TreatyClauseRow(
+                treaty_entity_id=treaty.id, kind=clause.kind, obligor_node_id=clause.obligor, beneficiary_node_id=clause.beneficiary, params=clause.params
+            )
+        )
+    await ctx.session.flush()
+    ctx.count("treaty_proposed")
+    return treaty
+
+
+async def accept(ctx: TickContext, profile: TreatyProfileRow) -> EntityRow | None:
+    treaty = await ctx.session.get(EntityRow, profile.treaty_entity_id)
+    if treaty is None or profile.status is not TreatyStatus.PROPOSED:
+        return None
+    parties = [(row.party_node_id, row.role) for row in await parties_of(ctx.session, profile.treaty_entity_id)]
+    rows = list(
+        await ctx.session.scalars(select(TreatyClauseRow).where(TreatyClauseRow.treaty_entity_id == profile.treaty_entity_id).order_by(TreatyClauseRow.id))
+    )
+    clauses = [Clause(row.kind, row.obligor_node_id, row.beneficiary_node_id, dict(row.params)) for row in rows]
+    span = profile.until_epoch
+    profile.status = TreatyStatus.IN_FORCE
+    profile.signed_epoch = ctx.epoch
+    profile.until_epoch = ctx.epoch + span if span is not None else None
+    bond = await derive_bond(ctx, treaty, profile.kind, bond_ends(profile.kind, parties, clauses), profile.until_epoch)
+    profile.source_bond_id = bond.id if bond is not None else None
+    for party, _ in parties:
+        await connect(ctx.session, party, treaty.id, BondKind.PARTY_TO, ctx.epoch, description="signatory")
+    witness = await oath_god(ctx, treaty.world_id)
+    first = await ctx.session.get(EntityRow, parties[0][0])
+    if witness is not None and first is not None:
+        profile.witness_son_id = witness.id
+        swearer = await sworn_by(ctx, first)
+        if swearer is not None:
+            oath = await swear(
+                ctx, swearer, OathKind.FEALTY if profile.kind is TreatyKind.VASSALAGE else OathKind.PROTECTION, recipient_id=parties[-1][0], witness=witness
+            )
+            profile.oath_id = oath.id
+    await execute_on_signing(ctx, treaty, clauses)
+    ctx.count(f"treaty.{profile.kind.value}")
+    return treaty
+
+
+def reject(ctx: TickContext, profile: TreatyProfileRow) -> None:
+    profile.status = TreatyStatus.REJECTED
+    profile.ended_epoch = ctx.epoch

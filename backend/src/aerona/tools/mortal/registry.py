@@ -29,6 +29,7 @@ from aerona.tools.mortal import (
     religion,
     ruler,
     trade,
+    treaties,
     war,
 )
 from aerona.tools.mortal.support import civilization_tier, rules_a_realm, worships_dead_son
@@ -100,6 +101,8 @@ CONDITIONS: dict[MortalToolId, Condition] = {
     T.ENACT_LAW: lambda rules, state: rules.mortal_tools.enact_law_per_epoch > 0 and state.rules_realm,
     T.APPOINT_OFFICER: lambda rules, state: rules.mortal_tools.appoint_officer_per_epoch > 0 and state.rules_realm,
     T.SET_TAX: lambda rules, state: rules.mortal_tools.set_tax_per_epoch > 0 and state.rules_realm,
+    T.PROPOSE_TREATY: lambda rules, state: rules.mortal_tools.propose_treaty_per_epoch > 0 and (state.rules_realm or state.actor_type is not EntityType.MORTAL),
+    T.BREAK_TREATY: lambda _rules, state: state.rules_realm or state.actor_type is not EntityType.MORTAL,
 }
 
 FAMILIES: tuple[Callable[[], list[MortalSpec]], ...] = (
@@ -118,6 +121,7 @@ FAMILIES: tuple[Callable[[], list[MortalSpec]], ...] = (
     armies.specs,
     barter.specs,
     ruler.specs,
+    treaties.specs,
 )
 
 

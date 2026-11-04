@@ -11,6 +11,7 @@ from aerona.db.tables.polity import (
     LawJurisdictionRow,
     LawProfileRow,
     OfficeRow,
+    PolityProfileRow,
     TreatyClauseRow,
     TreatyPartyRow,
     TreatyProfileRow,
@@ -88,3 +89,23 @@ async def statecraft(session: AsyncSession, me: EntityRow, home: EntityRow, real
     for profile in laws:
         lines.laws.append(f"{words(profile.kind.value)}: {law_effect(profile.kind, dict(profile.params))} (enforced {profile.enforcement})")
     return lines
+
+
+async def realm_overview(session: AsyncSession, world_id: int | None) -> list[str]:
+    statement = (
+        select(PolityProfileRow, EntityRow).join(EntityRow, EntityRow.id == PolityProfileRow.polity_entity_id).where(EntityRow.status == EntityStatus.CANON)
+    )
+    if world_id is not None:
+        statement = statement.where(EntityRow.world_id == world_id)
+    found: list[str] = []
+    for profile, realm in await session.execute(statement.order_by(EntityRow.id)):
+        lines = await statecraft(session, realm, realm, realm.id)
+        ruler = f"; {lines.succession}" if lines.succession else ""
+        laws = f"; laws: {'; '.join(lines.laws)}" if lines.laws else ""
+        treaties = f"; treaties: {'; '.join(lines.treaties)}" if lines.treaties else ""
+        claims = f"; claims: {'; '.join(lines.claims)}" if lines.claims else ""
+        found.append(
+            f"realm#{realm.id} {realm.name} ({words(profile.government.value)}, tier {profile.tier}, legitimacy {profile.legitimacy}, "
+            f"{words(profile.standing.value)}){ruler}{laws}{treaties}{claims}"
+        )
+    return found

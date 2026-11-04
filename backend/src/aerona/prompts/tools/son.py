@@ -345,6 +345,20 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "At most {{ rules.son_tools.foreign_talk_per_god }} talk(s) with the same god per age. 1 action.",
         {"god_id": "The foreign god's id", "intent": "alliance, threat or bargain", "words": "What you say"},
     ),
+    T.SEAL_TREATY: ToolText(
+        "You bind two or more parties (realms, communities, houses, cults, beasts) by a typed treaty sealed in your name: its kind decides how it behaves "
+        "and its clauses run every age (tribute, hostages, tolls waived, freedom of faith, call to arms...). Costs essence.",
+        {
+            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage, tribute, marriage_pact, trade_pact, condotta, guarantee or interworld",
+            "parties": "Each party's id and role (signatory, overlord, vassal, guarantor)",
+            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression), who owes it, who gains, and its terms (amount, commodity, epochs, region_id, mortal_id...)",
+            "epochs": "How many ages it holds; empty for ever",
+        },
+    ),
+    T.VOID_TREATY: ToolText(
+        "You make one party break a treaty in force: the breach is recorded, its oath is broken, guarantors may march and the breaker loses honour. Costs essence.",
+        {"treaty_id": "The treaty", "breaker_id": "The party that breaks it"},
+    ),
     T.MAKE_INTERWORLD_TREATY: ToolText(
         "You establish an interworld treaty between two communities in separate worlds: alliance or trade. There must be a known, open road between the two worlds and one "
         "of the communities must be on the world you are currently on; enemies do not make treaties. {{ rules.son_tools.treaty_cost }} essence, "

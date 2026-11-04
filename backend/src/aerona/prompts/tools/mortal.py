@@ -289,6 +289,20 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "name": "The law's name, if it should have one of its own",
         },
     ),
+    T.PROPOSE_TREATY: ToolText(
+        "You offer a typed treaty to another community or realm; it takes force when they accept. 1 action, {{ " + M + ".propose_treaty_per_epoch }} per age.",
+        {
+            "target_id": "The community or realm you offer it to",
+            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage (you become the vassal), tribute, marriage_pact, trade_pact, guarantee or interworld",
+            "clauses": "Typed clauses with who owes, who gains and their terms (amount, commodity, epochs, region_id, mortal_id...)",
+            "epochs": "How many ages it should hold",
+        },
+    ),
+    T.ACCEPT_TREATY: ToolText("You accept a treaty offered to you; it takes force at once. Free.", {"treaty_id": "The offered treaty"}),
+    T.BREAK_TREATY: ToolText(
+        "You break a treaty your people are bound by: the other parties remember the betrayal, guarantors may march and your rulers lose honour. 1 action.",
+        {"treaty_id": "The treaty you break"},
+    ),
     T.APPOINT_OFFICER: ToolText(
         "As ruler or regent you fill a seat of your realm (chancellor, marshal, treasurer, high_judge, spymaster, governor, ambassador) with a living named mortal, "
         "or leave it empty. Free, {{ " + M + ".appoint_officer_per_epoch }} per age.",
