@@ -1,38 +1,86 @@
 import { useState } from 'react'
-import { Eye, Save, Shield, Swords, Trash2, TriangleAlert } from 'lucide-react'
+import {
+  Bird,
+  CalendarDays,
+  Crown,
+  Eye,
+  EyeOff,
+  Flag,
+  Lock,
+  Radar,
+  Save,
+  Shield,
+  Swords,
+  Trash2,
+  TriangleAlert,
+  UserRound,
+  Users,
+} from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
-import { commanderTraitValues, spyCoverValues } from '@/api/generated/schema'
-import { Badge } from '@/components/ui/badge'
+import { commanderTraitValues } from '@/api/generated/schema'
+import { formatInteger } from '@/lib/format'
 import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
-import { EmptyState, Section, StatBar } from '@/components/domain'
-import { Label, Muted, Text } from '@/components/typography'
-import { MindPicker } from '@/features/entity/mind/parts'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  EmptyState,
+  Medallion,
+  MiniStat,
+  Section,
+  StatBar,
+} from '@/components/domain'
+import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
-import { ArmyPanel, NumberBox } from './ArmyPanel'
-import { CohortRow, OccupationRow } from './WarRoom'
+import { ArmyPanel } from './ArmyPanel'
+import { CohortCard, OccupationCard } from './WarRoom'
 import {
   type CommanderTrait,
   type MilitaryOverview,
   type SpyNetwork,
-  table,
+  soldiersOf,
   useArmyCard,
   useMilitary,
-  words,
 } from './api'
+import {
+  COVER,
+  OPERATION,
+  PERCENT,
+  TRAIT,
+  fieldLabel,
+  named,
+  percentTone,
+  busyOf,
+  cardGrid,
+  whole,
+} from './labels'
+import {
+  Adjust,
+  ChoiceField,
+  NumberField,
+  Panel,
+  Plain,
+  Tag,
+  TableTag,
+  ToggleField,
+} from './parts'
 
-const PERCENT = 100
-const WORKING = 'Working…'
 const NETWORK_NUMBERS = ['agents', 'depth', 'exposure', 'intel'] as const
+const NETWORK_ICON = {
+  agents: Users,
+  depth: Radar,
+  exposure: EyeOff,
+  intel: Eye,
+} as const
 type NetworkNumber = (typeof NETWORK_NUMBERS)[number]
 
-function NetworkRow({
+function NetworkCard({
   network,
+  watching,
   blocked,
 }: {
   network: SpyNetwork
+  watching: boolean
   blocked: string | null
 }) {
   const [numbers, setNumbers] = useState<Record<NetworkNumber, string>>(
@@ -52,13 +100,7 @@ function NetworkRow({
               ...Object.fromEntries(
                 NETWORK_NUMBERS.map((key) => [
                   key,
-                  Math.max(
-                    0,
-                    Math.min(
-                      key === 'agents' ? Number.MAX_SAFE_INTEGER : PERCENT,
-                      Math.round(Number(numbers[key]) || 0)
-                    )
-                  ),
+                  whole(numbers[key], key === 'agents' ? undefined : PERCENT),
                 ])
               ),
               cover,
@@ -76,78 +118,126 @@ function NetworkRow({
         })
       ),
   })
-  const busy = blocked ?? (save.isPending || roll.isPending ? WORKING : null)
+  const busy = busyOf(blocked, save.isPending, roll.isPending)
+  const disguise = named(COVER, network.cover)
   return (
     <li
       data-surface='SpyNetwork'
-      className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'
+      className='@container/spy flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-3'
     >
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Eye
-          aria-hidden='true'
-          className='size-icon-sm text-muted-foreground'
+      <div className='flex min-w-0 items-center gap-3'>
+        <Medallion
+          icon={watching ? EyeOff : Eye}
+          tone={watching ? 'danger' : 'info'}
         />
-        <Text as='span'>{`${network.owner?.name ?? ''} → ${network.target?.name ?? ''}`}</Text>
-        <Badge variant='outline'>{`as ${words(network.cover)}`}</Badge>
+        <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
+          <Text as='span' weight='semibold' truncate>
+            {`${network.owner?.name ?? 'Someone'} → ${network.target?.name ?? 'someone'}`}
+          </Text>
+          <Muted as='span' variant='caption' truncate>
+            {watching
+              ? 'A network watching this record'
+              : 'A network run by this record'}
+          </Muted>
+        </div>
+        <div className='flex shrink-0 flex-col items-end'>
+          <Stat value={formatInteger(network.agents)} size='kpi' />
+          <Label>Agents</Label>
+        </div>
+      </div>
+      <div className='flex min-w-0 flex-wrap gap-1'>
+        <Tag
+          item={disguise}
+          text={`Disguised as ${disguise.label.toLowerCase()}`}
+        />
         {network.spymaster && (
-          <Badge variant='outline'>{`Spymaster ${network.spymaster.name}`}</Badge>
+          <Plain
+            icon={UserRound}
+          >{`Spymaster ${network.spymaster.name}`}</Plain>
         )}
+        <Plain
+          icon={CalendarDays}
+        >{`Since epoch ${network.since_epoch}`}</Plain>
         {network.last_operation && (
-          <Badge variant='info'>{`${words(network.last_operation)} (${network.last_epoch ?? ''})`}</Badge>
+          <TableTag
+            table={OPERATION}
+            value={network.last_operation}
+            text={`${named(OPERATION, network.last_operation).label}${network.last_epoch !== null ? ` · epoch ${network.last_epoch}` : ''}`}
+          />
         )}
       </div>
-      <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-3'>
-        <StatBar label='Depth' value={network.depth} max={PERCENT} />
+      <div className='grid min-w-0 grid-cols-1 gap-2 @sm/spy:grid-cols-3'>
+        <StatBar
+          label='Depth'
+          icon={Radar}
+          value={network.depth}
+          max={PERCENT}
+          tone='verdigris'
+        />
         <StatBar
           label='Exposure'
+          icon={EyeOff}
           value={network.exposure}
           max={PERCENT}
-          tone='warning'
+          tone={percentTone(network.exposure, true)}
         />
         <StatBar
           label='Intelligence'
+          icon={Eye}
           value={network.intel}
           max={PERCENT}
           tone='info'
         />
       </div>
-      <div className='flex min-w-0 flex-wrap items-end gap-2'>
-        {NETWORK_NUMBERS.map((key) => (
-          <NumberBox
-            key={key}
-            label={words(key)}
-            value={numbers[key]}
-            onChange={(value) =>
-              setNumbers((current) => ({ ...current, [key]: value }))
-            }
-          />
-        ))}
-        <MindPicker
-          label='Cover'
-          value={cover}
-          table={table(spyCoverValues)}
-          blocked={busy}
-          onPick={setCover}
-        />
-        <Button
-          size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => save.mutate(undefined)}
+      <div className='mt-auto flex min-w-0 flex-col'>
+        <Adjust
+          title='Shape the network'
+          note='Agents, depth, exposure and gathered intelligence, and the cover they hide behind.'
         >
-          <Save />
-          Save
-        </Button>
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => roll.mutate(undefined)}
-        >
-          <Trash2 />
-          Roll it up
-        </Button>
+          <div className='grid min-w-0 grid-cols-1 gap-2 @sm/spy:grid-cols-2'>
+            {NETWORK_NUMBERS.map((key) => (
+              <NumberField
+                key={key}
+                label={fieldLabel(key)}
+                icon={NETWORK_ICON[key]}
+                value={numbers[key]}
+                max={key === 'agents' ? undefined : PERCENT}
+                onChange={(value) =>
+                  setNumbers((current) => ({ ...current, [key]: value }))
+                }
+              />
+            ))}
+            <ChoiceField
+              label='Cover'
+              icon={disguise.icon}
+              value={cover}
+              table={COVER}
+              blocked={busy}
+              onPick={setCover}
+            />
+          </div>
+          <div className='flex min-w-0 flex-wrap gap-2'>
+            <Button
+              size='sm'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => save.mutate(undefined)}
+            >
+              <Save />
+              Save
+            </Button>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => roll.mutate(undefined)}
+            >
+              <Trash2 />
+              Roll it up
+            </Button>
+          </div>
+        </Adjust>
       </div>
     </li>
   )
@@ -172,17 +262,67 @@ function TraitToggle({
         })
       ),
   })
-  const busy = blocked ?? (toggle.isPending ? WORKING : null)
+  const busy = busyOf(blocked, toggle.isPending)
   return (
-    <label className='flex items-center gap-2'>
-      <Switch
-        checked={held}
-        disabled={busy !== null}
-        aria-label={words(trait)}
-        onCheckedChange={(next) => toggle.mutate(next)}
-      />
-      <Text as='span'>{words(trait)}</Text>
-    </label>
+    <ToggleField
+      item={named(TRAIT, trait)}
+      checked={held}
+      disabled={busy !== null}
+      onChange={(next) => toggle.mutate(next)}
+    />
+  )
+}
+
+function CommanderTraits({
+  entityId,
+  traits,
+  blocked,
+}: {
+  entityId: number
+  traits: CommanderTrait[]
+  blocked: string | null
+}) {
+  return (
+    <Panel
+      title='Battle traits'
+      icon={Crown}
+      tone='gold'
+      count={traits.length}
+      hint='How this mortal leads an army in the field'
+    >
+      <div
+        data-surface='CommanderTraits'
+        className='flex min-w-0 flex-col gap-3'
+      >
+        {traits.length === 0 ? (
+          <Muted variant='caption'>
+            No battle trait yet. Battles won and lost teach them.
+          </Muted>
+        ) : (
+          <div className='flex min-w-0 flex-wrap gap-1.5'>
+            {traits.map((trait) => (
+              <TableTag key={trait} table={TRAIT} value={trait} />
+            ))}
+          </div>
+        )}
+        <Adjust
+          title='Grant or take battle traits'
+          note='Each trait changes how this mortal fights when leading an army.'
+        >
+          <div className='grid min-w-0 grid-cols-1 gap-2 @sm/mil:grid-cols-2 @3xl/mil:grid-cols-3'>
+            {commanderTraitValues.map((trait) => (
+              <TraitToggle
+                key={trait}
+                mortalId={entityId}
+                trait={trait}
+                held={traits.includes(trait)}
+                blocked={blocked}
+              />
+            ))}
+          </div>
+        </Adjust>
+      </div>
+    </Panel>
   )
 }
 
@@ -197,86 +337,153 @@ function Overview({
   mortal: boolean
   blocked: string | null
 }) {
+  const captives = [...data.captives_held, ...data.captives_lost]
+  const networks = [...data.networks, ...data.watched_by]
+  const occupations = [...data.occupying, ...data.occupied]
+  const soldiers = data.armies.reduce((sum, army) => sum + soldiersOf(army), 0)
+  const held = data.captives_held.reduce((sum, item) => sum + item.count, 0)
+  const lost = data.captives_lost.reduce((sum, item) => sum + item.count, 0)
   const empty =
-    !mortal &&
     data.armies.length +
-      data.captives_held.length +
-      data.captives_lost.length +
-      data.networks.length +
-      data.watched_by.length +
-      data.occupying.length +
-      data.occupied.length ===
-      0
-  if (empty)
-    return (
-      <Muted>
-        No armies, captives, spies or occupations touch this record.
-      </Muted>
-    )
+      captives.length +
+      networks.length +
+      occupations.length ===
+    0
   return (
     <div
       data-surface='MilitaryOverview'
-      className='flex min-w-0 flex-col gap-4'
+      className='@container/mil flex min-w-0 flex-col gap-4'
     >
       {mortal && (
-        <div
-          data-surface='CommanderTraits'
-          className='flex min-w-0 flex-col gap-2'
-        >
-          <Label variant='overline'>Battle traits</Label>
-          <div className='grid min-w-0 grid-cols-2 gap-2 md:grid-cols-5'>
-            {commanderTraitValues.map((trait) => (
-              <TraitToggle
-                key={trait}
-                mortalId={entityId}
-                trait={trait}
-                held={data.commander_traits.includes(trait)}
-                blocked={blocked}
-              />
-            ))}
-          </div>
+        <CommanderTraits
+          entityId={entityId}
+          traits={data.commander_traits}
+          blocked={blocked}
+        />
+      )}
+      {empty ? (
+        <EmptyState
+          size={mortal ? 'compact' : 'default'}
+          icon={Bird}
+          title='Untouched by war'
+          description='No army, captive cohort, spy network or occupation touches this record.'
+        />
+      ) : (
+        <div className='grid min-w-0 grid-cols-2 gap-2 @3xl/mil:grid-cols-4'>
+          <MiniStat
+            icon={Swords}
+            label={data.armies.length === 1 ? 'Army' : 'Armies'}
+            value={formatInteger(data.armies.length)}
+            tone='danger'
+            hint={`${formatInteger(soldiers)} soldiers under arms`}
+          />
+          <MiniStat
+            icon={Lock}
+            label='Captives held / lost'
+            value={`${formatInteger(held)} / ${formatInteger(lost)}`}
+            tone='warning'
+            hint='People this record holds, then its own people held by others'
+          />
+          <MiniStat
+            icon={Eye}
+            label='Spy networks run / watching'
+            value={`${data.networks.length} / ${data.watched_by.length}`}
+            tone='info'
+          />
+          <MiniStat
+            icon={Flag}
+            label='Lands held / lost'
+            value={`${data.occupying.length} / ${data.occupied.length}`}
+            tone='gold'
+          />
         </div>
       )}
       {data.armies.map((army) => (
         <ArmyPanel key={army.army?.id} army={army} blocked={blocked} />
       ))}
-      {[...data.captives_held, ...data.captives_lost].length > 0 && (
-        <>
-          <Label variant='overline'>Captives</Label>
-          <ul className='flex min-w-0 flex-col gap-2'>
-            {[...data.captives_held, ...data.captives_lost].map((cohort) => (
-              <CohortRow key={cohort.id} cohort={cohort} blocked={blocked} />
+      {captives.length > 0 && (
+        <Panel
+          title='Captives'
+          icon={Lock}
+          tone='warning'
+          count={captives.length}
+          hint='Cohorts taken in war and what became of them'
+        >
+          <ul className={cardGrid(captives.length)}>
+            {data.captives_held.map((cohort) => (
+              <CohortCard
+                key={cohort.id}
+                cohort={cohort}
+                blocked={blocked}
+                perspective='Held by this record'
+              />
+            ))}
+            {data.captives_lost.map((cohort) => (
+              <CohortCard
+                key={cohort.id}
+                cohort={cohort}
+                blocked={blocked}
+                perspective='Its own people in chains'
+              />
             ))}
           </ul>
-        </>
+        </Panel>
       )}
-      {[...data.networks, ...data.watched_by].length > 0 && (
-        <>
-          <Label variant='overline'>Spy networks</Label>
-          <ul className='flex min-w-0 flex-col gap-2'>
-            {[...data.networks, ...data.watched_by].map((network) => (
-              <NetworkRow
+      {networks.length > 0 && (
+        <Panel
+          title='Spy networks'
+          icon={Eye}
+          tone='info'
+          count={networks.length}
+          hint='Agents, their cover and what they have learned'
+        >
+          <ul className={cardGrid(networks.length)}>
+            {data.networks.map((network) => (
+              <NetworkCard
                 key={network.id}
                 network={network}
+                watching={false}
+                blocked={blocked}
+              />
+            ))}
+            {data.watched_by.map((network) => (
+              <NetworkCard
+                key={network.id}
+                network={network}
+                watching
                 blocked={blocked}
               />
             ))}
           </ul>
-        </>
+        </Panel>
       )}
-      {[...data.occupying, ...data.occupied].length > 0 && (
-        <>
-          <Label variant='overline'>Occupations</Label>
-          <ul className='flex min-w-0 flex-col gap-2'>
-            {[...data.occupying, ...data.occupied].map((item) => (
-              <OccupationRow
-                key={item.region?.id}
+      {occupations.length > 0 && (
+        <Panel
+          title='Occupations'
+          icon={Flag}
+          tone='gold'
+          count={occupations.length}
+          hint='Lands held by the sword'
+        >
+          <ul className={cardGrid(occupations.length)}>
+            {data.occupying.map((item) => (
+              <OccupationCard
+                key={`held.${item.region?.id}`}
                 occupation={item}
                 blocked={blocked}
+                perspective='Held by this record'
+              />
+            ))}
+            {data.occupied.map((item) => (
+              <OccupationCard
+                key={`lost.${item.region?.id}`}
+                occupation={item}
+                blocked={blocked}
+                perspective='Occupied by an enemy'
               />
             ))}
           </ul>
-        </>
+        </Panel>
       )}
     </div>
   )
@@ -308,7 +515,7 @@ export function MilitarySection({
       }
       icon={army ? Swords : Shield}
     >
-      {query.isPending && <Muted>Reading the rolls…</Muted>}
+      {query.isPending && <Skeleton className='h-textarea w-full' />}
       {query.isError && (
         <EmptyState
           icon={TriangleAlert}
@@ -316,7 +523,11 @@ export function MilitarySection({
           description={query.error.message}
         />
       )}
-      {army && card.data && <ArmyPanel army={card.data} blocked={blocked} />}
+      {army && card.data && (
+        <div className='@container/mil min-w-0'>
+          <ArmyPanel army={card.data} blocked={blocked} />
+        </div>
+      )}
       {!army && overview.data && (
         <Overview
           entityId={entityId}

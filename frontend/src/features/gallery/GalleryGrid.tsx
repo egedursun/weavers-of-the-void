@@ -84,10 +84,11 @@ function Tile({
           </Badge>
         </span>
       </a>
-      <span className='absolute top-2 right-2'>
+      <span className='absolute top-2 right-2 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-within:opacity-100'>
         <Button
-          variant='destructive'
+          variant='secondary'
           size='icon-sm'
+          className='hover:bg-destructive hover:text-destructive-foreground'
           aria-label={`Delete this image of ${name}`}
           title='Delete this image'
           disabled={deleteBlocked !== null}

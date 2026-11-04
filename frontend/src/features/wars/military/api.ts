@@ -85,10 +85,8 @@ export function useUnitKinds() {
   })
 }
 
-export function words(value: string): string {
-  return value.replaceAll('_', ' ')
-}
-
-export function table(values: readonly string[]): Record<string, string> {
-  return Object.fromEntries(values.map((value) => [value, words(value)]))
+export function soldiersOf(army: ArmyCard): number {
+  return army.stacks.length > 0
+    ? army.stacks.reduce((sum, stack) => sum + stack.count, 0)
+    : army.size
 }
