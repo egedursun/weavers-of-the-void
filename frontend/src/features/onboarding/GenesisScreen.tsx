@@ -1,4 +1,5 @@
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { APP_NAME, APP_SUBTITLE } from '@/config/brand'
 import { useEvent } from '@/realtime'
 import {
@@ -29,6 +30,7 @@ import { useFeed } from '@/features/feed/feedStore'
 import { useWorldState } from '@/features/overview/api'
 import { useRevealQueue } from '@/features/pantheon/revealStore'
 import { GenesisWizard } from './GenesisWizard'
+import { WorldBorn } from './WorldBorn'
 
 function GenesisProgress() {
   const jobs = useRecentJobs()
@@ -159,17 +161,19 @@ function Hero() {
 export function GenesisScreen() {
   const state = useWorldState()
   const jobs = useRecentJobs()
-  const navigate = useNavigate()
   const expectGenesis = useRevealQueue((store) => store.expectGenesis)
+  const [witnessed, setWitnessed] = useState(false)
   useEvent('genesis.finished', () => {
     expectGenesis()
-    void navigate({ to: '/' })
+    setWitnessed(true)
+    void state.refetch()
   })
   const running = (jobs.data ?? []).some(
     (item) =>
       item.kind === 'genesis' &&
       (item.status === 'running' || item.status === 'queued')
   )
+  if (running && !witnessed) setWitnessed(true)
   const world = state.data?.world ?? null
   const llm = state.data?.llm_enabled ?? false
   return (
@@ -187,7 +191,10 @@ export function GenesisScreen() {
         {state.isPending && <Skeleton className='h-160 w-full' />}
         {state.isError && <Text tone='destructive'>{state.error.message}</Text>}
         {state.data && running && <GenesisProgress />}
-        {state.data && !running && world && (
+        {state.data && !running && world && witnessed && (
+          <WorldBorn state={state.data} />
+        )}
+        {state.data && !running && world && !witnessed && (
           <div className='flex w-full max-w-2xl min-w-0 flex-col self-center rounded-xl border bg-card p-6 shadow-sm'>
             <EmptyState
               icon={Globe}
