@@ -19,6 +19,7 @@ from aerona.domain.enums.polity import GenderRule, LawKind, OathKind, OfficeKind
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.causes import succession_incident
 from aerona.engine.mind.book import traits_of
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook, sex_of
@@ -361,5 +362,6 @@ async def press_claims(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
             key="polity.succession_war",
             ids=[claimant.id, realm.entity.id, host.id],
             kind=ChronicleKind.CIVILIZATION,
+            cause_incident_id=await succession_incident(ctx.session, realm.entity.id, [realm.ruler_id]),
         )
     return wars

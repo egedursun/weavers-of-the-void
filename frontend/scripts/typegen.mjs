@@ -7,7 +7,7 @@ const BACKEND_DIR = path.resolve(import.meta.dirname, '../../backend')
 const OUTPUT_DIR = path.resolve(import.meta.dirname, '../src/api/generated')
 const EXPORT_SCRIPT = 'import json; from aerona.main import create_app; print(json.dumps(create_app().openapi()))'
 
-const schemaJson = execFileSync('uv', ['run', 'python', '-c', EXPORT_SCRIPT], { cwd: BACKEND_DIR, encoding: 'utf8' })
+const schemaJson = execFileSync('uv', ['run', 'python', '-c', EXPORT_SCRIPT], { cwd: BACKEND_DIR, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 })
 const ast = await openapiTS(JSON.parse(schemaJson), { enumValues: true })
 mkdirSync(OUTPUT_DIR, { recursive: true })
 const withoutComments = astToString(ast)

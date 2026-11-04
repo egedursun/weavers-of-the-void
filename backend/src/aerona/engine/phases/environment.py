@@ -64,7 +64,7 @@ from aerona.engine.primitives.naming import Namer
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, canon, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
-from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.primitives.stats import base_stat, set_base_stats, set_stats, stat, stat_or
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
 
@@ -581,12 +581,12 @@ async def environment_derive(ctx: TickContext) -> None:
                 sanitation_pct=sanitation.get(region.id, 0),
                 scars=env.scars,
             )
-        current = stat(region, "fertility")
+        current = base_stat(region, "fertility")
         env.soil_fertility = fold_external(env.derived_fertility, current, env.soil_fertility)
         recover_soil(rules, env)
         if current is not None or not region.is_water:
-            set_stats(region, fertility=fertility_from(env.soil_fertility, factor_of(rules, env, context.works)))
-            env.derived_fertility = stat(region, "fertility")
+            set_base_stats(region, fertility=fertility_from(env.soil_fertility, factor_of(rules, env, context.works)))
+            env.derived_fertility = base_stat(region, "fertility")
             derived += 1
     for place_env in book.places.values():
         place = await ctx.session.get(EntityRow, place_env.entity_id)
@@ -594,9 +594,9 @@ async def environment_derive(ctx: TickContext) -> None:
         context = contexts.get(place_env.region_entity_id) if place_env.region_entity_id is not None else None
         if place is None or env is None or context is None or stat(place, "fertility") is None:
             continue
-        place_env.soil_fertility = fold_external(place_env.derived_fertility, stat(place, "fertility"), place_env.soil_fertility)
-        set_stats(place, fertility=fertility_from(place_env.soil_fertility, factor_of(rules, env, context.works)))
-        place_env.derived_fertility = stat(place, "fertility")
+        place_env.soil_fertility = fold_external(place_env.derived_fertility, base_stat(place, "fertility"), place_env.soil_fertility)
+        set_base_stats(place, fertility=fertility_from(place_env.soil_fertility, factor_of(rules, env, context.works)))
+        place_env.derived_fertility = base_stat(place, "fertility")
     await ctx.session.flush()
     ctx.count("regions_derived", derived)
 

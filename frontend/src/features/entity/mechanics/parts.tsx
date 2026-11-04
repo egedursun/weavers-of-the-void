@@ -20,6 +20,7 @@ import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { humanize } from '../actions/schema'
 import { MindPicker } from '../mind/parts'
+import { IncidentControls } from './IncidentForge'
 
 type Effective = components['schemas']['EffectiveValue']
 type Modifier = components['schemas']['ModifierRecord']
@@ -342,10 +343,12 @@ export function IncidentEntry({
   incident,
   last,
   blocked,
+  incidents = [],
 }: {
   incident: Incident
   last: boolean
   blocked: string | undefined
+  incidents?: Incident[]
 }) {
   const [writing, setWriting] = useState(false)
   const [note, setNote] = useState(incident.note ?? '')
@@ -398,6 +401,11 @@ export function IncidentEntry({
           )}
         </div>
         <CausalChain causes={incident.causes} text={null} />
+        <IncidentControls
+          incident={incident}
+          incidents={incidents}
+          blocked={blocked}
+        />
         {incident.note && !writing && <Text>{incident.note}</Text>}
         {writing ? (
           <div className='flex min-w-0 flex-wrap items-center gap-2'>

@@ -72,6 +72,14 @@ def set_stats(entity: EntityRow, **values: int | None) -> bool:
     return True
 
 
+def set_base_stats(entity: EntityRow, **values: int | None) -> bool:
+    lifted: dict[str, int | None] = {}
+    for key, value in values.items():
+        contributions = live_contributions(entity.id, key) if value is not None and has_stat(entity, key) else []
+        lifted[key] = clamp_to_field(entity, key, combine(value, contributions).value) if contributions and value is not None else value
+    return set_stats(entity, **lifted)
+
+
 def headcount_key(entity: EntityRow) -> str:
     return FOLLOWERS_KEY if entity.entity_type is EntityType.CULT else POPULATION_KEY
 

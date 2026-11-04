@@ -7,6 +7,7 @@ from aerona.constants.units import PERCENT
 from aerona.constants.warfare import BATTLE_NAME_TEMPLATE, SIEGE_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.repositories.chronicle import ChronicleRepository, caused_by
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.bonds import BondRow
@@ -25,6 +26,7 @@ from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.military import DuelContext, DuelEnd, OutcomeClass, Stance, StarvationStage
 from aerona.domain.enums.mind import ActKind, MemoryKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import Commodity, NaturalLaw
 from aerona.domain.enums.war import BattleOutcome, SiegeStatus, WarCause, WarEnding, WarStatus
 from aerona.domain.models.calendar import epoch_start_year
@@ -47,6 +49,7 @@ from aerona.engine.environment.battleground import (
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment, scar_region
 from aerona.engine.environment.years import grant_sub_steps
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.interconnect.causes import war_cause_incident
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.rites import warded
 from aerona.engine.military.aims import REGION_AIMS, advance, set_aims
@@ -712,14 +715,15 @@ async def _refused(
 
 async def _announce(
     ctx: TickContext, report: BattleReport, event: EntityRow, *, ground: BattleGround, place: EntityRow | None, son_id: int | None, taken: int
-) -> None:
+) -> int | None:
     war = report.war
     ids = [*([report.record.id] if report.record is not None else []), war.event_entity_id, report.winner.id, report.loser.id, *report.ids]
     setting = ground.describe()
     lead = f"{event.name}, {setting}" if setting else event.name
     captives = f" {taken} soldiers were led away captive." if taken else ""
     text = f"{lead}: {report.summary}.{captives}{''.join(report.hero_texts)}"
-    await ctx.chronicle(
+    outbreak = await ChronicleRepository(ctx.session).prior_incident([war.event_entity_id], ("war.outbreak", "war.battle."))
+    write = await ctx.chronicle(
         ChronicleKind.WAR,
         text,
         template_key=f"war.battle.{report.outcome.value}",
@@ -728,7 +732,10 @@ async def _announce(
         feed_category=FeedCategory.WAR,
         place_entity_id=place.id if place is not None else None,
         year=ground.year,
+        cause_incident_id=outbreak,
+        roles={report.winner.id: IncidentRole.ACTOR, report.loser.id: IncidentRole.TARGET},
     )
+    return write.incident_id
 
 
 async def _powers(
@@ -833,10 +840,11 @@ async def fight_battle(
     await _mark_ground(ctx, ground, gap, outcome)
     await _heroics(ctx, theatre, report)
     await _seasoned(ctx, theatre, (winner, loser), armies)
-    await _announce(ctx, report, event, ground=ground, place=place, son_id=son_id, taken=taken)
+    battle_incident = await _announce(ctx, report, event, ground=ground, place=place, son_id=son_id, taken=taken)
     ctx.count("battles")
     ctx.count("battle_captives", taken)
-    report.settlement = await check_war_end(ctx, item, attacker, defender, armies)
+    with caused_by(battle_incident):
+        report.settlement = await check_war_end(ctx, item, attacker, defender, armies)
     return report
 
 
@@ -887,6 +895,7 @@ async def check_war_end(
             template_key="war.ended_white_peace",
             entity_ids=(war.event_entity_id, attacker.id, defender.id),
             feed_category=FeedCategory.WAR,
+            roles={attacker.id: IncidentRole.ACTOR, defender.id: IncidentRole.ACTOR},
         )
         return settlement
     settlement = await end_war(ctx, war, WarEnding.VICTORY, victor_id=victor.id, loser_id=loser.id)
@@ -901,6 +910,7 @@ async def check_war_end(
         template_key=f"war.ended_{settlement.ending.value}",
         entity_ids=(war.event_entity_id, attacker.id, defender.id),
         feed_category=FeedCategory.WAR,
+        roles={victor.id: IncidentRole.ACTOR, loser.id: IncidentRole.TARGET},
     )
     return settlement
 
@@ -912,7 +922,11 @@ async def _outbreak(ctx: TickContext, war: WarRow, attacker: EntityRow, defender
         f"faces {second.name} ({stat(second, 'size') or 0} soldiers)."
     )
     ids = (war.event_entity_id, attacker.id, defender.id, first.id, second.id)
-    await ctx.chronicle(ChronicleKind.WAR, text, template_key="war.outbreak", entity_ids=ids, feed_category=FeedCategory.WAR)
+    cause = await war_cause_incident(ctx.session, war.cause, attacker.id, defender.id, ctx.epoch)
+    roles = {attacker.id: IncidentRole.ACTOR, defender.id: IncidentRole.TARGET, first.id: IncidentRole.ACTOR, second.id: IncidentRole.TARGET}
+    await ctx.chronicle(
+        ChronicleKind.WAR, text, template_key="war.outbreak", entity_ids=ids, feed_category=FeedCategory.WAR, cause_incident_id=cause, roles=roles
+    )
 
 
 async def _armies(ctx: TickContext, theatre: Theatre, war: WarRow, attacker: EntityRow, defender: EntityRow) -> dict[int, tuple[EntityRow, ArmyRow]]:
