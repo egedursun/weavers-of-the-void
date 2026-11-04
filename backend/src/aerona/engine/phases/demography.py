@@ -7,8 +7,9 @@ from aerona.engine.demography.cohorts import rebalance_classes, reconcile, seed
 from aerona.engine.demography.labour import allocate
 from aerona.engine.demography.mobility import class_mobility, desertion, ennoble_heroes, ruin_merchants
 from aerona.engine.demography.peoples import culture_for, ensure_profiles, refresh_culture
-from aerona.engine.demography.promotion import doze, promote, sync_veterans
+from aerona.engine.demography.promotion import doze, promote, sync_maimed, sync_veterans
 from aerona.engine.disease.emergence import WET
+from aerona.engine.disease.harm import community_targets
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.capacity import LAND_COMMUNITY_TYPES
@@ -27,20 +28,35 @@ async def region_of(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) 
 @reads(
     "people.population",
     "settlement.population",
+    "table.bodies",
     "table.community_cohorts",
     "table.community_societies",
+    "table.conditions",
     "table.culture_values",
+    "table.disease_profiles",
     "table.entity_flags",
     "table.incident_participants",
     "table.incidents",
+    "table.injuries",
     "table.maimed_cohorts",
+    "table.memories",
     "table.outbreaks",
     "table.people_biology",
     "table.people_culture",
     "table.region_environment",
     "table.world_maps",
 )
-@writes("table.community_cohorts", "table.entities", "table.entity_flags", "table.people_biology", "table.people_culture")
+@writes(
+    "table.bodies",
+    "table.community_cohorts",
+    "table.conditions",
+    "table.entities",
+    "table.entity_flags",
+    "table.injuries",
+    "table.memories",
+    "table.people_biology",
+    "table.people_culture",
+)
 async def cohort_upkeep(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     seeded = 0
@@ -53,6 +69,7 @@ async def cohort_upkeep(ctx: TickContext) -> None:
         seeded += 1
         await rebalance_classes(ctx.session, ctx.rules, community, rows, ctx.epoch)
         await sync_veterans(ctx, community)
+        await sync_maimed(ctx, community)
         await reconcile(ctx.session, ctx.rules, community, rows, ctx.epoch)
     ctx.count("cohorts_kept", seeded)
     ctx.count("promoted", await promote(ctx))
@@ -68,6 +85,8 @@ async def cohort_upkeep(ctx: TickContext) -> None:
     "table.community_cohorts",
     "table.community_labour",
     "table.community_societies",
+    "table.disease_profiles",
+    "table.outbreaks",
     "table.region_environment",
     "table.world_maps",
 )
@@ -80,7 +99,7 @@ async def labour_allocation(ctx: TickContext) -> None:
             continue
         ground = await region_of(ctx, atlas, community)
         wet_cold = ground is not None and (ground.temperature_band in COLD or ground.wetland >= WET)
-        await allocate(ctx, community, ground, wet_cold=wet_cold)
+        await allocate(ctx, community, ground, wet_cold=wet_cold, targets=await community_targets(ctx.session, community.id, atlas))
         kept += 1
     ctx.count("labour_kept", kept)
     await ctx.session.flush()

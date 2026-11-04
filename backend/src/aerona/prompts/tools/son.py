@@ -288,6 +288,27 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "for {{ rules.environment.sever_ley_epochs }} ages. {{ rules.son_tools.sever_ley_essence }} essence, 1 action.",
         {"line_id": "The ley line's id (see the region's ley lines)", "reason": "Why you cut it"},
     ),
+    T.LOOSE_DISEASE: ToolText(
+        "You forge a new sickness of your own design and loose it on a region or community: you choose how it spreads (vector), the body functions "
+        "it strikes, how readily it passes on, how many it kills, how long it hides before the sick show it, which beast carries it and the climate it loves. "
+        "It spreads along roads, armies and journeys by its vector, survivors grow immune, and you gain essence from every outbreak of it. "
+        "{{ rules.son_tools.loose_disease_essence }} essence, 1 action.",
+        {
+            "target_id": "The region or community it first strikes",
+            "name": "The sickness's name in the world's language",
+            "vector": "How it passes on: air (crowds and cold), water (rivers, marsh, poor sanitation), touch (caravans and armies), "
+            "bite (needs its host beast), spirit (magic, ley lines, the impious), void (void-scarred lands), curse (bound to you while you live)",
+            "target_functions": "The body functions it strikes; survivors may keep a lasting weakness there",
+            "virulence": "How readily it spreads, 1 to 100",
+            "lethality": "How many of the sick die, 1 to 100",
+            "incubation": "Sampled years before the sick show it (0 to 20): long incubation spreads it unseen, past quarantines",
+            "chronic_rate": "How many survivors keep a lasting weakness, 0 to 100",
+            "climate_affinity": "The climate where it spreads fastest",
+            "host_species_id": "Optional: the species that carries it; killing that species weakens the sickness",
+            "severity": "How hard the first outbreak strikes, 1 to 100",
+            "reason": "Why you loose it",
+        },
+    ),
     T.REORDER_SEASONS: ToolText(
         "You reorder the seasons of a world: the year runs in the order you name, so harvests, campaigns, travel and festivals fall differently. "
         "Only gods of sky, storm, time, sun, moon, harvest, ice or plants can do it. {{ rules.son_tools.reorder_seasons_essence }} essence, "

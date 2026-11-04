@@ -51,6 +51,8 @@ import { BAND, named } from '../environment/labels'
 import { PRESSURE_ICONS, VALUE_ICONS } from '../mind/labels'
 import { MindPicker } from '../mind/parts'
 import { useDemography } from './api'
+import { DormancyPanel, SetCohort, SickCohorts } from './cohortParts'
+import { ForgeDisease } from './diseaseParts'
 import {
   AESTHETIC_SPEC,
   AGE_ORDER,
@@ -130,7 +132,13 @@ const PYRAMID_GAP = 6
 const PYRAMID_LABEL = 104
 const PYRAMID_COUNT = 52
 const PYRAMID_CHAR = 6.6
-const CONDITIONS: CohortCondition[] = ['veteran', 'sick', 'enslaved', 'captive']
+const CONDITIONS: CohortCondition[] = [
+  'veteran',
+  'sick',
+  'maimed',
+  'enslaved',
+  'captive',
+]
 
 function classColor(socialClass: SocialClass): string {
   return PALETTE[CLASS_ORDER.indexOf(socialClass) % PALETTE.length]
@@ -425,6 +433,7 @@ function MoveCohort({
   const [target, setTarget] = useState<string>('serf_or_slave')
   const [band, setBand] = useState<string>(ANY)
   const [condition, setCondition] = useState<string>(KEEP)
+  const [from, setFrom] = useState<string>(ANY)
   const move = useGodAction({
     run: () =>
       unwrap(
@@ -437,6 +446,7 @@ function MoveCohort({
             band: band === ANY ? null : (band as AgeBand),
             condition:
               condition === KEEP ? null : (condition as CohortCondition),
+            from_condition: from === ANY ? null : (from as CohortCondition),
           },
         })
       ),
@@ -448,6 +458,10 @@ function MoveCohort({
   }
   const states: Record<string, Spec> = {
     [KEEP]: { label: 'As they are', icon: Users },
+    ...CONDITION_SPEC,
+  }
+  const sources: Record<string, Spec> = {
+    [ANY]: { label: 'Any condition', icon: Users },
     ...CONDITION_SPEC,
   }
   const parsed = Number(count)
@@ -494,6 +508,13 @@ function MoveCohort({
           onPick={setBand}
         />
         <IconPicker
+          label='Who are'
+          value={from}
+          table={sources}
+          blocked={busy}
+          onPick={setFrom}
+        />
+        <IconPicker
           label='Mark them as'
           value={condition}
           table={states}
@@ -504,12 +525,16 @@ function MoveCohort({
           <Button
             size='sm'
             className='w-full'
-            disabled={busy !== null || invalid || source === target}
+            disabled={
+              busy !== null ||
+              invalid ||
+              (source === target && (condition === KEEP || condition === from))
+            }
             disabledReason={
               busy ??
               (invalid
                 ? 'Give a whole number of people.'
-                : 'Choose two different classes.')
+                : 'Choose a different class or condition.')
             }
             onClick={() => move.mutate(undefined)}
           >
@@ -701,11 +726,21 @@ export function DemographySection({
               </Panel>
             )}
           </div>
+          <div className='grid min-w-0 grid-cols-1 gap-3 @xl/demo:grid-cols-2'>
+            <SickCohorts view={data} blocked={blocked} />
+            <DormancyPanel view={data} blocked={blocked} />
+          </div>
           <AdjustPanel
             title='Shape the people'
-            note='Move people between classes, bind them or set them free. Every change goes into the ledger and can be undone.'
+            note='Move people between classes and conditions, heal the sick, set any cohort to an exact headcount, or forge a sickness to loose on them. Every change goes into the ledger and can be undone.'
           >
             <MoveCohort view={data} blocked={blocked} />
+            <SetCohort view={data} blocked={blocked} />
+            <ForgeDisease
+              anchorId={data.entity_id}
+              targetId={data.entity_id}
+              blocked={blocked}
+            />
           </AdjustPanel>
         </div>
       )}

@@ -200,6 +200,8 @@ class SonResult(StrEnum):
     WEATHER_NOT_REGION = "Weather is held over a region; {{ name }} is not one."
     LEY_SEVERED = "The ley line between {{ first }} and {{ second }} is cut for {{ epochs }} ages."
     NO_SUCH_LEY = "There is no ley line #{{ id }}."
+    DISEASE_TARGET = "A sickness can only be loosed on a region or a community."
+    DISEASE_LOOSED = "#{{ id }} {{ name }} rose in {{ land }} and struck {{ target }} (severity {{ severity }})."
     LEY_OUT_OF_REACH = "Your hand does not reach that ley line: its lands are not on your world or a world joined to yours."
     SEASONS_OUT_OF_REACH = "Your hand does not reach {{ name }}: it is not your world and no open road joins it to yours."
     SEASONS_INVALID = "Name every season of {{ name }} exactly once, by its current position: {{ seasons }}."

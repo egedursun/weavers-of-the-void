@@ -152,9 +152,14 @@ async def seed(session: AsyncSession, rules: Rules, community: EntityRow, epoch:
     return rows
 
 
-def weights_for(rows: Mapping[CohortKey, CohortRow], category: FlowCategory, condition: CohortCondition | None = None) -> dict[CohortKey, float]:
+def weights_for(
+    rows: Mapping[CohortKey, CohortRow], category: FlowCategory, condition: CohortCondition | None = None, *, sick_weight: float = 1.0
+) -> dict[CohortKey, float]:
     profile = PROFILES.get(category, UNIFORM)
-    return {key: profile.get((key[0], key[1]), 0.0) for key in rows if condition is None or key[3] is condition}
+    lean = sick_weight if category is FC.PLAGUE else 1.0
+    return {
+        key: profile.get((key[0], key[1]), 0.0) * (lean if key[3] is CohortCondition.SICK else 1.0) for key in rows if condition is None or key[3] is condition
+    }
 
 
 async def apply_flow(session: AsyncSession, rules: Rules, community: EntityRow, delta: int, *, category: FlowCategory, epoch: int) -> None:
@@ -162,7 +167,7 @@ async def apply_flow(session: AsyncSession, rules: Rules, community: EntityRow, 
     if not rows:
         return
     if delta < 0:
-        place(rows, weights_for(rows, category), -delta, add=False)
+        place(rows, weights_for(rows, category, sick_weight=rules.epidemiology.sick_death_weight_pct / PERCENT), -delta, add=False)
         return
     shares = await class_shares(session, rules, community.id)
     condition = FLOW_CONDITION.get(category, CohortCondition.NONE)

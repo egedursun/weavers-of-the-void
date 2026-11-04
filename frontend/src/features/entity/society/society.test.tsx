@@ -53,11 +53,19 @@ const DISEASE = {
       ended_epoch: null,
       quarantined: false,
       event_id: null,
+      locked: [],
+      unseen_pct: 0,
     },
   ],
   endemic: [],
   cures: [],
   immunities: [],
+  origin_incident_id: null,
+  origin: null,
+  incidents: [],
+  hosts: [],
+  unseen_pct: 0,
+  sick: 0,
 }
 
 const EFFECTS = {
@@ -217,7 +225,9 @@ describe('society sections', () => {
       .poll(() => callsTo('POST', '/api/actions/outbreak:end'))
       .toHaveLength(1)
     await screen.getByRole('button', { name: 'Adjust' }).click()
-    await screen.getByRole('spinbutton', { name: 'Virulence' }).fill('70')
+    await screen
+      .getByRole('spinbutton', { name: 'Virulence', exact: true })
+      .fill('70')
     await screen.getByRole('button', { name: 'Set Virulence' }).click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/disease:edit'))
@@ -225,6 +235,7 @@ describe('society sections', () => {
     expect(callsTo('POST', '/api/actions/disease:edit')[0].body).toEqual({
       disease_id: 40,
       values: { virulence: 70 },
+      hold: true,
     })
     await expect.element(screen.getByText('Held').first()).toBeVisible()
   })

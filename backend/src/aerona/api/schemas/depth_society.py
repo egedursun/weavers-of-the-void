@@ -89,6 +89,27 @@ class DemographyView(ApiModel):
     neighbours: list[NeighbourCulture]
     inequality: int
     mobilisation_pct: int
+    afflictions: list["AfflictionView"]
+    named: list["NamedMortalView"]
+    held: list[str]
+
+
+class AfflictionView(ApiModel):
+    disease_id: int
+    disease: str
+    vector: DiseaseVector
+    target_functions: list[DiseaseTarget]
+    severity: int
+    status: OutbreakStatus
+    outbreak_id: int
+
+
+class NamedMortalView(ApiModel):
+    id: int
+    name: str
+    dormant: bool
+    held: bool
+    importance: int
 
 
 class ImmunityView(ApiModel):
@@ -96,6 +117,7 @@ class ImmunityView(ApiModel):
     community: str
     age_band: AgeBand
     immune_pct: int
+    locked: bool
 
 
 class OutbreakView(ApiModel):
@@ -114,6 +136,8 @@ class OutbreakView(ApiModel):
     ended_epoch: int | None
     quarantined: bool
     event_id: int | None
+    locked: list[str]
+    unseen_pct: int
 
 
 class StrainView(ApiModel):
@@ -129,6 +153,9 @@ class EndemicView(ApiModel):
     region: str
     load: int
     since_epoch: int
+    locked: bool
+    disease_id: int
+    disease: str
 
 
 class CureView(ApiModel):
@@ -158,11 +185,35 @@ class DiseaseView(ApiModel):
     origin_region_id: int | None
     emerged_epoch: int
     locked: list[str]
+    origin_incident_id: int | None
+    origin: "IncidentRefView | None"
+    incidents: list["IncidentRefView"]
+    hosts: list["HostView"]
+    unseen_pct: int
+    sick: int
     strains: list[StrainView]
     outbreaks: list[OutbreakView]
     endemic: list[EndemicView]
     cures: list[CureView]
     immunities: list[ImmunityView]
+
+
+class IncidentRefView(ApiModel):
+    id: int
+    epoch: int
+    year: int | None
+    kind: str
+    text: str
+    place_id: int | None
+
+
+class HostView(ApiModel):
+    species_id: int
+    name: str
+    immune: bool
+    lands: int
+    abundance: int
+    primary: bool
 
 
 class QuarantineView(ApiModel):
@@ -327,3 +378,7 @@ class SettlementPlanView(ApiModel):
     districts: list[DistrictView]
     treasury_ledger: list[TreasuryLine]
     history: list[HistoryPoint]
+
+
+DemographyView.model_rebuild()
+DiseaseView.model_rebuild()

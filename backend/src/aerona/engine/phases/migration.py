@@ -10,6 +10,7 @@ from aerona.domain.enums.society import Commodity
 from aerona.domain.models.entity_stats import SettlementStats
 from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
+from aerona.engine.disease.load import endemic_repel
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.interconnect.annotations import reads
 from aerona.engine.lore.legends import haunted_regions
@@ -57,7 +58,7 @@ async def kin_pull(ctx: TickContext, atlas: RegionAtlas, origin: EntityRow | Non
     return 1 + (nearest - 1) * ctx.rules.culture_drift.migration_kinship_pct / PERCENT
 
 
-async def town_pull(ctx: TickContext, atlas: RegionAtlas, region_id: int) -> float:
+async def town_pull(ctx: TickContext, atlas: RegionAtlas, region_id: int, origin: EntityRow | None = None) -> float:
     best = 0.0
     for entity_id in atlas.communities_in(region_id):
         town = await ctx.session.get(SettlementProfileRow, entity_id)
@@ -75,7 +76,11 @@ async def town_pull(ctx: TickContext, atlas: RegionAtlas, region_id: int) -> flo
         if await law_param(ctx.session, entity_id, LawKind.FOREIGNER_RIGHTS, "level") == "citizenship":
             welcome = 1 + ctx.rules.legislation.foreigner_pull_pct / PERCENT
             break
-    return (1 + best * ctx.rules.urban.migration_pull_pct / PERCENT) * welcome
+    return (
+        (1 + best * ctx.rules.urban.migration_pull_pct / PERCENT)
+        * welcome
+        * await endemic_repel(ctx.session, ctx.rules, region_id, origin.id if origin is not None else None)
+    )
 
 
 async def greener_region(
@@ -97,7 +102,9 @@ async def greener_region(
             continue
         fertility = stat(neighbour, "fertility")
         value = fertility if fertility is not None else effects.unknown_fertility
-        appeal = value * (PERCENT + passable) / (2 * PERCENT) * await kin_pull(ctx, atlas, origin, neighbour.id) * await town_pull(ctx, atlas, neighbour.id)
+        appeal = (
+            value * (PERCENT + passable) / (2 * PERCENT) * await kin_pull(ctx, atlas, origin, neighbour.id) * await town_pull(ctx, atlas, neighbour.id, origin)
+        )
         if value > floor and (best is None or appeal > best[0]):
             best = (appeal, neighbour)
     return best[1] if best is not None else None
@@ -140,7 +147,9 @@ async def migrate(ctx: TickContext, atlas: RegionAtlas, source: EntityRow, targe
     "settlement.prosperity",
     "table.calendars",
     "table.community_societies",
+    "table.endemic_diseases",
     "table.forced_weather",
+    "table.immunities",
     "table.place_environment",
     "table.pressures",
     "table.region_environment",

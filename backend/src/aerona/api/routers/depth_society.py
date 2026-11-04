@@ -39,6 +39,7 @@ from aerona.api.schemas.depth_society import (
     TreasuryLine,
     ValuePoint,
 )
+from aerona.api.views.disease import afflictions, community_holds, disease_incidents, disease_sick, host_views, named_mortals, unseen_pct
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
@@ -56,14 +57,15 @@ from aerona.db.tables.settlement import (
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.demography import Job
-from aerona.domain.enums.disease import DiseaseTarget
+from aerona.domain.enums.disease import DiseaseTarget, OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import culture_of, people_of
-from aerona.engine.demography.labour import AGE_WORK, CONDITION_WORK, jobs_for, mobilisation
+from aerona.engine.demography.labour import AGE_WORK, condition_work, jobs_for, mobilisation
 from aerona.engine.demography.mobility import inequality
+from aerona.engine.disease.harm import community_targets
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.stats import stat
@@ -115,12 +117,12 @@ async def neighbours_of(session: AsyncSession, people: EntityRow) -> list[Neighb
     return views
 
 
-def labour_flows(rules: Rules, rows: list[CohortRow]) -> list[LabourFlowView]:
+def labour_flows(rules: Rules, rows: list[CohortRow], targets: frozenset[DiseaseTarget] = frozenset()) -> list[LabourFlowView]:
     found: dict[tuple[SocialClass, Job], float] = defaultdict(float)
     for row in rows:
-        hands = row.count * AGE_WORK[row.age_band] * CONDITION_WORK[row.condition]
+        hands = row.count * AGE_WORK[row.age_band]
         for job, share in jobs_for(rules, row.social_class).items():
-            found[(row.social_class, job)] += hands * share
+            found[(row.social_class, job)] += hands * condition_work(rules, row.condition, job, targets) * share
     return [LabourFlowView(social_class=key[0], job=key[1], workers=round(value)) for key, value in sorted(found.items()) if value >= 1]
 
 
@@ -140,7 +142,9 @@ async def demography(services: ServicesDep, entity_id: int = Path(ge=1)) -> Demo
             for row in await session.scalars(select(LabourRow).where(LabourRow.community_entity_id == entity.id).order_by(LabourRow.job))
         ]
         society = await session.get(CommunitySocietyRow, entity.id)
-        flows = labour_flows(rules, list(await session.scalars(select(CohortRow).where(CohortRow.community_entity_id == entity.id))))
+        flows = labour_flows(
+            rules, list(await session.scalars(select(CohortRow).where(CohortRow.community_entity_id == entity.id))), await community_targets(session, entity.id)
+        )
         pressures = [PressureView(kind=kind, value=value) for kind, value in sorted((await pressures_of(session, entity.id)).items())]
         classes = (
             [ClassMood(social_class=item, share=society.share(item), satisfaction=society.satisfaction(item)) for item in SocialClass]
@@ -189,10 +193,13 @@ async def demography(services: ServicesDep, entity_id: int = Path(ge=1)) -> Demo
             neighbours=await neighbours_of(session, people) if people is not None else [],
             inequality=inequality(society) if society is not None else 0,
             mobilisation_pct=round(await mobilisation(session, rules, entity, harvest_share=0.0) * PERCENT),
+            afflictions=await afflictions(session, entity.id),
+            named=await named_mortals(session, entity.id),
+            held=await community_holds(session, entity.id),
         )
 
 
-def outbreak_views(rows: list[OutbreakRow], names: dict[int, str], sources: dict[int, int]) -> list[OutbreakView]:
+def outbreak_views(rows: list[OutbreakRow], names: dict[int, str], sources: dict[int, int], unseen: Mapping[int, int] | None = None) -> list[OutbreakView]:
     return [
         OutbreakView(
             id=row.id,
@@ -210,6 +217,32 @@ def outbreak_views(rows: list[OutbreakRow], names: dict[int, str], sources: dict
             ended_epoch=row.ended_epoch,
             quarantined=row.quarantined,
             event_id=row.event_entity_id,
+            locked=list(row.locked or []),
+            unseen_pct=(unseen or {}).get(row.id, 0),
+        )
+        for row in rows
+    ]
+
+
+async def unseen_of(session: AsyncSession, rules: Rules, rows: list[OutbreakRow]) -> dict[int, int]:
+    epoch = (await CosmosRepository(session).require_cosmos()).epoch
+    profiles = {
+        row.disease_entity_id: row
+        for row in await session.scalars(select(DiseaseProfileRow).where(DiseaseProfileRow.disease_entity_id.in_({item.disease_entity_id for item in rows})))
+    }
+    return {row.id: unseen_pct(rules, profiles.get(row.disease_entity_id), row, epoch) for row in rows if row.status is not OutbreakStatus.ENDED}
+
+
+def endemic_views(rows: list[EndemicDiseaseRow], names: dict[int, str]) -> list[EndemicView]:
+    return [
+        EndemicView(
+            region_id=row.region_entity_id,
+            region=names.get(row.region_entity_id, ""),
+            load=row.load,
+            since_epoch=row.since_epoch,
+            locked=bool(row.locked),
+            disease_id=row.disease_entity_id,
+            disease=names.get(row.disease_entity_id, ""),
         )
         for row in rows
     ]
@@ -241,11 +274,14 @@ async def disease(services: ServicesDep, entity_id: int = Path(ge=1)) -> Disease
             *(row.disease_entity_id for row in strains),
             *(row.region_entity_id for row in outbreaks),
             *(row.region_entity_id for row in endemic),
+            *(row.disease_entity_id for row in endemic),
             *(row.community_entity_id for row in cures),
             *(row.community_entity_id for row in immunities),
         }
         names = await names_of(session, ids)
         children = {row.id: row for row in await session.scalars(select(EntityRow).where(EntityRow.id.in_([row.disease_entity_id for row in strains])))}
+        rules = await rules_of(session)
+        incidents = await disease_incidents(session, entity.id, profile.origin_incident_id)
         return DiseaseView(
             entity_id=entity.id,
             name=entity.name,
@@ -266,6 +302,12 @@ async def disease(services: ServicesDep, entity_id: int = Path(ge=1)) -> Disease
             origin_region_id=profile.origin_region_id,
             emerged_epoch=profile.emerged_epoch,
             locked=list(profile.locked),
+            origin_incident_id=profile.origin_incident_id,
+            origin=next((item for item in incidents if item.id == profile.origin_incident_id), None),
+            incidents=incidents,
+            hosts=await host_views(session, profile),
+            unseen_pct=unseen_pct(rules, profile, None, 0),
+            sick=await disease_sick(session, entity.id),
             strains=[
                 StrainView(
                     id=row.disease_entity_id,
@@ -277,18 +319,19 @@ async def disease(services: ServicesDep, entity_id: int = Path(ge=1)) -> Disease
                 for row in strains
                 if row.disease_entity_id in children
             ],
-            outbreaks=outbreak_views(outbreaks, names, await source_regions(session, outbreaks)),
-            endemic=[
-                EndemicView(region_id=row.region_entity_id, region=names.get(row.region_entity_id, ""), load=row.load, since_epoch=row.since_epoch)
-                for row in endemic
-            ],
+            outbreaks=outbreak_views(outbreaks, names, await source_regions(session, outbreaks), await unseen_of(session, rules, outbreaks)),
+            endemic=endemic_views(endemic, names),
             cures=[
                 CureView(community_id=row.community_entity_id, community=names.get(row.community_entity_id, ""), source=row.source, since_epoch=row.since_epoch)
                 for row in cures
             ],
             immunities=[
                 ImmunityView(
-                    community_id=row.community_entity_id, community=names.get(row.community_entity_id, ""), age_band=row.age_band, immune_pct=row.immune_pct
+                    community_id=row.community_entity_id,
+                    community=names.get(row.community_entity_id, ""),
+                    age_band=row.age_band,
+                    immune_pct=row.immune_pct,
+                    locked=bool(row.locked),
                 )
                 for row in immunities
             ],
@@ -308,16 +351,15 @@ async def world_outbreaks(services: ServicesDep, world_id: int = Path(ge=1)) -> 
                 *(row.region_entity_id for row in outbreaks),
                 *(row.disease_entity_id for row in outbreaks),
                 *(row.region_entity_id for row in endemic),
+                *(row.disease_entity_id for row in endemic),
                 *(row.region_entity_id for row in quarantines),
             },
         )
+        rules = await rules_of(session)
         return OutbreakMapView(
             world_id=world_id,
-            outbreaks=outbreak_views(outbreaks, names, await source_regions(session, outbreaks)),
-            endemic=[
-                EndemicView(region_id=row.region_entity_id, region=names.get(row.region_entity_id, ""), load=row.load, since_epoch=row.since_epoch)
-                for row in endemic
-            ],
+            outbreaks=outbreak_views(outbreaks, names, await source_regions(session, outbreaks), await unseen_of(session, rules, outbreaks)),
+            endemic=endemic_views(endemic, names),
             quarantines=[
                 QuarantineView(region_id=row.region_entity_id, region=names.get(row.region_entity_id, ""), until_epoch=row.until_epoch) for row in quarantines
             ],

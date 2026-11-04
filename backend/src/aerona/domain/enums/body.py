@@ -86,6 +86,7 @@ class InjuryKind(StrEnum):
     CURSE_WITHER = "curse_wither"
     VOID_TOUCH = "void_touch"
     DIVINE_BRAND = "divine_brand"
+    SICKNESS = "sickness"
 
 
 class InjuryState(StrEnum):

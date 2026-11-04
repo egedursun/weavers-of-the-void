@@ -4,16 +4,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.agents.context.lore import lore_lines
 from aerona.agents.context.wilds import wild_lines
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.demography import PeopleCultureRow
-from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
+from aerona.db.tables.demography import CohortRow, PeopleCultureRow
+from aerona.db.tables.disease import DiseaseProfileRow, EndemicDiseaseRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultDoctrineRow
+from aerona.db.tables.interconnect import IncidentRow
+from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.military import CaptiveCohortRow, CommanderTraitRow, OccupationRow, WarAimRow
 from aerona.db.tables.polity import HouseMemberRow, OathRow, OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.demography import CohortCondition
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import SOCIETY_TYPES
 from aerona.domain.enums.military import CaptiveFate
@@ -50,14 +53,7 @@ async def home_for(session: AsyncSession, me: EntityRow) -> HomeLine | None:
         if culture.slavery_lawful:
             customs.append("keeps slaves")
     region = (await RegionAtlas.load(session)).top_region(home.id)
-    sickness: list[str] = []
-    if region is not None:
-        raging = await session.scalars(select(OutbreakRow).where(OutbreakRow.region_entity_id == region, OutbreakRow.status != OutbreakStatus.ENDED))
-        endemic = await session.scalars(select(EndemicDiseaseRow).where(EndemicDiseaseRow.region_entity_id == region))
-        for disease_id, label in [*((row.disease_entity_id, "raging") for row in raging), *((row.disease_entity_id, "endemic") for row in endemic)]:
-            disease = await session.get(EntityRow, disease_id)
-            if disease is not None:
-                sickness.append(f"{disease.name} ({label})")
+    sickness = await sickness_lines(session, home, region)
     social = me.social_class
     realm_id = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == home.id).limit(1))
     realm = await session.get(EntityRow, realm_id) if realm_id is not None else None
@@ -106,6 +102,40 @@ async def home_for(session: AsyncSession, me: EntityRow) -> HomeLine | None:
         customs=customs,
         sickness=sickness,
     )
+
+
+async def sickness_lines(session: AsyncSession, home: EntityRow, region: int | None) -> list[str]:
+    if region is None:
+        return []
+    found: list[str] = []
+    raging = await session.scalars(select(OutbreakRow).where(OutbreakRow.region_entity_id == region, OutbreakRow.status != OutbreakStatus.ENDED))
+    endemic = await session.scalars(select(EndemicDiseaseRow).where(EndemicDiseaseRow.region_entity_id == region))
+    sick = sum(await session.scalars(select(CohortRow.count).where(CohortRow.community_entity_id == home.id, CohortRow.condition == CohortCondition.SICK)))
+    for disease_id, label in [*((row.disease_entity_id, "raging") for row in raging), *((row.disease_entity_id, "endemic") for row in endemic)]:
+        disease = await session.get(EntityRow, disease_id)
+        if disease is None:
+            continue
+        profile = await session.get(DiseaseProfileRow, disease_id)
+        found.append(f"{disease.name} ({label}{await disease_traits(session, profile)})")
+    if sick:
+        found.append(f"{sick} of {home.name} lie sick")
+    return found
+
+
+async def disease_traits(session: AsyncSession, profile: DiseaseProfileRow | None) -> str:
+    if profile is None:
+        return ""
+    parts = [f"spread by {profile.vector.value}", f"strikes {', '.join(words(item) for item in profile.target_functions)}"]
+    if profile.incubation:
+        parts.append(f"hides {profile.incubation} years before it shows")
+    host = await session.get(EntityRow, profile.host_species_id) if profile.host_species_id is not None else None
+    if host is not None:
+        parts.append(f"carried by {host.name}")
+    origin = await session.get(IncidentRow, profile.origin_incident_id) if profile.origin_incident_id is not None else None
+    if origin is not None:
+        text = await session.scalar(select(ChronicleRow.text).where(ChronicleRow.id == origin.chronicle_id)) if origin.chronicle_id is not None else None
+        parts.append(f"first rose in epoch {origin.epoch}{': ' + text if text else ''}")
+    return "; " + "; ".join(parts)
 
 
 async def war_lines(session: AsyncSession, me: EntityRow, home: EntityRow, region: int | None) -> tuple[list[str], str, str, int]:

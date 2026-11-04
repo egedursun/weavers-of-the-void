@@ -11,6 +11,7 @@ import {
   Hourglass,
   Lock,
   MapPin,
+  PawPrint,
   Shield,
   ShieldCheck,
   Skull,
@@ -55,6 +56,18 @@ import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { useNames } from '../api/queries'
 import { useDisease } from './api'
+import {
+  EndemicControls,
+  ForgeDisease,
+  HostsPanel,
+  ImmunityControls,
+  OriginLine,
+  OutbreakControls,
+  OutbreakHolds,
+  ShapeControls,
+  StrikesPanel,
+  TravelPanel,
+} from './diseaseParts'
 import {
   AFFINITY_SPEC,
   AGE_SPEC,
@@ -181,6 +194,7 @@ function OutbreakItem({
               Sealed
             </Badge>
           )}
+          <OutbreakHolds item={item} />
           <EntityLink kind='entity' id={String(item.region_id)} showIcon>
             Open the land
           </EntityLink>
@@ -397,7 +411,11 @@ function NatureControls({
     run: ({ key, value }: { key: string; value: number | string }) =>
       unwrap(
         api.POST('/api/actions/disease:edit', {
-          body: { disease_id: view.entity_id, values: { [key]: value } },
+          body: {
+            disease_id: view.entity_id,
+            values: { [key]: value },
+            hold: true,
+          },
         })
       ),
     success: (_result, change) => `${fieldLabel(change.key)} set`,
@@ -527,6 +545,7 @@ function Levers({ view, blocked }: { view: Disease; blocked: string | null }) {
             disease_id: view.entity_id,
             community_id: Number(community),
             immune_pct: PERCENT,
+            forget: false,
           },
         })
       ),
@@ -764,10 +783,20 @@ export function DiseaseSection({
                   </Badge>
                 )}
               </div>
-              <Muted variant='caption'>
-                {`Emerged in epoch ${data.emerged_epoch}`}
-                {origin ? ` in ${origin.region}` : ''}
-              </Muted>
+              {data.hosts.length > 0 && (
+                <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+                  {data.hosts.map((host) => (
+                    <Badge key={host.species_id} size='sm' variant='secondary'>
+                      <PawPrint />
+                      {`Carried by ${host.name}`}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+              <OriginLine view={data} />
+              {origin && (
+                <Muted variant='caption'>{`First outbreak in ${origin.region}`}</Muted>
+              )}
             </div>
           </div>
           <div className='grid min-w-0 grid-cols-2 gap-3 @xl/sick:grid-cols-4'>
@@ -860,6 +889,13 @@ export function DiseaseSection({
               />
             </div>
           </Panel>
+          <div className='grid min-w-0 grid-cols-1 gap-3 @xl/sick:grid-cols-2'>
+            <TravelPanel view={data} />
+            <HostsPanel view={data} />
+            <div className='min-w-0 @xl/sick:col-span-2'>
+              <StrikesPanel view={data} />
+            </div>
+          </div>
           <Panel
             title='Outbreaks'
             icon={Users}
@@ -885,10 +921,21 @@ export function DiseaseSection({
           <Reach view={data} />
           <AdjustPanel
             title='Shape the sickness'
-            note='Change how it spreads and kills, loose it on a land, seal lands, or heal communities. Every change goes into the ledger and can be undone.'
+            note='Change how it spreads, what it strikes and what carries it; reshape its outbreaks and where it lingers; loose it, seal lands, heal communities or forge a new sickness. Every change goes into the ledger and can be undone.'
           >
             <NatureControls view={data} blocked={blocked} />
+            <ShapeControls view={data} blocked={blocked} />
+            <OutbreakControls view={data} blocked={blocked} />
+            <EndemicControls view={data} blocked={blocked} />
             <Levers view={data} blocked={blocked} />
+            <EditorGroup title='Resistance by age' icon={ShieldCheck} pairs>
+              <ImmunityControls view={data} blocked={blocked} />
+            </EditorGroup>
+            <ForgeDisease
+              anchorId={data.entity_id}
+              landId={data.origin_region_id}
+              blocked={blocked}
+            />
           </AdjustPanel>
         </div>
       )}

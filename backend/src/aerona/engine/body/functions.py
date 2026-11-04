@@ -53,8 +53,13 @@ def part_losses(anatomy: Anatomy, wounds: Iterable[Wound], venom_paralysis_at: i
     return losses, direct
 
 
-def function_levels(rules: CapacityRules, anatomy: Anatomy, wounds: Iterable[Wound], fingers: int, venom_paralysis_at: int) -> dict[BodyFunction, float]:
+def function_levels(
+    rules: CapacityRules, anatomy: Anatomy, wounds: Iterable[Wound], fingers: int, venom_paralysis_at: int, *, afflicted: Iterable[tuple[str, int]] = ()
+) -> dict[BodyFunction, float]:
     losses, direct = part_losses(anatomy, wounds, venom_paralysis_at)
+    for key, loss in afflicted:
+        if anatomy.part(key) is not None:
+            losses[key] = min(1.0, max(losses.get(key, 0.0), loss / PERCENT))
     levels: dict[BodyFunction, float] = {}
     for function in BodyFunction:
         parts = anatomy.with_function(function)

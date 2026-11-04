@@ -75,6 +75,15 @@ WHITELISTED_TABLES = frozenset(
         "treaty_clauses",
         "oaths",
         "workshops",
+        "disease_profiles",
+        "outbreaks",
+        "immunities",
+        "endemic_diseases",
+        "disease_cures",
+        "quarantines",
+        "community_cohorts",
+        "species_hosts",
+        "community_societies",
     }
 )
 PERMANENT_BIRTH_TABLES = frozenset({"sons", "worlds"})

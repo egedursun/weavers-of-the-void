@@ -11,6 +11,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.demography import AgeBand, CohortCondition, Job
+from aerona.domain.enums.disease import DiseaseTarget
 from aerona.domain.enums.environment import CoastKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind
@@ -18,6 +19,7 @@ from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import cohorts_of, seed
+from aerona.engine.disease.harm import community_targets, sick_levy, sick_work
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
@@ -29,7 +31,7 @@ LEVY_BASE = 10
 SEASON_SICK_PCT = 50
 AGE_WORK: Mapping[AgeBand, float] = MappingProxyType({AgeBand.CHILD: 0.2, AgeBand.ADULT: 1.0, AgeBand.ELDER: 0.5})
 CONDITION_WORK: Mapping[CohortCondition, float] = MappingProxyType(
-    {CohortCondition.NONE: 1.0, CohortCondition.VETERAN: 0.9, CohortCondition.SICK: 0.3, CohortCondition.ENSLAVED: 1.0, CohortCondition.CAPTIVE: 0.8}
+    {CohortCondition.NONE: 1.0, CohortCondition.VETERAN: 0.9, CohortCondition.ENSLAVED: 1.0, CohortCondition.CAPTIVE: 0.8}
 )
 CLASS_JOBS: Mapping[SocialClass, Mapping[Job, float]] = MappingProxyType(
     {
@@ -45,6 +47,14 @@ CLASS_JOBS: Mapping[SocialClass, Mapping[Job, float]] = MappingProxyType(
 )
 FOOD_JOBS = (J.FARMING, J.HERDING, J.FISHING)
 BOUND_JOBS = frozenset({J.FARMING, J.HERDING, J.MINING, J.BUILDING})
+
+
+def condition_work(rules: Rules, condition: CohortCondition, job: Job, targets: frozenset[DiseaseTarget] = frozenset()) -> float:
+    if condition is CohortCondition.SICK:
+        return sick_work(rules, job, targets)
+    if condition is CohortCondition.MAIMED:
+        return max(0.0, 1 - rules.maimed.labour_loss_pct / PERCENT)
+    return CONDITION_WORK[condition]
 
 
 def jobs_for(rules: Rules, social_class: SocialClass) -> dict[Job, float]:
@@ -96,7 +106,9 @@ def illness_factor(rules: Rules, disease_load: int, wet_cold: bool) -> float:
     return max(0.0, 1 - lost)
 
 
-async def allocate(ctx: TickContext, community: EntityRow, region: RegionEnvironmentRow | None, *, wet_cold: bool) -> dict[Job, LabourRow]:
+async def allocate(
+    ctx: TickContext, community: EntityRow, region: RegionEnvironmentRow | None, *, wet_cold: bool, targets: frozenset[DiseaseTarget] = frozenset()
+) -> dict[Job, LabourRow]:
     rules = ctx.rules
     rows = await seed(ctx.session, rules, community, ctx.epoch)
     if not rows:
@@ -106,13 +118,13 @@ async def allocate(ctx: TickContext, community: EntityRow, region: RegionEnviron
     output: dict[Job, float] = {}
     food = split_food(region)
     for (band, _sex, social_class, condition), row in rows.items():
-        hands = row.count * AGE_WORK[band] * CONDITION_WORK[condition]
+        hands = row.count * AGE_WORK[band]
         bound = social_class is C.SERF_OR_SLAVE or condition in {CohortCondition.ENSLAVED, CohortCondition.CAPTIVE}
         mood = satisfaction_factor(rules, society, social_class)
         for job, share in jobs_for(rules, C.SERF_OR_SLAVE if bound else social_class).items():
             spread = food if job is J.FARMING else {job: 1.0}
             for target, part in spread.items():
-                workers = hands * share * part
+                workers = hands * condition_work(rules, condition, target, targets) * share * part
                 plan[target] += round_half_up(workers)
                 boost = rules.labour.slave_output_pct / PERCENT if bound and target in BOUND_JOBS else 1.0
                 output[target] = output.get(target, 0.0) + workers * mood * boost
@@ -169,8 +181,15 @@ async def mobilisation(session: AsyncSession, rules: Rules, community: EntityRow
     return max(0.1, martial * cohesion * season * law)
 
 
-async def fighting_age(session: AsyncSession, community_id: int) -> int | None:
+async def fighting_age(session: AsyncSession, community_id: int, rules: Rules | None = None) -> int | None:
     rows = await cohorts_of(session, community_id)
     if not rows:
         return None
-    return sum(row.count for (band, _sex, _social, condition), row in rows.items() if band is AgeBand.ADULT and condition is not CohortCondition.SICK)
+    adults = [
+        (condition, row.count) for (band, _sex, _social, condition), row in rows.items() if band is AgeBand.ADULT and condition is not CohortCondition.MAIMED
+    ]
+    fit = sum(count for condition, count in adults if condition is not CohortCondition.SICK)
+    sick = sum(count for condition, count in adults if condition is CohortCondition.SICK)
+    if rules is None or sick <= 0:
+        return fit
+    return fit + round_half_up(sick * sick_levy(rules, await community_targets(session, community_id)))
