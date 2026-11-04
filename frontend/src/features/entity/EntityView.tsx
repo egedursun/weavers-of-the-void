@@ -29,6 +29,9 @@ import { ResourceProfile } from './economy/ResourceProfile'
 import { PriceBoard, TradeRouteSection } from './economy/RouteAndMarket'
 import { AfterlifeSection, SoulSection } from './faith/Afterlife'
 import { DoctrineSection } from './faith/Doctrine'
+import { EventSection } from './happenings/EventCard'
+import { EventsHereSection } from './happenings/EventsHere'
+import { LandShapeSection } from './happenings/LandShape'
 import { LearningSection } from './lore/LearningSection'
 import { LoreSection } from './lore/LoreSection'
 import { isLoreKind } from './lore/model'
@@ -121,6 +124,9 @@ const SECTION_LINKS = [
   { id: 'section-images', label: 'Images' },
   { id: 'section-chronicle', label: 'Chronicle' },
   { id: 'section-environment', label: 'Environment' },
+  { id: 'section-land-shape', label: 'Land' },
+  { id: 'section-event', label: 'Event' },
+  { id: 'section-events-here', label: 'Events here' },
   { id: 'section-body', label: 'Body' },
   { id: 'section-body-customs', label: 'Wounds and bodies' },
   { id: 'section-maimed', label: 'The maimed' },
@@ -224,6 +230,13 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
     present.delete('section-trade-route')
   if (entity.entity_type !== 'region' && entity.entity_type !== 'place')
     present.delete('section-environment')
+  if (entity.entity_type !== 'region') present.delete('section-land-shape')
+  if (entity.entity_type !== 'event') present.delete('section-event')
+  const eventful =
+    entity.entity_type === 'region' ||
+    entity.entity_type === 'place' ||
+    entity.entity_type === 'settlement'
+  if (!eventful) present.delete('section-events-here')
   const embodied =
     entity.entity_type === 'mortal' || entity.entity_type === 'species'
   if (!embodied) present.delete('section-body')
@@ -321,6 +334,15 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         highlightEpoch={highlight}
       />
       <EntityEnvironment entityId={entity.id} entityType={entity.entity_type} />
+      {entity.entity_type === 'region' && (
+        <LandShapeSection regionId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'event' && (
+        <EventSection eventId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {eventful && (
+        <EventsHereSection locationId={entity.id} readOnlyReason={readOnly} />
+      )}
       {trading && (
         <DemographySection communityId={entity.id} readOnlyReason={readOnly} />
       )}

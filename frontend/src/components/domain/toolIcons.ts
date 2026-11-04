@@ -87,6 +87,7 @@ import {
   Wheat,
   Wrench,
   Zap,
+  Shovel,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 
@@ -166,6 +167,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   reorder_seasons: CalendarSync,
   shape_weather: CloudLightning,
   sever_ley: Scissors,
+  reshape_land: Shovel,
   declare_holy_world: Sun,
   seal_gate: Lock,
   rekindle_star: Flame,
