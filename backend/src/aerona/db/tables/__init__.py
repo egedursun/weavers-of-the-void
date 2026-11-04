@@ -83,6 +83,7 @@ from aerona.db.tables.epochs import (
     EpochStepRow,
     EpochWorldNarrativeRow,
 )
+from aerona.db.tables.factions import FactionActionRow, FactionGoalRow, FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.faith import (
     AfterlifeStratumRow,
     CultDoctrineRow,
@@ -248,6 +249,10 @@ __all__ = [
     "EpochStepRow",
     "EpochWorldNarrativeRow",
     "EpochYearCursorRow",
+    "FactionActionRow",
+    "FactionGoalRow",
+    "FactionMembershipRow",
+    "FactionProfileRow",
     "FateRewardRow",
     "FolkBeliefRow",
     "ForeignGodPowerRow",

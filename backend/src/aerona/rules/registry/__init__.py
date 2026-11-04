@@ -75,7 +75,7 @@ from aerona.rules.registry.epoch_flow import EpochFlowRules
 from aerona.rules.registry.espionage import EspionageRules
 from aerona.rules.registry.essence import EssenceRules
 from aerona.rules.registry.exploration import ExplorationRules
-from aerona.rules.registry.factions import FactionsRules
+from aerona.rules.registry.factions import BanditryRules, FactionsRules, IntrigueRules, MercenariesRules
 from aerona.rules.registry.faith import FaithRules
 from aerona.rules.registry.fate import FateRules
 from aerona.rules.registry.folk_belief import FolkBeliefRules
@@ -375,6 +375,9 @@ class Rules:
     fate: FateRules = field(default_factory=FateRules)
     folk_belief: FolkBeliefRules = field(default_factory=FolkBeliefRules)
     factions: FactionsRules = field(default_factory=FactionsRules)
+    intrigue: IntrigueRules = field(default_factory=IntrigueRules)
+    mercenaries: MercenariesRules = field(default_factory=MercenariesRules)
+    banditry: BanditryRules = field(default_factory=BanditryRules)
     foreign_gods: ForeignGodsRules = field(default_factory=ForeignGodsRules)
     genesis: GenesisRules = field(default_factory=GenesisRules)
     goals: GoalsRules = field(default_factory=GoalsRules)

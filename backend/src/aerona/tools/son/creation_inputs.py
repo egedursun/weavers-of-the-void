@@ -19,6 +19,7 @@ from aerona.constants.tool_inputs import (
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType, LegendCategory
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic
@@ -73,6 +74,7 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
         EntityType.MORTAL: {"title": (Annotated[str, Field(max_length=TITLE_MAX)] | None, None)},
         EntityType.EVENT: {"effects": (list[EventEffectInput] | None, None)},
         EntityType.LEGEND: {"legend_category": (LegendCategory | None, None)},
+        EntityType.FACTION: {"faction_kind": (FactionKind, ...)},
         EntityType.LAW: {"law_kind": (LawKind, ...), "law_params": (dict[str, int | str | bool] | None, None)},
         EntityType.RESOURCE: {
             "commodity": (CommodityKind | None, None),

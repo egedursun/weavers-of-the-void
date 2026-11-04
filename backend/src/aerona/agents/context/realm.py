@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.laws import law_effect
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.factions import FactionGoalRow, FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
 from aerona.db.tables.polity import (
     ClaimRow,
@@ -30,6 +31,7 @@ class StatecraftLines:
     claims: list[str] = field(default_factory=list)
     succession: str = ""
     laws: list[str] = field(default_factory=list)
+    factions: list[str] = field(default_factory=list)
 
 
 async def name_of(session: AsyncSession, node_id: int | None) -> str:
@@ -63,6 +65,7 @@ async def statecraft(session: AsyncSession, me: EntityRow, home: EntityRow, real
     lines = StatecraftLines()
     parties = [home.id, *([realm_id] if realm_id is not None else [])]
     lines.treaties = await treaty_lines(session, parties)
+    lines.factions = await faction_lines(session, me.id)
     claims = await session.scalars(
         select(ClaimRow).where(ClaimRow.ended_epoch.is_(None), (ClaimRow.claimant_entity_id == me.id) | (ClaimRow.polity_entity_id == (realm_id or -1)))
     )
@@ -107,5 +110,27 @@ async def realm_overview(session: AsyncSession, world_id: int | None) -> list[st
         found.append(
             f"realm#{realm.id} {realm.name} ({words(profile.government.value)}, tier {profile.tier}, legitimacy {profile.legitimacy}, "
             f"{words(profile.standing.value)}){ruler}{laws}{treaties}{claims}"
+        )
+    return found
+
+
+async def faction_lines(session: AsyncSession, mortal_id: int) -> list[str]:
+    found: list[str] = []
+    for membership in await session.scalars(select(FactionMembershipRow).where(FactionMembershipRow.mortal_entity_id == mortal_id)):
+        faction = await session.get(EntityRow, membership.faction_entity_id)
+        profile = await session.get(FactionProfileRow, membership.faction_entity_id)
+        if faction is None or profile is None or faction.status is not EntityStatus.CANON:
+            continue
+        goals = await session.scalars(
+            select(FactionGoalRow)
+            .where(FactionGoalRow.faction_entity_id == faction.id, FactionGoalRow.achieved_epoch.is_(None))
+            .order_by(FactionGoalRow.priority.desc())
+        )
+        aims = [f"{words(goal.kind.value)} ({goal.progress}%)" for goal in goals]
+        outlaw = ", outlawed" if profile.outlawed else ""
+        found.append(
+            f"you are a {membership.rank.value} of {faction.name} ({words(profile.kind.value)}{outlaw}; "
+            f"treasury {profile.treasury}, cohesion {profile.cohesion})"
+            + (f", striving to {', '.join(aims)}" if aims else "")
         )
     return found

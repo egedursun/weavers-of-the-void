@@ -4,12 +4,14 @@ from aerona.catalog.laws import LAW_PARAMS, PENALTY_CRUELTY, PENALTY_HARM
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import ClaimRow, PolityMemberRow, SentenceRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.faction import ROBBER_KINDS, FactionKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import CrimeKind, LawKind
 from aerona.domain.enums.settlement import TreasuryEntry
@@ -26,29 +28,28 @@ from aerona.engine.settlement.book import Town, ledger
 
 RECENT_EPOCHS = 2
 CRUEL = 60
-BANDIT_ENGINE_KINDS = frozenset({EngineKind.REBELS, EngineKind.VOID_PIRATES})
-TREASON_ENGINE_KINDS = frozenset({EngineKind.REBELS})
+TREASON_KINDS = frozenset({FactionKind.REBELS, FactionKind.SECRET_SOCIETY})
 
 
-async def _members_of(ctx: TickContext, mortals: list[EntityRow]) -> dict[int, set[EngineKind]]:
+async def _members_of(ctx: TickContext, mortals: list[EntityRow]) -> dict[int, set[FactionKind]]:
     ids = [mortal.id for mortal in mortals]
-    found: dict[int, set[EngineKind]] = {}
+    found: dict[int, set[FactionKind]] = {}
     if not ids:
         return found
     statement = (
-        select(BondRow.source_node_id, EntityRow.engine_kind)
-        .join(EntityRow, EntityRow.id == BondRow.target_node_id)
-        .where(
-            BondRow.kind == BondKind.MEMBER_OF,
-            BondRow.state == BondState.ACTIVE,
-            BondRow.source_node_id.in_(ids),
-            EntityRow.entity_type == EntityType.FACTION,
-            EntityRow.status == EntityStatus.CANON,
-        )
+        select(FactionMembershipRow.mortal_entity_id, FactionProfileRow.kind)
+        .join(FactionProfileRow, FactionProfileRow.faction_entity_id == FactionMembershipRow.faction_entity_id)
+        .where(FactionMembershipRow.mortal_entity_id.in_(ids))
     )
-    for mortal_id, engine_kind in await ctx.session.execute(statement):
-        if engine_kind is not None:
-            found.setdefault(mortal_id, set()).add(engine_kind)
+    for mortal_id, kind in await ctx.session.execute(statement):
+        found.setdefault(mortal_id, set()).add(kind)
+    bonded = (
+        select(BondRow.source_node_id, FactionProfileRow.kind)
+        .join(FactionProfileRow, FactionProfileRow.faction_entity_id == BondRow.target_node_id)
+        .where(BondRow.kind == BondKind.MEMBER_OF, BondRow.state == BondState.ACTIVE, BondRow.source_node_id.in_(ids))
+    )
+    for mortal_id, kind in await ctx.session.execute(bonded):
+        found.setdefault(mortal_id, set()).add(kind)
     return found
 
 
@@ -104,7 +105,7 @@ async def offenders(ctx: TickContext, town_id: int, laws: LawBook) -> dict[Crime
     war = await _at_war(ctx, town_id)
     for mortal in mortals:
         kinds = bands.get(mortal.id, set())
-        if kinds & TREASON_ENGINE_KINDS or mortal.id in pressing:
+        if kinds & TREASON_KINDS or mortal.id in pressing:
             found[CrimeKind.TREASON].append(mortal)
         if mortal.id in killers:
             found[CrimeKind.MURDER].append(mortal)
@@ -113,7 +114,7 @@ async def offenders(ctx: TickContext, town_id: int, laws: LawBook) -> dict[Crime
             found[CrimeKind.BLASPHEMY].append(mortal)
         if war and mortal.social_class is SocialClass.WARRIOR and mortal.id not in commanders:
             found[CrimeKind.DESERTION].append(mortal)
-        if mortal.social_class is SocialClass.OUTCAST or kinds & BANDIT_ENGINE_KINDS:
+        if mortal.social_class is SocialClass.OUTCAST or kinds & ROBBER_KINDS:
             found[CrimeKind.THEFT].append(mortal)
     return found
 

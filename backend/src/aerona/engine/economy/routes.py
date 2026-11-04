@@ -28,6 +28,7 @@ from aerona.engine.economy.credit import sell_on_credit
 from aerona.engine.economy.markets import Quote
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.environment.profile import Works
+from aerona.engine.factions.book import robber_ids
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.language import barrier
 from aerona.engine.mind.drives import greed_drive
@@ -329,12 +330,12 @@ async def blocker_of(ctx: TickContext, book: EconomyBook, route: Route, enemies:
     return None
 
 
-def bandits_on(book: EconomyBook, route: Route) -> EntityRow | None:
+def bandits_on(book: EconomyBook, route: Route, robbers: frozenset[int]) -> EntityRow | None:
     halfway = set(route.path)
     found = [
         entity
         for entity in book.entities.values()
-        if entity.entity_type is EntityType.FACTION and entity.engine_kind in BANDIT_KINDS and book.ground.atlas.top_region(entity.id) in halfway
+        if entity.entity_type is EntityType.FACTION and entity.id in robbers and book.ground.atlas.top_region(entity.id) in halfway
     ]
     return min(found, key=lambda entity: entity.id) if found else None
 
@@ -482,7 +483,7 @@ async def mourn_losses(ctx: TickContext, book: EconomyBook, route: Route, lane: 
         if ctx.rng(f"wreck.{route.entity.id}.{lane.commodity.value}.{ctx.epoch}").chance(lanes.shipwreck_chance):
             await _shipwreck(ctx, route, book.entities[lane.seller_id], tally)
         return TradeLoss.SEA
-    bandits = bandits_on(book, route)
+    bandits = bandits_on(book, route, await robber_ids(ctx.session))
     if bandits is not None:
         pay(ctx.rules.markets.seller_wealth_per_value, bandits, round_half_up(lane.landed * lost / PERCENT * lanes.bandit_share_pct / PERCENT))
     return TradeLoss.BANDITS

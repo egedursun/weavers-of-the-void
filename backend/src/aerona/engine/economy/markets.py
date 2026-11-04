@@ -10,6 +10,7 @@ from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import epoch_need, goods_of, holding
+from aerona.engine.factions.book import monopoly_factor
 from aerona.engine.faith.book import forbidden_foods
 from aerona.engine.lore.traditions import resent_taboo, taboos
 from aerona.engine.notes import note
@@ -73,7 +74,8 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
             demand = round_half_up(demand * ctx.rules.doctrine.dietary_demand_pct / PERCENT)
         if commodity is CommodityKind.LUXURIES:
             demand = round_half_up(demand * await luxury_factor(ctx.session, ctx.rules, market.id, book.societies.get(market.id)))
-        quotes[commodity] = Quote(commodity, price_of(ctx, commodity, supply, demand, factor), supply, demand)
+        factor_here = factor * await monopoly_factor(ctx.session, market.id, commodity, ctx.rules.factions.monopoly_price_pct)
+        quotes[commodity] = Quote(commodity, price_of(ctx, commodity, supply, demand, factor_here), supply, demand)
     ctx.count("taboo_resentment", await resent_taboo(ctx, market.id))
     return quotes
 

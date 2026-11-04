@@ -31,6 +31,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
+from aerona.engine.factions.balance import faction_pull
 from aerona.engine.lore.research import lacks
 from aerona.engine.mind.book import traits_of
 from aerona.engine.notes import note
@@ -130,6 +131,8 @@ async def counsel(ctx: TickContext, realm: Realm, *, exclude: int | None) -> dic
 
 async def will(ctx: TickContext, realm: Realm) -> dict[ValueAxis, int]:
     found = await base_will(ctx, realm)
+    for axis, value in (await faction_pull(ctx, realm)).items():
+        found = {**found, axis: found.get(axis, 0) + value}
     creed = realm.profile.ideology_entity_id
     if creed is None:
         return found

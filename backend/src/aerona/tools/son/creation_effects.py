@@ -6,6 +6,7 @@ from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.polity import LawProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import AGENT_TYPES, EntityStatus, EntityType
@@ -15,6 +16,7 @@ from aerona.domain.enums.travel import TravelMethod, VehicleKind
 from aerona.engine.cosmos.routes import RouteSpec, method_label, open_route
 from aerona.engine.cosmos.vessels import set_vessel_kind
 from aerona.engine.economy.resources import set_resource_yield
+from aerona.engine.factions.book import new_profile
 from aerona.engine.gods.queries import worshippers_of
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.polity.laws import attach_profile
@@ -175,6 +177,9 @@ async def finish_extras(call: SonCall, args: CreationInput, created: EntityRow) 
         await set_resource_yield(call.session, call.rules, created.id, commodity, args.option("material"))
     if created.entity_type in MECHANIC_TYPES:
         await assign_mechanics(call.session, call.rules, created, resource_choice=args.option("mechanics") or (), law_choice=args.option("mechanic"))
+    faction_kind = args.option("faction_kind")
+    if created.entity_type is EntityType.FACTION and faction_kind is not None and await call.session.get(FactionProfileRow, created.id) is None:
+        new_profile(call.tick, created, faction_kind)
     law_kind = args.option("law_kind")
     if created.entity_type is EntityType.LAW and law_kind is not None and await call.session.get(LawProfileRow, created.id) is None:
         holder = await call.session.get(EntityRow, created.location_id) if created.location_id is not None else None

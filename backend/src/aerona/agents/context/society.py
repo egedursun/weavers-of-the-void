@@ -102,6 +102,7 @@ async def home_for(session: AsyncSession, me: EntityRow) -> HomeLine | None:
         claims=state.claims,
         succession=state.succession,
         laws=state.laws,
+        factions=state.factions,
         community=home.name,
         tier=town.size_tier.value if town is not None else "",
         order=town.public_order if town is not None else None,

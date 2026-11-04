@@ -26,7 +26,7 @@ from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import cohorts_of
 from aerona.engine.demography.mobility import bound_revolt, inequality_pressure
-from aerona.engine.economy.routes import BANDIT_KINDS
+from aerona.engine.factions.book import robber_ids
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import lacks
 from aerona.engine.military.occupation import occupation_over, occupation_tax, pay_occupier
@@ -312,10 +312,9 @@ async def bandits_near(ctx: TickContext, atlas: RegionAtlas, town: Town) -> list
     if home is None:
         return []
     near = {home, *atlas.neighbour_regions(home)}
+    robbers = await robber_ids(ctx.session)
     found = await ctx.session.scalars(
-        select(EntityRow).where(
-            EntityRow.entity_type == EntityType.FACTION, EntityRow.status == EntityStatus.CANON, EntityRow.engine_kind.in_(list(BANDIT_KINDS))
-        )
+        select(EntityRow).where(EntityRow.entity_type == EntityType.FACTION, EntityRow.status == EntityStatus.CANON, EntityRow.id.in_(list(robbers) or [-1]))
     )
     return [band for band in found if atlas.top_region(band.id) in near]
 
