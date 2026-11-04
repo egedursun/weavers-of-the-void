@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type, nullable_between
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
+from aerona.domain.enums.mind import Profession
 from aerona.domain.enums.mortal import CareerPath, DeathCause, LifeStage, MarriageEnd, MarriageKind, StressBreak
 
 PROFILE_PERCENTS = (
@@ -48,6 +49,7 @@ class MortalProfileRow(Base):
     loyalty_community: Mapped[int] = mapped_column(default=PERCENT_MAX // 2)
     loyalty_god: Mapped[int] = mapped_column(default=PERCENT_MAX // 2)
     career: Mapped[CareerPath | None] = mapped_column(enum_type(CareerPath, "career"))
+    profession: Mapped[Profession | None] = mapped_column(enum_type(Profession, "profession"))
     last_break: Mapped[StressBreak | None] = mapped_column(enum_type(StressBreak, "last_break"))
     last_break_epoch: Mapped[int | None]
     cause_of_death: Mapped[DeathCause | None] = mapped_column(enum_type(DeathCause, "cause_of_death"))

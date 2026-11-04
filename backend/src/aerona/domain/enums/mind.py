@@ -254,6 +254,23 @@ class TraitEffect(StrEnum):
     COURAGE = "courage"
 
 
+class Profession(StrEnum):
+    SOLDIER = "soldier"
+    RIDER = "rider"
+    SMITH = "smith"
+    BUILDER = "builder"
+    WEAVER = "weaver"
+    HEALER = "healer"
+    SCHOLAR = "scholar"
+    PRIEST = "priest"
+    SORCERER = "sorcerer"
+    MERCHANT = "merchant"
+    DIPLOMAT = "diplomat"
+    HUNTER = "hunter"
+    SAILOR = "sailor"
+    COMMANDER = "commander"
+
+
 class CareerChange(StrEnum):
     SKILLED = "skilled"
     INJURED = "injured"

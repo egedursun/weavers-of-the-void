@@ -132,6 +132,19 @@ async def weather_skills(ctx: TickContext, mortal: EntityRow) -> int:
     return changed
 
 
+async def shared_tongue(ctx: TickContext, master: EntityRow, student: EntityRow) -> float:
+    tongues = [bond.target_node_id for bond in await active_bonds(ctx.session, [BondKind.SPEAKS], sources=[student.id])]
+    if not tongues:
+        return 1.0
+    floor = ctx.rules.skills.foreign_teaching_pct / PERCENT
+    rows = await ctx.session.scalars(
+        select(SkillRow.level).where(SkillRow.holder_node_id == master.id, SkillRow.skill == SkillKind.LANGUAGES, SkillRow.subject_node_id.in_(tongues))
+    )
+    spoken = await active_bonds(ctx.session, [BondKind.SPEAKS], sources=[master.id], targets=tongues)
+    best = PERCENT if spoken else max(rows, default=0)
+    return floor + (1 - floor) * best / PERCENT
+
+
 async def teach_apprentices(ctx: TickContext) -> int:
     table = ctx.rules.skills
     taught = 0
@@ -143,6 +156,7 @@ async def teach_apprentices(ctx: TickContext) -> int:
         lessons = sorted((await skills_of(ctx.session, master.id)).values(), key=lambda row: (-row.level, row.skill))[: table.taught_skills]
         teaching = (await skills_of(ctx.session, master.id)).get(SkillKind.TEACHING)
         quality = (PERCENT + (teaching.level if teaching is not None else 0)) / PERCENT
+        quality *= await shared_tongue(ctx, master, student)
         for lesson in lessons:
             student_level = (await skills_of(ctx.session, student.id)).get(lesson.skill)
             if student_level is not None and student_level.level >= lesson.level:
