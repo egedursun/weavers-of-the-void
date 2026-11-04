@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.place_terrain import height_of, kind_spec
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.environment import PlaceEnvironmentRow
 from aerona.db.tables.place import PlaceProfileRow
@@ -12,7 +13,6 @@ from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.places import KindClues, apply_kind, sacred_base, typed_kind
 from aerona.engine.primitives.queries import canon
-from aerona.catalog.place_terrain import height_of, kind_spec
 
 KIND_FIXUP = "places.kind_backfill"
 K = PlaceKind
@@ -142,7 +142,9 @@ def untouched(ground: PlaceEnvironmentRow, subtype: str | None, ctx: TickContext
 
 
 def new_profile(ctx: TickContext, place_id: int, kind: PlaceKind) -> PlaceProfileRow:
-    return PlaceProfileRow(entity_id=place_id, kind=kind, sacredness=sacred_base(ctx.rules, kind_spec(kind).sacred), pilgrims=0, secrets_seeded=False, locked=[])
+    return PlaceProfileRow(
+        entity_id=place_id, kind=kind, sacredness=sacred_base(ctx.rules, kind_spec(kind).sacred), pilgrims=0, secrets_seeded=False, locked=[]
+    )
 
 
 async def ensure_profiles(ctx: TickContext, book: EnvironmentBook) -> dict[int, PlaceKind]:

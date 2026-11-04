@@ -78,6 +78,7 @@ async def send_pilgrims(ctx: TickContext, atlas: RegionAtlas, place: EntityRow, 
     "table.place_profiles",
     "table.region_environment",
     "table.relics",
+    "table.world_maps",
 )
 @writes(
     "people.piety",
@@ -179,6 +180,7 @@ async def miner_of(ctx: TickContext, atlas: RegionAtlas, region_id: int | None) 
     "table.place_secrets",
     "table.region_environment",
     "table.skills",
+    "table.world_maps",
 )
 @writes(
     "place.danger",

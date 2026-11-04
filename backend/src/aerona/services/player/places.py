@@ -1,7 +1,7 @@
 from typing import Literal
 
 from pydantic import Field
-from sqlalchemy import delete, select
+from sqlalchemy import delete
 
 from aerona.catalog.place_terrain import kind_spec
 from aerona.core.errors import NotFoundError, ValidationFailedError

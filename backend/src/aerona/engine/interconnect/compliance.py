@@ -68,6 +68,7 @@ from aerona.db.tables.military import (
     WarAimRow,
 )
 from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, PersonalityValueRow, PressureRow, SkillRow
+from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.db.tables.polity import (
     ClaimRow,
     HeirloomRow,
@@ -641,5 +642,16 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (),
         ("afterlife.",),
         ("d6e2a8c0f4b1",),
+    ),
+    ComplianceRow(
+        "S6.2",
+        (PlaceProfileRow.__tablename__, PlaceSecretRow.__tablename__),
+        ("environment_survey", "place_profiles", "place_secrets", "living_stats"),
+        ("place:create", "place:edit", "place:release", "place:secret", "place:secret_edit", "place:reveal", "place:secret_delete", "pilgrimage:clear"),
+        ("section-place", "PlaceSection", "PlaceSecrets"),
+        ("geography_lines",),
+        ("hide_secret", "sanctify_place", "raise_nexus"),
+        ("place.", "tools.son.hide_secret"),
+        ("places.kind_backfill", "place_profiles"),
     ),
 )

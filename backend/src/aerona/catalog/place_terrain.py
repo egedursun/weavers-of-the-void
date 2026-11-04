@@ -46,7 +46,9 @@ PLACE_KINDS: dict[PlaceKind, PlaceKindSpec] = {
     K.WELL: PlaceKindSpec("Well", None, C.OPEN, W.WELL, H.FLAT, False, R.NOTABLE, (S.LOST_RITE, S.SEALED_SPIRIT), True),
     K.VALLEY: PlaceKindSpec("Valley", T.RIVER_VALLEY, C.LIGHT, W.RIVER, H.FLAT, False, R.PROFANE, (S.HIDDEN_RESOURCE,), False),
     K.CLIFF: PlaceKindSpec("Cliff", T.CANYON, C.LIGHT, W.NONE, H.HIGH, True, R.PROFANE, (S.HIDDEN_RESOURCE, S.BURIED_RELIC), True),
-    K.VOLCANO: PlaceKindSpec("Volcano", T.VOLCANIC, C.OPEN, W.NONE, H.HIGH, False, R.NOTABLE, (S.HIDDEN_RESOURCE, S.UNDERWORLD_ENTRANCE, S.SEALED_SPIRIT), True),
+    K.VOLCANO: PlaceKindSpec(
+        "Volcano", T.VOLCANIC, C.OPEN, W.NONE, H.HIGH, False, R.NOTABLE, (S.HIDDEN_RESOURCE, S.UNDERWORLD_ENTRANCE, S.SEALED_SPIRIT), True
+    ),
     K.CRATER: PlaceKindSpec("Crater", None, C.OPEN, W.NONE, H.LOW, False, R.NOTABLE, (S.HIDDEN_RESOURCE, S.LOST_KNOWLEDGE), True),
     K.BATTLEFIELD: PlaceKindSpec("Battlefield", None, C.OPEN, W.NONE, H.FLAT, False, R.NOTABLE, (S.BURIED_RELIC, S.SEALED_SPIRIT), False),
     K.BURIAL_GROUND: PlaceKindSpec("Burial ground", None, C.LIGHT, W.NONE, H.LOW, False, R.HOLY, (S.BURIED_RELIC, S.SEALED_SPIRIT, S.LOST_KNOWLEDGE), True),
@@ -54,7 +56,9 @@ PLACE_KINDS: dict[PlaceKind, PlaceKindSpec] = {
     K.NEXUS: PlaceKindSpec("Ley nexus", None, C.OPEN, W.NONE, H.FLAT, False, R.HOLY, (S.LOST_RITE, S.LOST_KNOWLEDGE), False),
     K.SHRINE_SITE: PlaceKindSpec("Shrine site", None, C.LIGHT, W.SPRING, H.LOW, False, R.HOLY, (S.LOST_RITE, S.BURIED_RELIC), False),
     K.GOD_CORPSE: PlaceKindSpec("God corpse", None, C.LIGHT, W.NONE, H.HIGH, False, R.HOLY, (S.SEALED_SPIRIT, S.LOST_KNOWLEDGE, S.BURIED_RELIC), True),
-    K.MINE_SITE: PlaceKindSpec("Mine site", T.UNDERGROUND, C.LIGHT, W.NONE, H.LOW, False, R.PROFANE, (S.HIDDEN_RESOURCE, S.SEALED_SPIRIT, S.UNDERWORLD_ENTRANCE), True),
+    K.MINE_SITE: PlaceKindSpec(
+        "Mine site", T.UNDERGROUND, C.LIGHT, W.NONE, H.LOW, False, R.PROFANE, (S.HIDDEN_RESOURCE, S.SEALED_SPIRIT, S.UNDERWORLD_ENTRANCE), True
+    ),
     K.HARBOUR_SITE: PlaceKindSpec("Harbour site", T.COAST, C.OPEN, W.SEA, H.FLAT, False, R.PROFANE, (S.BURIED_RELIC,), False),
     K.CROSSROADS: PlaceKindSpec("Crossroads", None, C.OPEN, W.WELL, H.FLAT, True, R.PROFANE, (S.BURIED_RELIC, S.LOST_KNOWLEDGE), False),
 }

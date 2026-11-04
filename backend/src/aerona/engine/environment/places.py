@@ -62,7 +62,9 @@ async def profile_of(session: AsyncSession, place_id: int) -> PlaceProfileRow | 
 async def write_kind(session: AsyncSession, rules: Rules, place_id: int, kind: PlaceKind) -> PlaceProfileRow:
     profile = await session.get(PlaceProfileRow, place_id)
     if profile is None:
-        profile = PlaceProfileRow(entity_id=place_id, kind=kind, sacredness=sacred_base(rules, kind_spec(kind).sacred), pilgrims=0, secrets_seeded=False, locked=[])
+        profile = PlaceProfileRow(
+            entity_id=place_id, kind=kind, sacredness=sacred_base(rules, kind_spec(kind).sacred), pilgrims=0, secrets_seeded=False, locked=[]
+        )
         session.add(profile)
     else:
         profile.kind = kind
@@ -90,19 +92,17 @@ class KindClues:
 
 
 def typed_kind(place: EntityRow, ground: PlaceEnvironmentRow | None, region: RegionEnvironmentRow | None, clues: KindClues) -> PlaceKind:
-    if place.engine_kind is EngineKind.GOD_CORPSE:
-        return PlaceKind.GOD_CORPSE
-    if place.id in clues.lairs:
-        return PlaceKind.LAIR
-    if place.id in clues.ruins:
-        return PlaceKind.RUIN
-    if ground is not None and ground.nexus:
-        return PlaceKind.NEXUS
-    if place.id in clues.pilgrimage:
-        return PlaceKind.SHRINE_SITE
-    if region is not None:
-        return TERRAIN_KINDS.get(region.dominant_terrain, DEFAULT_KIND)
-    return DEFAULT_KIND
+    signs = (
+        (place.engine_kind is EngineKind.GOD_CORPSE, PlaceKind.GOD_CORPSE),
+        (place.id in clues.lairs, PlaceKind.LAIR),
+        (place.id in clues.ruins, PlaceKind.RUIN),
+        (ground is not None and ground.nexus, PlaceKind.NEXUS),
+        (place.id in clues.pilgrimage, PlaceKind.SHRINE_SITE),
+    )
+    found = next((kind for sign, kind in signs if sign), None)
+    if found is not None:
+        return found
+    return TERRAIN_KINDS.get(region.dominant_terrain, DEFAULT_KIND) if region is not None else DEFAULT_KIND
 
 
 async def temples_at(session: AsyncSession, place_ids: list[int]) -> dict[int, int]:
@@ -182,6 +182,8 @@ async def place_kind_of(session: AsyncSession, place_id: int) -> PlaceKind:
 
 async def mystery_held(session: AsyncSession, place_id: int) -> bool:
     found = await session.scalar(
-        select(ModifierRow.id).where(ModifierRow.target_node_id == place_id, ModifierRow.target_key == MYSTERY_KEY, ModifierRow.source_kind == ModifierSource.PIN)
+        select(ModifierRow.id).where(
+            ModifierRow.target_node_id == place_id, ModifierRow.target_key == MYSTERY_KEY, ModifierRow.source_kind == ModifierSource.PIN
+        )
     )
     return found is not None

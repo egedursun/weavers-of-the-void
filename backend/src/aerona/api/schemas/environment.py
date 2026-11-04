@@ -110,6 +110,7 @@ class PlaceEnvironmentView(ApiModel):
     chokepoint: bool
     nexus: bool
     soil_fertility: int
+    locked: list[str]
 
 
 class SeasonView(ApiModel):

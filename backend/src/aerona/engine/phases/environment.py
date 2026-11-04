@@ -18,18 +18,18 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.environment import CoastKind, LandUse, NotableYearKind, RiverClass, ScarKind, SoilKind, WeatherEffect, WeatherKind
+from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.world import ClimateEra, Discovery
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
-from aerona.engine.environment.place_backfill import ensure_profiles
-from aerona.engine.environment.places import place_kind_of
-from aerona.domain.enums.place import PlaceKind
 from aerona.engine.cosmos.star_types import star_heat
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.ley import LeyWeb, candidate_lines, cut_by_land, pair
 from aerona.engine.environment.notable import backfill_notable_years
+from aerona.engine.environment.place_backfill import ensure_profiles
+from aerona.engine.environment.places import place_kind_of
 from aerona.engine.environment.profile import (
     Geography,
     Ground,
@@ -383,6 +383,25 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
     return contexts
 
 
+async def survey_places(ctx: TickContext, book: EnvironmentBook, contexts: dict[int, RegionContext]) -> int:
+    kinds = await ensure_profiles(ctx, book)
+    placed = 0
+    for place in await canon(ctx.session, [EntityType.PLACE]):
+        if place.id in book.places:
+            continue
+        region_id = book.atlas.top_region(place.id)
+        env = book.regions.get(region_id) if region_id is not None else None
+        context = contexts.get(region_id) if region_id is not None else None
+        factor = factor_of(ctx.rules, env, context.works if context is not None else Works()) if env is not None else 1.0
+        kind = kinds.get(place.id) or await place_kind_of(ctx.session, place.id)
+        row = new_place_environment(ctx.rules, place, region_id, factor, kind)
+        ctx.session.add(row)
+        book.places[place.id] = row
+        placed += 1
+    await ctx.session.flush()
+    return placed
+
+
 @reads(
     "event.severity",
     "people.population",
@@ -452,21 +471,7 @@ async def environment_survey(ctx: TickContext) -> None:
             synced += 1
     await ctx.session.flush()
     await settle_new_ground(ctx, fresh)
-    kinds = await ensure_profiles(ctx, book)
-    placed = 0
-    for place in await canon(ctx.session, [EntityType.PLACE]):
-        if place.id in book.places:
-            continue
-        region_id = book.atlas.top_region(place.id)
-        env = book.regions.get(region_id) if region_id is not None else None
-        context = contexts.get(region_id) if region_id is not None else None
-        factor = factor_of(ctx.rules, env, context.works if context is not None else Works()) if env is not None else 1.0
-        kind = kinds.get(place.id) or await place_kind_of(ctx.session, place.id)
-        row = new_place_environment(ctx.rules, place, region_id, factor, kind)
-        ctx.session.add(row)
-        book.places[place.id] = row
-        placed += 1
-    await ctx.session.flush()
+    placed = await survey_places(ctx, book, contexts)
     ctx.count("worlds_given_seasons", calendars)
     ctx.count("regions_surveyed", created)
     ctx.count("regions_resynced", synced)

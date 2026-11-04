@@ -169,7 +169,9 @@ def choose_tactic(rules: Rules, rng: SeededRandom, side: Side, enemy_doctrine: s
             weight *= 2.0 if ground.terrain in TACTIC_TERRAIN[option] else 0.4
         if expected in TACTIC_COUNTERS.get(option, frozenset()):
             weight *= 1 + side.skill * rules.tactics.skill_weight / 10
-        if option is Tactic.AMBUSH and not (ground.terrain in AMBUSH_TERRAIN or ground.cover is PlaceCover.HEAVY or ground.weather is WeatherKind.FOG or ground.night):
+        if option is Tactic.AMBUSH and not (
+            ground.terrain in AMBUSH_TERRAIN or ground.cover is PlaceCover.HEAVY or ground.weather is WeatherKind.FOG or ground.night
+        ):
             weight *= 0.1
         if option is Tactic.NIGHT_RAID and not ground.night:
             weight *= 0.1

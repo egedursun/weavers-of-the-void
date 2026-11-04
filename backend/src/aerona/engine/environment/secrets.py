@@ -261,7 +261,12 @@ async def underworld_of(ctx: TickContext, world_id: int | None) -> EntityRow | N
         return None
     return await ctx.session.scalar(
         select(EntityRow)
-        .where(EntityRow.world_id == world_id, EntityRow.is_underworld.is_(True), EntityRow.status == EntityStatus.CANON, EntityRow.entity_type == EntityType.REGION)
+        .where(
+            EntityRow.world_id == world_id,
+            EntityRow.is_underworld.is_(True),
+            EntityRow.status == EntityStatus.CANON,
+            EntityRow.entity_type == EntityType.REGION,
+        )
         .order_by(EntityRow.id)
         .limit(1)
     )

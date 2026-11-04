@@ -73,7 +73,6 @@ from aerona.db.tables.entities import (
     NetworkReviewRow,
 )
 from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
-from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.db.tables.epochs import (
     DeferredStepRow,
     EpochEnginePhaseRow,
@@ -142,6 +141,7 @@ from aerona.db.tables.mind import (
 )
 from aerona.db.tables.motifs import MotifOverrideRow
 from aerona.db.tables.node import NameRegistryRow, NodeRow
+from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.db.tables.polity import (
     ClaimRow,
     HeirloomRow,

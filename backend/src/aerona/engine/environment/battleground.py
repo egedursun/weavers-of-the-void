@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
 from aerona.constants.units import PERCENT
+from aerona.core.random import SeededRandom
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.environment import PlaceCover, ScarKind, TerrainKind, WeatherEffect
 from aerona.domain.enums.world import WorldType
-from aerona.core.random import SeededRandom
 from aerona.engine.environment.book import EnvironmentBook, add_scar, season_attrition
 from aerona.engine.environment.weather import Weather
 from aerona.rules.registry import Rules

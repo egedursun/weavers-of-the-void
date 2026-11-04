@@ -17,7 +17,7 @@ from aerona.engine.environment.places import NEXUS_FIELD, SACREDNESS_LOCK, place
 from aerona.engine.environment.secrets import draft_for, hide
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.prompts import SonToolId
-from aerona.prompts.tools.results import SonResult, result
+from aerona.prompts.tools.results import CommonResult, SonResult, result
 from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
@@ -43,7 +43,7 @@ class PlaceActInput(ToolInput):
 async def _place(call: SonCall, place_id: int) -> EntityRow:
     place = await call.session.get(EntityRow, place_id)
     if place is None or place.status is not EntityStatus.CANON:
-        fail(SonResult.NO_SUCH_ID, id=place_id)
+        fail(CommonResult.NO_SUCH_ENTITY, id=place_id)
     if place.entity_type is not EntityType.PLACE:
         fail(SonResult.NOT_A_PLACE, name=place.name)
     await ensure_in_reach(call, place)
@@ -67,7 +67,9 @@ async def hide_secret(call: SonCall, args: HideSecretInput) -> str:
     hide(call.tick, place.id, draft, SecretOrigin.SON, call.son.id)
     call.spend_essence(cost)
     call.target(place.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.HIDE_SECRET, entity_ids=[place.id], world_id=place.world_id, son=call.son.name, place=place.name, reason=args.reason)
+    await call.chronicle(
+        ChronicleKind.WORLD, lines.HIDE_SECRET, entity_ids=[place.id], world_id=place.world_id, son=call.son.name, place=place.name, reason=args.reason
+    )
     return result(SonResult.SECRET_HIDDEN, name=place.name)
 
 
@@ -80,7 +82,9 @@ async def sanctify_place(call: SonCall, args: PlaceActInput) -> str:
     profile.locked = sorted({*profile.locked, SACREDNESS_LOCK})
     call.spend_essence(cost)
     call.target(place.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.SANCTIFY_PLACE, entity_ids=[place.id], world_id=place.world_id, son=call.son.name, place=place.name, reason=args.reason)
+    await call.chronicle(
+        ChronicleKind.WORLD, lines.SANCTIFY_PLACE, entity_ids=[place.id], world_id=place.world_id, son=call.son.name, place=place.name, reason=args.reason
+    )
     return result(SonResult.PLACE_SANCTIFIED, name=place.name, sacredness=profile.sacredness)
 
 
@@ -97,7 +101,9 @@ async def raise_nexus(call: SonCall, args: PlaceActInput) -> str:
     ground.locked = sorted({*ground.locked, NEXUS_FIELD})
     call.spend_essence(cost)
     call.target(place.id)
-    await call.chronicle(ChronicleKind.COSMIC, lines.RAISE_NEXUS, entity_ids=[place.id], world_id=place.world_id, son=call.son.name, place=place.name, reason=args.reason)
+    await call.chronicle(
+        ChronicleKind.COSMIC, lines.RAISE_NEXUS, entity_ids=[place.id], world_id=place.world_id, son=call.son.name, place=place.name, reason=args.reason
+    )
     return result(SonResult.NEXUS_RAISED, name=place.name)
 
 

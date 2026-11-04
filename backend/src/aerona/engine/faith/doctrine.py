@@ -3,7 +3,6 @@ from sqlalchemy import select
 from aerona.catalog.tenets import DOMAIN_JUDGEMENT, DOMAIN_TENETS, OPPOSED, VALUE_TENETS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
-
 from aerona.db.tables.faith import CultDoctrineRow, CultOfficeRow, CultTenetRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.economy import CommodityKind

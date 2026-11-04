@@ -34,7 +34,16 @@ from aerona.engine.body.cohorts import return_maimed
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.equipment import march_burden, siege_engines, suffer_heat
-from aerona.engine.environment.battleground import BattleGround, attack_factor, battle_site, defend_factor, night_chance, omen_morale, scar_battlefield, season_losses
+from aerona.engine.environment.battleground import (
+    BattleGround,
+    attack_factor,
+    battle_site,
+    defend_factor,
+    night_chance,
+    omen_morale,
+    scar_battlefield,
+    season_losses,
+)
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment, scar_region
 from aerona.engine.environment.years import grant_sub_steps
 from aerona.engine.interconnect.annotations import reads, writes
@@ -115,7 +124,11 @@ class Theatre:
     def battleground(self, ctx: TickContext, war: WarRow, defender: EntityRow, *, slot: str, season_index: int, year: int | None) -> BattleGround:
         region = self.ground.region_of(defender.id)
         place = self.ground.place_of(defender.location_id) or self.ground.place_of(defender.id)
-        site = None if place is not None else battle_site(ctx.rules, self.ground, self.ground.atlas.top_region(defender.id), ctx.environment.rng(f"site.{war.id}.{slot}"))
+        site = (
+            None
+            if place is not None
+            else battle_site(ctx.rules, self.ground, self.ground.atlas.top_region(defender.id), ctx.environment.rng(f"site.{war.id}.{slot}"))
+        )
         season = self.ground.season_at(defender.world_id, season_index)
         weather = self.ground.weather(ctx.environment.world_seed, ctx.epoch, region, season, slot) if region is not None else None
         world = self.ground.worlds.get(defender.world_id)
@@ -456,9 +469,12 @@ def _community_losses(ctx: TickContext, winner: EntityRow, loser: EntityRow, los
     shift_stat(winner, "wealth", campaigns.winner_wealth_gain)
 
 
-async def _place(ctx: TickContext, theatre: Theatre, loser: EntityRow, besieged: EntityRow | None) -> EntityRow | None:
+async def _place(ctx: TickContext, theatre: Theatre, loser: EntityRow, besieged: EntityRow | None, site_id: int | None = None) -> EntityRow | None:
     if besieged is not None:
         return besieged
+    site = await living_entity(ctx.session, site_id)
+    if site is not None:
+        return site
     if loser.entity_type is EntityType.SETTLEMENT:
         return loser
     location = await living_entity(ctx.session, loser.location_id)
@@ -805,9 +821,7 @@ async def fight_battle(
     _community_losses(ctx, winner, loser, result.loser.lost / max(1, result.loser.start))
     await change_relation(ctx, attacker.id, defender.id, -campaigns.battle_relation, MemoryKind.FOUGHT_US, note="battle")
     son_id = await _patron_effects(ctx, theatre, winner, loser)
-    place = await _place(ctx, theatre, loser, besieged)
-    if ground.site_id is not None and besieged is None:
-        place = await living_entity(ctx.session, ground.site_id) or place
+    place = await _place(ctx, theatre, loser, besieged, ground.site_id)
     report = BattleReport(war, winner, loser, gap, outcome, summary)
     await _record(ctx, report, place, army_entities, war.battles)
     await ctx.session.flush()
