@@ -4,6 +4,7 @@ from aerona.agents.context.powers import powers_text
 from aerona.agents.context.reputation_line import reputation_line
 from aerona.agents.context.scope import Scope
 from aerona.agents.context.sky_calendar import sky_calendar
+from aerona.agents.context.son_faith import son_faith
 from aerona.agents.context.son_memory import son_memory
 from aerona.agents.context.speech import openings, tics
 from aerona.agents.context.tired_images import tired_images
@@ -132,6 +133,7 @@ async def son_user_context(scope: Scope, son: SonRow, points: int, catalogue: To
         world_summary=await world_summary(scope, son),
         memory=await son_memory(scope, son),
         opportunities=await son_opportunity_text(scope, son, catalogue),
+        faith=await son_faith(scope, son),
         action_points=points,
         resumed=resumed,
         continuation=continuation,

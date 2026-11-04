@@ -5,10 +5,12 @@ from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.entity_types import ENTITY_TYPES, EntityTypeSpec
 from aerona.catalog.interventions import DISASTERS, MIRACLES
 from aerona.catalog.stars import STAR_TYPES
+from aerona.catalog.tenets import TENET_EFFECTS
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import LIVING_CREATION_TYPES, EntityType, LegendCategory
+from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPath
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.travel import VehicleKind
 from aerona.prompts.contexts.blocks import SummarySection
@@ -73,6 +75,10 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "legend_categories": [category.value for category in LegendCategory],
         "commodities": [commodity.value for commodity in CommodityKind],
         "materials": [material.value for material in MaterialKind],
+        "tenets": "; ".join(f"{tenet} ({effect})" for tenet, effect in TENET_EFFECTS.items()),
+        "funeral_rites": [rite.value for rite in FuneralRite],
+        "judgements": [doctrine.value for doctrine in JudgementDoctrine],
+        "rebirth_paths": [path.value for path in RebirthPath],
     }
 
 

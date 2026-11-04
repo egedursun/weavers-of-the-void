@@ -8,6 +8,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.engine.context import TickContext
 from aerona.engine.faith.souls import burden
 from aerona.engine.lore.rites import cast, devise
+from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.primitives.queries import living_entity
 
@@ -55,4 +56,7 @@ async def possessions(ctx: TickContext) -> tuple[int, int]:
         casting = await cast(ctx, priest, found[0], found[1], target=host, realms=realms, forced=True)
         if casting is not None and casting.succeeded and await ctx.session.get(PossessionRow, host.id) is None:
             exorcised += 1
+            await note(
+                ctx, f"{priest.name} worked {found[0].name} over {host.name} and drove the spirit out.", key="afterlife.exorcism", ids=[priest.id, host.id]
+            )
     return len(held) - exorcised, exorcised

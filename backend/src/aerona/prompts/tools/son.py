@@ -47,7 +47,15 @@ COMMODITY_FIELD = "What its people draw from it: {{ commodities | join(', ') }};
 MATERIAL_FIELD = "What it is made of or yields, if a material: {{ materials | join(', ') }}; it sets hardness, edge, weight, holiness and taint"
 
 CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
-    EntityType.CULT: WORSHIPPED_SON_FIELD,
+    EntityType.CULT: {
+        **WORSHIPPED_SON_FIELD,
+        "tenets": "The tenets you teach this cult (at most {{ rules.doctrine.tenets_max }}; opposites cannot stand together): {{ tenets }}",
+        "judgement": "How its god judges the dead: {{ judgements | join(', ') }}",
+        "rebirth_path": "Where its exceptional souls are reborn: {{ rebirth_paths | join(', ') }} (people: the same people; house: the same house; merit: by their deeds)",
+    },
+    EntityType.TRADITION: {
+        "funeral_rite": "If it is a funeral custom, how its people send off the dead: {{ funeral_rites | join(', ') }}; nameless seals the soul"
+    },
     EntityType.PEOPLE: WORSHIPPED_SON_FIELD,
     EntityType.SETTLEMENT: WORSHIPPED_SON_FIELD,
     EntityType.FACTION: WORSHIPPED_SON_FIELD,
@@ -372,6 +380,23 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "FORBIDDEN: you bargain with the nameless thing that came from outside the cosmos. You gain great essence; but leakage rises, your siblings are disgusted by you, "
         "your loyalty to your father unravels and one day the price is demanded. Does not spend an action, {{ rules.son_tools.outer_bargain_per_epoch }} per age.",
         {"outsider_id": "The outer being's id", "request": "What you ask of it"},
+    ),
+    T.REVEAL_TENET: ToolText(
+        "You reveal a tenet to one of your own cults. The faithful accept it only if it fits your domains or what they already believe "
+        "(fit at least {{ rules.doctrine.reveal_fit }}); a tenet cannot stand beside its opposite. Once per cult per age. "
+        "{{ rules.doctrine.reveal_cost }} essence, 1 action.",
+        {
+            "cult_id": "One of your own cults",
+            "tenet": "The tenet: {{ tenets }}",
+            "name": "Optional: the name your faithful give this tenet",
+            "target": "Only for dietary law (a food), sacred species (the species id) or pilgrimage duty (the holy place id)",
+        },
+    ),
+    T.OPEN_REBIRTH_GATE: ToolText(
+        "By your own hand you open the gate of rebirth for a soul: it is born again as a newborn in a community, carrying some of its old traits and faint memories. "
+        "Only for souls of your own faith, or any soul if you are a god of death; a sealed soul cannot return. "
+        "{{ rules.necromancy.rebirth_gate_cost }} essence, 1 action.",
+        {"spirit_id": "The soul (a spirit) to send back", "community_id": "Optional: the community it is born into; otherwise its doctrine decides"},
     ),
     T.BIRTH_WORLD: ToolText(
         "You birth a new world into the cosmos: with its own sky, physics, regions, unique resource and perhaps natives. The world reflects your domains and you turn to it. "

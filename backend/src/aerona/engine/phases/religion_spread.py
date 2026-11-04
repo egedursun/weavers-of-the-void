@@ -447,6 +447,7 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.culture_values",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.journeys",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.memories",
@@ -513,9 +514,7 @@ async def religion_spread(ctx: TickContext) -> None:
             continue
         seeker = old is None or community.id in flags[EntityFlag.SEEKING_GOD] or community.id in flags[EntityFlag.GODLESS]
         chosen = best_source(ctx.rules, conversion_sources(ctx.rules, community, world, seeker), old, seeker, (faith, shares))
-        understood = (
-            await preaching_barrier(ctx, chosen.converter_id, community.id) if chosen is not None and chosen.converter_id is not None else 1.0
-        )
+        understood = await preaching_barrier(ctx, chosen.converter_id, community.id) if chosen is not None and chosen.converter_id is not None else 1.0
         if chosen is None or not rng.probability(min(1.0, chosen.pull * understood * tolerance(ctx, laws, community.id))):
             continue
         weight = syncretism_weight(ctx.rules, world, community.id, chosen.god_id)

@@ -88,6 +88,7 @@ class SonTurnUserContext(RulesContext):
     world_summary: str
     memory: str
     opportunities: str = ""
+    faith: str = ""
     action_points: int
     resumed: bool = False
     continuation: str = ""

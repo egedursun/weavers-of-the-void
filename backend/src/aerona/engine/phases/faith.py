@@ -6,6 +6,7 @@ from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
+from aerona.engine.faith.backfill import backfill_faith
 from aerona.engine.faith.book import Church, FaithBook, FaithLine
 from aerona.engine.faith.doctrine import ensure_doctrines, staff
 from aerona.engine.faith.exorcism import possessions
@@ -124,6 +125,8 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
 @reads(
     "cult.devotion",
     "cult.followers",
+    "spirit.unrest",
+    "table.applied_fixups",
     "cult.influence",
     "cult.zeal",
     "people.population",
@@ -166,10 +169,17 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     "table.species_ranges",
     "table.spirit_profiles",
     "table.traits",
+    "table.souls",
+    "table.tradition_profiles",
     "table.world_maps",
 )
 @writes(
     "cult.devotion",
+    "table.afterlife_strata",
+    "table.applied_fixups",
+    "table.soul_judgements",
+    "table.spirit_profiles",
+    "table.tradition_profiles",
     "cult.influence",
     "cult.zeal",
     "people.population",
@@ -202,6 +212,7 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
 async def faith_cycles(ctx: TickContext) -> None:
     book = await FaithBook.load(ctx.session)
     ctx.count("doctrines_founded", await ensure_doctrines(ctx, book))
+    ctx.count("faith_backfilled", await backfill_faith(ctx, book))
     laws = await LawBook.load(ctx.session)
     atlas = await RegionAtlas.load(ctx.session)
     knowledge = await KnowledgeMap.load(ctx.session)

@@ -1,7 +1,7 @@
 from collections.abc import Mapping, Set
 from typing import Any
 
-from pydantic import Field
+from pydantic import Field, ValidationError
 
 from aerona.domain.enums.faith import FuneralRite, TenetKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
@@ -27,7 +27,11 @@ class StratumCriteria(ValueObject):
 
     @classmethod
     def read(cls, raw: Mapping[str, Any] | None) -> "StratumCriteria":
-        return cls.model_validate(dict(raw or {}))
+        known = {key: value for key, value in dict(raw or {}).items() if key in cls.model_fields}
+        try:
+            return cls.model_validate(known)
+        except ValidationError:
+            return cls()
 
     def stored(self) -> dict[str, Any]:
         return self.model_dump(mode="json", exclude_defaults=True)

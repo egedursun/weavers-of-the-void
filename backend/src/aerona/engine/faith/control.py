@@ -337,11 +337,11 @@ async def edit_relic(ctx: TickContext, item_id: int, values: Values, *, release:
             row.sanctity = percent(key, value)
         elif key == "pilgrims":
             row.pilgrims = count(key, value)
-        elif key == "shrine_id":
+        elif key == "shrine_entity_id":
             row.shrine_entity_id = None if value is None else (await entity_of(ctx, value, set(COMMUNITY_TYPES), "A shrine stands in a living community.")).id
-        elif key == "cult_id":
+        elif key == "cult_entity_id":
             row.cult_entity_id = (await entity_of(ctx, value, {EntityType.CULT}, "A relic is kept by a living cult.")).id
-        elif key == "saint_id":
+        elif key == "saint_entity_id":
             saint = await ctx.session.get(EntityRow, value) if isinstance(value, int) else None
             if saint is None or saint.entity_type is not EntityType.MORTAL:
                 raise ValidationFailedError("A relic's saint is a mortal.")

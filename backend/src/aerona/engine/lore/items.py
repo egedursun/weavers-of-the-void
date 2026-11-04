@@ -239,7 +239,7 @@ async def relic_year(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
                 counts["healed"] += 1
         region = atlas.top_region(relic.shrine_entity_id) if relic.shrine_entity_id is not None else None
         rivals = [other for other in cults if other.id != cult.id and region is not None and atlas.top_region(other.id) == region]
-        if rivals and "cult_id" not in relic.locked and ctx.rng(f"relic_theft.{relic.item_entity_id}.{ctx.epoch}").chance(table.theft_chance):
+        if rivals and "cult_entity_id" not in relic.locked and ctx.rng(f"relic_theft.{relic.item_entity_id}.{ctx.epoch}").chance(table.theft_chance):
             thief = rivals[0]
             relic.cult_entity_id = thief.id
             record(ctx, relic.item_entity_id, ItemDeed.THEFT, thief.id, f"stolen by {thief.name} from {cult.name}")

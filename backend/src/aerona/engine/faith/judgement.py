@@ -77,9 +77,7 @@ async def funeral_custom(ctx: TickContext, community_id: int) -> FuneralRite | N
     )
     if profile is None:
         return None
-    if profile.funeral_rite is None:
-        profile.funeral_rite = custom_from_values(ctx.rules.afterlife, await values_for(ctx.session, community_id))
-    return profile.funeral_rite
+    return profile.funeral_rite or custom_from_values(ctx.rules.afterlife, await values_for(ctx.session, community_id))
 
 
 async def rite_for(ctx: TickContext, mortal: EntityRow) -> FuneralRite:

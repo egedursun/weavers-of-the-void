@@ -356,6 +356,7 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.routes",
     "table.skills",
     "table.spirit_profiles",
+    "table.tradition_profiles",
     "table.traits",
     "table.world_maps",
 )
