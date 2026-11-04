@@ -45,11 +45,11 @@ async def write_plan(call: SonCall, args: WritePlanInput) -> str:
 
 
 async def choose_anchor(call: SonCall, args: ChooseAnchorInput) -> str:
+    if await is_held(call.session, call.son.id, ANCHOR_KEY, call.epoch):
+        fail(SonResult.ANCHOR_HELD)
     cap = call.rules.son_tools.anchor_per_epoch
     await call.within_limit(TurnCounter.ANCHOR_CHOSEN, cap, "son_tools.anchor_per_epoch", SonResult.ANCHOR_LIMIT)
     entity = await require_canon(call.session, args.entity_id)
-    if await is_held(call.session, call.son.id, ANCHOR_KEY, call.epoch):
-        fail(SonResult.ANCHOR_HELD)
     if not await may_anchor(call.session, call.son, entity):
         fail(SonResult.ANCHOR_NOT_OWN)
     cost = call.rules.costs.anchor
