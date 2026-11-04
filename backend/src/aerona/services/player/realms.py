@@ -614,3 +614,71 @@ async def edit_vassalage(scope: PlayerScope, command: EditVassalage) -> Effect:
         release=command.release,
     )
     return Effect(f"The vassal pays {row.tribute_pct}% and sends {row.levy_pct}% of its levies; loyalty {row.loyalty}.", command.vassal_id)
+
+
+class EditHouse(Command):
+    house_id: int
+    values: dict[str, int | str | bool | list[int] | list[str] | None] = Field(default_factory=dict)
+    release: list[str] = Field(default_factory=list)
+
+
+class HouseMember(Command):
+    house_id: int
+    mortal_id: int
+    remove: bool = False
+    by_marriage: bool = False
+
+
+class HouseHeirloom(Command):
+    house_id: int
+    item_id: int
+    remove: bool = False
+
+
+class EditOath(Command):
+    oath_id: int
+    deadline_epoch: int | None = Field(default=None, ge=0)
+    clear_deadline: bool = False
+    note: str | None = Field(default=None, max_length=120)
+    recipient_id: int | None = None
+    witness_son_id: int | None = None
+
+
+@player_action("house:edit", ActionKind.EDIT_RECORD)
+async def edit_house(scope: PlayerScope, command: EditHouse) -> Effect:
+    profile = await control.edit_house(await scope.context("house_edit"), command.house_id, command.values, release=command.release)
+    return Effect(f"The house stands at prestige {profile.prestige}, wealth {profile.wealth}.", command.house_id)
+
+
+@player_action("house:member", ActionKind.EDIT_RECORD)
+async def house_member(scope: PlayerScope, command: HouseMember) -> Effect:
+    count = await control.house_member(
+        await scope.context("house_member"), command.house_id, command.mortal_id, remove=command.remove, by_marriage=command.by_marriage
+    )
+    return Effect(f"The house counts {count} of its blood.", command.house_id)
+
+
+@player_action("house:heirloom", ActionKind.EDIT_RECORD)
+async def house_heirloom(scope: PlayerScope, command: HouseHeirloom) -> Effect:
+    await control.house_heirloom(await scope.context("house_heirloom"), command.house_id, command.item_id, remove=command.remove)
+    return Effect("The treasure leaves the house." if command.remove else "The treasure is the house's heirloom.", command.house_id)
+
+
+@player_action("oath:edit", ActionKind.EDIT_RECORD)
+async def edit_oath(scope: PlayerScope, command: EditOath) -> Effect:
+    oath = await control.edit_oath(
+        await scope.context("oath_edit"),
+        command.oath_id,
+        deadline_epoch=command.deadline_epoch,
+        note=command.note,
+        recipient_id=command.recipient_id,
+        witness_son_id=command.witness_son_id,
+        clear_deadline=command.clear_deadline,
+    )
+    return Effect("The oath now binds as you set it.", oath.swearer_entity_id)
+
+
+@player_action("oath:release", ActionKind.OTHER)
+async def release_oath(scope: PlayerScope, command: OathTarget) -> Effect:
+    oath = await control.release_oath(await scope.context("oath_release"), command.oath_id)
+    return Effect("The oath is released with honour.", oath.swearer_entity_id)

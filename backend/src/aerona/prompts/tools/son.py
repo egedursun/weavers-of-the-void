@@ -355,6 +355,11 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "epochs": "How many ages it holds; empty for ever",
         },
     ),
+    T.BLESS_BLOODLINE: ToolText(
+        "You mark a noble house's blood with a lasting gift or curse (long_lived, giant_blooded, god_blooded, cursed, fertile, seer_gift); every child born to it carries it. "
+        "A god-blooded house anchors your existence while it lives. Costs essence.",
+        {"house_id": "The house", "trait": "The bloodline trait", "revoke": "True to lift it instead"},
+    ),
     T.VOID_TREATY: ToolText(
         "You make one party break a treaty in force: the breach is recorded, its oath is broken, guarantors may march and the breaker loses honour. Costs essence.",
         {"treaty_id": "The treaty", "breaker_id": "The party that breaks it"},

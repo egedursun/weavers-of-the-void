@@ -10,7 +10,9 @@ from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
 from aerona.db.tables.polity import (
     ClaimRow,
+    HeirloomRow,
     HouseMemberRow,
+    HouseProfileRow,
     LawJurisdictionRow,
     LawProfileRow,
     MortalReputeRow,
@@ -33,9 +35,11 @@ from aerona.domain.enums.polity import (
     ClauseKind,
     DecisionRule,
     GovernmentKind,
+    HouseTrait,
     LawKind,
     LegitimacyBasis,
     OathKind,
+    OathStatus,
     OfficeKind,
     OfficePower,
     PartyRole,
@@ -50,7 +54,7 @@ from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.formation import found_polity, refresh_realms
 from aerona.engine.polity.houses import HouseBook, extinguish, found_house, join
 from aerona.engine.polity.laws import edit_law, enact, ensure_profile, jurisdiction_of, repeal, validate
-from aerona.engine.polity.oaths import break_oath, swear
+from aerona.engine.polity.oaths import break_oath, keep, swear
 from aerona.engine.polity.offices import DEFAULT_POWERS, appoint
 from aerona.engine.polity.repute import repute_of
 from aerona.engine.polity.treaties import breach
@@ -858,3 +862,109 @@ async def edit_loan(
         profile.debt = max(0, profile.debt + after - before)
     await ctx.session.flush()
     return loan
+
+
+HOUSE_NUMBERS = ("prestige",)
+
+
+async def edit_house(ctx: TickContext, house_id: int, values: Mapping[str, object], *, release: Sequence[str]) -> HouseProfileRow:
+    profile = await ctx.session.get(HouseProfileRow, house_id)
+    house = await ctx.session.get(EntityRow, house_id)
+    if profile is None or house is None:
+        raise NotFoundError("No such house.")
+    for key, value in values.items():
+        await set_house_value(ctx, profile, house, key, value)
+        profile.locked = lock(profile.locked, key)
+    profile.locked = release_keys(profile.locked, release)
+    await ctx.session.flush()
+    return profile
+
+
+async def set_house_value(ctx: TickContext, profile: HouseProfileRow, house: EntityRow, key: str, value: object) -> None:
+    if key == "prestige":
+        profile.prestige = counted(key, value if isinstance(value, int) else None, cap=PERCENT)
+    elif key == "wealth":
+        profile.wealth = counted(key, value if isinstance(value, int) else None, cap=None)
+    elif key == "motto":
+        profile.motto = str(value).strip()[:120] or None if value is not None else None
+    elif key == "name" and isinstance(value, str) and value.strip():
+        house.name = value.strip()[:120]
+    elif key in {"emblem_field", "emblem_charge"}:
+        profile.emblem = {**profile.emblem, key.removeprefix("emblem_"): str(value or "")[:40]}
+    elif key == "traits" and isinstance(value, list):
+        known = {item.value for item in HouseTrait}
+        if any(str(item) not in known for item in value):
+            raise ValidationFailedError("No such bloodline trait.")
+        profile.traits = [HouseTrait(str(item)) for item in dict.fromkeys(value)]
+    elif key == "seats" and isinstance(value, list):
+        profile.seats = [int(item) for item in value if isinstance(item, int)]
+    elif key in {"head", "parent", "polity", "divine_son"}:
+        column = {"head": "head_entity_id", "parent": "parent_house_id", "polity": "polity_entity_id", "divine_son": "divine_son_id"}[key]
+        setattr(profile, column, int(value) if isinstance(value, int) else None)
+    else:
+        raise ValidationFailedError(f"Unknown house field: {key}.")
+
+
+async def house_member(ctx: TickContext, house_id: int, mortal_id: int, *, remove: bool, by_marriage: bool) -> int:
+    book = await HouseBook.load(ctx)
+    if house_id not in book.houses:
+        raise NotFoundError("No such house.")
+    mortal = await ctx.session.get(EntityRow, mortal_id)
+    if mortal is None or mortal.entity_type is not EntityType.MORTAL:
+        raise NotFoundError("No such mortal.")
+    if remove:
+        row = await ctx.session.get(HouseMemberRow, (house_id, mortal_id))
+        if row is None:
+            raise NotFoundError("That mortal is not of the house.")
+        await ctx.session.delete(row)
+    else:
+        await join(ctx, book, house_id, mortal, by_marriage=by_marriage)
+    await ctx.session.flush()
+    return len(book.members[house_id])
+
+
+async def house_heirloom(ctx: TickContext, house_id: int, item_id: int, *, remove: bool) -> None:
+    if await ctx.session.get(HouseProfileRow, house_id) is None:
+        raise NotFoundError("No such house.")
+    item = await living_entity(ctx.session, item_id)
+    row = await ctx.session.get(HeirloomRow, item_id)
+    if remove:
+        if row is None or row.house_entity_id != house_id:
+            raise NotFoundError("That treasure is not the house's.")
+        await ctx.session.delete(row)
+    elif item is None or item.entity_type is not EntityType.ITEM:
+        raise NotFoundError("No such living item.")
+    elif row is None:
+        ctx.session.add(HeirloomRow(item_entity_id=item_id, house_entity_id=house_id, since_epoch=ctx.epoch))
+    else:
+        row.house_entity_id, row.since_epoch = house_id, ctx.epoch
+    await ctx.session.flush()
+
+
+async def edit_oath(
+    ctx: TickContext, oath_id: int, *, deadline_epoch: int | None, note: str | None, recipient_id: int | None, witness_son_id: int | None, clear_deadline: bool
+) -> OathRow:
+    oath = await ctx.session.get(OathRow, oath_id)
+    if oath is None:
+        raise NotFoundError("No such oath.")
+    if deadline_epoch is not None:
+        oath.deadline_epoch = deadline_epoch
+    if clear_deadline:
+        oath.deadline_epoch = None
+    if note is not None:
+        oath.note = note.strip()[:120] or None
+    if recipient_id is not None:
+        oath.recipient_node_id = recipient_id or None
+    if witness_son_id is not None:
+        oath.witness_son_id = witness_son_id or None
+    await ctx.session.flush()
+    return oath
+
+
+async def release_oath(ctx: TickContext, oath_id: int) -> OathRow:
+    oath = await ctx.session.get(OathRow, oath_id)
+    if oath is None or oath.status is not OathStatus.SWORN:
+        raise NotFoundError("No sworn oath.")
+    await keep(ctx, oath, fulfilled=False)
+    await ctx.session.flush()
+    return oath

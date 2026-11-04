@@ -298,6 +298,11 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "epochs": "How many ages it should hold",
         },
     ),
+    T.SWEAR_OATH: ToolText(
+        "You swear an oath (fealty, vengeance, celibacy, pilgrimage, protection, silence, blood_brotherhood); keeping it wins honour, breaking it brings shame and a god's wrath. "
+        "Free, {{ " + M + ".swear_oath_per_epoch }} per age.",
+        {"kind": "The oath", "recipient_id": "To whom or against whom, if anyone (for a pilgrimage: the holy place)", "words": "The words of the oath"},
+    ),
     T.ACCEPT_TREATY: ToolText("You accept a treaty offered to you; it takes force at once. Free.", {"treaty_id": "The offered treaty"}),
     T.BREAK_TREATY: ToolText(
         "You break a treaty your people are bound by: the other parties remember the betrayal, guarantors may march and your rulers lose honour. 1 action.",

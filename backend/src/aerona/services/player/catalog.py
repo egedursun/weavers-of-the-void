@@ -1073,6 +1073,11 @@ ECONOMY_ACTIONS = (
     _sync(Meta("house:found", "Found a house", G.SOCIETY), realms.found_house, realms.FoundHouse, free, ("S4.7",)),
     _sync(Meta("house:merge", "Merge two houses", G.SOCIETY), realms.merge_house, realms.MergeHouse, free, ("S4.7",)),
     _sync(Meta("house:extinguish", "Extinguish a house", G.SOCIETY), realms.extinguish_house, realms.HouseTarget, free, ("S4.7",)),
+    _sync(
+        Meta("house:edit", "Edit a house's head, prestige, wealth, motto, bloodline and seats", G.SOCIETY), realms.edit_house, realms.EditHouse, free, ("S4.7",)
+    ),
+    _sync(Meta("house:member", "Add a mortal to a house or strike them from it", G.SOCIETY), realms.house_member, realms.HouseMember, free, ("S4.7",)),
+    _sync(Meta("house:heirloom", "Make an item a house heirloom or take it away", G.SOCIETY), realms.house_heirloom, realms.HouseHeirloom, free, ("S4.7",)),
     _sync(Meta("claim:grant", "Grant a claim to a throne", G.SOCIETY), realms.grant_claim, realms.GrantClaim, free, ("S4.7",)),
     _sync(Meta("treaty:sign", "Seal a treaty", G.SOCIETY), realms.sign_treaty, realms.SignTreaty, free, ("S5.13",)),
     _sync(Meta("treaty:break", "Break a treaty", G.SOCIETY), realms.break_treaty, realms.BreakTreaty, free, ("S5.13",)),
@@ -1086,6 +1091,8 @@ ECONOMY_ACTIONS = (
     _sync(Meta("vassal:edit", "Set a vassal's tribute, levies and loyalty", G.SOCIETY), realms.edit_vassalage, realms.EditVassalage, free, ("S4.6",)),
     _sync(Meta("oath:swear", "Have a mortal swear an oath", G.SOCIETY), realms.swear_oath, realms.SwearOath, free, ("S4.8",)),
     _sync(Meta("oath:break", "Break an oath", G.SOCIETY), realms.break_oath, realms.OathTarget, free, ("S4.8",)),
+    _sync(Meta("oath:edit", "Change an oath's deadline, words, recipient or witness", G.SOCIETY), realms.edit_oath, realms.EditOath, free, ("S4.8",)),
+    _sync(Meta("oath:release", "Release a mortal from an oath with honour", G.SOCIETY), realms.release_oath, realms.OathTarget, free, ("S4.8",)),
     _sync(Meta("army:edit", "Edit an army's stance, supplies, chest and camp", G.WARFARE), military.edit_army, military.EditArmy, free, ("S5.1",)),
     _sync(Meta("army:command", "Command an army's stance, march and target", G.WARFARE), military.command_army, military.CommandArmy, free, ("S5.1",)),
     _sync(Meta("army:edit_stack", "Edit a unit stack", G.WARFARE), military.edit_stack, military.EditStack, free, ("S5.1",)),

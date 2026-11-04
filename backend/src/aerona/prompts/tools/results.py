@@ -216,6 +216,8 @@ class SonResult(StrEnum):
     WORLD_BORN = "A new world was born: world#{{ id }} {{ name }} ({{ type }}). You are there now.{% if level %} {{ level }}{% endif %}"
     WORLD_BIRTH_FAILED = "The world could not be born"
     TREATY_SEALED = "{{ name }} is sealed in your name."
+    NO_HOUSE = "That is not a noble house."
+    BLOODLINE_SET = "The blood of {{ house }} now carries: {{ trait }}."
     NO_TREATY = "There is no such treaty in force."
     TREATY_VOIDED = "{{ name }} broke faith at your word."
 
@@ -269,6 +271,9 @@ class MortalResult(StrEnum):
     NO_SUCH_TREATY = "There is no such treaty waiting on you."
     TREATY_ACCEPTED = "{{ name }} is sealed."
     TREATY_BROKEN = "The treaty is broken; the betrayed will remember."
+    OATH_LIMIT = "You already swore an oath this age."
+    OATH_NOT_MORTAL = "Only a named mortal can swear an oath."
+    OATH_SWORN = "The {{ kind }} oath is sworn {{ witnessed }}."
     SEIZE_REPELLED = "The seizure was repelled ({{ mine }} against {{ theirs }}); {{ name }} is still held by {{ owners }}."
     CLAIM_ACTIONS = "Claiming costs {{ cost }} action(s){% if seizing %} because the resource has an owner (a seizure){% endif %}; you do not have enough left."
     SETTLE_NEAR = "You can only settle in your own or a neighbouring region."

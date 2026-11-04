@@ -24,6 +24,7 @@ from aerona.tools.mortal import (
     heroes,
     knowledge,
     language,
+    oaths,
     production,
     read,
     religion,
@@ -52,6 +53,7 @@ ACTOR_TYPES: dict[MortalToolId, frozenset[EntityType]] = {
     T.ESCAPE: NAMED,
     T.ADOPT: NAMED,
     T.ENACT_LAW: NAMED,
+    T.SWEAR_OATH: NAMED,
     T.APPOINT_OFFICER: NAMED,
     T.SET_TAX: NAMED,
     T.EXPLORE_LAND: COMMUNITIES_AND_NAMED,
@@ -122,6 +124,7 @@ FAMILIES: tuple[Callable[[], list[MortalSpec]], ...] = (
     barter.specs,
     ruler.specs,
     treaties.specs,
+    oaths.specs,
 )
 
 
