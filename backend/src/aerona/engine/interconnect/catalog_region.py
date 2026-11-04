@@ -21,7 +21,7 @@ REGION_MECHANICS = (
         spec_item="S6.1",
         title="Danger is typed: beasts, bandits, monsters, phenomena, disease, avalanches, quicksand and volcanic ground, each bred by the land",
         subsystem=S.ENVIRONMENT,
-        phases=("region_survey", "tradition_cycles"),
+        phases=("region_survey",),
         surface=Surface(drawer=DANGERS, layer=DANGER_LAYER),
         backfill=BACKFILL,
         fields=("danger", "source", "strength", "held", "origin"),

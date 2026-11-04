@@ -120,9 +120,7 @@ describe('region terrain', () => {
     const { screen } = await renderApp(<RegionTerrainSection regionId={5} />)
     await expect.element(screen.getByText('Dangers of the land')).toBeVisible()
     await expect.element(screen.getByText('Draws pilgrims')).toBeVisible()
-    await expect
-      .element(screen.getByText('Unmapped: armies lose their way'))
-      .toBeVisible()
+    await expect.element(screen.getByText('Unmapped 20')).toBeVisible()
     await screen.getByRole('button', { name: 'Release' }).click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/region:knowledge_release'))

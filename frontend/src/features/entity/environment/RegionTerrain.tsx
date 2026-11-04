@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Compass,
+  Gem,
   Eye,
   Footprints,
   Ghost,
   Lock,
   Map as MapIcon,
+  Mountain,
   Plus,
   Save,
   ScrollText,
@@ -28,6 +30,11 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   EmptyState,
   KpiTile,
@@ -655,47 +662,53 @@ function KnowledgeRow({
     success: 'The realm’s maps follow its explorers again',
   })
   const blocked = busy ?? (release.isPending ? WORKING : null)
+  const reveals = [
+    { known: row.terrain, icon: Mountain, label: 'terrain' },
+    { known: row.sacred, icon: Sparkles, label: 'holy sites' },
+    { known: row.minerals, icon: Gem, label: 'seams' },
+  ]
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-2'>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
+    <div className='flex min-w-0 flex-wrap items-center gap-2 rounded-lg border bg-muted/30 px-2 py-1.5'>
+      <div className='min-w-32 flex-1 truncate'>
         <Name item={{ id: row.polity_id, name: row.polity_name }} />
-        {row.unmapped && (
-          <Badge size='sm' variant='warning'>
-            Unmapped: armies lose their way
-          </Badge>
-        )}
-        {row.held && (
-          <Button
-            size='sm'
-            variant='outline'
-            className='ml-auto'
-            disabled={blocked !== null}
-            disabledReason={blocked ?? undefined}
-            onClick={() => release.mutate()}
-          >
-            <Unlock />
-            Release
-          </Button>
-        )}
       </div>
-      <StatBar
-        label='Known'
-        value={row.level}
-        max={PERCENT}
-        icon={MapIcon}
-        tone='info'
-      />
-      <div className='flex min-w-0 flex-wrap gap-1'>
-        <Badge size='sm' variant={row.terrain ? 'success' : 'secondary'}>
-          {row.terrain ? 'Knows the terrain' : 'Terrain unknown'}
-        </Badge>
-        <Badge size='sm' variant={row.sacred ? 'success' : 'secondary'}>
-          {row.sacred ? 'Knows the holy sites' : 'Holy sites unknown'}
-        </Badge>
-        <Badge size='sm' variant={row.minerals ? 'success' : 'secondary'}>
-          {row.minerals ? 'Knows the seams' : 'Seams unknown'}
-        </Badge>
-      </div>
+      {reveals.map((item) => (
+        <Tooltip key={item.label}>
+          <TooltipTrigger asChild>
+            <span
+              tabIndex={0}
+              aria-label={`${item.known ? 'Knows' : 'Does not know'} the ${item.label}`}
+            >
+              <item.icon
+                aria-hidden='true'
+                className={
+                  item.known
+                    ? 'size-icon-sm text-success'
+                    : 'size-icon-sm text-muted-foreground/40'
+                }
+              />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            {`${item.known ? 'Knows' : 'Does not know'} the ${item.label}`}
+          </TooltipContent>
+        </Tooltip>
+      ))}
+      <Badge size='sm' variant={row.unmapped ? 'warning' : 'info'}>
+        {row.unmapped ? `Unmapped ${row.level}` : `Known ${row.level}`}
+      </Badge>
+      {row.held && (
+        <Button
+          size='sm'
+          variant='outline'
+          disabled={blocked !== null}
+          disabledReason={blocked ?? undefined}
+          onClick={() => release.mutate()}
+        >
+          <Unlock />
+          Release
+        </Button>
+      )}
     </div>
   )
 }
