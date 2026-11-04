@@ -3,6 +3,7 @@ from types import MappingProxyType
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.faith import JudgementDoctrine, StratumKind, TenetKind
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.son import Passion
 
 T = TenetKind
 D = Domain
@@ -133,5 +134,25 @@ STRATUM_NAMES = MappingProxyType(
         StratumKind.OBLIVION: "the Forgetting",
         StratumKind.WARRIOR_HALL: "the Hall of the Fallen",
         StratumKind.ANCESTOR_HALL: "the House of the Fathers",
+    }
+)
+
+STRATUM_PRIORITY = MappingProxyType(
+    {
+        StratumKind.OBLIVION: 0,
+        StratumKind.WARRIOR_HALL: 10,
+        StratumKind.PARADISE: 20,
+        StratumKind.TORMENT: 30,
+        StratumKind.ANCESTOR_HALL: 40,
+        StratumKind.PLAIN: 90,
+    }
+)
+
+PASSION_TENETS = MappingProxyType(
+    {
+        Passion.WRATH: (T.HOLY_WAR, T.MARTYRDOM_GLORY),
+        Passion.MERCY: (T.PACIFISM, T.ASCETICISM),
+        Passion.AMBITION: (T.PROSELYTISM, T.DIVINE_KINGSHIP),
+        Passion.LOYALTY: (T.EXCLUSIVITY, T.ANCESTOR_VENERATION),
     }
 )

@@ -452,6 +452,9 @@ EFFECT_RULES = {
     RiteEffectKind.RAISE_DEAD: (S.FAITH, None),
     RiteEffectKind.FERTILITY: (S.DEMOGRAPHY, None),
     RiteEffectKind.HARVEST_BLESSING: (S.ECONOMY, None),
+    RiteEffectKind.SEAL_SOUL: (S.FAITH, "necromancy.seal_per_power"),
+    RiteEffectKind.UNSEAL_SOUL: (S.FAITH, "necromancy.seal_per_power"),
+    RiteEffectKind.EXORCISE: (S.FAITH, "necromancy.exorcism_per_power"),
 }
 SOURCE_RULES = {
     MagicSource.LEY: (S.ENVIRONMENT, None),

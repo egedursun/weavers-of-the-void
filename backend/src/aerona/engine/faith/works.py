@@ -2,42 +2,119 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.disease import OutbreakRow
+from aerona.db.tables.economy import GoodsFlowRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.faith import CultHoldingRow, RelicRow
+from aerona.db.tables.faith import CultDoctrineRow, CultHoldingRow, RelicRow
+from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
+from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.culture import CurseKind, ItemClass
 from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
+from aerona.domain.enums.economy import GOODS_SOURCES, CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import HoldingKind, TenetKind
 from aerona.domain.enums.mind import MemoryKind, PressureKind, ValueAxis
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind
+from aerona.domain.enums.society import SocialClass
+from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.outbreaks import open_outbreak
+from aerona.engine.economy.stocks import goods_of
 from aerona.engine.faith.book import Church
+from aerona.engine.gods.devotion import add_devotion
 from aerona.engine.mind.book import pressures_of, values_for, write_pressures
 from aerona.engine.mind.memories import remember
+from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.queries import connect
+from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.settlement.book import town_of
 from aerona.engine.settlement.life import add_district
 
-HUNDRED = 100
-SAINT_RENOWN = 60
 CLERGY_SAINTS = (MortalRole.PRIEST, MortalRole.SAINT, MortalRole.SEER)
+POOR = (SocialClass.FARMER, SocialClass.SERF_OR_SLAVE, SocialClass.OUTCAST)
+THOUSAND = 1000
 
 
-def tithe(ctx: TickContext, church: Church) -> int:
+def credit(doctrine: CultDoctrineRow, amount: int) -> int:
+    if "treasury" in doctrine.locked or amount == 0:
+        return 0
+    before = doctrine.treasury
+    doctrine.treasury = max(0, doctrine.treasury + amount)
+    return doctrine.treasury - before
+
+
+def affordable(doctrine: CultDoctrineRow, cost: int) -> bool:
+    return doctrine.treasury >= cost
+
+
+async def realm_of(ctx: TickContext, community_id: int) -> PolityProfileRow | None:
+    realm_id = await ctx.session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == community_id).limit(1))
+    return await ctx.session.get(PolityProfileRow, realm_id) if realm_id is not None else None
+
+
+async def tithe_terms(ctx: TickContext, church: Church, laws: LawBook, community_id: int) -> tuple[int, int]:
+    doctrine = church.doctrine
+    rate = doctrine.tithe_rate if doctrine is not None else ctx.rules.tithes.rate
+    realm = await realm_of(ctx, community_id)
+    law = laws.in_force(realm.polity_entity_id, LawKind.TITHE) if realm is not None and realm.state_religion_id == church.cult.id else None
+    if law is None or not bool(law.params.get("enforced")):
+        return rate, ctx.rules.tithes.voluntary_pct
+    if doctrine is not None and "tithe_rate" not in doctrine.locked:
+        doctrine.tithe_rate = clamp_int(int(law.params.get("rate", rate)), 0, PERCENT)
+        rate = doctrine.tithe_rate
+    return rate, law.enforcement
+
+
+async def output_of(ctx: TickContext, community_id: int) -> dict[CommodityKind, int]:
+    rows = await ctx.session.scalars(
+        select(GoodsFlowRow).where(
+            GoodsFlowRow.community_entity_id == community_id, GoodsFlowRow.epoch >= ctx.epoch - 1, GoodsFlowRow.flow.in_(list(GOODS_SOURCES))
+        )
+    )
+    by_epoch: dict[int, dict[CommodityKind, int]] = {}
+    for row in rows:
+        epoch = by_epoch.setdefault(row.epoch, {})
+        epoch[row.commodity] = epoch.get(row.commodity, 0) + max(0, row.quantity)
+    return by_epoch.get(ctx.epoch) or by_epoch.get(ctx.epoch - 1) or {}
+
+
+async def tithe_base(ctx: TickContext, church: Church) -> list[EntityRow]:
+    lands = {row.holding_entity_id for row in await holdings_of(ctx, church, HoldingKind.LAND)}
+    return [member for member in church.members if member.id in lands]
+
+
+async def tithe(ctx: TickContext, church: Church, laws: LawBook) -> int:
     doctrine = church.doctrine
     if doctrine is None:
         return 0
-    output = (stat(church.cult, "followers") or 0) * ctx.rules.tithes.output_per_100 / HUNDRED
-    income = round_half_up(output * doctrine.tithe_rate / PERCENT)
-    doctrine.treasury += income
-    return income
+    table = ctx.rules.tithes
+    ledger = goods_of(ctx.session, ctx.epoch)
+    units = 0
+    measured = False
+    for member in await tithe_base(ctx, church):
+        output = await output_of(ctx, member.id)
+        if not output:
+            continue
+        measured = True
+        rate, enforcement = await tithe_terms(ctx, church, laws, member.id)
+        for commodity, made in sorted(output.items()):
+            due = round_half_up(made * rate / PERCENT * enforcement / PERCENT)
+            if due > 0:
+                units += await ledger.take_units(member.id, commodity, due, GoodsFlow.OFFERING)
+    if not measured:
+        followers = stat(church.cult, "followers") or 0
+        units = round_half_up(followers * table.output_per_100 / PERCENT * doctrine.tithe_rate / PERCENT * table.voluntary_pct / PERCENT)
+    return credit(doctrine, round_half_up(units * table.unit_value_pct / PERCENT))
 
 
 async def holdings_of(ctx: TickContext, church: Church, kind: HoldingKind) -> list[CultHoldingRow]:
@@ -84,14 +161,29 @@ async def build(ctx: TickContext, church: Church, kind: HoldingKind, knowledge: 
 
 
 async def alms(ctx: TickContext, church: Church) -> int:
-    relief = ctx.rules.tithes.alms_poverty
+    table = ctx.rules.tithes
     eased = 0
     for member in church.members:
         pressures = await pressures_of(ctx.session, member.id)
         if pressures.get(PressureKind.POVERTY, 0) <= 0:
             continue
-        pressures[PressureKind.POVERTY] = clamp_int(pressures[PressureKind.POVERTY] - relief, 0, PERCENT)
+        pressures[PressureKind.POVERTY] = clamp_int(pressures[PressureKind.POVERTY] - table.alms_poverty, 0, PERCENT)
         await write_pressures(ctx.session, member.id, pressures)
+        society = await ctx.session.get(CommunitySocietyRow, member.id)
+        if society is not None:
+            for social_class in POOR:
+                key = f"satisfaction_{social_class.value}"
+                setattr(society, key, clamp_int(getattr(society, key) + table.alms_satisfaction, 0, PERCENT))
+        await remember(
+            ctx.session,
+            ctx.rules,
+            holder_id=member.id,
+            subject_id=church.cult.id,
+            kind=MemoryKind.FAMINE_AID,
+            magnitude=table.alms_goodwill,
+            epoch=ctx.epoch,
+            note="fed by the alms of the faith",
+        )
         eased += 1
     return eased
 
@@ -101,75 +193,114 @@ async def spend(ctx: TickContext, church: Church, knowledge: KnowledgeMap) -> st
     table = ctx.rules.tithes
     if doctrine is None:
         return None
-    if church.holds(TenetKind.ASCETICISM) and doctrine.treasury >= table.alms_cost:
-        doctrine.treasury -= table.alms_cost
+    if church.holds(TenetKind.ASCETICISM) and affordable(doctrine, table.alms_cost):
+        credit(doctrine, -table.alms_cost)
         return "alms" if await alms(ctx, church) else None
-    if church.holds(TenetKind.MONASTIC_LEARNING) and doctrine.treasury >= table.monastery_cost and await build(ctx, church, HoldingKind.MONASTERY, knowledge):
-        doctrine.treasury -= table.monastery_cost
+    if church.holds(TenetKind.MONASTIC_LEARNING) and affordable(doctrine, table.monastery_cost) and await build(ctx, church, HoldingKind.MONASTERY, knowledge):
+        credit(doctrine, -table.monastery_cost)
         return "monastery"
-    if doctrine.treasury >= table.temple_cost and await build(ctx, church, HoldingKind.TEMPLE, knowledge):
-        doctrine.treasury -= table.temple_cost
+    if affordable(doctrine, table.temple_cost) and await build(ctx, church, HoldingKind.TEMPLE, knowledge):
+        credit(doctrine, -table.temple_cost)
         return "temple"
-    if doctrine.treasury >= table.alms_cost:
-        doctrine.treasury -= table.alms_cost
+    if affordable(doctrine, table.alms_cost):
+        credit(doctrine, -table.alms_cost)
         return "alms" if await alms(ctx, church) else None
     return None
 
 
-async def saints(ctx: TickContext, church: Church) -> list[EntityRow]:
+async def saints(ctx: TickContext, church: Church, *, since: int | None = None) -> list[EntityRow]:
     homes = [member.id for member in church.members]
     if not homes:
         return []
+    threshold = ctx.rules.doctrine.saint_threshold
     known = set(await ctx.session.scalars(select(RelicRow.saint_entity_id).where(RelicRow.saint_entity_id.is_not(None))))
-    dead = await ctx.session.scalars(
-        select(EntityRow)
-        .where(
-            EntityRow.entity_type == EntityType.MORTAL,
-            EntityRow.status == EntityStatus.DEAD,
-            EntityRow.end_epoch == ctx.epoch,
-            EntityRow.location_id.in_(homes),
-            EntityRow.mortal_role.in_(list(CLERGY_SAINTS)),
-        )
-        .order_by(EntityRow.id)
+    statement = select(EntityRow).where(
+        EntityRow.entity_type == EntityType.MORTAL,
+        EntityRow.status == EntityStatus.DEAD,
+        EntityRow.location_id.in_(homes),
+        EntityRow.mortal_role.in_(list(CLERGY_SAINTS)),
     )
+    statement = statement.where(EntityRow.end_epoch == ctx.epoch) if since is None else statement.where(EntityRow.end_epoch >= since)
     found = []
-    for mortal in dead:
+    for mortal in await ctx.session.scalars(statement.order_by(EntityRow.id)):
         piety = (await values_for(ctx.session, mortal.id)).get(ValueAxis.PIETY, 0)
-        if mortal.id not in known and (piety >= SAINT_RENOWN or (stat(mortal, "charisma") or 0) >= SAINT_RENOWN):
+        if mortal.id not in known and (piety >= threshold or (stat(mortal, "charisma") or 0) >= threshold):
             found.append(mortal)
     return found
 
 
+async def bones_of(ctx: TickContext, church: Church, saint: EntityRow) -> EntityRow:
+    bones = await create_record(
+        ctx,
+        RecordSpec(
+            name=f"Bones of {saint.name}"[:200],
+            entity_type=EntityType.ITEM,
+            stats=ItemStats(),
+            body=f"The bones of {saint.name}, kept by {church.cult.name} as a holy relic.",
+            power=max(1, saint.power_level),
+            world_id=saint.world_id,
+            location_id=saint.location_id,
+        ),
+    )
+    ctx.session.add(
+        ItemProfileRow(
+            item_entity_id=bones.id,
+            item_class=ItemClass.HOLY_RELIC,
+            material="bone",
+            quality=PERCENT // 2,
+            condition=PERCENT,
+            reach=0,
+            coverage=0,
+            weight=0,
+            curse=CurseKind.NONE,
+            value=0,
+            renown=clamp_int(saint.importance or 0, 0, PERCENT),
+            symbol=True,
+            updated_epoch=ctx.epoch,
+            locked=[],
+        )
+    )
+    await connect(ctx.session, church.cult.id, bones.id, BondKind.OWNS, ctx.epoch, description="the bones of its saint")
+    return bones
+
+
 async def canonise(ctx: TickContext, church: Church, saint: EntityRow, item: EntityRow | None = None) -> RelicRow:
-    relic_id = item.id if item is not None else saint.id
-    row = await ctx.session.get(RelicRow, relic_id)
+    existing = await ctx.session.scalar(select(RelicRow).where(RelicRow.saint_entity_id == saint.id, RelicRow.cult_entity_id == church.cult.id).limit(1))
+    if existing is not None and item is None:
+        return existing
+    relic = item or await bones_of(ctx, church, saint)
+    row = await ctx.session.get(RelicRow, relic.id)
     if row is None:
         row = RelicRow(
-            item_entity_id=relic_id,
+            item_entity_id=relic.id,
             saint_entity_id=saint.id,
             cult_entity_id=church.cult.id,
             shrine_entity_id=saint.location_id,
             sanctity=PERCENT // 2,
             pilgrims=0,
             canonised_epoch=ctx.epoch,
+            locked=[],
         )
         ctx.session.add(row)
-    await hold(ctx, church, relic_id, HoldingKind.RELIC)
+    await hold(ctx, church, relic.id, HoldingKind.RELIC)
+    await ctx.session.flush()
     return row
 
 
 async def pilgrimage(ctx: TickContext, church: Church) -> tuple[int, int]:
+    table = ctx.rules.tithes
     relics = list(await ctx.session.scalars(select(RelicRow).where(RelicRow.cult_entity_id == church.cult.id)))
-    duty = church.holds(TenetKind.PILGRIMAGE_DUTY)
+    duty = table.pilgrimage_duty_pct if church.holds(TenetKind.PILGRIMAGE_DUTY) else PERCENT
     followers = stat(church.cult, "followers") or 0
     pilgrims = 0
     income = 0
     for relic in relics:
-        relic.pilgrims = round_half_up(followers * relic.sanctity / PERCENT / HUNDRED * (2 if duty else 1))
+        if "pilgrims" not in relic.locked:
+            relic.pilgrims = round_half_up(followers * relic.sanctity / PERCENT * table.pilgrims_per_follower_pct / PERCENT * duty / PERCENT)
         pilgrims += relic.pilgrims
-        income += relic.pilgrims // HUNDRED
+        income += relic.pilgrims // table.pilgrims_per_income
     if church.doctrine is not None:
-        church.doctrine.treasury += income
+        credit(church.doctrine, income)
     return pilgrims, income
 
 
@@ -193,7 +324,7 @@ async def pilgrim_plague(ctx: TickContext, church: Church, atlas: RegionAtlas) -
         if shrine is None:
             continue
         open_rows = select(OutbreakRow).where(OutbreakRow.region_entity_id == shrine, OutbreakRow.status != OutbreakStatus.ENDED)
-        chance = min(PERCENT, relic.pilgrims // HUNDRED)
+        chance = min(PERCENT, relic.pilgrims // ctx.rules.tithes.pilgrims_per_income)
         for outbreak in list(await ctx.session.scalars(open_rows)):
             disease = await ctx.session.get(EntityRow, outbreak.disease_entity_id)
             for region in sorted(home for home in homes if home is not None and home != shrine):
@@ -228,3 +359,34 @@ async def sacred_beasts(ctx: TickContext, church: Church) -> int:
             )
             wronged += 1
     return wronged
+
+
+async def devotion(ctx: TickContext, church: Church, patron_id: int | None) -> int:
+    table = ctx.rules.doctrine
+    if church.cult.engine_kind is EngineKind.RESURRECTION_ORDER:
+        return 0
+    followers = stat(church.cult, "followers") or 0
+    zeal = stat(church.cult, "zeal") or 0
+    gain = round_half_up(followers * table.devotion_per_1000 / THOUSAND * zeal / PERCENT)
+    held = clamp_int((stat(church.cult, "devotion") or 0) + gain, 0, ctx.rules.death.devotion_cap)
+    god = church.god
+    if god is not None:
+        tribute = round_half_up(held * table.devotion_tribute_pct / PERCENT)
+        god.faith += tribute
+        held -= tribute
+    else:
+        dead = await ctx.session.get(SonRow, patron_id) if patron_id is not None else None
+        if dead is not None and not dead.alive and gain > 0:
+            await add_devotion(ctx, dead, gain, church.cult)
+    if church.doctrine is None or "devotion" not in church.doctrine.locked:
+        set_stats(church.cult, devotion=held)
+    return gain
+
+
+def spend_devotion(church: Church, cost: int) -> bool:
+    held = stat(church.cult, "devotion") or 0
+    if held < cost:
+        return False
+    if church.doctrine is None or "devotion" not in church.doctrine.locked:
+        set_stats(church.cult, devotion=held - cost)
+    return True

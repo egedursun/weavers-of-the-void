@@ -9,7 +9,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import CastingRow, ItemEnchantmentRow, RiteEffectRow, RiteProfileRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
-from aerona.db.tables.faith import SpiritProfileRow
+from aerona.db.tables.faith import PossessionRow, SpiritProfileRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.military import SpyNetworkRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -34,6 +34,7 @@ from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.environment.control import force_weather
 from aerona.engine.faith.book import faith_tenets, patron_node
+from aerona.engine.faith.souls import exorcise, seal_with, soul_near, unseal_with
 from aerona.engine.gods.interventions import apply_abundance
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -381,6 +382,8 @@ async def do_bind(ctx: TickContext, caster: EntityRow, target: EntityRow | None,
     spirit = await wandering_near(ctx, caster.location_id or 0)
     if spirit is None:
         return None
+    if "binding" in spirit.locked:
+        return None
     spirit.binding, spirit.bound_entity_id, spirit.alignment = BindingKind.PLACE, caster.location_id, SpiritAlignment.GUARDIAN
     return "bound a wandering spirit as a guardian"
 
@@ -416,6 +419,8 @@ async def do_raise(ctx: TickContext, caster: EntityRow, target: EntityRow | None
     spirit = await wandering_near(ctx, caster.location_id or 0)
     if spirit is None:
         return None
+    if "binding" in spirit.locked:
+        return None
     spirit.binding, spirit.bound_entity_id, spirit.alignment = BindingKind.PERSON, caster.id, SpiritAlignment.VENGEFUL
     await connect(ctx.session, caster.id, spirit.spirit_entity_id, BondKind.COMMANDS, ctx.epoch, description="raised from the dead")
     return "raised a dead soul to serve"
@@ -441,6 +446,47 @@ async def do_harvest(ctx: TickContext, caster: EntityRow, target: EntityRow | No
     return f"blessed the fields of {home.name}"
 
 
+async def do_seal(ctx: TickContext, caster: EntityRow, target: EntityRow | None, magnitude: int, row: RiteProfileRow) -> str | None:
+    spirit_id = target.id if target is not None and target.entity_type is EntityType.SPIRIT else None
+    if spirit_id is None:
+        found = await soul_near(ctx, caster.location_id, sealed=False)
+        spirit_id = found.spirit_entity_id if found is not None else None
+    if spirit_id is None or not await seal_with(ctx, spirit_id, row.power):
+        return None
+    spirit = await ctx.session.get(EntityRow, spirit_id)
+    return f"sealed {spirit.name if spirit is not None else 'a soul'} against return"
+
+
+async def do_unseal(ctx: TickContext, caster: EntityRow, target: EntityRow | None, magnitude: int, row: RiteProfileRow) -> str | None:
+    spirit_id = target.id if target is not None and target.entity_type is EntityType.SPIRIT else None
+    if spirit_id is None:
+        found = await soul_near(ctx, caster.location_id, sealed=True)
+        spirit_id = found.spirit_entity_id if found is not None else None
+    if spirit_id is None:
+        return None
+    if not await unseal_with(ctx, spirit_id, row.power):
+        return "the seal on the soul held"
+    spirit = await ctx.session.get(EntityRow, spirit_id)
+    return f"broke the seal on {spirit.name if spirit is not None else 'a soul'}"
+
+
+async def do_exorcise(ctx: TickContext, caster: EntityRow, target: EntityRow | None, magnitude: int, row: RiteProfileRow) -> str | None:
+    host = target if target is not None and target.entity_type is EntityType.MORTAL else await possessed_near(ctx, caster.location_id)
+    if host is None:
+        return None
+    if not await exorcise(ctx, host, row.power):
+        return f"the spirit in {host.name} would not go"
+    return f"drove the spirit out of {host.name}"
+
+
+async def possessed_near(ctx: TickContext, place_id: int | None) -> EntityRow | None:
+    if place_id is None:
+        return None
+    hosts = select(PossessionRow.host_entity_id)
+    statement = select(EntityRow).where(EntityRow.location_id == place_id, EntityRow.status == EntityStatus.CANON, EntityRow.id.in_(hosts))
+    return await ctx.session.scalar(statement.order_by(EntityRow.id).limit(1))
+
+
 EFFECTS: dict[RiteEffectKind, Callable[[TickContext, EntityRow, EntityRow | None, int, RiteProfileRow], Awaitable[str | None]]] = {
     E.DAMAGE: do_damage,
     E.HEAL: do_heal,
@@ -454,6 +500,9 @@ EFFECTS: dict[RiteEffectKind, Callable[[TickContext, EntityRow, EntityRow | None
     E.RAISE_DEAD: do_raise,
     E.FERTILITY: do_fertility,
     E.HARVEST_BLESSING: do_harvest,
+    E.SEAL_SOUL: do_seal,
+    E.UNSEAL_SOUL: do_unseal,
+    E.EXORCISE: do_exorcise,
 }
 
 
@@ -551,7 +600,10 @@ async def warded(ctx: TickContext, settlement_id: int) -> float:
     return 1 + min(PERCENT, total) / PERCENT
 
 
-GENTLE = {True: frozenset({E.WARD, E.BLESS, E.HEAL, E.BIND}), False: frozenset({E.HARVEST_BLESSING, E.FERTILITY, E.WEATHER_CHANGE, E.SUMMON})}
+GENTLE = {
+    True: frozenset({E.WARD, E.BLESS, E.HEAL, E.BIND, E.EXORCISE, E.SEAL_SOUL}),
+    False: frozenset({E.HARVEST_BLESSING, E.FERTILITY, E.WEATHER_CHANGE, E.SUMMON}),
+}
 
 
 def fits(school: MagicSchool, *, hostile: bool, protective: bool) -> int:

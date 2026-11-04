@@ -217,6 +217,7 @@ class RelicsRules:
     healing_chance: int = rule(10, 0, 100, H, "A pilgrim is healed at a relic (%)")
     theft_chance: int = rule(3, 0, 100, H, "A rival faith steals a relic (%)")
     zeal: int = rule(3, 0, 100, H, "Zeal a famous relic stirs")
+    pilgrims_per_cure: int = rule(100, 1, 100000, H, "Pilgrims at a relic for each sick pilgrim it can heal in an epoch")
 
 
 @dataclass(frozen=True)

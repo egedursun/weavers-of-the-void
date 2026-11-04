@@ -83,6 +83,7 @@ PHASE_FLOWS: dict[str, FlowCategory] = {
     "population_growth": C.GROWTH,
     "population_baseline": C.GROWTH,
     "religion_spread": C.CONVERSION,
+    "faith_cycles": C.DEATH,
     "world_balance": C.CONVERSION,
     "god_power": C.DIVINE,
     "gods_fate": C.DIVINE,
