@@ -42,6 +42,7 @@ PERCENT_COLUMNS = (
     "mined",
     "built",
     "erosion",
+    "sacredness",
 )
 
 
@@ -89,6 +90,7 @@ class RegionEnvironmentRow(Base):
     erosion: Mapped[int] = mapped_column(default=0)
     harvest_pct: Mapped[int] = mapped_column(default=100)
     derived_fertility: Mapped[int | None]
+    sacredness: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

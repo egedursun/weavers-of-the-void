@@ -12,7 +12,7 @@ from aerona.rules.registry import Rules
 from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.ports import ToolPorts
 from aerona.tools.framework.spec import ToolSpec
-from aerona.tools.son import cosmos, death, influence, intervention, kin, knowledge, land, language, memory, places, prayer, read, resources, war
+from aerona.tools.son import cosmos, death, influence, intervention, kin, knowledge, land, language, memory, places, prayer, read, regions, resources, war
 from aerona.tools.son.availability import SonWorldState, condition_holds, star_lines
 from aerona.tools.son.creation import creation_specs, example_cost
 from aerona.tools.son.creation_rules import cheap_creation
@@ -34,6 +34,7 @@ FAMILIES: tuple[Callable[[], list[SonSpec]], ...] = (
     cosmos.specs,
     places.specs,
     land.specs,
+    regions.specs,
 )
 PORT_TAGS: dict[str, Callable[[ToolPorts], bool]] = {
     "views": lambda ports: ports.views is not None,

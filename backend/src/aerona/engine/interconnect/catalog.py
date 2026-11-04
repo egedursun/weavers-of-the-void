@@ -38,6 +38,7 @@ from aerona.engine.interconnect.catalog_military import MILITARY_MECHANICS
 from aerona.engine.interconnect.catalog_places import PLACE_BEHAVIOURS, PLACE_MECHANICS
 from aerona.engine.interconnect.catalog_realm import BEHAVIOURS as REALM_BEHAVIOURS
 from aerona.engine.interconnect.catalog_realm import REALM_MECHANICS
+from aerona.engine.interconnect.catalog_region import REGION_MECHANICS
 from aerona.engine.interconnect.catalog_society import BEHAVIOURS as SOCIETY_BEHAVIOURS
 from aerona.engine.interconnect.catalog_society import SOCIETY_MECHANICS
 from aerona.engine.interconnect.catalog_wilds import BEHAVIOURS as WILDS_BEHAVIOURS
@@ -941,6 +942,7 @@ BUILT_IN = (
     *PLACE_MECHANICS,
     *PLACE_BEHAVIOURS,
     *COUPLING_MECHANICS,
+    *REGION_MECHANICS,
 )
 
 MODULE_SUBSYSTEMS: dict[str, Subsystem] = {

@@ -167,6 +167,8 @@ def scar_depth(region: RegionEnvironmentRow | None, kind: ScarKind) -> int:
 
 
 def add_scar(region: RegionEnvironmentRow, kind: ScarKind, depth: int) -> int:
+    if f"scar.{kind.value}" in region.locked:
+        return region.scars.get(kind.value, 0)
     scars = dict(region.scars)
     scars[kind.value] = clamp_int(scars.get(kind.value, 0) + depth, 0, PERCENT)
     region.scars = scars

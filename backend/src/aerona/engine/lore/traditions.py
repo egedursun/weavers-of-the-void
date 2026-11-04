@@ -19,11 +19,13 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.faith import SpiritAlignment
 from aerona.domain.enums.mind import MemoryKind, ValueAxis, ValueHolder
+from aerona.domain.enums.region import DangerSource
 from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.domain.models.entity_stats import TraditionStats
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import holding
+from aerona.engine.environment.dangers import ease_danger
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.research import has_technique
@@ -200,10 +202,9 @@ async def placate(ctx: TickContext, community: EntityRow) -> int:
 
 async def welcome(ctx: TickContext, community: EntityRow, atlas: RegionAtlas) -> bool:
     region_id = atlas.top_region(community.id)
-    region = await ctx.session.get(EntityRow, region_id) if region_id is not None else None
-    if region is None:
+    if region_id is None:
         return False
-    shift_stat(region, "danger", -ctx.rules.traditions.hospitality_danger)
+    await ease_danger(ctx.session, ctx.rules, region_id, DangerSource.BANDITS, ctx.rules.traditions.hospitality_danger)
     return True
 
 

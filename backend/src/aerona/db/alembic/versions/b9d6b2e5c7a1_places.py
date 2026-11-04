@@ -2,7 +2,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision = "b9d6b2e5c7a1"
-down_revision = "a7c3e9d1f5b2"
+down_revision = "b8c5a1d4b6f0"
 branch_labels = None
 depends_on = None
 
@@ -245,6 +245,7 @@ OLD_ACTIONS = (
     "declare_pilgrimage_site",
     "order_end",
     "other",
+    "reshape_land",
 )
 NEW_ACTIONS = (*OLD_ACTIONS, "hide_secret", "reveal_secret", "sanctify_place", "raise_nexus")
 ACTION_COLUMNS = (("action_records", "kind"), ("ledger_entries", "action_kind"))

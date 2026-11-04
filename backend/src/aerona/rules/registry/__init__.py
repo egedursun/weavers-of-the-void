@@ -185,6 +185,7 @@ from aerona.rules.registry.production import ExtractionRules, MiningHazardsRules
 from aerona.rules.registry.rarities import RaritiesRules
 from aerona.rules.registry.rarity_gates import RarityGatesRules
 from aerona.rules.registry.record_schema import RecordSchemaRules
+from aerona.rules.registry.region import HazardsRules, RegionalDangerRules, TerrainRules
 from aerona.rules.registry.religion import ReligionRules
 from aerona.rules.registry.remembrance import RemembranceRules
 from aerona.rules.registry.reputation import ReputationRules
@@ -224,6 +225,9 @@ class Rules:
     incidents: IncidentRules = field(default_factory=IncidentRules)
     environment: EnvironmentRules = field(default_factory=EnvironmentRules)
     scars: ScarsRules = field(default_factory=ScarsRules)
+    regional_danger: RegionalDangerRules = field(default_factory=RegionalDangerRules)
+    hazards: HazardsRules = field(default_factory=HazardsRules)
+    terrain: TerrainRules = field(default_factory=TerrainRules)
     passability: PassabilityRules = field(default_factory=PassabilityRules)
     seasons: SeasonsRules = field(default_factory=SeasonsRules)
     land_use: LandUseRules = field(default_factory=LandUseRules)

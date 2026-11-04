@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.agents.context.scope import Scope
 from aerona.cartography.model import RegionRecord
+from aerona.catalog.dangers import DANGERS, MEMORY_LABELS
 from aerona.constants.agents import LARGE_REGION_RATIO, SMALL_REGION_RATIO
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
@@ -11,10 +12,13 @@ from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
+from aerona.db.tables.region import PolityMapKnowledgeRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import LandUse, RiverClass
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.environment.dangers import dangers_by_region
 from aerona.engine.environment.ley import LeyWeb
+from aerona.engine.environment.memory import memories_by_region
 from aerona.engine.environment.profile import Works
 from aerona.engine.environment.works import region_works
 from aerona.engine.lore.calendar_rites import long_days
@@ -163,6 +167,42 @@ async def long_day_words(scope: Scope, world_id: int) -> str | None:
     return f"A day lasts {world.day_length_hours} hours: folk rest at noon in the heat or keep vigil through the long night."
 
 
+async def terrain_facts(scope: Scope, region_ids: set[int], grounds: dict[int, RegionEnvironmentRow]) -> dict[int, dict[str, Any]]:
+    settings = scope.rules.context
+    terrain = scope.rules.terrain
+    dangers = await dangers_by_region(scope.session, region_ids)
+    memories = await memories_by_region(scope.session)
+    names = {
+        row.id: row.name
+        for row in await scope.session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.POLITY, EntityRow.status == EntityStatus.CANON))
+    }
+    mapped: dict[int, list[str]] = {}
+    for row in await scope.session.scalars(
+        select(PolityMapKnowledgeRow).where(PolityMapKnowledgeRow.region_entity_id.in_(list(region_ids))).order_by(PolityMapKnowledgeRow.level.desc())
+    ):
+        if row.level >= terrain.unmapped_below and row.polity_entity_id in names:
+            mapped.setdefault(row.region_entity_id, []).append(names[row.polity_entity_id])
+    found: dict[int, dict[str, Any]] = {}
+    for region_id in region_ids:
+        ground = grounds.get(region_id)
+        sacred = ground.sacredness if ground is not None and ground.sacredness >= terrain.pilgrim_sacred_min else None
+        found[region_id] = {
+            "dangers": [
+                f"{DANGERS[row.source].label.lower()} {row.strength}"
+                for row in sorted(dangers.get(region_id, []), key=lambda item: -item.strength)
+                if row.strength >= settings.scar_shown_depth
+            ],
+            "sacredness": sacred,
+            "memories": [
+                f"{row.title} ({MEMORY_LABELS[row.kind].lower()})"
+                for row in sorted(memories.get(region_id, []), key=lambda item: -item.magnitude)
+                if row.magnitude >= settings.scar_shown_depth
+            ],
+            "mapped_by": mapped.get(region_id, []),
+        }
+    return found
+
+
 async def geography_lines(scope: Scope, world_id: int | None) -> str:
     if world_id is None:
         return ""
@@ -183,6 +223,7 @@ async def geography_lines(scope: Scope, world_id: int | None) -> str:
     book = await EnvironmentBook.load(scope.session, scope.rules, scope.epoch)
     places = await place_lines(scope, set(regions))
     works = await region_works(scope.session, book.atlas)
+    terrain = await terrain_facts(scope, set(regions), grounds)
     lines = [
         RegionGeography(
             id=record.id,
@@ -199,6 +240,7 @@ async def geography_lines(scope: Scope, world_id: int | None) -> str:
             places=places.get(record.id, []),
             works=works_words(works.get(record.id)),
             drying=drying_words(scope.rules, grounds.get(record.id)),
+            **terrain[record.id],
         )
         for record in known
     ]

@@ -14,6 +14,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityType
 from aerona.domain.enums.world import Discovery
 from aerona.engine.context import TickContext
+from aerona.engine.environment.perils import haunt_factor
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -90,7 +91,16 @@ async def spirits_rest(ctx: TickContext) -> None:
     ctx.count("crossed", crossed)
 
 
-@reads("settlement.prosperity", "spirit.unrest", "table.bonds", "table.epoch_year_cursors", "table.spirit_profiles", "table.world_maps")
+@reads(
+    "settlement.prosperity",
+    "spirit.unrest",
+    "table.bonds",
+    "table.epoch_year_cursors",
+    "table.region_environment",
+    "table.region_memories",
+    "table.spirit_profiles",
+    "table.world_maps",
+)
 @writes(
     "settlement.prosperity",
     "spirit.unrest",
@@ -115,7 +125,7 @@ async def hauntings(ctx: TickContext) -> None:
         haunted = next((settlement for settlement in settlements if settlement.id == avenged), None) or next(
             (settlement for settlement in settlements if atlas.same_region(spirit.id, settlement.id)), None
         )
-        if haunted is None or not rng.chance(rules.world_engine.spirit_haunt_chance):
+        if haunted is None or not rng.chance(rules.world_engine.spirit_haunt_chance * await haunt_factor(ctx.session, rules, atlas.top_region(haunted.id))):
             continue
         prosperity = stat(haunted, "prosperity")
         set_stats(

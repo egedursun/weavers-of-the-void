@@ -78,6 +78,7 @@ from aerona.engine.phases import (
     prosperity,
     realms,
     refugees,
+    regions,
     religion_spread,
     remembrance,
     reputation,
@@ -201,6 +202,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + settlement_life.PHASES
     + demography.PHASES
     + happenings.PHASES
+    + regions.PHASES
 )
 PHASE_REGISTRY: dict[str, Phase] = {phase.name: phase for phase in EXPORTED_PHASES}
 
@@ -215,6 +217,7 @@ CLEANUP_STAGE = stage(
     "world_maps",
     "environment_survey",
     "environment_modifiers",
+    "region_survey",
     "mind_survey",
     "body_survey",
     "economy_survey",
@@ -280,6 +283,8 @@ SOCIETY_STAGE = stage(
     "knowledge_diffusion",
     "cultural_exchange",
     "natural_disasters",
+    "danger_harm",
+    "terrain_hazards",
     "famine_migration",
     "refugees",
     "disaster_casualties",
@@ -287,6 +292,7 @@ SOCIETY_STAGE = stage(
     "uprisings",
     "spirits_rest",
     "hauntings",
+    "sacred_pilgrims",
     "settlement_laws",
     "currency",
     "wizards",

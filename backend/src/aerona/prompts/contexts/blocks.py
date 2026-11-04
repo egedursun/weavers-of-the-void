@@ -320,6 +320,10 @@ class RegionGeography(ContextItem):
     places: list[str] = Field(default_factory=list)
     works: str | None = None
     drying: str | None = None
+    dangers: list[str] = Field(default_factory=list)
+    sacredness: int | None = None
+    memories: list[str] = Field(default_factory=list)
+    mapped_by: list[str] = Field(default_factory=list)
 
 
 class GeographyLinesContext(PromptContext):

@@ -1,8 +1,10 @@
 from pydantic import Field
 
+from aerona.cartography.biomes import Biome
 from aerona.catalog.weather import WEATHER
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow
 from aerona.domain.enums.action import ActionKind
@@ -34,12 +36,22 @@ class SetScar(Command):
     region_id: int
     kind: ScarKind
     depth: int = Field(ge=0, le=100)
+    lock: bool = False
 
 
 class SetMineral(Command):
     region_id: int
-    material: MaterialKind
+    material: MaterialKind | None = None
+    world_material_id: int | None = None
     richness: int = Field(ge=0, le=100)
+    lock: bool = False
+
+
+class SetBiome(Command):
+    region_id: int
+    biome: int = Field(ge=0, le=9)
+    share: int = Field(ge=0, le=100)
+    lock: bool = True
 
 
 class SetPlaceEnvironment(Command):
@@ -117,9 +129,10 @@ async def unlock_region_environment(scope: PlayerScope, command: UnlockRegionEnv
 async def set_region_scar(scope: PlayerScope, command: SetScar) -> Effect:
     region = await _entity(scope, command.region_id)
     ground = await control.region_ground(scope.session, region.id)
-    control.set_scar(ground, command.kind, command.depth)
+    control.set_scar(ground, command.kind, command.depth, lock=command.lock)
     label = command.kind.value.replace("_", " ")
-    message = f"{region.name} bears {label} of depth {command.depth}." if command.depth else f"The {label} of {region.name} is healed."
+    message = f"{region.name} bears {label} of depth {command.depth}" if command.depth else f"The {label} of {region.name} is healed"
+    message += ", held against time." if command.lock and command.depth else "."
     return Effect(message, target_node_id=region.id)
 
 
@@ -127,10 +140,29 @@ async def set_region_scar(scope: PlayerScope, command: SetScar) -> Effect:
 async def set_region_mineral(scope: PlayerScope, command: SetMineral) -> Effect:
     region = await _entity(scope, command.region_id)
     ground = await control.region_ground(scope.session, region.id)
-    control.set_mineral(ground, command.material.value, command.richness)
-    material = command.material.value.replace("_", " ")
+    if command.material is not None and command.world_material_id is None:
+        key = command.material.value
+        material = command.material.value.replace("_", " ")
+    elif command.world_material_id is not None and command.material is None:
+        world_material = await scope.session.get(WorldMaterialRow, command.world_material_id)
+        if world_material is None or world_material.world_id != ground.world_id:
+            raise NotFoundError("No such material in this region's world.")
+        key = control.world_seam(world_material.id)
+        material = world_material.name or (world_material.base_kind.value.replace("_", " ") if world_material.base_kind is not None else "strange stone")
+    else:
+        raise ValidationFailedError("Name either a material or a world material for the seam.")
+    control.set_mineral(ground, key, command.richness, lock=command.lock)
     message = f"{region.name} holds {material} of richness {command.richness}." if command.richness else f"{region.name} holds no {material}."
     return Effect(message, target_node_id=region.id)
+
+
+@player_action("environment:biome", ActionKind.OTHER)
+async def set_region_biome(scope: PlayerScope, command: SetBiome) -> Effect:
+    region = await _entity(scope, command.region_id)
+    ground = await control.region_ground(scope.session, region.id)
+    control.set_biome(ground, command.biome, command.share, lock=command.lock)
+    label = Biome(command.biome).name.replace("_", " ").lower()
+    return Effect(f"{label.capitalize()} now covers {command.share} of {region.name}.", target_node_id=region.id)
 
 
 @player_action("environment:place", ActionKind.OTHER)

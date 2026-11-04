@@ -349,8 +349,10 @@ async def extract(ctx: TickContext, book: EconomyBook, resource: EntityRow, prof
             )
             region = book.ground.region_of(resource.id)
             if region is not None:
-                region.mined = clamp_int(region.mined + ctx.rules.extraction.byproduct_scar, 0, PERCENT)
-                region.erosion = clamp_int(region.erosion + ctx.rules.extraction.byproduct_scar, 0, PERCENT)
+                if "mined" not in region.locked:
+                    region.mined = clamp_int(region.mined + ctx.rules.extraction.byproduct_scar, 0, PERCENT)
+                if "erosion" not in region.locked:
+                    region.erosion = clamp_int(region.erosion + ctx.rules.extraction.byproduct_scar, 0, PERCENT)
         await _pay_owner(ctx, owner, output * material_value(profile) // PERCENT)
         ctx.session.add(
             ProductionRunRow(

@@ -90,6 +90,7 @@ from aerona.db.tables.polity import (
     TreatyProfileRow,
     VassalageRow,
 )
+from aerona.db.tables.region import PolityMapKnowledgeRow, RegionDangerRow, RegionHazardRow, RegionMemoryRow
 from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import SiegeRow, WarRow, WarSideRow
@@ -129,6 +130,40 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("choose_anchor",),
         ("war.incitement_reaped", "world_age.golden_age"),
         ("doom_clock",),
+    ),
+    ComplianceRow(
+        "S6.1",
+        (
+            RegionDangerRow.__tablename__,
+            RegionMemoryRow.__tablename__,
+            PolityMapKnowledgeRow.__tablename__,
+            RegionHazardRow.__tablename__,
+            RegionEnvironmentRow.__tablename__,
+        ),
+        ("region_survey", "danger_harm", "terrain_hazards", "sacred_pilgrims", "campaigns", "travel", "trade_flow", "hauntings"),
+        (
+            "region:danger_create",
+            "region:danger_edit",
+            "region:danger_release",
+            "region:danger_delete",
+            "region:sanctify",
+            "region:memory_add",
+            "region:memory_edit",
+            "region:memory_delete",
+            "region:knowledge_set",
+            "region:knowledge_release",
+            "region:river_redirect",
+            "environment:set",
+            "environment:unlock",
+            "environment:scar",
+            "environment:mineral",
+            "environment:biome",
+        ),
+        ("section-region-dangers", "section-region-sanctity", "section-region-knowledge", "section-region-hazards", "section-region-river", "map-layer-danger"),
+        ("geography_lines",),
+        ("sanctify_region", "curse_region", "redirect_river"),
+        ("danger.", "hazard.", "tools.son.sanctify_region", "tools.son.curse_region", "tools.son.redirect_river"),
+        ("region.terrain_backfill",),
     ),
     ComplianceRow(
         "F1",

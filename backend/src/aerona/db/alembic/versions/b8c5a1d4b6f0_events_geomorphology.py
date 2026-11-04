@@ -4,7 +4,7 @@ from alembic import op
 import aerona.db.types
 
 revision = "b8c5a1d4b6f0"
-down_revision = "a7c3e9d1f5b2"
+down_revision = "b7b4f0c3a5e9"
 branch_labels = None
 depends_on = None
 

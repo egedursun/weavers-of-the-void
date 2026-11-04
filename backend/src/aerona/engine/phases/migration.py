@@ -12,6 +12,7 @@ from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.legends import haunted_regions
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.drives import closeness, hunger
@@ -189,7 +190,8 @@ async def famine_migration(ctx: TickContext) -> None:
         migrants = max(1, leaving - lost)
         if lost:
             floor, cap = headcount_bounds(rules, community)
-            set_stats(community, population=max(floor, min(cap, population - lost)))
+            with flowing(FlowCategory.DEATH):
+                set_stats(community, population=max(floor, min(cap, population - lost)))
         settlement, rebuilt = await migrate(ctx, atlas, community, target, migrants=migrants, reason="famine")
         moved += 1
         if rebuilt:

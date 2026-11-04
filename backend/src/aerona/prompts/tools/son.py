@@ -326,6 +326,22 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "reason": "Why you do it",
         },
     ),
+    T.SANCTIFY_REGION: ToolText(
+        "You sanctify a region: its ground becomes holy, drawing pilgrims who bring wealth and piety, warding off hauntings and strange phenomena. "
+        "{{ rules.terrain.sanctify_essence }} essence, 1 action.",
+        {"region_id": "The region's id", "sacredness": "How holy, 0-100 (leave out for the usual sanctification)", "reason": "Why you hallow it"},
+    ),
+    T.CURSE_REGION: ToolText(
+        "You loose a danger upon a region: beasts, bandits, monsters, phenomena, disease, avalanches, quicksand or volcanic fire. It harms settlers, herds, "
+        "travellers, armies and merchants there, and fades over the ages unless the land breeds it. {{ rules.terrain.curse_essence }} essence, 1 action, "
+        "strength at most {{ rules.terrain.curse_strength_max }}.",
+        {"region_id": "The region's id", "danger": "Which danger", "strength": "How strong, 1-100", "reason": "Why you curse it"},
+    ),
+    T.REDIRECT_RIVER: ToolText(
+        "You turn a river out of its bed into a neighbouring region: the old valley dries to a stream or a dry bed, the new one floods and grows. "
+        "{{ rules.terrain.redirect_essence }} essence, 1 action.",
+        {"from_region_id": "The region the river runs through now", "to_region_id": "The neighbouring region it will run through", "reason": "Why you turn it"},
+    ),
     T.REORDER_SEASONS: ToolText(
         "You reorder the seasons of a world: the year runs in the order you name, so harvests, campaigns, travel and festivals fall differently. "
         "Only gods of sky, storm, time, sun, moon, harvest, ice or plants can do it. {{ rules.son_tools.reorder_seasons_essence }} essence, "

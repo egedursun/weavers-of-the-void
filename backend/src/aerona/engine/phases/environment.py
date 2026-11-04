@@ -195,7 +195,8 @@ def refresh_climate(
     if "rainfall" not in locked:
         env.rainfall = rainfall_of(rules, geography, around)
     desert_rainfall(rules, env, shape)
-    env.temperature_band = band_of(rules, env.temperature)
+    if "temperature_band" not in locked:
+        env.temperature_band = band_of(rules, env.temperature)
     if "seasonality" not in locked:
         env.seasonality = seasonality_of(rules, env.latitude, axial_tilt)
     if "wetland" not in locked:
@@ -500,7 +501,11 @@ def decay_scars(rules: Rules, env: RegionEnvironmentRow) -> None:
         ScarKind.BLIGHTED: settings.blighted_decay,
         ScarKind.LEAK_WOUND: settings.leak_wound_decay,
     }
-    kept = {key: depth - decay[ScarKind(key)] for key, depth in env.scars.items() if depth - decay[ScarKind(key)] > 0}
+    kept = {
+        key: depth if f"scar.{key}" in env.locked else depth - decay[ScarKind(key)]
+        for key, depth in env.scars.items()
+        if f"scar.{key}" in env.locked or depth - decay[ScarKind(key)] > 0
+    }
     if kept != env.scars:
         env.scars = kept
 
@@ -512,6 +517,8 @@ def fold_external(env_fertility: int | None, current: int | None, soil: int) -> 
 
 
 def recover_soil(rules: Rules, env: RegionEnvironmentRow) -> None:
+    if "soil_fertility" in env.locked:
+        return
     settings = rules.climate_effects
     gap = env.soil_base - env.soil_fertility
     divisor = settings.fertility_recovery_divisor if gap > 0 else settings.fertility_decline_divisor
@@ -596,7 +603,8 @@ async def environment_derive(ctx: TickContext) -> None:
                 scars=env.scars,
             )
         current = base_stat(region, "fertility")
-        env.soil_fertility = fold_external(env.derived_fertility, current, env.soil_fertility)
+        if "soil_fertility" not in env.locked:
+            env.soil_fertility = fold_external(env.derived_fertility, current, env.soil_fertility)
         recover_soil(rules, env)
         if current is not None or not region.is_water:
             set_base_stats(region, fertility=fertility_from(env.soil_fertility, factor_of(rules, env, context.works)))
@@ -630,11 +638,16 @@ def work_land(rules: Rules, env: RegionEnvironmentRow, capacity: CapacityModel, 
     occupancy = load.population / ceiling * PERCENT
     farming = load.agriculture / load.population
     settled = sum(stat_or(item, "population", 0) for item in load.communities if item.entity_type is EntityType.SETTLEMENT)
-    env.farmed = drift(env.farmed, land_target(occupancy * farming * settings.farm_target_pct / PERCENT), divisor)
-    env.grazed = drift(env.grazed, land_target(occupancy * (1 - farming) * settings.graze_target_pct / PERCENT), divisor)
-    env.built = drift(env.built, land_target(settled / settings.built_population_per_pct), divisor)
+    locked = set(env.locked)
+    if "farmed" not in locked:
+        env.farmed = drift(env.farmed, land_target(occupancy * farming * settings.farm_target_pct / PERCENT), divisor)
+    if "grazed" not in locked:
+        env.grazed = drift(env.grazed, land_target(occupancy * (1 - farming) * settings.graze_target_pct / PERCENT), divisor)
+    if "built" not in locked:
+        env.built = drift(env.built, land_target(settled / settings.built_population_per_pct), divisor)
     cleared = env.farmed + env.built * settings.cleared_built_pct / PERCENT + env.grazed * settings.cleared_grazed_pct / PERCENT
-    env.cleared = drift(env.cleared, land_target(cleared), divisor)
+    if "cleared" not in locked:
+        env.cleared = drift(env.cleared, land_target(cleared), divisor)
 
 
 async def settle_new_ground(ctx: TickContext, created: list[RegionEnvironmentRow]) -> None:
@@ -719,18 +732,23 @@ async def land_use(ctx: TickContext) -> None:
         load = loads.get(("region", region_id))
         if load is None or load.population <= 0:
             for key in LandUse:
-                setattr(env, key.value, max(0, getattr(env, key.value) - settings.rewild_rate))
+                if key.value not in env.locked:
+                    setattr(env, key.value, max(0, getattr(env, key.value) - settings.rewild_rate))
             rewilded += 1
         else:
             work_land(rules, env, capacity, load, settings.drift_divisor)
             worked += 1
-        env.erosion = (
-            clamp_int(env.cleared * env.roughness / PERCENT * settings.erosion_pct / PERCENT, 0, PERCENT) if env.roughness >= settings.erosion_roughness else 0
-        )
+        if "erosion" not in env.locked:
+            env.erosion = (
+                clamp_int(env.cleared * env.roughness / PERCENT * settings.erosion_pct / PERCENT, 0, PERCENT)
+                if env.roughness >= settings.erosion_roughness
+                else 0
+            )
         loss = env.erosion * settings.erosion_soil_pct / PERCENT
         if env.farmed > settings.overfarm_threshold:
             loss += (env.farmed - settings.overfarm_threshold) * settings.overfarm_soil_pct / PERCENT
-        env.soil_fertility = clamp_int(env.soil_fertility - loss, 0, PERCENT)
+        if "soil_fertility" not in env.locked:
+            env.soil_fertility = clamp_int(env.soil_fertility - loss, 0, PERCENT)
         await note_land(ctx, env, before)
     await ctx.session.flush()
     ctx.count("regions_worked", worked)
@@ -919,7 +937,8 @@ async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason)
     )
     if year.weather is WeatherKind.ASH_FALL and env.soil is not SoilKind.VOLCANIC and "soil" not in env.locked:
         env.soil = SoilKind.ASH
-        env.soil_base = natural_soil(ctx.rules, SoilKind.ASH, env.moisture)
+        if "soil_base" not in env.locked:
+            env.soil_base = natural_soil(ctx.rules, SoilKind.ASH, env.moisture)
     return 1
 
 

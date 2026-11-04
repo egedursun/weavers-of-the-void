@@ -151,11 +151,15 @@ async def test_creation_tools(database: Database) -> None:
     )
     assert "Vellish" in language
     crowded = await ok(
-        toolkit, "create_place", {"place_kind": "cave", "name": "Lastshore", "description": LONG, "power_level": 1, "links": link, "location_id": realm.cosmos.region_id}
+        toolkit,
+        "create_place",
+        {"place_kind": "cave", "name": "Lastshore", "description": LONG, "power_level": 1, "links": link, "location_id": realm.cosmos.region_id},
     )
     assert "Remaining actions: 0" in crowded
     spent = await rejected(
-        toolkit, "create_place", {"place_kind": "cave", "name": "Farshore", "description": LONG, "power_level": 1, "links": link, "location_id": realm.cosmos.region_id}
+        toolkit,
+        "create_place",
+        {"place_kind": "cave", "name": "Farshore", "description": LONG, "power_level": 1, "links": link, "location_id": realm.cosmos.region_id},
     )
     assert "spent" in spent
 

@@ -150,7 +150,9 @@ describe('events and the shape of the land', () => {
       .element(screen.getByText('Since the year 2010, Summer'))
       .toBeVisible()
     await expect.element(screen.getByText('Greyfield')).toBeVisible()
-    await expect.element(screen.getByText('Elders', { exact: true })).toBeVisible()
+    await expect
+      .element(screen.getByText('Elders', { exact: true }))
+      .toBeVisible()
     await screen.getByRole('button', { name: 'Adjust' }).click()
     await screen.getByRole('button', { name: 'Release phase' }).click()
     await expect

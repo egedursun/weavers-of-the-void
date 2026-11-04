@@ -74,6 +74,8 @@ PHASE_FLOWS: dict[str, FlowCategory] = {
     "life_seed": C.CREATION,
     "natural_disasters": C.DISASTER,
     "event_phases": C.FAMINE,
+    "danger_harm": C.DISASTER,
+    "terrain_hazards": C.DISASTER,
     "settlement_life": C.DISASTER,
     "treaty_cycles": C.LEVY,
     "people_cycles": C.MERGE,
