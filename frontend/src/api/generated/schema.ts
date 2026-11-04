@@ -4287,6 +4287,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/nodes/{node_id}/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["node_profiles_api_nodes__node_id__profiles_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/worlds/{world_id}/materials": {
         parameters: {
             query?: never;
@@ -8207,6 +8223,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/profile:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_profile_set_api_actions_profile_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/profile:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_profile_release_api_actions_profile_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/ley:sever": {
         parameters: {
             query?: never;
@@ -8953,6 +9001,70 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["action_settlement_charter_api_actions_settlement_charter_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/settlement:foreigners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_settlement_foreigners_api_actions_settlement_foreigners_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/district:design": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_district_design_api_actions_district_design_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/district:design_edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_district_design_edit_api_actions_district_design_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/district:design_delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_district_design_delete_api_actions_district_design_delete_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10186,6 +10298,14 @@ export interface components {
             state: boolean;
             since_epoch: number;
         };
+        AdminView: {
+            base: number;
+            literacy: number;
+            scribes: number;
+            writing: number;
+            palace: number;
+            total: number;
+        };
         Aesthetic: "austere" | "ornate" | "geometric" | "natural" | "macabre" | "celestial";
         AfterlifeState: "wandering" | "judged" | "in_realm" | "reborn" | "consumed" | "released";
         AfterlifeStratumInput: {
@@ -10334,6 +10454,11 @@ export interface components {
             values?: {
                 [key: string]: number | string | boolean | null;
             };
+        };
+        ArmyOption: {
+            id: number;
+            name: string;
+            size: number;
         };
         ArmyRemoveStackInput: {
             unit_id: number;
@@ -11590,6 +11715,12 @@ export interface components {
             actor: components["schemas"]["NodeRef"] | null;
             note: string;
         };
+        DefenceView: {
+            wall_pct: number;
+            tower_pct: number;
+            batter_pct: number;
+            gate_weakness_pct: number;
+        };
         DefenderAction: "sally" | "repair" | "ration" | "seek_relief";
         DemographyView: {
             entity_id: number;
@@ -11708,14 +11839,66 @@ export interface components {
         };
         DistrictBuildInput: {
             settlement_id: number;
-            kind: components["schemas"]["DistrictKind"];
+            kind?: components["schemas"]["DistrictKind"] | null;
             material: components["schemas"]["BuildMaterial"];
+            design_id?: number | null;
+        };
+        DistrictDesignDeleteInput: {
+            design_id: number;
+        };
+        DistrictDesignEditInput: {
+            design_id: number;
+            values?: {
+                [key: string]: number | null;
+            };
+            name?: string | null;
+            description?: string | null;
+            base_kind?: components["schemas"]["DistrictKind"] | null;
+        };
+        DistrictDesignInput: {
+            world_id: number;
+            name: string;
+            base_kind: components["schemas"]["DistrictKind"];
+            description?: string | null;
+            values?: {
+                [key: string]: number;
+            };
+        };
+        DistrictDesignView: {
+            id: number;
+            name: string;
+            description: string | null;
+            base_kind: components["schemas"]["DistrictKind"];
+            parameters: {
+                [key: string]: number | null;
+            };
+            defaults: {
+                [key: string]: number;
+            };
+            created_epoch: number;
         };
         DistrictEditInput: {
             district_id: number;
             level?: number | null;
             condition?: number | null;
             material?: components["schemas"]["BuildMaterial"] | null;
+            kind?: components["schemas"]["DistrictKind"] | null;
+            design_id?: number | null;
+            clear_design: boolean;
+            release?: string[];
+        };
+        DistrictEffectsView: {
+            housing: number;
+            food_store: number;
+            goods_store: number;
+            harbour: number;
+            order: number;
+            sanitation: number;
+            piety_floor: number;
+            admin_pct: number;
+            policing: number;
+            investment_pct: number;
+            tension_relief_pct: number;
         };
         DistrictKind: "farmland" | "market" | "craft_quarter" | "temple_quarter" | "harbour" | "citadel" | "slums" | "palace" | "foreign_quarter" | "necropolis";
         DistrictRazeInput: {
@@ -11728,6 +11911,11 @@ export interface components {
             condition: number;
             material: components["schemas"]["BuildMaterial"];
             built_epoch: number;
+            design_id: number | null;
+            locked: string[];
+            effects: {
+                [key: string]: number;
+            };
         };
         DoctrineView: {
             cult: components["schemas"]["NodeRef"] | null;
@@ -15359,6 +15547,32 @@ export interface components {
             commodity: components["schemas"]["CommodityKind"];
             points: components["schemas"]["PricePoint"][];
         };
+        ProfileColumnRecord: {
+            name: string;
+            kind: string;
+            value: number | string | boolean | null;
+            options: string[];
+            nullable: boolean;
+            held: boolean;
+            pinned: boolean;
+        };
+        ProfileReleaseInput: {
+            node_id: number;
+            table: string;
+            column: string;
+        };
+        ProfileSetInput: {
+            node_id: number;
+            table: string;
+            column: string;
+            value: number | string | boolean | null;
+            hold: boolean;
+        };
+        ProfileTableRecord: {
+            table: string;
+            lockable: boolean;
+            columns: components["schemas"]["ProfileColumnRecord"][];
+        };
         PromptArea: "shared" | "context" | "genesis" | "son_turn" | "fate" | "chronicler" | "naming" | "voices" | "deepening" | "image_prompts" | "council" | "translation" | "world_birth" | "network_repair" | "mortal" | "opportunities" | "agent" | "chronicle" | "localisation";
         PromptCatalogue: {
             prompts: components["schemas"]["PromptEntry"][];
@@ -16232,6 +16446,12 @@ export interface components {
         SettlementEthnogenesisInput: {
             settlement_id: number;
         };
+        SettlementForeignersInput: {
+            settlement_id: number;
+            shares?: {
+                [key: string]: number;
+            };
+        };
         SettlementFreeCityInput: {
             settlement_id: number;
             free: boolean;
@@ -16243,6 +16463,7 @@ export interface components {
         };
         SettlementPlanView: {
             entity_id: number;
+            world_id: number | null;
             size_tier: components["schemas"]["SizeTier"];
             treasury: number;
             tax_rate: number;
@@ -16264,6 +16485,21 @@ export interface components {
             construction_capacity: number;
             hauling_capacity: number;
             rationing: boolean;
+            admin_capacity: number;
+            admin: components["schemas"]["AdminView"];
+            food_storage: components["schemas"]["StorageView"];
+            goods_storage: components["schemas"]["StorageView"];
+            defences: components["schemas"]["DefenceView"];
+            district_effects: components["schemas"]["DistrictEffectsView"];
+            prestige_pull_pct: number;
+            prestige_investment_pct: number;
+            designs: components["schemas"]["DistrictDesignView"][];
+            kind_defaults: {
+                [key: string]: {
+                    [key: string]: number;
+                };
+            };
+            armies: components["schemas"]["ArmyOption"][];
             district_slots: number;
             housing: number;
             locked: string[];
@@ -16699,7 +16935,7 @@ export interface components {
             value: number;
         };
         SonStatus: "active" | "asleep" | "exiled" | "dead";
-        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_father" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "sever_ley" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world";
+        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_father" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "sever_ley" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world" | "raise_district" | "design_district";
         SonToolsView: {
             son_id: number;
             rarity: components["schemas"]["Rarity"];
@@ -17126,6 +17362,12 @@ export interface components {
             label: string;
             quantity: number;
             quality: number;
+        };
+        StorageView: {
+            districts: number;
+            workshops: number;
+            other: number;
+            total: number;
         };
         StrainView: {
             id: number;
@@ -26242,6 +26484,35 @@ export interface operations {
             };
         };
     };
+    node_profiles_api_nodes__node_id__profiles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileTableRecord"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     world_materials_api_worlds__world_id__materials_get: {
         parameters: {
             query?: never;
@@ -33489,6 +33760,68 @@ export interface operations {
             };
         };
     };
+    action_profile_set_api_actions_profile_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_profile_release_api_actions_profile_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_ley_sever_api_actions_ley_sever_post: {
         parameters: {
             query?: never;
@@ -34925,6 +35258,130 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["SettlementCharterInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_settlement_foreigners_api_actions_settlement_foreigners_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettlementForeignersInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_district_design_api_actions_district_design_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DistrictDesignInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_district_design_edit_api_actions_district_design_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DistrictDesignEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_district_design_delete_api_actions_district_design_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DistrictDesignDeleteInput"];
             };
         };
         responses: {
@@ -37491,7 +37948,7 @@ export const sonDistributedEventKindValues: ReadonlyArray<FlattenedDeepRequired<
 export const sonDistributionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonDistribution"]> = ["auto", "manual"];
 export const sonNewEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonNewEvent"]["kind"]> = ["son.new"];
 export const sonStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonStatus"]> = ["active", "asleep", "exiled", "dead"];
-export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_father", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "sever_ley", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world"];
+export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_father", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "sever_ley", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world", "raise_district", "design_district"];
 export const sonTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnFinishedEvent"]["kind"]> = ["son.turn_finished"];
 export const sonTurnQueuedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnQueuedEvent"]["kind"]> = ["son.turn_queued"];
 export const sonTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnStartedEvent"]["kind"]> = ["son.turn_started"];

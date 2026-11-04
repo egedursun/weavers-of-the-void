@@ -34,6 +34,10 @@ import {
   Warehouse,
   Wheat,
   Wrench,
+  Lock,
+  LockOpen,
+  Swords,
+  Compass,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -55,7 +59,9 @@ import { LineChart } from '@/components/domain/LineChart'
 import { Muted, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { CityWorkings, DesignEditor, DistrictDesigns } from './CityWorks'
 import { useSettlementPlan } from './api'
+import { DESIGN_FIELDS, signed } from './cityFields'
 import {
   DISTRICT_MAX_LEVEL,
   DISTRICT_SPEC,
@@ -66,6 +72,7 @@ import {
   WATER_SPEC,
   type BuildMaterial,
   type DistrictKind,
+  type Spec,
   fieldLabel,
 } from './labels'
 import {
@@ -94,6 +101,13 @@ const WALL_MAX = 5
 const ROAD_MAX = 5
 const GATE_MAX = 20
 const PLOT_PIPS = 12
+const ADMIN_MAX = 300
+const NO_GARRISON = '0'
+const DISTRICT_LOCK_LABEL: Record<string, string> = {
+  level: 'Level',
+  condition: 'Repair',
+  material: 'Material',
+}
 
 const CIVIC = [
   { key: 'public_order', icon: Gavel, harmful: false },
@@ -107,6 +121,9 @@ const COFFERS = [
   { key: 'treasury', icon: Coins, max: HUGE, unit: 'coin' },
   { key: 'militia', icon: Shield, max: HUGE, unit: 'men' },
   { key: 'investment_pool', icon: Sparkles, max: HUGE, unit: 'coin' },
+  { key: 'construction_capacity', icon: Hammer, max: HUGE, unit: 'work' },
+  { key: 'hauling_capacity', icon: Truck, max: HUGE, unit: 'loads' },
+  { key: 'admin_capacity', icon: ScrollText, max: ADMIN_MAX, unit: '%' },
 ] as const
 const SIEGE = [
   { key: 'siege_supplies', icon: Utensils, max: HUGE, unit: 'days' },
@@ -136,9 +153,11 @@ function taxLevel(rate: number): string {
 
 function DistrictTile({
   district,
+  design,
   blocked,
 }: {
   district: District
+  design: string | null
   blocked: string | null
 }) {
   const spec = DISTRICT_SPEC[district.kind]
@@ -152,10 +171,10 @@ function DistrictTile({
       ),
   })
   const edit = useGodAction({
-    run: (change: { level?: number; condition?: number }) =>
+    run: (change: { level?: number; condition?: number; release?: string[] }) =>
       unwrap(
         api.POST('/api/actions/district:edit', {
-          body: { district_id: district.id, ...change },
+          body: { district_id: district.id, clear_design: false, ...change },
         })
       ),
   })
@@ -167,10 +186,12 @@ function DistrictTile({
         <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>
           <Text as='span' weight='medium' truncate>
-            {spec.label}
+            {design ?? spec.label}
           </Text>
           <Muted as='span' variant='caption' truncate>
-            {`Built in epoch ${district.built_epoch}`}
+            {design
+              ? `A ${spec.label.toLowerCase()} · built in epoch ${district.built_epoch}`
+              : `Built in epoch ${district.built_epoch}`}
           </Muted>
         </div>
         <Badge size='sm' variant='secondary'>
@@ -196,6 +217,36 @@ function DistrictTile({
         max={PERCENT}
         tone={METER_TONE[conditionTone]}
       />
+      <div className='flex min-w-0 flex-wrap gap-1.5'>
+        {DESIGN_FIELDS.filter((item) => district.effects[item.key]).map(
+          (item) => (
+            <Badge key={item.key} size='sm' variant='outline'>
+              <item.icon />
+              {`${fieldLabel(item.key)} ${item.unit === '%' ? `${signed(district.effects[item.key])}%` : signed(district.effects[item.key])}`}
+            </Badge>
+          )
+        )}
+      </div>
+      {district.locked.length > 0 && (
+        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+          {district.locked.map((key) => (
+            <Badge key={key} size='sm' variant='warning'>
+              <Lock />
+              {`${DISTRICT_LOCK_LABEL[key] ?? fieldLabel(key)} held`}
+            </Badge>
+          ))}
+          <Button
+            size='sm'
+            variant='ghost'
+            disabled={busy !== null}
+            disabledReason={busy ?? undefined}
+            onClick={() => edit.mutate({ release: district.locked })}
+          >
+            <LockOpen />
+            Release
+          </Button>
+        </div>
+      )}
       <div className='mt-auto grid min-w-0 grid-cols-3 gap-1.5'>
         <Button
           size='sm'
@@ -419,6 +470,44 @@ function PlanControls({
   const [tax, setTax] = useState(plan.tax_rate)
   const [kind, setKind] = useState<string>('market')
   const [material, setMaterial] = useState<string>('stone')
+  const [design, setDesign] = useState<string>('')
+  const [target, setTarget] = useState<string>(
+    plan.districts[0] ? String(plan.districts[0].id) : ''
+  )
+  const [retype, setRetype] = useState<string>('')
+  const designTable = Object.fromEntries(
+    plan.designs.map((item) => [
+      String(item.id),
+      {
+        label: item.name,
+        icon: DISTRICT_SPEC[item.base_kind].icon,
+        tone: DISTRICT_SPEC[item.base_kind].tone,
+      },
+    ])
+  )
+  const districtTable = Object.fromEntries(
+    plan.districts.map((item) => [
+      String(item.id),
+      {
+        label: `${plan.designs.find((entry) => entry.id === item.design_id)?.name ?? DISTRICT_SPEC[item.kind].label} ${item.level}`,
+        icon: DISTRICT_SPEC[item.kind].icon,
+        tone: DISTRICT_SPEC[item.kind].tone,
+      },
+    ])
+  )
+  const garrisonTable: Record<string, Spec> = {
+    [NO_GARRISON]: { label: 'No garrison', icon: Shield, tone: 'muted' },
+    ...Object.fromEntries(
+      plan.armies.map((army) => [
+        String(army.id),
+        {
+          label: `${army.name} (${formatInteger(army.size)})`,
+          icon: Swords,
+          tone: 'danger' as const,
+        },
+      ])
+    ),
+  }
   const locked = [...plan.locked, ...plan.infrastructure.locked]
   const edit = useGodAction({
     run: ({ key, value }: Change) =>
@@ -456,7 +545,8 @@ function PlanControls({
         api.POST('/api/actions/district:build', {
           body: {
             settlement_id: plan.entity_id,
-            kind: kind as DistrictKind,
+            kind: design === '' ? (kind as DistrictKind) : null,
+            design_id: design === '' ? null : Number(design),
             material: material as BuildMaterial,
           },
         })
@@ -469,6 +559,33 @@ function PlanControls({
           body: { settlement_id: plan.entity_id, free: value },
         })
       ),
+  })
+  const rework = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/district:edit', {
+          body: {
+            district_id: Number(target),
+            kind: retype.startsWith('kind:')
+              ? (retype.slice(5) as DistrictKind)
+              : null,
+            design_id: retype.startsWith('design:')
+              ? Number(retype.slice(7))
+              : null,
+            clear_design: false,
+          },
+        })
+      ),
+    success: 'The district was reworked',
+  })
+  const foreign = useGodAction({
+    run: (shares: Record<string, number>) =>
+      unwrap(
+        api.POST('/api/actions/settlement:foreigners', {
+          body: { settlement_id: plan.entity_id, shares },
+        })
+      ),
+    success: 'The foreign quarters were counted anew',
   })
   const charter = useGodAction({
     run: () =>
@@ -484,6 +601,8 @@ function PlanControls({
     setRate.isPending ||
     build.isPending ||
     free.isPending ||
+    rework.isPending ||
+    foreign.isPending ||
     charter.isPending
   const busy = blocked ?? (pending ? WORKING : null)
   const current: Record<string, number> = {
@@ -496,6 +615,9 @@ function PlanControls({
     treasury: plan.treasury,
     militia: plan.militia,
     investment_pool: plan.investment_pool,
+    construction_capacity: plan.construction_capacity,
+    hauling_capacity: plan.hauling_capacity,
+    admin_capacity: plan.admin_capacity,
     siege_supplies: plan.siege_supplies,
     siege_water: plan.siege_water,
     siege_disease: plan.siege_disease,
@@ -581,7 +703,7 @@ function PlanControls({
           icon={Shield}
           tone='success'
           checked={plan.free_city}
-          held={false}
+          held={locked.includes('free_city')}
           blocked={busy}
           onToggle={(value) => free.mutate(value)}
         />
@@ -591,7 +713,7 @@ function PlanControls({
           icon={Utensils}
           tone='warning'
           checked={plan.rationing}
-          held={false}
+          held={locked.includes('rationing')}
           blocked={busy}
           onToggle={(value) => edit.mutate({ key: 'rationing', value })}
         />
@@ -601,7 +723,7 @@ function PlanControls({
           icon={Droplets}
           tone='info'
           checked={plan.infrastructure.sewers}
-          held={false}
+          held={locked.includes('sewers')}
           blocked={busy}
           onToggle={(value) => edit.mutate({ key: 'sewers', value })}
         />
@@ -634,9 +756,23 @@ function PlanControls({
           label='District'
           value={kind}
           table={DISTRICT_SPEC}
-          blocked={busy}
+          blocked={
+            busy !== null ? busy : design !== '' ? 'A design is chosen' : null
+          }
           onPick={setKind}
         />
+        {plan.designs.length > 0 && (
+          <IconPicker
+            label='Or a design'
+            value={design}
+            table={{
+              '': { label: 'No design', icon: Compass, tone: 'muted' },
+              ...designTable,
+            }}
+            blocked={busy}
+            onPick={setDesign}
+          />
+        )}
         <IconPicker
           label='Built of'
           value={material}
@@ -659,6 +795,108 @@ function PlanControls({
             <Plus />
             Build it
           </Button>
+        </div>
+      </EditorGroup>
+      {plan.districts.length > 0 && (
+        <EditorGroup title='Rework a district' icon={Wrench}>
+          <IconPicker
+            label='District'
+            value={target}
+            table={districtTable}
+            blocked={busy}
+            onPick={setTarget}
+          />
+          <IconPicker
+            label='Turn it into'
+            value={retype}
+            table={{
+              ...Object.fromEntries(
+                Object.entries(DISTRICT_SPEC).map(([key, spec]) => [
+                  `kind:${key}`,
+                  spec,
+                ])
+              ),
+              ...Object.fromEntries(
+                Object.entries(designTable).map(([key, spec]) => [
+                  `design:${key}`,
+                  spec,
+                ])
+              ),
+            }}
+            blocked={busy}
+            onPick={setRetype}
+          />
+          <div className='flex min-w-0 flex-col justify-end gap-1.5'>
+            <Muted variant='caption'>
+              Its level, repair and material stay; its effects follow the new
+              kind.
+            </Muted>
+            <Button
+              size='sm'
+              disabled={busy !== null || retype === '' || target === ''}
+              disabledReason={busy ?? 'Choose a district and what it becomes'}
+              onClick={() => rework.mutate(undefined)}
+            >
+              <Wrench />
+              Rework it
+            </Button>
+          </div>
+        </EditorGroup>
+      )}
+      <EditorGroup title='Garrison and foreigners' icon={Users}>
+        <ChoiceEditor
+          label='Garrison'
+          hint='The standing army that watches the walls'
+          value={String(plan.garrison_id ?? NO_GARRISON)}
+          table={garrisonTable}
+          held={locked.includes('garrison_entity_id')}
+          blocked={busy}
+          onPick={(value) =>
+            edit.mutate({ key: 'garrison_entity_id', value: Number(value) })
+          }
+        />
+        {plan.foreigners.map((item) => (
+          <NumberEditor
+            key={`foreign-${item.people_id}-${item.share}`}
+            id={`settlement-${plan.entity_id}-foreign`}
+            field={{
+              key: `foreign-${item.people_id}`,
+              label: item.name || 'Foreign people',
+              icon: Users,
+              value: item.share,
+              min: 0,
+              max: PERCENT,
+              unit: '% of the city',
+            }}
+            held={locked.includes('foreigners')}
+            blocked={busy}
+            pending={foreign.isPending}
+            onSet={(value) =>
+              foreign.mutate(
+                Object.fromEntries(
+                  plan.foreigners.map((entry) => [
+                    String(entry.people_id),
+                    entry.people_id === item.people_id ? value : entry.share,
+                  ])
+                )
+              )
+            }
+          />
+        ))}
+        {plan.foreigners.length === 0 && (
+          <Muted variant='caption'>
+            No foreign people lives here; they arrive as migrants and traders.
+          </Muted>
+        )}
+      </EditorGroup>
+      <EditorGroup title='Design a new district' icon={Compass}>
+        <div className='flex min-w-0 flex-col gap-2 @md:col-span-2 @3xl:col-span-3'>
+          <Muted variant='caption'>
+            Pick the base kind it builds on and replace any of its effects per
+            level; blank fields keep the base value. Every city of the world may
+            then raise it.
+          </Muted>
+          <DesignEditor design={null} plan={plan} blocked={busy} />
         </div>
       </EditorGroup>
       <EditorGroup title='The city' icon={Landmark}>
@@ -787,6 +1025,7 @@ export function SettlementPlanSection({
             <Streets plan={plan} />
             <Defences plan={plan} />
           </div>
+          <CityWorkings plan={plan} />
           <Panel
             title='Under siege'
             icon={Castle}
@@ -853,6 +1092,10 @@ export function SettlementPlanSection({
                 <DistrictTile
                   key={district.id}
                   district={district}
+                  design={
+                    plan.designs.find((item) => item.id === district.design_id)
+                      ?.name ?? null
+                  }
                   blocked={blocked}
                 />
               ))}
@@ -863,6 +1106,7 @@ export function SettlementPlanSection({
               )}
             </ul>
           </Panel>
+          <DistrictDesigns plan={plan} blocked={blocked} />
           <PlanControls
             key={JSON.stringify([
               plan.locked,

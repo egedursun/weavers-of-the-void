@@ -60,8 +60,70 @@ const DISEASE = {
   immunities: [],
 }
 
+const EFFECTS = {
+  housing: 1500,
+  food_store: 0,
+  goods_store: 300,
+  harbour: 0,
+  order: 0,
+  sanitation: 0,
+  piety_floor: 0,
+  admin_pct: 0,
+  policing: 0,
+  investment_pct: 0,
+  tension_relief_pct: 0,
+}
+
 const PLAN = {
   entity_id: 30,
+  world_id: 1,
+  admin_capacity: 72,
+  admin: {
+    base: 50,
+    literacy: 10,
+    scribes: 6,
+    writing: 6,
+    palace: 0,
+    total: 72,
+  },
+  food_storage: { districts: 0, workshops: 5000, other: 0, total: 5000 },
+  goods_storage: { districts: 300, workshops: 0, other: 0, total: 300 },
+  defences: {
+    wall_pct: 56,
+    tower_pct: 4,
+    batter_pct: 60,
+    gate_weakness_pct: 0,
+  },
+  district_effects: { ...EFFECTS, order: 4 },
+  prestige_pull_pct: 8,
+  prestige_investment_pct: 4,
+  designs: [
+    {
+      id: 9,
+      name: 'Lantern Quay',
+      description: 'A lit quay.',
+      base_kind: 'harbour',
+      parameters: {
+        ...Object.fromEntries(Object.keys(EFFECTS).map((key) => [key, null])),
+        harbour: 900,
+      },
+      defaults: { ...EFFECTS, goods_store: 0, harbour: 200 },
+      created_epoch: 40,
+    },
+  ],
+  kind_defaults: {
+    farmland: EFFECTS,
+    market: EFFECTS,
+    craft_quarter: EFFECTS,
+    temple_quarter: EFFECTS,
+    harbour: { ...EFFECTS, harbour: 200 },
+    citadel: EFFECTS,
+    slums: EFFECTS,
+    palace: { ...EFFECTS, order: 4, admin_pct: 10 },
+    foreign_quarter: EFFECTS,
+    necropolis: EFFECTS,
+  },
+  armies: [{ id: 77, name: 'the Wall Guard', size: 400 }],
   size_tier: 'town',
   treasury: 28,
   tax_rate: 10,
@@ -109,6 +171,9 @@ const PLAN = {
       condition: 70,
       material: 'timber',
       built_epoch: 50,
+      design_id: null,
+      locked: ['condition'],
+      effects: { housing: 1500, goods_store: 300 },
     },
   ],
   treasury_ledger: [],
@@ -180,6 +245,7 @@ describe('society sections', () => {
       .toHaveLength(1)
     expect(callsTo('POST', '/api/actions/district:edit')[0].body).toEqual({
       district_id: 4,
+      clear_design: false,
       condition: 100,
     })
     await screen.getByRole('button', { name: 'Adjust' }).click()
@@ -201,6 +267,48 @@ describe('society sections', () => {
       settlement_id: 30,
       values: { militia: 600 },
       release: [],
+    })
+  })
+
+  it('explains how the city runs and devises district designs', async () => {
+    serve()
+    onApi('GET', '/api/entities/30/settlement-plan', PLAN)
+    onApi('POST', '/api/actions/district:edit', ACCEPTED_ACTION)
+    onApi('POST', '/api/actions/district:design', ACCEPTED_ACTION)
+    onApi('POST', '/api/actions/district:design_delete', ACCEPTED_ACTION)
+    onApi('POST', '/api/actions/settlement:edit', ACCEPTED_ACTION)
+    const { screen } = await renderApp(
+      <SettlementPlanSection settlementId={30} />
+    )
+    await expect.element(screen.getByText('Administrative reach')).toBeVisible()
+    await expect.element(screen.getByText('Lantern Quay')).toBeVisible()
+    await expect.element(screen.getByText('Repair held')).toBeVisible()
+    await screen.getByRole('button', { name: 'Release' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/district:edit'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/district:edit')[0].body).toEqual({
+      district_id: 4,
+      clear_design: false,
+      release: ['condition'],
+    })
+    await screen.getByRole('button', { name: 'Strike' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/district:design_delete'))
+      .toHaveLength(1)
+    await screen.getByRole('button', { name: 'Adjust' }).click()
+    await screen.getByLabelText('Name').fill('Night Market')
+    await screen.getByLabelText('Order per level').fill('5')
+    await screen.getByRole('button', { name: 'Design it' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/district:design'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/district:design')[0].body).toEqual({
+      world_id: 1,
+      name: 'Night Market',
+      base_kind: 'market',
+      description: null,
+      values: { order: 5 },
     })
   })
 })

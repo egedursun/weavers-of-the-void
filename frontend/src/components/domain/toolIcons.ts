@@ -179,6 +179,8 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   war_on_foreign_god: Sword,
   bargain_with_outsider: InfinityIcon,
   birth_world: Earth,
+  raise_district: Building2,
+  design_district: Compass,
   establish_trade: Store,
   worship: Church,
   diplomacy: Landmark,

@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.schemas.depth_society import (
     AdminView,
+    ArmyOption,
     BiologyView,
     ClassMood,
     CultureView,
@@ -53,10 +54,12 @@ from aerona.db.tables.settlement import (
     SettlementTreasuryRow,
 )
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.disease import DiseaseTarget
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.demography.labour import AGE_WORK, CONDITION_WORK, jobs_for, mobilisation
@@ -333,6 +336,15 @@ async def settlement_plan(services: ServicesDep, entity_id: int = Path(ge=1)) ->
         districts = list(await session.scalars(select(DistrictRow).where(DistrictRow.settlement_entity_id == entity.id).order_by(DistrictRow.id)))
         town = Town(entity, profile, infrastructure, districts, designs=await designs_for(session, districts))
         readout = await plan_readout(session, rules, town)
+        armies = [
+            ArmyOption(id=army.id, name=army.name, size=stat(army, "size") or 0)
+            for army in await session.scalars(
+                select(EntityRow)
+                .join(ArmyRow, ArmyRow.entity_id == EntityRow.id)
+                .where(ArmyRow.owner_entity_id == entity.id, ArmyRow.disbanded_epoch.is_(None))
+                .order_by(EntityRow.id)
+            )
+        ]
         ledger = list(
             await session.scalars(
                 select(SettlementTreasuryRow)
@@ -348,6 +360,7 @@ async def settlement_plan(services: ServicesDep, entity_id: int = Path(ge=1)) ->
         names = await names_of(session, {int(key) for key in profile.foreigners})
         return SettlementPlanView(
             entity_id=entity.id,
+            world_id=entity.world_id,
             size_tier=profile.size_tier,
             treasury=profile.treasury,
             tax_rate=profile.tax_rate,
@@ -377,6 +390,8 @@ async def settlement_plan(services: ServicesDep, entity_id: int = Path(ge=1)) ->
             district_effects=DistrictEffectsView(**asdict(readout.effects)),
             prestige_pull_pct=readout.prestige_pull_pct,
             prestige_investment_pct=readout.prestige_investment_pct,
+            armies=armies,
+            kind_defaults={kind: base_parameters(rules, kind) for kind in DistrictKind},
             designs=[
                 DistrictDesignView(
                     id=row.id,

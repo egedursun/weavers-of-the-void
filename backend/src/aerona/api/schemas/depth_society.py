@@ -200,6 +200,12 @@ class DistrictDesignView(ApiModel):
     created_epoch: int
 
 
+class ArmyOption(ApiModel):
+    id: int
+    name: str
+    size: int
+
+
 class AdminView(ApiModel):
     base: int
     literacy: int
@@ -280,6 +286,7 @@ class ForeignShare(ApiModel):
 
 class SettlementPlanView(ApiModel):
     entity_id: int
+    world_id: int | None
     size_tier: SizeTier
     treasury: int
     tax_rate: int
@@ -310,6 +317,8 @@ class SettlementPlanView(ApiModel):
     prestige_pull_pct: int
     prestige_investment_pct: int
     designs: list[DistrictDesignView]
+    kind_defaults: dict[DistrictKind, dict[str, int]]
+    armies: list[ArmyOption]
     district_slots: int
     housing: int
     locked: list[str]
