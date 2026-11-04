@@ -1419,7 +1419,7 @@ RUMOUR_ACTIONS = (
 )
 MADE_ACTIONS = (
     _sync(Meta("item:transfer", "Give an item into new hands", G.BEYOND), made_things.transfer_item, made_things.TransferItem, free, ("S7.1",)),
-    _sync(Meta("item:deed", "Write a deed into an item's story", G.BEYOND), made_things.add_deed, made_things.AddDeed, free, ("S7.1",)),
+    _sync(Meta("item:deed", "Add a deed to an item's history", G.BEYOND), made_things.add_deed, made_things.AddDeed, free, ("S7.1",)),
     _sync(Meta("item:deed_remove", "Strike a deed from an item's story", G.BEYOND), made_things.remove_deed, made_things.DeedTarget, free, ("S7.1",)),
     _sync(
         Meta("item:content", "Write knowledge into a book or scrape it out", G.BEYOND), made_things.set_content, made_things.BookContent, free, ("S7.1", "S8.4")

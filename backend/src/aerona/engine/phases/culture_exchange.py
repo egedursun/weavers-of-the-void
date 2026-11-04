@@ -112,6 +112,7 @@ async def _spread_language(ctx: TickContext, source: EntityRow, target: EntityRo
     "table.bonds",
     "table.book_contents",
     "table.epoch_year_cursors",
+    "table.holder_levels",
     "table.holder_techniques",
     "table.nodes",
     "table.skills",

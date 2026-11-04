@@ -88,7 +88,7 @@ function BondChip({
           </ExpandableText>
         )}
       </div>
-      {bond.kind !== 'inside' && (
+      {bond.kind !== 'inside' && !bond.derived && (
         <Button
           variant='ghost'
           size='icon-sm'

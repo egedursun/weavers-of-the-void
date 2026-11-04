@@ -50,10 +50,16 @@ async def town(session: AsyncSession, world: PlayerWorld, name: str) -> EntityRo
     )
 
 
+async def row[T](session: AsyncSession, table: type[T], key: int) -> T:
+    found = await session.get(table, key)
+    assert found is not None
+    return found
+
+
 async def forge(scope: PlayerScope, world: PlayerWorld, entity_type: EntityType, **values: object) -> int:
     effect = await lore.create_lore(
         scope,
-        lore.CreateLore(entity_type=entity_type, name=f"New {entity_type.value}", world_id=world.world.id, values=values),  # type: ignore[arg-type]
+        lore.CreateLore.model_validate({"entity_type": entity_type, "name": f"New {entity_type.value}", "world_id": world.world.id, "values": values}),
     )
     assert effect.created_ids
     return effect.created_ids[0]
@@ -64,18 +70,19 @@ async def test_every_lore_kind_can_be_forged_with_its_typed_profile(scope: Playe
     tradition = await forge(scope, world, EntityType.TRADITION, kind=TraditionKind.WAR_DANCE.value)
     creed = await forge(scope, world, EntityType.IDEOLOGY, tenets=[IdeologyTenet.EGALITARIANISM.value, IdeologyTenet.RATIONALISM.value])
     rite = await forge(scope, world, EntityType.RITE, school=MagicSchool.STORM.value, power=6)
-    prophecy = await forge(scope, world, EntityType.PROPHECY, predicate=ProphecyPredicate.SKY_EVENT.value, args={"kind": "eclipse"})
+    prophecy = await forge(scope, world, EntityType.PROPHECY, predicate=ProphecyPredicate.SKY_EVENT.value, sky_kind="eclipse", within_epochs=4)
     item = await forge(scope, world, EntityType.ITEM, item_class=ItemClass.CROWN.value, quality=90)
     artwork = await forge(scope, world, EntityType.ARTWORK, medium=ArtMedium.FRESCO.value)
     knowledge = await forge(scope, world, EntityType.KNOWLEDGE, branch="medicine", level=3)
-    assert (await session.get(LegendProfileRow, legend)).credence == 70  # type: ignore[union-attr]
-    assert (await session.get(TraditionProfileRow, tradition)).kind is TraditionKind.WAR_DANCE  # type: ignore[union-attr]
+    assert (await row(session, LegendProfileRow, legend)).credence == 70
+    assert (await row(session, TraditionProfileRow, tradition)).kind is TraditionKind.WAR_DANCE
     tenets = set(await session.scalars(select(IdeologyTenetRow.tenet).where(IdeologyTenetRow.ideology_entity_id == creed)))
     assert tenets == {IdeologyTenet.EGALITARIANISM, IdeologyTenet.RATIONALISM}
-    assert (await session.get(RiteProfileRow, rite)).power == 6  # type: ignore[union-attr]
-    assert (await session.get(ProphecyConditionRow, prophecy)).args == {"kind": "eclipse"}  # type: ignore[union-attr]
-    assert (await session.get(ItemProfileRow, item)).quality == 90  # type: ignore[union-attr]
-    assert (await session.get(ArtworkProfileRow, artwork)).medium is ArtMedium.FRESCO  # type: ignore[union-attr]
+    assert (await row(session, RiteProfileRow, rite)).power == 6
+    condition = await row(session, ProphecyConditionRow, prophecy)
+    assert condition.args == {"kind": "eclipse", "epochs": 4}
+    assert (await row(session, ItemProfileRow, item)).quality == 90
+    assert (await row(session, ArtworkProfileRow, artwork)).medium is ArtMedium.FRESCO
     made = await session.get(EntityRow, knowledge)
     assert made is not None and made.knowledge_branch is not None and made.knowledge_branch.value == "medicine"
 

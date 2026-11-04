@@ -400,6 +400,7 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.culture_values",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.language_registers",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.memories",

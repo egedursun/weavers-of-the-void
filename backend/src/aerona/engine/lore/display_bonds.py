@@ -4,8 +4,9 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.db.tables.culture import LegendProfileRow
-from aerona.domain.enums.bond import BondKind
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import IdeologyAdherentRow, LegendProfileRow, RiteProfileRow
+from aerona.domain.enums.bond import BondKind, BondState
 
 
 @dataclass(frozen=True)
@@ -42,7 +43,45 @@ async def fixed(session: AsyncSession, node_id: int) -> list[DerivedBond]:
     ]
 
 
-DERIVERS: dict[BondKind, Deriver] = {BondKind.TELLS: tellers, BondKind.FIXED_IN: fixed}
+async def adherents(session: AsyncSession, node_id: int) -> list[DerivedBond]:
+    rows = await session.scalars(
+        select(IdeologyAdherentRow)
+        .where((IdeologyAdherentRow.ideology_entity_id == node_id) | (IdeologyAdherentRow.adherent_entity_id == node_id))
+        .order_by(IdeologyAdherentRow.ideology_entity_id, IdeologyAdherentRow.adherent_entity_id)
+    )
+    return [
+        DerivedBond(
+            row.adherent_entity_id,
+            row.ideology_entity_id,
+            BondKind.ADHERENT_OF,
+            f"holds to it at {row.strength}%" + (", as the state creed" if row.state else ""),
+            row.since_epoch,
+        )
+        for row in rows
+    ]
+
+
+async def practitioners(session: AsyncSession, node_id: int) -> list[DerivedBond]:
+    rites = select(RiteProfileRow.rite_entity_id)
+    rows = await session.scalars(
+        select(BondRow)
+        .where(
+            BondRow.kind == BondKind.OWNS,
+            BondRow.state == BondState.ACTIVE,
+            BondRow.target_node_id.in_(rites),
+            (BondRow.source_node_id == node_id) | (BondRow.target_node_id == node_id),
+        )
+        .order_by(BondRow.id)
+    )
+    return [DerivedBond(row.source_node_id, row.target_node_id, BondKind.PRACTISES, row.description or "works the rite", row.epoch) for row in rows]
+
+
+DERIVERS: dict[BondKind, Deriver] = {
+    BondKind.TELLS: tellers,
+    BondKind.FIXED_IN: fixed,
+    BondKind.ADHERENT_OF: adherents,
+    BondKind.PRACTISES: practitioners,
+}
 
 
 def register(kind: BondKind, deriver: Deriver) -> None:

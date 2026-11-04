@@ -45,6 +45,7 @@ import {
   busyOf,
   lookup,
 } from '../model'
+import { IdeologyControls } from './MindControls'
 import { type Card, COMMUNITIES, average } from './shared'
 
 export function IdeologyPanel({
@@ -354,6 +355,7 @@ export function IdeologyPanel({
             </Button>
           </div>
         </AdjustBlock>
+        <IdeologyControls id={id} card={card} blocked={blocked} />
       </LoreAdjust>
     </div>
   )

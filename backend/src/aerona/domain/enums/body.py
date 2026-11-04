@@ -118,6 +118,7 @@ class HarmCause(StrEnum):
     SACRIFICE = "sacrifice"
     AGE = "age"
     PLAYER = "player"
+    RITUAL = "ritual"
 
 
 class ConditionKind(StrEnum):

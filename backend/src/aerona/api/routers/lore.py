@@ -9,20 +9,18 @@ from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.schemas.lore import (
     AdherentView,
     ArtworkCard,
+    BookPage,
     BranchSpec,
     CastingView,
     CustomKinds,
     CustomKindView,
+    CustomTechniqueView,
     DeedView,
     EnchantmentView,
     GateNeed,
     IdeologyCard,
     ItemCard,
-    KeeperView,
-    KinView,
-    LanguageCard,
     LearningCard,
-    LegendCard,
     LevelView,
     LoreCard,
     ProphecyCard,
@@ -30,16 +28,15 @@ from aerona.api.schemas.lore import (
     RiteEffectView,
     RumourBoard,
     RumourView,
-    SpeakerView,
     TechGraph,
     TechniqueSpecView,
     TechniqueView,
     TongueAtlas,
     TongueRank,
-    TraditionCard,
 )
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
+from aerona.api.views.culture_cards import language_card, legend_card, registers_of_languages, tradition_card
 from aerona.catalog.rumours import is_alarm, is_atrocity
 from aerona.catalog.techniques import BRANCH_GRAPH, TECHNIQUES, Gate
 from aerona.core.errors import NotFoundError
@@ -48,9 +45,12 @@ from aerona.db.tables.culture import (
     ArtworkProfileRow,
     BookContentRow,
     CastingRow,
+    CustomKindRow,
+    HolderCustomTechniqueRow,
     HolderLevelRow,
     HolderTechniqueRow,
     IdeologyAdherentRow,
+    IdeologyCustomTenetRow,
     IdeologyProfileRow,
     IdeologyTenetRow,
     ItemEnchantmentRow,
@@ -58,22 +58,20 @@ from aerona.db.tables.culture import (
     ItemProfileRow,
     LanguageIntelligibilityRow,
     LanguageStandingRow,
-    LegendProfileRow,
     ProphecyConditionRow,
     RiteEffectRow,
     RiteProfileRow,
     RumourRow,
-    SpeakerCohortRow,
-    TraditionParticipationRow,
-    TraditionProfileRow,
 )
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.culture import CustomCatalog
+from aerona.domain.enums.culture import CustomCatalog, Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.lore.kinds import kinds_in
 from aerona.engine.lore.research import gate_open
 from aerona.engine.lore.rumours import heard_by
+from aerona.engine.primitives.knowledge import raw_level
 
 router = APIRouter(tags=["lore"])
 Id = Annotated[int, Path(ge=1)]
@@ -83,85 +81,6 @@ SAME = 100
 
 def ref(refs: Refs, node_id: int | None) -> NodeRef | None:
     return refs.get(node_id) if node_id is not None else None
-
-
-async def language_card(session: AsyncSession, entity_id: int) -> LanguageCard | None:
-    row = await session.get(LanguageStandingRow, entity_id)
-    if row is None:
-        return None
-    cohorts = list(
-        await session.scalars(select(SpeakerCohortRow).where(SpeakerCohortRow.language_entity_id == entity_id).order_by(SpeakerCohortRow.community_entity_id))
-    )
-    kin = list(
-        await session.scalars(
-            select(LanguageIntelligibilityRow)
-            .where((LanguageIntelligibilityRow.first_entity_id == entity_id) | (LanguageIntelligibilityRow.second_entity_id == entity_id))
-            .order_by(LanguageIntelligibilityRow.value.desc())
-        )
-    )
-    others = [item.second_entity_id if item.first_entity_id == entity_id else item.first_entity_id for item in kin]
-    refs = await node_refs(session, [*(item.community_entity_id for item in cohorts), *others])
-    return LanguageCard(
-        prestige=row.prestige,
-        prestige_parts=row.prestige_parts,
-        standardisation=row.standardisation,
-        liturgical=row.liturgical,
-        lingua_franca=row.lingua_franca,
-        speakers=[
-            SpeakerView(community=ref(refs, item.community_entity_id), kind=item.kind, share=item.share, since_epoch=item.since_epoch) for item in cohorts
-        ],
-        kin=[KinView(language=ref(refs, other), value=item.value) for item, other in zip(kin, others, strict=True)],
-        locked=row.locked,
-    )
-
-
-async def legend_card(session: AsyncSession, entity_id: int) -> LegendCard | None:
-    row = await session.get(LegendProfileRow, entity_id)
-    if row is None:
-        return None
-    refs = await node_refs(session, [*row.tellers, *(item for item in (row.subject_node_id, row.fixed_in_entity_id) if item is not None)])
-    return LegendCard(
-        archetype=row.archetype,
-        credence=row.credence,
-        distortion=row.distortion,
-        subject=ref(refs, row.subject_node_id),
-        moral=row.moral,
-        tellers=[refs[item] for item in row.tellers if item in refs],
-        fixed_in=ref(refs, row.fixed_in_entity_id),
-        locked=row.locked,
-    )
-
-
-async def tradition_card(session: AsyncSession, entity_id: int) -> TraditionCard | None:
-    row = await session.get(TraditionProfileRow, entity_id)
-    if row is None:
-        return None
-    keepers = list(
-        await session.scalars(
-            select(TraditionParticipationRow)
-            .where(TraditionParticipationRow.tradition_entity_id == entity_id)
-            .order_by(TraditionParticipationRow.community_entity_id)
-        )
-    )
-    refs = await node_refs(session, [*(item.community_entity_id for item in keepers), *([row.origin_entity_id] if row.origin_entity_id else [])])
-    return TraditionCard(
-        kind=row.kind,
-        calendar_slot=row.calendar_slot,
-        cost=row.cost,
-        effects=row.effects,
-        taboo_target=row.taboo_target,
-        origin=ref(refs, row.origin_entity_id),
-        keepers=[
-            KeeperView(
-                community=ref(refs, item.community_entity_id),
-                participation=item.participation,
-                skipped=item.skipped,
-                last_celebrated_epoch=item.last_celebrated_epoch,
-            )
-            for item in keepers
-        ],
-        locked=row.locked,
-    )
 
 
 async def ideology_card(session: AsyncSession, entity_id: int) -> IdeologyCard | None:
@@ -178,7 +97,8 @@ async def ideology_card(session: AsyncSession, entity_id: int) -> IdeologyCard |
             .order_by(IdeologyAdherentRow.strength.desc(), IdeologyAdherentRow.adherent_entity_id)
         )
     )
-    refs = await node_refs(session, [*(item.adherent_entity_id for item in adherents), *([row.founder_entity_id] if row.founder_entity_id else [])])
+    refs = await node_refs(session, [*(item.adherent_entity_id for item in adherents), *row.texts, *([row.founder_entity_id] if row.founder_entity_id else [])])
+    customs = list(await session.scalars(select(IdeologyCustomTenetRow.kind_id).where(IdeologyCustomTenetRow.ideology_entity_id == entity_id)))
     return IdeologyCard(
         founder=ref(refs, row.founder_entity_id),
         tenets=tenets,
@@ -188,6 +108,8 @@ async def ideology_card(session: AsyncSession, entity_id: int) -> IdeologyCard |
             AdherentView(community=ref(refs, item.adherent_entity_id), strength=item.strength, state=item.state, since_epoch=item.since_epoch)
             for item in adherents
         ],
+        texts=[refs[item] for item in row.texts if item in refs],
+        custom_tenets=customs,
         locked=row.locked,
     )
 
@@ -201,7 +123,7 @@ async def rite_card(session: AsyncSession, entity_id: int) -> RiteCard | None:
         await session.scalars(select(CastingRow).where(CastingRow.rite_entity_id == entity_id).order_by(CastingRow.epoch.desc(), CastingRow.id.desc()))
     )
     ids = [*(item.caster_entity_id for item in castings if item.caster_entity_id), *(item.target_entity_id for item in castings if item.target_entity_id)]
-    refs = await node_refs(session, [*ids, *([row.inventor_entity_id] if row.inventor_entity_id else [])])
+    refs = await node_refs(session, [*ids, *row.forbidden_by, *([row.inventor_entity_id] if row.inventor_entity_id else [])])
     return RiteCard(
         school=row.school,
         source=row.source,
@@ -213,7 +135,18 @@ async def rite_card(session: AsyncSession, entity_id: int) -> RiteCard | None:
         holy=row.holy,
         heretical=row.heretical,
         inventor=ref(refs, row.inventor_entity_id),
-        effects=[RiteEffectView(effect=item.effect, magnitude=item.magnitude, detail=item.detail) for item in effects],
+        effects=[
+            RiteEffectView(
+                effect=item.effect,
+                magnitude=item.magnitude,
+                detail=item.detail,
+                damage_type=item.damage_type,
+                summon_form=item.summon_form,
+                custom_kind_id=item.custom_kind_id,
+            )
+            for item in effects
+        ],
+        forbidden_by=[refs[item] for item in row.forbidden_by if item in refs],
         castings=[
             CastingView(
                 id=item.id,
@@ -234,7 +167,7 @@ async def prophecy_card(session: AsyncSession, entity_id: int) -> ProphecyCard |
     row = await session.get(ProphecyConditionRow, entity_id)
     if row is None:
         return None
-    refs = await node_refs(session, [*row.audience, *([row.seer_entity_id] if row.seer_entity_id else [])])
+    refs = await node_refs(session, [*row.audience, *(item for item in (row.seer_entity_id, row.consequence_entity_id) if item)])
     return ProphecyCard(
         predicate=row.predicate,
         args=row.args,
@@ -244,6 +177,8 @@ async def prophecy_card(session: AsyncSession, entity_id: int) -> ProphecyCard |
         pressure=row.pressure,
         state=row.state,
         resolved_epoch=row.resolved_epoch,
+        consequence_kind=row.consequence_kind,
+        consequence=ref(refs, row.consequence_entity_id),
         locked=row.locked,
     )
 
@@ -256,14 +191,15 @@ async def item_card(session: AsyncSession, entity_id: int) -> ItemCard | None:
         await session.scalars(select(ItemHistoryRow).where(ItemHistoryRow.item_entity_id == entity_id).order_by(ItemHistoryRow.epoch, ItemHistoryRow.id))
     )
     spells = list(await session.scalars(select(ItemEnchantmentRow).where(ItemEnchantmentRow.item_entity_id == entity_id).order_by(ItemEnchantmentRow.effect)))
-    contents = list(await session.scalars(select(BookContentRow.knowledge_entity_id).where(BookContentRow.book_entity_id == entity_id)))
+    pages = list(await session.scalars(select(BookContentRow).where(BookContentRow.book_entity_id == entity_id)))
+    contents = [page.knowledge_entity_id for page in pages]
     owner = await session.scalar(
         select(BondRow.source_node_id)
         .where(BondRow.target_node_id == entity_id, BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE)
         .order_by(BondRow.id.desc())
         .limit(1)
     )
-    extra = [item for item in (row.maker_entity_id, row.regalia_of_entity_id, owner) if item is not None]
+    extra = [item for item in (row.maker_entity_id, row.regalia_of_entity_id, owner, row.bound_spirit_entity_id) if item is not None]
     refs = await node_refs(
         session,
         [
@@ -289,11 +225,16 @@ async def item_card(session: AsyncSession, entity_id: int) -> ItemCard | None:
         owner=ref(refs, owner),
         regalia_of=ref(refs, row.regalia_of_entity_id),
         symbol=row.symbol,
-        history=[DeedView(epoch=item.epoch, deed=item.deed, actor=ref(refs, item.actor_entity_id), note=item.note) for item in history],
+        history=[DeedView(id=item.id, epoch=item.epoch, deed=item.deed, actor=ref(refs, item.actor_entity_id), note=item.note) for item in history],
         enchantments=[
             EnchantmentView(effect=item.effect, strength=item.strength, rite=ref(refs, item.rite_entity_id), since_epoch=item.since_epoch) for item in spells
         ],
         contents=[refs[item] for item in contents if item in refs],
+        secondary_materials=row.secondary_materials,
+        bound_spirit=ref(refs, row.bound_spirit_entity_id),
+        prosthesis_for=row.prosthesis_for,
+        custom_class_id=row.custom_class_id,
+        book_contents=[BookPage(knowledge=ref(refs, page.knowledge_entity_id), fidelity=page.fidelity) for page in pages],
         locked=row.locked,
     )
 
@@ -316,6 +257,7 @@ async def artwork_card(session: AsyncSession, entity_id: int) -> ArtworkCard | N
         language=ref(refs, row.language_entity_id),
         translations=[refs[item] for item in row.translations if item in refs],
         propaganda=row.propaganda,
+        canon=row.canon,
         locked=row.locked,
     )
 
@@ -373,6 +315,19 @@ async def learning(entity_id: Id, services: ServicesDep) -> LearningCard:
         owned = select(BondRow.target_node_id).where(BondRow.source_node_id == entity_id, BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE)
         books = list(await session.scalars(select(BookContentRow.book_entity_id).where(BookContentRow.book_entity_id.in_(owned)).distinct()))
         refs = await node_refs(session, books)
+        frontiers: dict[KnowledgeBranch, int] = {}
+        for record in await session.scalars(
+            select(EntityRow).where(
+                EntityRow.entity_type == EntityType.KNOWLEDGE, EntityRow.status == EntityStatus.CANON, EntityRow.knowledge_branch.is_not(None)
+            )
+        ):
+            if record.knowledge_branch is not None:
+                frontiers[record.knowledge_branch] = max(frontiers.get(record.knowledge_branch, 0), raw_level(record.stats))
+        customs = await session.execute(
+            select(CustomKindRow, HolderCustomTechniqueRow.secret)
+            .join(HolderCustomTechniqueRow, HolderCustomTechniqueRow.kind_id == CustomKindRow.id)
+            .where(HolderCustomTechniqueRow.holder_entity_id == entity_id)
+        )
         return LearningCard(
             holder_id=entity_id,
             levels=[
@@ -383,6 +338,7 @@ async def learning(entity_id: Id, services: ServicesDep) -> LearningCard:
                     progress=item.progress,
                     secret=item.secret,
                     open=gate_open(BRANCH_GRAPH.get(item.branch, Gate()), levels),
+                    frontier=frontiers.get(item.branch, item.level),
                     locked=item.locked,
                 )
                 for item in rows
@@ -401,6 +357,9 @@ async def learning(entity_id: Id, services: ServicesDep) -> LearningCard:
                 for spec in TECHNIQUES.values()
             ],
             books=[refs[item] for item in books if item in refs],
+            custom_techniques=[
+                CustomTechniqueView(kind_id=kind.id, name=kind.name, base=Technique(kind.base), secret=secret) for kind, secret in customs.all()
+            ],
         )
 
 
@@ -444,6 +403,7 @@ async def tongues(world_id: Id, services: ServicesDep) -> TongueAtlas:
                 if item.id in refs
             ],
             matrix=matrix,
+            registers=await registers_of_languages(session, ids),
         )
 
 

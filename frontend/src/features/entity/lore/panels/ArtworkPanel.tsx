@@ -25,6 +25,7 @@ import {
   Who,
 } from '../LoreFields'
 import { KPI_GRID, LORE_GRID, MEDIUMS, PERCENT, VALUES, lookup } from '../model'
+import { ArtControls } from './ArtControls'
 import { type Card } from './shared'
 
 export function ArtworkPanel({
@@ -160,6 +161,7 @@ export function ArtworkPanel({
             table={VALUES}
           />
         </AdjustBlock>
+        <ArtControls id={id} card={card} blocked={blocked} />
       </LoreAdjust>
     </div>
   )

@@ -19,7 +19,7 @@ from aerona.domain.enums.culture import CalendarSlot, CustomCatalog, Technique, 
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.faith import SpiritAlignment
-from aerona.domain.enums.mind import MemoryKind, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import ActKind, MemoryKind, ValueAxis, ValueHolder
 from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.domain.models.entity_stats import TraditionStats
 from aerona.engine.body.hits import Harm
@@ -30,6 +30,7 @@ from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.kinds import TraditionKindParams, kind_of, params_of
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import stored_values, values_for, write_values
+from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.space import value_distance
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -237,8 +238,9 @@ async def scar_youths(ctx: TickContext, community: EntityRow, tradition: EntityR
         if (stat(youth, "age") or 0) != MATURITY:
             continue
         if ctx.rng(f"scar_rite.{tradition.id}.{youth.id}.{ctx.epoch}").chance(ctx.rules.traditions.scar_rite_chance):
-            harm = Harm(ctx.rules.traditions.scar_harm, HarmCause.RITUAL, f"marked by {tradition.name}", part="face", source_node_id=tradition.id)
+            harm = Harm(ctx.rules.traditions.scar_harm, HarmCause.RITUAL, f"marked by {tradition.name}", part="face")
             await apply_hits(ctx, youth, harm, lethal=False)
+            await judged(ctx, community.id, youth.id, ActKind.RITUAL_SCARRING, note=tradition.name)
             marked += 1
     if marked:
         ctx.count("ritual_scars")

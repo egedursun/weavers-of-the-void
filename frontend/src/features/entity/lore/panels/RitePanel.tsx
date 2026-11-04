@@ -48,6 +48,7 @@ import {
   lookup,
   sentence,
 } from '../model'
+import { RiteControls } from './RiteControls'
 import { type Card, COMMUNITIES } from './shared'
 
 export function RitePanel({
@@ -366,6 +367,7 @@ export function RitePanel({
             </Button>
           </div>
         </AdjustBlock>
+        <RiteControls id={id} card={card} blocked={blocked} />
       </LoreAdjust>
     </div>
   )

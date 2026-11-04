@@ -17,6 +17,7 @@ import {
   prophecyPredicateValues,
   traditionKindValues,
 } from '@/api/generated/schema'
+import { ACTS } from '../cultureLabels'
 import {
   ARCHETYPES,
   ITEM_CLASSES,
@@ -135,6 +136,12 @@ export const FORGE_FIELDS: Record<ForgeKind, ForgeField[]> = {
       label: 'When it is kept',
       kind: 'enum',
       table: CALENDAR_SLOTS,
+    },
+    {
+      key: 'taboo_act',
+      label: 'A deed it forbids',
+      kind: 'enum',
+      table: ACTS,
     },
   ],
   ideology: [

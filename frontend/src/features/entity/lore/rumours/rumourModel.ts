@@ -36,7 +36,9 @@ export function truthTone(fidelity: number): KpiTone {
   return 'danger'
 }
 
-export function truthBar(fidelity: number): 'success' | 'warning' | 'destructive' {
+export function truthBar(
+  fidelity: number
+): 'success' | 'warning' | 'destructive' {
   if (fidelity >= TRUE) return 'success'
   if (fidelity >= GARBLED) return 'warning'
   return 'destructive'

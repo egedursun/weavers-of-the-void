@@ -6,6 +6,8 @@ import {
   Languages,
   Mic,
   Plus,
+  Scale,
+  Unlock,
   Users,
 } from 'lucide-react'
 import { api } from '@/api/client'
@@ -16,6 +18,7 @@ import { ChangeChip, KpiTile } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { HeldBadge } from '../CultureParts'
 import {
   AdjustBlock,
   LoreAdjust,
@@ -29,6 +32,7 @@ import {
   RowEditor,
   RowEditors,
 } from '../LoreFields'
+import { RegisterEditor, RegisterList } from '../RegisterParts'
 import {
   KPI_GRID,
   LORE_GRID,
@@ -76,7 +80,33 @@ export function LanguagePanel({
         })
       ),
   })
-  const busy = busyOf(blocked, speakers.isPending, kin.isPending)
+  const releaseSpeakers = useGodAction<{ community: number; kind: string }>({
+    run: ({ community: target, kind }) =>
+      unwrap(
+        api.POST('/api/actions/language:release_speakers', {
+          body: {
+            community_id: target,
+            language_id: id,
+            kind: kind as 'second',
+          },
+        })
+      ),
+  })
+  const releaseKin = useGodAction<{ other: number }>({
+    run: ({ other }) =>
+      unwrap(
+        api.POST('/api/actions/language:release_understanding', {
+          body: { first_id: id, second_id: other },
+        })
+      ),
+  })
+  const busy = busyOf(
+    blocked,
+    speakers.isPending,
+    kin.isPending,
+    releaseSpeakers.isPending,
+    releaseKin.isPending
+  )
   const parts = Object.entries(card.prestige_parts)
   const near = card.kin
     .filter((row) => row.value > 0)
@@ -244,6 +274,18 @@ export function LanguagePanel({
           )}
         </LoreCard>
       </div>
+      <LoreCard
+        title='Where it is spoken, and how'
+        icon={Scale}
+        tone='gold'
+        wide
+      >
+        <RegisterList rows={card.registers} surface='LanguageRegisters' />
+        <Muted variant='caption'>
+          Treaties are read in the court's tongue, preachers are heard in the
+          liturgy, caravans bargain in the market tongue.
+        </Muted>
+      </LoreCard>
       <LoreAdjust
         entityId={id}
         noun='tongue'
@@ -282,7 +324,26 @@ export function LanguagePanel({
                       kind: row.kind,
                     })
                   }
-                />
+                >
+                  <HeldBadge held={row.held} />
+                  {row.held && (
+                    <Button
+                      size='icon'
+                      variant='ghost'
+                      aria-label={`Let the share in ${row.community?.name ?? 'it'} move again`}
+                      disabled={busy !== null}
+                      disabledReason={busy ?? undefined}
+                      onClick={() =>
+                        releaseSpeakers.mutate({
+                          community: row.community?.id ?? 0,
+                          kind: row.kind,
+                        })
+                      }
+                    >
+                      <Unlock />
+                    </Button>
+                  )}
+                </RowEditor>
               ))}
             </RowEditors>
           )}
@@ -313,6 +374,13 @@ export function LanguagePanel({
             </Button>
           </div>
         </AdjustBlock>
+        <AdjustBlock title='Registers' icon={Scale}>
+          <RegisterEditor
+            languageId={id}
+            rows={card.registers}
+            blocked={blocked}
+          />
+        </AdjustBlock>
         {card.kin.length > 0 && (
           <AdjustBlock title='Understanding' icon={Languages}>
             <RowEditors>
@@ -327,7 +395,23 @@ export function LanguagePanel({
                   onSave={(value) =>
                     kin.mutate({ other: row.language?.id ?? 0, value })
                   }
-                />
+                >
+                  <HeldBadge held={row.held} />
+                  {row.held && (
+                    <Button
+                      size='icon'
+                      variant='ghost'
+                      aria-label={`Let the world measure ${row.language?.name ?? 'it'} again`}
+                      disabled={busy !== null}
+                      disabledReason={busy ?? undefined}
+                      onClick={() =>
+                        releaseKin.mutate({ other: row.language?.id ?? 0 })
+                      }
+                    >
+                      <Unlock />
+                    </Button>
+                  )}
+                </RowEditor>
               ))}
             </RowEditors>
           </AdjustBlock>

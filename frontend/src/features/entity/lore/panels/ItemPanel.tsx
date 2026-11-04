@@ -53,6 +53,7 @@ import {
   busyOf,
   lookup,
 } from '../model'
+import { ItemControls } from './ItemControls'
 import { type Card, WORN, wear } from './shared'
 
 export function ItemPanel({
@@ -340,6 +341,7 @@ export function ItemPanel({
             </Button>
           </div>
         </AdjustBlock>
+        <ItemControls id={id} card={card} blocked={blocked} />
       </LoreAdjust>
     </div>
   )

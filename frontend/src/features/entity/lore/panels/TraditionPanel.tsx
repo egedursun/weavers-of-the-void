@@ -1,20 +1,32 @@
+import { useState } from 'react'
 import {
+  Ban,
   CalendarDays,
   Coins,
   HeartPulse,
   History,
+  Plus,
+  RotateCcw,
+  Shapes,
   Sparkles,
+  Trash2,
   TriangleAlert,
+  Unlock,
   Users,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { commodityKindValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { KpiTile } from '@/components/domain'
-import { Muted } from '@/components/typography'
+import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { CustomKindChoice, HeldBadge, OptionalChoice } from '../CultureParts'
 import {
   AdjustBlock,
+  ChoicePicker,
   DictField,
   LoreAdjust,
   LoreCard,
@@ -29,15 +41,188 @@ import {
   TermChips,
 } from '../LoreFields'
 import {
+  ACTS,
+  type TraditionEffect,
+  TRADITION_EFFECTS,
+  effectLabel,
+  signed,
+} from '../cultureLabels'
+import { KindForge } from '../forge/KindForge'
+import { CALENDAR_SLOTS } from '../forge/forgeModel'
+import {
+  CLASSES,
   KPI_GRID,
   LORE_GRID,
   PERCENT,
   TRADITION_KINDS,
   TRADITION_TERMS,
+  VALUES,
   busyOf,
   lookup,
+  sentence,
 } from '../model'
 import { type Card, COST_ONLY, average } from './shared'
+
+const COMMODITIES = Object.fromEntries(
+  commodityKindValues.map((key) => [
+    key,
+    { label: sentence(key), icon: Ban, tone: 'danger' as const },
+  ])
+)
+const ANYONE = ''
+
+function targetsFor(effect: string) {
+  if (effect === 'value') return VALUES
+  if (effect === 'satisfaction')
+    return {
+      [ANYONE]: { label: 'Everyone', icon: Users, tone: 'success' as const },
+      ...CLASSES,
+    }
+  return null
+}
+
+function EffectEditor({
+  id,
+  effects,
+  blocked,
+}: {
+  id: number
+  effects: readonly TraditionEffect[]
+  blocked: string | null
+}) {
+  const [effect, setEffect] = useState('cohesion')
+  const [target, setTarget] = useState('')
+  const [magnitude, setMagnitude] = useState('2')
+  const set = useGodAction<{
+    effect: string
+    target: string
+    magnitude: number
+  }>({
+    run: (body) =>
+      unwrap(
+        api.POST('/api/actions/tradition:effect', {
+          body: {
+            tradition_id: id,
+            effect: body.effect as TraditionEffect['effect'],
+            target: body.target,
+            magnitude: body.magnitude,
+          },
+        })
+      ),
+  })
+  const reseed = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/tradition:reseed', {
+          body: { tradition_id: id },
+        })
+      ),
+  })
+  const busy = busyOf(blocked, set.isPending, reseed.isPending)
+  const targets = targetsFor(effect)
+  const amount = Math.round(Number(magnitude))
+  const problem =
+    Number.isNaN(amount) || amount === 0 ? 'Give a strength' : null
+  return (
+    <div
+      data-surface='TraditionEffects'
+      className='flex min-w-0 flex-col gap-3'
+    >
+      {effects.length > 0 && (
+        <RowEditors>
+          {effects.map((row) => (
+            <RowEditor
+              key={`${row.effect}.${row.target}`}
+              label={effectLabel(row)}
+              icon={lookup(TRADITION_EFFECTS, row.effect).icon}
+              value={row.magnitude}
+              min={-PERCENT}
+              max={PERCENT}
+              blocked={busy}
+              onSave={(value) =>
+                set.mutate({
+                  effect: row.effect,
+                  target: row.target,
+                  magnitude: value,
+                })
+              }
+            >
+              <Button
+                size='icon'
+                variant='ghost'
+                aria-label={`Remove ${effectLabel(row)}`}
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() =>
+                  set.mutate({
+                    effect: row.effect,
+                    target: row.target,
+                    magnitude: 0,
+                  })
+                }
+              >
+                <Trash2 />
+              </Button>
+            </RowEditor>
+          ))}
+        </RowEditors>
+      )}
+      <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-4'>
+        <ChoicePicker
+          label='It brings'
+          value={effect}
+          table={TRADITION_EFFECTS}
+          blocked={busy}
+          onPick={(next) => {
+            setEffect(next)
+            setTarget(next === 'value' ? 'tradition' : '')
+          }}
+        />
+        {targets && (
+          <ChoicePicker
+            label={effect === 'value' ? 'Which value' : 'To whom'}
+            value={target}
+            table={targets}
+            blocked={busy}
+            onPick={setTarget}
+          />
+        )}
+        <div className='flex min-w-0 flex-col gap-1'>
+          <Label>Strength</Label>
+          <Input
+            type='number'
+            min={-PERCENT}
+            max={PERCENT}
+            value={magnitude}
+            aria-label='Strength of the effect'
+            onChange={(event) => setMagnitude(event.target.value)}
+          />
+        </div>
+        <div className='flex min-w-0 items-end gap-2'>
+          <Button
+            size='sm'
+            disabled={busy !== null || problem !== null}
+            disabledReason={busy ?? problem ?? undefined}
+            onClick={() => set.mutate({ effect, target, magnitude: amount })}
+          >
+            <Plus />
+            Add
+          </Button>
+          <Button
+            size='sm'
+            variant='outline'
+            disabled={busy !== null}
+            disabledReason={busy ?? undefined}
+            onClick={() => reseed.mutate(undefined)}
+          >
+            <RotateCcw />
+            From its kind
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function TraditionPanel({
   id,
@@ -60,7 +245,15 @@ export function TraditionPanel({
         })
       ),
   })
-  const busy = busyOf(blocked, keep.isPending)
+  const release = useGodAction<{ community: number }>({
+    run: ({ community }) =>
+      unwrap(
+        api.POST('/api/actions/tradition:release_participation', {
+          body: { tradition_id: id, community_id: community },
+        })
+      ),
+  })
+  const busy = busyOf(blocked, keep.isPending, release.isPending)
   const kind = lookup(TRADITION_KINDS, card.kind)
   const skipped = card.keepers.reduce((sum, row) => sum + row.skipped, 0)
   const kept = card.keepers
@@ -70,16 +263,31 @@ export function TraditionPanel({
     <div data-surface='TraditionCard' className='flex min-w-0 flex-col gap-4'>
       <LoreHero spec={kind} kicker='A custom kept'>
         {card.calendar_slot && (
-          <NamedChip spec={{ label: '', icon: CalendarDays, tone: 'info' }}>
-            {`Kept at ${card.calendar_slot}`}
+          <NamedChip spec={lookup(CALENDAR_SLOTS, card.calendar_slot)}>
+            {lookup(CALENDAR_SLOTS, card.calendar_slot).label}
           </NamedChip>
         )}
         {card.taboo_target && (
           <NamedChip spec={TRADITION_KINDS.taboo}>
-            {`Forbids ${card.taboo_target.replaceAll('_', ' ')}`}
+            {`Will not touch ${card.taboo_target.replaceAll('_', ' ')}`}
+          </NamedChip>
+        )}
+        {card.taboo_act && (
+          <NamedChip spec={lookup(ACTS, card.taboo_act)}>
+            {`Forbids ${lookup(ACTS, card.taboo_act).label.toLowerCase()}`}
+          </NamedChip>
+        )}
+        {card.custom_kind_id && (
+          <NamedChip spec={{ label: '', icon: Shapes, tone: 'gold' }}>
+            A kind of your own
           </NamedChip>
         )}
         <RefChip icon={History} label='Remembers' item={card.origin} />
+        {card.origin_incident && (
+          <NamedChip spec={{ label: '', icon: History, tone: 'muted' }}>
+            {`Born of an incident in epoch ${card.origin_incident.epoch}`}
+          </NamedChip>
+        )}
       </LoreHero>
       <div className={KPI_GRID}>
         <KpiTile
@@ -124,14 +332,20 @@ export function TraditionPanel({
           />
         </LoreCard>
         <LoreCard title='What it brings' icon={Sparkles} tone='success'>
-          <TermChips
-            entries={card.effects}
-            table={TRADITION_TERMS}
-            empty='It brings nothing but habit.'
-            unit={(key, value) =>
-              `${lookup(TRADITION_TERMS, key).label} +${value}`
-            }
-          />
+          {card.effects.length === 0 ? (
+            <Muted>It brings nothing but habit.</Muted>
+          ) : (
+            <div className='flex min-w-0 flex-wrap gap-2'>
+              {card.effects.map((row) => (
+                <NamedChip
+                  key={`${row.effect}.${row.target}`}
+                  spec={lookup(TRADITION_EFFECTS, row.effect)}
+                >
+                  {`${effectLabel(row)} ${signed(row.magnitude)}`}
+                </NamedChip>
+              ))}
+            </div>
+          )}
         </LoreCard>
         <LoreCard
           title='Kept by'
@@ -157,6 +371,7 @@ export function TraditionPanel({
                   icon={kind.icon}
                   tone={kind.tone}
                 >
+                  <HeldBadge held={row.held} />
                   {row.skipped > 0 && (
                     <Badge size='sm' variant='warning'>
                       {`Skipped ${row.skipped}×`}
@@ -178,14 +393,54 @@ export function TraditionPanel({
           <LoreFields
             entityId={id}
             surface='TraditionForm'
-            fields={[
-              { key: 'kind', kind: 'enum', table: TRADITION_KINDS },
-              { key: 'calendar_slot', kind: 'text', nullable: true },
-              { key: 'taboo_target', kind: 'text', nullable: true },
-            ]}
+            fields={[{ key: 'kind', kind: 'enum', table: TRADITION_KINDS }]}
             current={card}
             blocked={blocked}
           />
+          <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'>
+            <OptionalChoice
+              entityId={id}
+              field='calendar_slot'
+              label='When it is kept'
+              value={card.calendar_slot}
+              table={CALENDAR_SLOTS}
+              noneLabel='Whenever it falls'
+              blocked={blocked}
+            />
+            <CustomKindChoice
+              entityId={id}
+              field='custom_kind_id'
+              catalog='tradition_kind'
+              value={card.custom_kind_id}
+              blocked={blocked}
+            />
+          </div>
+        </AdjustBlock>
+        <AdjustBlock title='What it forbids' icon={Ban}>
+          <Text as='p'>
+            A taboo can forbid a good from the market and a deed from the
+            people. Its keepers refrain; those who break it are held in infamy.
+          </Text>
+          <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'>
+            <OptionalChoice
+              entityId={id}
+              field='taboo_target'
+              label='A good never touched'
+              value={card.taboo_target}
+              table={COMMODITIES}
+              noneLabel='No good'
+              blocked={blocked}
+            />
+            <OptionalChoice
+              entityId={id}
+              field='taboo_act'
+              label='A deed never done'
+              value={card.taboo_act}
+              table={ACTS}
+              noneLabel='No deed'
+              blocked={blocked}
+            />
+          </div>
         </AdjustBlock>
         <div className={LORE_GRID}>
           <AdjustBlock title='What it costs' icon={Coins}>
@@ -197,16 +452,7 @@ export function TraditionPanel({
             />
           </AdjustBlock>
           <AdjustBlock title='What it brings' icon={Sparkles}>
-            <DictField
-              entityId={id}
-              spec={{
-                key: 'effects',
-                label: 'Its effects',
-                value: card.effects,
-              }}
-              blocked={blocked}
-              table={TRADITION_TERMS}
-            />
+            <EffectEditor id={id} effects={card.effects} blocked={blocked} />
           </AdjustBlock>
         </div>
         {card.keepers.length > 0 && (
@@ -223,11 +469,29 @@ export function TraditionPanel({
                   onSave={(value) =>
                     keep.mutate({ community: row.community?.id ?? 0, value })
                   }
-                />
+                >
+                  {row.held && (
+                    <Button
+                      size='icon'
+                      variant='ghost'
+                      aria-label={`Let ${row.community?.name ?? 'them'} decide again`}
+                      disabled={busy !== null}
+                      disabledReason={busy ?? undefined}
+                      onClick={() =>
+                        release.mutate({ community: row.community?.id ?? 0 })
+                      }
+                    >
+                      <Unlock />
+                    </Button>
+                  )}
+                </RowEditor>
               ))}
             </RowEditors>
           </AdjustBlock>
         )}
+        <AdjustBlock title='Kinds of custom of your own' icon={Shapes}>
+          <KindForge catalog='tradition_kind' />
+        </AdjustBlock>
       </LoreAdjust>
     </div>
   )

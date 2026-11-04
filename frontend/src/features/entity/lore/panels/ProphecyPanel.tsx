@@ -39,6 +39,7 @@ import {
   lookup,
   sentence,
 } from '../model'
+import { ProphecyControls } from './MindControls'
 import { type Card, ENTITY_ARGS } from './shared'
 
 export function ProphecyPanel({
@@ -222,6 +223,7 @@ export function ProphecyPanel({
             table={PROPHECY_ARGS}
           />
         </AdjustBlock>
+        <ProphecyControls id={id} card={card} blocked={blocked} />
       </LoreAdjust>
     </div>
   )

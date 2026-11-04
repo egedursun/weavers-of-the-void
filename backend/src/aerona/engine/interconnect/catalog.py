@@ -30,6 +30,7 @@ from aerona.engine.interconnect.catalog_faith import BEHAVIOURS as FAITH_BEHAVIO
 from aerona.engine.interconnect.catalog_faith import FAITH_MECHANICS
 from aerona.engine.interconnect.catalog_lore import BEHAVIOURS as LORE_BEHAVIOURS
 from aerona.engine.interconnect.catalog_lore import LORE_MECHANICS
+from aerona.engine.interconnect.catalog_made import BEHAVIOURS as MADE_BEHAVIOURS
 from aerona.engine.interconnect.catalog_military import BEHAVIOURS as MILITARY_BEHAVIOURS
 from aerona.engine.interconnect.catalog_military import MILITARY_MECHANICS
 from aerona.engine.interconnect.catalog_realm import BEHAVIOURS as REALM_BEHAVIOURS
@@ -1587,7 +1588,16 @@ ROUTE_DIFFUSION = Mechanic(
         Coupling(Subsystem.DEMOGRAPHY, "plague follows the busiest roads", EdgeKind.FLOW),
     ),
 )
-for entry in (*BEHAVIOURS, *SOCIETY_BEHAVIOURS, *REALM_BEHAVIOURS, *MILITARY_BEHAVIOURS, *FAITH_BEHAVIOURS, *LORE_BEHAVIOURS, *WILDS_BEHAVIOURS):
+for entry in (
+    *BEHAVIOURS,
+    *SOCIETY_BEHAVIOURS,
+    *REALM_BEHAVIOURS,
+    *MILITARY_BEHAVIOURS,
+    *FAITH_BEHAVIOURS,
+    *LORE_BEHAVIOURS,
+    *MADE_BEHAVIOURS,
+    *WILDS_BEHAVIOURS,
+):
     register(behaviour(entry))
 register(ROUTE_DIFFUSION)
 CLAIMED = {phase for mechanic in BUILT_IN for phase in mechanic.phases}

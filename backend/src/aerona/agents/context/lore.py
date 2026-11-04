@@ -9,10 +9,12 @@ from aerona.db.tables.culture import (
     HolderTechniqueRow,
     IdeologyTenetRow,
     ItemProfileRow,
+    LanguageRegisterRow,
     LanguageStandingRow,
     LegendProfileRow,
     ProphecyConditionRow,
     RiteProfileRow,
+    TraditionEffectRow,
     TraditionProfileRow,
 )
 from aerona.db.tables.entities import EntityRow
@@ -59,6 +61,10 @@ async def tongue_lines(session: AsyncSession, home_id: int) -> list[str]:
             marks.append("the tongue of the trade roads")
         if standing is not None and standing.liturgical:
             marks.append("a holy tongue")
+        registers = await session.scalars(
+            select(LanguageRegisterRow.register).where(LanguageRegisterRow.holder_entity_id == home_id, LanguageRegisterRow.language_entity_id == language_id)
+        )
+        marks.extend(f"spoken at {words(register.value)}" for register in sorted(set(registers)))
         found.append(f"{language.name} ({', '.join(marks)})" if marks else language.name)
     return found
 
@@ -78,7 +84,8 @@ async def legend_lines(session: AsyncSession, home_id: int) -> list[str]:
         row = await session.get(LegendProfileRow, legend_id)
         legend = await session.get(EntityRow, legend_id)
         if row is not None and legend is not None and legend.status is EntityStatus.CANON and row.credence >= BELIEVED:
-            found.append(f"{legend.name} (a tale of {words(row.archetype.value)}, believed {row.credence}%)")
+            fixed = ", fixed in a work" if row.fixed_in_entity_id is not None else f", distorted {row.distortion}%"
+            found.append(f"{legend.name} (a tale of {words(row.archetype.value)}, believed {row.credence}%{fixed})")
     return found
 
 
@@ -89,7 +96,12 @@ async def tradition_lines(session: AsyncSession, home_id: int) -> list[str]:
         tradition = await session.get(EntityRow, tradition_id)
         if row is not None and tradition is not None and tradition.status is EntityStatus.CANON:
             taboo = f", nothing of {words(row.taboo_target)}" if row.taboo_target else ""
-            found.append(f"{tradition.name} ({words(row.kind.value)}{taboo})")
+            deed = f", never {words(row.taboo_act.value)}" if row.taboo_act is not None else ""
+            season = f", kept at {words(row.calendar_slot.value)}" if row.calendar_slot is not None else ""
+            brings = await session.scalars(select(TraditionEffectRow.effect).where(TraditionEffectRow.tradition_entity_id == tradition_id))
+            gifts = sorted({words(effect.value) for effect in brings})
+            brought = f"; it brings {', '.join(gifts)}" if gifts else ""
+            found.append(f"{tradition.name} ({words(row.kind.value)}{taboo}{deed}{season}{brought})")
     return found
 
 
