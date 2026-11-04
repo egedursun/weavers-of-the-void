@@ -1,17 +1,32 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
+  ChevronRight,
+  Church,
+  Coins,
   Crown,
+  Flag,
+  Flame,
   Gavel,
+  HandCoins,
+  Handshake,
   Landmark,
+  Layers,
+  ListOrdered,
+  Lock,
+  Map as MapIcon,
   Network,
   Save,
+  Scale,
   ScrollText,
+  Shield,
   Trash2,
   TriangleAlert,
+  Unlock,
   UserMinus,
   UserPlus,
-  Unlock,
+  Users,
+  Castle,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -19,70 +34,110 @@ import type { components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import {
+  ChangeChip,
   EmptyState,
   EntityLink,
   KpiTile,
+  Medallion,
+  Portrait,
+  RangeField,
   Section,
+  ShowMore,
   StatBar,
+  Timeline,
+  TimelineItem,
+  useShowMore,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { MindPicker } from '../mind/parts'
 import { useRealm, useRealmLink } from './api'
+import {
+  CLAIM_BASES,
+  GOVERNMENTS,
+  LAW_AREAS,
+  LAW_KINDS,
+  LAW_PARAMS,
+  LEGITIMACY_BASES,
+  MEMBER_TYPES,
+  OFFICES,
+  REALM_FIELDS,
+  RULES,
+  STANDINGS,
+  TINCTURES,
+  TREASURY_ENTRIES,
+  TREATY_KINDS,
+  TREATY_STATUSES,
+  badBand,
+  goodBand,
+  labels,
+  named,
+  plain,
+  sentence,
+} from './labels'
+import {
+  AdjustPanel,
+  ChoiceCard,
+  ChoiceGrid,
+  Fact,
+  Hero,
+  NumberField,
+  Panel,
+  RecordField,
+  Tag,
+} from './parts'
 
 type Realm = components['schemas']['RealmView']
 type Law = components['schemas']['LawView']
 type LawKindSpec = components['schemas']['LawKindSpec']
 type OfficeKind = components['schemas']['OfficeKind']
 type LawKind = components['schemas']['LawKind']
+type Treaty = Realm['treaties'][number]
 
 const WORKING = 'Working…'
 const PERCENT = 100
-const GOVERNMENTS = [
-  'chiefdom',
-  'monarchy',
-  'theocracy',
-  'oligarchy',
-  'republic',
-  'tribal_confederation',
-  'empire',
-  'hive_council',
-  'god_kingdom',
-  'occupation',
-] as const
-const RULES = ['autocratic', 'council', 'assembly', 'divine'] as const
-const OFFICES: OfficeKind[] = [
-  'chancellor',
-  'marshal',
-  'treasurer',
-  'high_judge',
-  'spymaster',
-  'governor',
-  'ambassador',
-  'regent',
-  'heir_designate',
+const SHOWN = 6
+const LEDGER_SHOWN = 5
+const UNJUST = 40
+const AUTONOMOUS = 60
+const LEGITIMACY_WORDS: [string, string, string, string] = [
+  'Contested',
+  'Shaky',
+  'Firm',
+  'Unquestioned',
 ]
-const AREAS = [
-  'succession',
-  'property',
-  'fiscal',
-  'penal',
-  'military',
-  'social',
-  'public_health',
-  'magic',
-] as const
+const STABILITY_WORDS: [string, string, string, string] = [
+  'Collapsing',
+  'Restless',
+  'Steady',
+  'Unshakeable',
+]
+const WEARINESS_WORDS: [string, string, string, string] = [
+  'Eager',
+  'Tiring',
+  'Weary',
+  'Exhausted',
+]
+const ENFORCEMENT_WORDS: [string, string, string, string] = [
+  'Ignored',
+  'Loosely kept',
+  'Enforced',
+  'Iron law',
+]
+const AREAS = Object.keys(LAW_AREAS)
+const STATUS_ORDER = ['in_force', 'fulfilled', 'expired', 'broken']
 
-function words(value: string): string {
-  return value.replaceAll('_', ' ')
+function clampPercent(value: number): number {
+  return Math.max(0, Math.min(PERCENT, Math.round(value)))
 }
 
-function table(values: readonly string[]): Record<string, string> {
-  return Object.fromEntries(values.map((value) => [value, words(value)]))
+function toneOf(value: number): 'success' | 'warning' | 'destructive' {
+  if (value < UNJUST) return 'destructive'
+  if (value < PERCENT * 0.7) return 'warning'
+  return 'success'
 }
 
 function useLawKinds() {
@@ -93,231 +148,268 @@ function useLawKinds() {
   })
 }
 
-function ParamField({
-  spec,
-  value,
-  onChange,
-  blocked,
-}: {
-  spec: components['schemas']['LawParamSpec']
-  value: string | number | boolean
-  onChange: (value: string | number | boolean) => void
-  blocked: string | null
-}) {
-  if (spec.kind === 'bool')
-    return (
-      <label className='flex items-center gap-2'>
-        <Switch
-          checked={Boolean(value)}
-          disabled={blocked !== null}
-          onCheckedChange={onChange}
-          aria-label={words(spec.key)}
-        />
-        <Text as='span'>{words(spec.key)}</Text>
-      </label>
-    )
-  if (spec.kind === 'choice')
-    return (
-      <MindPicker
-        label={words(spec.key)}
-        value={String(value)}
-        table={table(spec.choices)}
-        blocked={blocked}
-        onPick={onChange}
-      />
-    )
+function RealmCrest({ realm }: { realm: Realm }) {
+  const government = named(GOVERNMENTS, realm.government)
+  const rule = RULES[realm.decision_rule] ?? named({}, realm.decision_rule)
+  const tincture = realm.emblem.field
+    ? named(TINCTURES, realm.emblem.field)
+    : null
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label>{words(spec.key)}</Label>
-      <Input
-        type='number'
-        min={spec.low}
-        max={spec.high}
-        value={String(value)}
-        aria-label={words(spec.key)}
-        onChange={(event) =>
-          onChange(Math.round(Number(event.target.value) || 0))
+    <Hero
+      icon={government.icon}
+      tone={government.tone}
+      eyebrow={`${government.label} · ${rule.label}`}
+      title={
+        <EntityLink kind='entity' id={String(realm.id)}>
+          {realm.name}
+        </EntityLink>
+      }
+    >
+      <Tag spec={named(STANDINGS, realm.standing)} />
+      <Badge size='sm' variant='secondary'>
+        <Layers aria-hidden='true' />
+        {`Tier ${realm.tier}`}
+      </Badge>
+      <Tag spec={rule} text={RULES[realm.decision_rule]?.hint ?? rule.label} />
+      {tincture && <Tag spec={tincture} text={`Arms of ${tincture.label}`} />}
+      {realm.overlord && (
+        <Tag
+          spec={{ label: 'Vassal', icon: Lock, tone: 'warning' }}
+          text={`Vassal of ${realm.overlord.name}`}
+        />
+      )}
+      {realm.locked.length > 0 && (
+        <Tag
+          spec={{ label: 'Held', icon: Lock, tone: 'info' }}
+          text={`${realm.locked.length} held by a god`}
+        />
+      )}
+    </Hero>
+  )
+}
+
+function RealmVitals({ realm }: { realm: Realm }) {
+  const legitimacy = goodBand(realm.legitimacy, LEGITIMACY_WORDS)
+  const stability = goodBand(realm.stability, STABILITY_WORDS)
+  const weariness = badBand(realm.war_weariness, WEARINESS_WORDS)
+  const meter = (value: number, label: string) => ({
+    value: Math.min(PERCENT, value),
+    max: PERCENT,
+    label,
+  })
+  return (
+    <div className='grid min-w-0 grid-cols-1 gap-3 @xs/realm:grid-cols-2 @xl/realm:grid-cols-3'>
+      <KpiTile
+        label='Legitimacy'
+        value={realm.legitimacy}
+        icon={Crown}
+        tone={legitimacy.tone}
+        meter={meter(realm.legitimacy, 'Legitimacy')}
+        hint={`${legitimacy.label}: how rightful the ruler seems`}
+      />
+      <KpiTile
+        label='Stability'
+        value={realm.stability}
+        icon={Scale}
+        tone={stability.tone}
+        meter={meter(realm.stability, 'Stability')}
+        hint={`${stability.label}: how far from revolt`}
+      />
+      <KpiTile
+        label='War weariness'
+        value={realm.war_weariness}
+        icon={Flame}
+        tone={weariness.tone}
+        meter={meter(realm.war_weariness, 'War weariness')}
+        hint={`${weariness.label}: the people’s patience for war`}
+      />
+      <KpiTile
+        label='Treasury'
+        value={formatInteger(realm.treasury)}
+        icon={Coins}
+        tone='gold'
+        hint={`War chest ${formatInteger(realm.war_chest)} · gold in the vaults`}
+      />
+      <KpiTile
+        label='Debt'
+        value={formatInteger(realm.debt)}
+        icon={HandCoins}
+        tone={
+          realm.debt === 0
+            ? 'success'
+            : realm.debt > realm.treasury
+              ? 'danger'
+              : 'warning'
         }
+        valueTone={realm.debt > realm.treasury ? 'destructive' : 'default'}
+        hint={
+          realm.debt === 0
+            ? 'The realm owes nothing'
+            : realm.debt > realm.treasury
+              ? 'More than the vaults hold'
+              : 'Owed to lenders'
+        }
+      />
+      <KpiTile
+        label='Overextension'
+        value={`${realm.overextension}%`}
+        icon={Network}
+        tone={realm.overextension > PERCENT ? 'danger' : 'info'}
+        meter={meter(realm.overextension, 'Overextension')}
+        hint={`Administration ${realm.administration}; past 100% the provinces drift away`}
       />
     </div>
   )
 }
 
-function LawRow({
-  law,
-  spec,
-  blocked,
-}: {
-  law: Law
-  spec: LawKindSpec | undefined
-  blocked: string | null
-}) {
-  const [params, setParams] = useState<
-    Record<string, string | number | boolean>
-  >({ ...law.params })
-  const [enforcement, setEnforcement] = useState(String(law.enforcement))
-  const save = useGodAction({
-    run: () =>
-      unwrap(
-        api.POST('/api/actions/law:edit', {
-          body: {
-            law_id: law.id,
-            params,
-            enforcement: Math.max(
-              0,
-              Math.min(PERCENT, Number(enforcement) || 0)
-            ),
-          },
-        })
-      ),
-  })
-  const repeal = useGodAction({
-    run: () =>
-      unwrap(api.POST('/api/actions/law:repeal', { body: { law_id: law.id } })),
-  })
-  const busy = blocked ?? (save.isPending || repeal.isPending ? WORKING : null)
+function whyGroups(realm: Realm): [string, [string, number][]][] {
+  const groups = new Map<string, [string, number][]>()
+  for (const part of realm.why) {
+    const split = part.label.indexOf(': ')
+    const group = split > 0 ? part.label.slice(0, split) : 'legitimacy'
+    const label = split > 0 ? part.label.slice(split + 2) : part.label
+    groups.set(group, [...(groups.get(group) ?? []), [label, part.value]])
+  }
+  return [...groups.entries()]
+}
+
+function RealmSeat({ realm }: { realm: Realm }) {
+  const groups = whyGroups(realm)
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <EntityLink kind='entity' id={String(law.id)}>
-          {law.name}
-        </EntityLink>
-        <Badge variant='outline'>{words(law.kind)}</Badge>
-        <Badge variant='outline'>{words(law.legitimacy_basis)}</Badge>
-        {law.conflict > 0 && (
-          <Badge variant='warning'>{`Legal conflict ${law.conflict}`}</Badge>
-        )}
-      </div>
-      <Muted>{law.effect}</Muted>
-      <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'>
-        <StatBar label='Enforcement' value={law.enforcement} max={PERCENT} />
-        <StatBar
-          label='Justice'
-          value={law.justice}
-          max={PERCENT}
-          tone={law.justice < 40 ? 'destructive' : 'success'}
-        />
-      </div>
-      {spec && spec.params.length > 0 && (
-        <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-3'>
-          {spec.params.map((param) => (
-            <ParamField
-              key={param.key}
-              spec={param}
-              value={params[param.key] ?? param.default}
-              blocked={busy}
-              onChange={(value) =>
-                setParams((current) => ({ ...current, [param.key]: value }))
-              }
-            />
+    <div className='grid min-w-0 grid-cols-1 gap-3 @xl/realm:grid-cols-2'>
+      <Panel title='Seat of power' icon={Castle}>
+        <div className='flex min-w-0 flex-col gap-2'>
+          <Fact icon={Crown} label='Ruler'>
+            {realm.ruler ? (
+              <EntityLink kind='entity' id={String(realm.ruler.id)}>
+                {realm.ruler.name}
+              </EntityLink>
+            ) : (
+              <Muted>The throne is empty</Muted>
+            )}
+          </Fact>
+          <Fact icon={Castle} label='Capital'>
+            {realm.capital ? (
+              <EntityLink kind='entity' id={String(realm.capital.id)}>
+                {realm.capital.name}
+              </EntityLink>
+            ) : (
+              <Muted>No capital</Muted>
+            )}
+          </Fact>
+          <Fact icon={Users} label='Heartland'>
+            {realm.core ? (
+              <EntityLink kind='entity' id={String(realm.core.id)}>
+                {realm.core.name}
+              </EntityLink>
+            ) : (
+              <Muted>None</Muted>
+            )}
+          </Fact>
+          <Fact icon={Church} label='State faith'>
+            {realm.state_religion ? (
+              <EntityLink kind='entity' id={String(realm.state_religion.id)}>
+                {realm.state_religion.name}
+              </EntityLink>
+            ) : (
+              <Muted>No state faith</Muted>
+            )}
+          </Fact>
+          <Fact icon={Shield} label='Overlord'>
+            {realm.overlord ? (
+              <EntityLink kind='entity' id={String(realm.overlord.id)}>
+                {realm.overlord.name}
+              </EntityLink>
+            ) : (
+              <Muted>Sovereign</Muted>
+            )}
+          </Fact>
+          <Fact icon={Flag} label='Vassals'>
+            {realm.vassals.length === 0 ? (
+              <Muted>None</Muted>
+            ) : (
+              realm.vassals.map((item) => (
+                <EntityLink key={item.id} kind='entity' id={String(item.id)}>
+                  {item.name}
+                </EntityLink>
+              ))
+            )}
+          </Fact>
+        </div>
+      </Panel>
+      <Panel
+        title='Why the throne holds'
+        icon={Scale}
+        hint='What raises and lowers legitimacy and stability'
+      >
+        <div
+          data-surface='LegitimacyWhy'
+          className='flex min-w-0 flex-col gap-3'
+        >
+          {groups.length === 0 && <Muted>Nothing weighs on it yet.</Muted>}
+          {groups.map(([group, parts]) => (
+            <div key={group} className='flex min-w-0 flex-col gap-1.5'>
+              <div className='flex min-w-0 items-center justify-between gap-2'>
+                <Label variant='overline'>{plain(REALM_FIELDS, group)}</Label>
+                <ChangeChip
+                  value={parts.reduce((sum, [, value]) => sum + value, 0)}
+                  label='Total'
+                />
+              </div>
+              <ul className='flex min-w-0 flex-col gap-1'>
+                {parts.map(([label, value]) => (
+                  <li key={label} className='flex min-w-0 items-center gap-2'>
+                    <Text as='span' className='min-w-0 flex-1' truncate>
+                      {sentence(label)}
+                    </Text>
+                    <ChangeChip value={value} />
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
         </div>
-      )}
-      <div className='flex min-w-0 flex-wrap items-end gap-2'>
-        <div className='flex w-28 flex-col gap-1'>
-          <Label>Enforcement</Label>
-          <Input
-            type='number'
-            min={0}
-            max={PERCENT}
-            value={enforcement}
-            aria-label='Enforcement'
-            onChange={(event) => setEnforcement(event.target.value)}
-          />
-        </div>
-        <Button
-          size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => save.mutate(undefined)}
-        >
-          <Save />
-          Rewrite the law
-        </Button>
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => repeal.mutate(undefined)}
-        >
-          <Trash2 />
-          Repeal it
-        </Button>
+      </Panel>
+    </div>
+  )
+}
+
+function OfficeCard({ item }: { item: Realm['offices'][number] }) {
+  const spec = named(OFFICES, item.kind)
+  const title = item.region ? `${spec.label} of ${item.region}` : spec.label
+  return (
+    <li
+      className={
+        item.holder_id
+          ? 'flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'
+          : 'flex min-w-0 items-center gap-2 rounded-lg border border-dashed bg-muted/20 p-2'
+      }
+    >
+      <Medallion
+        icon={spec.icon}
+        tone={item.holder_id ? (spec.tone ?? 'gold') : 'muted'}
+        size='sm'
+      />
+      <div className='flex min-w-0 flex-1 flex-col'>
+        <Label truncate>{title}</Label>
+        {item.holder_id ? (
+          <EntityLink kind='entity' id={String(item.holder_id)}>
+            {item.holder ?? ''}
+          </EntityLink>
+        ) : (
+          <Muted as='span' truncate>
+            Vacant seat
+          </Muted>
+        )}
       </div>
+      {item.holder_id && <Portrait name={item.holder ?? ''} size='xs' />}
     </li>
   )
 }
 
-function LawCode({ realm, blocked }: { realm: Realm; blocked: string | null }) {
-  const kinds = useLawKinds()
-  const [kind, setKind] = useState<string>('quarantine')
-  const enact = useGodAction({
-    run: () =>
-      unwrap(
-        api.POST('/api/actions/law:enact', {
-          body: { holder_id: realm.id, kind: kind as LawKind, params: {} },
-        })
-      ),
-  })
-  const specs = Object.fromEntries(
-    (kinds.data ?? []).map((item) => [item.kind, item])
-  )
-  const busy = blocked ?? (enact.isPending ? WORKING : null)
-  return (
-    <div data-surface='LawCode' className='flex min-w-0 flex-col gap-4'>
-      {AREAS.map((area) => {
-        const laws = realm.laws.filter((law) => law.area === area)
-        if (laws.length === 0) return null
-        return (
-          <div key={area} className='flex min-w-0 flex-col gap-2'>
-            <Label variant='overline'>{words(area)}</Label>
-            <ul className='flex min-w-0 flex-col gap-2'>
-              {laws.map((law) => (
-                <LawRow
-                  key={`${law.id}-${JSON.stringify(law.params)}`}
-                  law={law}
-                  spec={specs[law.kind]}
-                  blocked={blocked}
-                />
-              ))}
-            </ul>
-          </div>
-        )
-      })}
-      <div className='flex min-w-0 flex-wrap items-end gap-3'>
-        <div className='min-w-48 flex-1'>
-          <MindPicker
-            label='Lay down a new law'
-            value={kind}
-            table={table(Object.keys(specs))}
-            blocked={busy}
-            onPick={setKind}
-          />
-        </div>
-        <Button
-          size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => enact.mutate(undefined)}
-        >
-          <Gavel />
-          Enact it
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-function OrgChart({
-  realm,
-  blocked,
-}: {
-  realm: Realm
-  blocked: string | null
-}) {
+function Court({ realm, blocked }: { realm: Realm; blocked: string | null }) {
   const [office, setOffice] = useState<string>('chancellor')
-  const [mortal, setMortal] = useState('')
+  const [mortal, setMortal] = useState<number | null>(null)
   const appoint = useGodAction({
     run: (holder: number | null) =>
       unwrap(
@@ -342,91 +434,686 @@ function OrgChart({
     blocked ?? (appoint.isPending || depose.isPending ? WORKING : null)
   const ruler = realm.offices.find((item) => item.kind === 'ruler')
   const below = realm.offices.filter((item) => item.kind !== 'ruler')
+  const filled = below.filter((item) => item.holder_id).length
+  const choices = Object.fromEntries(
+    Object.entries(labels(OFFICES)).filter(([key]) => key !== 'ruler')
+  )
   return (
-    <div data-surface='OfficesChart' className='flex min-w-0 flex-col gap-3'>
-      <div className='flex min-w-0 justify-center'>
-        <div className='flex min-w-48 flex-col items-center gap-1 rounded-lg border bg-muted/30 p-3'>
-          <Crown
-            aria-hidden='true'
-            className='size-icon-sm text-muted-foreground'
-          />
-          <Label variant='overline'>Ruler</Label>
-          {ruler?.holder_id ? (
-            <EntityLink kind='entity' id={String(ruler.holder_id)}>
-              {ruler.holder ?? ''}
-            </EntityLink>
-          ) : (
-            <Muted>The throne is empty</Muted>
-          )}
-        </div>
-      </div>
-      <ul className='grid min-w-0 grid-cols-2 gap-2 md:grid-cols-4'>
-        {below.map((item) => (
-          <li
-            key={item.id}
-            className='flex min-w-0 flex-col gap-1 rounded-lg border bg-background p-2'
-          >
-            <Label variant='overline'>{`${words(item.kind)}${item.region ? ` of ${item.region}` : ''}`}</Label>
-            {item.holder_id ? (
-              <EntityLink kind='entity' id={String(item.holder_id)}>
-                {item.holder ?? ''}
+    <Panel
+      title='The court'
+      icon={Crown}
+      hint={`${filled} of ${below.length} seats filled`}
+    >
+      <div data-surface='OfficesChart' className='flex min-w-0 flex-col gap-3'>
+        <div className='flex min-w-0 items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3'>
+          <Portrait name={ruler?.holder ?? realm.name} size='md' />
+          <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
+            <Label variant='overline'>Ruler</Label>
+            {ruler?.holder_id ? (
+              <EntityLink kind='entity' id={String(ruler.holder_id)}>
+                {ruler.holder ?? ''}
               </EntityLink>
             ) : (
-              <Muted variant='caption'>Vacant</Muted>
+              <Muted>The throne is empty</Muted>
             )}
-          </li>
+            {ruler && (
+              <Muted variant='caption'>{`On the throne since epoch ${ruler.since_epoch}`}</Muted>
+            )}
+          </div>
+          <Medallion icon={Crown} tone='gold' />
+        </div>
+        <ul className='grid min-w-0 grid-cols-1 gap-2 @xs/realm:grid-cols-2 @2xl/realm:grid-cols-3'>
+          {below.map((item) => (
+            <OfficeCard key={item.id} item={item} />
+          ))}
+        </ul>
+        <AdjustPanel
+          trigger='Adjust the court'
+          title='Appoint and dismiss'
+          note='Seat a mortal in any office, empty a seat, or cast the ruler down. Every change goes into the ledger.'
+        >
+          <div className='grid min-w-0 grid-cols-1 items-end gap-3 @md/realm:grid-cols-2'>
+            <MindPicker
+              label='Office'
+              value={office}
+              table={choices}
+              blocked={busy}
+              onPick={setOffice}
+            />
+            <RecordField
+              label='Mortal'
+              types={['mortal']}
+              value={mortal}
+              onChange={setMortal}
+              blocked={busy}
+              placeholder='Choose a mortal'
+            />
+          </div>
+          <div className='flex min-w-0 flex-wrap items-center gap-2'>
+            <Button
+              size='sm'
+              disabled={busy !== null || mortal === null}
+              disabledReason={busy ?? 'Choose a mortal first'}
+              onClick={() => appoint.mutate(mortal)}
+            >
+              <UserPlus />
+              Appoint
+            </Button>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => appoint.mutate(null)}
+            >
+              <UserMinus />
+              Empty the seat
+            </Button>
+            <Button
+              size='sm'
+              variant='destructive'
+              disabled={busy !== null || !ruler?.holder_id}
+              disabledReason={busy ?? 'There is no ruler'}
+              onClick={() => depose.mutate(undefined)}
+            >
+              <Crown />
+              Depose the ruler
+            </Button>
+          </div>
+        </AdjustPanel>
+      </div>
+    </Panel>
+  )
+}
+
+function Succession({ realm }: { realm: Realm }) {
+  return (
+    <Panel
+      title='Line of succession'
+      icon={ListOrdered}
+      hint='Who takes the throne if the ruler dies now'
+    >
+      <div
+        data-surface='SuccessionPreview'
+        className='flex min-w-0 flex-col gap-3'
+      >
+        {realm.succession.length === 0 ? (
+          <div className='flex min-w-0 items-center gap-2 rounded-lg border border-dashed border-warning/40 bg-warning/5 p-2'>
+            <Medallion icon={TriangleAlert} tone='warning' size='sm' />
+            <Muted>
+              No heir stands in line; the succession would be disputed or a
+              stranger would take the throne.
+            </Muted>
+          </div>
+        ) : (
+          <ol className='flex min-w-0 flex-wrap items-center gap-2'>
+            {realm.succession.map((item, index) => (
+              <li key={item.id} className='flex min-w-0 items-center gap-2'>
+                {index > 0 && (
+                  <ChevronRight
+                    aria-hidden='true'
+                    className='size-icon-sm shrink-0 text-muted-foreground'
+                  />
+                )}
+                <div
+                  className={
+                    index === 0
+                      ? 'flex min-w-0 items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 p-2'
+                      : 'flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'
+                  }
+                >
+                  <Badge
+                    size='sm'
+                    variant={index === 0 ? 'default' : 'outline'}
+                  >
+                    {index === 0 ? 'Heir' : `#${index + 1}`}
+                  </Badge>
+                  <Portrait name={item.name} size='xs' />
+                  <EntityLink kind='entity' id={String(item.id)}>
+                    {item.name}
+                  </EntityLink>
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
+        {realm.claims.length > 0 && (
+          <div className='flex min-w-0 flex-col gap-2'>
+            <Label variant='overline'>Claims on the throne</Label>
+            <ul className='grid min-w-0 grid-cols-1 gap-2 @xl/realm:grid-cols-2'>
+              {realm.claims.map((claim) => (
+                <li
+                  key={claim.id}
+                  className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2'
+                >
+                  <div className='flex min-w-0 flex-wrap items-center gap-2'>
+                    <EntityLink kind='entity' id={String(claim.claimant_id)}>
+                      {claim.claimant}
+                    </EntityLink>
+                    <Tag spec={named(CLAIM_BASES, claim.basis)} />
+                    {claim.pressed && (
+                      <Tag
+                        spec={{ label: 'Pressed', icon: Gavel, tone: 'danger' }}
+                      />
+                    )}
+                  </div>
+                  <StatBar
+                    label={`Strength, held since epoch ${claim.since_epoch}`}
+                    value={claim.strength}
+                    max={PERCENT}
+                    tone={claim.pressed ? 'destructive' : 'default'}
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </Panel>
+  )
+}
+
+function Dominion({ realm }: { realm: Realm }) {
+  const lands = useShowMore(realm.territory, SHOWN)
+  const members = useShowMore(realm.members, SHOWN)
+  return (
+    <div className='grid min-w-0 grid-cols-1 gap-3 @xl/realm:grid-cols-2'>
+      <Panel
+        title='Lands held'
+        icon={MapIcon}
+        tone='success'
+        count={realm.territory.length}
+        hint='How firmly each land obeys'
+      >
+        <div
+          data-surface='RealmTerritory'
+          className='flex min-w-0 flex-col gap-2'
+        >
+          {realm.territory.length === 0 && (
+            <Muted>The realm holds no land.</Muted>
+          )}
+          {lands.visible.map((item) => (
+            <StatBar
+              key={item.region_id}
+              label={item.name}
+              value={item.control}
+              max={PERCENT}
+              icon={MapIcon}
+              tone={toneOf(item.control)}
+            />
+          ))}
+          <ShowMore state={lands} noun={['land', 'lands']} />
+        </div>
+      </Panel>
+      <Panel
+        title='Members'
+        icon={Users}
+        tone='info'
+        count={realm.members.length}
+        hint='Peoples and towns under the crown'
+      >
+        <ul className='flex min-w-0 flex-col gap-2'>
+          {realm.members.length === 0 && <Muted>No one answers to it.</Muted>}
+          {members.visible.map((member) => {
+            const spec = named(MEMBER_TYPES, member.entity_type)
+            return (
+              <li key={member.id} className='flex min-w-0 items-center gap-2'>
+                <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
+                <div className='flex min-w-0 flex-1 flex-col'>
+                  <EntityLink kind='entity' id={String(member.id)}>
+                    {member.name}
+                  </EntityLink>
+                  <Muted variant='caption' truncate>
+                    {`${spec.label} · ${formatInteger(member.population)} souls`}
+                  </Muted>
+                </div>
+                <Badge
+                  size='sm'
+                  variant={
+                    member.autonomy > AUTONOMOUS
+                      ? 'warning'
+                      : member.autonomy > 0
+                        ? 'secondary'
+                        : 'success'
+                  }
+                >
+                  {member.autonomy > 0
+                    ? `Autonomy ${member.autonomy}`
+                    : 'Loyal'}
+                </Badge>
+              </li>
+            )
+          })}
+        </ul>
+        <ShowMore state={members} noun={['member', 'members']} />
+      </Panel>
+    </div>
+  )
+}
+
+function TreatyRow({ item }: { item: Treaty }) {
+  const kind = named(TREATY_KINDS, item.kind)
+  return (
+    <li className='flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'>
+      <Medallion icon={kind.icon} tone={kind.tone} size='sm' />
+      <div className='flex min-w-0 flex-1 flex-col'>
+        <EntityLink kind='entity' id={String(item.id)}>
+          {item.name}
+        </EntityLink>
+        <Muted variant='caption' truncate>
+          {item.until_epoch === null
+            ? `${kind.label} · without end`
+            : `${kind.label} · until epoch ${item.until_epoch}`}
+        </Muted>
+      </div>
+      <Tag spec={named(TREATY_STATUSES, item.status)} />
+    </li>
+  )
+}
+
+function Treaties({ realm }: { realm: Realm }) {
+  const [kind, setKind] = useState<string | null>(null)
+  const kinds = Object.keys(TREATY_KINDS).filter((key) =>
+    realm.treaties.some((item) => item.kind === key)
+  )
+  const shown = realm.treaties
+    .filter((item) => kind === null || item.kind === kind)
+    .sort(
+      (left, right) =>
+        STATUS_ORDER.indexOf(left.status) - STATUS_ORDER.indexOf(right.status)
+    )
+  const list = useShowMore(shown, SHOWN)
+  const live = realm.treaties.filter((item) => item.status === 'in_force')
+  if (realm.treaties.length === 0) return null
+  return (
+    <Panel
+      title='Treaties and pacts'
+      icon={Handshake}
+      tone='info'
+      count={realm.treaties.length}
+      hint={`${live.length} in force · pick a kind to see only those`}
+    >
+      <div className='grid min-w-0 grid-cols-1 gap-2 @xs/realm:grid-cols-2 @2xl/realm:grid-cols-3'>
+        {kinds.map((key) => {
+          const all = realm.treaties.filter((item) => item.kind === key)
+          const binding = all.filter((item) => item.status === 'in_force')
+          return (
+            <ChoiceCard
+              key={key}
+              spec={{ ...TREATY_KINDS[key], label: TREATY_KINDS[key].plural }}
+              hint={`${binding.length} in force`}
+              count={all.length}
+              selected={kind === key}
+              onSelect={() => setKind(kind === key ? null : key)}
+            />
+          )
+        })}
+      </div>
+      <ul className='flex min-w-0 flex-col gap-2'>
+        {list.visible.map((item) => (
+          <TreatyRow key={item.id} item={item} />
         ))}
       </ul>
-      <div className='flex min-w-0 flex-wrap items-end gap-3'>
-        <div className='min-w-40'>
-          <MindPicker
-            label='Office'
-            value={office}
-            table={table(OFFICES)}
-            blocked={busy}
-            onPick={setOffice}
-          />
-        </div>
-        <div className='flex w-36 flex-col gap-1'>
-          <Label>Mortal id</Label>
-          <Input
-            type='number'
-            min={1}
-            value={mortal}
-            aria-label='Mortal id'
-            onChange={(event) => setMortal(event.target.value)}
-          />
-        </div>
-        <Button
-          size='sm'
-          disabled={busy !== null || mortal === ''}
-          disabledReason={busy ?? 'Name a mortal first'}
-          onClick={() => appoint.mutate(Number(mortal))}
-        >
-          <UserPlus />
-          Appoint
-        </Button>
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => appoint.mutate(null)}
-        >
-          <UserMinus />
-          Dismiss
-        </Button>
-        <Button
-          size='sm'
-          variant='destructive'
-          disabled={busy !== null || !ruler?.holder_id}
-          disabledReason={busy ?? 'There is no ruler'}
-          onClick={() => depose.mutate(undefined)}
-        >
-          <Crown />
-          Depose the ruler
-        </Button>
+      <ShowMore
+        key={kind ?? 'all'}
+        state={list}
+        noun={['treaty', 'treaties']}
+      />
+    </Panel>
+  )
+}
+
+function TreasuryLedger({ realm }: { realm: Realm }) {
+  const lines = [...realm.treasury_ledger].reverse()
+  const list = useShowMore(lines, LEDGER_SHOWN)
+  const income = lines
+    .filter((line) => line.amount > 0)
+    .reduce((sum, line) => sum + line.amount, 0)
+  const spent = lines
+    .filter((line) => line.amount < 0)
+    .reduce((sum, line) => sum + line.amount, 0)
+  return (
+    <Panel
+      title='Treasury ledger'
+      icon={Coins}
+      count={lines.length}
+      hint='Every coin the crown gathered and spent'
+      actions={
+        lines.length > 0 && (
+          <>
+            <ChangeChip value={income} label='In' />
+            <ChangeChip value={spent} label='Out' />
+          </>
+        )
+      }
+    >
+      <div data-surface='RealmTreasury' className='flex min-w-0 flex-col gap-2'>
+        {lines.length === 0 ? (
+          <Muted>No coin has moved yet.</Muted>
+        ) : (
+          <Timeline label='Treasury ledger'>
+            {list.visible.map((line, index) => {
+              const entry = named(TREASURY_ENTRIES, line.entry)
+              const note = line.note
+                ? line.amount < 0
+                  ? `Spent on ${line.note}`
+                  : sentence(line.note)
+                : null
+              return (
+                <TimelineItem
+                  key={`${line.epoch}-${index}`}
+                  icon={entry.icon}
+                  framed
+                  title={entry.label}
+                  timestamp={`Epoch ${line.epoch}`}
+                  tone={
+                    line.amount > 0
+                      ? 'success'
+                      : line.amount < 0
+                        ? 'destructive'
+                        : 'default'
+                  }
+                  last={index === list.visible.length - 1}
+                >
+                  <div className='flex min-w-0 flex-wrap items-center gap-2'>
+                    <ChangeChip value={line.amount} icon={Coins} />
+                    {note && (
+                      <Muted as='span' variant='caption' truncate>
+                        {note}
+                      </Muted>
+                    )}
+                    <Muted
+                      as='span'
+                      variant='caption'
+                      className='ms-auto'
+                    >{`Balance ${formatInteger(line.balance)}`}</Muted>
+                  </div>
+                </TimelineItem>
+              )
+            })}
+          </Timeline>
+        )}
+        <ShowMore state={list} noun={['entry', 'entries']} />
       </div>
+    </Panel>
+  )
+}
+
+function ParamField({
+  spec,
+  value,
+  onChange,
+  blocked,
+}: {
+  spec: components['schemas']['LawParamSpec']
+  value: string | number | boolean
+  onChange: (value: string | number | boolean) => void
+  blocked: string | null
+}) {
+  const label = plain(LAW_PARAMS, spec.key)
+  if (spec.kind === 'bool')
+    return (
+      <label className='flex min-w-0 items-center gap-2 self-end rounded-lg border bg-background p-2'>
+        <Switch
+          checked={Boolean(value)}
+          disabled={blocked !== null}
+          onCheckedChange={onChange}
+          aria-label={label}
+        />
+        <Text as='span' truncate>
+          {label}
+        </Text>
+      </label>
+    )
+  if (spec.kind === 'choice')
+    return (
+      <MindPicker
+        label={label}
+        value={String(value)}
+        table={Object.fromEntries(
+          spec.choices.map((choice) => [choice, sentence(choice)])
+        )}
+        blocked={blocked}
+        onPick={onChange}
+      />
+    )
+  return (
+    <NumberField
+      label={`${label} (${spec.low}–${spec.high})`}
+      min={spec.low}
+      max={spec.high}
+      value={String(value)}
+      blocked={blocked}
+      onChange={(next) => onChange(Math.round(Number(next) || 0))}
+    />
+  )
+}
+
+function LawCard({
+  law,
+  spec,
+  blocked,
+}: {
+  law: Law
+  spec: LawKindSpec | undefined
+  blocked: string | null
+}) {
+  const [params, setParams] = useState<
+    Record<string, string | number | boolean>
+  >({ ...law.params })
+  const [enforcement, setEnforcement] = useState(law.enforcement)
+  const save = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/law:edit', {
+          body: {
+            law_id: law.id,
+            params,
+            enforcement: clampPercent(enforcement),
+          },
+        })
+      ),
+  })
+  const repeal = useGodAction({
+    run: () =>
+      unwrap(api.POST('/api/actions/law:repeal', { body: { law_id: law.id } })),
+  })
+  const busy = blocked ?? (save.isPending || repeal.isPending ? WORKING : null)
+  const area = named(LAW_AREAS, law.area)
+  return (
+    <li className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+      <div className='flex min-w-0 items-start gap-2'>
+        <Medallion icon={area.icon} tone={area.tone} size='sm' />
+        <div className='flex min-w-0 flex-1 flex-col gap-1'>
+          <EntityLink kind='entity' id={String(law.id)}>
+            {law.name}
+          </EntityLink>
+          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+            <Badge size='sm' variant='secondary'>
+              <ScrollText aria-hidden='true' />
+              {plain(LAW_KINDS, law.kind)}
+            </Badge>
+            <Tag spec={named(LEGITIMACY_BASES, law.legitimacy_basis)} />
+            <Badge size='sm' variant='outline'>
+              {`Since epoch ${law.enacted_epoch}`}
+            </Badge>
+            {law.conflict > 0 && (
+              <Tag
+                spec={{
+                  label: 'Conflict',
+                  icon: TriangleAlert,
+                  tone: 'warning',
+                }}
+                text={`Legal conflict ${law.conflict}`}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+      <Text>{law.effect}</Text>
+      <div className='grid min-w-0 grid-cols-1 gap-3 @md/realm:grid-cols-2'>
+        <StatBar
+          label='Enforcement'
+          value={law.enforcement}
+          max={PERCENT}
+          icon={Gavel}
+          tone={toneOf(law.enforcement)}
+        />
+        <StatBar
+          label='Justice'
+          value={law.justice}
+          max={PERCENT}
+          icon={Scale}
+          tone={toneOf(law.justice)}
+        />
+      </div>
+      <AdjustPanel
+        trigger='Amend'
+        title='Amend this law'
+        note='Rewrite its terms or how hard it is enforced, or strike it from the code.'
+      >
+        {spec && spec.params.length > 0 && (
+          <div className='grid min-w-0 grid-cols-1 items-end gap-3 @md/realm:grid-cols-2 @2xl/realm:grid-cols-3'>
+            {spec.params.map((param) => (
+              <ParamField
+                key={param.key}
+                spec={param}
+                value={params[param.key] ?? param.default}
+                blocked={busy}
+                onChange={(value) =>
+                  setParams((current) => ({ ...current, [param.key]: value }))
+                }
+              />
+            ))}
+          </div>
+        )}
+        <RangeField
+          label='Enforcement'
+          icon={Gavel}
+          value={enforcement}
+          min={0}
+          max={PERCENT}
+          level={goodBand(enforcement, ENFORCEMENT_WORDS).label}
+          lowLabel='Ignored'
+          highLabel='Iron law'
+          onChange={setEnforcement}
+        />
+        <div className='flex min-w-0 flex-wrap items-center gap-2'>
+          <Button
+            size='sm'
+            disabled={busy !== null}
+            disabledReason={busy ?? undefined}
+            onClick={() => save.mutate(undefined)}
+          >
+            <Save />
+            Rewrite the law
+          </Button>
+          <Button
+            size='sm'
+            variant='outline'
+            disabled={busy !== null}
+            disabledReason={busy ?? undefined}
+            onClick={() => repeal.mutate(undefined)}
+          >
+            <Trash2 />
+            Repeal it
+          </Button>
+        </div>
+      </AdjustPanel>
+    </li>
+  )
+}
+
+function LawCode({ realm, blocked }: { realm: Realm; blocked: string | null }) {
+  const kinds = useLawKinds()
+  const [kind, setKind] = useState<string>('quarantine')
+  const enact = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/law:enact', {
+          body: { holder_id: realm.id, kind: kind as LawKind, params: {} },
+        })
+      ),
+  })
+  const specs = Object.fromEntries(
+    (kinds.data ?? []).map((item) => [item.kind, item])
+  )
+  const busy = blocked ?? (enact.isPending ? WORKING : null)
+  const choices = Object.fromEntries(
+    [...(kinds.data ?? [])]
+      .sort(
+        (left, right) => AREAS.indexOf(left.area) - AREAS.indexOf(right.area)
+      )
+      .map((item) => [
+        item.kind,
+        `${plain(LAW_KINDS, item.kind)} · ${named(LAW_AREAS, item.area).label}`,
+      ])
+  )
+  return (
+    <div data-surface='LawCode' className='flex min-w-0 flex-col gap-4'>
+      {realm.laws.length === 0 && (
+        <EmptyState
+          icon={ScrollText}
+          size='compact'
+          title='No written law'
+          description='The realm lives by custom alone.'
+        />
+      )}
+      {AREAS.map((area) => {
+        const laws = realm.laws.filter((law) => law.area === area)
+        if (laws.length === 0) return null
+        const spec = named(LAW_AREAS, area)
+        return (
+          <div key={area} className='flex min-w-0 flex-col gap-2'>
+            <div className='flex min-w-0 items-center gap-2'>
+              <spec.icon
+                aria-hidden='true'
+                className='size-icon-sm shrink-0 text-muted-foreground'
+              />
+              <Label variant='overline'>{spec.label}</Label>
+              <Badge size='sm' variant='secondary'>
+                {laws.length}
+              </Badge>
+            </div>
+            <ul className='flex min-w-0 flex-col gap-2'>
+              {laws.map((law) => (
+                <LawCard
+                  key={`${law.id}-${JSON.stringify(law.params)}-${law.enforcement}`}
+                  law={law}
+                  spec={specs[law.kind]}
+                  blocked={blocked}
+                />
+              ))}
+            </ul>
+          </div>
+        )
+      })}
+      <AdjustPanel
+        trigger='Lay down a law'
+        title='Lay down a new law'
+        note='The law starts with its usual terms; amend it afterwards to change them.'
+      >
+        <div className='flex min-w-0 flex-wrap items-end gap-3'>
+          <div className='min-w-48 flex-1'>
+            <MindPicker
+              label='Law'
+              value={kind}
+              table={choices}
+              blocked={busy}
+              onPick={setKind}
+            />
+          </div>
+          <Button
+            size='sm'
+            disabled={busy !== null}
+            disabledReason={busy ?? undefined}
+            onClick={() => enact.mutate(undefined)}
+          >
+            <Gavel />
+            Enact it
+          </Button>
+        </div>
+      </AdjustPanel>
     </div>
   )
 }
@@ -441,11 +1128,11 @@ function RealmForm({
   const [values, setValues] = useState({
     government: realm.government,
     decision_rule: realm.decision_rule,
-    legitimacy: String(realm.legitimacy),
-    stability: String(realm.stability),
+    legitimacy: realm.legitimacy,
+    stability: realm.stability,
+    war_weariness: realm.war_weariness,
     treasury: String(realm.treasury),
     debt: String(realm.debt),
-    war_weariness: String(realm.war_weariness),
   })
   const save = useGodAction({
     run: (release: string[]) =>
@@ -459,11 +1146,11 @@ function RealmForm({
                 : {
                     government: values.government,
                     decision_rule: values.decision_rule,
-                    legitimacy: Number(values.legitimacy) || 0,
-                    stability: Number(values.stability) || 0,
+                    legitimacy: clampPercent(values.legitimacy),
+                    stability: clampPercent(values.stability),
                     treasury: Number(values.treasury) || 0,
                     debt: Number(values.debt) || 0,
-                    war_weariness: Number(values.war_weariness) || 0,
+                    war_weariness: clampPercent(values.war_weariness),
                   },
             release,
           },
@@ -479,61 +1166,110 @@ function RealmForm({
       ),
   })
   const busy = blocked ?? (save.isPending || free.isPending ? WORKING : null)
+  const set = (key: keyof typeof values, value: string | number) =>
+    setValues((current) => ({ ...current, [key]: value }))
   return (
-    <div className='flex min-w-0 flex-col gap-3'>
-      <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'>
-        <MindPicker
-          label='Government'
-          value={values.government}
-          table={table(GOVERNMENTS)}
-          blocked={busy}
-          onPick={(value) =>
-            setValues((current) => ({
-              ...current,
-              government: value as Realm['government'],
-            }))
-          }
+    <AdjustPanel
+      trigger='Adjust the realm'
+      title='Shape the realm'
+      note='Set its government and its fortunes. What you set is held against the world until you let the realm change again. Every change goes into the ledger.'
+    >
+      <ChoiceGrid
+        label='Government'
+        table={GOVERNMENTS}
+        value={values.government}
+        blocked={busy}
+        onPick={(value) => set('government', value)}
+      />
+      <ChoiceGrid
+        label='Who decides'
+        table={RULES}
+        hints={Object.fromEntries(
+          Object.entries(RULES).map(([key, rule]) => [key, rule.hint])
+        )}
+        value={values.decision_rule}
+        blocked={busy}
+        onPick={(value) => set('decision_rule', value)}
+      />
+      <div className='grid min-w-0 grid-cols-1 gap-3 @xl/realm:grid-cols-2'>
+        <RangeField
+          label='Legitimacy'
+          icon={Crown}
+          value={values.legitimacy}
+          min={0}
+          max={PERCENT}
+          level={goodBand(values.legitimacy, LEGITIMACY_WORDS).label}
+          lowLabel='Contested'
+          highLabel='Unquestioned'
+          onChange={(value) => set('legitimacy', value)}
         />
-        <MindPicker
-          label='Who decides'
-          value={values.decision_rule}
-          table={table(RULES)}
-          blocked={busy}
-          onPick={(value) =>
-            setValues((current) => ({
-              ...current,
-              decision_rule: value as Realm['decision_rule'],
-            }))
-          }
+        <RangeField
+          label='Stability'
+          icon={Scale}
+          value={values.stability}
+          min={0}
+          max={PERCENT}
+          level={goodBand(values.stability, STABILITY_WORDS).label}
+          lowLabel='Collapsing'
+          highLabel='Unshakeable'
+          onChange={(value) => set('stability', value)}
         />
-      </div>
-      <div className='grid min-w-0 grid-cols-2 gap-3 md:grid-cols-5'>
-        {(
-          [
-            'legitimacy',
-            'stability',
-            'treasury',
-            'debt',
-            'war_weariness',
-          ] as const
-        ).map((key) => (
-          <div key={key} className='flex min-w-0 flex-col gap-1'>
-            <Label>{words(key)}</Label>
-            <Input
-              type='number'
+        <RangeField
+          label='War weariness'
+          icon={Flame}
+          value={values.war_weariness}
+          min={0}
+          max={PERCENT}
+          level={badBand(values.war_weariness, WEARINESS_WORDS).label}
+          lowLabel='Eager'
+          highLabel='Exhausted'
+          onChange={(value) => set('war_weariness', value)}
+        />
+        <div className='flex min-w-0 flex-col gap-2 rounded-lg border bg-card p-3'>
+          <div className='flex min-w-0 items-center gap-2.5'>
+            <Medallion icon={Coins} tone='gold' size='sm' />
+            <div className='flex min-w-0 flex-col'>
+              <Text as='span' weight='medium'>
+                Coffers
+              </Text>
+              <Muted as='span' variant='caption' truncate>
+                Gold in the vaults and what is owed
+              </Muted>
+            </div>
+          </div>
+          <div className='grid min-w-0 grid-cols-2 gap-2'>
+            <NumberField
+              label='Treasury'
+              icon={Coins}
+              tone='text-primary'
               min={0}
-              value={values[key]}
-              aria-label={words(key)}
-              onChange={(event) =>
-                setValues((current) => ({
-                  ...current,
-                  [key]: event.target.value,
-                }))
-              }
+              value={values.treasury}
+              blocked={busy}
+              onChange={(value) => set('treasury', value)}
+            />
+            <NumberField
+              label='Debt'
+              icon={HandCoins}
+              tone='text-destructive'
+              min={0}
+              value={values.debt}
+              blocked={busy}
+              onChange={(value) => set('debt', value)}
             />
           </div>
-        ))}
+        </div>
       </div>
+      {realm.locked.length > 0 && (
+        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+          {realm.locked.map((key) => (
+            <Tag
+              key={key}
+              spec={{ label: key, icon: Lock, tone: 'info' }}
+              text={`Holding ${plain(REALM_FIELDS, key).toLowerCase()}`}
+            />
+          ))}
+        </div>
+      )}
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Button
           size='sm'
@@ -541,8 +1277,8 @@ function RealmForm({
           disabledReason={busy ?? undefined}
           onClick={() => save.mutate([])}
         >
-          <Save />
-          Hold these values
+          <Lock />
+          Set and hold these values
         </Button>
         {realm.locked.length > 0 && (
           <Button
@@ -568,11 +1304,8 @@ function RealmForm({
             Free it from its overlord
           </Button>
         )}
-        {realm.locked.map((key) => (
-          <Badge key={key} variant='outline'>{`held: ${words(key)}`}</Badge>
-        ))}
       </div>
-    </div>
+    </AdjustPanel>
   )
 }
 
@@ -586,140 +1319,32 @@ function RealmBody({
   const { reason } = useGodGate()
   const blocked = readOnlyReason ?? reason()
   return (
-    <div data-surface='RealmView' className='flex min-w-0 flex-col gap-5'>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <EntityLink kind='entity' id={String(realm.id)}>
-          {realm.name}
-        </EntityLink>
-        <Badge variant='info'>{words(realm.government)}</Badge>
-        <Badge variant='outline'>{words(realm.standing)}</Badge>
-        <Badge variant='outline'>{`Tier ${realm.tier}`}</Badge>
-        {realm.overlord && (
-          <Badge variant='warning'>{`Vassal of ${realm.overlord.name}`}</Badge>
-        )}
-        {realm.vassals.map((item) => (
-          <Badge
-            key={item.id}
-            variant='outline'
-          >{`Overlord of ${item.name}`}</Badge>
-        ))}
-      </div>
-      <div className='grid min-w-0 grid-cols-2 gap-3 md:grid-cols-4'>
-        <KpiTile
-          label='Legitimacy'
-          value={String(realm.legitimacy)}
-          icon={Crown}
-          tone={realm.legitimacy < 40 ? 'danger' : 'success'}
-        />
-        <KpiTile
-          label='Stability'
-          value={String(realm.stability)}
-          icon={Landmark}
-          tone={realm.stability < 40 ? 'danger' : 'muted'}
-        />
-        <KpiTile
-          label='Treasury'
-          value={formatInteger(realm.treasury)}
-          icon={Landmark}
-          hint={realm.debt ? `Owes ${formatInteger(realm.debt)}` : undefined}
-        />
-        <KpiTile
-          label='Overextension'
-          value={`${realm.overextension}%`}
-          icon={Network}
-          tone={realm.overextension > PERCENT ? 'warning' : 'muted'}
-          hint={`Administration ${realm.administration}`}
-        />
-      </div>
-      {realm.why.length > 0 && (
-        <div
-          data-surface='LegitimacyWhy'
-          className='flex min-w-0 flex-col gap-1'
-        >
-          <Label variant='overline'>Why</Label>
-          <ul className='grid min-w-0 grid-cols-1 gap-1 md:grid-cols-2'>
-            {realm.why.map((part) => (
-              <li key={part.label} className='flex min-w-0 items-center gap-2'>
-                <Text className='min-w-0 flex-1' truncate>
-                  {part.label}
-                </Text>
-                <Text
-                  className={
-                    part.value < 0 ? 'text-destructive' : 'text-success'
-                  }
-                >
-                  {part.value > 0 ? `+${part.value}` : String(part.value)}
-                </Text>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      <OrgChart realm={realm} blocked={blocked} />
-      <div
-        data-surface='SuccessionPreview'
-        className='flex min-w-0 flex-col gap-1'
-      >
-        <Label variant='overline'>If the ruler died now</Label>
-        {realm.succession.length === 0 ? (
-          <Muted>
-            No heir stands in line; the succession would be disputed or a
-            stranger would take the throne.
-          </Muted>
-        ) : (
-          <ol className='flex min-w-0 flex-wrap gap-2'>
-            {realm.succession.map((item, index) => (
-              <li key={item.id} className='flex items-center gap-1'>
-                <Badge variant={index === 0 ? 'info' : 'outline'}>
-                  {String(index + 1)}
-                </Badge>
-                <EntityLink kind='entity' id={String(item.id)}>
-                  {item.name}
-                </EntityLink>
-              </li>
-            ))}
-          </ol>
-        )}
-      </div>
-      {realm.claims.length > 0 && (
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label variant='overline'>Claims on the throne</Label>
-          {realm.claims.map((claim) => (
-            <Text key={claim.id}>
-              <EntityLink kind='entity' id={String(claim.claimant_id)}>
-                {claim.claimant}
-              </EntityLink>
-              {` · ${words(claim.basis)} · strength ${claim.strength}${claim.pressed ? ' · pressed' : ''}`}
-            </Text>
-          ))}
-        </div>
-      )}
-      <div
-        data-surface='RealmTerritory'
-        className='grid min-w-0 grid-cols-1 gap-2 md:grid-cols-2'
-      >
-        {realm.territory.map((item) => (
-          <StatBar
-            key={item.region_id}
-            label={item.name}
-            value={item.control}
-            max={PERCENT}
-          />
-        ))}
-      </div>
-      <div className='flex min-w-0 flex-wrap gap-2'>
-        {realm.members.map((member) => (
-          <Badge
-            key={member.id}
-            variant={member.autonomy > 60 ? 'warning' : 'outline'}
-          >
-            <EntityLink kind='entity' id={String(member.id)}>
-              {member.name}
-            </EntityLink>
-            {member.autonomy > 0 ? ` · autonomy ${member.autonomy}` : ''}
-          </Badge>
-        ))}
-      </div>
+    <div
+      data-surface='RealmView'
+      className='@container/realm flex min-w-0 flex-col gap-4'
+    >
+      <RealmCrest realm={realm} />
+      <RealmVitals realm={realm} />
+      <RealmForm
+        key={JSON.stringify([
+          realm.locked,
+          realm.government,
+          realm.decision_rule,
+          realm.legitimacy,
+          realm.stability,
+          realm.war_weariness,
+          realm.treasury,
+          realm.debt,
+        ])}
+        realm={realm}
+        blocked={blocked}
+      />
+      <RealmSeat realm={realm} />
+      <Court realm={realm} blocked={blocked} />
+      <Succession realm={realm} />
+      <Dominion realm={realm} />
+      <Treaties realm={realm} />
+      <TreasuryLedger realm={realm} />
       <Section
         id='section-law-code'
         level={3}
@@ -729,56 +1354,6 @@ function RealmBody({
       >
         <LawCode realm={realm} blocked={blocked} />
       </Section>
-      {realm.treaties.length > 0 && (
-        <div className='flex min-w-0 flex-wrap gap-2'>
-          {realm.treaties.map((item) => (
-            <Badge
-              key={item.id}
-              variant={item.status === 'in_force' ? 'info' : 'outline'}
-            >
-              <EntityLink kind='entity' id={String(item.id)}>
-                {item.name}
-              </EntityLink>
-            </Badge>
-          ))}
-        </div>
-      )}
-      {realm.treasury_ledger.length > 0 && (
-        <ul
-          data-surface='RealmTreasury'
-          className='flex min-w-0 flex-col gap-1'
-        >
-          {realm.treasury_ledger.map((line, index) => (
-            <li
-              key={`${line.epoch}-${index}`}
-              className='flex min-w-0 items-center gap-3'
-            >
-              <Muted
-                variant='caption'
-                className='w-16 shrink-0'
-              >{`Epoch ${line.epoch}`}</Muted>
-              <Text
-                className='min-w-0 flex-1'
-                truncate
-              >{`${words(line.entry)}${line.note ? `: ${line.note}` : ''}`}</Text>
-              <Text
-                className={
-                  line.amount < 0
-                    ? 'w-24 shrink-0 text-right text-destructive'
-                    : 'w-24 shrink-0 text-right text-success'
-                }
-              >
-                {formatInteger(line.amount)}
-              </Text>
-            </li>
-          ))}
-        </ul>
-      )}
-      <RealmForm
-        key={JSON.stringify([realm.locked, realm.government, realm.legitimacy])}
-        realm={realm}
-        blocked={blocked}
-      />
     </div>
   )
 }

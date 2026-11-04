@@ -1,5 +1,9 @@
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import {
+  ArrowDown,
+  ArrowUp,
+  Brain,
+  Flame,
   Ghost,
   Link2,
   Lock,
@@ -9,65 +13,94 @@ import {
   Skull,
   Sparkles,
   Trash2,
+  Users,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
-import {
-  bindingKindValues,
-  spiritAlignmentValues,
-  stratumKindValues,
-} from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
+  AttributeTile,
   EmptyState,
-  EntityLink,
+  KpiTile,
+  type KpiTone,
+  RangeField,
   Section,
+  ShowMore,
   StatBar,
   Timeline,
   TimelineItem,
+  type TimelineTone,
+  useShowMore,
 } from '@/components/domain'
-import { Label, Muted, Text } from '@/components/typography'
+import { Label, Muted } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { MindPicker } from '../mind/parts'
+import { goodBand, named, sentence } from '../realm/labels'
 import {
-  type SoulCard,
-  type Stratum,
-  table,
-  useAfterlife,
-  useSoul,
-  words,
-} from './api'
+  AdjustPanel,
+  ChoiceGrid,
+  Hero,
+  Panel,
+  RecordField,
+  RefLink,
+  Tag,
+} from '../realm/parts'
+import { type SoulCard, type Stratum, useAfterlife, useSoul } from './api'
+import {
+  ALIGNMENTS,
+  BINDINGS,
+  DEEDS,
+  GATES,
+  JUDGEMENTS,
+  RITES,
+  SOUL_STATES,
+  STRATA,
+  criterion,
+} from './labels'
 
 const PERCENT = 100
 const WORKING = 'Working…'
-const LEDGER = ['renown', 'honour', 'faith', 'violence', 'infamy'] as const
+const SOULS_SHOWN = 12
+const AUTOMATIC = /^judged by \w+: score/
+const MEMORY_WORDS: [string, string, string, string] = [
+  'Forgotten',
+  'Fading',
+  'Remembered',
+  'Vivid',
+]
+const VENERATION_WORDS: [string, string, string, string] = [
+  'Neglected',
+  'Honoured',
+  'Revered',
+  'Worshipped',
+]
 
 function busyOf(blocked: string | null, ...pending: boolean[]): string | null {
   return blocked ?? (pending.some(Boolean) ? WORKING : null)
 }
 
-function NumberField({
-  label,
-  value,
-  onChange,
+function timelineTone(tone: KpiTone | undefined): TimelineTone {
+  if (tone === 'gold') return 'primary'
+  if (tone === 'danger') return 'destructive'
+  if (tone === 'warning') return 'warning'
+  if (tone === 'success' || tone === 'verdigris') return 'success'
+  return 'default'
+}
+
+function LeverGroup({
+  title,
+  children,
 }: {
-  label: string
-  value: string
-  onChange: (value: string) => void
+  title: string
+  children: ReactNode
 }) {
   return (
-    <div className='flex w-32 flex-col gap-1'>
-      <Label>{label}</Label>
-      <Input
-        type='number'
-        min={0}
-        value={value}
-        aria-label={label}
-        onChange={(event) => onChange(event.target.value)}
-      />
+    <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-background p-3'>
+      <Label variant='overline'>{title}</Label>
+      {children}
     </div>
   )
 }
@@ -82,13 +115,14 @@ function SoulLevers({
   blocked: string | null
 }) {
   const id = soul.spirit?.id ?? 0
-  const [stratum, setStratum] = useState(String(strata[0]?.id ?? ''))
+  const [picked, setStratum] = useState('')
+  const stratum = picked || String(strata[0]?.id ?? '')
   const [reason, setReason] = useState('')
-  const [target, setTarget] = useState('')
+  const [target, setTarget] = useState<number | null>(null)
   const [binding, setBinding] = useState<string>('place')
-  const [home, setHome] = useState('')
-  const [memory, setMemory] = useState(String(soul.memory_strength))
-  const [veneration, setVeneration] = useState(String(soul.veneration))
+  const [home, setHome] = useState<number | null>(null)
+  const [memory, setMemory] = useState(soul.memory_strength)
+  const [veneration, setVeneration] = useState(soul.veneration)
   const [alignment, setAlignment] = useState<string>(soul.alignment)
   const judge = useGodAction({
     run: () =>
@@ -110,7 +144,7 @@ function SoulLevers({
         api.POST('/api/actions/soul:bind', {
           body: {
             spirit_id: id,
-            target_id: Math.round(Number(target)),
+            target_id: target ?? 0,
             binding: binding as SoulCard['binding'],
           },
         })
@@ -128,10 +162,7 @@ function SoulLevers({
     run: () =>
       unwrap(
         api.POST('/api/actions/soul:reincarnate', {
-          body: {
-            spirit_id: id,
-            community_id: home ? Math.round(Number(home)) : null,
-          },
+          body: { spirit_id: id, community_id: home },
         })
       ),
   })
@@ -144,11 +175,11 @@ function SoulLevers({
             values: {
               memory_strength: Math.max(
                 0,
-                Math.min(PERCENT, Math.round(Number(memory) || 0))
+                Math.min(PERCENT, Math.round(memory))
               ),
               veneration: Math.max(
                 0,
-                Math.min(PERCENT, Math.round(Number(veneration) || 0))
+                Math.min(PERCENT, Math.round(veneration))
               ),
               alignment,
             },
@@ -166,117 +197,170 @@ function SoulLevers({
     edit.isPending
   )
   return (
-    <div data-surface='SoulLevers' className='flex min-w-0 flex-col gap-3'>
-      {strata.length > 0 && (
-        <div className='flex min-w-0 flex-wrap items-end gap-2'>
-          <MindPicker
-            label='Send to'
-            value={stratum}
-            table={Object.fromEntries(
-              strata.map((item) => [String(item.id), item.name])
-            )}
+    <AdjustPanel
+      trigger='Adjust the soul'
+      title='Hold this soul in your hand'
+      note='Judge it, bind it, send it back into the world, or change how it is remembered. Every change goes into the ledger.'
+    >
+      <div data-surface='SoulLevers' className='flex min-w-0 flex-col gap-3'>
+        <LeverGroup title='Temper and memory'>
+          <ChoiceGrid
+            label='Temper'
+            table={ALIGNMENTS}
+            value={alignment}
             blocked={busy}
-            onPick={setStratum}
+            onPick={setAlignment}
           />
-          <div className='flex min-w-0 flex-1 flex-col gap-1'>
-            <Label>Reason</Label>
-            <Input
-              value={reason}
-              aria-label='Reason'
-              onChange={(event) => setReason(event.target.value)}
+          <div className='grid min-w-0 grid-cols-1 gap-3 @xl/soul:grid-cols-2'>
+            <RangeField
+              label='Memory of the living'
+              icon={Brain}
+              value={memory}
+              min={0}
+              max={PERCENT}
+              level={goodBand(memory, MEMORY_WORDS).label}
+              lowLabel='Forgotten'
+              highLabel='Vivid'
+              onChange={setMemory}
+            />
+            <RangeField
+              label='Veneration'
+              icon={Flame}
+              value={veneration}
+              min={0}
+              max={PERCENT}
+              level={goodBand(veneration, VENERATION_WORDS).label}
+              lowLabel='Neglected'
+              highLabel='Worshipped'
+              onChange={setVeneration}
             />
           </div>
-          <Button
-            size='sm'
-            disabled={busy !== null}
-            disabledReason={busy ?? undefined}
-            onClick={() => judge.mutate(undefined)}
-          >
-            <Scale />
-            Judge
-          </Button>
-        </div>
-      )}
-      <div className='flex min-w-0 flex-wrap items-end gap-2'>
-        <NumberField
-          label='Bind to record'
-          value={target}
-          onChange={setTarget}
-        />
-        <MindPicker
-          label='Binding'
-          value={binding}
-          table={table(bindingKindValues)}
-          blocked={busy}
-          onPick={setBinding}
-        />
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== null || !target}
-          disabledReason={busy ?? 'Name the record first.'}
-          onClick={() => bind.mutate(undefined)}
-        >
-          <Link2 />
-          Bind
-        </Button>
-        <NumberField label='Reborn in' value={home} onChange={setHome} />
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => reborn.mutate(undefined)}
-        >
-          <RefreshCw />
-          Reincarnate
-        </Button>
+          <div className='flex min-w-0 flex-wrap items-center gap-2'>
+            <Button
+              size='sm'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => edit.mutate(undefined)}
+            >
+              <Save />
+              Save the soul
+            </Button>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => seal.mutate(undefined)}
+            >
+              <Lock />
+              {soul.sealed ? 'Break the seal' : 'Seal against rebirth'}
+            </Button>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => release.mutate(undefined)}
+            >
+              <Sparkles />
+              Release it
+            </Button>
+          </div>
+        </LeverGroup>
+        {strata.length > 0 && (
+          <LeverGroup title='Judge it'>
+            <div className='grid min-w-0 grid-cols-1 items-end gap-3 @md/soul:grid-cols-2'>
+              <MindPicker
+                label='Send to'
+                value={stratum}
+                table={Object.fromEntries(
+                  strata.map((item) => [
+                    String(item.id),
+                    `${item.name} (${named(STRATA, item.kind).label})`,
+                  ])
+                )}
+                blocked={busy}
+                onPick={setStratum}
+              />
+              <div className='flex min-w-0 flex-col gap-1'>
+                <Label>Reason</Label>
+                <Input
+                  value={reason}
+                  aria-label='Reason'
+                  placeholder='Why the soul goes there'
+                  onChange={(event) => setReason(event.target.value)}
+                />
+              </div>
+            </div>
+            <div>
+              <Button
+                size='sm'
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() => judge.mutate(undefined)}
+              >
+                <Scale />
+                Judge
+              </Button>
+            </div>
+          </LeverGroup>
+        )}
+        <LeverGroup title='Bind it'>
+          <ChoiceGrid
+            label='Bound to'
+            table={BINDINGS}
+            value={binding}
+            blocked={busy}
+            onPick={setBinding}
+          />
+          <div className='flex min-w-0 flex-wrap items-end gap-3'>
+            <div className='min-w-48 flex-1'>
+              <RecordField
+                label='The record it haunts'
+                types={null}
+                value={target}
+                onChange={setTarget}
+                blocked={busy}
+              />
+            </div>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null || target === null}
+              disabledReason={busy ?? 'Choose the record first.'}
+              onClick={() => bind.mutate(undefined)}
+            >
+              <Link2 />
+              Bind
+            </Button>
+          </div>
+        </LeverGroup>
+        <LeverGroup title='Send it back'>
+          <div className='flex min-w-0 flex-wrap items-end gap-3'>
+            <div className='min-w-48 flex-1'>
+              <RecordField
+                label='Reborn among'
+                types={['people', 'settlement', 'tribe']}
+                value={home}
+                onChange={setHome}
+                blocked={busy}
+                placeholder='Wherever fate decides'
+              />
+            </div>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => reborn.mutate(undefined)}
+            >
+              <RefreshCw />
+              Reincarnate
+            </Button>
+          </div>
+        </LeverGroup>
       </div>
-      <div className='flex min-w-0 flex-wrap items-end gap-2'>
-        <NumberField label='Memory' value={memory} onChange={setMemory} />
-        <NumberField
-          label='Veneration'
-          value={veneration}
-          onChange={setVeneration}
-        />
-        <MindPicker
-          label='Temper'
-          value={alignment}
-          table={table(spiritAlignmentValues)}
-          blocked={busy}
-          onPick={setAlignment}
-        />
-        <Button
-          size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => edit.mutate(undefined)}
-        >
-          <Save />
-          Save
-        </Button>
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => seal.mutate(undefined)}
-        >
-          <Lock />
-          {soul.sealed ? 'Break the seal' : 'Seal against rebirth'}
-        </Button>
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => release.mutate(undefined)}
-        >
-          <Sparkles />
-          Release
-        </Button>
-      </div>
-    </div>
+    </AdjustPanel>
   )
 }
 
@@ -288,75 +372,185 @@ function SoulBody({
   blocked: string | null
 }) {
   const realm = useAfterlife(soul.spirit?.id ?? 0)
+  const alignment = named(ALIGNMENTS, soul.alignment)
+  const imprint = Object.entries(soul.imprint)
   return (
-    <div data-surface='SoulCard' className='flex min-w-0 flex-col gap-4'>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        {soul.origin && (
-          <EntityLink kind='entity' id={String(soul.origin.id)}>
-            {soul.origin.name}
-          </EntityLink>
+    <div
+      data-surface='SoulCard'
+      className='@container/soul flex min-w-0 flex-col gap-4'
+    >
+      <Hero
+        icon={Ghost}
+        tone={alignment.tone}
+        eyebrow={soul.origin ? 'The soul of' : 'A soul'}
+        title={
+          soul.origin ? (
+            <RefLink node={soul.origin} />
+          ) : (
+            (soul.spirit?.name ?? 'Nameless')
+          )
+        }
+      >
+        <Tag spec={named(SOUL_STATES, soul.state)} />
+        <Tag spec={alignment} />
+        <Tag spec={named(RITES, soul.rite)} />
+        {soul.stratum && (
+          <Tag
+            spec={named(STRATA, soul.stratum.kind)}
+            text={soul.stratum.name}
+          />
         )}
-        <Badge variant='info'>{words(soul.state)}</Badge>
-        <Badge
-          variant={soul.alignment === 'vengeful' ? 'destructive' : 'outline'}
-        >
-          {words(soul.alignment)}
-        </Badge>
-        <Badge variant='outline'>{`Rites: ${words(soul.rite)}`}</Badge>
-        {soul.stratum && <Badge variant='outline'>{soul.stratum.name}</Badge>}
-        {soul.sealed && <Badge variant='warning'>sealed</Badge>}
-        {soul.bound && (
-          <Badge variant='outline'>{`bound to ${soul.bound.name}`}</Badge>
+        {soul.sealed && (
+          <Tag
+            spec={{
+              label: 'Sealed against rebirth',
+              icon: Lock,
+              tone: 'warning',
+            }}
+          />
         )}
-        {soul.possessing && (
-          <Badge variant='destructive'>{`possessing ${soul.possessing.name}`}</Badge>
-        )}
-        {soul.reborn_as && (
-          <Badge variant='success'>{`reborn as ${soul.reborn_as.name}`}</Badge>
-        )}
-      </div>
-      <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'>
-        <StatBar
+        {soul.gate && <Tag spec={named(GATES, soul.gate)} />}
+        {soul.traits.map((trait) => (
+          <Badge key={trait} size='sm' variant='outline'>
+            {sentence(trait)}
+          </Badge>
+        ))}
+      </Hero>
+      <div className='grid min-w-0 grid-cols-1 gap-3 @xs/soul:grid-cols-2'>
+        <KpiTile
           label='Memory of the living'
           value={soul.memory_strength}
-          max={PERCENT}
+          icon={Brain}
+          tone='verdigris'
+          meter={{
+            value: soul.memory_strength,
+            max: PERCENT,
+            label: 'Memory of the living',
+          }}
+          hint={`${goodBand(soul.memory_strength, MEMORY_WORDS).label}; fades unless the living remember`}
         />
-        <StatBar
+        <KpiTile
           label='Veneration'
           value={soul.veneration}
-          max={PERCENT}
-          tone='success'
+          icon={Flame}
+          tone='gold'
+          meter={{ value: soul.veneration, max: PERCENT, label: 'Veneration' }}
+          hint={`${goodBand(soul.veneration, VENERATION_WORDS).label}; offerings from the peoples who honour it`}
         />
       </div>
-      <div
-        data-surface='DeedsLedger'
-        className='grid min-w-0 grid-cols-1 gap-2 md:grid-cols-5'
+      {(soul.bound || soul.possessing || soul.reborn_as) && (
+        <Panel title='Ties to the living' icon={Link2} tone='verdigris'>
+          <div className='flex min-w-0 flex-col gap-2'>
+            {soul.bound && (
+              <div className='flex min-w-0 items-center gap-2'>
+                <Tag spec={named(BINDINGS, soul.binding)} text='Bound to' />
+                <RefLink node={soul.bound} />
+              </div>
+            )}
+            {soul.possessing && (
+              <div className='flex min-w-0 items-center gap-2'>
+                <Tag
+                  spec={{ label: 'Possessing', icon: Ghost, tone: 'danger' }}
+                />
+                <RefLink node={soul.possessing} />
+              </div>
+            )}
+            {soul.reborn_as && (
+              <div className='flex min-w-0 items-center gap-2'>
+                <Tag
+                  spec={{
+                    label: 'Reborn as',
+                    icon: RefreshCw,
+                    tone: 'success',
+                  }}
+                />
+                <RefLink node={soul.reborn_as} />
+              </div>
+            )}
+          </div>
+        </Panel>
+      )}
+      <Panel
+        title='Deeds weighed at death'
+        icon={Scale}
+        hint='The ledger the judges read'
       >
-        {LEDGER.map((key) => (
-          <StatBar
-            key={key}
-            label={words(key)}
-            value={soul.deeds[key] ?? 0}
-            max={PERCENT}
-            tone={
-              key === 'infamy' || key === 'violence' ? 'destructive' : 'default'
-            }
-          />
-        ))}
-      </div>
-      {soul.judgements.length > 0 && (
-        <Timeline label='Judgements'>
-          {soul.judgements.map((item, index) => (
-            <TimelineItem
-              key={`${item.epoch}.${index}`}
-              icon={Scale}
-              title={item.reason}
-              timestamp={`Epoch ${item.epoch}`}
-              tone={item.stratum ? 'primary' : 'warning'}
-              last={index === soul.judgements.length - 1}
+        <div
+          data-surface='DeedsLedger'
+          className='grid min-w-0 grid-cols-2 gap-2 @md/soul:grid-cols-3 @xl/soul:grid-cols-5'
+        >
+          {Object.entries(DEEDS).map(([key, spec]) => (
+            <AttributeTile
+              key={key}
+              icon={spec.icon}
+              abbr={spec.label}
+              label={spec.label}
+              value={soul.deeds[key] ?? 0}
+              max={PERCENT}
+              tone={
+                key === 'infamy' || key === 'violence'
+                  ? 'destructive'
+                  : key === 'honour'
+                    ? 'success'
+                    : key === 'faith'
+                      ? 'info'
+                      : 'default'
+              }
             />
           ))}
-        </Timeline>
+        </div>
+        {imprint.length > 0 && (
+          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+            <Muted as='span' variant='caption'>
+              Carried into the next life
+            </Muted>
+            {imprint.map(([key, value]) => (
+              <Badge
+                key={key}
+                size='sm'
+                variant='secondary'
+              >{`${sentence(key)} ${value}`}</Badge>
+            ))}
+          </div>
+        )}
+      </Panel>
+      {soul.judgements.length > 0 && (
+        <Panel
+          title='Judgements'
+          icon={Scale}
+          tone='info'
+          count={soul.judgements.length}
+        >
+          <Timeline label='Judgements'>
+            {soul.judgements.map((item, index) => {
+              const doctrine = named(JUDGEMENTS, item.doctrine)
+              return (
+                <TimelineItem
+                  key={`${item.epoch}.${index}`}
+                  icon={doctrine.icon}
+                  framed
+                  title={
+                    item.stratum ? `Sent to ${item.stratum}` : 'Left to wander'
+                  }
+                  timestamp={`Epoch ${item.epoch}`}
+                  tone={item.stratum ? 'primary' : 'warning'}
+                  last={index === soul.judgements.length - 1}
+                >
+                  <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+                    <Tag spec={doctrine} />
+                    <Badge size='sm' variant='secondary'>
+                      {`Score ${item.score}`}
+                    </Badge>
+                    <Tag spec={named(RITES, item.rite)} />
+                  </div>
+                  {!AUTOMATIC.test(item.reason) && (
+                    <Muted variant='caption'>{sentence(item.reason)}</Muted>
+                  )}
+                </TimelineItem>
+              )
+            })}
+          </Timeline>
+        </Panel>
       )}
       <SoulLevers
         soul={soul}
@@ -391,13 +585,17 @@ export function SoulSection({
   )
 }
 
-function StratumRow({
+function StratumRung({
   realmId,
   stratum,
+  most,
+  last,
   blocked,
 }: {
   realmId: number
   stratum: Stratum
+  most: number
+  last: boolean
   blocked: string | null
 }) {
   const [name, setName] = useState(stratum.name)
@@ -417,65 +615,91 @@ function StratumRow({
         })
       ),
   })
+  const souls = useShowMore(stratum.souls, SOULS_SHOWN)
   const busy = busyOf(blocked, save.isPending, remove.isPending)
+  const spec = named(STRATA, stratum.kind)
   return (
-    <li
-      data-surface='Stratum'
-      className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'
+    <TimelineItem
+      icon={spec.icon}
+      tone={timelineTone(spec.tone)}
+      framed
+      last={last}
+      title={stratum.name}
+      timestamp={`${stratum.population} ${stratum.population === 1 ? 'soul' : 'souls'}`}
     >
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Skull
-          aria-hidden='true'
-          className='size-icon-sm text-muted-foreground'
-        />
-        <Text as='span' weight='semibold'>
-          {stratum.name}
-        </Text>
-        <Badge variant='outline'>{words(stratum.kind)}</Badge>
-        <Badge variant='info'>{`${stratum.population} souls`}</Badge>
-        {Object.entries(stratum.criteria).map(([key, value]) => (
-          <Badge key={key} variant='outline'>{`${words(key)} ${value}`}</Badge>
-        ))}
-      </div>
-      {stratum.souls.length > 0 && (
-        <div className='flex min-w-0 flex-wrap gap-2'>
-          {stratum.souls.map((soul) => (
-            <EntityLink key={soul.id} kind='entity' id={String(soul.id)}>
-              {soul.name}
-            </EntityLink>
+      <div data-surface='Stratum' className='flex min-w-0 flex-col gap-2'>
+        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+          <Tag spec={spec} />
+          {Object.entries(stratum.criteria).map(([key, value]) => (
+            <Badge key={key} size='sm' variant='outline'>
+              {criterion(key, value)}
+            </Badge>
           ))}
         </div>
-      )}
-      <div className='flex min-w-0 flex-wrap items-end gap-2'>
-        <div className='flex min-w-0 flex-1 flex-col gap-1'>
-          <Label>Name</Label>
-          <Input
-            value={name}
-            aria-label='Name'
-            onChange={(event) => setName(event.target.value)}
-          />
-        </div>
-        <Button
-          size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => save.mutate(undefined)}
+        <StatBar
+          label='Share of the dead here'
+          value={stratum.population}
+          max={Math.max(1, most)}
+          icon={Users}
+          tone={
+            spec.tone === 'danger'
+              ? 'destructive'
+              : spec.tone === 'gold'
+                ? 'default'
+                : 'muted'
+          }
+        />
+        {stratum.souls.length > 0 && (
+          <div className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1'>
+            {souls.visible.map((soul) => (
+              <span key={soul.id} className='flex min-w-0 items-center gap-1'>
+                <Ghost
+                  aria-hidden='true'
+                  className='size-icon-xs shrink-0 text-muted-foreground'
+                />
+                <RefLink node={soul} />
+              </span>
+            ))}
+          </div>
+        )}
+        <ShowMore state={souls} noun={['soul', 'souls']} />
+        <AdjustPanel
+          trigger='Edit'
+          title='Rename or unmake'
+          note='Unmaking a stratum sends its souls to be judged again.'
         >
-          <Save />
-          Rename
-        </Button>
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => remove.mutate(undefined)}
-        >
-          <Trash2 />
-          Unmake
-        </Button>
+          <div className='flex min-w-0 flex-wrap items-end gap-2'>
+            <div className='flex min-w-48 flex-1 flex-col gap-1'>
+              <Label>Name</Label>
+              <Input
+                value={name}
+                aria-label='Name'
+                onChange={(event) => setName(event.target.value)}
+              />
+            </div>
+            <Button
+              size='sm'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => save.mutate(undefined)}
+            >
+              <Save />
+              Rename
+            </Button>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => remove.mutate(undefined)}
+            >
+              <Trash2 />
+              Unmake
+            </Button>
+          </div>
+        </AdjustPanel>
       </div>
-    </li>
+    </TimelineItem>
   )
 }
 
@@ -502,9 +726,14 @@ export function AfterlifeSection({
         })
       ),
   })
-  const strata = view.data?.strata ?? []
+  const strata = [...(view.data?.strata ?? [])].sort(
+    (left, right) =>
+      (STRATA[left.kind]?.depth ?? 0) - (STRATA[right.kind]?.depth ?? 0)
+  )
   if (view.isPending || view.isError) return null
   const busy = busyOf(blocked, add.isPending)
+  const total = strata.reduce((sum, item) => sum + item.population, 0)
+  const most = Math.max(0, ...strata.map((item) => item.population))
   return (
     <Section
       id='section-afterlife'
@@ -512,41 +741,91 @@ export function AfterlifeSection({
       description='The strata of the afterlife and the souls in each.'
       icon={Skull}
     >
-      <ul data-surface='AfterlifeRealm' className='flex min-w-0 flex-col gap-2'>
-        {strata.map((stratum) => (
-          <StratumRow
-            key={stratum.id}
-            realmId={regionId}
-            stratum={stratum}
-            blocked={blocked}
+      <div className='@container/soul flex min-w-0 flex-col gap-4'>
+        {strata.length === 0 ? (
+          <EmptyState
+            icon={Skull}
+            title='No strata'
+            description='No soul has been judged here yet.'
           />
-        ))}
-      </ul>
-      <div className='flex min-w-0 flex-wrap items-end gap-2'>
-        <MindPicker
-          label='New stratum'
-          value={kind}
-          table={table(stratumKindValues)}
-          blocked={busy}
-          onPick={setKind}
-        />
-        <Button
-          size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => add.mutate(undefined)}
-        >
-          <Sparkles />
-          Make it
-        </Button>
+        ) : (
+          <>
+            <div className='grid min-w-0 grid-cols-1 gap-3 @xs/soul:grid-cols-2'>
+              <KpiTile
+                label='Souls at rest'
+                value={total}
+                icon={Ghost}
+                tone='verdigris'
+                hint='Every soul judged into this realm'
+              />
+              <KpiTile
+                label='Strata'
+                value={strata.length}
+                icon={Scale}
+                tone='gold'
+                hint='From the heavens down to the depths'
+              />
+            </div>
+            <div
+              data-surface='AfterlifeRealm'
+              className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'
+            >
+              <div className='flex min-w-0 items-center gap-2'>
+                <ArrowUp
+                  aria-hidden='true'
+                  className='size-icon-sm text-primary'
+                />
+                <Label variant='overline'>The heavens</Label>
+              </div>
+              <Timeline label='Strata of the afterlife'>
+                {strata.map((stratum, index) => (
+                  <StratumRung
+                    key={`${stratum.id}-${stratum.name}`}
+                    realmId={regionId}
+                    stratum={stratum}
+                    most={most}
+                    last={index === strata.length - 1}
+                    blocked={blocked}
+                  />
+                ))}
+              </Timeline>
+              <div className='flex min-w-0 items-center gap-2'>
+                <ArrowDown
+                  aria-hidden='true'
+                  className='size-icon-sm text-destructive'
+                />
+                <Label variant='overline'>The depths</Label>
+              </div>
+            </div>
+          </>
+        )}
+        <div className='flex min-w-0 flex-col'>
+          <AdjustPanel
+            trigger='Make a stratum'
+            title='Make a new stratum'
+            note='Each kind of stratum takes the souls its doctrine sends.'
+          >
+            <ChoiceGrid
+              label='Kind'
+              table={STRATA}
+              value={kind}
+              blocked={busy}
+              onPick={setKind}
+            />
+            <div>
+              <Button
+                size='sm'
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() => add.mutate(undefined)}
+              >
+                <Sparkles />
+                Make it
+              </Button>
+            </div>
+          </AdjustPanel>
+        </div>
       </div>
-      {strata.length === 0 && (
-        <EmptyState
-          icon={Skull}
-          title='No strata'
-          description='No soul has been judged here yet.'
-        />
-      )}
     </Section>
   )
 }

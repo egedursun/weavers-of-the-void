@@ -1,44 +1,94 @@
 import { useState } from 'react'
 import {
+  ArrowRight,
+  CalendarClock,
+  Coins,
+  Crown,
+  Gem,
+  GitBranch,
   Handshake,
+  Heart,
   HeartCrack,
+  Hourglass,
+  PenLine,
+  Quote,
+  RefreshCw,
   ScrollText,
   Shield,
   Skull,
+  Sparkles,
+  Sprout,
   Swords,
   TriangleAlert,
-  UserPlus,
+  Trophy,
+  User,
+  Users,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { EmptyState, EntityLink, KpiTile, Section } from '@/components/domain'
+import {
+  EmptyState,
+  EntityLink,
+  KpiTile,
+  Medallion,
+  Portrait,
+  RangeField,
+  Section,
+  StatBar,
+  Timeline,
+  TimelineItem,
+} from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
-import { MindPicker } from '../mind/parts'
 import { useHouse, useOaths, useTreaty } from './api'
+import {
+  CLAIM_BASES,
+  CLAUSES,
+  OATHS,
+  OATH_STATUSES,
+  OFFICES,
+  PARTY_ROLES,
+  SEXES,
+  TINCTURES,
+  TREATY_KINDS,
+  TREATY_STATUSES,
+  named,
+  plain,
+  sentence,
+} from './labels'
+import {
+  AdjustPanel,
+  ChoiceGrid,
+  Fact,
+  Hero,
+  NumberField,
+  Panel,
+  RecordField,
+  Tag,
+} from './parts'
 
 type Member = components['schemas']['HouseMemberView']
 type OathKind = components['schemas']['OathKind']
+type Oath = components['schemas']['OathView']
 type TreatyStatus = components['schemas']['TreatyStatus']
 
 const WORKING = 'Working…'
-const OATHS: OathKind[] = [
-  'fealty',
-  'vengeance',
-  'celibacy',
-  'pilgrimage',
-  'protection',
-  'silence',
-  'blood_brotherhood',
+const PERCENT = 100
+const CLAIM_STRENGTH = 50
+const STRENGTH_WORDS: [string, string, string, string] = [
+  'Faint',
+  'Arguable',
+  'Strong',
+  'Undeniable',
 ]
 
-function words(value: string): string {
-  return value.replaceAll('_', ' ')
+function strengthWord(value: number): string {
+  return STRENGTH_WORDS[[25, 50, 75].filter((edge) => value >= edge).length]
 }
 
 function generations(members: Member[]): Member[][] {
@@ -71,53 +121,93 @@ function generations(members: Member[]): Member[][] {
   return rows.filter(Boolean)
 }
 
-function FamilyTree({ members }: { members: Member[] }) {
+function MemberCard({ member }: { member: Member }) {
+  const facts = [
+    member.sex ? plain(SEXES, member.sex) : null,
+    member.age !== null ? `age ${member.age}` : null,
+  ].filter(Boolean)
   return (
-    <div data-surface='FamilyTree' className='flex min-w-0 flex-col gap-3'>
-      {generations(members).map((row, index) => (
-        <div key={index} className='flex min-w-0 flex-col gap-1'>
-          <Label variant='overline'>{`Generation ${index + 1}`}</Label>
-          <ul className='flex min-w-0 flex-wrap gap-2'>
-            {row.map((member) => (
-              <li
-                key={member.id}
-                className='flex min-w-40 flex-col gap-1 rounded-lg border bg-muted/30 p-2'
-              >
-                <div className='flex min-w-0 items-center gap-1'>
-                  {!member.alive && (
-                    <Skull
-                      aria-hidden='true'
-                      className='size-icon-sm text-muted-foreground'
-                    />
-                  )}
-                  <EntityLink kind='entity' id={String(member.id)}>
-                    {member.name}
-                  </EntityLink>
-                </div>
-                <div className='flex min-w-0 flex-wrap gap-1'>
-                  {member.sex && <Badge variant='outline'>{member.sex}</Badge>}
-                  {member.age !== null && (
-                    <Badge variant='outline'>{`age ${member.age}`}</Badge>
-                  )}
-                  {member.by_marriage && (
-                    <Badge variant='outline'>by marriage</Badge>
-                  )}
-                  {member.office && (
-                    <Badge variant='info'>{words(member.office)}</Badge>
-                  )}
-                  {member.lasting_injuries > 0 && (
-                    <Badge variant='warning'>{`${member.lasting_injuries} lasting wounds`}</Badge>
-                  )}
-                </div>
-                {!member.alive && member.fate && (
-                  <Muted variant='caption'>{member.fate}</Muted>
-                )}
-              </li>
-            ))}
-          </ul>
+    <li
+      className={
+        member.alive
+          ? 'flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2'
+          : 'flex min-w-0 flex-col gap-2 rounded-lg border border-dashed bg-muted/20 p-2'
+      }
+    >
+      <div className='flex min-w-0 items-center gap-2'>
+        <Portrait name={member.name} size='sm' />
+        <div className='flex min-w-0 flex-1 flex-col'>
+          <div className='flex min-w-0 items-center gap-1'>
+            {!member.alive && (
+              <Skull
+                aria-label='Dead'
+                className='size-icon-xs shrink-0 text-muted-foreground'
+              />
+            )}
+            <EntityLink kind='entity' id={String(member.id)}>
+              {member.name}
+            </EntityLink>
+          </div>
+          <Muted variant='caption' truncate>
+            {facts.length > 0 ? facts.join(' · ') : 'Age unknown'}
+          </Muted>
         </div>
-      ))}
-    </div>
+      </div>
+      {(member.office || member.by_marriage || member.lasting_injuries > 0) && (
+        <div className='flex min-w-0 flex-wrap gap-1'>
+          {member.office && <Tag spec={named(OFFICES, member.office)} />}
+          {member.by_marriage && (
+            <Tag
+              spec={{ label: 'By marriage', icon: Heart, tone: 'verdigris' }}
+            />
+          )}
+          {member.lasting_injuries > 0 && (
+            <Tag
+              spec={{ label: 'Wounds', icon: TriangleAlert, tone: 'warning' }}
+              text={`${member.lasting_injuries} lasting wounds`}
+            />
+          )}
+        </div>
+      )}
+      {!member.alive && member.fate && (
+        <Muted variant='caption' truncate={2}>
+          {member.fate}
+        </Muted>
+      )}
+    </li>
+  )
+}
+
+function FamilyTree({ members }: { members: Member[] }) {
+  const rows = generations(members)
+  return (
+    <Panel
+      title='Family tree'
+      icon={GitBranch}
+      tone='verdigris'
+      count={members.length}
+      hint={`${rows.length} ${rows.length === 1 ? 'generation' : 'generations'} of blood and marriage`}
+    >
+      <div data-surface='FamilyTree' className='flex min-w-0 flex-col gap-3'>
+        {members.length === 0 && <Muted>The house has no members left.</Muted>}
+        {rows.map((row, index) => (
+          <div key={index} className='flex min-w-0 flex-col gap-1.5'>
+            <div className='flex min-w-0 items-center gap-2'>
+              <Sprout
+                aria-hidden='true'
+                className='size-icon-sm shrink-0 text-muted-foreground'
+              />
+              <Label variant='overline'>{`Generation ${index + 1}`}</Label>
+            </div>
+            <ul className='grid min-w-0 grid-cols-1 gap-2 @xs/realm:grid-cols-2 @2xl/realm:grid-cols-3'>
+              {row.map((member) => (
+                <MemberCard key={member.id} member={member} />
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </Panel>
   )
 }
 
@@ -131,17 +221,17 @@ export function HouseSection({
   const view = useHouse(houseId)
   const { reason } = useGodGate()
   const blocked = readOnlyReason ?? reason()
-  const [claimant, setClaimant] = useState('')
-  const [polity, setPolity] = useState('')
-  const [strength, setStrength] = useState('50')
+  const [claimant, setClaimant] = useState<number | null>(null)
+  const [polity, setPolity] = useState<number | null>(null)
+  const [strength, setStrength] = useState(CLAIM_STRENGTH)
   const grant = useGodAction({
     run: () =>
       unwrap(
         api.POST('/api/actions/claim:grant', {
           body: {
-            mortal_id: Number(claimant),
-            polity_id: Number(polity),
-            strength: Number(strength) || 50,
+            mortal_id: claimant ?? 0,
+            polity_id: polity ?? 0,
+            strength,
             basis: 'divine',
           },
         })
@@ -157,6 +247,11 @@ export function HouseSection({
   })
   const busy =
     blocked ?? (grant.isPending || extinguish.isPending ? WORKING : null)
+  const house = view.data
+  const tincture = house?.emblem.field
+    ? named(TINCTURES, house.emblem.field)
+    : null
+  const living = house?.members.filter((member) => member.alive).length ?? 0
   return (
     <Section
       id='section-house'
@@ -172,139 +267,268 @@ export function HouseSection({
           description={view.error.message}
         />
       )}
-      {view.data && (
-        <div data-surface='HouseView' className='flex min-w-0 flex-col gap-5'>
-          <div className='flex min-w-0 flex-wrap items-center gap-2'>
-            <Badge variant='info'>{`${words(view.data.emblem.field ?? 'plain')} field, a ${view.data.emblem.charge ?? 'mark'}`}</Badge>
-            {view.data.motto && (
-              <Badge variant='outline'>{view.data.motto}</Badge>
+      {house && (
+        <div
+          data-surface='HouseView'
+          className='@container/realm flex min-w-0 flex-col gap-4'
+        >
+          <Hero
+            icon={Shield}
+            tone={tincture?.tone ?? 'gold'}
+            eyebrow={house.parent ? 'Cadet branch' : 'Noble house'}
+            title={house.name}
+          >
+            {tincture && (
+              <Tag spec={tincture} text={`Arms of ${tincture.label}`} />
             )}
-            {view.data.traits.map((trait) => (
-              <Badge key={trait} variant='warning'>
-                {words(trait)}
+            {house.motto && (
+              <Badge size='sm' variant='outline'>
+                <Quote aria-hidden='true' />
+                {house.motto}
               </Badge>
+            )}
+            {house.divine_son_id !== null && (
+              <Tag
+                spec={{
+                  label: 'Divine blood',
+                  icon: Sparkles,
+                  tone: 'verdigris',
+                }}
+              />
+            )}
+            {house.traits.map((trait) => (
+              <Tag
+                key={trait}
+                spec={{
+                  label: sentence(trait),
+                  icon: Sparkles,
+                  tone: 'warning',
+                }}
+              />
             ))}
-            {view.data.parent && (
-              <Badge variant='outline'>
-                {'branch of '}
-                <EntityLink kind='entity' id={String(view.data.parent.id)}>
-                  {view.data.parent.name}
-                </EntityLink>
-              </Badge>
-            )}
-            {view.data.polity && (
-              <Badge variant='outline'>
-                <EntityLink kind='entity' id={String(view.data.polity.id)}>
-                  {view.data.polity.name}
-                </EntityLink>
-              </Badge>
-            )}
-          </div>
-          <div className='grid min-w-0 grid-cols-2 gap-3 md:grid-cols-4'>
+          </Hero>
+          <div className='grid min-w-0 grid-cols-1 gap-3 @xs/realm:grid-cols-2 @xl/realm:grid-cols-4'>
             <KpiTile
               label='Prestige'
-              value={String(view.data.prestige)}
-              icon={Shield}
+              value={formatInteger(house.prestige)}
+              icon={Trophy}
+              tone='gold'
+              hint='From offices, renown and victories'
+            />
+            <KpiTile
+              label='Wealth'
+              value={formatInteger(house.wealth)}
+              icon={Coins}
+              tone='gold'
+              hint='The family’s own gold'
             />
             <KpiTile
               label='Living'
-              value={String(
-                view.data.members.filter((member) => member.alive).length
-              )}
-              icon={UserPlus}
+              value={living}
+              icon={Users}
+              tone={living === 0 ? 'danger' : 'success'}
+              hint={`${house.members.length - living} in the grave`}
             />
             <KpiTile
               label='Claims'
-              value={String(view.data.claims.length)}
+              value={house.claims.length}
               icon={ScrollText}
-            />
-            <KpiTile
-              label='Heirlooms'
-              value={String(view.data.heirlooms.length)}
-              icon={Shield}
+              tone='info'
+              hint={`${house.heirlooms.length} heirlooms kept`}
             />
           </div>
-          <FamilyTree members={view.data.members} />
-          {view.data.claims.length > 0 && (
-            <div className='flex min-w-0 flex-col gap-1'>
-              <Label variant='overline'>Claims</Label>
-              {view.data.claims.map((claim) => (
-                <Text key={claim.id}>
-                  <EntityLink kind='entity' id={String(claim.claimant_id)}>
-                    {claim.claimant}
+          <Panel title='Lineage' icon={Crown}>
+            <div className='flex min-w-0 flex-col gap-2'>
+              <Fact icon={Sprout} label='Founder'>
+                {house.founder ? (
+                  <EntityLink kind='entity' id={String(house.founder.id)}>
+                    {house.founder.name}
                   </EntityLink>
-                  {' on '}
-                  <EntityLink kind='entity' id={String(claim.polity_id)}>
-                    the realm
+                ) : (
+                  <Muted>Unknown</Muted>
+                )}
+              </Fact>
+              <Fact icon={Crown} label='Head'>
+                {house.head ? (
+                  <EntityLink kind='entity' id={String(house.head.id)}>
+                    {house.head.name}
                   </EntityLink>
-                  {` · ${words(claim.basis)} · ${claim.strength}${claim.pressed ? ' · pressed' : ''}`}
-                </Text>
-              ))}
+                ) : (
+                  <Muted>No living head</Muted>
+                )}
+              </Fact>
+              <Fact icon={GitBranch} label='Branch of'>
+                {house.parent ? (
+                  <EntityLink kind='entity' id={String(house.parent.id)}>
+                    {house.parent.name}
+                  </EntityLink>
+                ) : (
+                  <Muted>A house of its own</Muted>
+                )}
+              </Fact>
+              <Fact icon={Shield} label='Realm'>
+                {house.polity ? (
+                  <EntityLink kind='entity' id={String(house.polity.id)}>
+                    {house.polity.name}
+                  </EntityLink>
+                ) : (
+                  <Muted>Serves no realm</Muted>
+                )}
+              </Fact>
+              <Fact icon={GitBranch} label='Branches'>
+                {house.branches.length === 0 ? (
+                  <Muted>None</Muted>
+                ) : (
+                  house.branches.map((item) => (
+                    <EntityLink
+                      key={item.id}
+                      kind='entity'
+                      id={String(item.id)}
+                    >
+                      {item.name}
+                    </EntityLink>
+                  ))
+                )}
+              </Fact>
+            </div>
+          </Panel>
+          <FamilyTree members={house.members} />
+          {(house.claims.length > 0 || house.heirlooms.length > 0) && (
+            <div className='grid min-w-0 grid-cols-1 gap-3 @xl/realm:grid-cols-2'>
+              <Panel
+                title='Claims'
+                icon={ScrollText}
+                tone='info'
+                count={house.claims.length}
+              >
+                {house.claims.length === 0 && (
+                  <Muted>The house presses no claim.</Muted>
+                )}
+                <ul className='flex min-w-0 flex-col gap-2'>
+                  {house.claims.map((claim) => (
+                    <li
+                      key={claim.id}
+                      className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-2'
+                    >
+                      <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+                        <EntityLink
+                          kind='entity'
+                          id={String(claim.claimant_id)}
+                        >
+                          {claim.claimant}
+                        </EntityLink>
+                        <ArrowRight
+                          aria-hidden='true'
+                          className='size-icon-xs text-muted-foreground'
+                        />
+                        <EntityLink kind='entity' id={String(claim.polity_id)}>
+                          the realm
+                        </EntityLink>
+                        <Tag spec={named(CLAIM_BASES, claim.basis)} />
+                        {claim.pressed && (
+                          <Tag
+                            spec={{
+                              label: 'Pressed',
+                              icon: Swords,
+                              tone: 'danger',
+                            }}
+                          />
+                        )}
+                      </div>
+                      <StatBar
+                        label={`Strength: ${strengthWord(claim.strength)}`}
+                        value={claim.strength}
+                        max={PERCENT}
+                        tone={claim.pressed ? 'destructive' : 'default'}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </Panel>
+              <Panel
+                title='Heirlooms'
+                icon={Gem}
+                tone='verdigris'
+                count={house.heirlooms.length}
+              >
+                {house.heirlooms.length === 0 && (
+                  <Muted>No treasure is handed down.</Muted>
+                )}
+                <ul className='flex min-w-0 flex-col gap-2'>
+                  {house.heirlooms.map((item) => (
+                    <li
+                      key={item.id}
+                      className='flex min-w-0 items-center gap-2'
+                    >
+                      <Medallion icon={Gem} tone='verdigris' size='sm' />
+                      <div className='flex min-w-0 flex-1 flex-col'>
+                        <EntityLink kind='entity' id={String(item.id)}>
+                          {item.name}
+                        </EntityLink>
+                        <Muted variant='caption'>{`Kept since epoch ${item.since_epoch}`}</Muted>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </Panel>
             </div>
           )}
-          {view.data.heirlooms.length > 0 && (
-            <div className='flex min-w-0 flex-wrap gap-2'>
-              {view.data.heirlooms.map((item) => (
-                <Badge key={item.id} variant='outline'>
-                  <EntityLink kind='entity' id={String(item.id)}>
-                    {item.name}
-                  </EntityLink>
-                </Badge>
-              ))}
-            </div>
-          )}
-          <div className='flex min-w-0 flex-wrap items-end gap-3'>
-            <div className='flex w-32 flex-col gap-1'>
-              <Label>Claimant id</Label>
-              <Input
-                type='number'
-                min={1}
+          <AdjustPanel
+            trigger='Adjust the house'
+            title='Shape the line'
+            note='Grant a mortal a god-given claim on a realm, or end the house for good. Every change goes into the ledger.'
+          >
+            <div className='grid min-w-0 grid-cols-1 gap-3 @md/realm:grid-cols-2'>
+              <RecordField
+                label='Claimant'
+                types={['mortal']}
                 value={claimant}
-                aria-label='Claimant id'
-                onChange={(event) => setClaimant(event.target.value)}
+                onChange={setClaimant}
+                blocked={busy}
+                placeholder='Choose a mortal'
               />
-            </div>
-            <div className='flex w-32 flex-col gap-1'>
-              <Label>Realm id</Label>
-              <Input
-                type='number'
-                min={1}
+              <RecordField
+                label='Realm claimed'
+                types={['polity']}
                 value={polity}
-                aria-label='Realm id'
-                onChange={(event) => setPolity(event.target.value)}
+                onChange={setPolity}
+                blocked={busy}
+                placeholder='Choose a realm'
               />
             </div>
-            <div className='flex w-24 flex-col gap-1'>
-              <Label>Strength</Label>
-              <Input
-                type='number'
-                min={0}
-                max={100}
-                value={strength}
-                aria-label='Strength'
-                onChange={(event) => setStrength(event.target.value)}
-              />
+            <RangeField
+              label='Strength of the claim'
+              icon={ScrollText}
+              value={strength}
+              min={0}
+              max={PERCENT}
+              level={strengthWord(strength)}
+              lowLabel='Faint'
+              highLabel='Undeniable'
+              onChange={setStrength}
+            />
+            <div className='flex min-w-0 flex-wrap items-center gap-2'>
+              <Button
+                size='sm'
+                disabled={busy !== null || claimant === null || polity === null}
+                disabledReason={busy ?? 'Choose the claimant and the realm'}
+                onClick={() => grant.mutate(undefined)}
+              >
+                <ScrollText />
+                Grant a divine claim
+              </Button>
+              <Button
+                size='sm'
+                variant='destructive'
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() => extinguish.mutate(undefined)}
+              >
+                <Skull />
+                Extinguish the house
+              </Button>
             </div>
-            <Button
-              size='sm'
-              disabled={busy !== null || claimant === '' || polity === ''}
-              disabledReason={busy ?? 'Name the claimant and the realm'}
-              onClick={() => grant.mutate(undefined)}
-            >
-              <ScrollText />
-              Grant a claim
-            </Button>
-            <Button
-              size='sm'
-              variant='destructive'
-              disabled={busy !== null}
-              disabledReason={busy ?? undefined}
-              onClick={() => extinguish.mutate(undefined)}
-            >
-              <Skull />
-              Extinguish the house
-            </Button>
-          </div>
+          </AdjustPanel>
         </div>
       )}
     </Section>
@@ -344,6 +568,8 @@ export function TreatySection({
       ),
   })
   const busy = blocked ?? (edit.isPending || breakIt.isPending ? WORKING : null)
+  const treaty = view.data
+  const kind = treaty ? named(TREATY_KINDS, treaty.kind) : null
   return (
     <Section
       id='section-treaty'
@@ -359,113 +585,319 @@ export function TreatySection({
           description={view.error.message}
         />
       )}
-      {view.data && (
-        <div data-surface='TreatyView' className='flex min-w-0 flex-col gap-4'>
-          <div className='flex min-w-0 flex-wrap gap-2'>
-            <Badge variant='info'>{words(view.data.kind)}</Badge>
-            <Badge
-              variant={
-                view.data.status === 'broken'
-                  ? 'destructive'
-                  : view.data.status === 'in_force'
-                    ? 'success'
-                    : 'outline'
-              }
-            >
-              {words(view.data.status)}
-            </Badge>
-            <Badge variant='outline'>{`Signed in epoch ${view.data.signed_epoch}`}</Badge>
-            {view.data.until_epoch !== null && (
-              <Badge variant='outline'>{`Holds until epoch ${view.data.until_epoch}`}</Badge>
-            )}
-            {view.data.renewals > 0 && (
-              <Badge variant='outline'>{`Renewed ${view.data.renewals} times`}</Badge>
-            )}
-            {view.data.witness_son_id !== null && (
-              <Badge variant='warning'>Sworn before a god</Badge>
-            )}
-          </div>
-          <div className='flex min-w-0 flex-col gap-1'>
-            <Label variant='overline'>Parties</Label>
-            {view.data.parties.map((party) => (
-              <div key={party.id} className='flex min-w-0 items-center gap-2'>
-                <EntityLink kind='entity' id={String(party.id)}>
-                  {party.name}
-                </EntityLink>
-                <Badge variant='outline'>{words(party.role)}</Badge>
-                {view.data.status === 'in_force' && (
-                  <Button
-                    size='sm'
-                    variant='ghost'
-                    disabled={busy !== null}
-                    disabledReason={busy ?? undefined}
-                    onClick={() => breakIt.mutate(party.id)}
-                  >
-                    <HeartCrack />
-                    Make them break it
-                  </Button>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className='flex min-w-0 flex-col gap-1'>
-            <Label variant='overline'>Clauses</Label>
-            {view.data.clauses.map((clause) => (
-              <Text
-                key={clause.id}
-              >{`${words(clause.kind)}${clause.obligor ? `: ${clause.obligor}` : ''}${clause.beneficiary ? ` → ${clause.beneficiary}` : ''}${clause.last_kept_epoch !== null ? ` · kept in epoch ${clause.last_kept_epoch}` : ''}`}</Text>
-            ))}
-          </div>
-          {view.data.breaches.length > 0 && (
-            <div className='flex min-w-0 flex-col gap-1'>
-              <Label variant='overline'>Breaches</Label>
-              {view.data.breaches.map((item, index) => (
-                <Text
-                  key={index}
-                  className='text-destructive'
-                >{`Epoch ${item.epoch}: ${item.breaker ?? 'someone'} — ${item.note ?? ''}`}</Text>
-              ))}
-            </div>
-          )}
-          <div className='flex min-w-0 flex-wrap items-end gap-3'>
-            <div className='flex w-32 flex-col gap-1'>
-              <Label>Holds until epoch</Label>
-              <Input
-                type='number'
-                min={0}
-                value={until}
-                placeholder='Forever'
-                aria-label='Holds until epoch'
-                onChange={(event) => setUntil(event.target.value)}
-              />
-            </div>
-            <div className='min-w-36'>
-              <MindPicker
-                label='Standing'
-                value={status}
-                table={{
-                  in_force: 'in force',
-                  fulfilled: 'fulfilled',
-                  expired: 'expired',
-                  broken: 'broken',
+      {treaty && kind && (
+        <div
+          data-surface='TreatyView'
+          className='@container/realm flex min-w-0 flex-col gap-4'
+        >
+          <Hero
+            icon={kind.icon}
+            tone={kind.tone}
+            eyebrow={kind.label}
+            title={treaty.name}
+          >
+            <Tag spec={named(TREATY_STATUSES, treaty.status)} />
+            {treaty.witness_son_id !== null && (
+              <Tag
+                spec={{
+                  label: 'Sworn before a god',
+                  icon: Sparkles,
+                  tone: 'verdigris',
                 }}
-                blocked={busy}
-                onPick={setStatus}
               />
-            </div>
-            <Button
-              size='sm'
-              disabled={busy !== null}
-              disabledReason={busy ?? undefined}
-              onClick={() => edit.mutate(undefined)}
-            >
-              <Swords />
-              Set the terms
-            </Button>
+            )}
+            {treaty.renewals > 0 && (
+              <Tag
+                spec={{ label: 'Renewed', icon: RefreshCw, tone: 'info' }}
+                text={`Renewed ${treaty.renewals} times`}
+              />
+            )}
+          </Hero>
+          <div className='grid min-w-0 grid-cols-1 gap-3 @xs/realm:grid-cols-3'>
+            <KpiTile
+              label='Signed'
+              value={`Epoch ${treaty.signed_epoch}`}
+              icon={PenLine}
+              tone='gold'
+            />
+            <KpiTile
+              label={treaty.ended_epoch !== null ? 'Ended' : 'Holds until'}
+              value={
+                treaty.ended_epoch !== null
+                  ? `Epoch ${treaty.ended_epoch}`
+                  : treaty.until_epoch !== null
+                    ? `Epoch ${treaty.until_epoch}`
+                    : 'Forever'
+              }
+              icon={Hourglass}
+              tone='info'
+            />
+            <KpiTile
+              label='Breaches'
+              value={treaty.breaches.length}
+              icon={HeartCrack}
+              tone={treaty.breaches.length > 0 ? 'danger' : 'success'}
+            />
           </div>
+          <Panel
+            title='Parties'
+            icon={Users}
+            count={treaty.parties.length}
+            hint='Who is bound by it'
+          >
+            <ul className='grid min-w-0 grid-cols-1 gap-2 @xl/realm:grid-cols-2'>
+              {treaty.parties.map((party) => (
+                <li
+                  key={party.id}
+                  className='flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'
+                >
+                  <Portrait name={party.name} size='sm' />
+                  <div className='flex min-w-0 flex-1 flex-col gap-1'>
+                    <EntityLink kind='entity' id={String(party.id)}>
+                      {party.name}
+                    </EntityLink>
+                    <div className='flex min-w-0'>
+                      <Tag spec={named(PARTY_ROLES, party.role)} />
+                    </div>
+                  </div>
+                  {treaty.status === 'in_force' && (
+                    <Button
+                      size='sm'
+                      variant='ghost'
+                      disabled={busy !== null}
+                      disabledReason={busy ?? undefined}
+                      onClick={() => breakIt.mutate(party.id)}
+                    >
+                      <HeartCrack />
+                      Break it
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Panel>
+          <Panel
+            title='Clauses'
+            icon={ScrollText}
+            count={treaty.clauses.length}
+            hint='What each side owes the other'
+          >
+            {treaty.clauses.length === 0 && (
+              <Muted>It binds no one to anything.</Muted>
+            )}
+            <ul className='flex min-w-0 flex-col gap-2'>
+              {treaty.clauses.map((clause) => {
+                const spec = named(CLAUSES, clause.kind)
+                const terms = Object.entries(clause.params)
+                return (
+                  <li
+                    key={clause.id}
+                    className='flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2'
+                  >
+                    <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
+                    <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
+                      <Text as='span' weight='medium' truncate>
+                        {spec.label}
+                      </Text>
+                      {(clause.obligor || clause.beneficiary) && (
+                        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+                          {clause.obligor_id !== null && (
+                            <EntityLink
+                              kind='entity'
+                              id={String(clause.obligor_id)}
+                            >
+                              {clause.obligor ?? ''}
+                            </EntityLink>
+                          )}
+                          {clause.beneficiary_id !== null && (
+                            <>
+                              <ArrowRight
+                                aria-label='owes'
+                                className='size-icon-xs text-muted-foreground'
+                              />
+                              <EntityLink
+                                kind='entity'
+                                id={String(clause.beneficiary_id)}
+                              >
+                                {clause.beneficiary ?? ''}
+                              </EntityLink>
+                            </>
+                          )}
+                        </div>
+                      )}
+                      {terms.length > 0 && (
+                        <Muted variant='caption' truncate>
+                          {terms
+                            .map(
+                              ([key, value]) =>
+                                `${sentence(key)}: ${typeof value === 'boolean' ? (value ? 'yes' : 'no') : String(value)}`
+                            )
+                            .join(' · ')}
+                        </Muted>
+                      )}
+                    </div>
+                    <Badge
+                      size='sm'
+                      variant={
+                        clause.last_kept_epoch !== null ? 'success' : 'outline'
+                      }
+                    >
+                      <CalendarClock aria-hidden='true' />
+                      {clause.last_kept_epoch !== null
+                        ? `Kept in epoch ${clause.last_kept_epoch}`
+                        : 'Not yet called'}
+                    </Badge>
+                  </li>
+                )
+              })}
+            </ul>
+          </Panel>
+          {treaty.breaches.length > 0 && (
+            <Panel
+              title='Breaches'
+              icon={HeartCrack}
+              tone='danger'
+              count={treaty.breaches.length}
+            >
+              <Timeline label='Breaches'>
+                {treaty.breaches.map((item, index) => (
+                  <TimelineItem
+                    key={index}
+                    icon={HeartCrack}
+                    tone='destructive'
+                    framed
+                    title={
+                      item.breaker_id !== null ? (
+                        <EntityLink kind='entity' id={String(item.breaker_id)}>
+                          {item.breaker ?? 'Someone'}
+                        </EntityLink>
+                      ) : (
+                        'Someone broke it'
+                      )
+                    }
+                    timestamp={`Epoch ${item.epoch}`}
+                    last={index === treaty.breaches.length - 1}
+                  >
+                    {item.note && <Muted>{sentence(item.note)}</Muted>}
+                  </TimelineItem>
+                ))}
+              </Timeline>
+            </Panel>
+          )}
+          <AdjustPanel
+            trigger='Adjust the terms'
+            title='Set the terms'
+            note='Change how long it holds and where it stands. Every change goes into the ledger.'
+          >
+            <ChoiceGrid
+              label='Standing'
+              table={TREATY_STATUSES}
+              value={status}
+              blocked={busy}
+              onPick={setStatus}
+            />
+            <div className='flex min-w-0 flex-wrap items-end gap-3'>
+              <div className='min-w-48 flex-1'>
+                <NumberField
+                  label='Holds until epoch'
+                  icon={Hourglass}
+                  min={0}
+                  value={until}
+                  placeholder='Forever'
+                  blocked={busy}
+                  onChange={setUntil}
+                />
+              </div>
+              <Button
+                size='sm'
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() => edit.mutate(undefined)}
+              >
+                <Swords />
+                Set the terms
+              </Button>
+            </div>
+          </AdjustPanel>
         </div>
       )}
     </Section>
+  )
+}
+
+function OathCard({
+  oath,
+  blocked,
+  onBreak,
+}: {
+  oath: Oath
+  blocked: string | null
+  onBreak: () => void
+}) {
+  const kind = named(OATHS, oath.kind)
+  return (
+    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-background p-3'>
+      <div className='flex min-w-0 items-center gap-2'>
+        <Medallion icon={kind.icon} tone={kind.tone} size='sm' />
+        <div className='flex min-w-0 flex-1 flex-col'>
+          <Text as='span' weight='semibold' truncate>
+            {`Oath of ${kind.label.toLowerCase()}`}
+          </Text>
+          <Muted variant='caption' truncate>
+            {`Sworn in epoch ${oath.sworn_epoch}${oath.deadline_epoch !== null ? ` · due by epoch ${oath.deadline_epoch}` : ''}${oath.ended_epoch !== null ? ` · ended in epoch ${oath.ended_epoch}` : ''}`}
+          </Muted>
+        </div>
+        <Tag spec={named(OATH_STATUSES, oath.status)} />
+      </div>
+      <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+        <User
+          aria-hidden='true'
+          className='size-icon-xs shrink-0 text-muted-foreground'
+        />
+        <EntityLink kind='entity' id={String(oath.swearer_id)}>
+          {oath.swearer}
+        </EntityLink>
+        {oath.recipient_id !== null && (
+          <>
+            <ArrowRight
+              aria-label='sworn to'
+              className='size-icon-xs text-muted-foreground'
+            />
+            <EntityLink kind='entity' id={String(oath.recipient_id)}>
+              {oath.recipient ?? ''}
+            </EntityLink>
+          </>
+        )}
+      </div>
+      {oath.note && <Muted>{sentence(oath.note)}</Muted>}
+      {(oath.witness_son_id !== null || oath.status === 'sworn') && (
+        <div className='flex min-w-0 flex-wrap items-center justify-between gap-2'>
+          {oath.witness_son_id !== null ? (
+            <Tag
+              spec={{
+                label: 'Witnessed by a god',
+                icon: Sparkles,
+                tone: 'verdigris',
+              }}
+            />
+          ) : (
+            <span />
+          )}
+          {oath.status === 'sworn' && (
+            <Button
+              size='sm'
+              variant='ghost'
+              disabled={blocked !== null}
+              disabledReason={blocked ?? undefined}
+              onClick={onBreak}
+            >
+              <HeartCrack />
+              Break it
+            </Button>
+          )}
+        </div>
+      )}
+    </li>
   )
 }
 
@@ -480,7 +912,7 @@ export function OathsSection({
   const { reason } = useGodGate()
   const blocked = readOnlyReason ?? reason()
   const [kind, setKind] = useState<string>('fealty')
-  const [recipient, setRecipient] = useState('')
+  const [recipient, setRecipient] = useState<number | null>(null)
   const swear = useGodAction({
     run: () =>
       unwrap(
@@ -488,7 +920,7 @@ export function OathsSection({
           body: {
             swearer_id: entityId,
             kind: kind as OathKind,
-            recipient_id: recipient === '' ? null : Number(recipient),
+            recipient_id: recipient,
           },
         })
       ),
@@ -502,7 +934,11 @@ export function OathsSection({
   const busy =
     blocked ?? (swear.isPending || breakIt.isPending ? WORKING : null)
   if (!view.data) return null
-  const all = [...view.data.sworn, ...view.data.received]
+  const groups: [string, Oath[]][] = [
+    ['Sworn by them', view.data.sworn],
+    ['Sworn to them', view.data.received],
+  ]
+  const total = view.data.sworn.length + view.data.received.length
   return (
     <Section
       id='section-oaths'
@@ -510,72 +946,80 @@ export function OathsSection({
       description='Oaths sworn and received, kept and broken, and the gods who heard them.'
       icon={ScrollText}
     >
-      <div data-surface='Oaths' className='flex min-w-0 flex-col gap-3'>
-        {all.length === 0 && <Muted>No oath binds or is owed.</Muted>}
-        {all.map((oath) => (
-          <div
-            key={oath.id}
-            className='flex min-w-0 flex-wrap items-center gap-2'
-          >
-            <Badge
-              variant={
-                oath.status === 'broken'
-                  ? 'destructive'
-                  : oath.status === 'sworn'
-                    ? 'info'
-                    : 'success'
-              }
-            >{`${words(oath.kind)} · ${oath.status}`}</Badge>
-            <Text>{`${oath.swearer}${oath.recipient ? ` to ${oath.recipient}` : ''}, epoch ${oath.sworn_epoch}${oath.deadline_epoch !== null ? `, due by ${oath.deadline_epoch}` : ''}`}</Text>
-            {oath.witness_son_id !== null && (
-              <Badge variant='warning'>witnessed by a god</Badge>
-            )}
-            {oath.status === 'sworn' && (
-              <Button
-                size='sm'
-                variant='ghost'
-                disabled={busy !== null}
-                disabledReason={busy ?? undefined}
-                onClick={() => breakIt.mutate(oath.id)}
+      <div
+        data-surface='Oaths'
+        className='@container/realm flex min-w-0 flex-col gap-4'
+      >
+        {total === 0 && (
+          <EmptyState
+            icon={ScrollText}
+            size='compact'
+            title='No oaths'
+            description='No oath binds them and none is owed to them.'
+          />
+        )}
+        {groups.map(([title, oaths]) =>
+          oaths.length === 0 ? null : (
+            <div key={title} className='flex min-w-0 flex-col gap-2'>
+              <div className='flex min-w-0 items-center gap-2'>
+                <Label variant='overline'>{title}</Label>
+                <Badge size='sm' variant='secondary'>
+                  {oaths.length}
+                </Badge>
+              </div>
+              <ul
+                className={
+                  oaths.length > 1
+                    ? 'grid min-w-0 grid-cols-1 gap-2 @xl/realm:grid-cols-2'
+                    : 'grid min-w-0 grid-cols-1 gap-2'
+                }
               >
-                <HeartCrack />
-                Break it
-              </Button>
-            )}
+                {oaths.map((oath) => (
+                  <OathCard
+                    key={oath.id}
+                    oath={oath}
+                    blocked={busy}
+                    onBreak={() => breakIt.mutate(oath.id)}
+                  />
+                ))}
+              </ul>
+            </div>
+          )
+        )}
+        <AdjustPanel
+          trigger='Swear an oath'
+          title='Swear a new oath'
+          note='Bind this mortal by an oath, to someone or to no one. A broken oath costs honour, and more if a god heard it.'
+        >
+          <ChoiceGrid
+            label='Oath'
+            table={OATHS}
+            value={kind}
+            blocked={busy}
+            onPick={setKind}
+          />
+          <div className='flex min-w-0 flex-wrap items-end gap-3'>
+            <div className='min-w-48 flex-1'>
+              <RecordField
+                label='Sworn to'
+                types={null}
+                value={recipient}
+                onChange={setRecipient}
+                blocked={busy}
+                placeholder='No one in particular'
+              />
+            </div>
+            <Button
+              size='sm'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => swear.mutate(undefined)}
+            >
+              <ScrollText />
+              Swear it
+            </Button>
           </div>
-        ))}
-        <div className='flex min-w-0 flex-wrap items-end gap-3'>
-          <div className='min-w-40'>
-            <MindPicker
-              label='Oath'
-              value={kind}
-              table={Object.fromEntries(
-                OATHS.map((item) => [item, words(item)])
-              )}
-              blocked={busy}
-              onPick={setKind}
-            />
-          </div>
-          <div className='flex w-36 flex-col gap-1'>
-            <Label>Sworn to (id)</Label>
-            <Input
-              type='number'
-              min={1}
-              value={recipient}
-              aria-label='Sworn to'
-              onChange={(event) => setRecipient(event.target.value)}
-            />
-          </div>
-          <Button
-            size='sm'
-            disabled={busy !== null}
-            disabledReason={busy ?? undefined}
-            onClick={() => swear.mutate(undefined)}
-          >
-            <ScrollText />
-            Swear it
-          </Button>
-        </div>
+        </AdjustPanel>
       </div>
     </Section>
   )
