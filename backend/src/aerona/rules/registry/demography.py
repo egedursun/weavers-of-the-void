@@ -49,6 +49,10 @@ class LabourRules:
     price_pull_pct: int = rule(30, 0, 100, S, "How strongly dear goods pull workers into the trades that make them (%)")
     idle_outcast_pct: int = rule(70, 0, 100, S, "Share of outcasts who find no work (%)")
     slave_output_pct: int = rule(130, 0, 500, S, "Output of serfs and slaves in mines and fields compared with free workers (%)")
+    workshop_workers_per_level: int = rule(40, 0, 100000, S, "Workers each level of a workshop draws into its trade")
+    resource_workers: int = rule(60, 0, 100000, S, "Workers each worked mine, quarry, fishery or forest draws into its trade")
+    corvee_unrest: int = rule(8, 0, 100, S, "Unrest a corvee of the whole people raises in a settlement each epoch")
+    corvee_satisfaction: int = rule(15, 0, 100, S, "Contentment farmers and serfs lose under a corvee of the whole people")
 
 
 @dataclass(frozen=True)
@@ -63,9 +67,6 @@ class PeopleRules:
     assimilation_distance: int = rule(20, 0, 300, G, "Value distance below which a people of low cohesion assimilates into a neighbour sharing its tongue")
     assimilation_cohesion: int = rule(40, 0, 100, G, "Cohesion below which a people may assimilate")
     ethnogenesis_distance: int = rule(35, 0, 300, G, "Value distance from its parent people at which a settlement becomes a people of its own")
-    levy_martial_pct: int = rule(100, 0, 500, G, "Weight of a people's martial value in how many adults it can levy (%)")
-    levy_cohesion_pct: int = rule(100, 0, 500, G, "Weight of cohesion in how many adults a people can levy (%)")
-    harvest_levy_pct: int = rule(50, 0, 100, G, "Levy kept in the harvest season (%)")
 
 
 @dataclass(frozen=True)
@@ -84,3 +85,9 @@ class MobilityRules:
     slavery_cohesion_loss: int = rule(4, 0, 100, S, "Cohesion a slave-holding people loses each epoch")
     slavery_opinion_loss: int = rule(5, 0, 100, S, "Relation xenophile neighbours lose with a slave-holding people each epoch")
     slavery_revolt_pct: int = rule(30, 0, 300, S, "Revolt pressure added by the share of the bound (%)")
+    wealth_drift_pct: int = rule(25, 0, 100, S, "Share of the gap to its earned wealth a class closes each epoch (%)")
+    wealth_per_supply_pct: int = rule(50, 0, 1000, S, "Wealth a community counts per point of its food, ore and goods supply gauges (%)")
+    ennobled_memory: int = rule(25, 0, 100, S, "Gratitude an ennobled hero holds toward the people that raised them")
+    enslaved_memory: int = rule(30, 0, 100, S, "Grievance a people holds toward those that enslaved its captured kin")
+    freed_memory: int = rule(20, 0, 100, S, "Gratitude toward those that freed one's kin")
+    ruined_memory: int = rule(30, 0, 100, S, "Grievance a ruined merchant holds toward the guild that failed")

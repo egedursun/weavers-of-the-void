@@ -51,6 +51,7 @@ import { BAND, named } from '../environment/labels'
 import { PRESSURE_ICONS, VALUE_ICONS } from '../mind/labels'
 import { MindPicker } from '../mind/parts'
 import { FolkBody, FolkControls, FolkWays, FoundPeoplePanel } from './Folk'
+import { LabourDepth } from './LabourDepth'
 import { useDemography } from './api'
 import { DormancyPanel, SetCohort, SickCohorts } from './cohortParts'
 import { ForgeDisease } from './diseaseParts'
@@ -1029,6 +1030,7 @@ export function LabourSection({ communityId }: { communityId: number }) {
               <JobTile key={row.job} row={row} />
             ))}
         </div>
+        <LabourDepth communityId={communityId} />
       </div>
     </Section>
   )

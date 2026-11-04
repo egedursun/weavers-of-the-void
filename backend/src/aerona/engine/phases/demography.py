@@ -109,10 +109,23 @@ async def cohort_upkeep(ctx: TickContext) -> None:
     "table.outbreaks",
     "table.people_biology",
     "table.people_culture",
+    "table.community_stocks",
+    "table.corvee_levies",
+    "table.labour_reasons",
+    "table.market_prices",
     "table.region_environment",
+    "table.resource_profiles",
+    "table.resource_workers",
+    "table.settlement_profiles",
+    "table.workshops",
     "table.world_maps",
 )
-@writes("table.community_cohorts", "table.community_labour")
+@writes(
+    "table.community_cohorts",
+    "table.community_labour",
+    "table.labour_reasons",
+    "table.settlement_profiles",
+)
 async def labour_allocation(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     kept = 0
@@ -134,14 +147,37 @@ async def labour_allocation(ctx: TickContext) -> None:
     "table.armies",
     "table.battles",
     "table.bonds",
+    "table.captive_cohorts",
     "table.community_cohorts",
     "table.community_societies",
     "table.cult_tenets",
+    "table.entities",
+    "table.house_members",
+    "table.house_profiles",
     "table.loans",
+    "table.memories",
     "table.people_culture",
+    "table.polity_members",
 )
 @writes(
-    "army.size", "people.population", "settlement.population", "table.community_cohorts", "table.community_societies", "table.entities", "table.people_culture"
+    "army.size",
+    "people.population",
+    "settlement.population",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_cohorts",
+    "table.community_societies",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.house_members",
+    "table.house_profiles",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+    "table.mobility_events",
+    "table.name_registry",
+    "table.nodes",
+    "table.people_culture",
 )
 async def society_mobility(ctx: TickContext) -> None:
     ctx.count("deserted", await desertion(ctx))

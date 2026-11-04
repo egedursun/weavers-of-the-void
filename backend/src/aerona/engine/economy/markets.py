@@ -8,7 +8,9 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.engine.context import TickContext
+from aerona.engine.demography.basket import staples_of
 from aerona.engine.economy.book import EconomyBook
+from aerona.engine.economy.household import diet_demand
 from aerona.engine.economy.stocks import epoch_need, goods_of, holding
 from aerona.engine.faith.book import forbidden_foods
 from aerona.engine.lore.traditions import resent_taboo, taboos
@@ -65,9 +67,10 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
     population = headcount(market)
     quotes: dict[CommodityKind, Quote] = {}
     forbidden = await forbidden_foods(ctx.session, market.id) | await taboos(ctx, market.id)
+    diet = diet_demand(ctx.rules, population, await staples_of(ctx.session, market))
     for commodity in COMMODITIES:
         supply = await holding(ctx.session, market.id, commodity)
-        demand = round_half_up(epoch_need(ctx.rules, population, commodity) * ctx.rules.markets.demand_epochs_pct / PERCENT)
+        demand = round_half_up(diet.get(commodity, epoch_need(ctx.rules, population, commodity)) * ctx.rules.markets.demand_epochs_pct / PERCENT)
         if commodity.value in forbidden:
             demand = round_half_up(demand * ctx.rules.doctrine.dietary_demand_pct / PERCENT)
         quotes[commodity] = Quote(commodity, price_of(ctx, commodity, supply, demand, factor), supply, demand)

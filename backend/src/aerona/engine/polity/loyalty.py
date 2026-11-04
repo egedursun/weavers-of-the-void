@@ -1,0 +1,137 @@
+from sqlalchemy import select
+
+from aerona.constants.units import PERCENT
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.tables.society_depth import PolityLoyaltyRow
+from aerona.db.tables.warfare import WarRow
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.society_depth import GRIEVANCE_PARTS, LoyaltyPart
+from aerona.engine.body.customs import culture_of, people_of
+from aerona.engine.context import TickContext
+from aerona.engine.mind.book import Values, values_for
+from aerona.engine.mind.space import value_distance
+from aerona.engine.notes import note
+from aerona.engine.polity.book import Realm
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import active_bonds, bond_exists
+from aerona.engine.primitives.stats import stat
+from aerona.rules.registry import Rules
+
+RECENT_EPOCHS = 3
+MIDDLE = PERCENT // 2
+HELD_KEYS = ("grievances", "benefits", "loyalty")
+
+
+async def member_values(ctx: TickContext, member: EntityRow) -> Values:
+    found = await values_for(ctx.session, member.id)
+    if found:
+        return dict(found)
+    people = await people_of(ctx.session, member)
+    return dict(await culture_of(ctx.session, people.id)) if people is not None else {}
+
+
+async def victories(ctx: TickContext, realm: Realm) -> int:
+    members = [realm.entity.id, *realm.members]
+    statement = select(WarRow.id).where(WarRow.ended_epoch >= ctx.epoch - RECENT_EPOCHS, WarRow.victor_entity_id.in_(members))
+    return len(list(await ctx.session.scalars(statement)))
+
+
+def mean_satisfaction(society: CommunitySocietyRow | None) -> int:
+    if society is None:
+        return MIDDLE
+    weights = {social_class: society.share(social_class) for social_class in SocialClass if society.share(social_class) > 0}
+    whole = sum(weights.values())
+    if whole <= 0:
+        return MIDDLE
+    return round_half_up(sum(society.satisfaction(social_class) * weight for social_class, weight in weights.items()) / whole)
+
+
+async def loyalty_parts(ctx: TickContext, realm: Realm, member: EntityRow, won: int) -> dict[LoyaltyPart, int]:
+    table = ctx.rules.loyalty
+    parts: dict[LoyaltyPart, int] = {}
+    tribute = len(await active_bonds(ctx.session, [BondKind.PAYS_TRIBUTE], sources=[member.id]))
+    if tribute:
+        parts[LoyaltyPart.TRIBUTE] = tribute * table.tribute_grievance
+    if realm.profile.war_weariness:
+        parts[LoyaltyPart.WEARINESS] = round_half_up(realm.profile.war_weariness * table.weariness_grievance_pct / PERCENT)
+    rulers = {realm.entity.id, *(item for item in (realm.profile.core_entity_id, realm.ruler_id) if item is not None)}
+    conquered = await ctx.session.scalar(
+        select(MemoryRow.id)
+        .where(MemoryRow.holder_node_id == member.id, MemoryRow.kind == MemoryKind.CONQUERED_US, MemoryRow.subject_node_id.in_(list(rulers)))
+        .limit(1)
+    )
+    if conquered is not None:
+        parts[LoyaltyPart.CONQUEST] = table.conquest_grievance
+    town = await ctx.session.get(SettlementProfileRow, member.id)
+    if town is not None and town.tax_rate > table.tax_ordinary:
+        parts[LoyaltyPart.TAX] = round_half_up((town.tax_rate - table.tax_ordinary) * table.tax_grievance_pct / PERCENT)
+    routes = len(await active_bonds(ctx.session, [BondKind.TRADES_WITH], sources=[member.id])) + len(
+        await active_bonds(ctx.session, [BondKind.TRADES_WITH], targets=[member.id])
+    )
+    if routes:
+        parts[LoyaltyPart.ROUTES] = min(table.route_benefit_cap, routes * table.route_benefit)
+    if won:
+        parts[LoyaltyPart.VICTORIES] = won * table.victory_benefit
+    faith = realm.profile.state_religion_id
+    if faith is not None and await bond_exists(ctx.session, member.id, faith, BondKind.WORSHIPS):
+        parts[LoyaltyPart.FAITH] = table.faith_benefit
+    prosperity = stat(member, "prosperity")
+    if prosperity is not None and prosperity > MIDDLE:
+        parts[LoyaltyPart.PROSPERITY] = round_half_up((prosperity - MIDDLE) * table.prosperity_benefit_pct / PERCENT)
+    return parts
+
+
+def loyalty_of(rules: Rules, distance: int, grievances: int, benefits: int, satisfaction: int) -> int:
+    table = rules.loyalty
+    return clamp_int(round_half_up(table.base - distance * table.distance_pct / PERCENT - grievances + benefits + satisfaction), 0, PERCENT)
+
+
+def satisfaction_term(rules: Rules, mood: int) -> int:
+    return round_half_up((mood - MIDDLE) * rules.loyalty.satisfaction_pct / PERCENT)
+
+
+async def member_loyalty(ctx: TickContext, realm: Realm, member: EntityRow, won: int) -> PolityLoyaltyRow:
+    row = await ctx.session.get(PolityLoyaltyRow, (realm.entity.id, member.id))
+    if row is None:
+        row = PolityLoyaltyRow(polity_entity_id=realm.entity.id, member_entity_id=member.id, parts={}, locked=[], loyalty=MIDDLE, epoch=ctx.epoch)
+        ctx.session.add(row)
+    before = row.loyalty
+    ruler = await values_for(ctx.session, realm.ruler_id) if realm.ruler_id is not None else {}
+    mine = await member_values(ctx, member)
+    parts = await loyalty_parts(ctx, realm, member, won)
+    row.value_distance = value_distance(mine, ruler) if mine and ruler else 0
+    if "grievances" not in row.locked:
+        row.grievances = sum(value for part, value in parts.items() if part in GRIEVANCE_PARTS)
+    if "benefits" not in row.locked:
+        row.benefits = sum(value for part, value in parts.items() if part not in GRIEVANCE_PARTS)
+    row.satisfaction = satisfaction_term(ctx.rules, mean_satisfaction(await ctx.session.get(CommunitySocietyRow, member.id)))
+    row.parts = {part.value: value for part, value in parts.items()}
+    if "loyalty" not in row.locked:
+        row.loyalty = loyalty_of(ctx.rules, row.value_distance, row.grievances, row.benefits, row.satisfaction)
+    row.epoch = ctx.epoch
+    if row.loyalty < ctx.rules.loyalty.wavering_loyalty <= before:
+        await note(
+            ctx,
+            f"{member.name} wavers in its loyalty to {realm.entity.name}.",
+            key="loyalty.wavering",
+            ids=[member.id, realm.entity.id],
+            kind=ChronicleKind.CIVILIZATION,
+        )
+    return row
+
+
+def autonomy_pull(rules: Rules, loyalty: int) -> int:
+    return round_half_up((MIDDLE - loyalty) * rules.loyalty.autonomy_pct / PERCENT)
+
+
+async def loyalty_autonomy(ctx: TickContext, realm: Realm, member: EntityRow | None) -> int:
+    if member is None:
+        return 0
+    row = await member_loyalty(ctx, realm, member, await victories(ctx, realm))
+    return autonomy_pull(ctx.rules, row.loyalty)

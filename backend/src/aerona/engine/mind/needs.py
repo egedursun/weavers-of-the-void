@@ -12,7 +12,9 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.mind import NeedKind, PressureKind, TraitKind, ValueAxis
 from aerona.domain.enums.society import Commodity
+from aerona.domain.enums.society_depth import ShortfallEffect
 from aerona.engine.context import TickContext
+from aerona.engine.demography.basket import effect_shortfalls, poverty_of
 from aerona.engine.gods.queries import community_of
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.mind.book import Values, best_skill, is_locked, mind_of, needs_of, pressures_of, write_needs, write_pressures
@@ -21,7 +23,7 @@ from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds
-from aerona.engine.primitives.society import stock
+from aerona.engine.primitives.society import class_shares, stock
 from aerona.engine.primitives.stats import stat
 from aerona.engine.services.war import ongoing_war_count
 from aerona.rules.registry import Rules
@@ -70,22 +72,33 @@ async def community_pressures(ctx: TickContext, community: EntityRow, culture: V
     prosperity = prosperity if prosperity is not None else table.unknown_prosperity
     population = stat(community, "population") or 0
     food = await stock(session, ctx.rules, community.id, Commodity.FOOD)
-    hunger = max(gap_pct(table.hunger_food, food), gap_pct(table.hunger_prosperity, prosperity))
+    basket = await effect_shortfalls(session, community.id)
+    plenty = ctx.rules.consumption
+    hunger = max(
+        gap_pct(table.hunger_food, food),
+        gap_pct(table.hunger_prosperity, prosperity),
+        basket.get(ShortfallEffect.HUNGER, 0) * plenty.hunger_pressure_pct / PERCENT,
+    )
     memories = list(await session.scalars(select(MemoryRow).where(MemoryRow.holder_node_id == community.id)))
     threat = sum(-strength_of(row, ctx.epoch) for row in memories if row.kind in THREAT_MEMORIES and row.magnitude < 0)
     wars = await ongoing_war_count(session, community.id)
     insecurity = wars * table.war_insecurity + threat * table.threat_pct / PERCENT + (table.plague_insecurity if community.id in plagued else 0)
+    insecurity += basket.get(ShortfallEffect.INSECURITY, 0) * plenty.insecurity_pressure_pct / PERCENT
     location = await session.get(EntityRow, community.location_id) if community.location_id is not None else None
     fertility = stat(location, FERTILITY_KEY) if location is not None else None
     room = (fertility if fertility is not None else table.default_fertility) * table.crowd_per_fertility
     crowding = pct((population - room) * PERCENT / room) if room > 0 else 0
-    poverty = gap_pct(table.poverty_prosperity, prosperity)
+    poverty = max(
+        gap_pct(table.poverty_prosperity, prosperity),
+        pct(await poverty_of(session, community.id, await class_shares(session, ctx.rules, community.id)) * plenty.poverty_pressure_pct / PERCENT),
+    )
     piety_value = max(0, culture.get(ValueAxis.PIETY, 0))
     piety_stat = stat(community, "piety")
     worships = bool(await active_bonds(session, [BondKind.WORSHIPS], sources=[community.id]))
     impiety = piety_value * (PERCENT - (piety_stat if piety_stat is not None else table.unknown_piety)) / PERCENT
     if not worships:
         impiety += table.godless_impiety
+    impiety += basket.get(ShortfallEffect.IMPIETY, 0) * plenty.impiety_pressure_pct / PERCENT
     shame = sum(-strength_of(row, ctx.epoch) for row in memories if row.kind in HUMILIATING_MEMORIES and row.magnitude < 0)
     tribute = len(await active_bonds(session, [BondKind.PAYS_TRIBUTE], sources=[community.id]))
     humiliation = shame * table.humiliation_pct / PERCENT + tribute * table.tribute_humiliation
@@ -96,6 +109,7 @@ async def community_pressures(ctx: TickContext, community: EntityRow, culture: V
         gap_pct(table.stagnation_prosperity, prosperity) * table.stagnation_weight_pct / PERCENT
         + innovation * table.innovation_pct / PERCENT
         - known * table.knowledge_relief
+        + basket.get(ShortfallEffect.ARCANE, 0) * plenty.arcane_pressure_pct / PERCENT
     )
     return {
         PressureKind.HUNGER: pct(hunger),

@@ -19,6 +19,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for, total
+from aerona.engine.demography.events import ennobled, enslaved, freed, ruined
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.notes import note
@@ -35,11 +36,7 @@ LEAN = 25
 
 
 def inequality(society: CommunitySocietyRow) -> int:
-    present = [social_class for social_class in SocialClass if society.share(social_class) > 0]
-    if len(present) < 2:
-        return 0
-    moods = [society.satisfaction(social_class) for social_class in present]
-    return max(moods) - min(moods)
+    return society.gini
 
 
 def inequality_pressure(rules: Rules, society: CommunitySocietyRow | None, hierarchy: int) -> int:
@@ -214,7 +211,7 @@ async def ennoble_heroes(ctx: TickContext) -> int:
             continue
         hero.social_class = SocialClass.NOBLE
         raised += 1
-        await note(ctx, f"For the victory, {hero.name} was raised among the nobles.", key="society.ennobled", ids=[hero.id], kind=ChronicleKind.WORLD)
+        await ennobled(ctx, hero, await living_entity(ctx.session, army.owner_entity_id))
     return raised
 
 
@@ -238,12 +235,7 @@ async def ruin_merchants(ctx: TickContext) -> int:
             remedy = await law_param(ctx.session, member.location_id or 0, LawKind.DEBT_LAW, "remedy")
             member.social_class = SocialClass.SERF_OR_SLAVE if remedy == "bondage" else SocialClass.OUTCAST
             fallen += 1
-            await note(
-                ctx,
-                f"{borrower.name} could not pay; {member.name} lost everything and fell among the outcasts.",
-                key="society.ruined",
-                ids=[member.id, borrower.id],
-            )
+            await ruined(ctx, member, borrower)
     return fallen
 
 
@@ -263,9 +255,13 @@ async def class_mobility(ctx: TickContext, community: EntityRow) -> dict[str, in
     culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
     lawful = culture.slavery_lawful if culture is not None else False
     society = await ctx.session.get(CommunitySocietyRow, community.id)
+    bound = await settle_captives(ctx, community, rows, lawful)
+    loosed = await manumit(ctx, community, rows, lawful)
+    await enslaved(ctx, community, bound)
+    await freed(ctx, community, loosed)
     counts = {
-        "enslaved": await settle_captives(ctx, community, rows, lawful),
-        "freed": await manumit(ctx, community, rows, lawful),
+        "enslaved": bound,
+        "freed": loosed,
         "emigrated": await bitter_emigration(ctx, community, rows, society),
         "laid_down_arms": await lay_down_arms(ctx, community, rows),
     }

@@ -131,7 +131,7 @@ SOCIETY_MECHANICS = (
         tables=(PeopleBiologyRow.__tablename__, PeopleCultureRow.__tablename__),
         targets=("people",),
         couplings=(
-            Coupling(Subsystem.WAR, "martial value and cohesion set the levy", EdgeKind.MODIFIER, "peoples.levy_martial_pct"),
+            Coupling(Subsystem.WAR, "martial value and cohesion set the levy", EdgeKind.MODIFIER, "mobilisation.martial_pct"),
             Coupling(Subsystem.DEMOGRAPHY, "short-lived peoples breed faster", EdgeKind.MODIFIER, "peoples.maturity_years"),
         ),
     ),
@@ -758,7 +758,7 @@ BEHAVIOURS = (
         (P, S, "army"),
         ("mobilisation", "fighting_age"),
         Subsystem.WAR,
-        "peoples.harvest_levy_pct",
+        "mobilisation.harvest_pct",
         "soldiers raised",
     ),
     (

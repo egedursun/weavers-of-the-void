@@ -13,6 +13,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.tables.society_depth import CorveeRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialSlot
@@ -25,8 +26,24 @@ from aerona.domain.models.entity_stats import FactionStats, ItemStats
 from aerona.engine.body.cohorts import labour_factor
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_types import ore_yield_pct
+from aerona.engine.demography.backfill import society_depth_backfill
+from aerona.engine.demography.basket import (
+    Basket,
+    ClassNeed,
+    apply_shortfalls,
+    build_basket,
+    class_need_penalty,
+    held_needs,
+    needs_of,
+    save_basket,
+    serve_order,
+    standing_of,
+    staples_of,
+)
+from aerona.engine.demography.prices import local_prices
+from aerona.engine.demography.wealth import settle_wealth
 from aerona.engine.economy.book import EconomyBook
-from aerona.engine.economy.household import eat, enforce_storage, gather_commons, harvest_goods, wear
+from aerona.engine.economy.household import Meal, eat, enforce_storage, gather_commons, harvest_goods, wear
 from aerona.engine.economy.materials import MaterialBook, armour_protection, curse_bonus, enchantment_cap, set_node_material, weapon_damage
 from aerona.engine.economy.stocks import aggregate_need, goods_of, holding, lots_of, sync_aggregates
 from aerona.engine.interconnect.annotations import reads, writes
@@ -235,7 +252,13 @@ def _when(condition: bool, value: int) -> int:
     return value if condition else 0
 
 
-def satisfaction_targets(rules: Rules, inputs: EconomyInputs, stocks: Mapping[Commodity, int]) -> dict[SocialClass, int]:
+def satisfaction_targets(
+    rules: Rules,
+    inputs: EconomyInputs,
+    stocks: Mapping[Commodity, int],
+    needs: Mapping[SocialClass, ClassNeed] | None = None,
+    corvee_pct: int = 0,
+) -> dict[SocialClass, int]:
     settings = rules.society
     prosperity = inputs.prosperity
     war = inputs.at_war
@@ -257,7 +280,7 @@ def satisfaction_targets(rules: Rules, inputs: EconomyInputs, stocks: Mapping[Co
         + _when(KnowledgeBranch.WARFARE in inputs.branches, settings.sat_warrior_warcraft),
         SocialClass.SCRIBE: prosperity + _signed(writing, settings.sat_scribe_writing, settings.sat_scribe_no_writing),
         SocialClass.NOBLE: settings.sat_noble_base
-        + _when(stocks[Commodity.GOODS] > settings.effect_goods_plenty, settings.sat_noble_luxury)
+        + _when(needs is None and stocks[Commodity.GOODS] > settings.effect_goods_plenty, settings.sat_noble_luxury)
         - _when(war, settings.sat_merchant_war),
         SocialClass.SERF_OR_SLAVE: settings.sat_serf_base + _signed(fed, settings.sat_farmer_fed, settings.sat_farmer_hungry),
         SocialClass.OUTCAST: settings.sat_outcast_base + _when(inputs.has_god and inputs.piety >= settings.target_piety_threshold, settings.sat_outcast_alms),
@@ -268,6 +291,10 @@ def satisfaction_targets(rules: Rules, inputs: EconomyInputs, stocks: Mapping[Co
     shared: float = -_when(inputs.pays_tribute, settings.sat_tribute) - _when(inputs.cursed, settings.sat_curse)
     if inputs.justice is not None:
         shared += (inputs.justice - settings.sat_justice_midpoint) / settings.sat_justice_divisor
+    for social_class, need in (needs or {}).items():
+        targets[social_class] -= class_need_penalty(rules, social_class, need)
+    for social_class in (SocialClass.FARMER, SocialClass.SERF_OR_SLAVE):
+        targets[social_class] -= rules.labour.corvee_satisfaction * corvee_pct / PERCENT
     return {social_class: clamp_int(value + shared, 0, PERCENT) for social_class, value in targets.items()}
 
 
@@ -466,6 +493,28 @@ async def raise_class_uprising(ctx: TickContext, entity: EntityRow, society: Soc
     return faction
 
 
+async def consume(ctx: TickContext, entity: EntityRow, society: Society, world: EconomyWorld) -> tuple[Meal, Basket]:
+    staples = await staples_of(ctx.session, entity)
+    meal = await eat(ctx, entity, staples)
+    worn = await wear(ctx, entity)
+    standing = await standing_of(ctx.session, entity.id)
+    found = await needs_of(ctx.session, entity.id)
+    basket = build_basket(
+        society.shares,
+        meal,
+        worn,
+        staples=staples,
+        order=serve_order(standing, society.shares),
+        held={key: row.held_pct for key, row in found.items() if row.held_pct is not None},
+        luxuries_left=await holding(ctx.session, entity.id, CommodityKind.LUXURIES),
+    )
+    await save_basket(ctx, entity, basket, found)
+    basket = held_needs(await standing_of(ctx.session, entity.id), basket)
+    region = world.economy.ground.region_of(entity.id)
+    await apply_shortfalls(ctx, entity, basket, region.temperature_band if region is not None else None)
+    return meal, basket
+
+
 async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInputs, world: EconomyWorld, counters: EconomyCounters) -> Society:
     rules = ctx.rules
     settings = rules.society
@@ -478,13 +527,15 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     await seed_stocks(ctx, entity)
     await harvest_goods(ctx, world.economy, entity, rate, society.shares[SocialClass.FARMER])
     await gather_commons(ctx, world.economy, entity, society.shares[SocialClass.FARMER])
-    meal = await eat(ctx, entity)
-    await wear(ctx, entity)
+    meal, basket = await consume(ctx, entity, society, world)
     await enforce_storage(ctx, world.economy, entity)
     row = await sync_aggregates(ctx.session, rules, entity)
     if row is not None:
         society.stocks = {commodity: row.stock(commodity) for commodity in Commodity}
-    society.satisfaction = drift_satisfaction(rules, society.satisfaction, satisfaction_targets(rules, inputs, society.stocks))
+        await settle_wealth(ctx, entity, row, society.shares, await local_prices(ctx.session, rules, entity.id, stat_or(entity, "population", 0)))
+    corvee = await ctx.session.get(CorveeRow, entity.id)
+    targets = satisfaction_targets(rules, inputs, society.stocks, basket.classes, corvee.share_pct if corvee is not None else 0)
+    society.satisfaction = drift_satisfaction(rules, society.satisfaction, targets)
     apply_class_effects(rules, entity, society)
     hungry = society.stocks[Commodity.FOOD] <= settings.famine_food or meal.fed_pct < settings.famine_fed_pct
     if hungry and rate < fraction(settings.famine_rate_pct) and counters.famines < settings.famine_cap:
@@ -530,21 +581,32 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "settlement.piety",
     "settlement.population",
     "settlement.prosperity",
+    "table.applied_fixups",
     "table.army_profiles",
     "table.bonds",
     "table.calendars",
+    "table.class_standing",
+    "table.community_cohorts",
     "table.community_labour",
+    "table.community_needs",
     "table.community_societies",
     "table.community_stocks",
+    "table.corvee_levies",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.forced_weather",
     "table.goods_flows",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.incident_participants",
+    "table.incidents",
     "table.maimed_cohorts",
+    "table.market_prices",
+    "table.mobility_events",
     "table.name_registry",
     "table.nodes",
+    "table.people_biology",
+    "table.people_culture",
     "table.place_environment",
     "table.region_environment",
     "table.resource_commodities",
@@ -564,13 +626,19 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
 @writes(
     "people.martiality",
     "people.piety",
+    "people.population",
     "people.prosperity",
     "settlement.defense",
     "settlement.piety",
+    "settlement.population",
     "settlement.prosperity",
+    "table.applied_fixups",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.class_standing",
+    "table.community_cohorts",
+    "table.community_needs",
     "table.community_societies",
     "table.community_stocks",
     "table.entities",
@@ -578,12 +646,15 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
+    "table.mobility_events",
     "table.name_registry",
 )
 async def society_economy(ctx: TickContext) -> None:
     session = ctx.session
     world = replace(await EconomyWorld.load(session), ledger=await EconomyBook.load(ctx))
     counters = EconomyCounters()
+    for key, value in (await society_depth_backfill(ctx, list(await canon(session, SOCIETY_TYPES)))).items():
+        ctx.count(f"backfill.{key}", value)
     for entity in await canon(session, SOCIETY_TYPES):
         if entity.status is not EntityStatus.CANON:
             continue

@@ -15,7 +15,8 @@ from aerona.engine.demography.biology import climate_fit, profiles_of
 from aerona.engine.demography.urban import town_pull_factor
 from aerona.engine.disease.load import endemic_repel
 from aerona.engine.environment.book import EnvironmentBook
-from aerona.engine.interconnect.annotations import reads
+from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.legends import haunted_regions
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.drives import closeness, hunger
@@ -153,19 +154,43 @@ async def migrate(ctx: TickContext, atlas: RegionAtlas, source: EntityRow, targe
 
 @reads(
     "people.population",
+    "region.fertility",
     "settlement.population",
     "settlement.prosperity",
+    "table.bonds",
     "table.calendars",
     "table.community_societies",
     "table.endemic_diseases",
     "table.forced_weather",
     "table.immunities",
+    "table.culture_values",
+    "table.epoch_year_cursors",
+    "table.forced_weather",
+    "table.language_profiles",
+    "table.legend_profiles",
+    "table.lexemes",
+    "table.name_registry",
+    "table.nodes",
     "table.place_environment",
+    "table.polity_members",
     "table.pressures",
     "table.region_environment",
+    "table.settlement_profiles",
     "table.sky_events",
     "table.world_maps",
     "table.world_seasons",
+)
+@writes(
+    "settlement.population",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.name_registry",
 )
 async def famine_migration(ctx: TickContext) -> None:
     rules = ctx.rules
@@ -194,7 +219,8 @@ async def famine_migration(ctx: TickContext) -> None:
         migrants = max(1, leaving - lost)
         if lost:
             floor, cap = headcount_bounds(rules, community)
-            set_stats(community, population=max(floor, min(cap, population - lost)))
+            with flowing(FlowCategory.DEATH):
+                set_stats(community, population=max(floor, min(cap, population - lost)))
         settlement, rebuilt = await migrate(ctx, atlas, community, target, migrants=migrants, reason="famine")
         moved += 1
         if rebuilt:

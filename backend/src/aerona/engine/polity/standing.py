@@ -22,6 +22,7 @@ from aerona.engine.lore.items import regalia_holder
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook
+from aerona.engine.polity.loyalty import loyalty_autonomy
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import bond_exists, connect, has_flag
@@ -192,6 +193,7 @@ async def overreach(ctx: TickContext, book: RealmBook, realm: Realm, capacity: i
         else:
             row.autonomy = clamp_int(row.autonomy - table.autonomy_decay, 0, PERCENT)
         member = book.entities.get(member_id)
+        row.autonomy = clamp_int(row.autonomy + await loyalty_autonomy(ctx, realm, member), 0, PERCENT)
         if member is not None and row.autonomy >= table.secession_autonomy and ctx.rng(f"secession.{member_id}.{ctx.epoch}").chance(table.secession_chance):
             breaking.append(member)
     return breaking

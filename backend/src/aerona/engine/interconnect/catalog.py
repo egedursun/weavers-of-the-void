@@ -38,6 +38,7 @@ from aerona.engine.interconnect.catalog_realm import REALM_MECHANICS
 from aerona.engine.interconnect.catalog_routes import ROUTE_MECHANICS
 from aerona.engine.interconnect.catalog_society import BEHAVIOURS as SOCIETY_BEHAVIOURS
 from aerona.engine.interconnect.catalog_society import SOCIETY_MECHANICS
+from aerona.engine.interconnect.catalog_society_depth import SOCIETY_DEPTH_MECHANICS
 from aerona.engine.interconnect.catalog_wilds import BEHAVIOURS as WILDS_BEHAVIOURS
 from aerona.engine.interconnect.catalog_wilds import WILDS_MECHANICS
 from aerona.engine.interconnect.registry import MECHANICS, Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface, register
@@ -830,6 +831,7 @@ BUILT_IN = (
     *WILDS_MECHANICS,
     *ROUTE_MECHANICS,
     *PEOPLE_MECHANICS,
+    *SOCIETY_DEPTH_MECHANICS,
 )
 
 MODULE_SUBSYSTEMS: dict[str, Subsystem] = {

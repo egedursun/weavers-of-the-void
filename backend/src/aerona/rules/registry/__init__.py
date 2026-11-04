@@ -191,6 +191,7 @@ from aerona.rules.registry.settlement import CrimeRules, DistrictRules, FireRule
 from aerona.rules.registry.setup_wizard import SetupWizardRules
 from aerona.rules.registry.sky import SkyRules
 from aerona.rules.registry.society import SocietyRules
+from aerona.rules.registry.society_depth import ConsumptionRules, LoyaltyRules, MobilisationRules
 from aerona.rules.registry.son_relations import SonRelationsRules
 from aerona.rules.registry.son_tools import SonToolsRules
 from aerona.rules.registry.star_types import StarTypeRules
@@ -441,3 +442,6 @@ class Rules:
     world_physics: WorldPhysicsRules = field(default_factory=WorldPhysicsRules)
     world_terrain: WorldTerrainRules = field(default_factory=WorldTerrainRules)
     world_war_strength: WorldWarStrengthRules = field(default_factory=WorldWarStrengthRules)
+    consumption: ConsumptionRules = field(default_factory=ConsumptionRules)
+    mobilisation: MobilisationRules = field(default_factory=MobilisationRules)
+    loyalty: LoyaltyRules = field(default_factory=LoyaltyRules)

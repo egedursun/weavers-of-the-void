@@ -71,11 +71,17 @@ import { SkillsSection } from './sections/SkillsSection'
 import { SocietyEconomy } from './sections/SocietyEconomy'
 import { TagEditor } from './sections/TagEditor'
 import {
+  CultureDriftSection,
+  LoyaltySection,
+  MobilitySection,
+} from './society/CultureLoyalty'
+import {
   DemographySection,
   LabourSection,
   PeopleProfileSection,
 } from './society/Demography'
 import { DiseaseSection } from './society/DiseaseCard'
+import { ClassWealthSection, NeedsSection } from './society/Needs'
 import {
   SettlementPlanSection,
   TreasurySection,
@@ -102,6 +108,11 @@ const SECTION_LINKS = [
   { id: 'section-demography', label: 'Population' },
   { id: 'section-labour', label: 'Work' },
   { id: 'section-people-profile', label: 'Folk' },
+  { id: 'section-needs', label: 'Needs' },
+  { id: 'section-class-wealth', label: 'Wealth' },
+  { id: 'section-culture-drift', label: 'Drift' },
+  { id: 'section-loyalty', label: 'Loyalty' },
+  { id: 'section-mobility', label: 'Rise and fall' },
   { id: 'section-settlement-plan', label: 'City' },
   { id: 'section-treasury', label: 'Treasury' },
   { id: 'section-disease', label: 'Sickness' },
@@ -205,7 +216,13 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
     present.delete('section-labour')
     present.delete('section-economy')
     present.delete('section-market')
+    present.delete('section-needs')
+    present.delete('section-class-wealth')
+    present.delete('section-loyalty')
   }
+  if (entity.entity_type !== 'people') present.delete('section-culture-drift')
+  if (!trading && entity.entity_type !== 'mortal')
+    present.delete('section-mobility')
   if (entity.entity_type !== 'people') present.delete('section-people-profile')
   if (entity.entity_type !== 'settlement') {
     present.delete('section-settlement-plan')
@@ -330,6 +347,28 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       {trading && <LabourSection communityId={entity.id} />}
       {entity.entity_type === 'people' && (
         <PeopleProfileSection peopleId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {trading && (
+        <NeedsSection communityId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {trading && (
+        <ClassWealthSection communityId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'people' && (
+        <CultureDriftSection
+          communityId={entity.id}
+          readOnlyReason={readOnly}
+        />
+      )}
+      {trading && (
+        <LoyaltySection communityId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {(trading || entity.entity_type === 'mortal') && (
+        <MobilitySection
+          entityId={entity.id}
+          mortal={entity.entity_type === 'mortal'}
+          readOnlyReason={readOnly}
+        />
       )}
       {entity.entity_type === 'settlement' && (
         <SettlementPlanSection
