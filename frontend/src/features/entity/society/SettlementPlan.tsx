@@ -1,17 +1,39 @@
 import { useState } from 'react'
 import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Biohazard,
+  BrickWall,
   Building,
+  Castle,
   Coins,
+  DoorOpen,
+  Droplets,
   Flame,
+  Gavel,
   Hammer,
+  House,
   Landmark,
+  LandPlot,
+  Package,
   Percent,
-  Save,
+  Plus,
+  Route,
   ScrollText,
   Shield,
-  TriangleAlert,
+  ShieldAlert,
+  Ship,
+  Siren,
+  Sparkles,
+  Star,
   Trash2,
-  Unlock,
+  TriangleAlert,
+  Truck,
+  Users,
+  Utensils,
+  Warehouse,
+  Wheat,
+  Wrench,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -19,52 +41,98 @@ import type { components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
 import {
   EmptyState,
   EntityLink,
   KpiTile,
+  Medallion,
+  MiniStat,
+  RangeField,
   Section,
   StatBar,
 } from '@/components/domain'
 import { LineChart } from '@/components/domain/LineChart'
-import { Label, Muted, Text } from '@/components/typography'
+import { Muted, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
-import { MindPicker } from '../mind/parts'
 import { useSettlementPlan } from './api'
-import { DISTRICT_SPEC, choices, words, type DistrictKind } from './labels'
+import {
+  DISTRICT_MAX_LEVEL,
+  DISTRICT_SPEC,
+  MATERIAL_SPEC,
+  SIZE_ORDER,
+  SIZE_SPEC,
+  TREASURY_SPEC,
+  WATER_SPEC,
+  type BuildMaterial,
+  type DistrictKind,
+  fieldLabel,
+} from './labels'
+import {
+  AdjustPanel,
+  ChoiceEditor,
+  EditorGroup,
+  EditorTile,
+  FlagEditor,
+  HeldStrip,
+  IconPicker,
+  type NumberField,
+  NumberEditor,
+  Panel,
+  Pips,
+} from './parts'
+import { METER_TONE, WORKING, badTone, goodTone } from './tones'
 
 type Plan = components['schemas']['SettlementPlanView']
 type District = components['schemas']['DistrictView']
+type Change = { key: string; value: number | string | boolean }
 
-const WORKING = 'Working…'
 const PERCENT = 100
-const PROFILE_FIELDS = [
-  { key: 'public_order', label: 'Order' },
-  { key: 'crime', label: 'Crime' },
-  { key: 'unrest', label: 'Unrest' },
-  { key: 'sanitation', label: 'Sanitation' },
-  { key: 'fire_risk', label: 'Fire risk' },
-  { key: 'prestige', label: 'Prestige' },
-  { key: 'treasury', label: 'Treasury' },
-  { key: 'militia', label: 'Militia' },
-  { key: 'investment_pool', label: 'Investment pool' },
+const HUGE = 1000000000000
+const STORE_MAX = 100000000
+const WALL_MAX = 5
+const ROAD_MAX = 5
+const GATE_MAX = 20
+const PLOT_PIPS = 12
+
+const CIVIC = [
+  { key: 'public_order', icon: Gavel, harmful: false },
+  { key: 'crime', icon: Siren, harmful: true },
+  { key: 'unrest', icon: ShieldAlert, harmful: true },
+  { key: 'sanitation', icon: Droplets, harmful: false },
+  { key: 'fire_risk', icon: Flame, harmful: true },
+  { key: 'prestige', icon: Star, harmful: false },
 ] as const
-const INFRA_FIELDS = [
-  { key: 'walls_level', label: 'Wall level' },
-  { key: 'walls_condition', label: 'Wall condition' },
-  { key: 'gates', label: 'Gates' },
-  { key: 'towers', label: 'Towers' },
-  { key: 'roads', label: 'Roads' },
-  { key: 'granary_capacity', label: 'Granary' },
-  { key: 'warehouse_capacity', label: 'Warehouses' },
-  { key: 'harbour_capacity', label: 'Harbour' },
+const COFFERS = [
+  { key: 'treasury', icon: Coins, max: HUGE, unit: 'coin' },
+  { key: 'militia', icon: Shield, max: HUGE, unit: 'men' },
+  { key: 'investment_pool', icon: Sparkles, max: HUGE, unit: 'coin' },
 ] as const
-const TIERS = ['hamlet', 'village', 'town', 'city', 'metropolis'] as const
-const WATER = ['none', 'well', 'cistern', 'aqueduct'] as const
-const MATERIALS = ['timber', 'stone'] as const
+const SIEGE = [
+  { key: 'siege_supplies', icon: Utensils, max: HUGE, unit: 'days' },
+  { key: 'siege_water', icon: Droplets, max: HUGE, unit: 'days' },
+  { key: 'siege_disease', icon: Biohazard, max: HUGE, unit: '' },
+] as const
+const WORKS = [
+  { key: 'walls_level', icon: BrickWall, max: WALL_MAX, unit: '' },
+  { key: 'walls_condition', icon: Wrench, max: PERCENT, unit: '' },
+  { key: 'gates', icon: DoorOpen, max: GATE_MAX, unit: '' },
+  { key: 'towers', icon: Castle, max: GATE_MAX, unit: '' },
+] as const
+const STORES = [
+  { key: 'roads', icon: Route, max: ROAD_MAX, unit: '' },
+  { key: 'granary_capacity', icon: Wheat, max: STORE_MAX, unit: 'measures' },
+  { key: 'warehouse_capacity', icon: Warehouse, max: STORE_MAX, unit: 'loads' },
+  { key: 'harbour_capacity', icon: Ship, max: STORE_MAX, unit: 'ships' },
+] as const
+
+function taxLevel(rate: number): string {
+  if (rate === 0) return 'Untaxed'
+  if (rate <= 10) return 'Light'
+  if (rate <= 25) return 'Fair'
+  if (rate <= 45) return 'Heavy'
+  return 'Crushing'
+}
 
 function DistrictTile({
   district,
@@ -74,7 +142,7 @@ function DistrictTile({
   blocked: string | null
 }) {
   const spec = DISTRICT_SPEC[district.kind]
-  const Icon = spec.icon
+  const material = MATERIAL_SPEC[district.material]
   const raze = useGodAction({
     run: () =>
       unwrap(
@@ -83,49 +151,77 @@ function DistrictTile({
         })
       ),
   })
-  const raise = useGodAction({
-    run: (level: number) =>
+  const edit = useGodAction({
+    run: (change: { level?: number; condition?: number }) =>
       unwrap(
         api.POST('/api/actions/district:edit', {
-          body: { district_id: district.id, level, condition: PERCENT },
+          body: { district_id: district.id, ...change },
         })
       ),
   })
-  const busy = blocked ?? (raze.isPending || raise.isPending ? WORKING : null)
+  const busy = blocked ?? (raze.isPending || edit.isPending ? WORKING : null)
+  const conditionTone = goodTone(district.condition, 80, 40)
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'>
-      <div className='flex min-w-0 items-center gap-2'>
-        <Icon
-          aria-hidden='true'
-          className='size-icon-sm shrink-0 text-muted-foreground'
-        />
-        <Text className='min-w-0 flex-1' truncate>
-          {spec.label}
-        </Text>
-        <Badge variant={district.material === 'stone' ? 'info' : 'outline'}>
-          {words(district.material)}
+    <li className='flex h-full min-w-0 flex-col gap-3 rounded-lg border bg-muted/30 p-3'>
+      <div className='flex min-w-0 items-center gap-2.5'>
+        <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
+        <div className='flex min-w-0 flex-1 flex-col'>
+          <Text as='span' weight='medium' truncate>
+            {spec.label}
+          </Text>
+          <Muted as='span' variant='caption' truncate>
+            {`Built in epoch ${district.built_epoch}`}
+          </Muted>
+        </div>
+        <Badge size='sm' variant='secondary'>
+          <material.icon />
+          {material.label}
         </Badge>
       </div>
+      <div className='flex min-w-0 items-center justify-between gap-2'>
+        <Muted as='span' variant='caption'>
+          {`Level ${district.level} of ${DISTRICT_MAX_LEVEL}`}
+        </Muted>
+        <Pips
+          value={district.level}
+          max={DISTRICT_MAX_LEVEL}
+          tone={spec.tone}
+          label='Level'
+        />
+      </div>
       <StatBar
-        label={`Level ${district.level}`}
+        label='Repair'
+        icon={Wrench}
         value={district.condition}
         max={PERCENT}
-        tone={district.condition < 40 ? 'destructive' : 'default'}
+        tone={METER_TONE[conditionTone]}
       />
-      <div className='flex min-w-0 flex-wrap gap-1'>
+      <div className='mt-auto grid min-w-0 grid-cols-3 gap-1.5'>
         <Button
           size='sm'
-          variant='ghost'
-          disabled={busy !== null || district.level >= 5}
+          variant='outline'
+          disabled={busy !== null || district.level >= DISTRICT_MAX_LEVEL}
           disabledReason={busy ?? 'Already at the highest level'}
-          onClick={() => raise.mutate(district.level + 1)}
+          onClick={() =>
+            edit.mutate({ level: district.level + 1, condition: PERCENT })
+          }
         >
           <Hammer />
           Enlarge
         </Button>
         <Button
           size='sm'
-          variant='ghost'
+          variant='outline'
+          disabled={busy !== null || district.condition >= PERCENT}
+          disabledReason={busy ?? 'It stands whole'}
+          onClick={() => edit.mutate({ condition: PERCENT })}
+        >
+          <Wrench />
+          Repair
+        </Button>
+        <Button
+          size='sm'
+          variant='outline'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
           onClick={() => raze.mutate(undefined)}
@@ -138,63 +234,219 @@ function DistrictTile({
   )
 }
 
-function PlanForm({ plan, blocked }: { plan: Plan; blocked: string | null }) {
-  const [numbers, setNumbers] = useState<Record<string, string>>(() => ({
-    ...Object.fromEntries(
-      PROFILE_FIELDS.map((field) => [field.key, String(plan[field.key])])
-    ),
-    ...Object.fromEntries(
-      INFRA_FIELDS.map((field) => [
-        field.key,
-        String(plan.infrastructure[field.key]),
-      ])
-    ),
-  }))
-  const [picks, setPicks] = useState<Record<string, string>>(() => ({
-    size_tier: plan.size_tier,
-    water: plan.infrastructure.water,
-    walls_material: plan.infrastructure.walls_material,
-  }))
-  const [flags, setFlags] = useState({
-    sewers: plan.infrastructure.sewers,
-    rationing: plan.rationing,
-  })
-  const [tax, setTax] = useState(String(plan.tax_rate))
+function OpenPlots({ count }: { count: number }) {
+  return (
+    <li className='flex h-full min-h-32 min-w-0 flex-col items-center justify-center gap-2 rounded-lg border border-dashed bg-background p-3 text-center'>
+      <Medallion icon={LandPlot} tone='muted' size='sm' />
+      <Text as='span' weight='medium'>
+        {count === 1 ? 'One open plot' : `${count} open plots`}
+      </Text>
+      {count <= PLOT_PIPS && (
+        <Pips value={0} max={count} tone='muted' label='Open plots' />
+      )}
+      <Muted as='span' variant='caption'>
+        Raise a district on them from the controls below
+      </Muted>
+    </li>
+  )
+}
+
+function CityHero({ plan }: { plan: Plan }) {
+  const size = SIZE_SPEC[plan.size_tier]
+  const water = WATER_SPEC[plan.infrastructure.water]
+  return (
+    <div className='flex min-w-0 items-center gap-3 rounded-lg border bg-background p-3'>
+      <Medallion icon={size.icon} tone={size.tone} />
+      <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
+        <div className='flex min-w-0 flex-wrap items-center gap-2'>
+          <Text weight='semibold'>{size.label}</Text>
+          <Pips
+            value={size.rank}
+            max={SIZE_ORDER.length}
+            tone={size.tone}
+            label='Size'
+          />
+        </div>
+        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+          <Badge size='sm' variant={plan.free_city ? 'success' : 'secondary'}>
+            <Shield />
+            {plan.free_city ? 'Free city' : 'Under an overlord'}
+          </Badge>
+          {plan.charter_id !== null && (
+            <Badge size='sm' variant='default'>
+              <ScrollText />
+              <EntityLink kind='entity' id={String(plan.charter_id)}>
+                Chartered
+              </EntityLink>
+            </Badge>
+          )}
+          <Badge size='sm' variant='info'>
+            <water.icon />
+            {water.label}
+          </Badge>
+          <Badge
+            size='sm'
+            variant={plan.infrastructure.sewers ? 'info' : 'secondary'}
+          >
+            <Droplets />
+            {plan.infrastructure.sewers ? 'Sewers' : 'No sewers'}
+          </Badge>
+          {plan.rationing && (
+            <Badge size='sm' variant='warning'>
+              <Utensils />
+              Rationing
+            </Badge>
+          )}
+          {plan.foreigners.map((item) => (
+            <Badge key={item.people_id} size='sm' variant='outline'>
+              <Users />
+              {`${item.name} ${item.share}%`}
+            </Badge>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Defences({ plan }: { plan: Plan }) {
+  const works = plan.infrastructure
+  const material = MATERIAL_SPEC[works.walls_material]
+  return (
+    <Panel
+      title='Walls and stores'
+      icon={BrickWall}
+      tone='info'
+      hint='What keeps enemies out and the city fed'
+      aside={
+        <Badge size='sm' variant='secondary'>
+          <material.icon />
+          {material.label}
+        </Badge>
+      }
+    >
+      <div className='flex min-w-0 items-center justify-between gap-2'>
+        <Text as='span' variant='caption' weight='medium'>
+          {works.walls_level === 0
+            ? 'No walls'
+            : `Walls, height ${works.walls_level} of ${WALL_MAX}`}
+        </Text>
+        <Pips
+          value={works.walls_level}
+          max={WALL_MAX}
+          tone='info'
+          label='Wall height'
+        />
+      </div>
+      <StatBar
+        label='Wall repair'
+        icon={Wrench}
+        value={works.walls_condition}
+        max={PERCENT}
+        tone={METER_TONE[goodTone(works.walls_condition, 80, 40)]}
+      />
+      <div className='grid min-w-0 grid-cols-2 gap-2'>
+        <MiniStat icon={DoorOpen} label='Gates' value={works.gates} />
+        <MiniStat icon={Castle} label='Towers' value={works.towers} />
+        <MiniStat
+          icon={Route}
+          label='Roads'
+          value={`${works.roads} of ${ROAD_MAX}`}
+        />
+        <MiniStat
+          icon={Wheat}
+          label='Granaries'
+          value={formatInteger(works.granary_capacity)}
+          tone='success'
+        />
+        <MiniStat
+          icon={Warehouse}
+          label='Warehouses'
+          value={formatInteger(works.warehouse_capacity)}
+          tone='gold'
+        />
+        <MiniStat
+          icon={Ship}
+          label='Harbour'
+          value={formatInteger(works.harbour_capacity)}
+          tone={works.harbour_capacity > 0 ? 'info' : 'muted'}
+        />
+      </div>
+    </Panel>
+  )
+}
+
+function Streets({ plan }: { plan: Plan }) {
+  return (
+    <Panel
+      title='Life in the streets'
+      icon={Users}
+      hint='Order and standing, each out of 100'
+    >
+      <div className='flex min-w-0 flex-col gap-3'>
+        {CIVIC.map((item) => {
+          const value = plan[item.key]
+          return (
+            <StatBar
+              key={item.key}
+              label={fieldLabel(item.key)}
+              icon={item.icon}
+              value={value}
+              max={PERCENT}
+              tone={METER_TONE[item.harmful ? badTone(value) : goodTone(value)]}
+            />
+          )
+        })}
+        <StatBar
+          label='Wealth'
+          icon={Coins}
+          value={plan.wealth}
+          max={PERCENT}
+          tone={METER_TONE[goodTone(plan.wealth)]}
+        />
+      </div>
+    </Panel>
+  )
+}
+
+function PlanControls({
+  plan,
+  blocked,
+}: {
+  plan: Plan
+  blocked: string | null
+}) {
+  const [tax, setTax] = useState(plan.tax_rate)
   const [kind, setKind] = useState<string>('market')
   const [material, setMaterial] = useState<string>('stone')
   const locked = [...plan.locked, ...plan.infrastructure.locked]
-  const save = useGodAction({
-    run: (release: string[]) =>
+  const edit = useGodAction({
+    run: ({ key, value }: Change) =>
       unwrap(
         api.POST('/api/actions/settlement:edit', {
           body: {
             settlement_id: plan.entity_id,
-            values:
-              release.length > 0
-                ? {}
-                : {
-                    ...Object.fromEntries(
-                      Object.entries(numbers).map(([key, value]) => [
-                        key,
-                        Math.max(0, Math.round(Number(value) || 0)),
-                      ])
-                    ),
-                    ...picks,
-                    ...flags,
-                  },
-            release,
+            values: { [key]: value },
+            release: [],
           },
         })
       ),
+    success: (_result, change) => `${fieldLabel(change.key)} set`,
+  })
+  const release = useGodAction({
+    run: (keys: string[]) =>
+      unwrap(
+        api.POST('/api/actions/settlement:edit', {
+          body: { settlement_id: plan.entity_id, values: {}, release: keys },
+        })
+      ),
+    success: 'The city follows the world again',
   })
   const setRate = useGodAction({
     run: () =>
       unwrap(
         api.POST('/api/actions/settlement:tax', {
-          body: {
-            settlement_id: plan.entity_id,
-            rate: Math.max(0, Math.min(PERCENT, Number(tax) || 0)),
-          },
+          body: { settlement_id: plan.entity_id, rate: tax },
         })
       ),
   })
@@ -205,16 +457,16 @@ function PlanForm({ plan, blocked }: { plan: Plan; blocked: string | null }) {
           body: {
             settlement_id: plan.entity_id,
             kind: kind as DistrictKind,
-            material: material as 'timber' | 'stone',
+            material: material as BuildMaterial,
           },
         })
       ),
   })
   const free = useGodAction({
-    run: () =>
+    run: (value: boolean) =>
       unwrap(
         api.POST('/api/actions/settlement:free_city', {
-          body: { settlement_id: plan.entity_id, free: !plan.free_city },
+          body: { settlement_id: plan.entity_id, free: value },
         })
       ),
   })
@@ -227,177 +479,233 @@ function PlanForm({ plan, blocked }: { plan: Plan; blocked: string | null }) {
       ),
   })
   const pending =
-    save.isPending ||
+    edit.isPending ||
+    release.isPending ||
     setRate.isPending ||
     build.isPending ||
     free.isPending ||
     charter.isPending
   const busy = blocked ?? (pending ? WORKING : null)
-  const districts = Object.fromEntries(
-    Object.entries(DISTRICT_SPEC).map(([key, spec]) => [key, spec.label])
-  )
+  const current: Record<string, number> = {
+    public_order: plan.public_order,
+    crime: plan.crime,
+    unrest: plan.unrest,
+    sanitation: plan.sanitation,
+    fire_risk: plan.fire_risk,
+    prestige: plan.prestige,
+    treasury: plan.treasury,
+    militia: plan.militia,
+    investment_pool: plan.investment_pool,
+    siege_supplies: plan.siege_supplies,
+    siege_water: plan.siege_water,
+    siege_disease: plan.siege_disease,
+    walls_level: plan.infrastructure.walls_level,
+    walls_condition: plan.infrastructure.walls_condition,
+    gates: plan.infrastructure.gates,
+    towers: plan.infrastructure.towers,
+    roads: plan.infrastructure.roads,
+    granary_capacity: plan.infrastructure.granary_capacity,
+    warehouse_capacity: plan.infrastructure.warehouse_capacity,
+    harbour_capacity: plan.infrastructure.harbour_capacity,
+  }
+  const editor = (item: {
+    key: string
+    icon: NumberField['icon']
+    max: number
+    unit?: string
+  }) => {
+    const field: NumberField = {
+      key: item.key,
+      label: fieldLabel(item.key),
+      icon: item.icon,
+      value: current[item.key],
+      min: 0,
+      max: item.max,
+      unit: item.unit || undefined,
+    }
+    return (
+      <NumberEditor
+        key={`${field.key}-${field.value}`}
+        id={`settlement-${plan.entity_id}`}
+        field={field}
+        held={locked.includes(field.key)}
+        blocked={blocked}
+        pending={edit.isPending && edit.variables?.key === field.key}
+        onSet={(value) => edit.mutate({ key: field.key, value })}
+      />
+    )
+  }
+  const full = plan.districts.length >= plan.district_slots
   return (
-    <div className='flex min-w-0 flex-col gap-4'>
-      <div className='flex min-w-0 flex-wrap items-end gap-3'>
-        <div className='min-w-40 flex-1'>
-          <MindPicker
-            label='District'
-            value={kind}
-            table={districts}
-            blocked={busy}
-            onPick={setKind}
-          />
-        </div>
-        <div className='min-w-32'>
-          <MindPicker
-            label='Built of'
-            value={material}
-            table={choices(MATERIALS)}
-            blocked={busy}
-            onPick={setMaterial}
-          />
-        </div>
-        <Button
-          size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => build.mutate(undefined)}
-        >
-          <Building />
-          Build it
-        </Button>
-        <div className='flex w-28 flex-col gap-1'>
-          <Label>Tax (%)</Label>
-          <Input
-            type='number'
+    <AdjustPanel
+      title='Govern the city'
+      note='Tax, build, free or charter it, and set any value. What you set is held against the world until you release it; every change goes into the ledger and can be undone.'
+    >
+      <HeldStrip
+        keys={locked}
+        labelOf={fieldLabel}
+        blocked={busy}
+        onRelease={(keys) => release.mutate(keys)}
+      />
+      <EditorGroup title='Tax' icon={Percent} pairs>
+        <div className='flex min-w-0 flex-col gap-2 @md:col-span-2'>
+          <RangeField
+            label='Tax'
+            icon={Percent}
+            value={tax}
             min={0}
             max={PERCENT}
-            value={tax}
-            aria-label='Tax'
-            onChange={(event) => setTax(event.target.value)}
+            level={taxLevel(tax)}
+            hint='Share of trade and harvest taken'
+            lowLabel='Untaxed'
+            highLabel='Crushing'
+            onChange={setTax}
           />
-        </div>
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => setRate.mutate(undefined)}
-        >
-          <Percent />
-          Set the tax
-        </Button>
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => free.mutate(undefined)}
-        >
-          <Shield />
-          {plan.free_city ? 'Bind it to its overlord' : 'Declare a free city'}
-        </Button>
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== null || plan.charter_id !== null}
-          disabledReason={busy ?? 'It already holds a charter'}
-          onClick={() => charter.mutate(undefined)}
-        >
-          <ScrollText />
-          Grant a charter
-        </Button>
-      </div>
-      <div className='grid min-w-0 grid-cols-2 gap-3 md:grid-cols-4'>
-        {[...PROFILE_FIELDS, ...INFRA_FIELDS].map((field) => (
-          <div key={field.key} className='flex min-w-0 flex-col gap-1'>
-            <Label>{field.label}</Label>
-            <Input
-              type='number'
-              min={0}
-              value={numbers[field.key]}
-              aria-label={field.label}
-              onChange={(event) =>
-                setNumbers((current) => ({
-                  ...current,
-                  [field.key]: event.target.value,
-                }))
-              }
-            />
-          </div>
-        ))}
-      </div>
-      <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-3'>
-        <MindPicker
-          label='Size'
-          value={picks.size_tier}
-          table={choices(TIERS)}
-          blocked={busy}
-          onPick={(value) =>
-            setPicks((current) => ({ ...current, size_tier: value }))
-          }
-        />
-        <MindPicker
-          label='Water'
-          value={picks.water}
-          table={choices(WATER)}
-          blocked={busy}
-          onPick={(value) =>
-            setPicks((current) => ({ ...current, water: value }))
-          }
-        />
-        <MindPicker
-          label='Walls of'
-          value={picks.walls_material}
-          table={choices(MATERIALS)}
-          blocked={busy}
-          onPick={(value) =>
-            setPicks((current) => ({ ...current, walls_material: value }))
-          }
-        />
-      </div>
-      <div className='flex min-w-0 flex-wrap gap-4'>
-        {(['sewers', 'rationing'] as const).map((key) => (
-          <label key={key} className='flex items-center gap-2'>
-            <Switch
-              checked={flags[key]}
-              disabled={busy !== null}
-              onCheckedChange={(value) =>
-                setFlags((current) => ({ ...current, [key]: value }))
-              }
-              aria-label={words(key)}
-            />
-            <Text as='span'>{key === 'sewers' ? 'Sewers' : 'Rationing'}</Text>
-          </label>
-        ))}
-      </div>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Button
-          size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => save.mutate([])}
-        >
-          <Save />
-          Hold these values
-        </Button>
-        {locked.length > 0 && (
           <Button
             size='sm'
             variant='outline'
+            className='self-end'
+            disabled={busy !== null || tax === plan.tax_rate}
+            disabledReason={busy ?? 'This is the present rate.'}
+            onClick={() => setRate.mutate(undefined)}
+          >
+            <Percent />
+            {`Set the tax to ${tax}%`}
+          </Button>
+        </div>
+      </EditorGroup>
+      <EditorGroup title='Decrees' icon={ScrollText} pairs>
+        <FlagEditor
+          label='Free city'
+          hint='Rules itself, owing no overlord'
+          icon={Shield}
+          tone='success'
+          checked={plan.free_city}
+          held={false}
+          blocked={busy}
+          onToggle={(value) => free.mutate(value)}
+        />
+        <FlagEditor
+          label='Rationing'
+          hint='Food is doled out; hunger eases, mood sours'
+          icon={Utensils}
+          tone='warning'
+          checked={plan.rationing}
+          held={false}
+          blocked={busy}
+          onToggle={(value) => edit.mutate({ key: 'rationing', value })}
+        />
+        <FlagEditor
+          label='Sewers'
+          hint='Carry filth away; sanitation rises'
+          icon={Droplets}
+          tone='info'
+          checked={plan.infrastructure.sewers}
+          held={false}
+          blocked={busy}
+          onToggle={(value) => edit.mutate({ key: 'sewers', value })}
+        />
+        <EditorTile
+          icon={ScrollText}
+          tone={plan.charter_id !== null ? 'gold' : 'muted'}
+          label='Charter'
+          hint={
+            plan.charter_id !== null
+              ? 'It holds its own courts, markets and walls'
+              : 'Grant it its own courts, markets and walls'
+          }
+          held={false}
+          control={
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null || plan.charter_id !== null}
+              disabledReason={busy ?? 'It already holds a charter'}
+              onClick={() => charter.mutate(undefined)}
+            >
+              <ScrollText />
+              Grant
+            </Button>
+          }
+        />
+      </EditorGroup>
+      <EditorGroup title='Raise a district' icon={Building}>
+        <IconPicker
+          label='District'
+          value={kind}
+          table={DISTRICT_SPEC}
+          blocked={busy}
+          onPick={setKind}
+        />
+        <IconPicker
+          label='Built of'
+          value={material}
+          table={MATERIAL_SPEC}
+          blocked={busy}
+          onPick={setMaterial}
+        />
+        <div className='flex min-w-0 flex-col justify-end gap-1.5'>
+          <Muted variant='caption'>
+            {full
+              ? 'Every plot is taken; a new district crowds in beyond them.'
+              : `${plan.district_slots - plan.districts.length} open plots`}
+          </Muted>
+          <Button
+            size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
-            onClick={() => save.mutate(locked)}
+            onClick={() => build.mutate(undefined)}
           >
-            <Unlock />
-            Let them change again
+            <Plus />
+            Build it
           </Button>
-        )}
-        {locked.map((key) => (
-          <Badge key={key} variant='outline'>{`held: ${words(key)}`}</Badge>
-        ))}
-      </div>
-    </div>
+        </div>
+      </EditorGroup>
+      <EditorGroup title='The city' icon={Landmark}>
+        <ChoiceEditor
+          label='Size'
+          hint='How large the city counts as'
+          value={plan.size_tier}
+          table={SIZE_SPEC}
+          held={locked.includes('size_tier')}
+          blocked={busy}
+          onPick={(value) => edit.mutate({ key: 'size_tier', value })}
+        />
+        <ChoiceEditor
+          label='Water'
+          hint='Where its water comes from'
+          value={plan.infrastructure.water}
+          table={WATER_SPEC}
+          held={locked.includes('water')}
+          blocked={busy}
+          onPick={(value) => edit.mutate({ key: 'water', value })}
+        />
+        <ChoiceEditor
+          label='Walls of'
+          hint='What its walls are built of'
+          value={plan.infrastructure.walls_material}
+          table={MATERIAL_SPEC}
+          held={locked.includes('walls_material')}
+          blocked={busy}
+          onPick={(value) => edit.mutate({ key: 'walls_material', value })}
+        />
+      </EditorGroup>
+      <EditorGroup title='Order and standing' icon={Gavel}>
+        {CIVIC.map((item) => editor({ ...item, max: PERCENT }))}
+      </EditorGroup>
+      <EditorGroup title='Coffers and men' icon={Coins}>
+        {COFFERS.map(editor)}
+      </EditorGroup>
+      <EditorGroup title='Siege stores' icon={Castle}>
+        {SIEGE.map(editor)}
+      </EditorGroup>
+      <EditorGroup title='Walls' icon={BrickWall} pairs>
+        {WORKS.map(editor)}
+      </EditorGroup>
+      <EditorGroup title='Roads and stores' icon={Package} pairs>
+        {STORES.map(editor)}
+      </EditorGroup>
+    </AdjustPanel>
   )
 }
 
@@ -411,6 +719,8 @@ export function SettlementPlanSection({
   const view = useSettlementPlan(settlementId)
   const { reason } = useGodGate()
   const blocked = readOnlyReason ?? reason()
+  const plan = view.data
+  const living = plan?.history[plan.history.length - 1]?.population ?? null
   return (
     <Section
       id='section-settlement-plan'
@@ -426,110 +736,140 @@ export function SettlementPlanSection({
           description={view.error.message}
         />
       )}
-      {view.data && (
+      {plan && (
         <div
           data-surface='SettlementPlan'
-          className='flex min-w-0 flex-col gap-5'
+          className='@container/city flex min-w-0 flex-col gap-4'
         >
-          <div className='flex min-w-0 flex-wrap gap-2'>
-            <Badge variant='info'>{words(view.data.size_tier)}</Badge>
-            {view.data.free_city && <Badge variant='success'>Free city</Badge>}
-            {view.data.charter_id !== null && (
-              <Badge variant='outline'>
-                <EntityLink kind='entity' id={String(view.data.charter_id)}>
-                  Chartered
-                </EntityLink>
-              </Badge>
-            )}
-            {view.data.rationing && <Badge variant='warning'>Rationing</Badge>}
-            {view.data.infrastructure.sewers && (
-              <Badge variant='outline'>Sewers</Badge>
-            )}
-            <Badge variant='outline'>{`Water: ${words(view.data.infrastructure.water)}`}</Badge>
-            {view.data.foreigners.map((item) => (
-              <Badge
-                key={item.people_id}
-                variant='outline'
-              >{`${item.name} ${item.share}%`}</Badge>
-            ))}
-          </div>
-          <div className='grid min-w-0 grid-cols-2 gap-3 md:grid-cols-4'>
+          <CityHero plan={plan} />
+          <div className='grid min-w-0 grid-cols-2 gap-3 @xl/city:grid-cols-4'>
             <KpiTile
               label='Treasury'
-              value={formatInteger(view.data.treasury)}
+              value={formatInteger(plan.treasury)}
               icon={Coins}
+              tone='gold'
+              hint={`Taxed at ${plan.tax_rate}%, ${taxLevel(plan.tax_rate).toLowerCase()}`}
             />
             <KpiTile
               label='Districts'
-              value={`${view.data.districts.length} of ${view.data.district_slots}`}
+              value={`${plan.districts.length} of ${plan.district_slots}`}
               icon={Building}
+              tone='verdigris'
+              hint='Plots built on, out of all the city can hold'
+              meter={{
+                value: plan.districts.length,
+                max: plan.district_slots,
+                label: 'Districts',
+              }}
             />
             <KpiTile
               label='Housing'
-              value={formatInteger(view.data.housing)}
-              icon={Building}
+              value={formatInteger(plan.housing)}
+              icon={House}
+              tone={
+                living !== null && living > plan.housing ? 'warning' : 'info'
+              }
+              hint={
+                living !== null
+                  ? `${formatInteger(living)} live here`
+                  : 'Roofs for this many'
+              }
             />
             <KpiTile
-              label='Fire risk'
-              value={String(view.data.fire_risk)}
-              icon={Flame}
-              tone={view.data.fire_risk > 50 ? 'danger' : 'muted'}
+              label='Militia'
+              value={formatInteger(plan.militia)}
+              icon={Shield}
+              tone='danger'
+              hint='Citizens who take up arms in need'
             />
           </div>
-          <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'>
-            <StatBar
-              label='Order'
-              value={view.data.public_order}
-              max={PERCENT}
-              tone='success'
-            />
-            <StatBar
-              label='Crime'
-              value={view.data.crime}
-              max={PERCENT}
-              tone='destructive'
-            />
-            <StatBar
-              label='Unrest'
-              value={view.data.unrest}
-              max={PERCENT}
-              tone='warning'
-            />
-            <StatBar
-              label='Sanitation'
-              value={view.data.sanitation}
-              max={PERCENT}
-              tone='info'
-            />
-            <StatBar label='Wealth' value={view.data.wealth} max={PERCENT} />
-            <StatBar
-              label='Prestige'
-              value={view.data.prestige}
-              max={PERCENT}
-              tone='verdigris'
-            />
+          <div className='grid min-w-0 grid-cols-1 gap-3 @xl/city:grid-cols-2'>
+            <Streets plan={plan} />
+            <Defences plan={plan} />
           </div>
-          <Muted variant='caption'>{`Siege: food for ${view.data.siege_supplies} days, water for ${view.data.siege_water}, camp sickness ${view.data.siege_disease}. Builders can raise ${formatInteger(view.data.construction_capacity)}, porters haul ${formatInteger(view.data.hauling_capacity)}.`}</Muted>
-          <ul
-            data-surface='SettlementPlanTiles'
-            className='grid min-w-0 auto-rows-min grid-cols-2 gap-3 md:grid-cols-4'
+          <Panel
+            title='Under siege'
+            icon={Castle}
+            tone='warning'
+            hint='How long it holds out, and how fast it builds and hauls'
           >
-            {view.data.districts.map((district) => (
-              <DistrictTile
-                key={district.id}
-                district={district}
-                blocked={blocked}
+            <div className='grid min-w-0 grid-cols-1 gap-2 @md/city:grid-cols-2 @xl/city:grid-cols-3'>
+              <MiniStat
+                icon={Utensils}
+                label='Food'
+                value={`${formatInteger(plan.siege_supplies)} days`}
+                tone='success'
               />
-            ))}
-          </ul>
-          <PlanForm
+              <MiniStat
+                icon={Droplets}
+                label='Water'
+                value={`${formatInteger(plan.siege_water)} days`}
+                tone='info'
+              />
+              <MiniStat
+                icon={Biohazard}
+                label='Camp sickness'
+                value={formatInteger(plan.siege_disease)}
+                tone={plan.siege_disease > 0 ? 'danger' : 'muted'}
+              />
+              <MiniStat
+                icon={Hammer}
+                label='Builders raise'
+                value={formatInteger(plan.construction_capacity)}
+                tone='gold'
+                hint='Building work done each epoch'
+              />
+              <MiniStat
+                icon={Truck}
+                label='Porters haul'
+                value={formatInteger(plan.hauling_capacity)}
+                tone='gold'
+                hint='Loads carried each epoch'
+              />
+              <MiniStat
+                icon={Sparkles}
+                label='Investment'
+                value={formatInteger(plan.investment_pool)}
+                tone='verdigris'
+                hint='Coin the owners have put in, waiting to be spent'
+              />
+            </div>
+          </Panel>
+          <Panel
+            title='Districts'
+            icon={Building}
+            hint='Each quarter of the city, its size and its repair'
+            aside={
+              <Badge size='sm' variant='secondary'>
+                {`${plan.districts.length} of ${plan.district_slots} plots`}
+              </Badge>
+            }
+          >
+            <ul
+              data-surface='SettlementPlanTiles'
+              className='grid min-w-0 grid-cols-1 gap-3 @md/city:grid-cols-2 @3xl/city:grid-cols-3'
+            >
+              {plan.districts.map((district) => (
+                <DistrictTile
+                  key={district.id}
+                  district={district}
+                  blocked={blocked}
+                />
+              ))}
+              {plan.district_slots > plan.districts.length && (
+                <OpenPlots
+                  count={plan.district_slots - plan.districts.length}
+                />
+              )}
+            </ul>
+          </Panel>
+          <PlanControls
             key={JSON.stringify([
-              view.data.locked,
-              view.data.infrastructure.locked,
-              view.data.treasury,
-              view.data.districts.length,
+              plan.locked,
+              plan.infrastructure.locked,
+              plan.tax_rate,
             ])}
-            plan={view.data}
+            plan={plan}
             blocked={blocked}
           />
         </div>
@@ -541,7 +881,14 @@ export function SettlementPlanSection({
 export function TreasurySection({ settlementId }: { settlementId: number }) {
   const view = useSettlementPlan(settlementId)
   if (!view.data) return null
-  const history = view.data.history
+  const plan = view.data
+  const history = plan.history
+  const income = plan.treasury_ledger
+    .filter((line) => line.amount > 0)
+    .reduce((total, line) => total + line.amount, 0)
+  const spending = plan.treasury_ledger
+    .filter((line) => line.amount < 0)
+    .reduce((total, line) => total - line.amount, 0)
   return (
     <>
       <Section
@@ -550,42 +897,81 @@ export function TreasurySection({ settlementId }: { settlementId: number }) {
         description='Every coin in and out: taxes, tolls, the owners’ investment, garrisons, walls, festivals, alms, building and fires.'
         icon={Coins}
       >
-        {view.data.treasury_ledger.length === 0 ? (
-          <Muted>No coin has moved yet.</Muted>
-        ) : (
-          <ul
-            data-surface='TreasuryLedger'
-            className='flex min-w-0 flex-col gap-1'
-          >
-            {view.data.treasury_ledger.map((line, index) => (
-              <li
-                key={`${line.epoch}-${index}`}
-                className='flex min-w-0 items-center gap-3'
+        <div className='@container/coin flex min-w-0 flex-col gap-4'>
+          <div className='grid min-w-0 grid-cols-3 gap-3'>
+            <KpiTile
+              label='In the coffers'
+              value={formatInteger(plan.treasury)}
+              icon={Coins}
+              tone='gold'
+              hint={`Taxed at ${plan.tax_rate}%`}
+            />
+            <KpiTile
+              label='Came in'
+              value={formatInteger(income)}
+              icon={ArrowUpRight}
+              tone='success'
+              hint='All income on the ledger'
+            />
+            <KpiTile
+              label='Went out'
+              value={formatInteger(spending)}
+              icon={ArrowDownRight}
+              tone='danger'
+              hint='All spending on the ledger'
+            />
+          </div>
+          {plan.treasury_ledger.length === 0 ? (
+            <EmptyState
+              icon={Coins}
+              title='No coin has moved yet'
+              description='Taxes and costs are booked at the end of each epoch.'
+            />
+          ) : (
+            <Panel title='Ledger' icon={ScrollText} hint='Newest last'>
+              <ul
+                data-surface='TreasuryLedger'
+                className='flex min-w-0 flex-col divide-y'
               >
-                <Muted
-                  variant='caption'
-                  className='w-16 shrink-0'
-                >{`Epoch ${line.epoch}`}</Muted>
-                <Text
-                  className='min-w-0 flex-1'
-                  truncate
-                >{`${words(line.entry)}${line.note ? `: ${line.note}` : ''}`}</Text>
-                <Text
-                  className={
-                    line.amount < 0
-                      ? 'w-24 shrink-0 text-right text-destructive'
-                      : 'w-24 shrink-0 text-right text-success'
-                  }
-                >
-                  {formatInteger(line.amount)}
-                </Text>
-                <Muted variant='caption' className='w-24 shrink-0 text-right'>
-                  {formatInteger(line.balance)}
-                </Muted>
-              </li>
-            ))}
-          </ul>
-        )}
+                {plan.treasury_ledger.map((line, index) => {
+                  const spec = TREASURY_SPEC[line.entry]
+                  return (
+                    <li
+                      key={`${line.epoch}-${index}`}
+                      className='flex min-w-0 items-center gap-3 py-2 first:pt-0 last:pb-0'
+                    >
+                      <Medallion
+                        icon={spec.icon}
+                        tone={line.amount < 0 ? 'danger' : spec.tone}
+                        size='sm'
+                      />
+                      <div className='flex min-w-0 flex-1 flex-col'>
+                        <Text as='span' weight='medium' truncate>
+                          {spec.label}
+                        </Text>
+                        <Muted as='span' variant='caption' truncate>
+                          {line.note &&
+                          line.note.toLowerCase() !== spec.label.toLowerCase()
+                            ? `Epoch ${line.epoch} · ${line.note}`
+                            : `Epoch ${line.epoch}`}
+                        </Muted>
+                      </div>
+                      <div className='flex shrink-0 flex-col items-end'>
+                        <Stat
+                          value={`${line.amount > 0 ? '+' : ''}${formatInteger(line.amount)}`}
+                          tone={line.amount < 0 ? 'destructive' : 'success'}
+                        />
+                        <Muted as='span' variant='caption'>
+                          {`Balance ${formatInteger(line.balance)}`}
+                        </Muted>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            </Panel>
+          )}
+        </div>
       </Section>
       {history.length > 1 && (
         <Section
