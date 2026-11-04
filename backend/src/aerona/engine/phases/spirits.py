@@ -91,7 +91,16 @@ async def spirits_rest(ctx: TickContext) -> None:
     ctx.count("crossed", crossed)
 
 
-@reads("settlement.prosperity", "spirit.unrest", "table.bonds", "table.epoch_year_cursors", "table.spirit_profiles", "table.world_maps")
+@reads(
+    "settlement.prosperity",
+    "spirit.unrest",
+    "table.bonds",
+    "table.epoch_year_cursors",
+    "table.region_environment",
+    "table.region_memories",
+    "table.spirit_profiles",
+    "table.world_maps",
+)
 @writes(
     "settlement.prosperity",
     "spirit.unrest",

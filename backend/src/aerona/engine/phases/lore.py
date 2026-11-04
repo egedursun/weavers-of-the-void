@@ -260,6 +260,7 @@ async def defied(ctx: TickContext, laws: LawBook, kind: TraditionKind, community
     "table.laws",
     "table.people_culture",
     "table.polity_members",
+    "table.region_dangers",
     "table.region_environment",
     "table.tradition_participation",
     "table.tradition_profiles",
@@ -268,11 +269,13 @@ async def defied(ctx: TickContext, laws: LawBook, kind: TraditionKind, community
     "table.world_maps",
 )
 @writes(
+    "region.danger",
     "table.community_societies",
     "table.community_stocks",
     "table.culture_values",
     "table.goods_flows",
     "table.people_culture",
+    "table.region_dangers",
     "table.region_environment",
     "table.settlement_profiles",
     "table.tradition_participation",

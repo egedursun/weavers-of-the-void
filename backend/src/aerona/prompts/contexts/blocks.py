@@ -313,6 +313,10 @@ class RegionGeography(ContextItem):
     use: str | None = None
     nexus: str | None = None
     weather: str | None = None
+    dangers: list[str] = Field(default_factory=list)
+    sacredness: int | None = None
+    memories: list[str] = Field(default_factory=list)
+    mapped_by: list[str] = Field(default_factory=list)
 
 
 class GeographyLinesContext(PromptContext):

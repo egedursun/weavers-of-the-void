@@ -855,6 +855,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.personality_values",
     "table.place_environment",
     "table.pressures",
+    "table.region_dangers",
     "table.region_environment",
     "table.reverences",
     "table.routes",

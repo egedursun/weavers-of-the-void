@@ -4,14 +4,18 @@ from sqlalchemy import select
 
 from aerona.agents.context.scope import Scope
 from aerona.cartography.model import RegionRecord
+from aerona.catalog.dangers import DANGERS, MEMORY_LABELS
 from aerona.constants.agents import LARGE_REGION_RATIO, SMALL_REGION_RATIO
 from aerona.db.tables.celestial import WorldMapRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
+from aerona.db.tables.region import PolityMapKnowledgeRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import LandUse, RiverClass
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.environment.dangers import dangers_by_region
 from aerona.engine.environment.ley import LeyWeb
+from aerona.engine.environment.memory import memories_by_region
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import GeographyLinesContext, RegionGeography
 from aerona.prompts.contexts.common import NamedRecord
@@ -85,6 +89,42 @@ async def nexus_names(scope: Scope, region_ids: set[int]) -> dict[int, str]:
     return {region_id: name for region_id, name in rows if region_id is not None}
 
 
+async def terrain_facts(scope: Scope, region_ids: set[int], grounds: dict[int, RegionEnvironmentRow]) -> dict[int, dict[str, Any]]:
+    settings = scope.rules.context
+    terrain = scope.rules.terrain
+    dangers = await dangers_by_region(scope.session, region_ids)
+    memories = await memories_by_region(scope.session)
+    names = {
+        row.id: row.name
+        for row in await scope.session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.POLITY, EntityRow.status == EntityStatus.CANON))
+    }
+    mapped: dict[int, list[str]] = {}
+    for row in await scope.session.scalars(
+        select(PolityMapKnowledgeRow).where(PolityMapKnowledgeRow.region_entity_id.in_(list(region_ids))).order_by(PolityMapKnowledgeRow.level.desc())
+    ):
+        if row.level >= terrain.unmapped_below and row.polity_entity_id in names:
+            mapped.setdefault(row.region_entity_id, []).append(names[row.polity_entity_id])
+    found: dict[int, dict[str, Any]] = {}
+    for region_id in region_ids:
+        ground = grounds.get(region_id)
+        sacred = ground.sacredness if ground is not None and ground.sacredness >= terrain.pilgrim_sacred_min else None
+        found[region_id] = {
+            "dangers": [
+                f"{DANGERS[row.source].label.lower()} {row.strength}"
+                for row in sorted(dangers.get(region_id, []), key=lambda item: -item.strength)
+                if row.strength >= settings.scar_shown_depth
+            ],
+            "sacredness": sacred,
+            "memories": [
+                f"{row.title} ({MEMORY_LABELS[row.kind].lower()})"
+                for row in sorted(memories.get(region_id, []), key=lambda item: -item.magnitude)
+                if row.magnitude >= settings.scar_shown_depth
+            ],
+            "mapped_by": mapped.get(region_id, []),
+        }
+    return found
+
+
 async def geography_lines(scope: Scope, world_id: int | None) -> str:
     if world_id is None:
         return ""
@@ -103,6 +143,7 @@ async def geography_lines(scope: Scope, world_id: int | None) -> str:
     web = await LeyWeb.load(scope.session)
     nexus = await nexus_names(scope, set(regions))
     book = await EnvironmentBook.load(scope.session, scope.rules, scope.epoch)
+    terrain = await terrain_facts(scope, set(regions), grounds)
     lines = [
         RegionGeography(
             id=record.id,
@@ -116,6 +157,7 @@ async def geography_lines(scope: Scope, world_id: int | None) -> str:
             ley=[NamedRecord(id=other, name=regions[other].name) for other in web.partners(record.id) if other in regions],
             nexus=nexus.get(record.id),
             weather=weather_words(scope, book, grounds.get(record.id)),
+            **terrain[record.id],
         )
         for record in known
     ]

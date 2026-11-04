@@ -21,12 +21,10 @@ from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.polity import ClauseKind, TreatyStatus
-from aerona.domain.enums.region import DangerHarm
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.economy.materials import MaterialBook
 from aerona.engine.environment.book import EnvironmentBook
-from aerona.engine.environment.dangers import weighted_dangers
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import canon
@@ -107,7 +105,6 @@ class EconomyBook:
         book.waived = {frozenset(pair) for parties in signers.values() for pair in combinations(sorted(parties), 2)}
         for known in await session.scalars(select(HolderTechniqueRow)):
             book.techniques.setdefault(known.holder_entity_id, set()).add(known.technique)
-        book.merchant_danger = await weighted_dangers(session, ctx.rules, DangerHarm.MERCHANTS)
         book.blockaded = set(await session.scalars(select(ArmyProfileRow.blockade_entity_id).where(ArmyProfileRow.blockade_entity_id.is_not(None))))
         return book
 

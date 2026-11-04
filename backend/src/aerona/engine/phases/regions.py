@@ -65,7 +65,15 @@ async def survey_regions(ctx: TickContext) -> dict[str, int]:
     "table.tradition_profiles",
     "table.world_maps",
 )
-@writes("region.danger", "table.applied_fixups", "table.polity_map_knowledge", "table.region_dangers", "table.region_environment", "table.region_memories")
+@writes(
+    "region.danger",
+    "table.applied_fixups",
+    "table.entities",
+    "table.polity_map_knowledge",
+    "table.region_dangers",
+    "table.region_environment",
+    "table.region_memories",
+)
 async def region_survey(ctx: TickContext) -> None:
     for key, value in (await survey_regions(ctx)).items():
         ctx.count(f"region_{key}", value)
@@ -75,9 +83,11 @@ async def region_survey(ctx: TickContext) -> None:
     "people.population",
     "settlement.population",
     "table.herds",
+    "table.maimed_cohorts",
     "table.nodes",
     "table.region_dangers",
     "table.region_environment",
+    "table.region_memories",
     "table.world_maps",
 )
 @writes(
@@ -85,6 +95,7 @@ async def region_survey(ctx: TickContext) -> None:
     "settlement.population",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.herds",
     "table.incident_participants",
@@ -102,15 +113,33 @@ async def danger_harm(ctx: TickContext) -> None:
 
 @reads(
     "army.size",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
     "people.population",
     "settlement.population",
     "table.army_profiles",
     "table.army_units",
     "table.bodies",
+    "table.body_customs",
+    "table.bonds",
     "table.calendars",
+    "table.conditions",
+    "table.cult_tenets",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
     "table.forced_weather",
+    "table.holder_levels",
+    "table.injuries",
+    "table.item_profiles",
     "table.nodes",
     "table.place_environment",
+    "table.prostheses",
     "table.region_environment",
     "table.sky_events",
     "table.world_maps",
@@ -123,8 +152,10 @@ async def danger_harm(ctx: TickContext) -> None:
     "settlement.population",
     "table.army_units",
     "table.bodies",
+    "table.body_customs",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
@@ -140,7 +171,16 @@ async def terrain_hazards(ctx: TickContext) -> None:
     ctx.count("hazard_soldiers", tally.soldiers)
 
 
-@reads("cult.zeal", "people.piety", "settlement.piety", "settlement.prosperity", "table.nodes", "table.region_environment", "table.world_maps")
+@reads(
+    "cult.zeal",
+    "people.piety",
+    "settlement.piety",
+    "settlement.prosperity",
+    "table.nodes",
+    "table.region_environment",
+    "table.region_memories",
+    "table.world_maps",
+)
 @writes("cult.zeal", "people.piety", "settlement.piety", "settlement.prosperity")
 async def sacred_pilgrims(ctx: TickContext) -> None:
     scene = await _scene(ctx)

@@ -182,7 +182,8 @@ def refresh_climate(rules: Rules, env: RegionEnvironmentRow, around: Surrounding
         env.temperature = temperature_of(rules, geography, around)
     if "rainfall" not in locked:
         env.rainfall = rainfall_of(rules, geography, around)
-    env.temperature_band = band_of(rules, env.temperature)
+    if "temperature_band" not in locked:
+        env.temperature_band = band_of(rules, env.temperature)
     if "seasonality" not in locked:
         env.seasonality = seasonality_of(rules, env.latitude, axial_tilt)
     if "wetland" not in locked:

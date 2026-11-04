@@ -3,6 +3,7 @@ from enum import StrEnum
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.cartography.biomes import Biome
 from aerona.catalog.weather import WEATHER
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -18,6 +19,7 @@ from aerona.domain.enums.environment import (
     RiverClass,
     ScarKind,
     SoilKind,
+    TemperatureBand,
     TerrainKind,
     WaterSource,
     WeatherKind,
@@ -31,6 +33,7 @@ from aerona.rules.registry import Rules
 
 REGION_ENUMS: dict[str, type[StrEnum]] = {
     "dominant_terrain": TerrainKind,
+    "temperature_band": TemperatureBand,
     "soil": SoilKind,
     "river_class": RiverClass,
     "coast_kind": CoastKind,
@@ -61,6 +64,7 @@ REGION_NUMBERS = frozenset(
         "seasonality",
         "harvest_pct",
         "sacredness",
+        "derived_fertility",
     }
 )
 LOCKABLE = frozenset(
@@ -93,10 +97,15 @@ LOCKABLE = frozenset(
         "built",
         "erosion",
         "sacredness",
+        "temperature_band",
+        "derived_fertility",
+        "biome_mix",
     }
 )
 SCAR_PREFIX = "scar."
 SEAM_PREFIX = "seam."
+WORLD_SEAM = "world:"
+BIOME_COUNT = len(Biome)
 PLACE_ENUMS: dict[str, type[StrEnum]] = {"terrain": TerrainKind, "cover": PlaceCover, "water_source": WaterSource}
 PLACE_NUMBERS = frozenset({"height_advantage", "soil_fertility"})
 PASSABILITY_PREFIX = "passability."
@@ -203,6 +212,23 @@ def set_scar(ground: RegionEnvironmentRow, kind: ScarKind, depth: int, *, lock: 
         scars[kind.value] = clamp_int(depth, 0, PERCENT)
     ground.scars = scars
     hold(ground, f"{SCAR_PREFIX}{kind.value}", lock and depth > 0)
+
+
+def world_seam(world_material_id: int) -> str:
+    return f"{WORLD_SEAM}{world_material_id}"
+
+
+def world_seam_id(key: str) -> int | None:
+    return int(key.removeprefix(WORLD_SEAM)) if key.startswith(WORLD_SEAM) and key.removeprefix(WORLD_SEAM).isdigit() else None
+
+
+def set_biome(ground: RegionEnvironmentRow, biome: int, share: int, *, lock: bool) -> None:
+    if not 0 <= biome < BIOME_COUNT:
+        raise ValidationFailedError("No such biome.")
+    mix = [*ground.biome_mix, *([0] * max(0, BIOME_COUNT - len(ground.biome_mix)))]
+    mix[biome] = clamp_int(share, 0, PERCENT)
+    ground.biome_mix = mix
+    hold(ground, "biome_mix", lock or "biome_mix" in ground.locked)
 
 
 def set_mineral(ground: RegionEnvironmentRow, material: str, richness: int, *, lock: bool = False) -> None:

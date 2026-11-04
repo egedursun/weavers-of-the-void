@@ -1150,6 +1150,9 @@ WILDS_ACTIONS = (
 )
 
 REGION_ACTIONS = (
+    _sync(
+        Meta("environment:biome", "Set the share of a biome in a region's land", G.WORLDS), environment.set_region_biome, environment.SetBiome, free, ("F2.1",)
+    ),
     _sync(Meta("region:danger_create", "Set a danger of any kind upon a region", G.WORLDS), regions.create_danger, regions.CreateDanger, free, ("S6.1",)),
     _sync(Meta("region:danger_edit", "Change or hold the strength of a region's danger", G.WORLDS), regions.edit_danger, regions.EditDanger, free, ("S6.1",)),
     _sync(Meta("region:danger_release", "Let a held danger follow the land again", G.WORLDS), regions.release_danger, regions.DangerTarget, free, ("S6.1",)),
@@ -1241,7 +1244,7 @@ ENVIRONMENT_ACTIONS = (
         ("F2.1",),
     ),
     _sync(
-        Meta("environment:mineral", "Set the richness of a mineral seam", G.WORLDS),
+        Meta("environment:mineral", "Set the richness of a mineral seam, of a catalog or a world material", G.WORLDS),
         environment.set_region_mineral,
         environment.SetMineral,
         free,
