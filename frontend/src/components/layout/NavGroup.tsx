@@ -5,7 +5,7 @@ import {
   type NavSection,
   isNavItemActive,
 } from '@/config/navigation'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Keyboard } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Collapsible,
@@ -114,12 +114,20 @@ function NavLinkItem({ item, pathname }: { item: NavItem; pathname: string }) {
         isActive={isNavItemActive(pathname, item)}
         tooltip={item.title}
       >
-        <Link to={item.to} onClick={() => setOpenMobile(false)}>
+        <Link
+          to={item.to}
+          onClick={() => setOpenMobile(false)}
+          aria-keyshortcuts={item.shortcut}
+        >
           <item.icon />
           <span className='min-w-0 flex-1 truncate'>{item.title}</span>
           <NavCount id={item.id} />
           {item.shortcut && (
-            <Kbd className='group-data-[collapsible=icon]:hidden max-md:hidden'>
+            <Kbd
+              title={`Keyboard shortcut: press ${item.shortcut}`}
+              className='border-b-2 bg-transparent group-data-[collapsible=icon]:hidden max-md:hidden'
+            >
+              <Keyboard aria-hidden='true' className='size-icon-xs' />
               {item.shortcut}
             </Kbd>
           )}

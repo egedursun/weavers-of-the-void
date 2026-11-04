@@ -100,7 +100,7 @@ async def _card(session: AsyncSession, son: SonRow, relations: list[SonRelationR
     friends = sorted((item for item in own if item[1] > 0), key=lambda item: -item[1])
     rivals = sorted((item for item in own if item[1] < 0), key=lambda item: item[1])
     return SonCard(
-        last_action=(action.summary or "")[:LAST_ACTION_PREVIEW] or None if action is not None else None,
+        last_action=(action.summary or action.kind.value.replace("_", " "))[:LAST_ACTION_PREVIEW] if action is not None else None,
         last_action_epoch=action.epoch if action is not None else None,
         last_words=words,
         reputation=son.reputation_label.value if son.reputation_label is not None else None,

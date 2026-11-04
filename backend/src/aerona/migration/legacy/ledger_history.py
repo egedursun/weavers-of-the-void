@@ -8,6 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.schema import LEDGER_SUMMARY_MAX_LENGTH
+from aerona.core.action_text import readable_summary
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.ledger import LedgerEntryRow
@@ -132,7 +133,9 @@ async def _actor_ids(session: AsyncSession) -> dict[tuple[ActorKind, str], int]:
 def _summary(text: str | None) -> str | None:
     if not text:
         return None
-    clean = " ".join(text.split())
+    clean = readable_summary(" ".join(text.split()))
+    if not clean:
+        return None
     return clean if len(clean) <= LEDGER_SUMMARY_MAX_LENGTH else clean[: LEDGER_SUMMARY_MAX_LENGTH - 1] + ELLIPSIS
 
 
