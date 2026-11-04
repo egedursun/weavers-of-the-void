@@ -160,7 +160,7 @@ async def found_polity(ctx: TickContext, book: RealmBook, core: EntityRow) -> Re
     return realm
 
 
-def set_ruler(ctx: TickContext, realm: Realm, ruler_id: int | None, reason: str) -> bool:
+def set_ruler(ctx: TickContext, realm: Realm, ruler_id: int | None, reason: str, *, usurped: bool = False) -> bool:
     office = realm.office(OfficeKind.RULER)
     if office is None:
         office = OfficeRow(polity_entity_id=realm.entity.id, kind=OfficeKind.RULER, since_epoch=ctx.epoch, powers=[])
@@ -176,6 +176,8 @@ def set_ruler(ctx: TickContext, realm: Realm, ruler_id: int | None, reason: str)
         )
     office.holder_entity_id = ruler_id
     office.since_epoch = ctx.epoch
+    if not usurped and "usurper" in realm.profile.legitimacy_parts:
+        realm.profile.legitimacy_parts = {key: value for key, value in realm.profile.legitimacy_parts.items() if key != "usurper"}
     return True
 
 
@@ -321,8 +323,33 @@ async def map_territory(ctx: TickContext, book: RealmBook, realm: Realm, members
         control = clamp_int(people * PERCENT / max(1, people, everyone), 0, PERCENT)
         row = realm.territory.get(region_id)
         if row is None:
-            row = PolityTerritoryRow(polity_entity_id=realm.entity.id, region_entity_id=region_id, control=control)
+            row = PolityTerritoryRow(polity_entity_id=realm.entity.id, region_entity_id=region_id, control=control, locked=[])
             ctx.session.add(row)
             realm.territory[region_id] = row
-        elif "control" not in realm.profile.locked:
+        elif "control" not in realm.profile.locked and "control" not in row.locked:
             row.control = control
+    await provinces(ctx, book, realm, members)
+
+
+async def provinces(ctx: TickContext, book: RealmBook, realm: Realm, members: list[EntityRow]) -> int:
+    if realm.profile.tier < ctx.rules.realm_tiers.provinces:
+        for row in realm.territory.values():
+            if "province" not in row.locked:
+                row.province = None
+        return 0
+    seats: dict[int, EntityRow] = {}
+    for member in members:
+        region = book.atlas.top_region(member.id)
+        if region is not None and (region not in seats or (stat(member, "population") or 0) > (stat(seats[region], "population") or 0)):
+            seats[region] = member
+    named = 0
+    for region, row in realm.territory.items():
+        if "province" in row.locked:
+            continue
+        seat = seats.get(region)
+        if seat is None:
+            near = [other for other in book.atlas.neighbour_regions(region) if other in seats]
+            seat = seats[min(near)] if near else None
+        row.province = f"the province of {seat.name}"[:120] if seat is not None else row.province
+        named += 1
+    return named

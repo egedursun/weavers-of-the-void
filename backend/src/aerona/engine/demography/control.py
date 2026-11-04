@@ -31,9 +31,9 @@ from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import PeopleStats
 from aerona.engine.context import TickContext
+from aerona.engine.demography.bound import sync_bound_share
 from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for, seed
 from aerona.engine.demography.keys import DORMANT_KEY
-from aerona.engine.demography.mobility import sync_bound_share
 from aerona.engine.demography.peoples import ensure_profiles
 from aerona.engine.demography.rites import rite_tradition, set_rite
 from aerona.engine.primitives.distance import RegionAtlas

@@ -12,6 +12,7 @@ from aerona.engine.economy.stocks import sync_aggregates
 from aerona.engine.economy.toll_polities import Realms
 from aerona.engine.environment.dangers import weighted_dangers
 from aerona.engine.environment.works import works_by_region
+from aerona.engine.factions.book import robber_ids
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 
@@ -28,15 +29,18 @@ from aerona.engine.phase import Phase
     "table.cult_tenets",
     "table.currencies",
     "table.epoch_year_cursors",
+    "table.faction_profiles",
     "table.forced_weather",
     "table.goods_flows",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.law_jurisdictions",
     "table.market_price_holds",
     "table.market_prices",
     "table.people_biology",
     "table.people_culture",
     "table.place_environment",
+    "table.polity_members",
     "table.region_environment",
     "table.resource_profiles",
     "table.resource_workers",
@@ -96,9 +100,11 @@ async def markets(ctx: TickContext) -> None:
     "table.community_stocks",
     "table.cult_tenets",
     "table.districts",
+    "table.faction_profiles",
     "table.forced_weather",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.law_jurisdictions",
     "table.market_price_holds",
     "table.market_prices",
     "table.people_biology",
@@ -174,6 +180,7 @@ async def markets(ctx: TickContext) -> None:
 async def trade_flow(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     book.merchant_danger = await weighted_dangers(ctx.session, ctx.rules, DangerHarm.MERCHANTS)
+    book.robbers = await robber_ids(ctx.session)
     tally = RouteTally()
     works = await works_by_region(ctx, book.ground)
     nodes = market_nodes(book)

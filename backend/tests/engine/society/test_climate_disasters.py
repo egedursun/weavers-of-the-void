@@ -16,6 +16,7 @@ from aerona.engine.environment.profile import Geography, Surroundings, rainfall_
 from aerona.engine.phases.climate import climate_of, climate_transition, impose_climate, law_fertility
 from aerona.engine.phases.disasters import apply_disaster, joined_names, natural_disasters, record_disaster_event, send_disaster
 from aerona.engine.phases.society_economy import set_stores
+from aerona.engine.primitives.modifiers import ModifierIndex, live_modifiers
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import (
@@ -94,8 +95,10 @@ async def test_imposed_climate_applies_once_more_at_transition(realm: Realm) -> 
 
 async def test_laws_shift_land_fertility(realm: Realm) -> None:
     await natural_law(realm, "Plenty", NaturalLaw.BOUNTY)
-    await law_fertility(context(realm.session))
-    assert stat(realm.region, "fertility") == 60 + RULES.climate_effects.bounty_law_fertility
+    ctx = context(realm.session)
+    await law_fertility(ctx)
+    with live_modifiers(await ModifierIndex.load(realm.session, ctx.epoch), ctx.epoch, RULES):
+        assert stat(realm.region, "fertility") == round(60 * (1 + RULES.climate_effects.bounty_law_fertility / 100))
 
 
 async def test_disaster_effects_protection_and_collapse(realm: Realm) -> None:

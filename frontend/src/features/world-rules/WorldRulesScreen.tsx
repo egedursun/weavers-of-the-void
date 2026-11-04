@@ -35,6 +35,7 @@ import { Muted, Stat, Text } from '@/components/typography'
 import { HarshnessDial } from './HarshnessDial'
 import { GroupHeader, RuleLine } from './RuleRowView'
 import { Spacer } from './Spacer'
+import { VariantForge } from './VariantForge'
 import {
   type Rule,
   rulePath,
@@ -199,6 +200,7 @@ function RulesEditor({ rules }: RulesEditorProps) {
   return (
     <div className='flex min-w-0 flex-col gap-4'>
       <HarshnessDial />
+      <VariantForge />
       <div className='grid min-w-0 grid-cols-2 gap-2 lg:grid-cols-5'>
         <MiniStat
           icon={SlidersHorizontal}

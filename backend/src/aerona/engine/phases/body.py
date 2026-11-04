@@ -185,12 +185,11 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
 
 
 @reads(
-    "mortal.endurance",
-    "table.mortal_equipment",
     "item.protection",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
+    "mortal.endurance",
     "mortal.hp",
     "mortal.intellect",
     "mortal.lifespan",
@@ -214,8 +213,10 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.item_profiles",
     "table.language_profiles",
     "table.lexemes",
+    "table.marriages",
     "table.memories",
     "table.minds",
+    "table.mortal_equipment",
     "table.name_registry",
     "table.nodes",
     "table.outbreaks",

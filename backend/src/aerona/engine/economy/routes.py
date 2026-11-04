@@ -25,6 +25,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeLoss, Tra
 from aerona.domain.enums.entity import EntityStatus, EntityType, LegendCategory
 from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.polity import ClauseKind
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import WarCause
@@ -42,6 +43,8 @@ from aerona.engine.environment.profile import Works
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.notes import note
+from aerona.engine.polity.accords import clause_pairs
+from aerona.engine.polity.law_effects import toll_rate
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
@@ -306,18 +309,32 @@ async def controllers(ctx: TickContext, book: EconomyBook, realms: Realms | None
 
 
 async def set_tolls(
-    ctx: TickContext, book: EconomyBook, route: Route, masters: dict[int, int], *, realms: Realms | None = None, grants: dict[int, int] | None = None
+    ctx: TickContext,
+    book: EconomyBook,
+    route: Route,
+    masters: dict[int, int],
+    *,
+    realms: Realms | None = None,
+    grants: dict[int, int] | None = None,
+    waived: set[frozenset[int]] | None = None,
 ) -> None:
     table = ctx.rules.tolls
     first, second = route.ends
     homes = {first, second} | ({realms.polity_of(first), realms.polity_of(second)} - {None} if realms is not None else set())
     granted = (grants or {}).get(route.entity.id)
+    free = waived if waived is not None else await clause_pairs(ctx.session, ClauseKind.TOLLS_WAIVED)
     for region in route.path:
         master = granted if granted is not None else masters.get(region)
         if master is None or master in homes or held(route, f"untolled.{region}"):
             continue
+        if frozenset((master, first)) in free or frozenset((master, second)) in free:
+            toll = route.tolls.get(region)
+            if toll is not None and not toll.set_by_player:
+                toll.controller_entity_id, toll.rate_pct = master, 0
+            continue
         greed = await greed_drive(ctx.session, ctx.rules, master)
-        rate = clamp_int(table.default_rate_pct + max(0.0, greed - 1) * table.greed_rate_pct, 0, PERCENT)
+        decreed = await toll_rate(ctx.session, master)
+        rate = clamp_int(decreed if decreed is not None else table.default_rate_pct + max(0.0, greed - 1) * table.greed_rate_pct, 0, PERCENT)
         toll = route.tolls.get(region)
         if toll is None:
             toll = TradeRouteTollRow(route_entity_id=route.entity.id, region_entity_id=region, controller_entity_id=master, rate_pct=rate)

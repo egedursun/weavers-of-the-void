@@ -3,10 +3,13 @@ from typing import Any
 
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.catalog.tenets import OPPOSED
+from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.polity import LawProfileRow
 from aerona.db.tables.structures import StructureDesignRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import TraditionKind
@@ -14,6 +17,7 @@ from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import AGENT_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.faith import FuneralRite, TenetKind
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.polity import LegitimacyBasis
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.travel import TravelMethod, VehicleKind
 from aerona.engine.cosmos.routes import RouteSpec, method_label, open_route
@@ -22,11 +26,14 @@ from aerona.engine.economy.materials import set_node_material
 from aerona.engine.economy.provenance import ensure_materials
 from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.environment.places import write_kind
+from aerona.engine.factions.book import new_profile
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.faith.doctrine import found_doctrine
 from aerona.engine.gods.queries import worshippers_of
 from aerona.engine.lore.traditions import profile_of as tradition_profile
+from aerona.engine.military.shipyard import Commission, commission
 from aerona.engine.phases.society_support.knowledge import teach
+from aerona.engine.polity.laws import attach_profile
 from aerona.engine.primitives.mechanics import assign_mechanics
 from aerona.engine.primitives.stats import set_stats
 from aerona.engine.structures.profiles import ensure_profile
@@ -154,6 +161,20 @@ async def mandatory_holder(call: SonCall, created: EntityRow, linked: list[Entit
 async def _vessel_route(call: SonCall, args: CreationInput, created: EntityRow) -> str | None:
     kind = args.option("vessel_kind") or VehicleKind.SHIP
     await set_vessel_kind(call.session, created.id, kind)
+    if kind is VehicleKind.SHIP:
+        await commission(
+            call.session,
+            call.rules,
+            created,
+            Commission(
+                hull=args.option("hull_class"),
+                armament=args.option("armament"),
+                hull_material=args.option("hull_material"),
+                fabric_material=args.option("fabric_material"),
+                home_port_id=args.option("home_port_id"),
+                captain_id=args.option("captain_id"),
+            ),
+        )
     target_id = args.option("target_world_id")
     target = await call.session.get(WorldRow, target_id) if target_id is not None else None
     if target is None or target.id == created.world_id:
@@ -227,6 +248,24 @@ async def keep_rite(call: SonCall, created: EntityRow, rite: FuneralRite) -> Non
     profile.locked = [*profile.locked, "funeral_rite"] if "funeral_rite" not in profile.locked else profile.locked
 
 
+async def polity_extras(call: SonCall, args: CreationInput, created: EntityRow) -> list[str]:
+    notes: list[str] = []
+    faction_kind = args.option("faction_kind")
+    if created.entity_type is EntityType.FACTION and faction_kind is not None and await call.session.get(FactionProfileRow, created.id) is None:
+        new_profile(call.tick, created, faction_kind)
+    law_kind = args.option("law_kind")
+    if created.entity_type is EntityType.LAW and law_kind is not None and await call.session.get(LawProfileRow, created.id) is None:
+        holder = await call.session.get(EntityRow, created.location_id) if created.location_id is not None else None
+        try:
+            await attach_profile(
+                call.session, created, law_kind, args.option("law_params"), holder=holder, epoch=call.epoch, by_id=None, basis=LegitimacyBasis.DIVINE
+            )
+        except ValidationFailedError:
+            await attach_profile(call.session, created, law_kind, {}, holder=holder, epoch=call.epoch, by_id=None, basis=LegitimacyBasis.DIVINE)
+            notes.append(f"Its terms were set to the custom of {law_kind.value.replace('_', ' ')}.")
+    return notes
+
+
 async def finish_extras(call: SonCall, args: CreationInput, created: EntityRow) -> list[str]:
     notes: list[str] = []
     if created.entity_type is EntityType.VESSEL:
@@ -253,6 +292,7 @@ async def finish_extras(call: SonCall, args: CreationInput, created: EntityRow) 
     rite = args.option("funeral_rite")
     if created.entity_type is EntityType.TRADITION and rite is not None:
         await keep_rite(call, created, rite)
+    notes.extend(await polity_extras(call, args, created))
     learners = args.option("learner_ids") or []
     if created.entity_type is EntityType.KNOWLEDGE:
         for learner_id in learners[: call.rules.son_tools.knowledge_first_learners]:

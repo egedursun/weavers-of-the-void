@@ -23,6 +23,7 @@ from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.debt_law import bind_debtor, debt_law_of, jail_debtor
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.notes import note
+from aerona.engine.polity.law_effects import may_coin
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import active_bonds
@@ -137,7 +138,7 @@ async def mint(ctx: TickContext, book: EconomyBook, issuer: EntityRow, tally: Mo
         return
     currency = await issued_by(ctx, issuer.id)
     if currency is None:
-        if book.lacks(issuer.id, Technique.COINAGE):
+        if book.lacks(issuer.id, Technique.COINAGE) or not await may_coin(ctx.session, ctx.rules, issuer.id):
             return
         if riches(issuer) < ctx.rules.trade.coinage_min_wealth or not ctx.rng(f"mint.{issuer.id}.{ctx.epoch}").chance(ctx.rules.trade.coinage_chance):
             return

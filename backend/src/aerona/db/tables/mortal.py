@@ -1,9 +1,11 @@
-from sqlalchemy import JSON, ForeignKey, Index
+from sqlalchemy import JSON, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
+from aerona.constants.schema import KEY_MAX_LENGTH, NAME_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type, nullable_between
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
+from aerona.domain.enums.mind import KindFamily, Profession
 from aerona.domain.enums.mortal import CareerPath, DeathCause, LifeStage, MarriageEnd, MarriageKind, StressBreak
 
 PROFILE_PERCENTS = (
@@ -48,6 +50,7 @@ class MortalProfileRow(Base):
     loyalty_community: Mapped[int] = mapped_column(default=PERCENT_MAX // 2)
     loyalty_god: Mapped[int] = mapped_column(default=PERCENT_MAX // 2)
     career: Mapped[CareerPath | None] = mapped_column(enum_type(CareerPath, "career"))
+    profession: Mapped[Profession | None] = mapped_column(enum_type(Profession, "profession"))
     last_break: Mapped[StressBreak | None] = mapped_column(enum_type(StressBreak, "last_break"))
     last_break_epoch: Mapped[int | None]
     cause_of_death: Mapped[DeathCause | None] = mapped_column(enum_type(DeathCause, "cause_of_death"))
@@ -86,3 +89,19 @@ class MarriageRow(Base):
     end_epoch: Mapped[int | None]
     cause_end: Mapped[MarriageEnd | None] = mapped_column(enum_type(MarriageEnd, "cause_end"))
     forced: Mapped[bool] = mapped_column(default=False)
+
+
+class KindVariantRow(Base):
+    __tablename__ = "kind_variants"
+    __table_args__ = (at_least("strength_pct", 0), at_least("learning_pct", 0), Index("ix_kind_variants_family", "family"))
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="CASCADE"))
+    family: Mapped[KindFamily] = mapped_column(enum_type(KindFamily, "family"))
+    base: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
+    name: Mapped[str] = mapped_column(String(NAME_MAX_LENGTH))
+    description: Mapped[str | None] = mapped_column(Text)
+    strength_pct: Mapped[int] = mapped_column(default=100)
+    learning_pct: Mapped[int] = mapped_column(default=100)
+    created_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)

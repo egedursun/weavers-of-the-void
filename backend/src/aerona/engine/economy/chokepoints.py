@@ -13,8 +13,8 @@ from aerona.domain.enums.polity import ClauseKind, TreatyStatus
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
+from aerona.engine.polity.accords import Clause
 from aerona.engine.polity.book import RealmBook
-from aerona.engine.polity.treaties import Clause
 from aerona.engine.primitives.numbers import clamp_int
 
 LIVE = (TradeRouteStatus.FORMING, TradeRouteStatus.OPEN, TradeRouteStatus.BLOCKADED)

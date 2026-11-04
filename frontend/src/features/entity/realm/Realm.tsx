@@ -54,6 +54,7 @@ import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { MindPicker } from '../mind/parts'
+import { LawProtection, Statecraft } from './Statecraft'
 import { useRealm, useRealmLink } from './api'
 import {
   CLAIM_BASES,
@@ -998,6 +999,7 @@ function LawCard({
           highLabel='Iron law'
           onChange={setEnforcement}
         />
+        <LawProtection law={law} blocked={busy} />
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
             size='sm'
@@ -1345,6 +1347,7 @@ function RealmBody({
       <Dominion realm={realm} />
       <Treaties realm={realm} />
       <TreasuryLedger realm={realm} />
+      <Statecraft realm={realm} blocked={blocked} />
       <Section
         id='section-law-code'
         level={3}

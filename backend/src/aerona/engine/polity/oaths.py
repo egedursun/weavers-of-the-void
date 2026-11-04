@@ -2,16 +2,20 @@ from itertools import pairwise
 
 from sqlalchemy import select
 
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OathRow
 from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import HERO_ROLES, EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import OathKind, OathStatus
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
+from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.gods.progress import cap_gained_essence
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.standing import add_honour
@@ -20,6 +24,7 @@ from aerona.engine.primitives.queries import add_flag, living_entity
 from aerona.engine.services.community_relations import change_relation
 
 TIMED = frozenset({OathKind.VENGEANCE, OathKind.PILGRIMAGE})
+CLERGY = frozenset({MortalRole.PRIEST, MortalRole.SAINT, MortalRole.SEER})
 
 
 async def oath_god(ctx: TickContext, world_id: int | None) -> SonRow | None:
@@ -56,6 +61,26 @@ async def swear(
     await ctx.session.flush()
     ctx.count(f"oath.{kind.value}")
     return row
+
+
+async def wrath(ctx: TickContext, witness: SonRow, swearer: EntityRow) -> None:
+    table = ctx.rules.oaths
+    if witness.status is not SonStatus.ACTIVE:
+        return
+    before = witness.essence
+    witness.essence += table.wrath_essence
+    cap_gained_essence(ctx.rules, witness, before)
+    cursed = ctx.rng(f"wrath.{witness.id}.{swearer.id}.{ctx.epoch}").chance(table.wrath_curse_chance)
+    if cursed:
+        await add_flag(ctx.session, swearer.id, EntityFlag.CURSED, ctx.epoch)
+    await note(
+        ctx,
+        f"{witness.name} turned in wrath on {swearer.name}, who broke an oath sworn before it" + ("; a curse fell on the oathbreaker." if cursed else "."),
+        key="oaths.wrath",
+        ids=[swearer.id],
+        son_id=witness.id,
+        kind=ChronicleKind.DIVINE_SIGN,
+    )
 
 
 async def keep(ctx: TickContext, oath: OathRow, *, fulfilled: bool) -> None:
@@ -112,6 +137,8 @@ async def break_oath(ctx: TickContext, oath: OathRow, reason: str) -> None:
         home = await living_entity(ctx.session, swearer.location_id)
         if home is not None and home.entity_type in {EntityType.SETTLEMENT, EntityType.PEOPLE} and home.status is EntityStatus.CANON:
             await change_relation(ctx, home.id, swearer.id, -table.wrath_relation, MemoryKind.BROKE_OATH, note=f"broke an oath sworn before {witness.name}")
+    if witness is not None:
+        await wrath(ctx, witness, swearer)
     await note(
         ctx,
         f"{swearer.name} broke the {oath.kind.value.replace('_', ' ')} oath{f' sworn before {witness.name}' if witness else ''}: {reason}.",
@@ -131,16 +158,84 @@ async def lapse(ctx: TickContext) -> tuple[int, int]:
             await keep(ctx, oath, fulfilled=True)
             kept += 1
             continue
+        if oath.kind is OathKind.VENGEANCE and await avenged(ctx, oath):
+            await keep(ctx, oath, fulfilled=True)
+            kept += 1
+            continue
+        if oath.kind is OathKind.PILGRIMAGE and await journeyed(ctx, oath, swearer):
+            await keep(ctx, oath, fulfilled=True)
+            kept += 1
+            continue
         if oath.deadline_epoch is not None and ctx.epoch > oath.deadline_epoch:
-            if oath.kind is OathKind.VENGEANCE:
-                await break_oath(ctx, oath, "the blood went unavenged")
-                broken += 1
-            else:
-                await keep(ctx, oath, fulfilled=True)
-                kept += 1
+            await break_oath(ctx, oath, "the blood went unavenged" if oath.kind is OathKind.VENGEANCE else "the road was never walked")
+            broken += 1
         elif oath.kind in {OathKind.FEALTY, OathKind.PROTECTION, OathKind.BLOOD_BROTHERHOOD, OathKind.CELIBACY, OathKind.SILENCE}:
             await reward_witness(ctx, oath)
     return kept, broken
+
+
+async def avenged(ctx: TickContext, oath: OathRow) -> bool:
+    if oath.recipient_node_id is None:
+        return False
+    target = await ctx.session.get(EntityRow, oath.recipient_node_id)
+    if target is None or target.status is EntityStatus.CANON:
+        return False
+    return target.end_epoch is None or target.end_epoch >= oath.sworn_epoch
+
+
+async def journeyed(ctx: TickContext, oath: OathRow, swearer: EntityRow) -> bool:
+    if oath.recipient_node_id is None:
+        return swearer.location_id is not None and ctx.epoch > oath.sworn_epoch and swearer.location_id != home_at_oath(oath)
+    return swearer.location_id == oath.recipient_node_id
+
+
+def home_at_oath(oath: OathRow) -> int | None:
+    return int(oath.note) if oath.note is not None and oath.note.isdigit() else None
+
+
+async def break_on(ctx: TickContext, swearer_ids: list[int], kind: OathKind, reason: str, *, recipient_id: int | None = None) -> int:
+    broken = 0
+    for swearer_id in swearer_ids:
+        for oath in await oaths_of(ctx, swearer_id, kind):
+            if recipient_id is not None and oath.recipient_node_id != recipient_id:
+                continue
+            await break_oath(ctx, oath, reason)
+            broken += 1
+    return broken
+
+
+async def vows(ctx: TickContext) -> int:
+    table = ctx.rules.oaths
+    sworn = 0
+    for mortal in await ctx.session.scalars(
+        select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id.is_not(None))
+    ):
+        tenets = await faith_tenets(ctx.session, mortal.location_id or 0)
+        chaste = mortal.mortal_role in CLERGY and TenetKind.CELIBATE_CLERGY in tenets
+        if chaste and ctx.rng(f"celibacy.{mortal.id}.{ctx.epoch}").chance(table.celibacy_chance) and not await oaths_of(ctx, mortal.id, OathKind.CELIBACY):
+            await swear(ctx, mortal, OathKind.CELIBACY, recipient_id=None, note_text="for the faith")
+            sworn += 1
+        pilgrim = TenetKind.PILGRIMAGE_DUTY in tenets and ctx.rng(f"pilgrimage.{mortal.id}.{ctx.epoch}").chance(table.pilgrimage_chance)
+        if pilgrim and not await oaths_of(ctx, mortal.id, OathKind.PILGRIMAGE):
+            holy = await holy_site(ctx, mortal)
+            await swear(ctx, mortal, OathKind.PILGRIMAGE, recipient_id=holy, note_text=None if holy is not None else str(mortal.location_id))
+            sworn += 1
+    return sworn
+
+
+async def holy_site(ctx: TickContext, mortal: EntityRow) -> int | None:
+    god = await patron_node(ctx.session, mortal.location_id or 0)
+    if god is None:
+        return None
+    cults = await ctx.session.scalars(
+        select(EntityRow.location_id)
+        .join(BondRow, BondRow.source_node_id == EntityRow.id)
+        .where(
+            BondRow.target_node_id == god, BondRow.kind == BondKind.WORSHIPS, EntityRow.entity_type == EntityType.CULT, EntityRow.status == EntityStatus.CANON
+        )
+        .order_by(EntityRow.id)
+    )
+    return next((place for place in cults if place is not None and place != mortal.location_id), None)
 
 
 async def oaths_of(ctx: TickContext, swearer_id: int, kind: OathKind | None = None) -> list[OathRow]:

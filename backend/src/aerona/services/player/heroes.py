@@ -1,6 +1,7 @@
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.war import HeroQuestKind
-from aerona.engine.phases.factions import FactionKind, decree_faction, dissolve_faction
+from aerona.engine.phases.factions import decree_faction, dissolve_faction
 from aerona.engine.phases.heroes import assign_apprentice, raise_hero, recall_hero, resolve_quest, send_on_quest
 from aerona.engine.phases.heroism import send_hero_to_hunt
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action

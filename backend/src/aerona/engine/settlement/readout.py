@@ -48,7 +48,7 @@ def defences_of(rules: Rules, town: Town) -> Defences:
     return Defences(
         wall_pct=round(walls.walls_level * rules.siegecraft.wall_defence_pct * material / PERCENT),
         tower_pct=walls.towers * table.tower_defence_pct,
-        batter_pct=table.stone_batter_pct if stone else table.timber_batter_pct,
+        batter_pct=rules.siege_depth.stone_bombard_pct if stone else rules.siege_depth.timber_bombard_pct,
         gate_weakness_pct=max(0, walls.gates - 1) * table.gate_breach_pct,
     )
 

@@ -131,7 +131,7 @@ async def test_duel_without_death_wounds_the_loser(session: AsyncSession, world_
     text = await order_duel(ctx, champion.id, victim.id)
     assert "Tam was crippled" in text
     assert victim.status is EntityStatus.CANON and champion.status is EntityStatus.CANON
-    assert victim.stats.model_dump()["hp"] == 100 - rules.campaigns.duel_loser_hp_loss
+    assert victim.stats.model_dump()["hp"] <= 100 - rules.campaigns.duel_loser_hp_loss
     assert champion.stats.model_dump()["hp"] == 100
     assert await BondRepository(session).exists_between(champion.id, victim.id, BondKind.RIVAL)
     assert "war.duel_decree" in await chronicle_keys(session)

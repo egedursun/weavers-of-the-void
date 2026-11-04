@@ -8,6 +8,7 @@ from aerona.rules.registry.awakening import AwakeningRules
 from aerona.rules.registry.backup import BackupRules
 from aerona.rules.registry.balance import BalanceRules
 from aerona.rules.registry.batch import BatchRules
+from aerona.rules.registry.battle_tables import BattleTerrainRules, BattleWeatherRules, TacticMatchupRules
 from aerona.rules.registry.beyond import BeyondRules
 from aerona.rules.registry.body import (
     AnatomyRules,
@@ -76,7 +77,7 @@ from aerona.rules.registry.espionage import EspionageRules
 from aerona.rules.registry.essence import EssenceRules
 from aerona.rules.registry.events import EventsRules
 from aerona.rules.registry.exploration import ExplorationRules
-from aerona.rules.registry.factions import FactionsRules
+from aerona.rules.registry.factions import BanditryRules, FactionsRules, IntrigueRules, MercenariesRules
 from aerona.rules.registry.faith import FaithRules
 from aerona.rules.registry.fate import FateRules
 from aerona.rules.registry.folk import BiologyRules, CustomsRules
@@ -181,6 +182,7 @@ from aerona.rules.registry.polity import (
     LegitimacyRules,
     OathsRules,
     OverextensionRules,
+    RealmTierRules,
     RevoltsRules,
     SuccessionRules,
     TreatiesRules,
@@ -201,7 +203,7 @@ from aerona.rules.registry.settlement import CrimeRules, DistrictRules, FireRule
 from aerona.rules.registry.setup_wizard import SetupWizardRules
 from aerona.rules.registry.sky import SkyRules
 from aerona.rules.registry.society import SocietyRules
-from aerona.rules.registry.society_depth import ConsumptionRules, MobilisationRules, RealmLoyaltyRules
+from aerona.rules.registry.society_depth import ConsumptionRules, RealmLoyaltyRules
 from aerona.rules.registry.son_relations import SonRelationsRules
 from aerona.rules.registry.son_tools import SonToolsRules
 from aerona.rules.registry.star_types import StarTypeRules
@@ -213,6 +215,15 @@ from aerona.rules.registry.trade import TradeRules
 from aerona.rules.registry.travel import TravelRules
 from aerona.rules.registry.travel_methods import TravelMethodsRules
 from aerona.rules.registry.ui import UiRules
+from aerona.rules.registry.war_depth import (
+    BattleMagicRules,
+    CampaignDepthRules,
+    CaptiveDepthRules,
+    LevyRules,
+    SeafaringRules,
+    SiegeDepthRules,
+    WarFinanceRules,
+)
 from aerona.rules.registry.weather import WeatherRules
 from aerona.rules.registry.wilds import (
     BeastsRules,
@@ -364,6 +375,7 @@ class Rules:
     houses: HousesRules = field(default_factory=HousesRules)
     oaths: OathsRules = field(default_factory=OathsRules)
     treaties: TreatiesRules = field(default_factory=TreatiesRules)
+    realm_tiers: RealmTierRules = field(default_factory=RealmTierRules)
     military_units: MilitaryUnitsRules = field(default_factory=MilitaryUnitsRules)
     logistics: LogisticsRules = field(default_factory=LogisticsRules)
     attrition: AttritionRules = field(default_factory=AttritionRules)
@@ -371,6 +383,16 @@ class Rules:
     terrain_effects: TerrainEffectsRules = field(default_factory=TerrainEffectsRules)
     weather_battle_effects: WeatherBattleEffectsRules = field(default_factory=WeatherBattleEffectsRules)
     tactics: TacticsRules = field(default_factory=TacticsRules)
+    battle_terrain: BattleTerrainRules = field(default_factory=BattleTerrainRules)
+    battle_weather: BattleWeatherRules = field(default_factory=BattleWeatherRules)
+    tactic_matchups: TacticMatchupRules = field(default_factory=TacticMatchupRules)
+    battle_magic: BattleMagicRules = field(default_factory=BattleMagicRules)
+    levies: LevyRules = field(default_factory=LevyRules)
+    campaign_depth: CampaignDepthRules = field(default_factory=CampaignDepthRules)
+    war_finance: WarFinanceRules = field(default_factory=WarFinanceRules)
+    siege_depth: SiegeDepthRules = field(default_factory=SiegeDepthRules)
+    captive_depth: CaptiveDepthRules = field(default_factory=CaptiveDepthRules)
+    seafaring: SeafaringRules = field(default_factory=SeafaringRules)
     interpreters: InterpretersRules = field(default_factory=InterpretersRules)
     prestige: PrestigeRules = field(default_factory=PrestigeRules)
     script: ScriptRules = field(default_factory=ScriptRules)
@@ -425,6 +447,9 @@ class Rules:
     fate: FateRules = field(default_factory=FateRules)
     folk_belief: FolkBeliefRules = field(default_factory=FolkBeliefRules)
     factions: FactionsRules = field(default_factory=FactionsRules)
+    intrigue: IntrigueRules = field(default_factory=IntrigueRules)
+    mercenaries: MercenariesRules = field(default_factory=MercenariesRules)
+    banditry: BanditryRules = field(default_factory=BanditryRules)
     foreign_gods: ForeignGodsRules = field(default_factory=ForeignGodsRules)
     genesis: GenesisRules = field(default_factory=GenesisRules)
     goals: GoalsRules = field(default_factory=GoalsRules)
@@ -485,7 +510,6 @@ class Rules:
     world_terrain: WorldTerrainRules = field(default_factory=WorldTerrainRules)
     world_war_strength: WorldWarStrengthRules = field(default_factory=WorldWarStrengthRules)
     consumption: ConsumptionRules = field(default_factory=ConsumptionRules)
-    mobilisation: MobilisationRules = field(default_factory=MobilisationRules)
     realm_loyalty: RealmLoyaltyRules = field(default_factory=RealmLoyaltyRules)
     construction: ConstructionRules = field(default_factory=ConstructionRules)
     structure_functions: StructureFunctionsRules = field(default_factory=StructureFunctionsRules)

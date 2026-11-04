@@ -46,6 +46,7 @@ class TraitView(ApiModel):
     heritable: bool
     effects: list[TraitEffectView]
     capacities: list[TraitCapacityView]
+    variant_id: int | None = None
 
 
 class SkillView(ApiModel):

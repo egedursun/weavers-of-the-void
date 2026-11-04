@@ -148,3 +148,5 @@ PRAYER_REQUEST = " and asked: {request}"
 PROPHECY_SUBTYPES = {"cult": "cult prophecy", "mortal": "seer's word"}
 SPIES_CAUGHT = Line("tools.mortal.spies_caught", "The spies of {me} were caught among {target}; the network was broken.")
 SPIES_CAUGHT_EVENT = "caught spies"
+
+LAW_LAID = Line("tools.mortal.law_laid", "{me} laid down {law} for {realm}.")

@@ -18,10 +18,12 @@ from aerona.domain.enums.polity import DebtRemedy, LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
-from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for, total
+from aerona.engine.demography.bound import BOUND, bound_share, move_people, sync_bound_share
+from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for
 from aerona.engine.demography.events import ennobled, enslaved, freed, ruined
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.military.units import resize
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.levies import demobilise
@@ -32,7 +34,6 @@ from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import held_captive, take_captive
 from aerona.rules.registry import Rules
 
-BOUND = SocialClass.SERF_OR_SLAVE
 LEAN = 25
 
 
@@ -46,44 +47,6 @@ def inequality_pressure(rules: Rules, society: CommunitySocietyRow | None, hiera
     table = rules.mobility
     tolerance = max(0.0, hierarchy / PERCENT) * table.hierarchy_tolerance_pct / PERCENT
     return clamp_int(inequality(society) * table.inequality_crime_pct / PERCENT * (1 - tolerance), 0, PERCENT)
-
-
-def bound_share(rows: dict[CohortKey, CohortRow]) -> float:
-    people = total(rows)
-    bound = sum(row.count for key, row in rows.items() if key[2] is BOUND)
-    return bound / people if people else 0.0
-
-
-def sync_bound_share(society: CommunitySocietyRow | None, rows: dict[CohortKey, CohortRow]) -> None:
-    if society is None:
-        return
-    current = society.share(BOUND)
-    target = round(bound_share(rows) * PERCENT, 2)
-    if abs(current - target) < 0.01:
-        return
-    others = [social_class for social_class in SocialClass if social_class is not BOUND]
-    free = sum(society.share(social_class) for social_class in others) or 1.0
-    for social_class in others:
-        setattr(society, f"share_{social_class.value}", round(society.share(social_class) * (PERCENT - target) / free, 2))
-    society.share_serf_or_slave = target
-
-
-async def move_people(
-    ctx: TickContext, community: EntityRow, rows: dict[CohortKey, CohortRow], *, source: SocialClass, target: SocialClass, share: float
-) -> int:
-    moved = 0
-    for key in sorted(rows, key=lambda item: tuple(part.value for part in item)):
-        band, sex, social_class, condition = key
-        if social_class is not source or rows[key].count <= 0:
-            continue
-        count = round_half_up(rows[key].count * share)
-        if count <= 0:
-            continue
-        rows[key].count -= count
-        landed = CohortCondition.NONE if condition in {CohortCondition.ENSLAVED, CohortCondition.CAPTIVE} else condition
-        row_for(ctx.session, rows, community.id, (band, sex, target, landed), ctx.epoch).count += count
-        moved += count
-    return moved
 
 
 async def settle_captives(ctx: TickContext, community: EntityRow, rows: dict[CohortKey, CohortRow], lawful: bool) -> int:
@@ -146,7 +109,7 @@ async def desertion(ctx: TickContext) -> int:
         with flowing(FlowCategory.LEVY):
             set_stats(army, size=size - returned)
         with flowing(FlowCategory.DEATH):
-            set_stats(army, size=size - leaving)
+            await resize(ctx.session, ctx.rules, army, size - leaving)
         deserted += leaving
         await note(
             ctx,

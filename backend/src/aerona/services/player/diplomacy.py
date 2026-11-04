@@ -15,6 +15,8 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.polity import ClauseKind
+from aerona.domain.enums.polity import TreatyKind as PolityTreatyKind
 from aerona.domain.enums.travel import JourneyIntent, JourneyStatus
 from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.domain.models.entity_stats import FactionStats
@@ -23,6 +25,8 @@ from aerona.engine.gods.devotion import RiteKind
 from aerona.engine.phases.diplomacy import decree_alliance
 from aerona.engine.phases.exploration import SearchStatus, planet_exploration, record_intuition, search_route, send_to_explore
 from aerona.engine.phases.travel import send_expedition
+from aerona.engine.polity.accords import Clause
+from aerona.engine.polity.treaties import sign_derived
 from aerona.engine.primitives.stats import stat
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import WarBlock, can_open_war, declare_war
@@ -128,7 +132,14 @@ async def decree(scope: PlayerScope, command: Decree) -> Effect:
     elif command.kind is DecreeKind.ALLIANCE:
         await bonds.close_between(first.id, second.id, [BondKind.ENEMY], ctx.epoch, DECREE_REASON)
         if not await bonds.exists_between(first.id, second.id, BondKind.ALLY):
-            await bonds.connect(BondDraft(first.id, second.id, BondKind.ALLY, ctx.epoch, DECREE_REASON))
+            await sign_derived(
+                ctx,
+                PolityTreatyKind.ALLIANCE_DEFENSIVE,
+                first.id,
+                second.id,
+                until=ctx.epoch + ctx.rules.treaties.alliance_epochs,
+                clauses=[Clause(ClauseKind.CALL_TO_ARMS, first.id, second.id), Clause(ClauseKind.CALL_TO_ARMS, second.id, first.id)],
+            )
         await change_relation(ctx, first.id, second.id, hand_rules.decree_alliance_relation, MemoryKind.DIVINE_WILL, note=DECREE_REASON)
     elif command.kind is DecreeKind.MARRIAGE:
         await bonds.close_between(first.id, second.id, [BondKind.ENEMY], ctx.epoch, DECREE_REASON)
@@ -136,7 +147,7 @@ async def decree(scope: PlayerScope, command: Decree) -> Effect:
     else:
         await bonds.close_between(first.id, second.id, [BondKind.ENEMY], ctx.epoch, DECREE_REASON)
         if not await bonds.exists_between(first.id, second.id, BondKind.TRADES_WITH):
-            await bonds.connect(BondDraft(first.id, second.id, BondKind.TRADES_WITH, ctx.epoch, DECREE_REASON))
+            await sign_derived(ctx, PolityTreatyKind.TRADE_PACT, first.id, second.id, until=ctx.epoch + ctx.rules.treaties.trade_epochs)
         await change_relation(ctx, first.id, second.id, hand_rules.decree_trade_relation, MemoryKind.DIVINE_WILL, note=DECREE_REASON)
         kind = ActionKind.ESTABLISH_TRADE
     creator = await scope.creator()
@@ -283,11 +294,18 @@ async def found_federation(scope: PlayerScope, command: Federation) -> Effect:
     bonds = BondRepository(scope.session)
     for member in members:
         await bonds.connect(BondDraft(member.id, faction.id, BondKind.MEMBER_OF, epoch, "federation"))
+    ctx = await scope.context("federation")
     for first, second in combinations(members, 2):
         await bonds.close_between(first.id, second.id, [BondKind.ENEMY], epoch, "federation")
         if not await bonds.exists_between(first.id, second.id, BondKind.ALLY):
-            await bonds.connect(BondDraft(first.id, second.id, BondKind.ALLY, epoch, "federation"))
-    ctx = await scope.context("federation")
+            await sign_derived(
+                ctx,
+                PolityTreatyKind.ALLIANCE_DEFENSIVE,
+                first.id,
+                second.id,
+                until=None,
+                clauses=[Clause(ClauseKind.CALL_TO_ARMS, first.id, second.id), Clause(ClauseKind.CALL_TO_ARMS, second.id, first.id)],
+            )
     message = await tell(
         ctx, FEDERATION_FOUNDED, ids=[faction.id, *member_ids], kind=ChronicleKind.CIVILIZATION, creator=creator.name, name=faction.name, members=names
     )

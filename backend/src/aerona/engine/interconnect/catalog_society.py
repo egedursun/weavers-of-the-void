@@ -131,7 +131,7 @@ SOCIETY_MECHANICS = (
         tables=(PeopleBiologyRow.__tablename__, PeopleCultureRow.__tablename__),
         targets=("people",),
         couplings=(
-            Coupling(Subsystem.WAR, "martial value and cohesion set the levy", EdgeKind.MODIFIER, "mobilisation.martial_pct"),
+            Coupling(Subsystem.WAR, "martial value and cohesion set the levy", EdgeKind.MODIFIER, "levies.martial_pct"),
             Coupling(Subsystem.DEMOGRAPHY, "short-lived peoples breed faster", EdgeKind.MODIFIER, "peoples.maturity_years"),
         ),
     ),
@@ -758,7 +758,7 @@ BEHAVIOURS = (
         (P, S, "army"),
         ("mobilisation", "fighting_age"),
         Subsystem.WAR,
-        "mobilisation.harvest_pct",
+        "levies.harvest_pct",
         "soldiers raised",
     ),
     (
@@ -1084,18 +1084,6 @@ BEHAVIOURS = (
         Subsystem.ENVIRONMENT,
         "districts.quake_loss",
         "district condition and levels",
-    ),
-    (
-        "typed_culprits",
-        "S4.2",
-        "The watch seizes outcasts, bandits, exiles and the greedy",
-        ("settlement_life",),
-        SETTLEMENT_SECTION,
-        (S, "mortal"),
-        ("crime",),
-        Subsystem.INTRIGUE,
-        "districts.culprit_band_weight",
-        "punishments",
     ),
     (
         "unified_storage",

@@ -205,7 +205,8 @@ def test_discontent_raises_faction_recruitment() -> None:
 def test_old_rule_keys_map_into_the_new_namespaces() -> None:
     rules = rules_from_snapshot({"economy": {"consumption_grain_per_1000": 777.0}, "peoples": {"levy_martial_pct": 222.0}})
     assert rules.consumption.grain_per_1000 == 777
-    assert rules.mobilisation.martial_pct == 222
+    assert rules.levies.martial_pct == 222
+    assert rules_from_snapshot({"mobilisation": {"harvest_pct": 33.0}}).levies.harvest_pct == 33
     newer = rules_from_snapshot({"economy": {"consumption_fish_per_1000": 1.0}, "consumption": {"fish_per_1000": 9.0}})
     assert newer.consumption.fish_per_1000 == 9
     assert ("consumption", "grain_per_1000") in snapshot_differences({"economy": {"consumption_grain_per_1000": 777.0}}, Rules())

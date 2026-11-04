@@ -15,6 +15,7 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
     ("epidemics", "disease_cures"): "none: cures are found from the next epoch; no outbreak was cured before the wave",
     ("epidemics", "quarantines"): "none: quarantines are ordered from the next epoch",
     ("polity_cycles", "vassalages"): "none: vassalages are sworn by treaties from the next epoch",
+    ("law_effects", "sentences"): "none: sentences are recorded as towns judge their offenders from the next epoch; earlier trials kept no record",
     ("geomorphology", "river_shifts"): "none: a river shift is recorded when a river moves; the courses rivers took before the wave are their present beds",
     ("spy_networks", "spy_networks"): "existing mechanic: the next espionage step gives every agent network bond its record",
     ("disease_type", "disease_profiles"): "epidemics: every disease entity is profiled by the next epidemics step",
@@ -30,6 +31,10 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
     ("labour_reasons", "corvee_levies"): "none: corvee is imposed by the player after the wave; no levy stood before",
     ("debt_settlement", "loans"): "existing mechanic: banks lend to realms and communities from the next banking step",
     ("structure_profiles", "structure_designs"): "none: structure designs are drawn up by the player or a son after the wave; none stood before",
+    (
+        "arms_and_wear",
+        "unit_designs",
+    ): "none: designs are drawn up by the player, gods or a realm's muster from the next epoch; earlier armies fought with the catalog's units",
 }
 
 

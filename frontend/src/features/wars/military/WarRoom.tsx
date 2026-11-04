@@ -60,6 +60,10 @@ import { IncitementCard } from '@/features/foundations/IncitementCard'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { ArmyPanel } from './ArmyPanel'
+import { BattleDepthPanel } from './BattleDepth'
+import { WarOrders } from './Orders'
+import { PeaceTreaty } from './PeaceBuilder'
+import { WarMap } from './WarMap'
 import {
   type BattleReport,
   type CaptiveCohort,
@@ -1347,6 +1351,14 @@ function BattleItem({ battle, last }: { battle: BattleReport; last: boolean }) {
           </div>
         )}
         {battle.phases.length > 0 && <PhaseTimeline battle={battle} />}
+        <BattleDepthPanel
+          battleId={battle.id}
+          sides={Object.fromEntries(
+            [battle.winner, battle.loser]
+              .filter((side): side is NonNullable<typeof side> => side !== null)
+              .map((side) => [String(side.id), side.name])
+          )}
+        />
       </div>
     </TimelineItem>
   )
@@ -1406,6 +1418,23 @@ export function WarRoom({ warId }: { warId: number }) {
       <RoomStats room={data} />
       <IncitementCard war={data.war} blocked={blocked} />
       <WarControls room={data} blocked={blocked} />
+      <WarMap room={data} />
+      <WarOrders
+        warId={warId}
+        sides={sideEntries(data).map((entry) => ({
+          id: entry.id,
+          name: entry.name,
+        }))}
+        blocked={blocked}
+      />
+      <PeaceTreaty
+        warId={warId}
+        sides={sideEntries(data).map((entry) => ({
+          id: entry.id,
+          name: entry.name,
+        }))}
+        blocked={blocked}
+      />
       {data.fronts.length > 0 && (
         <Panel
           title='Fronts'

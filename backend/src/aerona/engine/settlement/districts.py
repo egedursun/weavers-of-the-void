@@ -11,11 +11,8 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import DESIGN_PARAMETERS, DistrictDesignRow, DistrictRow, SettlementProfileRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import WorkshopKind
-from aerona.domain.enums.entity import EntityFlag
-from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.settlement import TIER_ORDER, BuildMaterial, DistrictHarm, DistrictKind
-from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -27,8 +24,6 @@ CONDITION_KEY = "condition"
 LEVEL_KEY = "level"
 MATERIAL_KEY = "material"
 DISTRICT_LOCKS = (LEVEL_KEY, CONDITION_KEY, MATERIAL_KEY)
-CRIMINAL_TRAITS = frozenset({TraitKind.GREEDY, TraitKind.DECEITFUL, TraitKind.CRUEL})
-CRIMINAL_FLAGS = frozenset({EntityFlag.EXILE, EntityFlag.OATHBREAKER})
 DISASTER_TARGETS: Mapping[DistrictHarm, frozenset[DistrictKind]] = MappingProxyType(
     {
         DistrictHarm.FLOOD: frozenset({DistrictKind.FARMLAND, DistrictKind.HARBOUR, DistrictKind.SLUMS, DistrictKind.MARKET, DistrictKind.NECROPOLIS}),
@@ -240,16 +235,6 @@ async def damage_districts(ctx: TickContext, settlement: EntityRow, harm: Distri
     )
     ctx.count(f"districts_{harm.value}", len(struck))
     return len(struck)
-
-
-def culprit_weight(rules: Rules, *, social_class: SocialClass | None, traits: set[TraitKind], flags: set[EntityFlag], in_band: bool) -> int:
-    table = rules.districts
-    return (
-        (table.culprit_outcast_weight if social_class is SocialClass.OUTCAST else 0)
-        + (table.culprit_band_weight if in_band else 0)
-        + (table.culprit_flag_weight if flags & CRIMINAL_FLAGS else 0)
-        + table.culprit_trait_weight * len(traits & CRIMINAL_TRAITS)
-    )
 
 
 def office_tier(rules: Rules, kind: OfficeKind) -> int:

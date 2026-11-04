@@ -21,6 +21,7 @@ from aerona.engine.polity.book import Realm
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, bond_exists
 from aerona.engine.primitives.stats import stat
+from aerona.engine.services.community_relations import relation
 from aerona.rules.registry import Rules
 
 RECENT_EPOCHS = 3
@@ -135,3 +136,16 @@ async def loyalty_autonomy(ctx: TickContext, realm: Realm, member: EntityRow | N
         return 0
     row = await member_loyalty(ctx, realm, member, await victories(ctx, realm))
     return autonomy_pull(ctx.rules, row.loyalty)
+
+
+async def vassal_loyalty(ctx: TickContext, vassal_id: int, overlord_id: int, tribute_pct: int) -> int:
+    table = ctx.rules.realm_loyalty
+    vassal = await ctx.session.get(EntityRow, vassal_id)
+    lord_values = await values_for(ctx.session, overlord_id)
+    mine = await member_values(ctx, vassal) if vassal is not None else {}
+    distance = value_distance(mine, lord_values) if mine and lord_values else 0
+    regard = await relation(ctx.session, ctx.rules, vassal_id, overlord_id)
+    grievances = round_half_up(tribute_pct * table.vassal_tribute_pct / PERCENT) + round_half_up(max(0, -regard) * table.vassal_regard_pct / PERCENT)
+    benefits = round_half_up(max(0, regard) * table.vassal_regard_pct / PERCENT)
+    mood = satisfaction_term(ctx.rules, mean_satisfaction(await ctx.session.get(CommunitySocietyRow, vassal_id)))
+    return loyalty_of(ctx.rules, distance, grievances, benefits, mood)

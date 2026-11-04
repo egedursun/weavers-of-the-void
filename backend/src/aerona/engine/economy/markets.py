@@ -17,9 +17,11 @@ from aerona.engine.economy.household import diet_demand
 from aerona.engine.economy.materials import price_premium
 from aerona.engine.economy.stocks import epoch_need, goods_of, holding, lots_of
 from aerona.engine.environment.years import world_years
+from aerona.engine.factions.book import monopoly_factor
 from aerona.engine.faith.book import forbidden_foods
 from aerona.engine.lore.traditions import resent_taboo, taboos
 from aerona.engine.notes import note
+from aerona.engine.polity.law_effects import luxury_factor
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import headcount
 
@@ -128,9 +130,16 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
         demand = round_half_up(diet.get(commodity, epoch_need(ctx.rules, population, commodity)) * ctx.rules.markets.demand_epochs_pct / PERCENT)
         if commodity.value in forbidden:
             demand = round_half_up(demand * ctx.rules.doctrine.dietary_demand_pct / PERCENT)
+        if commodity is CommodityKind.LUXURIES:
+            demand = round_half_up(demand * await luxury_factor(ctx.session, ctx.rules, market.id, book.societies.get(market.id)))
+        monopoly = await monopoly_factor(ctx.session, market.id, commodity, ctx.rules.factions.monopoly_price_pct)
         premium = await material_premium(ctx, book, market, commodity)
         swing = swing_of(ctx, market, commodity, growth)
-        price = hold.price if hold is not None and hold.price is not None else price_of(ctx, commodity, supply, demand, factor * swing.factor, premium=premium)
+        price = (
+            hold.price
+            if hold is not None and hold.price is not None
+            else price_of(ctx, commodity, supply, demand, factor * swing.factor * monopoly, premium=premium)
+        )
         quotes[commodity] = Quote(commodity, price, supply, demand, swing.spread)
     ctx.count("taboo_resentment", await resent_taboo(ctx, market.id))
     return quotes

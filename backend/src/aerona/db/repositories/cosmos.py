@@ -24,7 +24,7 @@ def snapshot_rules(rules: Rules) -> RulesSnapshot:
 
 
 def rules_from_snapshot(snapshot: RulesSnapshot) -> Rules:
-    overrides = {(namespace, key): value for namespace, values in snapshot.items() for key, value in values.items()}
+    overrides = canonical_overrides({(namespace, key): value for namespace, values in snapshot.items() for key, value in values.items()})
     return apply_overrides(Rules(), overrides)
 
 

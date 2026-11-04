@@ -213,10 +213,24 @@ async def confirmed(ctx: TickContext, legend: EntityRow, row: LegendProfileRow) 
     "table.culture_values",
     "table.house_profiles",
     "table.legend_profiles",
+    "table.memories",
+    "table.minds",
     "table.people_culture",
     "table.value_profiles",
 )
-@writes("table.claims", "table.culture_values", "table.house_profiles", "table.legend_profiles", "table.value_profiles")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.claims",
+    "table.culture_values",
+    "table.epoch_year_cursors",
+    "table.house_profiles",
+    "table.incident_participants",
+    "table.incidents",
+    "table.legend_profiles",
+    "table.memories",
+    "table.value_profiles",
+)
 async def legend_cycles(ctx: TickContext) -> None:
     table = ctx.rules.belief
     for legend in await canon(ctx.session, [EntityType.LEGEND]):
@@ -230,6 +244,10 @@ async def legend_cycles(ctx: TickContext) -> None:
             row.credence = clamp_int(row.credence + table.confirmation, 0, PERCENT)
             ctx.count("legends_confirmed")
         ctx.count("legend_morals", await legends.press_morals(ctx, row))
+        remembered = await legends.remember_legend(ctx, legend, row)
+        if remembered:
+            ctx.count("legend_memories", remembered)
+            await note(ctx, f"The telling of {legend.name} reshaped what its peoples remember.", key="lore.legend_memory", ids=[legend.id])
         outcome = await legends.consequences(ctx, row)
         if outcome:
             ctx.count("legend_consequences")
@@ -419,8 +437,11 @@ async def ideology_cycles(ctx: TickContext) -> None:
 
 @reads(
     "rite.power",
+    "table.bonds",
     "table.castings",
+    "table.culture_values",
     "table.entity_flags",
+    "table.holder_techniques",
     "table.laws",
     "table.offices",
     "table.polity_members",

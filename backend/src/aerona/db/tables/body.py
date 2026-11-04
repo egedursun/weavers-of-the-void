@@ -124,6 +124,7 @@ class ConditionRow(CreatedAtMixin, Base):
     since_epoch: Mapped[int]
     ended_epoch: Mapped[int | None]
     visible: Mapped[bool] = mapped_column(default=False)
+    variant_id: Mapped[int | None] = mapped_column(ForeignKey("kind_variants.id", ondelete="SET NULL"))
     incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
 
 
@@ -144,6 +145,7 @@ class ProsthesisRow(CreatedAtMixin, Base):
     quality: Mapped[int]
     restored_pct: Mapped[int]
     item_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    world_material_id: Mapped[int | None] = mapped_column(ForeignKey("world_materials.id", ondelete="SET NULL"))
     maker_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     epoch: Mapped[int]
 

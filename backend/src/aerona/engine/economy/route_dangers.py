@@ -128,7 +128,9 @@ def bandits_on(book: EconomyBook, path: list[int]) -> EntityRow | None:
     found = [
         entity
         for entity in book.entities.values()
-        if entity.entity_type is EntityType.FACTION and entity.engine_kind in BANDIT_KINDS and book.ground.atlas.top_region(entity.id) in halfway
+        if entity.entity_type is EntityType.FACTION
+        and (entity.engine_kind in BANDIT_KINDS or entity.id in book.robbers)
+        and book.ground.atlas.top_region(entity.id) in halfway
     ]
     return min(found, key=lambda entity: entity.id) if found else None
 

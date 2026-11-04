@@ -13,6 +13,7 @@ import { useImageGenEvents } from '@/features/images/imageGenState'
 import { CommunityRelations } from '@/features/relations/CommunityRelations'
 import { CommunityWars } from '@/features/wars/CommunityWars'
 import { MilitarySection } from '@/features/wars/military/MilitarySection'
+import { VesselSection } from '@/features/wars/military/VesselCard'
 import { RecordActions } from './actions/RecordActions'
 import { buildContext, isCommunity } from './actions/context'
 import { READ_ONLY_REASON } from './actions/gate'
@@ -32,6 +33,7 @@ import { ResourceProfile } from './economy/ResourceProfile'
 import { PriceBoard, TradeRouteSection } from './economy/RouteAndMarket'
 import { CommunityRoutes } from './economy/RouteControls'
 import { SentientPacts } from './economy/SentientPact'
+import { FactionSection } from './faction/Faction'
 import { AfterlifeSection, SoulSection } from './faith/Afterlife'
 import { DoctrineSection } from './faith/Doctrine'
 import { EventSection } from './happenings/EventCard'
@@ -451,6 +453,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       {entity.entity_type === 'treaty' && (
         <TreatySection treatyId={entity.id} readOnlyReason={readOnly} />
       )}
+      {entity.entity_type === 'faction' && (
+        <FactionSection factionId={entity.id} readOnlyReason={readOnly} />
+      )}
       {entity.entity_type === 'mortal' && (
         <OathsSection entityId={entity.id} readOnlyReason={readOnly} />
       )}
@@ -493,6 +498,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       )}
       {entity.entity_type === 'region' && (
         <AfterlifeSection regionId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'vessel' && (
+        <VesselSection vesselId={entity.id} readOnlyReason={readOnly} />
       )}
       {(entity.entity_type === 'army' ||
         entity.entity_type === 'mortal' ||

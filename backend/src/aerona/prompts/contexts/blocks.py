@@ -368,6 +368,7 @@ class WorldSummaryContext(RulesContext):
     multi_world: bool = False
     cosmos_lines: str = ""
     foreign_gods: list[ForeignGodLine] = Field(default_factory=list)
+    realms: list[str] = Field(default_factory=list)
     routes: list[RouteLine] = Field(default_factory=list)
     geography: str
     geography_total: int

@@ -123,6 +123,7 @@ def prosthesis_view(row: ProsthesisRow, names: dict[int, tuple[str, str]]) -> Pr
         maker_node_id=row.maker_node_id,
         maker_name=name_in(names, row.maker_node_id),
         epoch=row.epoch,
+        world_material_id=row.world_material_id,
     )
 
 
@@ -187,6 +188,7 @@ async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyVie
             )
         return BodyView(
             node_id=bearer.id,
+            world_id=getattr(bearer, "world_id", None),
             name=bearer.name,
             bearer_kind=kind_of(bearer),
             alive=alive(bearer),
@@ -246,6 +248,7 @@ async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyVie
                     severity=row.severity,
                     part=row.part,
                     source=row.source,
+                    variant_id=row.variant_id,
                     source_node_id=row.source_node_id,
                     source_name=name_in(names, row.source_node_id),
                     source_link=link_in(names, row.source_node_id),

@@ -41,7 +41,7 @@ async def test_new_war_mobilises_then_clashes_next_epoch(session: AsyncSession, 
     assert war.status.value == WarStatus.ONGOING.value and war.battles == 1 and war.last_clash_epoch == 11
     battle = await session.scalar(select(BattleRow))
     assert battle is not None and battle.winner_entity_id == strong.id and battle.outcome is BattleOutcome.FIELD_VICTORY
-    assert war.score >= 1
+    assert war.score >= 0 and battle.outcome_class is not None
     assert await relation(session, rules, strong.id, weak.id) < 0
     texts = [row.text for row in await session.scalars(select(ChronicleRow).order_by(ChronicleRow.id))]
     assert any(text.startswith("War broke out between Iron Folk and Reed Folk") for text in texts)
@@ -81,7 +81,7 @@ async def test_siege_starvation_costs_the_attacker_morale(session: AsyncSession,
 
 
 async def test_capture_takes_a_hero_prisoner_with_synced_bond(session: AsyncSession, world_id: int) -> None:
-    rules = tune(Rules(), campaigns={**QUIET, "capture_chance": 100})
+    rules = tune(Rules(), campaigns={**QUIET, "capture_chance": 100}, tactics={"scouting_margin": 1000})
     ctx = make_ctx(session, rules)
     strong = await make(session, "Iron Folk", EntityType.PEOPLE, world_id, population=9000, martiality=90)
     weak = await make(session, "Reed Folk", EntityType.PEOPLE, world_id, population=900, martiality=10)

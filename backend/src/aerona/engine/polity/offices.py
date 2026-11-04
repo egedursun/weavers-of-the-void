@@ -5,34 +5,43 @@ from sqlalchemy import delete, select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import InjuryRow
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
+from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.mind import SkillRow
-from aerona.db.tables.polity import ClaimRow, HouseMemberRow, OfficeHistoryRow, OfficeRow
+from aerona.db.tables.polity import ClaimRow, HouseMemberRow, HouseProfileRow, OfficeHistoryRow, OfficeRow, TreatyPartyRow, TreatyProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.tables.sons import SonRow
+from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
 from aerona.domain.enums.body import LASTING_INJURY_STATES
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
-from aerona.domain.enums.mind import SkillKind, TraitKind
-from aerona.domain.enums.polity import GenderRule, LawKind, OathKind, OfficeKind, SuccessionRule
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitKind
+from aerona.domain.enums.polity import GenderRule, LawKind, OathKind, OfficeKind, OfficePower, SuccessionRule, TreatyStatus
 from aerona.domain.enums.settlement import TIER_ORDER
-from aerona.domain.enums.war import WarCause
+from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.war import WarSide
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.causes import succession_incident
+from aerona.engine.military.causes import press_claim_war
 from aerona.engine.mind.book import traits_of
 from aerona.engine.mortal.kin import children_of, siblings_of
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook, sex_of
 from aerona.engine.polity.formation import set_ruler
 from aerona.engine.polity.laws import LawBook
-from aerona.engine.polity.oaths import swear
-from aerona.engine.primitives.numbers import round_half_up
-from aerona.engine.primitives.queries import active_bonds, close, connect, living_entity
+from aerona.engine.polity.oaths import break_on, swear
+from aerona.engine.polity.repute import shift_infamy
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import active_bonds, bond_exists, close, connect, has_flag, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
-from aerona.engine.services.war import declare_war
+from aerona.engine.services.community_relations import change_relation, relation
+from aerona.engine.services.war import war_event
 from aerona.engine.settlement.book import towns
 from aerona.engine.settlement.districts import office_tier
 from aerona.rules.registry import Rules
@@ -51,8 +60,61 @@ OFFICE_SKILLS: Mapping[OfficeKind, tuple[tuple[SkillKind, ...], str]] = MappingP
     }
 )
 COUNCIL = (OfficeKind.CHANCELLOR, OfficeKind.MARSHAL, OfficeKind.TREASURER, OfficeKind.HIGH_JUDGE, OfficeKind.SPYMASTER)
-PROVINCE_TIER = 2
-EMBASSY_TIER = 2
+W = OfficePower
+DEFAULT_POWERS: Mapping[OfficeKind, tuple[OfficePower, ...]] = MappingProxyType(
+    {
+        OfficeKind.RULER: (W.RULE,),
+        OfficeKind.HEIR_DESIGNATE: (W.SUCCEED,),
+        OfficeKind.REGENT: (W.RULE,),
+        OfficeKind.CHANCELLOR: (W.NEGOTIATE,),
+        OfficeKind.MARSHAL: (W.COMMAND,),
+        OfficeKind.TREASURER: (W.TREASURY,),
+        OfficeKind.HIGH_JUDGE: (W.JUDGE,),
+        OfficeKind.SPYMASTER: (W.SPY,),
+        OfficeKind.GOVERNOR: (W.GOVERN,),
+        OfficeKind.AMBASSADOR: (W.EMBASSY,),
+    }
+)
+POWER_SKILLS: Mapping[OfficePower, OfficeKind] = MappingProxyType(
+    {
+        W.RULE: OfficeKind.REGENT,
+        W.SUCCEED: OfficeKind.REGENT,
+        W.NEGOTIATE: OfficeKind.CHANCELLOR,
+        W.COMMAND: OfficeKind.MARSHAL,
+        W.TREASURY: OfficeKind.TREASURER,
+        W.JUDGE: OfficeKind.HIGH_JUDGE,
+        W.SPY: OfficeKind.SPYMASTER,
+        W.GOVERN: OfficeKind.GOVERNOR,
+        W.EMBASSY: OfficeKind.AMBASSADOR,
+    }
+)
+POWER_VALUES = frozenset(item.value for item in OfficePower)
+
+
+def powers_of(office: OfficeRow) -> set[OfficePower]:
+    if office.powers:
+        return {OfficePower(item) for item in office.powers if item in POWER_VALUES}
+    return set(DEFAULT_POWERS.get(office.kind, ()))
+
+
+async def power_skill(ctx: TickContext, office: OfficeRow, power: OfficePower) -> float:
+    holder = await living_entity(ctx.session, office.holder_entity_id) if office.holder_entity_id is not None else None
+    if holder is None:
+        return 0.0
+    score = await skill_score(ctx, holder, POWER_SKILLS[power])
+    return min(1.0, score / max(1, ctx.rules.government.skill_full))
+
+
+async def wielders(ctx: TickContext, realm: Realm, power: OfficePower) -> list[tuple[OfficeRow, float]]:
+    found = []
+    for office in realm.offices:
+        if office.holder_entity_id is not None and power in powers_of(office):
+            found.append((office, await power_skill(ctx, office, power)))
+    return found
+
+
+async def best_skill(ctx: TickContext, realm: Realm, power: OfficePower) -> float:
+    return max((skill for _, skill in await wielders(ctx, realm, power)), default=0.0)
 
 
 async def subjects(ctx: TickContext, realm: Realm) -> list[EntityRow]:
@@ -85,34 +147,71 @@ async def appoint(ctx: TickContext, realm: Realm, office: OfficeRow, holder: Ent
     office.since_epoch = ctx.epoch
     if holder is not None and ctx.rules.oaths.fealty_on_office and realm.ruler_id is not None and holder.id != realm.ruler_id:
         await swear(ctx, holder, OathKind.FEALTY, recipient_id=realm.ruler_id, note_text=f"as {office.kind.value.replace('_', ' ')} of {realm.entity.name}")
+    if holder is not None and ctx.rules.oaths.silence_on_office and OfficePower.SPY in powers_of(office):
+        await swear(ctx, holder, OathKind.SILENCE, recipient_id=realm.entity.id, note_text="the secrets of the realm")
 
 
-def wanted_offices(book: RealmBook, realm: Realm, rules: Rules, towns: Mapping[int, SettlementProfileRow]) -> list[tuple[OfficeKind, int | None]]:
-    tier = realm.profile.tier
+def largest_tier(book: RealmBook, region: int, towns: Mapping[int, SettlementProfileRow]) -> int:
+    return max((TIER_ORDER.index(towns[place].size_tier) for place in book.atlas.communities_in(region) if place in towns), default=0)
+
+
+def province_seats(book: RealmBook, realm: Realm) -> list[int]:
+    capital_region = book.atlas.top_region(realm.profile.capital_entity_id or -1)
+    seats: dict[str, int] = {}
+    for region, row in sorted(realm.territory.items()):
+        seats.setdefault(row.province or str(region), region)
+    return sorted(region for region in seats.values() if region != capital_region)
+
+
+async def embassy_targets(ctx: TickContext, book: RealmBook, realm: Realm) -> list[int]:
+    core = realm.profile.core_entity_id
+    if core is None or realm.profile.tier < ctx.rules.realm_tiers.embassies:
+        return []
+    scored = []
+    for other in book.realms.values():
+        other_core = other.profile.core_entity_id
+        if other.entity.id == realm.entity.id or other_core is None or other.entity.world_id != realm.entity.world_id:
+            continue
+        scored.append((await relation(ctx.session, ctx.rules, core, other_core), other.entity.id))
+    return [realm_id for _, realm_id in sorted(scored, key=lambda item: (-item[0], item[1]))[: ctx.rules.government.embassy_count]]
+
+
+def wanted_offices(
+    book: RealmBook, realm: Realm, embassies: list[int], rules: Rules, towns: Mapping[int, SettlementProfileRow]
+) -> list[tuple[OfficeKind, int | None, int | None]]:
     seat = towns.get(realm.profile.capital_entity_id or -1)
     seat_tier = TIER_ORDER.index(seat.size_tier) if seat is not None else 0
-    wanted: list[tuple[OfficeKind, int | None]] = [(kind, None) for kind in COUNCIL if seat_tier >= office_tier(rules, kind)]
-    if tier >= PROVINCE_TIER:
-        capital_region = book.atlas.top_region(realm.profile.capital_entity_id or -1)
-        largest = {
-            region: max((TIER_ORDER.index(towns[place].size_tier) for place in book.atlas.communities_in(region) if place in towns), default=0)
-            for region in realm.territory
-        }
+    wanted: list[tuple[OfficeKind, int | None, int | None]] = [(kind, None, None) for kind in COUNCIL if seat_tier >= office_tier(rules, kind)]
+    if realm.profile.tier >= rules.realm_tiers.provinces:
         wanted.extend(
-            (OfficeKind.GOVERNOR, region)
-            for region in sorted(realm.territory)
-            if region != capital_region and largest[region] >= office_tier(rules, OfficeKind.GOVERNOR)
+            (OfficeKind.GOVERNOR, region, None)
+            for region in province_seats(book, realm)
+            if largest_tier(book, region, towns) >= office_tier(rules, OfficeKind.GOVERNOR)
         )
+    wanted.extend((OfficeKind.AMBASSADOR, None, target) for target in embassies)
     return wanted
 
 
 async def staff(ctx: TickContext, book: RealmBook, realm: Realm, held: set[int]) -> int:
     people = [mortal for mortal in await subjects(ctx, realm) if adult(ctx, mortal) and mortal.id != realm.ruler_id]
     filled = 0
-    for kind, region in wanted_offices(book, realm, ctx.rules, await towns(ctx.session)):
-        office = next((row for row in realm.offices if row.kind is kind and row.region_entity_id == region), None)
+    embassies = await embassy_targets(ctx, book, realm)
+    for seat in list(realm.offices):
+        recalled = seat.kind is OfficeKind.AMBASSADOR and seat.target_entity_id not in embassies
+        if recalled and seat.holder_entity_id is not None and "offices" not in realm.profile.locked and "holder" not in seat.locked:
+            await appoint(ctx, realm, seat, None, by_id=realm.ruler_id, reason="the embassy was recalled")
+    for kind, region, target in wanted_offices(book, realm, embassies, ctx.rules, await towns(ctx.session)):
+        office = next((row for row in realm.offices if row.kind is kind and row.region_entity_id == region and row.target_entity_id == target), None)
         if office is None:
-            office = OfficeRow(polity_entity_id=realm.entity.id, kind=kind, region_entity_id=region, since_epoch=ctx.epoch, powers=[])
+            office = OfficeRow(
+                polity_entity_id=realm.entity.id,
+                kind=kind,
+                region_entity_id=region,
+                target_entity_id=target,
+                since_epoch=ctx.epoch,
+                powers=[power.value for power in DEFAULT_POWERS.get(kind, ())],
+                locked=[],
+            )
             ctx.session.add(office)
             realm.offices.append(office)
             await ctx.session.flush()
@@ -120,7 +219,7 @@ async def staff(ctx: TickContext, book: RealmBook, realm: Realm, held: set[int])
         if holder is not None and holder.status is EntityStatus.CANON:
             held.add(holder.id)
             continue
-        if "offices" in realm.profile.locked:
+        if "offices" in realm.profile.locked or "holder" in office.locked:
             continue
         candidates = [mortal for mortal in people if mortal.id not in held]
         if not candidates:
@@ -194,6 +293,7 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
     rule = SuccessionRule(str(laws.param(polity, LawKind.SUCCESSION_RULE, "rule") or SuccessionRule.PRIMOGENITURE.value))
     gender = GenderRule(str(laws.param(polity, LawKind.SUCCESSION_RULE, "gender") or GenderRule.MALE_PREFERENCE.value))
     wholeness = bool(laws.param(polity, LawKind.SUCCESSION_RULE, "wholeness_required"))
+    min_age = int(laws.param(polity, LawKind.SUCCESSION_RULE, "min_age") or 0)
     children, grandchildren, siblings = await kin(ctx, ruler)
     house = await ctx.session.scalar(select(HouseMemberRow.house_entity_id).where(HouseMemberRow.mortal_entity_id == ruler.id).limit(1))
     housemates: list[EntityRow] = []
@@ -224,8 +324,11 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
         if rank is None or (wholeness and not await whole(ctx, item)):
             continue
         eligible.append((rank, item))
+    grown = [entry for entry in eligible if (stat(entry[1], "age") or 0) >= min_age]
+    eligible = grown or eligible
     table = ctx.rules.succession
     order = {item.id: index for index, item in enumerate(pool)}
+    favour = await divine_favour(ctx, realm, [item for _, item in eligible]) if rule is SuccessionRule.DIVINE_CHOICE else {}
 
     def key(entry: tuple[int, EntityRow]) -> tuple[float, ...]:
         rank, item = entry
@@ -248,9 +351,27 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
             )
         if rule is SuccessionRule.MATRILINEAL:
             return (order[item.id], item.id)
-        return (rank, -((stat(item, "strength") or 0) + (stat(item, "charisma") or 0) + (item.importance or 0)), item.id)
+        merit = (stat(item, "strength") or 0) + (stat(item, "charisma") or 0) + (item.importance or 0)
+        return (rank, -(favour.get(item.id, 0) * PERCENT + merit), item.id)
 
     return [item for _, item in sorted(eligible, key=key)]
+
+
+async def divine_favour(ctx: TickContext, realm: Realm, people: list[EntityRow]) -> dict[int, int]:
+    weight = ctx.rules.succession.patron_favour
+    patron = realm.profile.patron_son_id
+    son = await ctx.session.get(SonRow, patron) if patron is not None else None
+    favour: dict[int, int] = {}
+    for item in people:
+        score = 0
+        if son is not None and await bond_exists(ctx.session, item.id, son.id, BondKind.WORSHIPS):
+            score += weight
+        if son is not None and item.creator_son_id == son.id:
+            score += weight * 2
+        if await has_flag(ctx.session, item.id, EntityFlag.CHOSEN):
+            score += weight
+        favour[item.id] = score
+    return favour
 
 
 async def name_heir(ctx: TickContext, realm: Realm, line: list[EntityRow]) -> EntityRow | None:
@@ -315,38 +436,101 @@ async def regency(ctx: TickContext, realm: Realm, held: set[int]) -> str | None:
 
 
 async def usurp(ctx: TickContext, realm: Realm, usurper: EntityRow, ruler: EntityRow) -> None:
-    for bond in await active_bonds(ctx.session, [BondKind.RULES], sources=[ruler.id]):
-        await close(ctx.session, bond, ctx.epoch, "usurped")
-        await connect(ctx.session, usurper.id, bond.target_node_id, BondKind.RULES, ctx.epoch, description="usurped")
-    set_ruler(ctx, realm, usurper.id, "usurped")
-    realm.profile.legitimacy_parts = {**realm.profile.legitimacy_parts, "usurper": 1}
-    await note(
-        ctx,
-        f"{usurper.name}, regent for the child {ruler.name}, took the throne of {realm.entity.name} for themself.",
-        key="polity.usurped",
-        ids=[usurper.id, ruler.id, realm.entity.id],
-        kind=ChronicleKind.CIVILIZATION,
+    await seize_throne(ctx, realm, usurper, f"the regent for the child {ruler.name} took the crown")
+
+
+async def house_of(ctx: TickContext, mortal_id: int | None) -> HouseProfileRow | None:
+    if mortal_id is None:
+        return None
+    house_id = await ctx.session.scalar(select(HouseMemberRow.house_entity_id).where(HouseMemberRow.mortal_entity_id == mortal_id).limit(1))
+    return await ctx.session.get(HouseProfileRow, house_id) if house_id is not None else None
+
+
+async def backing(ctx: TickContext, claimant_id: int) -> int:
+    statement = (
+        select(EntityRow)
+        .join(BondRow, BondRow.target_node_id == EntityRow.id)
+        .where(
+            BondRow.kind == BondKind.MEMBER_OF,
+            BondRow.state == BondState.ACTIVE,
+            BondRow.source_node_id == claimant_id,
+            EntityRow.entity_type == EntityType.FACTION,
+            EntityRow.status == EntityStatus.CANON,
+        )
     )
+    return sum(stat(faction, "strength") or 0 for faction in await ctx.session.scalars(statement))
+
+
+async def support(ctx: TickContext, realm: Realm, claim: ClaimRow) -> tuple[int, int]:
+    table = ctx.rules.succession
+    rival = await house_of(ctx, claim.claimant_entity_id)
+    crown = await house_of(ctx, realm.ruler_id)
+    society = await ctx.session.get(CommunitySocietyRow, realm.profile.core_entity_id or -1)
+    discontent = (PERCENT // 2 - society.satisfaction(SocialClass.NOBLE)) if society is not None else 0
+    claimant_side = (
+        claim.strength
+        + (rival.prestige if rival is not None else 0) * table.house_support_pct / PERCENT
+        + await backing(ctx, claim.claimant_entity_id) * table.faction_support_pct / PERCENT
+        + discontent * table.opinion_support_pct / PERCENT
+    )
+    throne_side = realm.profile.legitimacy + (crown.prestige if crown is not None else 0) * table.house_support_pct / PERCENT
+    return round_half_up(claimant_side), round_half_up(throne_side)
+
+
+async def house_sides(ctx: TickContext, realm: Realm, war: WarRow, claimant_id: int, host_id: int) -> int:
+    rival = await house_of(ctx, claimant_id)
+    crown = await house_of(ctx, realm.ruler_id)
+    officers = {office.holder_entity_id for office in realm.offices if office.holder_entity_id is not None}
+    claimants = set(
+        await ctx.session.scalars(select(ClaimRow.house_entity_id).where(ClaimRow.polity_entity_id == realm.entity.id, ClaimRow.ended_epoch.is_(None)))
+    )
+    present = set(await ctx.session.scalars(select(WarSideRow.entity_id).where(WarSideRow.war_id == war.id)))
+    event = await war_event(ctx.session, war)
+    joined = 0
+    for house in await ctx.session.scalars(
+        select(HouseProfileRow).where(HouseProfileRow.polity_entity_id == realm.entity.id, HouseProfileRow.extinct_epoch.is_(None))
+    ):
+        if rival is not None and house.house_entity_id == rival.house_entity_id:
+            side = WarSide.ATTACKER
+        elif (crown is not None and house.house_entity_id == crown.house_entity_id) or house.head_entity_id in officers:
+            side = WarSide.DEFENDER
+        elif house.house_entity_id in claimants:
+            side = WarSide.ATTACKER
+        else:
+            continue
+        if not ctx.rng(f"house_side.{war.id}.{house.house_entity_id}").chance(ctx.rules.succession.house_join_chance):
+            continue
+        await connect(ctx.session, house.house_entity_id, event.id, BondKind.PARTY_TO, ctx.epoch, description=f"fought for the {side.value}")
+        for seat in house.seats:
+            place = await living_entity(ctx.session, seat)
+            if place is None or seat in present or place.entity_type not in {EntityType.SETTLEMENT, EntityType.PEOPLE} or seat == host_id:
+                continue
+            ctx.session.add(WarSideRow(war_id=war.id, entity_id=seat, side=side, joined_epoch=ctx.epoch))
+            present.add(seat)
+        joined += 1
+    return joined
 
 
 async def press_claims(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
     table = ctx.rules.succession
-    if realm.ruler_id is None or realm.profile.legitimacy >= PERCENT // 2:
+    if realm.ruler_id is None:
         return 0
     claims = await ctx.session.scalars(
         select(ClaimRow).where(ClaimRow.polity_entity_id == realm.entity.id, ClaimRow.ended_epoch.is_(None), ClaimRow.strength >= table.claim_press_pct)
     )
     wars = 0
-    for claim in claims:
+    for claim in list(claims):
         claimant = await living_entity(ctx.session, claim.claimant_entity_id)
-        if claimant is None or claimant.id == realm.ruler_id or claim.pressed:
+        if claimant is None or claimant.id == realm.ruler_id or claim.pressed or "pressed" in claim.locked:
             continue
-        if not ctx.rng(f"press.{claim.id}.{ctx.epoch}").chance(table.war_chance * (PERCENT - realm.profile.legitimacy) / PERCENT * 2):
+        backers, throne = await support(ctx, realm, claim)
+        margin = backers - throne
+        if margin < table.support_press or not ctx.rng(f"press.{claim.id}.{ctx.epoch}").chance(table.war_chance * min(2.0, 1 + margin / PERCENT)):
             continue
-        claim.pressed = True
         core = book.entities.get(realm.profile.core_entity_id or -1)
         if core is None:
             continue
+        claim.pressed = True
         host = await create_record(
             ctx,
             RecordSpec(
@@ -363,8 +547,12 @@ async def press_claims(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
                 pending=False,
             ),
         )
+        claim.backer_entity_id = host.id
         await connect(ctx.session, claimant.id, host.id, BondKind.MEMBER_OF, ctx.epoch, description="claimant")
-        await declare_war(ctx, host.id, core.id, f"{claimant.name} pressed a claim to {realm.entity.name}", cause=WarCause.UPRISING, world_cap=False)
+        war = await press_claim_war(ctx, host.id, core.id, claim_id=claim.id, succession=True, reason=f"{claimant.name} pressed a claim to {realm.entity.name}")
+        if war is None:
+            continue
+        ctx.count("houses_took_sides", await house_sides(ctx, realm, war, claimant.id, host.id))
         wars += 1
         await note(
             ctx,
@@ -375,3 +563,107 @@ async def press_claims(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
             cause_incident_id=await succession_incident(ctx.session, realm.entity.id, [realm.ruler_id]),
         )
     return wars
+
+
+async def office_effects(ctx: TickContext, book: RealmBook, realm: Realm) -> dict[str, int]:
+    table = ctx.rules.government
+    counts = {"negotiated": 0, "drilled": 0, "governed": 0, "embassies": 0}
+    core = realm.profile.core_entity_id
+    negotiate = await best_skill(ctx, realm, OfficePower.NEGOTIATE)
+    if core is not None and negotiate > 0:
+        parties = set(realm.members) | {realm.entity.id}
+        treaties = set(
+            await ctx.session.scalars(
+                select(TreatyPartyRow.treaty_entity_id)
+                .join(TreatyProfileRow, TreatyProfileRow.treaty_entity_id == TreatyPartyRow.treaty_entity_id)
+                .where(TreatyPartyRow.party_node_id.in_(list(parties)), TreatyProfileRow.status == TreatyStatus.IN_FORCE)
+            )
+        )
+        partners = set(
+            await ctx.session.scalars(
+                select(TreatyPartyRow.party_node_id).where(
+                    TreatyPartyRow.treaty_entity_id.in_(list(treaties)), TreatyPartyRow.party_node_id.not_in(list(parties))
+                )
+            )
+        )
+        for partner in sorted(partners):
+            other = await living_entity(ctx.session, partner)
+            if other is not None and other.entity_type in COMMUNITY_TYPES:
+                await change_relation(ctx, core, partner, table.chancellor_relation * negotiate, MemoryKind.GOODWILL, note="courted by the chancellor")
+                counts["negotiated"] += 1
+    command = await best_skill(ctx, realm, OfficePower.COMMAND)
+    banner = table.emblem_cohesion if realm.profile.emblem else 0
+    gain = round_half_up(table.marshal_cohesion * command) + banner
+    if gain and realm.members:
+        for army in await ctx.session.scalars(
+            select(ArmyProfileRow)
+            .join(ArmyRow, ArmyRow.entity_id == ArmyProfileRow.army_entity_id)
+            .where(ArmyRow.owner_entity_id.in_(list(realm.members)), ArmyRow.disbanded_epoch.is_(None))
+        ):
+            army.cohesion = clamp_int(army.cohesion + gain, 0, PERCENT)
+            counts["drilled"] += 1
+    counts["governed"] = await govern(ctx, book, realm)
+    for office, skill in await wielders(ctx, realm, OfficePower.EMBASSY):
+        host = book.realms.get(office.target_entity_id or -1)
+        if host is None or core is None or host.profile.core_entity_id is None or skill <= 0:
+            continue
+        await change_relation(ctx, core, host.profile.core_entity_id, table.ambassador_relation * skill, MemoryKind.GOODWILL, note="an embassy at court")
+        counts["embassies"] += 1
+    return counts
+
+
+async def govern(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
+    table = ctx.rules.government
+    governed = 0
+    for office, skill in await wielders(ctx, realm, OfficePower.GOVERN):
+        if office.region_entity_id is None or skill <= 0:
+            continue
+        seat = realm.territory.get(office.region_entity_id)
+        province = seat.province if seat is not None else None
+        regions = {
+            region for region, row in realm.territory.items() if (province is not None and row.province == province) or region == office.region_entity_id
+        }
+        for member_id, member in realm.members.items():
+            if book.atlas.top_region(member_id) in regions and "autonomy" not in member.locked:
+                member.autonomy = clamp_int(member.autonomy - table.governor_autonomy * skill, 0, PERCENT)
+        for region in regions:
+            row = realm.territory[region]
+            if "control" not in row.locked and "control" not in realm.profile.locked:
+                row.control = clamp_int(row.control + table.governor_control * skill, 0, PERCENT)
+        governed += 1
+    return governed
+
+
+async def seize_throne(ctx: TickContext, realm: Realm, usurper: EntityRow, reason: str, *, backer_id: int | None = None) -> bool:
+    ruler = await living_entity(ctx.session, realm.ruler_id) if realm.ruler_id is not None else None
+    if ruler is not None and ruler.id == usurper.id:
+        return False
+    if ruler is not None:
+        for bond in await active_bonds(ctx.session, [BondKind.RULES], sources=[ruler.id]):
+            await close(ctx.session, bond, ctx.epoch, "overthrown")
+            await connect(ctx.session, usurper.id, bond.target_node_id, BondKind.RULES, ctx.epoch, description="seized")
+    core = realm.profile.core_entity_id
+    if core is not None and not await active_bonds(ctx.session, [BondKind.RULES], sources=[usurper.id], targets=[core]):
+        await connect(ctx.session, usurper.id, core, BondKind.RULES, ctx.epoch, description="seized")
+    set_ruler(ctx, realm, usurper.id, reason, usurped=True)
+    realm.profile.legitimacy_parts = {**realm.profile.legitimacy_parts, "usurper": ctx.epoch}
+    if ruler is not None:
+        await break_on(ctx, [usurper.id], OathKind.FEALTY, "the oath-sworn seized the throne", recipient_id=ruler.id)
+    await shift_infamy(ctx, usurper.id, ctx.rules.legitimacy.usurper_infamy)
+    ids = [usurper.id, realm.entity.id, *([ruler.id] if ruler is not None else []), *([backer_id] if backer_id is not None else [])]
+    fallen = f" from {ruler.name}" if ruler is not None else ""
+    await note(ctx, f"{usurper.name} seized the throne of {realm.entity.name}{fallen}: {reason}.", key="polity.coup", ids=ids, kind=ChronicleKind.CIVILIZATION)
+    return True
+
+
+async def coups(ctx: TickContext, realm: Realm) -> int:
+    table = ctx.rules.government
+    if realm.ruler_id is None or realm.profile.legitimacy >= table.coup_legitimacy or "ruler" in realm.profile.locked:
+        return 0
+    marshal = next((office for office in realm.offices if OfficePower.COMMAND in powers_of(office) and office.holder_entity_id is not None), None)
+    holder = await living_entity(ctx.session, marshal.holder_entity_id) if marshal is not None and marshal.holder_entity_id is not None else None
+    if holder is None or TraitKind.AMBITIOUS not in await traits_of(ctx.session, holder.id):
+        return 0
+    if not ctx.rng(f"coup.{realm.entity.id}.{ctx.epoch}").chance(table.coup_chance):
+        return 0
+    return 1 if await seize_throne(ctx, realm, holder, "the marshal turned the army on the throne") else 0

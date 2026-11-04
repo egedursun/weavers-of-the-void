@@ -33,6 +33,7 @@ from aerona.engine.demography.cohorts import cohorts_of, seed
 from aerona.engine.demography.prices import cheapest, dearest, local_prices
 from aerona.engine.disease.harm import community_targets, sick_levy, sick_work
 from aerona.engine.economy.extraction import KIND_JOBS, extraction_kind
+from aerona.engine.polity.law_effects import feudal_levy
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat
@@ -344,11 +345,9 @@ async def mobilisation(session: AsyncSession, rules: Rules, community: EntityRow
         return 1.0
     values = await culture_of(session, people.id)
     culture = await session.get(PeopleCultureRow, people.id)
-    martial = 1 + values.get(ValueAxis.MARTIAL, 0) / PERCENT * rules.mobilisation.martial_pct / PERCENT
-    cohesion = (
-        1 + ((culture.cohesion if culture is not None else table.cohesion_base) - table.cohesion_base) / PERCENT * rules.mobilisation.cohesion_pct / PERCENT
-    )
-    season = 1 - harvest_share * (1 - rules.mobilisation.harvest_pct / PERCENT)
+    martial = 1 + values.get(ValueAxis.MARTIAL, 0) / PERCENT * rules.levies.martial_pct / PERCENT
+    cohesion = 1 + ((culture.cohesion if culture is not None else table.cohesion_base) - table.cohesion_base) / PERCENT * rules.levies.cohesion_pct / PERCENT
+    season = 1 - harvest_share * (1 - rules.levies.harvest_pct / PERCENT)
     laws = await LawBook.load(session)
     share = laws.param(community.id, LawKind.LEVY_LAW, "share")
     drafted = laws.param(community.id, LawKind.CONSCRIPTION, "share")
@@ -357,6 +356,7 @@ async def mobilisation(session: AsyncSession, rules: Rules, community: EntityRow
         law *= 1 + (int(share) - LEVY_BASE) / LEVY_BASE * rules.legislation.levy_share_pct / PERCENT * laws.weight(community.id, LawKind.LEVY_LAW)
     if drafted is not None:
         law *= 1 + int(drafted) / PERCENT * laws.weight(community.id, LawKind.CONSCRIPTION)
+    law *= feudal_levy(laws, community.id, rules)
     return max(0.1, martial * cohesion * season * law)
 
 

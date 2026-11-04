@@ -2,27 +2,34 @@ from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
+from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.formation import refresh_realms
-from aerona.engine.polity.governance import agenda, collect, conquest_conflict, enforce, law_effects, repeal_discord
-from aerona.engine.polity.houses import HouseBook, arrange_marriages, gather_kin, seed_houses, tend
-from aerona.engine.polity.laws import LawBook, ensure_profile
-from aerona.engine.polity.oaths import lapse, pledges
-from aerona.engine.polity.offices import name_heir, press_claims, purge, regency, staff, succession_line
+from aerona.engine.polity.governance import agenda, collect, conquest_conflict, cult_laws, enforce, law_effects, proposals, repeal_discord
+from aerona.engine.polity.houses import HouseBook, arrange_marriages, conquest_claims, dynasty_backfill, fabricate_claims, gather_kin, seed_houses, tend
+from aerona.engine.polity.law_effects import realm_coinage
+from aerona.engine.polity.laws import LawBook, backfill_kinds, ensure_profile
+from aerona.engine.polity.oaths import lapse, pledges, vows
+from aerona.engine.polity.offices import coups, name_heir, office_effects, press_claims, purge, regency, staff, succession_line
+from aerona.engine.polity.pacts import outer_pacts
 from aerona.engine.polity.standing import administration, legitimacy, overreach, rank, realm_tier, secede, settle, stability
-from aerona.engine.polity.treaties import Clause, adopt_bonds, hostilities, keep_clauses, sign
+from aerona.engine.polity.treaties import adopt_bonds, answer_proposals, hostilities, keep_clauses, tribute_ledger, vassal_duties
 from aerona.engine.polity.wars import champions, join_wars
 from aerona.engine.primitives.knowledge import KnowledgeMap
 
 
 @reads(
+    "army.size",
     "table.bodies",
     "table.memories",
     "faction.strength",
+    "faction.sway",
+    "faction.wealth",
     "law.rigidity",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
+    "mortal.importance",
     "mortal.intellect",
     "mortal.lifespan",
     "mortal.strength",
@@ -31,20 +38,37 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "polity.subjects",
     "settlement.population",
     "settlement.prosperity",
+    "table.applied_fixups",
+    "table.armies",
+    "table.army_profiles",
+    "table.artwork_profiles",
+    "table.body_customs",
     "table.bonds",
+    "table.claims",
+    "table.community_relations",
     "table.community_societies",
+    "table.conditions",
+    "table.cosmos",
+    "table.cult_doctrines",
+    "table.cult_tenets",
     "table.culture_values",
+    "table.districts",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.holder_levels",
     "table.holder_techniques",
     "table.house_members",
+    "table.house_profiles",
     "table.injuries",
     "table.item_profiles",
+    "table.language_intelligibility",
     "table.law_jurisdictions",
     "table.law_profiles",
+    "table.loans",
     "table.maimed_cohorts",
     "table.memories",
+    "table.minds",
+    "table.mortal_profiles",
     "table.name_registry",
     "table.nodes",
     "table.oaths",
@@ -60,27 +84,51 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.settlement_profiles",
     "table.settlement_treasury",
     "table.skills",
+    "table.sons",
+    "table.speaker_cohorts",
     "table.traits",
+    "table.treaty_parties",
+    "table.treaty_profiles",
     "table.vassalages",
     "table.war_sides",
     "table.wars",
     "table.world_maps",
 )
 @writes(
+    "army.size",
+    "cult.followers",
+    "faction.sway",
+    "faction.wealth",
     "law.justice",
+    "people.population",
+    "people.prosperity",
     "polity.legitimacy",
     "polity.stability",
     "polity.subjects",
     "polity.territory",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.applied_fixups",
+    "table.army_profiles",
+    "table.body_customs",
+    "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.claims",
+    "table.community_relations",
+    "table.community_societies",
     "table.designated_heirs",
+    "table.districts",
     "table.entities",
+    "table.entity_flags",
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.law_jurisdictions",
     "table.law_profiles",
+    "table.loans",
+    "table.memories",
+    "table.mortal_profiles",
     "table.name_registry",
     "table.oaths",
     "table.office_history",
@@ -93,6 +141,80 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.polity_treasury",
     "table.settlement_profiles",
     "table.settlement_treasury",
+    "table.sons",
+    "table.war_aims",
+    "table.war_sides",
+    "table.wars",
+)
+@reads(
+    "table.applied_fixups",
+    "table.army_officers",
+    "table.claims",
+    "table.community_cohorts",
+    "table.community_stocks",
+    "table.currencies",
+    "table.districts",
+    "table.feuds",
+    "table.goods",
+    "table.house_members",
+    "table.house_profiles",
+    "table.injuries",
+    "table.law_profiles",
+    "table.learned_tactics",
+    "table.loans",
+    "table.memories",
+    "table.mercenary_contracts",
+    "table.offices",
+    "table.peace_terms",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.routes",
+    "table.settlement_infrastructure",
+    "table.settlement_profiles",
+    "table.spy_agents",
+    "table.treaty_clauses",
+    "table.treaty_profiles",
+    "table.unit_designs",
+    "table.vessel_profiles",
+    "table.war_sides",
+    "table.workshops",
+)
+@writes(
+    "people.wealth",
+    "settlement.wealth",
+    "table.applied_fixups",
+    "table.army_officers",
+    "table.battle_casualties",
+    "table.battle_stacks",
+    "table.bonds",
+    "table.captive_cohorts",
+    "table.captives",
+    "table.claims",
+    "table.community_cohorts",
+    "table.community_stocks",
+    "table.currencies",
+    "table.districts",
+    "table.entities",
+    "table.feuds",
+    "table.goods",
+    "table.house_members",
+    "table.house_profiles",
+    "table.learned_tactics",
+    "table.loans",
+    "table.maimed_cohorts",
+    "table.memories",
+    "table.mercenary_contracts",
+    "table.offices",
+    "table.peace_terms",
+    "table.polity_profiles",
+    "table.region_environment",
+    "table.settlement_infrastructure",
+    "table.settlement_profiles",
+    "table.spy_agents",
+    "table.spy_networks",
+    "table.treaty_breaches",
+    "table.vessel_profiles",
+    "table.war_sides",
 )
 async def polity_cycles(ctx: TickContext) -> None:
     book = await RealmBook.load(ctx.session)
@@ -100,15 +222,17 @@ async def polity_cycles(ctx: TickContext) -> None:
     for key, value in (await refresh_realms(ctx, book)).items():
         ctx.count(key, value)
     knowledge = await KnowledgeMap.load(ctx.session)
+    ctx.count("law_kinds_backfilled", await backfill_kinds(ctx.session, ctx.epoch))
     laws = await LawBook.load(ctx.session)
     for law in laws.laws.values():
         if law.id not in laws.profiles:
             laws.profiles[law.id] = await ensure_profile(ctx.session, law, ctx.epoch)
     laws = await LawBook.load(ctx.session)
+    ctx.count("cult_laws", await cult_laws(ctx, laws))
     for realm in list(book.realms.values()):
         newcomers = [member for member in realm.members if before.get(member) not in {None, realm.entity.id}]
         ctx.count("legal_conflicts", await conquest_conflict(ctx, book, realm, laws, newcomers))
-        realm.profile.tier = realm_tier(book, realm)
+        realm.profile.tier = await realm_tier(ctx, book, realm, knowledge)
         capacity, need = await administration(ctx, book, realm, knowledge)
         for member in await overreach(ctx, book, realm, capacity, need):
             await secede(ctx, book, realm, member)
@@ -119,12 +243,18 @@ async def polity_cycles(ctx: TickContext) -> None:
             ctx.count(f"regency.{regent}")
         ctx.count("offices_filled", await staff(ctx, book, realm, held))
         ctx.count("purged", await purge(ctx, realm))
+        for key, value in (await office_effects(ctx, book, realm)).items():
+            ctx.count(f"office.{key}", value)
+        ctx.count("coups", await coups(ctx, realm))
         await name_heir(ctx, realm, await succession_line(ctx, realm, laws))
         ctx.count("taxed", await collect(ctx, book, realm))
         for decision in await agenda(ctx, book, realm, laws):
             ctx.count(f"decision.{decision.replace(' ', '_')}")
+        for decision in await proposals(ctx, realm, laws):
+            ctx.count(f"proposal.{decision.replace(' ', '_')}")
         ctx.count("repealed", await repeal_discord(ctx, realm, laws))
         await law_effects(ctx, book, realm, laws)
+        ctx.count("realm_coinage", await realm_coinage(ctx, realm))
         ctx.count("law_unrest", await enforce(ctx, realm, laws))
         legit = await legitimacy(ctx, book, realm, laws)
         steady = await stability(ctx, book, realm, sum(legit.values()))
@@ -136,14 +266,24 @@ async def polity_cycles(ctx: TickContext) -> None:
 
 @reads(
     "mortal.age",
+    "mortal.lifespan",
+    "mortal.strength",
+    "settlement.prosperity",
+    "table.applied_fixups",
     "table.bonds",
     "table.claims",
     "table.culture_values",
+    "table.entity_flags",
     "table.epoch_year_cursors",
     "table.heirlooms",
+    "table.hero_quests",
     "table.house_members",
     "table.house_profiles",
     "table.injuries",
+    "table.law_jurisdictions",
+    "table.law_profiles",
+    "table.memories",
+    "table.mortal_profiles",
     "table.name_registry",
     "table.nodes",
     "table.offices",
@@ -152,14 +292,19 @@ async def polity_cycles(ctx: TickContext) -> None:
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
+    "table.sentences",
+    "table.sons",
     "table.speaker_cohorts",
+    "table.traits",
     "table.vassalages",
+    "table.wars",
     "table.world_maps",
 )
 @writes(
     "house.members",
     "house.prestige",
     "house.wealth",
+    "table.applied_fixups",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
@@ -168,11 +313,17 @@ async def polity_cycles(ctx: TickContext) -> None:
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.heirlooms",
+    "table.hero_quests",
     "table.house_members",
     "table.house_profiles",
     "table.incident_participants",
     "table.incidents",
+    "table.memories",
+    "table.mortal_profiles",
     "table.name_registry",
+    "table.oaths",
+    "table.sons",
+    "table.treaty_breaches",
     "table.treaty_clauses",
     "table.treaty_parties",
     "table.treaty_profiles",
@@ -181,6 +332,9 @@ async def house_cycles(ctx: TickContext) -> None:
     realms = await RealmBook.load(ctx.session)
     book = await HouseBook.load(ctx)
     ctx.count("houses_founded", await seed_houses(ctx, book, realms))
+    ctx.count("dynasty_ancestors", await dynasty_backfill(ctx, book))
+    ctx.count("conquest_claims", await conquest_claims(ctx, realms))
+    ctx.count("fabricated_claims", await fabricate_claims(ctx, realms))
     ctx.count("kin_joined", await gather_kin(ctx, book))
     for key, value in (await tend(ctx, book, realms)).items():
         ctx.count(key, value)
@@ -190,10 +344,11 @@ async def house_cycles(ctx: TickContext) -> None:
         if first_realm is not None and second_realm is not None and first_realm.entity.id != second_realm.entity.id:
             first_core, second_core = first_realm.profile.core_entity_id, second_realm.profile.core_entity_id
             if first_core is not None and second_core is not None:
+                houses = [house for house in (book.house_of.get(first.id), book.house_of.get(second.id)) if house is not None]
                 await sign(
                     ctx,
                     TreatyKind.MARRIAGE_PACT,
-                    [(first_core, PartyRole.SIGNATORY), (second_core, PartyRole.SIGNATORY)],
+                    [(first_core, PartyRole.SIGNATORY), (second_core, PartyRole.SIGNATORY), *((house, PartyRole.SIGNATORY) for house in dict.fromkeys(houses))],
                     clauses=[
                         Clause(ClauseKind.MARRIAGE, first_core, second_core, {"first_id": first.id, "second_id": second.id}),
                         Clause(ClauseKind.CALL_TO_ARMS, first_core, second_core),
@@ -205,40 +360,77 @@ async def house_cycles(ctx: TickContext) -> None:
 
 
 @reads(
+    "faction.wealth",
+    "people.prosperity",
+    "people.wealth",
+    "settlement.prosperity",
+    "table.applied_fixups",
     "table.armies",
+    "table.beast_profiles",
     "table.bonds",
     "table.community_relations",
+    "table.community_societies",
+    "table.community_stocks",
+    "table.cult_tenets",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.foreign_gods",
+    "table.holder_levels",
     "table.language_intelligibility",
+    "table.law_jurisdictions",
+    "table.law_profiles",
     "table.memories",
     "table.minds",
+    "table.mortal_profiles",
     "table.name_registry",
     "table.nodes",
     "table.oaths",
     "table.offices",
+    "table.personality_values",
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
     "table.skills",
     "table.speaker_cohorts",
+    "table.trade_route_tolls",
     "table.traits",
     "table.treaty_clauses",
     "table.treaty_parties",
     "table.treaty_profiles",
+    "table.tributes",
     "table.vassalages",
     "table.war_sides",
     "table.wars",
     "table.world_maps",
 )
 @writes(
+    "faction.wealth",
+    "people.prosperity",
+    "people.wealth",
+    "settlement.prosperity",
+    "table.applied_fixups",
     "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_relations",
+    "table.community_societies",
+    "table.community_stocks",
     "table.entities",
+    "table.entity_flags",
+    "table.goods_flows",
+    "table.incident_participants",
+    "table.incidents",
     "table.memories",
+    "table.mortal_profiles",
     "table.name_registry",
     "table.oaths",
+    "table.polity_profiles",
+    "table.sons",
     "table.treaty_breaches",
     "table.treaty_clauses",
     "table.treaty_parties",
     "table.treaty_profiles",
+    "table.tributes",
     "table.vassalages",
     "table.war_sides",
     "table.wars",
@@ -246,13 +438,21 @@ async def house_cycles(ctx: TickContext) -> None:
 async def treaty_cycles(ctx: TickContext) -> None:
     book = await RealmBook.load(ctx.session)
     ctx.count("treaties_adopted", await adopt_bonds(ctx))
+    for key, value in (await answer_proposals(ctx)).items():
+        ctx.count(f"proposals_{key}", value)
     ctx.count("treaties_breached", await hostilities(ctx))
     for key, value in (await keep_clauses(ctx, book)).items():
         ctx.count(f"treaties_{key}", value)
+    for key, value in (await vassal_duties(ctx, book)).items():
+        ctx.count(f"vassal_{key}", value)
+    ctx.count("tributes_closed", await tribute_ledger(ctx))
+    for key, value in (await outer_pacts(ctx, book)).items():
+        ctx.count(f"pacts_{key}", value)
     ctx.count("joined_wars", await join_wars(ctx, book))
     ctx.count("champions", await champions(ctx))
     rulers = {member: realm.ruler_id for realm in book.realms.values() if realm.ruler_id is not None for member in realm.members}
     ctx.count("pledges", await pledges(ctx, rulers))
+    ctx.count("vows", await vows(ctx))
     kept, broken = await lapse(ctx)
     ctx.count("oaths_kept", kept)
     ctx.count("oaths_broken", broken)

@@ -31,7 +31,8 @@ from aerona.engine.gods.queries import community_of
 from aerona.engine.lore.items import record
 from aerona.engine.mind.memories import remember
 from aerona.engine.notes import note
-from aerona.engine.polity.treaties import Clause, breach, end_treaty, sign
+from aerona.engine.polity.accords import Clause, end_treaty, sign
+from aerona.engine.polity.treaties import breach
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon, close, connect, has_flag, living_entity

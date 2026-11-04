@@ -47,6 +47,8 @@ class SonToolsRules:
     treaty_cost: int = rule(20, 0, 500, RuleGroup.SON_TOOLS, "make_treaty (antlasma_yap) cost (essence)")
     treaty_ap: int = rule(1, 1, 5, RuleGroup.SON_TOOLS, "make_treaty action cost")
     treaty_relation: int = rule(15, 0, 100, RuleGroup.SON_TOOLS, "Contribution of an inter-world treaty to the two communities' relation")
+    treaty_max_epochs: int = rule(30, 1, 1000, RuleGroup.SON_TOOLS, "seal_treaty: longest term in epochs a god may seal a treaty for")
+    bloodline_cost: int = rule(25, 0, 500, RuleGroup.SON_TOOLS, "bless_bloodline cost (essence)")
     stitch_cost: int = rule(35, 0, 500, RuleGroup.SON_TOOLS, "stitch_leak (sizinti_dik) cost (essence)")
     stitch_ap: int = rule(1, 1, 5, RuleGroup.SON_TOOLS, "stitch_leak action cost")
     stitch_leak_reduction: int = rule(25, 1, 100, RuleGroup.SON_TOOLS, "Leak reduction from stitch_leak")

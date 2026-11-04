@@ -24,6 +24,10 @@ import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import {
+  useVariants,
+  variantChoices,
+} from '@/features/world-rules/VariantForge'
+import {
   type Mind,
   type MindTrait,
   type MindValue,
@@ -425,11 +429,17 @@ function MindControls({ mind }: { mind: Mind }) {
         })
       ),
   })
+  const variants = useVariants()
+  const [variant, setVariant] = useState('')
   const give = useGodAction({
     run: (picked: TraitKind) =>
       unwrap(
         api.POST('/api/actions/mind:trait', {
-          body: { node_id: mind.node_id, trait: picked },
+          body: {
+            node_id: mind.node_id,
+            trait: picked,
+            variant_id: variant === '' ? null : Number(variant),
+          },
         })
       ),
     onDone: () => setTrait(''),
@@ -522,6 +532,18 @@ function MindControls({ mind }: { mind: Mind }) {
               Give
             </Button>
           </div>
+          {trait !== '' &&
+            Object.keys(variantChoices(variants.data, 'trait', trait)).length >
+              0 && (
+              <MindPicker
+                label='Of a kind made in this world'
+                value={variant}
+                table={variantChoices(variants.data, 'trait', trait)}
+                blocked={busy}
+                placeholder='The plain kind'
+                onPick={setVariant}
+              />
+            )}
           {mind.career && (
             <MindPicker
               label='Calling'

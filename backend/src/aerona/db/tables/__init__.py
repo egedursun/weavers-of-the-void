@@ -88,6 +88,7 @@ from aerona.db.tables.epochs import (
     EpochStepRow,
     EpochWorldNarrativeRow,
 )
+from aerona.db.tables.factions import FactionActionRow, FactionGoalRow, FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.faith import (
     AfterlifeStratumRow,
     CultDoctrineRow,
@@ -125,14 +126,23 @@ from aerona.db.tables.lore import (
 from aerona.db.tables.meta import AchievementRow, ImageRow, MapNoteRow, MapSnapshotRow, NotificationRow, ScenarioRow, ScoreRow
 from aerona.db.tables.military import (
     ArmyMovementRow,
+    ArmyOfficerRow,
     ArmyProfileRow,
     ArmyUnitRow,
+    BattleCasualtyRow,
     BattlePhaseRow,
+    BattleStackRow,
     CampaignFrontRow,
     CaptiveCohortRow,
     CommanderTraitRow,
+    FeudRow,
+    LearnedTacticRow,
+    MercenaryContractRow,
     OccupationRow,
+    PeaceTermRow,
+    SpyAgentRow,
     SpyNetworkRow,
+    UnitDesignRow,
     WarAimRow,
 )
 from aerona.db.tables.mind import (
@@ -145,7 +155,7 @@ from aerona.db.tables.mind import (
     SkillRow,
     TraitRow,
 )
-from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
+from aerona.db.tables.mortal import KindVariantRow, MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.db.tables.motifs import MotifOverrideRow
 from aerona.db.tables.node import NameRegistryRow, NodeRow
 from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
@@ -163,6 +173,7 @@ from aerona.db.tables.polity import (
     PolityProfileRow,
     PolityTerritoryRow,
     PolityTreasuryRow,
+    SentenceRow,
     TreatyBreachRow,
     TreatyClauseRow,
     TreatyPartyRow,
@@ -213,12 +224,15 @@ __all__ = [
     "AppliedFixupRow",
     "ArchiveHoldingRow",
     "ArmyMovementRow",
+    "ArmyOfficerRow",
     "ArmyProfileRow",
     "ArmyRow",
     "ArmyUnitRow",
     "ArtworkProfileRow",
+    "BattleCasualtyRow",
     "BattlePhaseRow",
     "BattleRow",
+    "BattleStackRow",
     "BeastProfileRow",
     "BodyCustomRow",
     "BodyRow",
@@ -283,7 +297,12 @@ __all__ = [
     "EventCasualtyRow",
     "EventFootprintRow",
     "EventProfileRow",
+    "FactionActionRow",
+    "FactionGoalRow",
+    "FactionMembershipRow",
+    "FactionProfileRow",
     "FateRewardRow",
+    "FeudRow",
     "FolkBeliefRow",
     "ForeignGodPowerRow",
     "ForeignGodRow",
@@ -312,6 +331,7 @@ __all__ = [
     "ItemProfileRow",
     "JobRow",
     "JourneyRow",
+    "KindVariantRow",
     "LabourReasonRow",
     "LabourRow",
     "LanguageIntelligibilityRow",
@@ -319,6 +339,7 @@ __all__ = [
     "LanguageStandingRow",
     "LawJurisdictionRow",
     "LawProfileRow",
+    "LearnedTacticRow",
     "LedgerChangeRow",
     "LedgerEntryRow",
     "LegendProfileRow",
@@ -333,6 +354,7 @@ __all__ = [
     "MarketPriceRow",
     "MarriageRow",
     "MemoryRow",
+    "MercenaryContractRow",
     "MessageRow",
     "MindRow",
     "MobilityEventRow",
@@ -353,6 +375,7 @@ __all__ = [
     "OfficeRow",
     "OutbreakRow",
     "OuterBargainRow",
+    "PeaceTermRow",
     "PeopleBiologyRow",
     "PeopleCultureRow",
     "PersonalityValueRow",
@@ -390,6 +413,7 @@ __all__ = [
     "RuleOverrideRow",
     "ScenarioRow",
     "ScoreRow",
+    "SentenceRow",
     "SettlementHistoryRow",
     "SettlementInfrastructureRow",
     "SettlementProfileRow",
@@ -411,6 +435,7 @@ __all__ = [
     "SpeciesUseRow",
     "SpeciesYieldRow",
     "SpiritProfileRow",
+    "SpyAgentRow",
     "SpyNetworkRow",
     "StarRow",
     "StructureDesignRow",
@@ -433,6 +458,7 @@ __all__ = [
     "TreatyProfileRow",
     "TributeRow",
     "TurnCounterRow",
+    "UnitDesignRow",
     "VassalageRow",
     "VesselProfileRow",
     "WarAimRow",

@@ -209,7 +209,7 @@ async def test_cults_worship_their_maker_unless_another_son_is_named(database: D
     assert await outgoing(database, toolkit.created_entity_ids[-1], BondKind.WORSHIPS) == [realm.son_id]
     await ok(toolkit, "found_cult", creation("Order of the Flame", realm.people_id, location_id=realm.cosmos.region_id, worshipped_son_id=realm.sibling_id))
     assert await outgoing(database, toolkit.created_entity_ids[-1], BondKind.WORSHIPS) == [realm.sibling_id]
-    await ok(toolkit, "found_faction", creation("Salt Guild", realm.people_id, location_id=realm.cosmos.region_id))
+    await ok(toolkit, "found_faction", creation("Salt Guild", realm.people_id, location_id=realm.cosmos.region_id, faction_kind="merchant_guild"))
     assert await outgoing(database, toolkit.created_entity_ids[-1], BondKind.WORSHIPS) == []
     await ok(toolkit, "found_settlement", creation("Saltmoor", realm.people_id, location_id=realm.cosmos.region_id, worshipped_son_id=realm.sibling_id))
     assert await outgoing(database, toolkit.created_entity_ids[-1], BondKind.WORSHIPS) == [realm.sibling_id]
@@ -360,7 +360,7 @@ async def test_unplaced_kinds_have_no_location_and_optional_kinds_keep_theirs(da
     legend, moon = toolkit.created_entity_ids[-2:]
     assert (await entity(database, legend)).location_id is None and (await entity(database, moon)).location_id is None
     await ok(toolkit, "create_artwork", creation("The Drowned Choir", realm.people_id, location_id=realm.settlement_id))
-    await ok(toolkit, "decree_law", creation("Law of Salt", realm.people_id, location_id=realm.settlement_id))
+    await ok(toolkit, "decree_law", creation("Law of Salt", realm.people_id, location_id=realm.settlement_id, law_kind="tolls"))
     await ok(toolkit, "summon_spirit", creation("Whisper of Brine", realm.people_id, location_id=realm.cosmos.place_id))
     artwork, law, spirit = toolkit.created_entity_ids[-3:]
     assert (await entity(database, artwork)).location_id == realm.settlement_id

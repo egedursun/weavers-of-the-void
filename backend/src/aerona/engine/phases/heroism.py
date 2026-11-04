@@ -410,7 +410,7 @@ async def sworn_hunts(ctx: TickContext) -> None:
         await encounter(ctx, hunter, prey, "in a sworn hunt")
 
 
-@reads(*ENCOUNTER_READS)
+@reads(*ENCOUNTER_READS, "table.law_jurisdictions")
 @writes(*ENCOUNTER_WRITES)
 async def glory_hunts(ctx: TickContext) -> None:
     engine = ctx.rules.world_engine

@@ -52,6 +52,7 @@ class EconomyBook:
     techniques: dict[int, set[Technique]] = field(default_factory=dict)
     designs: dict[int, WorkshopDesignRow] = field(default_factory=dict)
     merchant_danger: dict[int, int] = field(default_factory=dict)
+    robbers: frozenset[int] = frozenset()
 
     @classmethod
     async def load(cls, ctx: TickContext) -> "EconomyBook":

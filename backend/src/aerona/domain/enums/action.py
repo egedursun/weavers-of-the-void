@@ -245,6 +245,16 @@ class ActionKind(StrEnum):
     SANCTIFY_PLACE = "sanctify_place"
     RAISE_NEXUS = "raise_nexus"
     OTHER = "other"
+    ENACT_LAW = "enact_law"
+    APPOINT_OFFICER = "appoint_officer"
+    SET_TAX = "set_tax"
+    PROPOSE_TREATY = "propose_treaty"
+    ACCEPT_TREATY = "accept_treaty"
+    BREAK_TREATY = "break_treaty"
+    SWEAR_OATH = "swear_oath"
+    RELEASE_OATH = "release_oath"
+    BLESS_BLOODLINE = "bless_bloodline"
+    STEER_FACTION = "steer_faction"
 
 
 class ActionPolarity(StrEnum):

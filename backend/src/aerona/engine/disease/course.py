@@ -22,6 +22,7 @@ from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.emergence import WET, new_strain
 from aerona.engine.disease.origin import caused_by_origin, mark_strain_origin, origin_line
 from aerona.engine.disease.outbreaks import QUARANTINE_LOCK, STATUS_LOCK, lethality_factor, spread_factor, tally
+from aerona.engine.military.units import resize
 from aerona.engine.notes import note
 from aerona.engine.phases.disasters import strike_plague
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -394,6 +395,6 @@ async def camp_disease(ctx: TickContext, book: DiseaseBook) -> int:
         losses = min(size, round_half_up(size * min(1.0, share)))
         if losses <= 0:
             continue
-        set_stats(army, size=size - losses)
+        await resize(ctx.session, ctx.rules, army, size - losses)
         lost += losses
     return lost

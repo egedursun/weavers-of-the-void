@@ -10,7 +10,10 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.mind import MemoryKind, SkillKind
+from aerona.domain.enums.polity import ClauseKind, TreatyKind
 from aerona.domain.enums.war import WarCause, WarEnding
+from aerona.engine.polity.accords import Clause
+from aerona.engine.polity.treaties import sign_derived
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.services.community_relations import change_relation, relation
@@ -47,6 +50,15 @@ def strength_of(call: MortalCall, entity: EntityRow) -> float:
 async def _union(call: MortalCall, target: EntityRow, args: DiplomacyInput, roll: int) -> str:
     tools = call.rules.mortal_tools
     if roll <= tools.diplomacy_alliance_threshold:
+        clauses = [Clause(ClauseKind.CALL_TO_ARMS, call.me.id, target.id), Clause(ClauseKind.CALL_TO_ARMS, target.id, call.me.id)]
+        await sign_derived(
+            call.tick,
+            TreatyKind.MARRIAGE_PACT if args.kind is DiplomacyKind.MARRIAGE else TreatyKind.ALLIANCE_DEFENSIVE,
+            call.me.id,
+            target.id,
+            until=call.epoch + call.rules.treaties.alliance_epochs,
+            clauses=clauses,
+        )
         await BondRepository(call.session).connect(
             BondDraft(call.me.id, target.id, BondKind.ALLY, call.epoch, lines.UNION_BOND.format(kind=args.kind.value, terms=args.terms))
         )

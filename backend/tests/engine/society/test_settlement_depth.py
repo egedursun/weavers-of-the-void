@@ -8,15 +8,11 @@ from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.settlement import DistrictDesignRow, DistrictRow, SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.warfare import SiegeRow
-from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import WorkshopKind
-from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
-from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.settlement import BuildMaterial, DistrictHarm, DistrictKind, SizeTier
-from aerona.domain.enums.society import Commodity, SocialClass
-from aerona.domain.models.entity_stats import FactionStats
-from aerona.engine.military.siege import batter_factor, wall_defence
+from aerona.domain.enums.society import Commodity
+from aerona.engine.military.siege import gate_factor, wall_defence
 from aerona.engine.phases.settlement_life import settlement_life
 from aerona.engine.polity.offices import wanted_offices
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -24,7 +20,6 @@ from aerona.engine.settlement import control
 from aerona.engine.settlement.book import town_of
 from aerona.engine.settlement.districts import (
     admin_parts,
-    culprit_weight,
     damage_districts,
     effects_of,
     material_factor,
@@ -32,10 +27,9 @@ from aerona.engine.settlement.districts import (
     parameters_of,
     wound_district,
 )
-from aerona.engine.settlement.life import suspects
 from aerona.engine.settlement.storage import settlement_store, storage_index, storage_room
 from aerona.rules.registry import Rules
-from tests.engine.society.factories import Realm, chronicle_keys, context, link, make, mortal, people, settlement
+from tests.engine.society.factories import Realm, chronicle_keys, context, people, settlement
 
 RULES = Rules()
 
@@ -121,24 +115,14 @@ def test_administrative_reach_adds_literacy_scribes_writing_and_palace() -> None
     assert parts.total == parts.base + parts.literacy + parts.scribes + parts.writing + 10
 
 
-def test_culprits_are_weighed_from_typed_state() -> None:
-    table = RULES.districts
-    assert culprit_weight(RULES, social_class=SocialClass.FARMER, traits=set(), flags=set(), in_band=False) == 0
-    assert culprit_weight(RULES, social_class=SocialClass.OUTCAST, traits=set(), flags=set(), in_band=False) == table.culprit_outcast_weight
-    assert (
-        culprit_weight(RULES, social_class=None, traits={TraitKind.GREEDY, TraitKind.CRUEL, TraitKind.BRAVE}, flags={EntityFlag.EXILE}, in_band=True)
-        == table.culprit_band_weight + table.culprit_flag_weight + 2 * table.culprit_trait_weight
-    )
-
-
 def test_stone_walls_and_towers_hold_better_and_gates_weaken_them() -> None:
     ctx = cast(Any, SimpleNamespace(rules=RULES))
     siege = SiegeRow(walls_level=3, breaches=0)
     stone = SettlementInfrastructureRow(walls_level=3, walls_material=BuildMaterial.STONE, towers=4, gates=1, locked=[])
     timber = SettlementInfrastructureRow(walls_level=3, walls_material=BuildMaterial.TIMBER, towers=0, gates=3, locked=[])
     assert wall_defence(ctx, siege, stone) > wall_defence(ctx, siege) > wall_defence(ctx, siege, timber)
-    assert batter_factor(ctx, timber) > batter_factor(ctx, stone)
-    assert batter_factor(ctx, timber) == pytest.approx(RULES.districts.timber_batter_pct / 100 * (1 + 2 * RULES.districts.gate_breach_pct / 100))
+    assert gate_factor(ctx, timber) > gate_factor(ctx, stone)
+    assert gate_factor(ctx, timber) == pytest.approx(1 + 2 * RULES.districts.gate_breach_pct / 100)
 
 
 def test_storage_room_adds_absolute_capacity_to_household_stores() -> None:
@@ -156,18 +140,19 @@ def test_office_tiers_gate_council_and_governors() -> None:
     assert office_tier(RULES, OfficeKind.RULER) == 0
     atlas = SimpleNamespace(top_region=lambda entity_id: 100 if entity_id == 1 else None, communities_in=lambda region: {100: [1], 200: [2], 300: [3]}[region])
     book = cast(Any, SimpleNamespace(atlas=atlas))
-    realm = cast(Any, SimpleNamespace(profile=SimpleNamespace(tier=3, capital_entity_id=1), territory={100: None, 200: None, 300: None}))
+    territory = {region: SimpleNamespace(province=None) for region in (100, 200, 300)}
+    realm = cast(Any, SimpleNamespace(profile=SimpleNamespace(tier=RULES.realm_tiers.provinces, capital_entity_id=1), territory=territory))
     towns = {
         1: SettlementProfileRow(size_tier=SizeTier.VILLAGE),
         2: SettlementProfileRow(size_tier=SizeTier.TOWN),
         3: SettlementProfileRow(size_tier=SizeTier.HAMLET),
     }
-    wanted = wanted_offices(book, realm, RULES, cast(Any, towns))
-    kinds = {kind for kind, _ in wanted}
+    wanted = wanted_offices(book, realm, [], RULES, cast(Any, towns))
+    kinds = {kind for kind, _, _ in wanted}
     assert OfficeKind.MARSHAL in kinds and OfficeKind.CHANCELLOR in kinds
     assert OfficeKind.SPYMASTER not in kinds and OfficeKind.TREASURER not in kinds
-    assert (OfficeKind.GOVERNOR, 200) in wanted
-    assert (OfficeKind.GOVERNOR, 300) not in wanted
+    assert (OfficeKind.GOVERNOR, 200, None) in wanted
+    assert (OfficeKind.GOVERNOR, 300, None) not in wanted
 
 
 async def test_a_flood_wrecks_low_timber_districts_more_than_stone(realm: Realm) -> None:
@@ -273,17 +258,3 @@ async def test_foreigners_can_be_set_and_held(realm: Realm) -> None:
     assert "foreigners" in found.profile.locked
     with pytest.raises(ValidationFailedError):
         await control.set_foreigners(ctx, town.id, {town.id: 10})
-
-
-async def test_the_watch_suspects_bandits_and_outcasts_not_honest_folk(realm: Realm) -> None:
-    session = realm.session
-    town = await settlement(realm, "Thornwick", population=4000)
-    honest = await mortal(realm, "Ada", location_id=town.id)
-    rogue = await mortal(realm, "Brann", location_id=town.id)
-    band = await make(session, "Red Hand", EntityType.FACTION, FactionStats(), world_id=realm.world.id, engine_kind=EngineKind.REBELS)
-    await link(session, rogue.id, band.id, BondKind.MEMBER_OF)
-    ctx = context(session)
-    found = await town_of(ctx, town, await KnowledgeMap.load(session))
-    weights = await suspects(ctx, found)
-    assert honest not in weights
-    assert weights[rogue] == RULES.districts.culprit_band_weight

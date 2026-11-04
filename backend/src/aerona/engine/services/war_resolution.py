@@ -16,8 +16,10 @@ from aerona.domain.enums.war import SiegeStatus, WarEnding, WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.faith.church import holy_peace
 from aerona.engine.gods.incitement import answer_incitement
-from aerona.engine.military.aims import peace_terms, white_peace
+from aerona.engine.military.aims import peace_terms, unsigned_ending, white_peace
 from aerona.engine.military.captivity import exchange_at_peace
+from aerona.engine.military.peace import PeaceTerm
+from aerona.engine.military.units import retire_stacks
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.hooks import converted, judged, witnessed
 from aerona.engine.mind.space import value_reading
@@ -76,6 +78,9 @@ ENDING_LABELS: dict[WarEnding, str] = {
 }
 
 
+SIGNED_ENDINGS = frozenset({WarEnding.WHITE_PEACE, WarEnding.EXHAUSTION, WarEnding.PEACE, WarEnding.MIRACLE})
+
+
 def relation_effect(rules: Rules, ending: WarEnding) -> int:
     effect = RELATION_EFFECTS.get(ending)
     return effect(rules) if effect is not None else 0
@@ -118,6 +123,7 @@ async def close_war(ctx: TickContext, war: WarRow, ending: WarEnding, victor_id:
         army = await living_entity(ctx.session, army_row.entity_id)
         if army is not None:
             stand_down(ctx.rules, army, await living_entity(ctx.session, army_row.owner_entity_id))
+            await retire_stacks(ctx.session, army.id)
             await retire_in(ctx, army, f"disbanded when {event.name} ended ({label})", close_bonds=True)
     await answer_incitement(ctx, war, victor_id, loser_id)
     await ctx.session.flush()
@@ -187,7 +193,7 @@ async def _convert_loser(ctx: TickContext, war: WarRow, victor: EntityRow, loser
     return [f"{loser.name} converted to the faith of {victor_god.name}."]
 
 
-async def impose_victory(ctx: TickContext, war: WarRow, victor: EntityRow, loser: EntityRow) -> WarSettlement:
+async def impose_victory(ctx: TickContext, war: WarRow, victor: EntityRow, loser: EntityRow, chosen: list[PeaceTerm] | None = None) -> WarSettlement:
     event = await war_event(ctx.session, war)
     if victor.entity_type in (EntityType.FACTION, EntityType.PEOPLE) and loser.entity_type is EntityType.SETTLEMENT:
         ending = WarEnding.CONQUEST
@@ -197,7 +203,7 @@ async def impose_victory(ctx: TickContext, war: WarRow, victor: EntityRow, loser
         await impose_tribute(ctx, loser, victor, war, event.name)
         notes = []
     notes.extend(await _convert_loser(ctx, war, victor, loser, ending))
-    notes.extend(await peace_terms(ctx, war, victor, loser))
+    notes.extend(await peace_terms(ctx, war, victor, loser, ending=ending, chosen=chosen))
     return WarSettlement(ending, victor.id, loser.id, notes)
 
 
@@ -211,6 +217,7 @@ async def end_war(
     reason: str | None = None,
     close_hostility: bool = True,
     apply_relation: bool = True,
+    chosen: list[PeaceTerm] | None = None,
 ) -> WarSettlement:
     sides = await sides_of(ctx.session, war)
     settlement = WarSettlement(ending, victor_id, loser_id)
@@ -223,11 +230,13 @@ async def end_war(
     if close_hostility:
         await make_peace(ctx, first, second, f"end of {event.name}" if victor is not None else reason or ENDING_LABELS[ending])
     if ending is WarEnding.VICTORY and victor is not None and loser is not None:
-        settlement = await impose_victory(ctx, war, victor, loser)
-    elif ending is WarEnding.WHITE_PEACE:
+        settlement = await impose_victory(ctx, war, victor, loser, chosen)
+    else:
         first_side, second_side = await living_entity(ctx.session, first), await living_entity(ctx.session, second)
-        if first_side is not None and second_side is not None:
-            await white_peace(ctx, first_side, second_side)
+        if first_side is not None and second_side is not None and ending in SIGNED_ENDINGS:
+            settlement.notes.extend(await white_peace(ctx, first_side, second_side, war=war, ending=ending))
+        elif first_side is not None and second_side is not None:
+            await unsigned_ending(ctx, war, ending, first_side, second_side)
     ctx.count("captives_exchanged", await exchange_at_peace(ctx, war.id))
     ctx.count("holy_peace", await holy_peace(ctx, first, second))
     if apply_relation:

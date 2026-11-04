@@ -54,13 +54,6 @@ class ConsumptionRules:
 
 
 @dataclass(frozen=True)
-class MobilisationRules:
-    martial_pct: int = rule(100, 0, 500, G, "Weight of a people's martial value in how many adults it can levy (%)")
-    cohesion_pct: int = rule(100, 0, 500, G, "Weight of cohesion in how many adults a people can levy (%)")
-    harvest_pct: int = rule(50, 0, 100, G, "Levy kept in the harvest season (%)")
-
-
-@dataclass(frozen=True)
 class RealmLoyaltyRules:
     base: int = rule(60, 0, 100, P, "Loyalty of a member to its realm before values, grievances and benefits")
     distance_pct: int = rule(30, 0, 300, P, "Loyalty lost per point of value distance between a member and its ruler (%)")
@@ -77,3 +70,5 @@ class RealmLoyaltyRules:
     satisfaction_pct: int = rule(40, 0, 200, P, "Loyalty gained or lost by the classes' satisfaction above or below the middle (%)")
     autonomy_pct: int = rule(20, 0, 200, P, "Autonomy a member gains each epoch per point of loyalty below the middle, and loses above it (%)")
     wavering_loyalty: int = rule(30, 0, 100, P, "Loyalty below which the chronicle notes that a member wavers")
+    vassal_tribute_pct: int = rule(50, 0, 300, P, "Grievance per point of tribute a vassal pays its overlord (%)")
+    vassal_regard_pct: int = rule(50, 0, 300, P, "Loyalty a vassal gains or loses per point of its regard for its overlord (%)")

@@ -14,8 +14,8 @@ from aerona.domain.enums.polity import DebtRemedy, LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.context import TickContext
+from aerona.engine.demography.bound import move_people, sync_bound_share
 from aerona.engine.demography.cohorts import cohorts_of
-from aerona.engine.demography.mobility import move_people, sync_bound_share
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.prosperity import add_prosperity

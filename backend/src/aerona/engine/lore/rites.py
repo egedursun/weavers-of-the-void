@@ -23,7 +23,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherEffect, WeatherKind
 from aerona.domain.enums.faith import AfterlifeState, BindingKind, SpiritAlignment, TenetKind
 from aerona.domain.enums.military import SpyCover
-from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.mind import SkillKind, ValueAxis
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import NaturalLaw
@@ -41,6 +41,7 @@ from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import values_for
+from aerona.engine.mortal.learning import practise_subject, school_level
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.governance import spend
 from aerona.engine.polity.laws import law_param
@@ -564,7 +565,9 @@ async def cast(
         succeeded=True,
         effect="",
     )
-    if rng.chance(row.backlash_chance):
+    mastery = await school_level(ctx.session, caster.id, rite.id)
+    await practise_subject(ctx.session, ctx.rules, caster.id, SkillKind.SPELLCRAFT, subject_id=rite.id, xp=ctx.rules.skills.spellcraft_xp, epoch=ctx.epoch)
+    if rng.chance(row.backlash_chance * (1 - mastery / PERCENT * ctx.rules.skills.school_backlash_pct / PERCENT)):
         casting.succeeded, casting.backlash = False, await backlash(ctx, caster, row)
         casting.effect = f"the rite turned on {caster.name} ({casting.backlash.value})"
     else:

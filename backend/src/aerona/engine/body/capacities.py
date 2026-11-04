@@ -29,7 +29,7 @@ class BodyState:
     wounds: tuple[Wound, ...]
     fingers: int
     open_severity: int
-    conditions: tuple[tuple[ConditionKind, int], ...] = ()
+    conditions: tuple[tuple[ConditionKind, float], ...] = ()
     presence_pct: int = PERCENT
     reader: bool = False
     afflicted: tuple[tuple[str, int], ...] = ()

@@ -25,7 +25,6 @@ from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.models.entity_stats import SpiritStats, TraditionStats
 from aerona.engine.context import TickContext
-from aerona.engine.demography.kinship import heirs_by_custom, inheritance_of
 from aerona.engine.demography.rites import mourning_factor, rite_of, spirit_factor
 from aerona.engine.demography.rites import restless as restless_by_rite
 from aerona.engine.faith.judgement import profile_for
@@ -37,6 +36,7 @@ from aerona.engine.mind.memories import inherit_memories, mourn
 from aerona.engine.mortal.death import record_end
 from aerona.engine.mortal.kin import children_of
 from aerona.engine.notes import note
+from aerona.engine.polity.law_effects import bequest_order
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, scaled_cap
 from aerona.engine.primitives.queries import active_bonds, close, connect, count_communities, living_entity, living_sons
@@ -160,17 +160,18 @@ async def _bequeath(ctx: TickContext, mortal: EntityRow) -> None:
     items = await active_bonds(session, [BondKind.OWNS], sources=[mortal.id])
     if not items:
         return
-    children = [
-        child
-        for child in [await living_entity(session, child_id) for child_id in await children_of(session, mortal.id)]
-        if child is not None and child.entity_type is EntityType.MORTAL
-    ]
-    heirs = heirs_by_custom(await inheritance_of(session, mortal), children)
-    if not heirs:
+    children: list[EntityRow] = []
+    for child_id in reversed(await children_of(session, mortal.id)):
+        child = await living_entity(session, child_id)
+        if child is not None:
+            children.append(child)
+    heirs = await bequest_order(session, mortal, children)
+    receiver: EntityRow | None = heirs[0] if heirs else None
+    if receiver is None:
         place = await living_entity(session, mortal.location_id)
-        heirs = [place] if place is not None and place.entity_type in COMMUNITY_TYPES else []
-    receiver = heirs[0] if heirs else None
+        receiver = place if place is not None and place.entity_type in COMMUNITY_TYPES else None
     for index, bond in enumerate(items):
+        receiver = heirs[index % len(heirs)] if len(heirs) > 1 else receiver
         await close(session, bond, ctx.epoch, "inheritance")
         if heirs:
             taker = heirs[index % len(heirs)]

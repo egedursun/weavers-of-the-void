@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.mind import CAREER_SKILLS
+from aerona.catalog.mind import CAREER_SKILLS, PROFESSIONS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
@@ -431,6 +431,8 @@ async def choose_path(ctx: TickContext, mortal: EntityRow, profile: MortalProfil
         score += await best_level(ctx, mortal.id, path) * table.skill_weight_pct / PERCENT
         axis = CAREER_VALUES.get(path)
         score += values.get(axis, 0) * table.values_weight_pct / PERCENT if axis is not None else 0
+        if profile.profession is not None and PROFESSIONS[profile.profession].role is CAREER_ROLES.get(path):
+            score += ctx.rules.skills.profession_pull
         need = CAREER_NEEDS.get(path)
         score += (FULL - needs.get(need, FULL)) * table.need_weight_pct / PERCENT if need is not None else 0
         scores[path] = score + rng.integer(0, table.switch_margin)

@@ -15,7 +15,8 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind, TreatyStatus
 from aerona.engine.context import TickContext
 from aerona.engine.gods.stats import Trait, add_trait
-from aerona.engine.polity.treaties import Clause, breach, end_treaty, sign
+from aerona.engine.polity.accords import Clause, end_treaty, sign
+from aerona.engine.polity.treaties import breach
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 

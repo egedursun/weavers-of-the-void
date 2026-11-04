@@ -20,11 +20,14 @@ from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.ecology import BeastTemper, Diet, SizeClass, Sociality, YieldProduct
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType, LegendCategory
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPath, TenetKind
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.military import HullClass, VesselArmament
 from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.mortal import MortalSex
 from aerona.domain.enums.place import PlaceKind
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic
 from aerona.domain.enums.structure import STRUCTURE_LEVEL_MAX, StructureKind
 from aerona.domain.enums.travel import VehicleKind
@@ -99,8 +102,12 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
         EntityType.VESSEL: {
             "target_world_id": (int | None, None),
             "vessel_kind": (VehicleKind | None, None),
+            "hull_class": (HullClass | None, None),
+            "armament": (list[VesselArmament] | None, None),
             "hull_material": (MaterialKind | None, None),
             "fabric_material": (MaterialKind | None, None),
+            "home_port_id": (int | None, None),
+            "captain_id": (int | None, None),
         },
         EntityType.ITEM: {"material": (MaterialKind | None, None), "world_material_id": (int | None, None)},
         EntityType.LANGUAGE: {"words": (Annotated[list[WordInput], Field(min_length=1)], ...)},
@@ -118,6 +125,8 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
             "level": (Annotated[int, Field(ge=1, le=STRUCTURE_LEVEL_MAX)] | None, None),
             "design_id": (int | None, None),
         },
+        EntityType.FACTION: {"faction_kind": (FactionKind, ...)},
+        EntityType.LAW: {"law_kind": (LawKind, ...), "law_params": (dict[str, int | str | bool] | None, None)},
         EntityType.CULT: {
             "tenets": (Annotated[list[TenetKind], Field(max_length=TENETS_MAX)] | None, None),
             "judgement": (JudgementDoctrine | None, None),

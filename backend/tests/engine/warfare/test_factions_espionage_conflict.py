@@ -7,14 +7,17 @@ from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.foreign_gods import ForeignGodDraft, ForeignGodRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import GodConflictRow
+from aerona.db.tables.military import SpyNetworkRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.military import SpyOwnerKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.stats import StatBlock
 from aerona.engine.phases.espionage import SpyOperation, espionage, order_spy_operation
-from aerona.engine.phases.factions import FactionKind, decree_faction, dissolve_faction, factions
+from aerona.engine.phases.factions import decree_faction, dissolve_faction, factions
 from aerona.engine.services.community_relations import relation, set_relation
 from aerona.engine.services.conflict import foreign_god_war
 from aerona.rules.registry import Rules
@@ -32,7 +35,7 @@ async def test_warrior_society_founds_a_brotherhood(session: AsyncSession, world
     assert faction.location_id == town.id
     assert await BondRepository(session).exists_between(faction.id, town.id, BondKind.DESCENDS_FROM)
     with pytest.raises(ConflictError):
-        await decree_faction(make_ctx(session, rules), town.id, FactionKind.BROTHERHOOD)
+        await decree_faction(make_ctx(session, rules), town.id, FactionKind.WARRIOR_ORDER)
 
 
 async def test_idle_uprisings_disband_and_factions_can_be_dissolved(session: AsyncSession, world_id: int) -> None:
@@ -51,9 +54,10 @@ async def test_influential_faction_weaves_a_network_and_gets_caught(session: Asy
     target = await make(session, "Proud City", EntityType.SETTLEMENT, world_id, population=900, defense=40)
     await set_relation(make_ctx(session, rules), spies.id, target.id, -60, "rivalry")
     await espionage(make_ctx(session, rules, epoch=4))
-    assert await BondRepository(session).exists_between(spies.id, target.id, BondKind.SPY_NETWORK)
-    await espionage(make_ctx(session, rules, epoch=5))
+    network = await session.scalar(select(SpyNetworkRow).where(SpyNetworkRow.owner_entity_id == spies.id))
+    assert network is not None and network.target_entity_id == target.id and network.owner_kind is SpyOwnerKind.FACTION
     assert not await BondRepository(session).exists_between(spies.id, target.id, BondKind.SPY_NETWORK)
+    await espionage(make_ctx(session, rules, epoch=5))
     assert await relation(session, rules, spies.id, target.id) == -60 - rules.espionage.spy_caught_relation_loss
 
 

@@ -26,6 +26,7 @@ from aerona.engine.mortal.course import (
 )
 from aerona.engine.mortal.equipment import auto_equip
 from aerona.engine.mortal.kinship import backfill_kin
+from aerona.engine.mortal.learning import learn
 from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -85,6 +86,8 @@ async def mortal_survey(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.book_contents",
+    "table.minds",
     *MORTAL_STATS,
     "table.bodies",
     "table.bonds",
@@ -120,6 +123,7 @@ async def mortal_life_course(ctx: TickContext) -> None:
         await live_one_epoch(ctx, mortal)
         profile, _ = await ensure_profile(ctx.session, mortal.id, ctx.epoch)
         learned += await educate(ctx, mortal, profile)
+        learned += await learn(ctx, mortal, profile)
     ctx.count("lessons", learned)
 
 
@@ -201,15 +205,16 @@ async def mortal_standing(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.bodies",
+    "table.bonds",
     "table.community_relations",
+    "table.conditions",
+    "table.culture_values",
     "table.entity_flags",
     "table.epoch_year_cursors",
     *MORTAL_STATS,
-    "table.bodies",
-    "table.bonds",
-    "table.conditions",
-    "table.culture_values",
     "table.injuries",
+    "table.law_jurisdictions",
     "table.memories",
     "table.minds",
     "table.mortal_profiles",
