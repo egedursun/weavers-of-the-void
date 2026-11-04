@@ -15,6 +15,8 @@ import {
   useWorldState,
 } from '@/features/entity/api/queries'
 import { type EntitySummary } from '@/features/entity/api/types'
+import { LoreForge } from '@/features/entity/lore/forge/LoreForge'
+import { isForgeKind } from '@/features/entity/lore/forge/forgeModel'
 import { useHealth } from '@/features/images/api'
 import { useImageGenEvents } from '@/features/images/imageGenState'
 import { AtlasDetail } from './AtlasDetail'
@@ -168,6 +170,7 @@ export function AtlasScreen() {
         actions={
           view === 'tree' && !empty ? (
             <>
+              {isForgeKind(search.type) && <LoreForge kind={search.type} />}
               <Button
                 variant='outline'
                 size='sm'
@@ -181,6 +184,8 @@ export function AtlasScreen() {
                 Close all
               </Button>
             </>
+          ) : isForgeKind(search.type) ? (
+            <LoreForge kind={search.type} />
           ) : undefined
         }
       />
