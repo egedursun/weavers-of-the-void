@@ -37,6 +37,7 @@ from aerona.domain.models.records import EpochStatsData
 from aerona.rules.registry import Rules
 from aerona.services.books.history import HandEpoch, creator_hand, ending_line, god_fate, son_fate
 from aerona.services.books.mapsvg import MapPicture, map_picture
+from aerona.services.books.typed import TypedIndex, TypedSection
 from aerona.services.codex import CosmicEpoch, TravellerGuide, cosmic_chronicle, traveller_guide
 from aerona.services.images.records import cover_of
 from aerona.services.narrative import clean_lore
@@ -131,6 +132,7 @@ class EntityArticle:
     depth_level: int = 0
     children: list["EntityArticle"] = field(default_factory=list)
     ending: str | None = None
+    typed: list[TypedSection] = field(default_factory=list)
 
 
 @dataclass
@@ -148,6 +150,7 @@ class SonArticle:
     creations: list[tuple[int, str]]
     cover: str | None
     fate: list[str] = field(default_factory=list)
+    typed: list[TypedSection] = field(default_factory=list)
 
 
 @dataclass
@@ -343,6 +346,7 @@ class BookBuilder:
         self.tags: dict[int, list[str]] = defaultdict(list)
         self.bonds: dict[int, list[BondRow]] = defaultdict(list)
         self.son_names: dict[int, str] = {}
+        self.typed = TypedIndex({})
 
     async def load_common(self) -> None:
         rows = await self.session.execute(select(EntityRow.id, EntityRow.name))
@@ -363,6 +367,7 @@ class BookBuilder:
             self.tags[entity_id].append(tag)
         for bond in await self.session.scalars(select(BondRow).where(BondRow.state.in_([BondState.ACTIVE, BondState.PAST])).order_by(BondRow.id)):
             self.bonds[bond.source_node_id].append(bond)
+        self.typed = await TypedIndex.load(self.session, self.names)
 
     def bond_lines(self, node_id: int) -> tuple[list[str], list[str]]:
         active: list[str] = []
@@ -403,6 +408,7 @@ class BookBuilder:
             cover=await cover_of(self.session, entity.id),
             depth_level=depth_level,
             ending=ending_line(entity.status.value, entity.end_epoch, entity.fate_note) if entity.status in ENDED else None,
+            typed=self.typed.of(entity.id),
         )
 
     async def son_article(self, son: SonRow, relations: list[SonRelationRow]) -> SonArticle:
@@ -440,6 +446,7 @@ class BookBuilder:
             creations=creations,
             cover=await cover_of(self.session, son.id),
             fate=await son_fate(self.session, son, self.names),
+            typed=self.typed.of(son.id),
         )
 
     async def world_tree(self, epoch: int) -> list[StarSection]:

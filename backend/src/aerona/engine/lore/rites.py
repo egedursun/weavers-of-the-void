@@ -909,8 +909,17 @@ async def design(ctx: TickContext, plan: Design, holder: EntityRow) -> tuple[Ent
     row.cost = cost_of(ctx, row, priced=False)
     await ctx.session.flush()
     await ctx.session.execute(delete(RiteEffectRow).where(RiteEffectRow.rite_entity_id == rite.id))
+    workings: dict[RiteEffectKind, RiteEffectRow] = {}
     for effect, magnitude, damage, form in plan.workings:
-        ctx.session.add(RiteEffectRow(rite_entity_id=rite.id, effect=effect, magnitude=clamp_int(magnitude, 1, PERCENT), damage_type=damage, summon_form=form))
+        held = workings.get(effect)
+        if held is not None:
+            held.magnitude = clamp_int(held.magnitude + magnitude, 1, PERCENT)
+            held.damage_type = held.damage_type or damage
+            held.summon_form = held.summon_form or form
+            continue
+        strength = clamp_int(magnitude, 1, PERCENT)
+        workings[effect] = RiteEffectRow(rite_entity_id=rite.id, effect=effect, magnitude=strength, damage_type=damage, summon_form=form)
+    ctx.session.add_all(workings.values())
     await connect(ctx.session, holder.id, rite.id, BondKind.OWNS, ctx.epoch, description="devised")
     await ctx.session.flush()
     return rite, row

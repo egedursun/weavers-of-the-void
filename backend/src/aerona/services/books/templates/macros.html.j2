@@ -10,6 +10,10 @@
 {% if items %}<ul class="stats">{% for item in items %}<li>{{ item.label }}<b>{{ item.value }}</b></li>{% endfor %}</ul>{% endif %}
 {%- endmacro %}
 
+{% macro typed(sections) -%}
+{% for section in sections %}<section class="typed"><p class="sublabel">{{ section.title }}</p>{% if section.facts %}<dl class="facts">{% for fact in section.facts %}<div><dt>{{ fact.label }}</dt><dd>{{ fact.value }}</dd></div>{% endfor %}</dl>{% endif %}{% if section.rows %}<ul class="typed-rows">{% for row in section.rows %}<li>{{ row }}</li>{% endfor %}</ul>{% endif %}</section>{% endfor %}
+{%- endmacro %}
+
 {% macro chips(items) -%}
 {% if items %}<ul class="chips">{% for item in items %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
 {%- endmacro %}
@@ -105,6 +109,7 @@
 {{ article.description | paragraphs }}
 {{ stats(article.stats) }}
 {{ entity_depth(article.entity.depth) }}
+{{ typed(article.typed) }}
 {% if article.ending %}<div class="box"><span class="label">Ending</span>{{ article.ending }}</div>{% elif article.entity.fate_note %}<div class="box"><span class="label">Fate's judgement</span>{{ article.entity.fate_note }}</div>{% endif %}
 {% if article.bonds or article.past_bonds %}<p class="sublabel">Ties</p><ul class="bonds">{% for bond in article.bonds %}<li>{{ bond }}</li>{% endfor %}{% for bond in article.past_bonds %}<li class="muted"><span class="relation">once</span>{{ bond }}</li>{% endfor %}</ul>{% endif %}
 {{ chips(article.tags) }}
@@ -126,6 +131,7 @@
 </div>
 </div>
 {{ personality(article.son.personality) }}
+{{ typed(article.typed) }}
 {{ existence(article.son.existence_profile) }}
 {% if article.powers %}<p class="sublabel">Powers</p><ul>{% for power in article.powers %}<li><b>{{ power.label }}</b>: {{ power.value }}</li>{% endfor %}</ul>{% endif %}
 {% if article.son.plan %}<div class="box"><span class="label">Plan</span>{{ article.son.plan }}</div>{% endif %}

@@ -17,6 +17,16 @@
 
 {% endif %}
 {%- endmacro %}
+{% macro typed(sections) -%}
+{% for section in sections %}
+**{{ section.title }}.**{% for fact in section.facts %} {{ fact.label }}: {{ fact.value }}{% if not loop.last %};{% endif %}{% endfor %}
+
+{% for row in section.rows %}
+- {{ row }}
+{% endfor %}
+
+{% endfor %}
+{%- endmacro %}
 {% macro sayings(items) -%}
 {% for saying in items %}
 > *{{ saying.text }}*{% if saying.form %}
@@ -145,6 +155,7 @@
 
 {% endif %}
 {{ entity_depth(article.entity.depth) }}
+{{ typed(article.typed) }}
 {% if article.ending %}
 *{{ article.ending }}*
 
@@ -417,6 +428,8 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 {{ inline_stats(article.stats) }} · Fame **{{ article.son.fame }}** · Faith **{{ article.son.faith }}**
 
 *Passions:* {{ inline_stats(article.passions) }}
+
+{{ typed(article.typed) }}
 
 {{ personality(article.son.personality) }}
 {{ existence(article.son.existence_profile) }}

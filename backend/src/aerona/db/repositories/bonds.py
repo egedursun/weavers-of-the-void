@@ -62,6 +62,10 @@ class BondRepository(Repository):
                     existing.description = normalized.description
                     await self.flush()
                 return existing
+        if normalized.kind is BondKind.INSIDE and normalized.role is not BondRole.SPIRIT_BINDING:
+            for held in await self.outgoing(normalized.source_node_id, BondKind.INSIDE):
+                if held.target_node_id != normalized.target_node_id and held.role is not BondRole.SPIRIT_BINDING:
+                    await self.deactivate(held, normalized.epoch)
         guarded = normalized.kind not in ANCHORED_BOND_KINDS and (
             write_blocked(normalized.source_node_id, BOND_KEY) or write_blocked(normalized.target_node_id, BOND_KEY)
         )
