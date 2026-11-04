@@ -14,7 +14,7 @@ import { useGodGate } from '@/features/pantheon/gate'
 import { plain } from '../environment/labels'
 import { busyOf, PERCENT } from '../lore/model'
 import { MindPicker } from '../mind/parts'
-import { AdjustPanel, Card, NumberField, TileGrid } from '../wilds/parts'
+import { AdjustPanel, Card, NumberField } from '../wilds/parts'
 import { type PlaceProfile, type PlaceSecret, usePlaceAction } from './api'
 import { MODE, ORIGIN, choices, secretOf } from './labels'
 
@@ -53,7 +53,7 @@ function SecretTile({
   const extra = detail(secret)
   return (
     <div
-      className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-2'
+      className='@container/secret flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'
       data-secret={secret.id}
     >
       <div className='flex min-w-0 items-center gap-2'>
@@ -113,18 +113,20 @@ function SecretTile({
             Break the seal
           </Button>
         )}
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() =>
-            edit.mutate({ secret_id: secret.id, held: !secret.held })
-          }
-        >
-          <Lock />
-          {secret.held ? 'Let the land give it up' : 'Keep it hidden'}
-        </Button>
+        {!known && (
+          <Button
+            size='sm'
+            variant='outline'
+            disabled={busy !== null}
+            disabledReason={busy ?? undefined}
+            onClick={() =>
+              edit.mutate({ secret_id: secret.id, held: !secret.held })
+            }
+          >
+            <Lock />
+            {secret.held ? 'Let the land give it up' : 'Keep it hidden'}
+          </Button>
+        )}
         <Button
           size='sm'
           variant='ghost'
@@ -149,7 +151,7 @@ function ReshapeSecret({ secret }: { secret: PlaceSecret }) {
   const [strength, setStrength] = useState(String(secret.strength))
   const busy = busyOf(reason(), edit.isPending)
   return (
-    <div className='grid min-w-0 grid-cols-1 items-end gap-2 @md/place:grid-cols-3'>
+    <div className='grid min-w-0 grid-cols-1 items-end gap-2 @md/secret:grid-cols-3'>
       <MindPicker
         label='Kind'
         value={kind}
@@ -289,7 +291,7 @@ export function PlaceSecrets({ profile }: { profile: PlaceProfile }) {
       {profile.secrets.length === 0 ? (
         <Muted>Nothing lies hidden here, that anyone knows.</Muted>
       ) : (
-        <TileGrid>
+        <div className='grid min-w-0 grid-cols-1 gap-2 @3xl/card:grid-cols-2'>
           {profile.secrets.map((secret) => (
             <SecretTile
               key={secret.id}
@@ -297,7 +299,7 @@ export function PlaceSecrets({ profile }: { profile: PlaceProfile }) {
               placeId={profile.place_id}
             />
           ))}
-        </TileGrid>
+        </div>
       )}
       <HideSecret placeId={profile.place_id} />
     </Card>
