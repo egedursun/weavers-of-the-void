@@ -1,11 +1,24 @@
 import { useState } from 'react'
 import {
+  ArrowDownToLine,
+  ArrowLeftRight,
+  ArrowUpFromLine,
+  CalendarClock,
+  Check,
   DoorClosed,
   DoorOpen,
+  Flag,
+  Landmark,
+  Map as MapIcon,
+  Package,
+  Percent,
   Route,
-  Scale,
+  ShieldAlert,
   Store,
+  Swords,
   TriangleAlert,
+  Undo2,
+  Utensils,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -13,29 +26,154 @@ import type { components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   EmptyState,
   EntityLink,
+  IconStat,
+  KpiTile,
+  type KpiTone,
   Medallion,
   Section,
-  StatBar,
+  Timeline,
+  TimelineItem,
 } from '@/components/domain'
 import { LineChart } from '@/components/domain/LineChart'
-import { Label, Muted, Stat, Text } from '@/components/typography'
+import { Muted, Stat, Text } from '@/components/typography'
+import { useNames } from '@/features/entity/api/queries'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import {
+  AdjustPanel,
+  FIELD_GRID,
+  GoodChip,
+  NumberField,
+  PartHeader,
+} from './EntityEconomy'
 import { useMarketPrices, useTradeRoute } from './api'
-import { COMMODITY, MODE, ROUTE_STATUS } from './labels'
+import {
+  COMMODITY,
+  GOODS_FAMILY,
+  MATERIAL_LABEL,
+  MODE,
+  ROUTE_STATUS,
+  TRADE_LOSS,
+} from './labels'
 
 type Toll = components['schemas']['TollView']
+type Series = components['schemas']['PriceSeries']
+type Flow = components['schemas']['RouteFlowView']
 
 const WORKING = 'Working…'
 const BASE = 100
+const PERCENT = 100
+const DEAR = 2
+const CHEAP = 2
+
+function priceTone(price: number): KpiTone {
+  if (price > BASE * DEAR) return 'danger'
+  if (price > BASE) return 'warning'
+  if (price < BASE / CHEAP) return 'success'
+  return 'muted'
+}
+
+function priceWord(price: number): string {
+  if (price > BASE * DEAR) return 'Scarce'
+  if (price > BASE) return 'Dear'
+  if (price < BASE / CHEAP) return 'Glut'
+  return 'Fair'
+}
+
+function PriceCard({ series }: { series: Series }) {
+  const spec = COMMODITY[series.commodity]
+  const last = series.points[series.points.length - 1]
+  const tone = priceTone(last.price)
+  return (
+    <li
+      data-commodity={series.commodity}
+      className='flex h-full min-w-0 flex-col gap-2.5 rounded-lg border bg-background p-3'
+    >
+      <div className='flex min-w-0 items-center gap-2.5'>
+        <Medallion icon={spec.icon} tone={tone} size='sm' />
+        <div className='flex min-w-0 flex-1 flex-col'>
+          <Text weight='medium' truncate>
+            {spec.label}
+          </Text>
+          <Muted variant='caption' truncate>
+            {`${priceWord(last.price)} · ${GOODS_FAMILY[spec.family].label}`}
+          </Muted>
+        </div>
+        <Stat
+          value={last.price}
+          unit='/ 100'
+          tone={
+            tone === 'danger'
+              ? 'destructive'
+              : tone === 'success'
+                ? 'success'
+                : tone === 'warning'
+                  ? 'warning'
+                  : 'default'
+          }
+        />
+      </div>
+      {series.points.length > 1 && (
+        <LineChart
+          bare
+          height={48}
+          label={`${spec.label} price`}
+          series={[
+            {
+              key: series.commodity,
+              label: spec.label,
+              color: 'var(--chart-1)',
+              points: series.points.map((point) => ({
+                x: point.epoch,
+                y: point.price,
+              })),
+            },
+          ]}
+        />
+      )}
+      <div className='mt-auto grid min-w-0 grid-cols-2 gap-1.5'>
+        <IconStat
+          icon={Package}
+          label='Held in the market'
+          value={`${formatInteger(last.supply)} held`}
+          tone='gold'
+        />
+        <IconStat
+          icon={Utensils}
+          label='Needed each epoch'
+          value={`${formatInteger(last.demand)} needed`}
+          tone={last.demand > last.supply ? 'danger' : 'muted'}
+        />
+        <IconStat
+          icon={ArrowDownToLine}
+          label='Bought in from other markets'
+          value={`${formatInteger(last.imported)} in`}
+          tone='info'
+        />
+        <IconStat
+          icon={ArrowUpFromLine}
+          label='Sold out to other markets'
+          value={`${formatInteger(last.exported)} out`}
+          tone='success'
+        />
+      </div>
+    </li>
+  )
+}
 
 export function PriceBoard({ marketId }: { marketId: number }) {
   const view = useMarketPrices(marketId)
   if (!view.data || view.data.series.length === 0) return null
+  const series = [...view.data.series].sort(
+    (a, b) =>
+      b.points[b.points.length - 1].price - a.points[a.points.length - 1].price
+  )
+  const last = (row: Series) => row.points[row.points.length - 1].price
+  const scarce = series.filter((row) => last(row) > BASE * DEAR).length
+  const glut = series.filter((row) => last(row) < BASE / CHEAP).length
   return (
     <Section
       id='section-market'
@@ -43,126 +181,175 @@ export function PriceBoard({ marketId }: { marketId: number }) {
       description='What each good costs here, epoch by epoch, against what the market holds and needs. 100 is its usual price.'
       icon={Store}
     >
-      <ul
+      <div
         data-surface='PriceBoard'
-        className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'
+        className='@container/market flex min-w-0 flex-col gap-3'
       >
-        {view.data.series.map((series) => {
-          const spec = COMMODITY[series.commodity]
-          const last = series.points[series.points.length - 1]
-          return (
-            <li
-              key={series.commodity}
-              className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'
-            >
-              <div className='flex min-w-0 items-center gap-2'>
-                <Medallion
-                  icon={spec.icon}
-                  tone={
-                    last.price > BASE * 2
-                      ? 'danger'
-                      : last.price < BASE / 2
-                        ? 'success'
-                        : 'muted'
-                  }
-                  size='sm'
-                />
-                <Text className='min-w-0 flex-1' truncate>
-                  {spec.label}
-                </Text>
-                <Stat value={last.price} />
-              </div>
-              <Muted variant='caption'>{`Holds ${formatInteger(last.supply)}, needs ${formatInteger(last.demand)}; bought in ${formatInteger(last.imported)}, sold out ${formatInteger(last.exported)}`}</Muted>
-              {series.points.length > 1 && (
-                <LineChart
-                  bare
-                  height={56}
-                  label={`${spec.label} price`}
-                  series={[
-                    {
-                      key: series.commodity,
-                      label: spec.label,
-                      color: 'var(--chart-1)',
-                      points: series.points.map((point) => ({
-                        x: point.epoch,
-                        y: point.price,
-                      })),
-                    },
-                  ]}
-                />
-              )}
-            </li>
-          )
-        })}
-      </ul>
+        <div className='flex min-w-0 flex-wrap gap-1.5'>
+          <Badge variant='outline'>
+            <Store />
+            {`${series.length} goods priced`}
+          </Badge>
+          <Badge variant={scarce > 0 ? 'destructive' : 'outline'}>
+            <TriangleAlert />
+            {`${scarce} scarce, over twice the usual`}
+          </Badge>
+          <Badge variant={glut > 0 ? 'success' : 'outline'}>
+            <Package />
+            {`${glut} in glut, under half`}
+          </Badge>
+        </div>
+        <ul className='grid min-w-0 grid-cols-1 gap-2 @md/market:grid-cols-2 @3xl/market:grid-cols-3'>
+          {series.map((row) => (
+            <PriceCard key={row.commodity} series={row} />
+          ))}
+        </ul>
+      </div>
     </Section>
   )
 }
 
-function ModeIcon({ mode }: { mode: components['schemas']['TradeMode'] }) {
-  const Icon = MODE[mode].icon
-  return <Icon />
+function TollStop({ toll }: { toll: Toll }) {
+  return (
+    <li className='flex min-w-0 items-center gap-2.5 rounded-lg border bg-background p-2.5'>
+      <Medallion icon={Landmark} tone='gold' size='sm' />
+      <div className='flex min-w-0 flex-1 flex-col'>
+        <EntityLink kind='entity' id={String(toll.region_id)}>
+          {toll.region_name}
+        </EntityLink>
+        <Muted variant='caption' truncate>
+          {'Taken by '}
+          <EntityLink kind='entity' id={String(toll.controller_id)}>
+            {toll.controller_name}
+          </EntityLink>
+        </Muted>
+      </div>
+      {toll.set_by_player && (
+        <Badge size='sm' variant='info'>
+          <Check />
+          Held by you
+        </Badge>
+      )}
+      <IconStat
+        icon={Percent}
+        label='Toll on every load'
+        value={`${toll.rate_pct}% toll`}
+        tone='gold'
+      />
+    </li>
+  )
 }
 
-function TollRow({
-  routeId,
+function TollEditor({
   toll,
   busy,
   onSet,
 }: {
-  routeId: number
   toll: Toll
   busy: string | null
   onSet: (rate: number | null) => void
 }) {
   const [rate, setRate] = useState(String(toll.rate_pct))
   return (
-    <li className='flex min-w-0 flex-wrap items-end gap-2 rounded-lg border bg-muted/30 p-2'>
-      <div className='flex min-w-0 flex-1 flex-col'>
-        <EntityLink kind='entity' id={String(toll.region_id)}>
+    <div className='grid min-w-0 grid-cols-1 items-end gap-2 rounded-lg border bg-background p-2.5 @md/route:grid-cols-3'>
+      <div className='flex min-w-0 flex-col'>
+        <Text weight='medium' truncate>
           {toll.region_name}
-        </EntityLink>
-        <Muted variant='caption'>
-          {'Taken by '}
-          <EntityLink kind='entity' id={String(toll.controller_id)}>
-            {toll.controller_name}
-          </EntityLink>
-          {toll.set_by_player ? ' at the rate you set' : ''}
+        </Text>
+        <Muted variant='caption' truncate>
+          {toll.set_by_player
+            ? 'At the rate you hold'
+            : `Set by ${toll.controller_name}`}
         </Muted>
       </div>
-      <div className='flex w-24 flex-col gap-1'>
-        <Label>Toll %</Label>
-        <Input
-          type='number'
-          min={0}
-          max={100}
-          value={rate}
-          aria-label={`Toll in ${toll.region_name}`}
-          onChange={(event) => setRate(event.target.value)}
-        />
-      </div>
-      <Button
-        size='sm'
-        disabled={busy !== null}
-        disabledReason={busy ?? undefined}
-        onClick={() => onSet(Math.round(Number(rate) || 0))}
-        data-route={routeId}
-      >
-        <Scale />
-        Hold this toll
-      </Button>
-      {toll.set_by_player && (
+      <NumberField
+        label='Toll %'
+        aria={`Toll in ${toll.region_name}`}
+        value={rate}
+        max={PERCENT}
+        onChange={setRate}
+      />
+      <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
           size='sm'
-          variant='outline'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
-          onClick={() => onSet(null)}
+          onClick={() => onSet(Math.round(Number(rate) || 0))}
         >
-          Leave it to its master
+          <Check />
+          Hold this toll
         </Button>
-      )}
-    </li>
+        {toll.set_by_player && (
+          <Button
+            size='sm'
+            variant='outline'
+            disabled={busy !== null}
+            disabledReason={busy ?? undefined}
+            onClick={() => onSet(null)}
+          >
+            <Undo2 />
+            Leave it to its master
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function CargoEpoch({
+  epoch,
+  flows,
+  last,
+}: {
+  epoch: number
+  flows: Flow[]
+  last: boolean
+}) {
+  const carried = flows.reduce((sum, row) => sum + row.volume, 0)
+  const lost = flows.reduce((sum, row) => sum + row.lost, 0)
+  const tolls = flows.reduce((sum, row) => sum + row.toll_paid, 0)
+  return (
+    <TimelineItem
+      icon={lost > 0 ? ShieldAlert : Package}
+      tone={lost > 0 ? 'warning' : 'success'}
+      title={`${formatInteger(carried)} carried`}
+      timestamp={`Epoch ${epoch}`}
+      last={last}
+      framed
+    >
+      <div className='flex min-w-0 flex-wrap gap-1.5'>
+        {flows.map((row, index) => (
+          <GoodChip
+            key={`${row.commodity}-${row.material ?? ''}-${index}`}
+            kind={row.commodity}
+            quantity={row.volume}
+            suffix={
+              row.material
+                ? ` of ${MATERIAL_LABEL[row.material].toLowerCase()}`
+                : undefined
+            }
+          />
+        ))}
+        {flows
+          .filter((row) => row.lost > 0)
+          .map((row, index) => {
+            const loss = row.loss ? TRADE_LOSS[row.loss] : null
+            const Icon = loss?.icon ?? TriangleAlert
+            return (
+              <Badge key={`lost-${index}`} variant='destructive'>
+                <Icon />
+                {`${formatInteger(row.lost)} lost to ${loss?.label ?? 'the road'}`}
+              </Badge>
+            )
+          })}
+        {tolls > 0 && (
+          <Badge variant='info'>
+            <Percent />
+            {`${formatInteger(tolls)} paid in tolls`}
+          </Badge>
+        )}
+      </div>
+    </TimelineItem>
   )
 }
 
@@ -204,6 +391,9 @@ export function TradeRouteSection({
     reason() ??
     (open.isPending || close.isPending || toll.isPending ? WORKING : null)
   const route = view.data
+  const epochs = route
+    ? [...new Set(route.flows.map((row) => row.epoch))].sort((a, b) => b - a)
+    : []
   return (
     <Section
       id='section-trade-route'
@@ -222,73 +412,124 @@ export function TradeRouteSection({
       {route && (
         <div
           data-surface='TradeRouteSection'
-          className='flex min-w-0 flex-col gap-5'
+          className='@container/route flex min-w-0 flex-col gap-5'
         >
-          <div className='flex min-w-0 flex-wrap items-center gap-2'>
-            <Badge variant={ROUTE_STATUS[route.status].variant}>
-              {ROUTE_STATUS[route.status].label}
-            </Badge>
-            <Badge variant='outline'>
-              <ModeIcon mode={route.mode} />
-              {`${MODE[route.mode].label}, ${route.length} regions long`}
-            </Badge>
-            <Text>
-              <EntityLink kind='entity' id={String(route.first_id)}>
-                {route.first_name}
-              </EntityLink>
-              {' ⇄ '}
-              <EntityLink kind='entity' id={String(route.second_id)}>
-                {route.second_name}
-              </EntityLink>
-            </Text>
-          </div>
-          <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2'>
-            <StatBar
+          <RouteBanner route={route} />
+          <div className='grid min-w-0 grid-cols-1 gap-3 @md/route:grid-cols-2 @3xl/route:grid-cols-4'>
+            <KpiTile
               label='Carried last epoch'
-              value={route.volume}
-              max={Math.max(route.capacity, 1)}
+              value={formatInteger(route.volume)}
+              icon={Package}
+              tone='gold'
+              meter={{
+                value: route.volume,
+                max: Math.max(route.capacity, 1),
+                label: 'Carried against capacity',
+              }}
+              hint={`Of ${formatInteger(route.capacity)} it can bear`}
             />
-            <StatBar
+            <KpiTile
               label='Danger'
               value={route.danger}
-              max={BASE}
-              tone={route.danger > BASE / 2 ? 'destructive' : 'default'}
+              icon={Swords}
+              tone={route.danger > BASE / 2 ? 'danger' : 'warning'}
+              meter={{ value: route.danger, max: BASE, label: 'Danger' }}
+              hint='Bandits, beasts, storms and the sea'
             />
-            <StatBar label='Renown' value={route.renown} max={BASE} />
-            <StatBar label='Carried culture' value={route.culture} max={BASE} />
+            <KpiTile
+              label='Renown'
+              value={route.renown}
+              icon={Flag}
+              tone='info'
+              meter={{ value: route.renown, max: BASE, label: 'Renown' }}
+              hint='Draws more merchants each epoch'
+            />
+            <KpiTile
+              label='Carried culture'
+              value={route.culture}
+              icon={ArrowLeftRight}
+              tone='verdigris'
+              meter={{ value: route.culture, max: BASE, label: 'Culture' }}
+              hint='Words, gods and customs that travel with it'
+            />
           </div>
-          <div className='flex min-w-0 flex-wrap gap-2'>
-            {route.status === 'closed' || route.status === 'decayed' ? (
-              <Button
-                size='sm'
-                disabled={busy !== null}
-                disabledReason={busy ?? undefined}
-                onClick={() => open.mutate(undefined)}
-              >
-                <DoorOpen />
-                Open the route
-              </Button>
-            ) : (
-              <Button
-                size='sm'
-                variant='outline'
-                disabled={busy !== null}
-                disabledReason={busy ?? undefined}
-                onClick={() => close.mutate(undefined)}
-              >
-                <DoorClosed />
-                Close the route
-              </Button>
+          <div className='flex min-w-0 flex-col gap-3'>
+            <PartHeader
+              icon={Landmark}
+              title='Tolls on the way'
+              note={
+                route.tolls.length === 0
+                  ? 'No one takes a toll on this road.'
+                  : `${route.tolls.reduce((sum, row) => sum + row.rate_pct, 0)}% taken in all across ${route.tolls.length} ${route.tolls.length === 1 ? 'land' : 'lands'}`
+              }
+            />
+            {route.tolls.length > 0 && (
+              <ul className='grid min-w-0 grid-cols-1 gap-2 @xl/route:grid-cols-2'>
+                {route.tolls.map((item) => (
+                  <TollStop key={item.region_id} toll={item} />
+                ))}
+              </ul>
             )}
           </div>
-          {route.tolls.length > 0 && (
-            <div className='flex min-w-0 flex-col gap-2'>
-              <Label variant='overline'>Tolls on the way</Label>
-              <ul className='flex min-w-0 flex-col gap-2'>
+          <div className='flex min-w-0 flex-col gap-3'>
+            <PartHeader
+              icon={Package}
+              title='Cargo by epoch'
+              note='What merchants carried each epoch and what the road took from them.'
+            />
+            {epochs.length === 0 ? (
+              <EmptyState
+                icon={Package}
+                title='No cargo yet'
+                description='Loads appear once merchants travel it.'
+              />
+            ) : (
+              <Timeline label='Cargo by epoch'>
+                {epochs.map((epoch, index) => (
+                  <CargoEpoch
+                    key={epoch}
+                    epoch={epoch}
+                    flows={route.flows.filter((row) => row.epoch === epoch)}
+                    last={index === epochs.length - 1}
+                  />
+                ))}
+              </Timeline>
+            )}
+          </div>
+          <AdjustPanel
+            label='Adjust the route'
+            title='Command the route'
+            note='Close it to all merchants or open it again, and hold the toll of any land on the way. Every change goes into the ledger.'
+          >
+            <div className='flex min-w-0 flex-wrap gap-2'>
+              {route.status === 'closed' || route.status === 'decayed' ? (
+                <Button
+                  size='sm'
+                  disabled={busy !== null}
+                  disabledReason={busy ?? undefined}
+                  onClick={() => open.mutate(undefined)}
+                >
+                  <DoorOpen />
+                  Open the route
+                </Button>
+              ) : (
+                <Button
+                  size='sm'
+                  variant='outline'
+                  disabled={busy !== null}
+                  disabledReason={busy ?? undefined}
+                  onClick={() => close.mutate(undefined)}
+                >
+                  <DoorClosed />
+                  Close the route
+                </Button>
+              )}
+            </div>
+            {route.tolls.length > 0 && (
+              <div className={FIELD_GRID}>
                 {route.tolls.map((item) => (
-                  <TollRow
-                    key={item.region_id}
-                    routeId={routeId}
+                  <TollEditor
+                    key={`${item.region_id}-${item.rate_pct}`}
                     toll={item}
                     busy={busy}
                     onSet={(rate) =>
@@ -296,42 +537,99 @@ export function TradeRouteSection({
                     }
                   />
                 ))}
-              </ul>
-            </div>
-          )}
-          {route.flows.length > 0 && (
-            <div className='flex min-w-0 flex-col gap-2'>
-              <Label variant='overline'>Cargo by epoch</Label>
-              <ul className='flex min-w-0 flex-col gap-1'>
-                {[...route.flows].reverse().map((flow, index) => (
-                  <li
-                    key={`${flow.epoch}-${flow.commodity}-${index}`}
-                    className='flex min-w-0 flex-wrap items-center gap-2'
-                  >
-                    <Badge
-                      size='sm'
-                      variant='outline'
-                    >{`Epoch ${flow.epoch}`}</Badge>
-                    <Text>{`${formatInteger(flow.volume)} ${COMMODITY[flow.commodity].label.toLowerCase()}${flow.material ? ` of ${flow.material.replace('_', ' ')}` : ''}`}</Text>
-                    {flow.lost > 0 && (
-                      <Badge
-                        size='sm'
-                        variant='destructive'
-                      >{`${formatInteger(flow.lost)} lost to ${flow.loss ?? 'the road'}`}</Badge>
-                    )}
-                    {flow.toll_paid > 0 && (
-                      <Badge
-                        size='sm'
-                        variant='info'
-                      >{`${formatInteger(flow.toll_paid)} in tolls`}</Badge>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+              </div>
+            )}
+          </AdjustPanel>
         </div>
       )}
     </Section>
+  )
+}
+
+type RouteView = components['schemas']['TradeRouteView']
+
+export function RouteBanner({ route }: { route: RouteView }) {
+  const names = useNames()
+  const status = ROUTE_STATUS[route.status]
+  const mode = MODE[route.mode]
+  const named = (id: number, fallback: string) =>
+    names.data?.find((row) => row.kind === 'entity' && row.id === id)?.name ??
+    fallback
+  return (
+    <div className='flex min-w-0 flex-col gap-3 rounded-xl border bg-background p-4'>
+      <div className='flex min-w-0 flex-wrap items-center gap-3'>
+        <Medallion icon={mode.icon} tone={status.tone} />
+        <div className='flex min-w-0 flex-1 basis-56 flex-col gap-0.5'>
+          <Text
+            weight='semibold'
+            className='flex min-w-0 flex-wrap items-center gap-x-2'
+          >
+            <EntityLink kind='entity' id={String(route.first_id)}>
+              {route.first_name}
+            </EntityLink>
+            <ArrowLeftRight
+              aria-hidden='true'
+              className='size-icon-sm shrink-0 text-muted-foreground'
+            />
+            <EntityLink kind='entity' id={String(route.second_id)}>
+              {route.second_name}
+            </EntityLink>
+          </Text>
+          <Muted variant='caption'>
+            {`${mode.label}, ${route.length} ${route.length === 1 ? 'land' : 'lands'} long`}
+          </Muted>
+        </div>
+        <Badge variant={status.variant}>
+          <status.icon />
+          {status.label}
+        </Badge>
+      </div>
+      <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+        <IconStat
+          icon={MapIcon}
+          label='Lands it crosses'
+          value={`${route.length} ${route.length === 1 ? 'land' : 'lands'}`}
+          tone='info'
+        />
+        <IconStat
+          icon={CalendarClock}
+          label='Founded in epoch'
+          value={`Founded ${route.founded_epoch}`}
+          tone='muted'
+        />
+        {route.last_traffic_epoch !== null && (
+          <IconStat
+            icon={Package}
+            label='Last traffic in epoch'
+            value={`Last trade ${route.last_traffic_epoch}`}
+            tone='gold'
+          />
+        )}
+        {route.controller_id !== null && (
+          <Badge variant='outline'>
+            <Flag />
+            {'Kept by '}
+            <EntityLink kind='entity' id={String(route.controller_id)}>
+              {named(route.controller_id, 'its master')}
+            </EntityLink>
+          </Badge>
+        )}
+        {route.blockaded_by_id !== null && (
+          <Badge variant='destructive'>
+            <ShieldAlert />
+            {'Blockaded by '}
+            <EntityLink kind='entity' id={String(route.blockaded_by_id)}>
+              {named(route.blockaded_by_id, 'an enemy')}
+            </EntityLink>
+          </Badge>
+        )}
+        {route.closed_by_player && (
+          <Badge variant='warning'>
+            <DoorClosed />
+            Closed by your hand
+          </Badge>
+        )}
+      </div>
+    </div>
   )
 }

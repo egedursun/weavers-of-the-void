@@ -68,9 +68,10 @@ export function useMarketPrices(id: number, enabled = true) {
   })
 }
 
-export function useTradeRoutes(worldId: number | null) {
+export function useTradeRoutes(worldId: number | null, enabled = true) {
   return useQuery({
     queryKey: economyKeys.routes(worldId),
+    enabled,
     queryFn: () =>
       unwrap(
         api.GET('/api/trade-routes', {
@@ -107,9 +108,10 @@ export function useDebtsLedger() {
   })
 }
 
-export function useMarkets(worldId: number | null) {
+export function useMarkets(worldId: number | null, enabled = true) {
   return useQuery({
     queryKey: economyKeys.markets(worldId),
+    enabled,
     queryFn: () =>
       unwrap(
         api.GET('/api/markets', {
