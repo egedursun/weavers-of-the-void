@@ -32,6 +32,8 @@ import { DoctrineSection } from './faith/Doctrine'
 import { LearningSection } from './lore/LearningSection'
 import { LoreSection } from './lore/LoreSection'
 import { isLoreKind } from './lore/model'
+import { CreatePlace } from './place/CreatePlace'
+import { PlaceSection } from './place/PlaceSection'
 import { HouseSection, OathsSection, TreatySection } from './realm/HouseTreaty'
 import { RealmSection } from './realm/Realm'
 import { scrollToSection } from './scrollToSection'
@@ -321,6 +323,8 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         highlightEpoch={highlight}
       />
       <EntityEnvironment entityId={entity.id} entityType={entity.entity_type} />
+      {entity.entity_type === 'place' && <PlaceSection placeId={entity.id} />}
+      {entity.entity_type === 'region' && <CreatePlace regionId={entity.id} />}
       {trading && (
         <DemographySection communityId={entity.id} readOnlyReason={readOnly} />
       )}

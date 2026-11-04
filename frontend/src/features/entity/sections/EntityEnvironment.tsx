@@ -76,6 +76,7 @@ import {
   named,
   plain,
 } from '../environment/labels'
+import { PlaceHolds } from '../place/PlaceSection'
 
 type RegionEnvironment = components['schemas']['RegionEnvironmentView']
 type PlaceEnvironment = components['schemas']['PlaceEnvironmentView']
@@ -763,7 +764,7 @@ function PlaceEnvironmentSection({ placeId }: { placeId: number }) {
   const run = ({ key, value }: Change) =>
     unwrap(
       api.POST('/api/actions/environment:place', {
-        body: { place_id: placeId, field: key, value },
+        body: { place_id: placeId, field: key, value, lock: true },
       })
     )
   const set = useGodAction({
@@ -850,10 +851,11 @@ function PlaceEnvironmentSection({ placeId }: { placeId: number }) {
             <div className='flex min-w-0 flex-col gap-0.5'>
               <Text weight='semibold'>Shape this place</Text>
               <Muted variant='caption'>
-                Every value above can be set here; every change goes into the
-                ledger.
+                Every value above can be set here and is held until you release
+                it; every change goes into the ledger.
               </Muted>
             </div>
+            <PlaceHolds placeId={placeId} held={ground.locked} />
             <div className='grid min-w-0 grid-cols-1 gap-3 @md/env:grid-cols-2 @3xl/env:grid-cols-5'>
               {PLACE_CHOICES.map((item) => (
                 <ChoiceRow
