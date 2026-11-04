@@ -94,6 +94,10 @@
   animation: indeterminate 1.4s ease-in-out infinite;
 }
 
+@utility max-h-lightbox {
+  max-height: max(12rem, calc(100dvh - 24rem));
+}
+
 @keyframes skeleton-sheen {
   from {
     background-position: 150% 0;

@@ -140,7 +140,7 @@ export function Lightbox({
                 src={mediaUrl(current.file_name)}
                 alt={current.caption ?? title}
                 className={cn(
-                  'max-h-96 w-auto max-w-full object-contain sm:max-h-128',
+                  'max-h-lightbox w-auto max-w-full object-contain',
                   veiled && 'blur-xl'
                 )}
               />
