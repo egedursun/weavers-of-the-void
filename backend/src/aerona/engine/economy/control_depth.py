@@ -35,6 +35,7 @@ from aerona.engine.economy.extraction import write_reserve
 from aerona.engine.economy.materials import set_node_material
 from aerona.engine.economy.provenance import ensure_materials
 from aerona.engine.economy.stocks import goods_of, sync_aggregates
+from aerona.engine.economy.workshop_designs import assign_design
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 
@@ -268,7 +269,15 @@ async def release_stock(ctx: TickContext, lot_id: int) -> CommunityStockRow:
 
 
 async def edit_workshop(
-    ctx: TickContext, community_id: int, kind: WorkshopKind, *, fleet: int | None, idle: int | None, structure_id: int | None, hold: bool | None
+    ctx: TickContext,
+    community_id: int,
+    kind: WorkshopKind,
+    *,
+    fleet: int | None,
+    idle: int | None,
+    structure_id: int | None,
+    hold: bool | None,
+    design_id: int | None = None,
 ) -> WorkshopRow:
     entity = await community(ctx, community_id)
     row = await ctx.session.scalar(select(WorkshopRow).where(WorkshopRow.community_entity_id == entity.id, WorkshopRow.kind == kind))
@@ -283,6 +292,8 @@ async def edit_workshop(
         if structure_id > 0 and (structure is None or structure.entity_type is not EntityType.STRUCTURE):
             raise ValidationFailedError("A workshop stands in a structure.")
         row.structure_entity_id = structure.id if structure is not None else None
+    if design_id is not None:
+        await assign_design(ctx, row, design_id)
     if hold is not None:
         row.held = hold
     await ctx.session.flush()

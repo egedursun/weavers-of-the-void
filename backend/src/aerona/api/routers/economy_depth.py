@@ -3,12 +3,13 @@ from sqlalchemy import select
 
 from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.routers.economy import names_of, rules_of
-from aerona.api.schemas.economy import DebtLawView, MarketHoldsView, NodeMaterialsView, PremiumView, SlotView
+from aerona.api.schemas.economy import DebtLawView, MarketHoldsView, NodeMaterialsView, PremiumView, SlotView, WorkshopDesignView
 from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.laws import LAW_PARAMS
+from aerona.catalog.production import WORKSHOP_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
-from aerona.db.tables.economy import CommunityStockRow, MarketPriceHoldRow, NodeMaterialRow
+from aerona.db.tables.economy import CommunityStockRow, MarketPriceHoldRow, NodeMaterialRow, WorkshopDesignRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import LawJurisdictionRow, LawProfileRow
 from aerona.domain.enums.economy import FoeNature, MaterialSlot
@@ -167,3 +168,30 @@ async def debt_laws(services: ServicesDep) -> list[DebtLawView]:
                 )
             )
         return views
+
+
+@router.get("/worlds/{world_id}/workshop-designs", response_model=list[WorkshopDesignView])
+async def workshop_designs(services: ServicesDep, world_id: int = Path(ge=1)) -> list[WorkshopDesignView]:
+    async with reader(services) as session:
+        rows = list(await session.scalars(select(WorkshopDesignRow).where(WorkshopDesignRow.world_id == world_id).order_by(WorkshopDesignRow.id)))
+        used: dict[int, int] = {}
+        for design_id in await session.scalars(select(WorkshopRow.design_id).where(WorkshopRow.design_id.is_not(None))):
+            if design_id is not None:
+                used[design_id] = used.get(design_id, 0) + 1
+        return [
+            WorkshopDesignView(
+                id=row.id,
+                world_id=row.world_id,
+                base_kind=row.base_kind,
+                label=WORKSHOP_LABELS[row.base_kind],
+                name=row.name,
+                description=row.description,
+                output_pct=row.output_pct,
+                capacity_pct=row.capacity_pct,
+                store_pct=row.store_pct,
+                quality_bonus=row.quality_bonus,
+                held=row.held,
+                workshops=used.get(row.id, 0),
+            )
+            for row in rows
+        ]

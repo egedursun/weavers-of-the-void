@@ -4479,6 +4479,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/worlds/{world_id}/workshop-designs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["workshop_designs_api_worlds__world_id__workshop_designs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/entities/{entity_id}/demography": {
         parameters: {
             query?: never;
@@ -8937,6 +8953,70 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["action_workshop_release_api_actions_workshop_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/workshop_design:create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_workshop_design_create_api_actions_workshop_design_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/workshop_design:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_workshop_design_edit_api_actions_workshop_design_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/workshop_design:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_workshop_design_release_api_actions_workshop_design_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/workshop_design:delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_workshop_design_delete_api_actions_workshop_design_delete_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -18482,12 +18562,51 @@ export interface components {
             workers: number;
             held: boolean;
         };
+        WorkshopDesignCreateInput: {
+            world_id: number;
+            base_kind: components["schemas"]["WorkshopKind"];
+            name: string;
+            values?: {
+                [key: string]: number;
+            };
+            description?: string | null;
+        };
+        WorkshopDesignDeleteInput: {
+            design_id: number;
+        };
+        WorkshopDesignEditInput: {
+            design_id: number;
+            values?: {
+                [key: string]: number;
+            };
+            name?: string | null;
+            description?: string | null;
+            hold?: boolean | null;
+        };
+        WorkshopDesignReleaseInput: {
+            design_id: number;
+        };
+        WorkshopDesignView: {
+            id: number;
+            world_id: number;
+            base_kind: components["schemas"]["WorkshopKind"];
+            label: string;
+            name: string;
+            description: string | null;
+            output_pct: number;
+            capacity_pct: number;
+            store_pct: number;
+            quality_bonus: number;
+            held: boolean;
+            workshops: number;
+        };
         WorkshopEditInput: {
             community_id: number;
             kind: components["schemas"]["WorkshopKind"];
             fleet?: number | null;
             idle_epochs?: number | null;
             structure_id?: number | null;
+            design_id?: number | null;
             hold?: boolean | null;
         };
         WorkshopKind: "market" | "granary" | "warehouse" | "mine" | "lumber_camp" | "fishery" | "charcoal_kiln" | "forge" | "tannery" | "mill" | "brewery" | "weavery" | "stable" | "mason_yard" | "shipyard" | "siege_yard" | "alchemist" | "shrine_workshop" | "mint";
@@ -18509,6 +18628,7 @@ export interface components {
             built_epoch: number;
             structure_id: number | null;
             held: boolean;
+            design_id?: number | null;
         };
         WorldBornEvent: {
             id: number;
@@ -27235,6 +27355,35 @@ export interface operations {
             };
         };
     };
+    workshop_designs_api_worlds__world_id__workshop_designs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkshopDesignView"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     demography_api_entities__entity_id__demography_get: {
         parameters: {
             query?: never;
@@ -35553,6 +35702,130 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["WorkshopReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_workshop_design_create_api_actions_workshop_design_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkshopDesignCreateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_workshop_design_edit_api_actions_workshop_design_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkshopDesignEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_workshop_design_release_api_actions_workshop_design_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkshopDesignReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_workshop_design_delete_api_actions_workshop_design_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkshopDesignDeleteInput"];
             };
         };
         responses: {

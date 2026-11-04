@@ -1074,6 +1074,18 @@ ECONOMY_ACTIONS = (
         ("S6.3",),
     ),
     _sync(Meta("workshop:release", "Release a held workshop", G.SOCIETY), economy_depth.release_workshop, economy_depth.WorkshopTarget, free, ("S6.3",)),
+    _sync(
+        Meta("workshop_design:create", "Draw a new workshop design", G.SOCIETY),
+        economy_depth.create_design,
+        economy_depth.CreateWorkshopDesign,
+        free,
+        ("S6.3",),
+    ),
+    _sync(Meta("workshop_design:edit", "Redraw a workshop design", G.SOCIETY), economy_depth.edit_design, economy_depth.EditWorkshopDesign, free, ("S6.3",)),
+    _sync(
+        Meta("workshop_design:release", "Release a held workshop design", G.SOCIETY), economy_depth.release_design, economy_depth.DesignTarget, free, ("S6.3",)
+    ),
+    _sync(Meta("workshop_design:delete", "Tear up a workshop design", G.SOCIETY), economy_depth.delete_design, economy_depth.DesignTarget, free, ("S6.3",)),
     _sync(Meta("resource:create", "Set a new deposit into the earth", G.SOCIETY), economy_depth.create_resource, economy_depth.CreateResource, free, ("S6.3",)),
     _sync(
         Meta("resource:edit", "Set a resource's knowledge, byproduct, seal and substance", G.SOCIETY),

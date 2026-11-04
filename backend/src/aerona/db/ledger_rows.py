@@ -66,6 +66,7 @@ WHITELISTED_TABLES = frozenset(
         "community_stocks",
         "goods_flows",
         "workshops",
+        "workshop_designs",
         "resource_profiles",
         "resource_workers",
         "market_price_holds",

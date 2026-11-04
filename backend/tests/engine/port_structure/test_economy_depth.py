@@ -7,14 +7,14 @@ from aerona.db.tables.body import BodyRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import CohortRow
-from aerona.db.tables.economy import CommunityStockRow, LoanRow, NodeMaterialRow, ResourceProfileRow
+from aerona.db.tables.economy import CommunityStockRow, LoanRow, NodeMaterialRow, ResourceProfileRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import CaptiveRow
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
-from aerona.domain.enums.economy import CommodityKind, FoeNature, GoodsFlow, LoanStatus, MaterialFamily, MaterialSlot
+from aerona.domain.enums.economy import CommodityKind, FoeNature, GoodsFlow, LoanStatus, MaterialFamily, MaterialSlot, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.polity import DebtRemedy, LawKind
@@ -50,6 +50,7 @@ from aerona.engine.economy.realm_credit import collect_from_realms, lend_to_real
 from aerona.engine.economy.sanctity import holy_strike, natures_of
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.economy.survey import DEPTH_FIXUP, depth_backfill
+from aerona.engine.economy.workshop_designs import NewDesign, capacity_scale, create_design, output_scale, workshop_store_units
 from aerona.engine.phases.market import market
 from aerona.engine.phases.production import species_yields
 from aerona.engine.phases.society_economy import default_society, save_society
@@ -335,3 +336,13 @@ async def test_the_depth_backfill_runs_once(session: AsyncSession, world: CoreWo
     assert await session.get(AppliedFixupRow, DEPTH_FIXUP) is not None
     assert await depth_backfill(ctx) == {}
     assert await sweep_materials(session, ctx.rules) == 0
+
+
+async def test_workshop_designs_scale_capacity_output_and_storage(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "design", Rules())
+    design = await create_design(ctx, NewDesign(world.world.id, WorkshopKind.GRANARY, "Deep Silo", {"store_pct": 300, "capacity_pct": 50, "output_pct": 200}))
+    workshop = WorkshopRow(community_entity_id=world.people.id, kind=WorkshopKind.GRANARY, level=2, built_epoch=1)
+    assert workshop_store_units(workshop, design, 10) == 60
+    assert workshop_store_units(workshop, None, 10) == 20
+    assert capacity_scale(design) == 0.5 and output_scale(design) == 2.0
+    assert workshop_store_units(None, design, 10) == 0

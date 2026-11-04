@@ -554,6 +554,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.sky_events",
     "table.treaty_parties",
     "table.tributes",
+    "table.workshop_designs",
     "table.workshops",
     "table.world_maps",
     "table.world_materials",
@@ -646,7 +647,8 @@ async def set_satisfaction(ctx: TickContext, entity_id: int, values: Mapping[Soc
 
 async def storage_room(ctx: TickContext, entity: EntityRow, commodity: Commodity) -> int:
     book = await EconomyBook.load(ctx)
-    return storage_index(ctx.rules, book.workshop(entity.id, store_kind(commodity)), commodity)
+    store = book.workshop(entity.id, store_kind(commodity))
+    return storage_index(ctx.rules, store, commodity, book.design_of(store))
 
 
 async def set_stores(ctx: TickContext, entity_id: int, stocks: Mapping[Commodity, int]) -> Society:

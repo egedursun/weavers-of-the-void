@@ -59,6 +59,7 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
     "table.skills",
     "table.sky_events",
     "table.treaty_parties",
+    "table.workshop_designs",
     "table.workshops",
     "table.world_maps",
     "table.world_materials",
@@ -123,12 +124,16 @@ async def resource_economy(ctx: TickContext) -> None:
     "table.skills",
     "table.sky_events",
     "table.treaty_parties",
+    "table.workshop_designs",
     "table.workshops",
     "table.world_maps",
     "table.world_materials",
     "table.world_seasons",
 )
-@writes("resource.abundance", "table.resource_profiles")
+@writes(
+    "resource.abundance",
+    "table.resource_profiles",
+)
 async def resource_regeneration(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     regrown = 0

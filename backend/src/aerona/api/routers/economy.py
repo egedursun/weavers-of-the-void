@@ -284,6 +284,7 @@ async def community_economy(services: ServicesDep, community_id: int = Path(ge=1
                     built_epoch=row.built_epoch,
                     structure_id=row.structure_entity_id,
                     held=row.held,
+                    design_id=row.design_id,
                 )
                 for row in sorted(workshops.values(), key=lambda item: item.kind.value)
             ],

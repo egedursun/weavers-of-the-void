@@ -6,6 +6,7 @@ from aerona.db.tables.economy import (
     NodeMaterialRow,
     ResourceProfileRow,
     ResourceWorkerRow,
+    WorkshopDesignRow,
     WorkshopRow,
     WorldMaterialRow,
 )
@@ -180,6 +181,19 @@ ECONOMY_DEPTH_MECHANICS = (
         tables=(CommunityStockRow.__tablename__, CurrencyRow.__tablename__),
         targets=("people", "settlement", "structure"),
         couplings=(Coupling(S.FAITH, "a temple's gold and silver become loot", EdgeKind.FLOW, "money.temple_hoard_units"),),
+    ),
+    Mechanic(
+        key="workshop_designs",
+        spec_item="S6.3",
+        title="Workshop designs drawn on a base kind change capacity, output, quality and storage",
+        subsystem=S.ECONOMY,
+        phases=("refining", "society_economy"),
+        surface=Surface(drawer="WorkshopDesigns"),
+        backfill="none: workshops follow their base kind until a design is drawn",
+        fields=("output_pct", "capacity_pct", "store_pct", "quality_bonus", "design_id"),
+        tables=(WorkshopDesignRow.__tablename__, WorkshopRow.__tablename__),
+        targets=("people", "settlement"),
+        couplings=(Coupling(S.ECONOMY, "a better forge turns more ore into better weapons", EdgeKind.MODIFIER),),
     ),
     Mechanic(
         key="economy_holds",

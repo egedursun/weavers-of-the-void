@@ -6,7 +6,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.economy import CommodityKind, LoanStatus, MaterialFamily, MaterialSlot, WorkshopKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
-from aerona.engine.economy import control, control_depth
+from aerona.engine.economy import control, control_depth, workshop_designs
 from aerona.engine.economy.control_depth import NewCoin, NewDeposit, NewLoan, Substance
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -66,7 +66,28 @@ class EditWorkshop(Command):
     fleet: int | None = Field(default=None, ge=0)
     idle_epochs: int | None = Field(default=None, ge=0)
     structure_id: int | None = Field(default=None, ge=0)
+    design_id: int | None = Field(default=None, ge=0)
     hold: bool | None = None
+
+
+class CreateWorkshopDesign(Command):
+    world_id: int
+    base_kind: WorkshopKind
+    name: str = Field(min_length=1, max_length=NAME_MAX)
+    values: dict[str, int] = Field(default_factory=dict)
+    description: str | None = Field(default=None, max_length=DESCRIPTION_MAX)
+
+
+class EditWorkshopDesign(Command):
+    design_id: int
+    values: dict[str, int] = Field(default_factory=dict)
+    name: str | None = Field(default=None, max_length=NAME_MAX)
+    description: str | None = Field(default=None, max_length=DESCRIPTION_MAX)
+    hold: bool | None = None
+
+
+class DesignTarget(Command):
+    design_id: int
 
 
 class WorkshopTarget(Command):
@@ -260,9 +281,39 @@ async def edit_workshop(scope: PlayerScope, command: EditWorkshop) -> Effect:
         idle=command.idle_epochs,
         structure_id=command.structure_id,
         hold=command.hold,
+        design_id=command.design_id,
     )
     held = ", held" if row.held else ""
     return Effect(f"{WORKSHOP_LABELS[command.kind]} set{held}.", command.community_id)
+
+
+@player_action("workshop_design:create", ActionKind.CREATE_ENTITY)
+async def create_design(scope: PlayerScope, command: CreateWorkshopDesign) -> Effect:
+    row = await workshop_designs.create_design(
+        await scope.context("workshop_design_create"),
+        workshop_designs.NewDesign(command.world_id, command.base_kind, command.name, command.values, command.description),
+    )
+    return Effect(f"{row.name} is drawn as a new {WORKSHOP_LABELS[row.base_kind].lower()}.", values={"design_id": row.id})
+
+
+@player_action("workshop_design:edit", ActionKind.EDIT_RECORD)
+async def edit_design(scope: PlayerScope, command: EditWorkshopDesign) -> Effect:
+    row = await workshop_designs.edit_design(
+        await scope.context("workshop_design_edit"), command.design_id, command.values, name=command.name, description=command.description, hold=command.hold
+    )
+    return Effect(f"{row.name} is redrawn{', held' if row.held else ''}.", values={"design_id": row.id})
+
+
+@player_action("workshop_design:release", ActionKind.EDIT_RECORD)
+async def release_design(scope: PlayerScope, command: DesignTarget) -> Effect:
+    row = await workshop_designs.edit_design(await scope.context("workshop_design_release"), command.design_id, {}, name=None, description=None, hold=False)
+    return Effect(f"{row.name} is no longer held.", values={"design_id": row.id})
+
+
+@player_action("workshop_design:delete", ActionKind.EDIT_RECORD)
+async def delete_design(scope: PlayerScope, command: DesignTarget) -> Effect:
+    name = await workshop_designs.delete_design(await scope.context("workshop_design_delete"), command.design_id)
+    return Effect(f"{name} is torn up; its workshops work as plain ones again.")
 
 
 @player_action("workshop:release", ActionKind.EDIT_RECORD)

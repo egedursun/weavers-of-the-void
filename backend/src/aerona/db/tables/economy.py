@@ -94,6 +94,29 @@ class CommunityStockRow(Base):
     held: Mapped[bool] = mapped_column(default=False)
 
 
+class WorkshopDesignRow(Base):
+    __tablename__ = "workshop_designs"
+    __table_args__ = (
+        between("output_pct", 0, 500),
+        between("capacity_pct", 0, 500),
+        between("store_pct", 0, 500),
+        between("quality_bonus", PERCENT_MIN, PERCENT_MAX),
+        Index("ix_workshop_designs_world", "world_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    world_id: Mapped[int] = mapped_column(ForeignKey("worlds.id", ondelete="CASCADE"))
+    base_kind: Mapped[WorkshopKind] = mapped_column(enum_type(WorkshopKind, "base_kind"))
+    name: Mapped[str] = mapped_column(String(NAME_MAX_LENGTH))
+    description: Mapped[str | None] = mapped_column(Text)
+    output_pct: Mapped[int] = mapped_column(default=100)
+    capacity_pct: Mapped[int] = mapped_column(default=100)
+    store_pct: Mapped[int] = mapped_column(default=100)
+    quality_bonus: Mapped[int] = mapped_column(default=0)
+    held: Mapped[bool] = mapped_column(default=False)
+    created_epoch: Mapped[int]
+
+
 class WorkshopRow(Base):
     __tablename__ = "workshops"
     __table_args__ = (
@@ -112,6 +135,7 @@ class WorkshopRow(Base):
     fleet: Mapped[int] = mapped_column(default=0)
     idle_epochs: Mapped[int] = mapped_column(default=0)
     held: Mapped[bool] = mapped_column(default=False)
+    design_id: Mapped[int | None] = mapped_column(ForeignKey("workshop_designs.id", ondelete="SET NULL"))
 
 
 class ResourceProfileRow(Base):

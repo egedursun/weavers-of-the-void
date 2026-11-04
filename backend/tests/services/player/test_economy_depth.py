@@ -12,6 +12,7 @@ from aerona.db.tables.economy import (
     NodeMaterialRow,
     ResourceProfileRow,
     ResourceWorkerRow,
+    WorkshopDesignRow,
     WorkshopRow,
     WorldMaterialRow,
 )
@@ -54,6 +55,10 @@ DEPTH_ACTIONS = (
     "loan:edit",
     "loan:release",
     "loan:delete",
+    "workshop_design:create",
+    "workshop_design:edit",
+    "workshop_design:release",
+    "workshop_design:delete",
 )
 
 
@@ -224,3 +229,29 @@ async def test_a_loan_is_made_edited_held_and_struck(scope: PlayerScope, session
         await economy_depth.grant_loan(scope, economy_depth.GrantLoan(lender_id=home.id, borrower_id=home.id, principal=5))
     await economy_depth.delete_loan(scope, economy_depth.LoanTarget(loan_id=loan.id))
     assert await session.get(LoanRow, loan.id) is None
+
+
+async def test_a_workshop_design_is_drawn_assigned_held_and_torn_up(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
+    home = await town(session, world)
+    drawn = await economy_depth.create_design(
+        scope,
+        economy_depth.CreateWorkshopDesign(
+            world_id=world.world.id, base_kind=WorkshopKind.FORGE, name="Bellows Forge", values={"capacity_pct": 200, "quality_bonus": 15}
+        ),
+    )
+    design = await session.get(WorkshopDesignRow, drawn.values["design_id"])
+    assert design is not None and design.capacity_pct == 200 and design.output_pct == 100
+    await economy.set_workshop(scope, economy.SetWorkshop(community_id=home.id, kind=WorkshopKind.FORGE, level=2))
+    await economy_depth.edit_workshop(scope, economy_depth.EditWorkshop(community_id=home.id, kind=WorkshopKind.FORGE, design_id=design.id))
+    forge = await session.scalar(select(WorkshopRow).where(WorkshopRow.community_entity_id == home.id, WorkshopRow.kind == WorkshopKind.FORGE))
+    assert forge is not None and forge.design_id == design.id
+    with pytest.raises(ValidationFailedError):
+        await economy.set_workshop(scope, economy.SetWorkshop(community_id=home.id, kind=WorkshopKind.MILL, level=1))
+        await economy_depth.edit_workshop(scope, economy_depth.EditWorkshop(community_id=home.id, kind=WorkshopKind.MILL, design_id=design.id))
+    await economy_depth.edit_design(scope, economy_depth.EditWorkshopDesign(design_id=design.id, values={"output_pct": 150}, hold=True))
+    assert design.output_pct == 150 and design.held
+    await economy_depth.release_design(scope, economy_depth.DesignTarget(design_id=design.id))
+    assert not design.held
+    await economy_depth.delete_design(scope, economy_depth.DesignTarget(design_id=design.id))
+    await session.refresh(forge)
+    assert forge.design_id is None

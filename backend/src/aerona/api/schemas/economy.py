@@ -84,6 +84,7 @@ class WorkshopView(ApiModel):
     built_epoch: int
     structure_id: int | None
     held: bool = False
+    design_id: int | None = None
 
 
 class ChainStepView(ApiModel):
@@ -358,3 +359,18 @@ class DebtLawView(ApiModel):
     remedy: DebtRemedy
     jubilee_epochs: int
     enforcement: int
+
+
+class WorkshopDesignView(ApiModel):
+    id: int
+    world_id: int
+    base_kind: WorkshopKind
+    label: str
+    name: str
+    description: str | None
+    output_pct: int
+    capacity_pct: int
+    store_pct: int
+    quality_bonus: int
+    held: bool
+    workshops: int

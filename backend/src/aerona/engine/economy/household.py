@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import MaimedCohortRow
-from aerona.db.tables.economy import WorkshopRow
+from aerona.db.tables.economy import WorkshopDesignRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
@@ -16,6 +16,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.extraction import tools_factor
 from aerona.engine.economy.stocks import aggregate_need, epoch_need, goods_of, holdings, nourishment_need
+from aerona.engine.economy.workshop_designs import workshop_store_units
 from aerona.engine.environment.profile import CropMix, crop_mix
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import headcount
@@ -129,10 +130,10 @@ def store_kind(aggregate: Commodity) -> WorkshopKind:
     return WorkshopKind.GRANARY if aggregate is Commodity.FOOD else WorkshopKind.WAREHOUSE
 
 
-def storage_index(rules: Rules, store: WorkshopRow | None, aggregate: Commodity) -> int:
+def storage_index(rules: Rules, store: WorkshopRow | None, aggregate: Commodity, design: WorkshopDesignRow | None = None) -> int:
     table = rules.economy
     per_level = table.storage_per_granary_level if aggregate is Commodity.FOOD else table.storage_per_warehouse_level
-    return table.storage_base_index + (store.level * per_level if store is not None else 0)
+    return table.storage_base_index + workshop_store_units(store, design, per_level)
 
 
 async def enforce_storage(ctx: TickContext, book: EconomyBook, community: EntityRow) -> int:
@@ -143,9 +144,8 @@ async def enforce_storage(ctx: TickContext, book: EconomyBook, community: Entity
         family = {kind: quantity for kind, quantity in held.items() if COMMODITIES[kind].aggregate is aggregate and quantity > 0}
         stocked = sum(family.values())
         need = aggregate_need(ctx.rules, population, aggregate)
-        room = round_half_up(
-            storage_index(ctx.rules, book.workshop(community.id, store_kind(aggregate)), aggregate) * max(1, need) / ctx.rules.economy.supply_index_epoch
-        )
+        store = book.workshop(community.id, store_kind(aggregate))
+        room = round_half_up(storage_index(ctx.rules, store, aggregate, book.design_of(store)) * max(1, need) / ctx.rules.economy.supply_index_epoch)
         excess = stocked - room
         if excess <= 0:
             continue

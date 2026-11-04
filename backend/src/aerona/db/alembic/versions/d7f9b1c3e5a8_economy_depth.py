@@ -15,6 +15,28 @@ WIDENED = (
     ("polity_treasury", "entry", OLD_TREASURY_ENTRIES, NEW_TREASURY_ENTRIES, False),
     ("settlement_treasury", "entry", OLD_TREASURY_ENTRIES, NEW_TREASURY_ENTRIES, False),
 )
+NAME_LENGTH = 200
+WORKSHOP_KINDS = (
+    "market",
+    "granary",
+    "warehouse",
+    "mine",
+    "lumber_camp",
+    "fishery",
+    "charcoal_kiln",
+    "forge",
+    "tannery",
+    "mill",
+    "brewery",
+    "weavery",
+    "stable",
+    "mason_yard",
+    "shipyard",
+    "siege_yard",
+    "alchemist",
+    "shrine_workshop",
+    "mint",
+)
 HELD_TABLES = ("world_materials", "node_materials", "community_stocks", "workshops", "resource_profiles", "resource_workers", "currencies", "loans")
 COMMODITIES = (
     "grain",
@@ -59,6 +81,31 @@ def upgrade() -> None:
     with op.batch_alter_table("item_profiles", schema=None) as batch_op:
         batch_op.drop_column("material")
     op.create_table(
+        "workshop_designs",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("world_id", sa.Integer(), nullable=False),
+        sa.Column("base_kind", enum_of("base_kind", WORKSHOP_KINDS), nullable=False),
+        sa.Column("name", sa.String(length=NAME_LENGTH), nullable=False),
+        sa.Column("description", sa.Text(), nullable=True),
+        sa.Column("output_pct", sa.Integer(), nullable=False),
+        sa.Column("capacity_pct", sa.Integer(), nullable=False),
+        sa.Column("store_pct", sa.Integer(), nullable=False),
+        sa.Column("quality_bonus", sa.Integer(), nullable=False),
+        sa.Column("held", sa.Boolean(), nullable=False),
+        sa.Column("created_epoch", sa.Integer(), nullable=False),
+        sa.CheckConstraint("output_pct BETWEEN 0 AND 500", name=op.f("ck_workshop_designs_output_pct_range")),
+        sa.CheckConstraint("capacity_pct BETWEEN 0 AND 500", name=op.f("ck_workshop_designs_capacity_pct_range")),
+        sa.CheckConstraint("store_pct BETWEEN 0 AND 500", name=op.f("ck_workshop_designs_store_pct_range")),
+        sa.CheckConstraint("quality_bonus BETWEEN 0 AND 100", name=op.f("ck_workshop_designs_quality_bonus_range")),
+        sa.ForeignKeyConstraint(["world_id"], ["worlds.id"], name=op.f("fk_workshop_designs_world_id_worlds"), ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_workshop_designs")),
+    )
+    with op.batch_alter_table("workshop_designs", schema=None) as batch_op:
+        batch_op.create_index("ix_workshop_designs_world", ["world_id"], unique=False)
+    with op.batch_alter_table("workshops", schema=None) as batch_op:
+        batch_op.add_column(sa.Column("design_id", sa.Integer(), nullable=True))
+        batch_op.create_foreign_key(batch_op.f("fk_workshops_design_id_workshop_designs"), "workshop_designs", ["design_id"], ["id"], ondelete="SET NULL")
+    op.create_table(
         "market_price_holds",
         sa.Column("market_entity_id", sa.Integer(), nullable=False),
         sa.Column("commodity", enum_of("commodity", COMMODITIES), nullable=False),
@@ -74,6 +121,10 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table("market_price_holds")
+    with op.batch_alter_table("workshops", schema=None) as batch_op:
+        batch_op.drop_constraint(batch_op.f("fk_workshops_design_id_workshop_designs"), type_="foreignkey")
+        batch_op.drop_column("design_id")
+    op.drop_table("workshop_designs")
     with op.batch_alter_table("item_profiles", schema=None) as batch_op:
         batch_op.add_column(sa.Column("material", sa.String(length=120), nullable=True))
     for table in HELD_TABLES:

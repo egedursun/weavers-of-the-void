@@ -60,6 +60,7 @@ from aerona.db.tables.economy import (
     TradeRouteProfileRow,
     TradeRouteRegionRow,
     TradeRouteTollRow,
+    WorkshopDesignRow,
     WorkshopRow,
     WorldMaterialRow,
 )
@@ -381,6 +382,7 @@ __all__ = [
     "WarAimRow",
     "WarRow",
     "WarSideRow",
+    "WorkshopDesignRow",
     "WorkshopRow",
     "WorldLeakItemRow",
     "WorldMapRow",

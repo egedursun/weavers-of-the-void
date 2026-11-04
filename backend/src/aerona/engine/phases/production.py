@@ -61,6 +61,7 @@ CORRUPT_FROM = PERCENT // 2
     "table.skills",
     "table.sky_events",
     "table.treaty_parties",
+    "table.workshop_designs",
     "table.workshops",
     "table.world_maps",
     "table.world_materials",
@@ -144,6 +145,7 @@ async def holy_and_tainted_stocks(ctx: TickContext, book: EconomyBook, lure: dic
     "table.skills",
     "table.sky_events",
     "table.treaty_parties",
+    "table.workshop_designs",
     "table.workshops",
     "table.world_maps",
     "table.world_materials",
@@ -352,6 +354,7 @@ async def _slain_beasts(ctx: TickContext) -> int:
     "table.sky_events",
     "table.stars",
     "table.treaty_parties",
+    "table.workshop_designs",
     "table.workshops",
     "table.world_maps",
     "table.world_materials",
@@ -475,12 +478,19 @@ async def species_yields(ctx: TickContext) -> None:
     "table.skills",
     "table.sky_events",
     "table.treaty_parties",
+    "table.workshop_designs",
     "table.workshops",
     "table.world_maps",
     "table.world_materials",
     "table.world_seasons",
 )
-@writes("table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents", "table.resource_profiles")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.incident_participants",
+    "table.incidents",
+    "table.resource_profiles",
+)
 async def deposit_finding(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     table = ctx.rules.extraction
@@ -539,6 +549,7 @@ async def deposit_finding(ctx: TickContext) -> None:
     "table.trade_route_tolls",
     "table.treaty_parties",
     "table.vessel_profiles",
+    "table.workshop_designs",
     "table.workshops",
     "table.world_maps",
     "table.world_materials",
