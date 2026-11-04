@@ -164,7 +164,7 @@ async def release_knowledge(scope: PlayerScope, command: KnowledgeTarget) -> Eff
 
 @player_action("region:river_redirect", ActionKind.OTHER)
 async def redirect_river(scope: PlayerScope, command: RedirectRiver) -> Effect:
-    moved = await region_control.redirect_river(scope.session, scope.rules, command.from_region_id, command.to_region_id)
+    moved = await region_control.redirect_river(scope.session, scope.rules, command.from_region_id, command.to_region_id, epoch=await scope.epoch())
     source, target = await _name(scope, command.from_region_id), await _name(scope, command.to_region_id)
     river = moved.river.value.replace("_", " ")
     tail = f"; {moved.dried} places went dry and {moved.watered} found water" if moved.dried or moved.watered else ""

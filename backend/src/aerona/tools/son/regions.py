@@ -11,6 +11,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.happening import RiverShiftCause
 from aerona.domain.enums.region import DangerOrigin, DangerSource
 from aerona.engine.environment import region_control
 from aerona.prompts import SonToolId
@@ -101,7 +102,7 @@ async def redirect_river(call: SonCall, args: RedirectRiverInput) -> str:
     source = await _region(call, args.from_region_id)
     target = await _region(call, args.to_region_id)
     try:
-        moved = await region_control.redirect_river(call.session, call.rules, source.id, target.id)
+        moved = await region_control.redirect_river(call.session, call.rules, source.id, target.id, epoch=call.tick.epoch, cause=RiverShiftCause.DIVINE)
     except AeronaError as error:
         fail(SonResult.RIVER_NOT_TURNED, reason=error.message)
     call.target(target.id)

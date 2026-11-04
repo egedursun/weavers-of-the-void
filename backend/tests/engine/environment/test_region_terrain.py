@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.db.tables.ecology import HerdRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
+from aerona.db.tables.happenings import RegionGeomorphRow, RiverShiftRow
 from aerona.db.tables.polity import PolityMemberRow, PolityTerritoryRow
 from aerona.db.tables.region import PolityMapKnowledgeRow, RegionDangerRow, RegionHazardRow, RegionMemoryRow
 from aerona.db.tables.routes import RouteRow
@@ -222,10 +223,13 @@ async def test_a_river_turned_into_a_neighbour_dries_and_waters_places(realm: Re
     )
     await realm.session.flush()
     rules = tuned(RULES, terrain={"redirect_leaves_stream": 0})
-    moved = await region_control.redirect_river(realm.session, rules, realm.region.id, realm.far_region.id)
+    moved = await region_control.redirect_river(realm.session, rules, realm.region.id, realm.far_region.id, epoch=4)
     assert ground.river_class is RiverClass.NONE and far.river_class is RiverClass.GREAT_RIVER
     assert moved.dried == 1 and moved.watered == 1
     assert "river_class" in ground.locked and "river_class" in far.locked
+    shift = await realm.session.scalar(select(RiverShiftRow))
+    assert shift is not None and (shift.from_region_id, shift.to_region_id, shift.epoch) == (realm.region.id, realm.far_region.id, 4)
+    assert (await realm.session.get(RegionGeomorphRow, realm.far_region.id)).river_course is RiverClass.GREAT_RIVER
 
 
 async def test_held_soil_land_use_and_scars_survive_the_engine(realm: Realm) -> None:

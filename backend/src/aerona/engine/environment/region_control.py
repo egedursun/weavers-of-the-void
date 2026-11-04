@@ -8,12 +8,15 @@ from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
+from aerona.db.tables.happenings import RiverShiftRow
 from aerona.db.tables.region import PolityMapKnowledgeRow, RegionDangerRow, RegionMemoryRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import RiverClass, WaterSource
+from aerona.domain.enums.happening import RiverShiftCause
 from aerona.domain.enums.region import DangerOrigin, DangerSource, MemoryOrigin, RegionMemoryKind
 from aerona.engine.environment.control import hold, region_ground
 from aerona.engine.environment.dangers import sync_stat
+from aerona.engine.environment.geomorph import shape_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.rules.registry import Rules
@@ -203,7 +206,9 @@ def rank(river: RiverClass) -> int:
     return RIVER_ORDER.index(river)
 
 
-async def redirect_river(session: AsyncSession, rules: Rules, from_region_id: int, to_region_id: int) -> Redirected:
+async def redirect_river(
+    session: AsyncSession, rules: Rules, from_region_id: int, to_region_id: int, *, epoch: int, cause: RiverShiftCause = RiverShiftCause.PLAYER
+) -> Redirected:
     if from_region_id == to_region_id:
         raise ValidationFailedError("A river is turned from one region into another.")
     source = await region_ground(session, (await region_entity(session, from_region_id)).id)
@@ -229,5 +234,12 @@ async def redirect_river(session: AsyncSession, rules: Rules, from_region_id: in
         elif place.region_entity_id == to_region_id and place.water_source is WaterSource.NONE:
             place.water_source = WaterSource.RIVER
             watered += 1
+    for ground in (source, target):
+        shape = await shape_of(session, ground.entity_id, ground.world_id)
+        shape.river_course = ground.river_class
+        shape.course_changed_epoch = epoch
+    session.add(
+        RiverShiftRow(world_id=source.world_id, from_region_id=source.entity_id, to_region_id=target.entity_id, epoch=epoch, river_class=river, cause=cause)
+    )
     await session.flush()
     return Redirected(source, target, river, dried, watered)
