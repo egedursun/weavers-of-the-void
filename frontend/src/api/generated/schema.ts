@@ -4287,6 +4287,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/nodes/{node_id}/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["node_profiles_api_nodes__node_id__profiles_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/worlds/{world_id}/materials": {
         parameters: {
             query?: never;
@@ -4807,6 +4823,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["custom_kinds_api_custom_kinds_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/rumours": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["rumours_api_entities__entity_id__rumours_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5417,6 +5449,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["action_kind_delete_api_actions_kind_delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/rumour:plant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_rumour_plant_api_actions_rumour_plant_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/rumour:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_rumour_edit_api_actions_rumour_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/rumour:suppress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_rumour_suppress_api_actions_rumour_suppress_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8287,6 +8367,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/profile:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_profile_set_api_actions_profile_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/profile:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_profile_release_api_actions_profile_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/ley:sever": {
         parameters: {
             query?: never;
@@ -10788,6 +10900,7 @@ export interface components {
             debt_status: components["schemas"]["DebtStatus"] | null;
             outgoing: boolean;
             other: components["schemas"]["NodeRef"] | null;
+            derived: boolean;
         };
         BookPdfStatus: {
             ready: boolean;
@@ -12867,7 +12980,7 @@ export interface components {
             phase: number;
             started: boolean;
         };
-        HarmCause: "battle" | "duel" | "punishment" | "torture" | "accident" | "monster" | "disaster" | "curse" | "magic_backlash" | "god" | "poison" | "quest" | "escape" | "sacrifice" | "age" | "player";
+        HarmCause: "battle" | "duel" | "punishment" | "torture" | "accident" | "monster" | "disaster" | "curse" | "magic_backlash" | "god" | "poison" | "quest" | "escape" | "sacrifice" | "age" | "player" | "ritual";
         HealthReport: {
             status: string;
             version: string;
@@ -15495,6 +15608,32 @@ export interface components {
             commodity: components["schemas"]["CommodityKind"];
             points: components["schemas"]["PricePoint"][];
         };
+        ProfileColumnRecord: {
+            name: string;
+            kind: string;
+            value: number | string | boolean | null;
+            options: string[];
+            nullable: boolean;
+            held: boolean;
+            pinned: boolean;
+        };
+        ProfileReleaseInput: {
+            node_id: number;
+            table: string;
+            column: string;
+        };
+        ProfileSetInput: {
+            node_id: number;
+            table: string;
+            column: string;
+            value: number | string | boolean | null;
+            hold: boolean;
+        };
+        ProfileTableRecord: {
+            table: string;
+            lockable: boolean;
+            columns: components["schemas"]["ProfileColumnRecord"][];
+        };
         PromptArea: "shared" | "context" | "genesis" | "son_turn" | "fate" | "chronicler" | "naming" | "voices" | "deepening" | "image_prompts" | "council" | "translation" | "world_birth" | "network_repair" | "mortal" | "opportunities" | "agent" | "chronicle" | "localisation";
         PromptCatalogue: {
             prompts: components["schemas"]["PromptEntry"][];
@@ -16215,6 +16354,47 @@ export interface components {
             key?: string | null;
         } & {
             [key: string]: unknown;
+        };
+        RumourBoard: {
+            community_id: number;
+            rumours: components["schemas"]["RumourView"][];
+        };
+        RumourChannel: "witness" | "route" | "pilgrimage" | "journey" | "spy" | "planted";
+        RumourEditInput: {
+            rumour_id: number;
+            fidelity?: number | null;
+            release: boolean;
+        };
+        RumourPlantInput: {
+            community_id: number;
+            incident_id?: number | null;
+            subject_id?: number | null;
+            text: string;
+            fidelity: number;
+            atrocity: boolean;
+        };
+        RumourSuppressInput: {
+            rumour_id: number;
+            everywhere: boolean;
+        };
+        RumourView: {
+            id: number;
+            incident_id: number;
+            text: string;
+            kind: string;
+            happened_epoch: number;
+            fidelity: number;
+            channel: components["schemas"]["RumourChannel"];
+            hops: number;
+            heard_epoch: number;
+            lingered: number;
+            source: components["schemas"]["NodeRef"] | null;
+            legend: components["schemas"]["NodeRef"] | null;
+            planted: boolean;
+            atrocity: boolean;
+            alarm: boolean;
+            carriers: number;
+            locked: string[];
         };
         RunView: {
             epoch: number;
@@ -26378,6 +26558,35 @@ export interface operations {
             };
         };
     };
+    node_profiles_api_nodes__node_id__profiles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileTableRecord"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     world_materials_api_worlds__world_id__materials_get: {
         parameters: {
             query?: never;
@@ -27264,6 +27473,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CustomKinds"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rumours_api_entities__entity_id__rumours_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RumourBoard"];
                 };
             };
             422: {
@@ -28413,6 +28651,99 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["KindDeleteInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_rumour_plant_api_actions_rumour_plant_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RumourPlantInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_rumour_edit_api_actions_rumour_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RumourEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_rumour_suppress_api_actions_rumour_suppress_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RumourSuppressInput"];
             };
         };
         responses: {
@@ -33779,6 +34110,68 @@ export interface operations {
             };
         };
     };
+    action_profile_set_api_actions_profile_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_profile_release_api_actions_profile_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_ley_sever_api_actions_ley_sever_post: {
         parameters: {
             query?: never;
@@ -37615,7 +38008,7 @@ export const genesisFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired
 export const genesisTemplateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisTemplate"]> = ["dark_fantasy", "mythic_age", "cosmic_horror", "fairy_tale", "star_myth", "sand_and_ash", "primordial_dawn", "crowns_and_knives", "drowned_world", "long_winter", "after_the_fall", "sky_islands", "age_of_engines"];
 export const governmentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GovernmentKind"]> = ["chiefdom", "monarchy", "theocracy", "oligarchy", "republic", "tribal_confederation", "empire", "hive_council", "god_kingdom", "occupation"];
 export const gravityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Gravity"]> = ["low", "normal", "high"];
-export const harmCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HarmCause"]> = ["battle", "duel", "punishment", "torture", "accident", "monster", "disaster", "curse", "magic_backlash", "god", "poison", "quest", "escape", "sacrifice", "age", "player"];
+export const harmCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HarmCause"]> = ["battle", "duel", "punishment", "torture", "accident", "monster", "disaster", "curse", "magic_backlash", "god", "poison", "quest", "escape", "sacrifice", "age", "player", "ritual"];
 export const heightClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HeightClass"]> = ["short", "average", "tall", "giant"];
 export const heroQuestKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HeroQuestKind"]> = ["hunt", "thread", "relic", "knowledge", "vengeance"];
 export const holdingKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HoldingKind"]> = ["temple", "land", "relic", "holy_place", "monastery"];
@@ -37754,6 +38147,7 @@ export const roadKindValues: ReadonlyArray<FlattenedDeepRequired<components>["sc
 export const routeClosureValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RouteClosure"]> = ["sealed", "severed", "forgotten", "collapsed", "snapped", "scorched"];
 export const routeStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RouteState"]> = ["open", "temporary", "misaligned", "sealed", "severed", "collapsed", "snapped", "scorched", "unstable", "forgotten"];
 export const rulesChangedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RulesChangedEvent"]["kind"]> = ["rules.changed"];
+export const rumourChannelValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RumourChannel"]> = ["witness", "route", "pilgrimage", "journey", "spy", "planted"];
 export const scarKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ScarKind"]> = ["battlefield", "plague_ground", "salted_earth", "burned", "crater", "haunted", "blighted", "leak_wound"];
 export const scenarioKeyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ScenarioKey"]> = ["doom_far", "one_faith", "lost_star", "many_worlds", "long_peace", "cosmic_power", "loyal_pantheon", "new_horizons"];
 export const scenarioStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ScenarioStatus"]> = ["running", "completed", "failed", "abandoned"];

@@ -20,6 +20,7 @@ from aerona.services.player import (
     creation,
     creator,
     creatures,
+    culture,
     curation,
     death,
     diplomacy,
@@ -55,6 +56,7 @@ from aerona.services.player import (
     profiles,
     realms,
     relations,
+    rumours,
     settings,
     settlements,
     society,
@@ -1112,6 +1114,27 @@ LORE_ACTIONS = (
         ("S8.1",),
     ),
     _sync(Meta("language:speakers", "Set the speakers of a tongue in a community", G.LANGUAGES), lore.set_speakers, lore.Speakers, free, ("S8.1",)),
+    _sync(
+        Meta("language:register", "Set or hold the tongue of a court, faith, market or hearth", G.LANGUAGES),
+        culture.set_register,
+        culture.Register,
+        free,
+        ("S8.1",),
+    ),
+    _sync(
+        Meta("language:release_understanding", "Let the world measure two tongues again", G.LANGUAGES),
+        culture.release_understanding,
+        culture.PairTarget,
+        free,
+        ("S8.1",),
+    ),
+    _sync(
+        Meta("language:release_speakers", "Let a community's share of speakers move again", G.LANGUAGES),
+        culture.release_speakers,
+        culture.SpeakerTarget,
+        free,
+        ("S8.1",),
+    ),
     _sync(Meta("research:level", "Set a people's level in a branch of knowledge", G.SOCIETY), lore.set_level, lore.HolderLevel, free, ("S8.4",)),
     _sync(Meta("research:technique", "Give or take a technique", G.SOCIETY), lore.set_technique, lore.HolderTechnique, free, ("S8.4",)),
     _sync(Meta("creed:tenet", "Add or remove a creed's tenet", G.SOCIETY), lore.set_creed_tenet, lore.CreedTenet, free, ("S8.5",)),
@@ -1124,6 +1147,27 @@ LORE_ACTIONS = (
     _sync(Meta("item:enchant", "Set an enchantment on an item", G.BEYOND), lore.set_enchantment, lore.Enchantment, free, ("S7.1", "S8.6")),
     _sync(
         Meta("tradition:participation", "Set how fully a community keeps a tradition", G.SOCIETY), lore.set_participation, lore.Participation, free, ("S8.3",)
+    ),
+    _sync(
+        Meta("tradition:release_participation", "Let a community's keeping of a tradition move again", G.SOCIETY),
+        culture.release_participation,
+        culture.KeeperTarget,
+        free,
+        ("S8.3",),
+    ),
+    _sync(
+        Meta("tradition:effect", "Set what a tradition brings its keepers", G.SOCIETY),
+        culture.set_tradition_effect,
+        culture.TraditionEffect,
+        free,
+        ("S8.3",),
+    ),
+    _sync(
+        Meta("tradition:reseed", "Draw a tradition's effects again from its kind", G.SOCIETY),
+        culture.reseed_tradition,
+        culture.TraditionTarget,
+        free,
+        ("S8.3",),
     ),
     _sync(
         Meta("lore:create", "Make a new language, legend, tradition, creed, rite, prophecy, item, artwork or knowledge", G.LANGUAGES),
@@ -1341,9 +1385,15 @@ MECHANIC_ACTIONS = (
         ("J.16c",),
     ),
 )
+RUMOUR_ACTIONS = (
+    _sync(Meta("rumour:plant", "Whisper a rumour into a community", G.MEMORY), rumours.plant_rumour, rumours.PlantRumour, free, ("F11",)),
+    _sync(Meta("rumour:edit", "Set how true a rumour runs, or let it fade", G.MEMORY), rumours.edit_rumour, rumours.EditRumour, free, ("F11",)),
+    _sync(Meta("rumour:suppress", "Silence a rumour", G.MEMORY), rumours.suppress_rumour, rumours.SuppressRumour, free, ("F11",)),
+)
 ACTIONS: tuple[ActionSpec, ...] = (
     *WILDS_ACTIONS,
     *LORE_ACTIONS,
+    *RUMOUR_ACTIONS,
     *CREATOR_ACTIONS,
     *SON_ACTIONS,
     *GOD_POWER_ACTIONS,

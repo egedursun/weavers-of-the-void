@@ -14,6 +14,7 @@ from aerona.domain.enums.culture import (
     ProphecyPredicate,
     ProphecyState,
     RiteEffectKind,
+    RumourChannel,
     SpeakerKind,
     Technique,
     TraditionKind,
@@ -276,3 +277,28 @@ class CustomKindView(ApiModel):
 
 class CustomKinds(ApiModel):
     kinds: list[CustomKindView]
+
+
+class RumourView(ApiModel):
+    id: int
+    incident_id: int
+    text: str
+    kind: str
+    happened_epoch: int
+    fidelity: int
+    channel: RumourChannel
+    hops: int
+    heard_epoch: int
+    lingered: int
+    source: NodeRef | None
+    legend: NodeRef | None
+    planted: bool
+    atrocity: bool
+    alarm: bool
+    carriers: int
+    locked: list[str]
+
+
+class RumourBoard(ApiModel):
+    community_id: int
+    rumours: list[RumourView]

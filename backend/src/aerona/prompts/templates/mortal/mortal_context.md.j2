@@ -59,6 +59,9 @@ WHAT YOU OWN: resources: {% if resources %}{% for item in resources %}#{{ item.i
 
 {% endset %}
 {% set mentions_text = "\nRECORDS THAT MENTION YOU:\n" ~ (budget(chronicle_rows(mentions) | string, m.ctx_mentions_chars, "see the chronicle", trim) if mentions else "(none)") %}
+{% set rumours_body %}{% for item in rumours %}- (age {{ item.age }}, {{ item.fidelity }}% true to what happened) {{ item.text }}
+{% endfor %}{% endset %}
+{% set rumours_text = "\nWHAT YOUR PEOPLE HAVE HEARD (rumour, perhaps garbled):\n" ~ (budget(rumours_body | trim, m.ctx_events_chars, "rumours are uncertain", trim) if rumours else "(nothing)") %}
 {% set languages_text = "\nLANGUAGES OF THE WORLD:\n" ~ (budget(languages, m.ctx_languages_chars, "look at the language's lexicon with inspect_entity", trim) if languages else "(none yet)") %}
 {% set worlds_text %}
 {% if other_worlds %}
@@ -87,7 +90,7 @@ YOUR ONGOING EXPEDITIONS: {% for item in expeditions %}{{ item.intent_label }}, 
 {% set floor = c.section_min_chars %}
 {% set hint = "look with look_at_world, search_entities and inspect_entity" %}
 {% set parts = [(header, header | length, hint)] %}
-{% for text in [you_text, character_text, god_text, language_text, land_text, "\n" ~ near_text, events_text, knowledge_text, owned_text, mentions_text, languages_text, worlds_text, expeditions_text] %}
+{% for text in [you_text, character_text, god_text, language_text, land_text, "\n" ~ near_text, events_text, rumours_text, knowledge_text, owned_text, mentions_text, languages_text, worlds_text, expeditions_text] %}
 {% set _ = parts.append((text.rstrip() if text.strip() else "", floor, hint)) %}
 {% endfor %}
 {{ sectioned(parts, c.mortal_context_chars * (c.read_tool_multiplier if full else 1), trim) }}

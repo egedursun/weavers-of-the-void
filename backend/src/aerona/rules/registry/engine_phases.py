@@ -161,5 +161,6 @@ class EnginePhasesRules:
     tradition_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: tradition cycles")
     item_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: item cycles")
     artwork_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: artwork cycles")
+    rumour_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: rumour cycles")
     husbandry: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: husbandry")
     beast_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: beast cycles")

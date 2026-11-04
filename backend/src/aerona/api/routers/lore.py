@@ -28,6 +28,8 @@ from aerona.api.schemas.lore import (
     ProphecyCard,
     RiteCard,
     RiteEffectView,
+    RumourBoard,
+    RumourView,
     SpeakerView,
     TechGraph,
     TechniqueSpecView,
@@ -38,6 +40,7 @@ from aerona.api.schemas.lore import (
 )
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
+from aerona.catalog.rumours import is_alarm, is_atrocity
 from aerona.catalog.techniques import BRANCH_GRAPH, TECHNIQUES, Gate
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.bonds import BondRow
@@ -59,6 +62,7 @@ from aerona.db.tables.culture import (
     ProphecyConditionRow,
     RiteEffectRow,
     RiteProfileRow,
+    RumourRow,
     SpeakerCohortRow,
     TraditionParticipationRow,
     TraditionProfileRow,
@@ -69,6 +73,7 @@ from aerona.domain.enums.culture import CustomCatalog
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.engine.lore.kinds import kinds_in
 from aerona.engine.lore.research import gate_open
+from aerona.engine.lore.rumours import heard_by
 
 router = APIRouter(tags=["lore"])
 Id = Annotated[int, Path(ge=1)]
@@ -459,4 +464,44 @@ async def custom_kinds(services: ServicesDep, catalog: Annotated[CustomCatalog, 
                 )
                 for row in await kinds_in(session, catalog, world_id)
             ]
+        )
+
+
+@router.get("/entities/{entity_id}/rumours", response_model=RumourBoard)
+async def rumours(entity_id: Id, services: ServicesDep) -> RumourBoard:
+    async with reader(services) as session:
+        heard = await heard_by(session, entity_id)
+        incident_ids = sorted({incident.id for _, incident, _ in heard})
+        spread: dict[int, int] = {}
+        if incident_ids:
+            for incident_id in await session.scalars(select(RumourRow.incident_id).where(RumourRow.incident_id.in_(incident_ids))):
+                spread[incident_id] = spread.get(incident_id, 0) + 1
+        refs = await node_refs(
+            session,
+            [item for rumour, _, _ in heard for item in (rumour.source_entity_id, rumour.legend_entity_id) if item is not None],
+        )
+        return RumourBoard(
+            community_id=entity_id,
+            rumours=[
+                RumourView(
+                    id=rumour.id,
+                    incident_id=incident.id,
+                    text=text,
+                    kind=incident.kind,
+                    happened_epoch=incident.epoch,
+                    fidelity=rumour.fidelity,
+                    channel=rumour.channel,
+                    hops=rumour.hops,
+                    heard_epoch=rumour.epoch,
+                    lingered=rumour.lingered,
+                    source=ref(refs, rumour.source_entity_id),
+                    legend=ref(refs, rumour.legend_entity_id),
+                    planted=rumour.planted,
+                    atrocity=is_atrocity(incident.kind),
+                    alarm=is_alarm(incident.kind),
+                    carriers=spread.get(incident.id, 1),
+                    locked=rumour.locked,
+                )
+                for rumour, incident, text in heard
+            ],
         )

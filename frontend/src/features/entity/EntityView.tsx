@@ -32,6 +32,7 @@ import { DoctrineSection } from './faith/Doctrine'
 import { LearningSection } from './lore/LearningSection'
 import { LoreSection } from './lore/LoreSection'
 import { isLoreKind } from './lore/model'
+import { RumoursSection } from './lore/rumours/RumoursSection'
 import { HouseSection, OathsSection, TreatySection } from './realm/HouseTreaty'
 import { RealmSection } from './realm/Realm'
 import { scrollToSection } from './scrollToSection'
@@ -366,6 +367,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       )}
       {isCommunity(ctx.type) && (
         <LearningSection holderId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {(isCommunity(ctx.type) || entity.entity_type === 'polity') && (
+        <RumoursSection communityId={entity.id} readOnlyReason={readOnly} />
       )}
       {entity.entity_type === 'species' && (
         <SpeciesSection speciesId={entity.id} readOnlyReason={readOnly} />
