@@ -176,7 +176,7 @@ async def hallow_holy_days(ctx: TickContext, calendar: CalendarRow) -> int:
     for day in calendar.holy_days:
         entry = dict(day)
         notable_id = entry.get("notable_year_id")
-        if entry.get("tradition_entity_id") is None and isinstance(notable_id, int):
+        if "tradition_entity_id" not in entry and isinstance(notable_id, int):
             notable = await ctx.session.get(NotableYearRow, notable_id)
             if notable is not None:
                 keepers = keepers if keepers is not None else await keepers_of(ctx.session, calendar.knowledge_entity_id)

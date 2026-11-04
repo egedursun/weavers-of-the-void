@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { KpiTile, MiniStat } from '@/components/domain'
+import { KpiTile, MiniStat, ShowMore, useShowMore } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { NOTABLE, named } from '@/features/entity/environment/labels'
 import {
@@ -54,6 +54,7 @@ const WORKING = 'Working on it.'
 const ALL_YEAR = 'all'
 const NONE = 'none'
 const PERCENT = 100
+const SHOWN = 6
 
 function calendarKey(worldId: number) {
   return ['world', 'calendar', worldId] as const
@@ -99,6 +100,18 @@ function TraditionTile({ tradition }: { tradition: Tradition }) {
   )
 }
 
+function TraditionList({ items }: { items: Tradition[] }) {
+  const more = useShowMore(items, SHOWN)
+  return (
+    <>
+      {more.visible.map((item) => (
+        <TraditionTile key={item.id} tradition={item} />
+      ))}
+      <ShowMore state={more} noun={['tradition', 'traditions']} />
+    </>
+  )
+}
+
 function FestivalWheel({
   data,
   view,
@@ -127,9 +140,7 @@ function FestivalWheel({
             {kept.length === 0 ? (
               <Muted variant='caption'>No tradition is kept in it.</Muted>
             ) : (
-              kept.map((item) => (
-                <TraditionTile key={item.id} tradition={item} />
-              ))
+              <TraditionList items={kept} />
             )}
           </Card>
         )
@@ -141,9 +152,7 @@ function FestivalWheel({
           tone='muted'
           hint='Customs with no season of their own'
         >
-          {loose.map((item) => (
-            <TraditionTile key={item.id} tradition={item} />
-          ))}
+          <TraditionList items={loose} />
         </Card>
       )}
     </div>

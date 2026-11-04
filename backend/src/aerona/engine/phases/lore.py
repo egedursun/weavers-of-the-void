@@ -304,10 +304,10 @@ async def tradition_cycles(ctx: TickContext) -> None:
         profile = await traditions.profile_of(ctx, tradition)
         kind = profile.kind
         for community in await traditions.celebrants(ctx, tradition.id):
+            rites.bind(profile, tradition, community)
             if held >= table.cap:
                 await traditions.participate(ctx, tradition, community)
                 continue
-            rites.bind(profile, tradition, community)
             keeping = rites.keeping(ctx, profile, tradition, community)
             done = await traditions.celebrate(ctx, tradition, community, atlas, keeping)
             if keeping.in_season is not None:
