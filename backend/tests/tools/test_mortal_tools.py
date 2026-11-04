@@ -99,7 +99,7 @@ async def test_language_and_production(database: Database) -> None:
         await connect(session, realm.mortal_id, realm.resource_id, BondKind.OWNS)
     made = await ok(toolkit, "produce_item", {"name": "Salt Spear", "category": "weapon", "description": LONG, "resource_ids": [realm.resource_id]})
     assert "Damage" in made
-    await ok(toolkit, "build_structure", {"name": "Tide Shrine", "description": LONG, "dedicated_son_id": realm.son_id})
+    await ok(toolkit, "build_structure", {"name": "Tide Shrine", "structure_kind": "shrine", "description": LONG, "dedicated_son_id": realm.son_id})
     await ok(
         toolkit,
         "create_culture",

@@ -21,6 +21,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType, LegendCategory
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic
+from aerona.domain.enums.structure import STRUCTURE_LEVEL_MAX, StructureKind
 from aerona.domain.enums.travel import VehicleKind
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.shared_inputs import LinkInput, WordInput
@@ -72,6 +73,12 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
         EntityType.MORTAL: {"title": (Annotated[str, Field(max_length=TITLE_MAX)] | None, None)},
         EntityType.EVENT: {"effects": (list[EventEffectInput] | None, None)},
         EntityType.LEGEND: {"legend_category": (LegendCategory | None, None)},
+        EntityType.STRUCTURE: {
+            "structure_kind": (StructureKind, ...),
+            "material": (MaterialKind | None, None),
+            "level": (Annotated[int, Field(ge=1, le=STRUCTURE_LEVEL_MAX)] | None, None),
+            "design_id": (int | None, None),
+        },
         EntityType.RESOURCE: {
             "commodity": (CommodityKind | None, None),
             "material": (MaterialKind | None, None),

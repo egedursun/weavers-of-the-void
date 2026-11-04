@@ -1,11 +1,11 @@
-import re
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.structures import HOLY_HOUSES
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.engine.context import TickContext
@@ -16,7 +16,6 @@ from aerona.engine.primitives.stats import shift_stat
 from aerona.rules.registry import Rules
 
 SITE_TYPES = frozenset({EntityType.PLACE, EntityType.STRUCTURE, EntityType.REGION})
-TEMPLE_WORDS = re.compile(r"temple|shrine|altar|sanctuary", re.IGNORECASE)
 
 
 async def holy_sites(session: AsyncSession, world_id: int, son_id: int | None) -> list[EntityRow]:
@@ -26,7 +25,11 @@ async def holy_sites(session: AsyncSession, world_id: int, son_id: int | None) -
         if entity.id in marked:
             found.append(entity)
             continue
-        if son_id is None or entity.entity_type is not EntityType.STRUCTURE or not TEMPLE_WORDS.search(entity.subtype or ""):
+        profile = await session.get(StructureProfileRow, entity.id) if entity.entity_type is EntityType.STRUCTURE else None
+        if son_id is None or profile is None or profile.kind not in HOLY_HOUSES:
+            continue
+        if profile.dedicated_son_id == son_id:
+            found.append(entity)
             continue
         home = await living_entity(session, entity.location_id)
         patron = await living_patron(session, home) if home is not None else None

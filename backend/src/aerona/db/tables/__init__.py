@@ -174,6 +174,7 @@ from aerona.db.tables.society import (
     SoulRow,
 )
 from aerona.db.tables.sons import SonPowerRow, SonRelationRow, SonRow
+from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow, StructureStaffRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, HeroQuestRow, SiegeRow, TributeRow, WarRow, WarSideRow
 
 __all__ = [
@@ -214,6 +215,7 @@ __all__ = [
     "CommunitySocietyRow",
     "CommunityStockRow",
     "ConditionRow",
+    "ConstructionRow",
     "CosmosRow",
     "CouncilRow",
     "CreationMotifRow",
@@ -359,6 +361,9 @@ __all__ = [
     "SpiritProfileRow",
     "SpyNetworkRow",
     "StarRow",
+    "StructureDesignRow",
+    "StructureProfileRow",
+    "StructureStaffRow",
     "ThreadLinkRow",
     "ThreadRow",
     "TradeFlowRow",

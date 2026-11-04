@@ -24,6 +24,7 @@ from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.gods.queries import community_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.stats import stat
+from aerona.engine.structures.describe import structure_lines
 from aerona.prompts.contexts.mortal import HomeLine
 
 
@@ -77,6 +78,7 @@ async def home_for(session: AsyncSession, me: EntityRow) -> HomeLine | None:
         wildlife=wildlife,
         herds=herds,
         beasts=beasts,
+        works=await structure_lines(session, home),
         tongues=lore.tongues,
         techniques=lore.techniques,
         creed=lore.creed,

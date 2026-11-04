@@ -89,6 +89,7 @@ from aerona.db.tables.polity import (
     VassalageRow,
 )
 from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
+from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow, StructureStaffRow
 from aerona.db.tables.warfare import SiegeRow, WarSideRow
 
 
@@ -305,6 +306,30 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (),
         ("settlement.",),
         ("settlement_life", "f2b8d4c6a1e9"),
+    ),
+    ComplianceRow(
+        "S7.2",
+        (StructureProfileRow.__tablename__, StructureStaffRow.__tablename__, ConstructionRow.__tablename__, StructureDesignRow.__tablename__),
+        ("structure_survey", "structure_upkeep", "engine_works", "structure_functions", "splendor_growth"),
+        (
+            "structure:commission",
+            "structure:fund",
+            "structure:finish",
+            "structure:abandon",
+            "structure:staff",
+            "structure:damage",
+            "structure:repair",
+            "structure:edit",
+            "structure:raze",
+            "structure_design:create",
+            "structure_design:edit",
+            "structure_design:retire",
+        ),
+        ("SettlementStructures", "StructureSection", "section-structures", "section-structure"),
+        ("entity_detail", "mortal_context"),
+        ("build_structure", "commission_structure"),
+        ("structures.",),
+        ("structures.typed_backfill", "e3c5a7b9d1f2"),
     ),
     ComplianceRow(
         "S4.5",

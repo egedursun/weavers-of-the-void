@@ -73,6 +73,7 @@ class SonToolId(StrEnum):
     WAR_ON_FOREIGN_GOD = "war_on_foreign_god"
     BARGAIN_WITH_OUTSIDER = "bargain_with_outsider"
     BIRTH_WORLD = "birth_world"
+    COMMISSION_STRUCTURE = "commission_structure"
 
 
 class MortalToolId(StrEnum):

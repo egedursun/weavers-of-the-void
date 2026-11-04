@@ -53,6 +53,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         " A named mortal needs a craft skill of at least {{ rules.skills.tool_min_craft }} (smithing, carpentry, masonry and the like). 1 action.",
         {
             "name": NAME_FIELD,
+            "structure_kind": "What it is and what it does: {{ structure_kinds }}",
             "subtype": "temple, tower, wall, bridge, tomb, mine, harbour, library…",
             "description": DESCRIPTION_FIELD,
             "location_id": "Your own settlement, place or region; if empty, where you are",

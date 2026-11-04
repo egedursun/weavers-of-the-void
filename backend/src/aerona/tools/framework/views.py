@@ -23,6 +23,7 @@ from aerona.domain.enums.war import WarStatus
 from aerona.engine.body.describe import body_lines
 from aerona.engine.mind.describe import mind_lines
 from aerona.engine.services.community_relations import cosmos_epoch
+from aerona.engine.structures.describe import structure_facts
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import (
     BondEndpoint,
@@ -181,6 +182,7 @@ async def fact_lines(session: AsyncSession, rules: Rules, entity: EntityRow) -> 
         subject = names.get(fact.subject_entity_id, "") if fact.subject_entity_id != entity.id else ""
         target = names.get(fact.object_entity_id, "") if fact.object_entity_id is not None else ""
         lines.append(" ".join(part for part in (subject, fact.predicate, fact.object_text or target) if part))
+    lines.extend(await structure_facts(session, entity))
     return lines
 
 

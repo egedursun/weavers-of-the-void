@@ -12,6 +12,7 @@ from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.environment import CoastKind, NotableYearKind, RiverClass, ScarKind, TerrainKind, WaterSource, WeatherKind
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.world import ClimateEra, SkyEventKind, WorldType
 from aerona.domain.models.entity_stats import EventStats, PlaceStats, StructureStats
 from aerona.engine.environment.book import EnvironmentBook, sail_factor
@@ -34,6 +35,7 @@ from aerona.engine.phases.disasters import strike
 from aerona.engine.phases.environment import LandMark, calendars, environment_derive, environment_survey, harvest, land_turns, land_use, ley_lines, year_harvest
 from aerona.engine.primitives.capacity import CapacityModel
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.structures.profiles import ensure_profile
 from aerona.rules.registry import Rules
 from tests.engine.environment.factories import mapped_region
 from tests.engine.society.factories import Realm, context, knowledge, link, make, people, settlement, store_map, tuned
@@ -216,9 +218,12 @@ async def test_works_on_a_ley_line_gain_function(realm: Realm) -> None:
     stats = StructureStats(splendor=10, durability=50, function=40)
     work = await make(realm.session, "Ley Spire", EntityType.STRUCTURE, stats, world_id=realm.world.id, location_id=realm.region.id, subtype="tower")
     wall = await make(realm.session, "Grey Wall", EntityType.STRUCTURE, stats, world_id=realm.world.id, location_id=realm.region.id, subtype="wall")
+    spire = await ensure_profile(realm.session, RULES, 1, work, StructureKind.TOWER)
+    walls = await ensure_profile(realm.session, RULES, 1, wall, StructureKind.WALL)
     await ley_lines(context(realm.session))
     assert (stat(work, "function") or 0) == 40 + RULES.environment.ley_function_gain
     assert stat(wall, "function") == 40
+    assert spire.on_ley_line and walls.on_ley_line
 
 
 async def test_every_shown_value_can_be_set_and_held(realm: Realm) -> None:

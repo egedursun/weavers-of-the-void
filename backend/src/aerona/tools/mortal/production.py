@@ -28,6 +28,7 @@ from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.primitives.strength import military_strength
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import declare_war
+from aerona.engine.structures.profiles import ensure_profile as structure_profile
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
 from aerona.tools.framework.call import MortalCall
@@ -208,6 +209,17 @@ async def build_structure(call: MortalCall, args: BuildInput) -> str:
     bonds = BondRepository(call.session)
     await bonds.connect(BondDraft(call.me.id, work.id, BondKind.BUILT, call.epoch))
     god = await call.session.get(SonRow, args.dedicated_son_id) if args.dedicated_son_id is not None else None
+    living_god = god is not None and god.status is not SonStatus.DEAD
+    await structure_profile(
+        call.session,
+        call.rules,
+        call.epoch,
+        work,
+        args.structure_kind,
+        builder=call.me,
+        architect_id=call.me.id,
+        son_id=god.id if god is not None and living_god else None,
+    )
     if god is not None and god.status is not SonStatus.DEAD:
         await bonds.connect(BondDraft(work.id, god.id, BondKind.WORSHIPS, call.epoch, lines.OFFERING))
     for key in ("prosperity", "wealth"):

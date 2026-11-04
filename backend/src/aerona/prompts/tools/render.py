@@ -5,6 +5,7 @@ from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.entity_types import ENTITY_TYPES, EntityTypeSpec
 from aerona.catalog.interventions import DISASTERS, MIRACLES
 from aerona.catalog.stars import STAR_TYPES
+from aerona.catalog.structures import STRUCTURES
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.economy import CommodityKind
@@ -73,6 +74,7 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "legend_categories": [category.value for category in LegendCategory],
         "commodities": [commodity.value for commodity in CommodityKind],
         "materials": [material.value for material in MaterialKind],
+        "structure_kinds": ", ".join(f"{kind} ({spec.label})" for kind, spec in STRUCTURES.items()),
     }
 
 

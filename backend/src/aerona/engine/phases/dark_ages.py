@@ -4,16 +4,18 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.structures import KNOWLEDGE_KEEPERS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.entity import COMMUNITY_TYPES, ENDED_STATUSES, SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, ENDED_STATUSES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarEnding
 from aerona.engine.context import TickContext
@@ -29,7 +31,6 @@ from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.rules.registry import Rules
 
-KEEPER_KINDS = frozenset({EngineKind.LIBRARY, EngineKind.SCHOOL, EngineKind.OBSERVATORY, EngineKind.COSMIC_ARCHIVE})
 FORGOTTEN_REASON = "forgotten"
 
 
@@ -82,11 +83,14 @@ def is_devastated(rules: Rules, community: EntityRow, scars: EpochScars) -> bool
     return community.location_id is not None and community.location_id in scars.fallen_places
 
 
-async def keepers_by_place(session: AsyncSession) -> set[int]:
+async def keepers_by_place(session: AsyncSession, rules: Rules) -> set[int]:
+    keeping = select(StructureProfileRow.structure_entity_id).where(
+        StructureProfileRow.kind.in_(list(KNOWLEDGE_KEEPERS)), StructureProfileRow.effect_pct >= rules.structure_functions.archive_preserve_pct
+    )
     statement = select(EntityRow.location_id).where(
         EntityRow.status == EntityStatus.CANON,
         EntityRow.location_id.is_not(None),
-        (EntityRow.engine_kind.in_(list(KEEPER_KINDS))) | (EntityRow.entity_type == EntityType.ARTWORK),
+        EntityRow.id.in_(keeping) | (EntityRow.entity_type == EntityType.ARTWORK),
     )
     return {place for place in await session.scalars(statement) if place is not None}
 
@@ -116,7 +120,7 @@ async def forget_knowledge(ctx: TickContext, community: EntityRow, knowledge: En
 async def _forgetting(ctx: TickContext, holdings: KnowledgeHoldings) -> int:
     settings = ctx.rules.knowledge
     scars = await load_scars(ctx.session, ctx.rules, ctx.epoch)
-    keepers = await keepers_by_place(ctx.session)
+    keepers = await keepers_by_place(ctx.session, ctx.rules)
     rng = ctx.rng("forgetting")
     forgotten = 0
     for community in await canon(ctx.session, COMMUNITY_TYPES):
@@ -257,7 +261,7 @@ async def dark_age_status(session: AsyncSession, rules: Rules, epoch: int, commu
     if community is None or community.entity_type not in COMMUNITY_TYPES:
         raise NotFoundError("No such community.")
     devastated = is_devastated(rules, community, await load_scars(session, rules, epoch))
-    protected = await is_protected(session, rules, community, await keepers_by_place(session))
+    protected = await is_protected(session, rules, community, await keepers_by_place(session, rules))
     chance = rules.knowledge.dark_age_forget_protected_chance if protected else rules.knowledge.dark_age_forget_chance
     return DarkAgeStatus(community.id, devastated, protected, chance if devastated else 0)
 

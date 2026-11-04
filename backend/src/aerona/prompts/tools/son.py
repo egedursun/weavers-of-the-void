@@ -66,6 +66,12 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "vessel_kind": "What it is: {{ vessel_kinds | join(', ') }}; a gate, ship, mount or bridge opens the matching kind of road",
     },
     EntityType.LEGEND: {"legend_category": LEGEND_CATEGORY_FIELD},
+    EntityType.STRUCTURE: {
+        "structure_kind": "What it is and what it does: {{ structure_kinds }}",
+        "material": "What it is built of: {{ materials | join(', ') }}; stone lasts and resists fire, wood rots and burns",
+        "level": "Its size, 1 to 5",
+        "design_id": "A structure design of the same kind to build to, if one exists",
+    },
     EntityType.RESOURCE: {
         "commodity": COMMODITY_FIELD,
         "material": MATERIAL_FIELD,
@@ -385,6 +391,19 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "star_id": "The existing star it will orbit (from the list)",
             "parent_world_id": "If it will be a moon of a world, that world's id",
             "new_star": "Only if no star in the list fits this world's light: a distant system with its own new sun",
+        },
+    ),
+    T.COMMISSION_STRUCTURE: ToolText(
+        "You set a settlement or people to raise a work in your name: its builders, stone and coin raise it over the coming ages, and when it stands it is "
+        "dedicated to you (fame, faith, and it can anchor your existence). The kind decides what it does: temples hold piety, walls defend, granaries store, "
+        "hospitals heal, libraries keep learning, palaces lend legitimacy. {{ rules.construction.commission_essence }} essence, 1 action.",
+        {
+            "community_id": "The settlement or people that builds it",
+            "structure_kind": "What it is: {{ structure_kinds }}",
+            "level": "Its size, 1 to 5",
+            "material": "What it is built of (stone, wood, bronze...); by default what its builders know",
+            "design_id": "A structure design of that kind to build to, if one exists",
+            "name": "Its name, if you give one",
         },
     ),
 }

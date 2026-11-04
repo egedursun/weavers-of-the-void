@@ -192,6 +192,7 @@ from aerona.rules.registry.society import SocietyRules
 from aerona.rules.registry.son_relations import SonRelationsRules
 from aerona.rules.registry.son_tools import SonToolsRules
 from aerona.rules.registry.star_types import StarTypeRules
+from aerona.rules.registry.structures import ConstructionRules, StructureFunctionsRules, UpkeepRules
 from aerona.rules.registry.summoning import SummoningRules
 from aerona.rules.registry.time import TimeRules
 from aerona.rules.registry.trade import TradeRules
@@ -431,3 +432,6 @@ class Rules:
     world_physics: WorldPhysicsRules = field(default_factory=WorldPhysicsRules)
     world_terrain: WorldTerrainRules = field(default_factory=WorldTerrainRules)
     world_war_strength: WorldWarStrengthRules = field(default_factory=WorldWarStrengthRules)
+    construction: ConstructionRules = field(default_factory=ConstructionRules)
+    structure_functions: StructureFunctionsRules = field(default_factory=StructureFunctionsRules)
+    upkeep: UpkeepRules = field(default_factory=UpkeepRules)

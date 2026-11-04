@@ -82,8 +82,8 @@ def lethality_factor(book: DiseaseBook, disease_id: int, communities: list[Entit
             factor *= table.virgin_soil_pct / PERCENT
         if book.cured(disease_id, community.id) or knowledge.level(community.id, KnowledgeBranch.MEDICINE) >= profile.cure_level:
             factor *= table.cure_lethality_pct / PERCENT
-        if book.hospitals.get(book.atlas.top_region(community.id) or -1):
-            factor *= table.hospital_lethality_pct / PERCENT
+        ward = book.hospital_strength.get(book.atlas.top_region(community.id) or -1, 0.0)
+        factor *= 1 - ward * (1 - table.hospital_lethality_pct / PERCENT)
         weight += people * factor
         total += people
     blended = weight / total if total else 1.0

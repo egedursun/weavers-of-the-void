@@ -10,12 +10,14 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.son import ExistenceBand, PowerEffect, SonStatus
+from aerona.domain.enums.structure import STANDING_STATES
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
@@ -152,7 +154,7 @@ async def sons_renewal(ctx: TickContext) -> None:
     record(ctx, LedgerKey.TOTAL_FAITH, total)
 
 
-@reads("table.bonds")
+@reads("table.bonds", "table.structure_profiles")
 @writes("table.sons")
 async def works_remember_gods(ctx: TickContext) -> None:
     transition = ctx.rules.world_epoch_transition
@@ -167,8 +169,12 @@ async def works_remember_gods(ctx: TickContext) -> None:
             work = await living_entity(ctx.session, bond.source_node_id)
             if work is None or work.entity_type is not EntityType.STRUCTURE:
                 continue
-            son.fame += transition.dedicated_work_renown
-            son.existence = min(PERCENT, son.existence + transition.dedicated_work_existence)
+            profile = await ctx.session.get(StructureProfileRow, work.id)
+            share = (
+                profile.effect_pct / PERCENT if profile is not None and profile.construction_state in STANDING_STATES else 0.0 if profile is not None else 1.0
+            )
+            son.fame += round(transition.dedicated_work_renown * share)
+            son.existence = min(PERCENT, son.existence + round(transition.dedicated_work_existence * share))
 
 
 @reads("table.son_relations", "table.sons")

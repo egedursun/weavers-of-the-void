@@ -22,6 +22,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import LegendCategory
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch, ResourceMechanic
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.travel import JourneyIntent
 from aerona.tools.framework.inputs import ToolInput
 
@@ -89,6 +90,7 @@ class ProduceInput(ToolInput):
 
 class BuildInput(ToolInput):
     name: Name
+    structure_kind: StructureKind
     subtype: Subtype | None = None
     description: Description
     location_id: int | None = None

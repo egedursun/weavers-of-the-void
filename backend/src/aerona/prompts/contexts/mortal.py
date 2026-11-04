@@ -124,6 +124,7 @@ class HomeLine(ContextItem):
     wildlife: list[str] = Field(default_factory=list)
     herds: list[str] = Field(default_factory=list)
     beasts: list[str] = Field(default_factory=list)
+    works: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

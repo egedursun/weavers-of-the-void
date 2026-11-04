@@ -77,6 +77,7 @@ import {
   SettlementPlanSection,
   TreasurySection,
 } from './society/SettlementPlan'
+import { PeopleStructuresSection, StructureSection } from './society/Structures'
 import {
   BeastSection,
   FoodWebSection,
@@ -101,6 +102,8 @@ const SECTION_LINKS = [
   { id: 'section-people-profile', label: 'Folk' },
   { id: 'section-settlement-plan', label: 'City' },
   { id: 'section-treasury', label: 'Treasury' },
+  { id: 'section-structure', label: 'Work' },
+  { id: 'section-people-structures', label: 'Works' },
   { id: 'section-disease', label: 'Sickness' },
   { id: 'section-realm', label: 'Realm' },
   { id: 'section-house', label: 'House' },
@@ -208,6 +211,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
     present.delete('section-settlement-plan')
     present.delete('section-treasury')
   }
+  if (entity.entity_type !== 'structure') present.delete('section-structure')
+  if (entity.entity_type !== 'people')
+    present.delete('section-people-structures')
   if (entity.entity_type !== 'disease') present.delete('section-disease')
   if (entity.entity_type !== 'house') present.delete('section-house')
   if (entity.entity_type !== 'treaty') present.delete('section-treaty')
@@ -336,6 +342,15 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       )}
       {entity.entity_type === 'settlement' && (
         <TreasurySection settlementId={entity.id} />
+      )}
+      {entity.entity_type === 'structure' && (
+        <StructureSection structureId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'people' && (
+        <PeopleStructuresSection
+          peopleId={entity.id}
+          readOnlyReason={readOnly}
+        />
       )}
       {entity.entity_type === 'disease' && (
         <DiseaseSection diseaseId={entity.id} readOnlyReason={readOnly} />

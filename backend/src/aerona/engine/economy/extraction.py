@@ -30,6 +30,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import headcount, set_stats, stat
+from aerona.engine.structures.readers import workshop_output
 from aerona.rules.registry import Rules
 
 THOUSAND = 1000
@@ -182,7 +183,7 @@ async def output_of(ctx: TickContext, book: EconomyBook, resource: EntityRow, pr
     season = 1 + table.season_pct / PERCENT * season_fit(book, resource.world_id, kind)
     difficulty = 1 - profile.extraction_difficulty * table.difficulty_pct / PERCENT / PERCENT
     site = book.workshop(community.id, spec.workshop) if spec.workshop is not None else None
-    works = 1 + (site.level if site is not None else 0) * table.workshop_pct_per_level / PERCENT
+    works = (1 + (site.level if site is not None else 0) * table.workshop_pct_per_level / PERCENT) * await workshop_output(ctx.session, ctx.rules, site)
     raw = base * skill * knowledge * season * difficulty * works * await tools_factor(ctx, community.id, workers) * await labour_factor(ctx, community)
     raw *= craft_factor(ctx, book, community.id, resource.id, kind)
     if kind is ExtractionKind.FARMING:

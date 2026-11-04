@@ -51,7 +51,7 @@ class TradeRoutesRules:
     capacity_per_bridge: int = rule(250, 0, 100000, G, "Units added per bridge along the way")
     capacity_per_harbour: int = rule(600, 0, 100000, G, "Units added per harbour at the ends of a sea or river route")
     capacity_per_ship: int = rule(300, 0, 100000, G, "Units a ship of either end adds to a sea route")
-    capacity_per_market: int = rule(200, 0, 100000, G, "Units a market district halfway along the way adds as a waystation")
+    capacity_per_market: int = rule(200, 0, 100000, G, "Units a working market structure halfway along the way adds as a waystation")
     capacity_cap: int = rule(50000, 1, 1000000, G, "Most units of goods a route can carry in an epoch")
     sea_length_pct: int = rule(50, 1, 100, G, "Length of a sea crossing compared with walking the same regions (%)")
     river_length_pct: int = rule(70, 1, 100, G, "Length of a river voyage compared with walking the same regions (%)")

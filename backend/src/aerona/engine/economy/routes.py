@@ -181,12 +181,7 @@ def capacity_of(ctx: TickContext, book: EconomyBook, route: Route, works: dict[i
             capacity += (yard.fleet if yard is not None else 0) * table.capacity_per_ship
         if book.blockaded & {book.affiliated.get(first, first), book.affiliated.get(second, second), first, second}:
             capacity = round_half_up(capacity * ctx.rules.naval.blockade_trade_pct / PERCENT)
-    halfway = set(route.path[1:-1])
-    capacity += sum(
-        table.capacity_per_market
-        for community in book.communities
-        if book.workshop(community.id, WorkshopKind.MARKET) and book.ground.atlas.top_region(community.id) in halfway
-    )
+    capacity += sum(region_works(works, region).waystations for region in set(route.path[1:-1]))
     return clamp_int(capacity, 0, table.capacity_cap)
 
 
