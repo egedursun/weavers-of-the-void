@@ -6,6 +6,7 @@ import {
   createRootRoute,
   createRouter,
 } from '@tanstack/react-router'
+import { RealtimeProvider } from '@/realtime'
 import '@/styles/index.css'
 import { toast } from 'sonner'
 import { render } from 'vitest-browser-react'
@@ -13,9 +14,17 @@ import { ThemeProvider } from '@/context/ThemeProvider'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { validateDrawerSearch } from '@/components/layout/drawer/drawerEntries'
-import { RealtimeProvider } from '@/realtime'
 import { FakeEventSource } from './fakeEventSource'
 import { type MockRoutes, startMockServer } from './mockServer'
+
+const TEST_TOASTS = {
+  classNames: {
+    toast: 'pointer-events-none',
+    actionButton: 'pointer-events-auto',
+    cancelButton: 'pointer-events-auto',
+    closeButton: 'pointer-events-auto',
+  },
+}
 
 export async function renderScreen(
   node: ReactNode,
@@ -39,13 +48,15 @@ export async function renderScreen(
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
             {options.realtime ? (
-              <RealtimeProvider createSource={(url) => new FakeEventSource(url)}>
+              <RealtimeProvider
+                createSource={(url) => new FakeEventSource(url)}
+              >
                 {node}
               </RealtimeProvider>
             ) : (
               node
             )}
-            <Toaster />
+            <Toaster toastOptions={TEST_TOASTS} />
           </TooltipProvider>
         </QueryClientProvider>
       </ThemeProvider>

@@ -42,7 +42,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherEffect, WeatherKind
 from aerona.domain.enums.faith import AfterlifeState, BindingKind, SpiritAlignment, TenetKind
 from aerona.domain.enums.military import UnitKind
-from aerona.domain.enums.mind import ActKind, SkillKind, ValueAxis
+from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource, ValueAxis
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.settlement import TreasuryEntry
@@ -65,7 +65,7 @@ from aerona.engine.lore.intel import gain_intel
 from aerona.engine.lore.kinds import RiteEffectParams, kind_of, params_of
 from aerona.engine.lore.research import has_technique
 from aerona.engine.military.control import add_stack
-from aerona.engine.mind.book import values_for
+from aerona.engine.mind.book import set_skill, values_for
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mortal.learning import practise_subject, school_level
 from aerona.engine.notes import note
@@ -1099,7 +1099,7 @@ async def backfill(ctx: TickContext) -> int:
             )
             is None
         ):
-            ctx.session.add(SkillRow(holder_node_id=mortal.id, skill=SkillKind.SPELLCRAFT, level=ctx.rules.rites.wizard_skill, xp=0))
+            await set_skill(ctx.session, mortal.id, SkillKind.SPELLCRAFT, ctx.rules.rites.wizard_skill, epoch=ctx.epoch, source=SkillSource.BACKFILL)
             made += 1
     ctx.session.add(AppliedFixupRow(key=ROW_FIXUP, result={"rites": made}))
     await ctx.session.flush()

@@ -680,7 +680,7 @@ async def relic_quest(ctx: TickContext, item: EntityRow, house: EntityRow) -> No
 
 async def keep_heirlooms(ctx: TickContext, house_id: int, alive: list[EntityRow]) -> None:
     owners = [mortal.id for mortal in alive]
-    held = set(await ctx.session.scalars(select(HeirloomRow.item_entity_id).where(HeirloomRow.house_entity_id == house_id)))
+    held = set(await ctx.session.scalars(select(HeirloomRow.item_entity_id)))
     items = await ctx.session.scalars(
         select(BondRow.target_node_id).where(BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE, BondRow.source_node_id.in_(owners))
     )

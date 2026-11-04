@@ -6,13 +6,22 @@ import {
   createRootRoute,
   createRouter,
 } from '@tanstack/react-router'
-import createClient from 'openapi-fetch'
-import { render } from 'vitest-browser-react'
 import '@/styles/index.css'
-import { type paths } from '@/api/generated/schema'
-import { validateDrawerSearch } from '@/components/layout/drawer/drawerEntries'
+import createClient from 'openapi-fetch'
 import { Toaster } from 'sonner'
+import { render } from 'vitest-browser-react'
+import { type paths } from '@/api/generated/schema'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { validateDrawerSearch } from '@/components/layout/drawer/drawerEntries'
+
+const TEST_TOASTS = {
+  classNames: {
+    toast: 'pointer-events-none',
+    actionButton: 'pointer-events-auto',
+    cancelButton: 'pointer-events-auto',
+    closeButton: 'pointer-events-auto',
+  },
+}
 
 export type ApiCall = {
   method: string
@@ -45,7 +54,11 @@ function isReply(value: unknown): value is Reply {
   )
 }
 
-export function onApi(method: string, path: string, responder: Responder): void {
+export function onApi(
+  method: string,
+  path: string,
+  responder: Responder
+): void {
   responders.set(`${method.toUpperCase()} ${path}`, responder)
 }
 
@@ -121,7 +134,7 @@ export async function renderApp(node: ReactNode, path = '/') {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           {node}
-          <Toaster />
+          <Toaster toastOptions={TEST_TOASTS} />
         </TooltipProvider>
       </QueryClientProvider>
     ),
