@@ -185,7 +185,7 @@ from aerona.rules.registry.religion import ReligionRules
 from aerona.rules.registry.remembrance import RemembranceRules
 from aerona.rules.registry.reputation import ReputationRules
 from aerona.rules.registry.server import ServerRules
-from aerona.rules.registry.settlement import CrimeRules, FireRules, SanitationRules, TaxationRules, UrbanRules
+from aerona.rules.registry.settlement import CrimeRules, DistrictRules, FireRules, SanitationRules, TaxationRules, UrbanRules
 from aerona.rules.registry.setup_wizard import SetupWizardRules
 from aerona.rules.registry.sky import SkyRules
 from aerona.rules.registry.society import SocietyRules
@@ -305,6 +305,7 @@ class Rules:
     crime: CrimeRules = field(default_factory=CrimeRules)
     fire: FireRules = field(default_factory=FireRules)
     sanitation: SanitationRules = field(default_factory=SanitationRules)
+    districts: DistrictRules = field(default_factory=DistrictRules)
     government: GovernmentRules = field(default_factory=GovernmentRules)
     succession: SuccessionRules = field(default_factory=SuccessionRules)
     legitimacy: LegitimacyRules = field(default_factory=LegitimacyRules)

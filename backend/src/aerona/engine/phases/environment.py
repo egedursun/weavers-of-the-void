@@ -13,7 +13,7 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
-from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
@@ -345,6 +345,8 @@ async def works_by_region(ctx: TickContext, book: EnvironmentBook) -> dict[int, 
             tally["harbours"] += HARBOUR_SUBTYPE in subtype
             continue
         tally["roads"] += knowledge.knows(entity.id, KnowledgeBranch.ARCHITECTURE)
+        harbour = await ctx.session.get(SettlementInfrastructureRow, entity.id)
+        tally["harbours"] += harbour.harbour_capacity // ctx.rules.districts.harbour_works_capacity if harbour is not None else 0
         tally["irrigation"] += knowledge.level(entity.id, KnowledgeBranch.AGRICULTURE) >= ctx.rules.environment.irrigation_agriculture_level
     return {
         region_id: Works(roads=tally["roads"], bridges=tally["bridges"], harbours=tally["harbours"], irrigation=tally["irrigation"])
@@ -396,6 +398,7 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
     "table.notable_years",
     "table.place_environment",
     "table.region_environment",
+    "table.settlement_infrastructure",
     "table.sky_events",
     "table.world_maps",
     "table.world_seasons",
@@ -520,6 +523,7 @@ async def sanitation_by_region(ctx: TickContext, book: EnvironmentBook, communit
     "table.holder_levels",
     "table.place_environment",
     "table.region_environment",
+    "table.settlement_infrastructure",
     "table.settlement_profiles",
     "table.sky_events",
     "table.world_maps",

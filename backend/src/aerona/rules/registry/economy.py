@@ -85,8 +85,6 @@ class EconomyRules:
         100, 1, 1000, RuleGroup.ECONOMY, "Supply index that stands for one epoch of a community's needs (the food, ore and goods gauges)"
     )
     storage_base_index: int = rule(150, 0, 10000, RuleGroup.ECONOMY, "Supply index a community can store without granaries or warehouses")
-    storage_per_granary_level: int = rule(100, 0, 10000, RuleGroup.ECONOMY, "Extra food supply index stored per granary level")
-    storage_per_warehouse_level: int = rule(100, 0, 10000, RuleGroup.ECONOMY, "Extra supply index of other goods stored per warehouse level")
     farm_units_per_1000_farmers: int = rule(1300, 0, 100000, RuleGroup.ECONOMY, "Units of food a thousand farmers raise in an epoch at a neutral harvest")
     fodder_share_pct: int = rule(20, 0, 100, RuleGroup.ECONOMY, "Share of pasture output cut as fodder rather than raised as livestock (%)")
     prosthetic_tools_per_1000_maimed: int = rule(30, 0, 10000, RuleGroup.ECONOMY, "Tools a thousand maimed need each epoch for crutches, hooks and false limbs")

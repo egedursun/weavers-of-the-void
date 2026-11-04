@@ -1,15 +1,16 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.settlement import DistrictRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
+from aerona.db.tables.settlement import DistrictDesignRow, DistrictRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
 from aerona.domain.enums.settlement import TIER_ORDER, BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.stats import stat
+from aerona.engine.settlement.districts import DistrictEffects, designs_for, effects_of
 from aerona.rules.registry import Rules
 
 
@@ -19,6 +20,11 @@ class Town:
     profile: SettlementProfileRow
     infrastructure: SettlementInfrastructureRow
     districts: list[DistrictRow]
+    work_used: int = 0
+    designs: dict[int, DistrictDesignRow] = field(default_factory=dict)
+
+    def effects(self, rules: Rules) -> DistrictEffects:
+        return effects_of(rules, self.districts, self.designs)
 
     def levels(self, kind: DistrictKind) -> int:
         return sum(district.level for district in self.districts if district.kind is kind)
@@ -115,7 +121,7 @@ async def town_of(ctx: TickContext, settlement: EntityRow, knowledge: KnowledgeM
         )
         session.add(profile)
         await session.flush()
-    return Town(settlement, profile, infrastructure, districts)
+    return Town(settlement, profile, infrastructure, districts, designs=await designs_for(session, districts))
 
 
 def ledger(ctx: TickContext, town: Town, entry: TreasuryEntry, amount: int, note: str | None = None) -> int:

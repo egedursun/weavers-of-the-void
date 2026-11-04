@@ -13,7 +13,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, OccupationRow
 from aerona.db.tables.mind import VALUE_MAX
-from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, SiegeRow, WarRow, WarSideRow
 from aerona.domain.enums.body import Capacity, HarmCause
@@ -725,7 +725,8 @@ async def _powers(
     attacker_power = await battle_power(ctx, theatre, attacker, *armies[attacker.id]) * attack_factor(ctx.rules, ground)
     defender_power = await battle_power(ctx, theatre, defender, *armies[defender.id]) * defend_factor(ctx.rules, ground)
     if besieged is not None:
-        defender_power *= wall_defence(ctx, await open_siege(ctx, war, besieged, attacker)) * await warded(ctx, besieged.id)
+        walls = await ctx.session.get(SettlementInfrastructureRow, besieged.id)
+        defender_power *= wall_defence(ctx, await open_siege(ctx, war, besieged, attacker), walls) * await warded(ctx, besieged.id)
     return attacker_power, defender_power
 
 
@@ -1141,6 +1142,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.cult_tenets",
     "table.culture_values",
     "table.designated_heirs",
+    "table.districts",
     "table.entity_flags",
     "table.entity_traits",
     "table.epoch_year_cursors",
@@ -1172,6 +1174,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.prostheses",
     "table.region_environment",
     "table.routes",
+    "table.settlement_infrastructure",
     "table.sieges",
     "table.skills",
     "table.sky_events",
@@ -1218,6 +1221,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_relations",
+    "table.districts",
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",

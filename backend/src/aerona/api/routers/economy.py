@@ -55,16 +55,17 @@ from aerona.db.tables.economy import (
     WorkshopRow,
 )
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.settlement import SettlementInfrastructureRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import MaterialOrigin, WorkshopKind
 from aerona.domain.enums.entity import SOCIETY_TYPES
 from aerona.domain.enums.society import Commodity
-from aerona.engine.economy.household import storage_index, store_kind
 from aerona.engine.economy.materials import MaterialBook, MaterialProps
 from aerona.engine.economy.money import owed
-from aerona.engine.economy.stocks import aggregate_index
-from aerona.engine.primitives.stats import stat
+from aerona.engine.economy.stocks import aggregate_index, aggregate_need
+from aerona.engine.primitives.stats import headcount, stat
+from aerona.engine.settlement.storage import capacity_of, storage_index, store_kind
 from aerona.rules.registry import Rules
 
 router = APIRouter(tags=["economy"])
@@ -204,6 +205,7 @@ async def community_economy(services: ServicesDep, community_id: int = Path(ge=1
             else []
         )
         society = await session.get(CommunitySocietyRow, community_id)
+        infrastructure = await session.get(SettlementInfrastructureRow, community_id)
         return CommunityEconomyView(
             community_id=community_id,
             epoch=epoch,
@@ -221,7 +223,14 @@ async def community_economy(services: ServicesDep, community_id: int = Path(ge=1
                 if row.quantity > 0
             ],
             supply={aggregate.value: await aggregate_index(session, rules, community, aggregate) for aggregate in Commodity},
-            storage={aggregate.value: storage_index(rules, workshops.get(store_kind(aggregate)), aggregate) for aggregate in Commodity},
+            storage={
+                aggregate.value: storage_index(
+                    rules,
+                    capacity_of(rules, infrastructure, workshops.get(store_kind(aggregate)), aggregate),
+                    aggregate_need(rules, headcount(community), aggregate),
+                )
+                for aggregate in Commodity
+            },
             workshops=[
                 WorkshopView(
                     kind=row.kind,

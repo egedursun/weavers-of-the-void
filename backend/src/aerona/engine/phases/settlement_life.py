@@ -15,6 +15,7 @@ from aerona.engine.primitives.queries import canon
 from aerona.engine.services.war import ongoing_wars
 from aerona.engine.settlement.book import town_of
 from aerona.engine.settlement.life import (
+    administer,
     bandits_near,
     build,
     capacities,
@@ -23,6 +24,7 @@ from aerona.engine.settlement.life import (
     festivals_and_alms,
     fires,
     foreigners,
+    hallow,
     invest,
     keep_order,
     keep_walls,
@@ -75,11 +77,13 @@ JUSTICE_FULL = 100
     "table.tributes",
     "table.war_sides",
     "table.wars",
+    "table.workshops",
     "table.world_maps",
 )
 @writes(
     "faction.strength",
     "settlement.defense",
+    "settlement.piety",
     "settlement.population",
     "settlement.prosperity",
     "settlement.wealth",
@@ -96,6 +100,7 @@ JUSTICE_FULL = 100
     "table.settlement_infrastructure",
     "table.settlement_profiles",
     "table.settlement_treasury",
+    "table.workshops",
 )
 async def settlement_life(ctx: TickContext) -> None:
     knowledge = await KnowledgeMap.load(ctx.session)
@@ -111,7 +116,8 @@ async def settlement_life(ctx: TickContext) -> None:
         at_war = bool(await ongoing_wars(ctx.session, settlement.id))
         await capacities(ctx, town, knowledge)
         ctx.count("invested", await invest(ctx, town))
-        ctx.count("taxed", await collect_taxes(ctx, town, await literacy_of(ctx, town)))
+        await administer(ctx, town, knowledge, await literacy_of(ctx, town))
+        ctx.count("taxed", await collect_taxes(ctx, town))
         if not await pay_soldiers(ctx, town):
             town.profile.public_order = max(0, town.profile.public_order - 5)
         await keep_walls(ctx, town)
@@ -126,6 +132,7 @@ async def settlement_life(ctx: TickContext) -> None:
         await stir_unrest(ctx, town, tension=tension, festival=festival, region=region)
         ctx.count("fires", await fires(ctx, town, ground, knowledge))
         sanitation(ctx, town, knowledge)
+        hallow(ctx, town)
         await endure_siege(ctx, town, values)
         await prestige(ctx, town)
         tier = retier(ctx, town)

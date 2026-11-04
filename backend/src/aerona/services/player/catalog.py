@@ -1047,6 +1047,12 @@ ECONOMY_ACTIONS = (
     _sync(Meta("settlement:tax", "Set a settlement's tax", G.SOCIETY), urban.set_tax, urban.SetTax, free, ("S4.2",)),
     _sync(Meta("settlement:free_city", "Declare a free city or bind it again", G.SOCIETY), urban.free_city, urban.FreeCity, free, ("S4.2",)),
     _sync(Meta("settlement:charter", "Grant a settlement a charter", G.SOCIETY), urban.grant_charter, urban.Charter, free, ("S4.2",)),
+    _sync(
+        Meta("settlement:foreigners", "Set the foreign peoples living in a settlement", G.SOCIETY), urban.set_foreigners, urban.SetForeigners, free, ("S4.2",)
+    ),
+    _sync(Meta("district:design", "Design a new kind of district on a base kind", G.SOCIETY), urban.design_district, urban.DesignDistrict, free, ("S4.2",)),
+    _sync(Meta("district:design_edit", "Rework a district design", G.SOCIETY), urban.edit_design, urban.EditDesign, free, ("S4.2",)),
+    _sync(Meta("district:design_delete", "Strike a district design", G.SOCIETY), urban.delete_design, urban.DesignTarget, free, ("S4.2",)),
     _sync(Meta("polity:edit", "Edit a realm's government, legitimacy and treasury", G.SOCIETY), realms.edit_polity, realms.EditPolity, free, ("S4.6",)),
     _sync(Meta("polity:appoint", "Appoint or dismiss an officer", G.SOCIETY), realms.appoint, realms.Appoint, free, ("S4.6",)),
     _sync(Meta("polity:depose", "Depose a ruler", G.SOCIETY), realms.depose, realms.PolityTarget, free, ("S4.6",)),

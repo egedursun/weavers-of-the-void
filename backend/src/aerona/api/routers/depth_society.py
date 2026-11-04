@@ -1,5 +1,6 @@
 from collections import defaultdict
 from collections.abc import Mapping
+from dataclasses import asdict
 
 from fastapi import APIRouter, Path
 from sqlalchemy import select
@@ -7,12 +8,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.schemas.depth_society import (
+    AdminView,
     BiologyView,
     ClassMood,
     CultureView,
     CureView,
+    DefenceView,
     DemographyView,
     DiseaseView,
+    DistrictDesignView,
+    DistrictEffectsView,
     DistrictView,
     EndemicView,
     ForeignShare,
@@ -28,6 +33,7 @@ from aerona.api.schemas.depth_society import (
     PressureView,
     QuarantineView,
     SettlementPlanView,
+    StorageView,
     StrainView,
     TreasuryLine,
     ValuePoint,
@@ -38,7 +44,14 @@ from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, EndemicDiseaseRow, ImmunityRow, OutbreakRow, QuarantineRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
+from aerona.db.tables.settlement import (
+    DESIGN_PARAMETERS,
+    DistrictRow,
+    SettlementHistoryRow,
+    SettlementInfrastructureRow,
+    SettlementProfileRow,
+    SettlementTreasuryRow,
+)
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.disease import DiseaseTarget
@@ -52,7 +65,9 @@ from aerona.engine.mind.book import pressures_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.stats import stat
 from aerona.engine.settlement.book import Town
+from aerona.engine.settlement.districts import base_parameters, designs_for
 from aerona.engine.settlement.life import housing_of, slots_of
+from aerona.engine.settlement.readout import plan_readout
 from aerona.rules.registry import Rules
 
 router = APIRouter(tags=["depth-society"])
@@ -316,7 +331,8 @@ async def settlement_plan(services: ServicesDep, entity_id: int = Path(ge=1)) ->
         if profile is None or infrastructure is None:
             raise NotFoundError("This settlement is surveyed at the next epoch.")
         districts = list(await session.scalars(select(DistrictRow).where(DistrictRow.settlement_entity_id == entity.id).order_by(DistrictRow.id)))
-        town = Town(entity, profile, infrastructure, districts)
+        town = Town(entity, profile, infrastructure, districts, designs=await designs_for(session, districts))
+        readout = await plan_readout(session, rules, town)
         ledger = list(
             await session.scalars(
                 select(SettlementTreasuryRow)
@@ -353,6 +369,27 @@ async def settlement_plan(services: ServicesDep, entity_id: int = Path(ge=1)) ->
             construction_capacity=profile.construction_capacity,
             hauling_capacity=profile.hauling_capacity,
             rationing=profile.rationing,
+            admin_capacity=profile.admin_capacity,
+            admin=AdminView(**asdict(readout.admin), total=readout.admin.total),
+            food_storage=StorageView(**asdict(readout.food), total=readout.food.total),
+            goods_storage=StorageView(**asdict(readout.goods), total=readout.goods.total),
+            defences=DefenceView(**asdict(readout.defences)),
+            district_effects=DistrictEffectsView(**asdict(readout.effects)),
+            prestige_pull_pct=readout.prestige_pull_pct,
+            prestige_investment_pct=readout.prestige_investment_pct,
+            designs=[
+                DistrictDesignView(
+                    id=row.id,
+                    name=row.name,
+                    description=row.description,
+                    base_kind=row.base_kind,
+                    parameters={key: getattr(row, key) for key in DESIGN_PARAMETERS},
+                    defaults=base_parameters(rules, row.base_kind),
+                    created_epoch=row.created_epoch,
+                    locked=list(row.locked or []),
+                )
+                for row in readout.designs
+            ],
             district_slots=slots_of(rules, town),
             housing=housing_of(rules, town),
             locked=list(profile.locked),
@@ -372,7 +409,17 @@ async def settlement_plan(services: ServicesDep, entity_id: int = Path(ge=1)) ->
                 locked=list(infrastructure.locked),
             ),
             districts=[
-                DistrictView(id=row.id, kind=row.kind, level=row.level, condition=row.condition, material=row.material, built_epoch=row.built_epoch)
+                DistrictView(
+                    id=row.id,
+                    kind=row.kind,
+                    level=row.level,
+                    condition=row.condition,
+                    material=row.material,
+                    built_epoch=row.built_epoch,
+                    design_id=row.design_id,
+                    locked=list(row.locked or []),
+                    effects=readout.district_effects.get(row.id, {}),
+                )
                 for row in districts
             ],
             treasury_ledger=[TreasuryLine(epoch=row.epoch, entry=row.entry, amount=row.amount, balance=row.balance, note=row.note) for row in ledger],

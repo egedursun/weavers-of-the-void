@@ -68,6 +68,7 @@ async def town_pull(ctx: TickContext, atlas: RegionAtlas, region_id: int) -> flo
         openness = (values.get(ValueAxis.XENOPHILIA, 0) + PERCENT) / (2 * PERCENT)
         jobs = 1.0 if (stat(settlement, "population") or 0) < town.construction_capacity * PERCENT else 0.5
         pull = ((stat(settlement, "prosperity") or 0) / PERCENT + town.public_order / PERCENT + openness + jobs) / 4
+        pull *= 1 + town.prestige * ctx.rules.districts.prestige_pull_pct / PERCENT / PERCENT
         best = max(best, pull)
     welcome = 1.0
     for entity_id in atlas.communities_in(region_id):

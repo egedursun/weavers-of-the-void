@@ -5,10 +5,10 @@ from sqlalchemy import func, select
 from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import MaimedCohortRow
-from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.settlement import SettlementInfrastructureRow
 from aerona.domain.enums.demography import Job
-from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.environment import CoastKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import Commodity, SocialClass
@@ -19,7 +19,7 @@ from aerona.engine.economy.stocks import aggregate_need, epoch_need, goods_of, h
 from aerona.engine.environment.profile import CropMix, crop_mix
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import headcount
-from aerona.rules.registry import Rules
+from aerona.engine.settlement.storage import capacity_of, storage_room, store_kind
 
 THOUSAND = 1000
 EATING_ORDER = (CommodityKind.BREAD, CommodityKind.LIVESTOCK, CommodityKind.FISH, CommodityKind.GRAIN)
@@ -125,27 +125,16 @@ async def wear(ctx: TickContext, community: EntityRow) -> dict[CommodityKind, in
     return short
 
 
-def store_kind(aggregate: Commodity) -> WorkshopKind:
-    return WorkshopKind.GRANARY if aggregate is Commodity.FOOD else WorkshopKind.WAREHOUSE
-
-
-def storage_index(rules: Rules, store: WorkshopRow | None, aggregate: Commodity) -> int:
-    table = rules.economy
-    per_level = table.storage_per_granary_level if aggregate is Commodity.FOOD else table.storage_per_warehouse_level
-    return table.storage_base_index + (store.level * per_level if store is not None else 0)
-
-
 async def enforce_storage(ctx: TickContext, book: EconomyBook, community: EntityRow) -> int:
     population = headcount(community)
     spilled = 0
     held = await holdings(ctx.session, community.id)
+    infrastructure = await ctx.session.get(SettlementInfrastructureRow, community.id)
     for aggregate in Commodity:
         family = {kind: quantity for kind, quantity in held.items() if COMMODITIES[kind].aggregate is aggregate and quantity > 0}
         stocked = sum(family.values())
         need = aggregate_need(ctx.rules, population, aggregate)
-        room = round_half_up(
-            storage_index(ctx.rules, book.workshop(community.id, store_kind(aggregate)), aggregate) * max(1, need) / ctx.rules.economy.supply_index_epoch
-        )
+        room = storage_room(ctx.rules, capacity_of(ctx.rules, infrastructure, book.workshop(community.id, store_kind(aggregate)), aggregate), need)
         excess = stocked - room
         if excess <= 0:
             continue

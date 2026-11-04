@@ -26,9 +26,9 @@ from aerona.engine.body.cohorts import labour_factor
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_types import ore_yield_pct
 from aerona.engine.economy.book import EconomyBook
-from aerona.engine.economy.household import eat, enforce_storage, gather_commons, harvest_goods, storage_index, store_kind, wear
+from aerona.engine.economy.household import eat, enforce_storage, gather_commons, harvest_goods, wear
 from aerona.engine.economy.materials import MaterialBook, armour_protection, curse_bonus, enchantment_cap, set_node_material, weapon_damage
-from aerona.engine.economy.stocks import goods_of, holding, lots_of, sync_aggregates
+from aerona.engine.economy.stocks import aggregate_need, goods_of, holding, lots_of, sync_aggregates
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.items import craft
 from aerona.engine.notes import note
@@ -42,8 +42,9 @@ from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import default_class_shares
-from aerona.engine.primitives.stats import set_stats, shift_stat, stat, stat_or
+from aerona.engine.primitives.stats import headcount, set_stats, shift_stat, stat, stat_or
 from aerona.engine.services.war import declare_war, uprising_target
+from aerona.engine.settlement.storage import community_capacity, storage_index
 from aerona.rules.registry import Rules
 from aerona.rules.registry.knowledge import KnowledgeRules
 from aerona.rules.registry.society import SocietyRules
@@ -645,8 +646,8 @@ async def set_satisfaction(ctx: TickContext, entity_id: int, values: Mapping[Soc
 
 
 async def storage_room(ctx: TickContext, entity: EntityRow, commodity: Commodity) -> int:
-    book = await EconomyBook.load(ctx)
-    return storage_index(ctx.rules, book.workshop(entity.id, store_kind(commodity)), commodity)
+    capacity = await community_capacity(ctx.session, ctx.rules, entity.id, commodity)
+    return storage_index(ctx.rules, capacity, aggregate_need(ctx.rules, headcount(entity), commodity))
 
 
 async def set_stores(ctx: TickContext, entity_id: int, stocks: Mapping[Commodity, int]) -> Society:

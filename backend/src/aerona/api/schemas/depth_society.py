@@ -185,6 +185,57 @@ class DistrictView(ApiModel):
     condition: int
     material: BuildMaterial
     built_epoch: int
+    design_id: int | None
+    locked: list[str]
+    effects: dict[str, int]
+
+
+class DistrictDesignView(ApiModel):
+    id: int
+    name: str
+    description: str | None
+    base_kind: DistrictKind
+    parameters: dict[str, int | None]
+    defaults: dict[str, int]
+    created_epoch: int
+    locked: list[str]
+
+
+class AdminView(ApiModel):
+    base: int
+    literacy: int
+    scribes: int
+    writing: int
+    palace: int
+    total: int
+
+
+class StorageView(ApiModel):
+    districts: int
+    workshops: int
+    other: int
+    total: int
+
+
+class DefenceView(ApiModel):
+    wall_pct: int
+    tower_pct: int
+    batter_pct: int
+    gate_weakness_pct: int
+
+
+class DistrictEffectsView(ApiModel):
+    housing: int
+    food_store: int
+    goods_store: int
+    harbour: int
+    order: int
+    sanitation: int
+    piety_floor: int
+    admin_pct: int
+    policing: int
+    investment_pct: int
+    tension_relief_pct: int
 
 
 class InfrastructureView(ApiModel):
@@ -251,6 +302,15 @@ class SettlementPlanView(ApiModel):
     construction_capacity: int
     hauling_capacity: int
     rationing: bool
+    admin_capacity: int
+    admin: AdminView
+    food_storage: StorageView
+    goods_storage: StorageView
+    defences: DefenceView
+    district_effects: DistrictEffectsView
+    prestige_pull_pct: int
+    prestige_investment_pct: int
+    designs: list[DistrictDesignView]
     district_slots: int
     housing: int
     locked: list[str]

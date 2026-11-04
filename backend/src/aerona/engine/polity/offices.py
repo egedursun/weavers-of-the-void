@@ -10,12 +10,14 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import ClaimRow, HouseMemberRow, OfficeHistoryRow, OfficeRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.body import LASTING_INJURY_STATES
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind, TraitKind
 from aerona.domain.enums.polity import GenderRule, LawKind, OathKind, OfficeKind, SuccessionRule
+from aerona.domain.enums.settlement import TIER_ORDER
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
@@ -30,6 +32,9 @@ from aerona.engine.primitives.queries import active_bonds, close, connect, livin
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
 from aerona.engine.services.war import declare_war
+from aerona.engine.settlement.book import towns
+from aerona.engine.settlement.districts import office_tier
+from aerona.rules.registry import Rules
 
 S = SkillKind
 OFFICE_SKILLS: Mapping[OfficeKind, tuple[tuple[SkillKind, ...], str]] = MappingProxyType(
@@ -81,19 +86,29 @@ async def appoint(ctx: TickContext, realm: Realm, office: OfficeRow, holder: Ent
         await swear(ctx, holder, OathKind.FEALTY, recipient_id=realm.ruler_id, note_text=f"as {office.kind.value.replace('_', ' ')} of {realm.entity.name}")
 
 
-def wanted_offices(book: RealmBook, realm: Realm) -> list[tuple[OfficeKind, int | None]]:
+def wanted_offices(book: RealmBook, realm: Realm, rules: Rules, towns: Mapping[int, SettlementProfileRow]) -> list[tuple[OfficeKind, int | None]]:
     tier = realm.profile.tier
-    wanted: list[tuple[OfficeKind, int | None]] = [(kind, None) for kind in COUNCIL]
+    seat = towns.get(realm.profile.capital_entity_id or -1)
+    seat_tier = TIER_ORDER.index(seat.size_tier) if seat is not None else 0
+    wanted: list[tuple[OfficeKind, int | None]] = [(kind, None) for kind in COUNCIL if seat_tier >= office_tier(rules, kind)]
     if tier >= PROVINCE_TIER:
         capital_region = book.atlas.top_region(realm.profile.capital_entity_id or -1)
-        wanted.extend((OfficeKind.GOVERNOR, region) for region in sorted(realm.territory) if region != capital_region)
+        largest = {
+            region: max((TIER_ORDER.index(towns[place].size_tier) for place in book.atlas.communities_in(region) if place in towns), default=0)
+            for region in realm.territory
+        }
+        wanted.extend(
+            (OfficeKind.GOVERNOR, region)
+            for region in sorted(realm.territory)
+            if region != capital_region and largest[region] >= office_tier(rules, OfficeKind.GOVERNOR)
+        )
     return wanted
 
 
 async def staff(ctx: TickContext, book: RealmBook, realm: Realm, held: set[int]) -> int:
     people = [mortal for mortal in await subjects(ctx, realm) if adult(ctx, mortal) and mortal.id != realm.ruler_id]
     filled = 0
-    for kind, region in wanted_offices(book, realm):
+    for kind, region in wanted_offices(book, realm, ctx.rules, await towns(ctx.session)):
         office = next((row for row in realm.offices if row.kind is kind and row.region_entity_id == region), None)
         if office is None:
             office = OfficeRow(polity_entity_id=realm.entity.id, kind=kind, region_entity_id=region, since_epoch=ctx.epoch, powers=[])

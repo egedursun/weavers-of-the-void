@@ -1,5 +1,6 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
+from types import MappingProxyType
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,6 +22,7 @@ from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.settlement import DistrictHarm
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import EventStats
@@ -49,6 +51,7 @@ from aerona.engine.primitives.records import RecordSpec, create_record, indefini
 from aerona.engine.primitives.stats import FOLLOWERS_KEY, POPULATION_KEY, headcount_value, set_stats, stat, stat_or
 from aerona.engine.primitives.thresholds import relative_threshold
 from aerona.engine.records import death_path
+from aerona.engine.settlement.districts import damage_districts
 from aerona.rules.registry import Rules
 
 DISASTER_DAMAGE: dict[Disaster, DamageType] = {
@@ -77,6 +80,16 @@ class DisasterImpact:
     losses: dict[int, int | None] = field(default_factory=dict)
     dead: list[EntityRow] = field(default_factory=list)
     destroyed: list[EntityRow] = field(default_factory=list)
+
+
+DISTRICT_HARMS: Mapping[Disaster, DistrictHarm] = MappingProxyType(
+    {
+        Disaster.EARTHQUAKE: DistrictHarm.EARTHQUAKE,
+        Disaster.FLOOD: DistrictHarm.FLOOD,
+        Disaster.STORM: DistrictHarm.STORM,
+        Disaster.DROUGHT: DistrictHarm.DROUGHT,
+    }
+)
 
 
 def joined_names(names: Sequence[str]) -> str:
@@ -210,6 +223,9 @@ async def apply_disaster(ctx: TickContext, target: EntityRow, disaster: Disaster
             impact.destroyed.append(entity)
             continue
         _strike_stats(ctx.rules, entity, disaster, scale, knowledge)
+        harm = DISTRICT_HARMS.get(disaster)
+        if harm is not None and entity.entity_type is EntityType.SETTLEMENT:
+            await damage_districts(ctx, entity, harm, scale)
         after = headcount_value(entity)
         if entity.entity_type in STRUCK_TYPES:
             impact.losses[entity.id] = max(0, before - after) if before is not None and after is not None else None
@@ -552,6 +568,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.designated_heirs",
     "table.disease_cures",
     "table.disease_profiles",
+    "table.districts",
     "table.endemic_diseases",
     "table.entity_flags",
     "table.entity_tags",
@@ -600,6 +617,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.chronicle",
     "table.chronicle_entities",
     "table.conditions",
+    "table.districts",
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",

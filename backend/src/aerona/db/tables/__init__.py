@@ -163,7 +163,14 @@ from aerona.db.tables.polity import (
 )
 from aerona.db.tables.routes import HorizonIntuitionRow, JourneyRow, RouteRow
 from aerona.db.tables.rule_override import RuleOverrideRow
-from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
+from aerona.db.tables.settlement import (
+    DistrictDesignRow,
+    DistrictRow,
+    SettlementHistoryRow,
+    SettlementInfrastructureRow,
+    SettlementProfileRow,
+    SettlementTreasuryRow,
+)
 from aerona.db.tables.society import (
     AddictionRow,
     ArchiveHoldingRow,
@@ -231,6 +238,7 @@ __all__ = [
     "DesignatedHeirRow",
     "DiseaseCureRow",
     "DiseaseProfileRow",
+    "DistrictDesignRow",
     "DistrictRow",
     "EndemicDiseaseRow",
     "EntityFlagRow",

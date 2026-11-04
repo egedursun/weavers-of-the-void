@@ -1,11 +1,13 @@
-from sqlalchemy import JSON, ForeignKey, Index, String
+from sqlalchemy import JSON, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from aerona.constants.schema import KEY_MAX_LENGTH
+from aerona.constants.schema import KEY_MAX_LENGTH, NAME_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
+
+ADMIN_MAX = 300
 
 
 class SettlementProfileRow(Base):
@@ -18,6 +20,7 @@ class SettlementProfileRow(Base):
         between("fire_risk", PERCENT_MIN, PERCENT_MAX),
         between("prestige", PERCENT_MIN, PERCENT_MAX),
         between("tax_rate", PERCENT_MIN, PERCENT_MAX),
+        between("admin_capacity", 0, ADMIN_MAX),
         at_least("militia", 0),
         at_least("siege_supplies", 0),
         at_least("siege_water", 0),
@@ -48,7 +51,48 @@ class SettlementProfileRow(Base):
     construction_capacity: Mapped[int] = mapped_column(default=0)
     hauling_capacity: Mapped[int] = mapped_column(default=0)
     rationing: Mapped[bool] = mapped_column(default=False)
+    admin_capacity: Mapped[int] = mapped_column(default=50)
     updated_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+DESIGN_PARAMETERS = (
+    "housing",
+    "food_store",
+    "goods_store",
+    "harbour",
+    "order",
+    "sanitation",
+    "piety_floor",
+    "admin_pct",
+    "policing",
+    "investment_pct",
+    "tension_relief_pct",
+)
+
+
+class DistrictDesignRow(Base):
+    __tablename__ = "district_designs"
+    __table_args__ = (Index("ix_district_designs_world", "world_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    world_id: Mapped[int] = mapped_column(ForeignKey("worlds.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(NAME_MAX_LENGTH))
+    description: Mapped[str | None] = mapped_column(Text)
+    base_kind: Mapped[DistrictKind] = mapped_column(enum_type(DistrictKind, "base_kind"))
+    housing: Mapped[int | None]
+    food_store: Mapped[int | None]
+    goods_store: Mapped[int | None]
+    harbour: Mapped[int | None]
+    order: Mapped[int | None]
+    sanitation: Mapped[int | None]
+    piety_floor: Mapped[int | None]
+    admin_pct: Mapped[int | None]
+    policing: Mapped[int | None]
+    investment_pct: Mapped[int | None]
+    tension_relief_pct: Mapped[int | None]
+    created_epoch: Mapped[int] = mapped_column(default=0)
+    created_by_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
@@ -65,6 +109,8 @@ class DistrictRow(Base):
     built_epoch: Mapped[int]
     built_by_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     built_by_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+    design_id: Mapped[int | None] = mapped_column(ForeignKey("district_designs.id", ondelete="SET NULL"))
 
 
 class SettlementInfrastructureRow(Base):

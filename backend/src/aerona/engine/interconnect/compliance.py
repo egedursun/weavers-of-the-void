@@ -88,7 +88,14 @@ from aerona.db.tables.polity import (
     TreatyProfileRow,
     VassalageRow,
 )
-from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
+from aerona.db.tables.settlement import (
+    DistrictDesignRow,
+    DistrictRow,
+    SettlementHistoryRow,
+    SettlementInfrastructureRow,
+    SettlementProfileRow,
+    SettlementTreasuryRow,
+)
 from aerona.db.tables.warfare import SiegeRow, WarSideRow
 
 
@@ -297,9 +304,22 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
             DistrictRow.__tablename__,
             SettlementTreasuryRow.__tablename__,
             SettlementHistoryRow.__tablename__,
+            DistrictDesignRow.__tablename__,
         ),
-        ("settlement_life", "uprisings"),
-        ("settlement:edit", "district:build", "district:edit", "district:raze", "settlement:tax", "settlement:free_city", "settlement:charter"),
+        ("settlement_life", "uprisings", "natural_disasters", "campaigns"),
+        (
+            "settlement:edit",
+            "district:build",
+            "district:edit",
+            "district:raze",
+            "settlement:tax",
+            "settlement:free_city",
+            "settlement:charter",
+            "settlement:foreigners",
+            "district:design",
+            "district:design_edit",
+            "district:design_delete",
+        ),
         ("SettlementPlan", "TreasuryLedger", "chart-order-timeline"),
         ("mortal_context",),
         (),

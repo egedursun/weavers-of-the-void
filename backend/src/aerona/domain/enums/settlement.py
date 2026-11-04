@@ -25,6 +25,14 @@ class DistrictKind(StrEnum):
     NECROPOLIS = "necropolis"
 
 
+class DistrictHarm(StrEnum):
+    FLOOD = "flood"
+    EARTHQUAKE = "earthquake"
+    STORM = "storm"
+    DROUGHT = "drought"
+    SACK = "sack"
+
+
 class BuildMaterial(StrEnum):
     TIMBER = "timber"
     STONE = "stone"

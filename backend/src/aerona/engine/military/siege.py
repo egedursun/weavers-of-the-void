@@ -8,6 +8,7 @@ from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.warfare import SiegeRow, WarRow
 from aerona.domain.enums.military import DefenderAction, SiegeAction, StarvationStage, UnitKind
+from aerona.domain.enums.settlement import BuildMaterial, DistrictHarm
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
 from aerona.engine.economy.equipment import siege_engines
@@ -16,6 +17,7 @@ from aerona.engine.military.logistics import March, desert, dishearten
 from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.settlement.districts import damage_districts
 
 DEFAULT_SUPPLIES = 180
 DEFAULT_WATER = 120
@@ -104,22 +106,29 @@ async def action_for(ctx: TickContext, siege: SiegeRow, march: March, engines: f
     return SiegeAction.BLOCKADE
 
 
+def batter_factor(ctx: TickContext, walls: SettlementInfrastructureRow) -> float:
+    table = ctx.rules.districts
+    material = table.stone_batter_pct if walls.walls_material is BuildMaterial.STONE else table.timber_batter_pct
+    return material / PERCENT * (1 + max(0, walls.gates - 1) * table.gate_breach_pct / PERCENT)
+
+
 def batter(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastructureRow | None, action: SiegeAction, engines: float) -> None:
     table = ctx.rules.siegecraft
-    if walls is None:
-        siege.breaches += 1 if action in {SiegeAction.BOMBARD, SiegeAction.MINE} else 0
+    if walls is None or "walls_condition" in walls.locked:
+        siege.breaches += 1 if walls is None and action in {SiegeAction.BOMBARD, SiegeAction.MINE} else 0
         return
+    weakness = batter_factor(ctx, walls)
     if action is SiegeAction.BOMBARD:
-        walls.walls_condition = clamp_int(walls.walls_condition - round_half_up(table.bombard_breach * engines), 0, PERCENT)
+        walls.walls_condition = clamp_int(walls.walls_condition - round_half_up(table.bombard_breach * engines * weakness), 0, PERCENT)
     if action is SiegeAction.MINE and ctx.rng(f"mine.{siege.id}.{siege.rounds}").chance(table.mine_chance):
-        walls.walls_condition = clamp_int(walls.walls_condition - table.bombard_breach, 0, PERCENT)
+        walls.walls_condition = clamp_int(walls.walls_condition - round_half_up(table.bombard_breach * weakness), 0, PERCENT)
         siege.works = {**siege.works, "mines": int(siege.works.get("mines", 0)) + 1}
     if walls.walls_condition < table.breach_condition:
         siege.breaches = max(siege.breaches, 1)
 
 
 def mend(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastructureRow | None) -> None:
-    if walls is None:
+    if walls is None or "walls_condition" in walls.locked:
         return
     walls.walls_condition = clamp_int(walls.walls_condition + ctx.rules.siegecraft.repair_pct, 0, PERCENT)
     if walls.walls_condition >= ctx.rules.siegecraft.breach_condition:
@@ -163,15 +172,21 @@ async def siege_season(ctx: TickContext, war: WarRow, besieged: EntityRow, march
     town = await ctx.session.get(SettlementProfileRow, besieged.id)
     if town is not None:
         siege.disease_inside = town.siege_disease
-        town.siege_supplies, town.siege_water = siege.supplies, siege.water
+        if "siege_supplies" not in town.locked:
+            town.siege_supplies = siege.supplies
+        if "siege_water" not in town.locked:
+            town.siege_water = siege.water
     siege.last_action, siege.last_defence = action, defence
     found.surrendered = surrenders(ctx, siege, action)
     found.assault = not found.surrendered and action is SiegeAction.ASSAULT
     return found
 
 
-def wall_defence(ctx: TickContext, siege: SiegeRow) -> float:
-    return 1 + siege.walls_level * ctx.rules.siegecraft.wall_defence_pct / PERCENT / max(1, siege.breaches + 1)
+def wall_defence(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastructureRow | None = None) -> float:
+    table = ctx.rules.districts
+    material = (table.stone_wall_pct if walls.walls_material is BuildMaterial.STONE else table.timber_wall_pct) / PERCENT if walls is not None else 1.0
+    towers = walls.towers * table.tower_defence_pct / PERCENT if walls is not None else 0.0
+    return 1 + (siege.walls_level * ctx.rules.siegecraft.wall_defence_pct / PERCENT * material + towers) / max(1, siege.breaches + 1)
 
 
 async def sack(ctx: TickContext, besieged: EntityRow, profile: ArmyProfileRow | None, *, homeward: list[March]) -> int:
@@ -193,6 +208,7 @@ async def sack(ctx: TickContext, besieged: EntityRow, profile: ArmyProfileRow | 
         dishearten(rows, -morale.home_sacked_rage)
         desert(ctx.rules, march, rows, round_half_up((stat(march.army, "size") or 0) * morale.home_sacked_desertion_pct / PERCENT))
         sync(march.army, rows, ctx.rules)
+    await damage_districts(ctx, besieged, DistrictHarm.SACK, 1.0)
     ctx.count("sacks")
     ctx.count("sacked_images", len(await smash(ctx, besieged.id, ctx.rules.art.sack_chance, "broken by the army that sacked the city")))
     return dead
