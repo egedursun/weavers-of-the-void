@@ -117,6 +117,7 @@ class IdeologiesRules:
 
 @dataclass(frozen=True)
 class RitesRules:
+    fire_wet_pct: int = rule(70, 0, 100, H, "Strength a fire rite loses under fully wet weather (%)")
     enchant_chance: int = rule(10, 0, 100, H, "A wizard binds a rite into an item they made (%)")
     cult_chance: int = rule(10, 0, 100, H, "A cult performs a collective rite in an epoch (%)")
     invention_chance: int = rule(5, 0, 100, H, "A wizard devises a new rite (%)")

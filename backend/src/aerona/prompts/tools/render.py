@@ -13,6 +13,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import LIVING_CREATION_TYPES, EntityType, LegendCategory
 from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPath
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.place import PlaceKind, SecretKind
 from aerona.domain.enums.travel import VehicleKind
 from aerona.prompts.contexts.blocks import SummarySection
 from aerona.prompts.environment import normalize, string_template
@@ -85,6 +86,8 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "funeral_rites": [rite.value for rite in FuneralRite],
         "judgements": [doctrine.value for doctrine in JudgementDoctrine],
         "rebirth_paths": [path.value for path in RebirthPath],
+        "place_kinds": [kind.value for kind in PlaceKind],
+        "secret_kinds": [kind.value for kind in SecretKind],
     }
 
 

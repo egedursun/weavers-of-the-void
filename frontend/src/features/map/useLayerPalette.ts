@@ -71,6 +71,10 @@ const ALPHA: Record<LayerMode, number> = {
   soil: 0.45,
   climate: 0.4,
   land_use: 0.42,
+  rainfall: 0.42,
+  danger: 0.45,
+  scars: 0.45,
+  sacred: 0.45,
   ley: 0.5,
   population: 0.45,
   followers: 0.45,
@@ -92,6 +96,41 @@ const BAND_LABEL: Record<string, string> = {
   sparse: 'Few wild herds',
   teeming: 'Many wild herds',
   wild: 'A land of beasts',
+}
+
+export const RAIN_BANDS = [
+  { key: 'arid', below: 20 },
+  { key: 'dry', below: 40 },
+  { key: 'moderate', below: 60 },
+  { key: 'wet', below: 80 },
+  { key: 'drenched', below: Number.POSITIVE_INFINITY },
+] as const
+
+const HOLY_FROM = 40
+
+const DANGER_LABEL: Record<string, string> = {
+  beasts: 'Beasts',
+  bandits: 'Bandits',
+  monsters: 'Monsters',
+  phenomena: 'Strange phenomena',
+  disease: 'Disease',
+  avalanche: 'Avalanches',
+  quicksand: 'Quicksand',
+  volcanic: 'Volcanic ground',
+}
+
+const LAND_LABEL: Record<string, string> = {
+  arid: 'Arid',
+  dry: 'Dry',
+  moderate: 'Moderate rain',
+  wet: 'Wet',
+  drenched: 'Drenched',
+  holy: 'Holy ground that draws pilgrims',
+  hallowed: 'Hallowed ground',
+}
+
+export function rainBand(value: number): string {
+  return RAIN_BANDS.find((band) => value < band.below)?.key ?? 'drenched'
 }
 
 export const WILD_BANDS = [
@@ -172,6 +211,29 @@ function regionKey(
               : ground.land_use
       return { key: `${mode}:${value}`, alpha }
     }
+    case 'rainfall':
+    case 'danger':
+    case 'scars':
+    case 'sacred': {
+      const ground = view.ground[String(regionId)] ?? view.ground[String(topId)]
+      if (!ground) return null
+      if (mode === 'rainfall')
+        return { key: `rainfall:${rainBand(ground.rainfall ?? 0)}`, alpha }
+      if (mode === 'danger')
+        return ground.danger_source
+          ? { key: `danger:${ground.danger_source}`, alpha }
+          : null
+      if (mode === 'scars')
+        return ground.scar && (ground.scar_depth ?? 0) > 0
+          ? { key: `scars:${ground.scar}`, alpha }
+          : null
+      const sacred = ground.sacredness ?? 0
+      if (sacred <= 0) return null
+      return {
+        key: `sacred:${sacred >= HOLY_FROM ? 'holy' : 'hallowed'}`,
+        alpha,
+      }
+    }
     case 'population':
     case 'followers':
     case 'soldiers': {
@@ -229,6 +291,10 @@ function labelFor(
   if (kind === 'language') return names.languages.get(id) ?? `Language ${id}`
   if (kind === 'ley')
     return raw === 'nexus' ? 'Nexus of ley lines' : 'On a ley line'
+  if (kind === 'danger') return DANGER_LABEL[raw] ?? words(raw)
+  if (kind === 'rainfall' || kind === 'sacred')
+    return LAND_LABEL[raw] ?? words(raw)
+  if (kind === 'scars') return words(raw)
   if (
     kind === 'population' ||
     kind === 'followers' ||

@@ -18,9 +18,10 @@ from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
-from aerona.domain.enums.environment import TerrainKind, WeatherKind
+from aerona.domain.enums.environment import PlaceCover, TerrainKind, WeatherKind
 from aerona.domain.enums.military import ArmourType, BattlePhase, CommanderTrait, OutcomeClass, Tactic, UnitFamily, UnitKind
 from aerona.domain.enums.mortal import HarshnessScale
+from aerona.engine.environment.battleground import cover_missile_pct
 from aerona.engine.primitives.harshness import harshness
 from aerona.rules.registry import Rules
 
@@ -124,6 +125,7 @@ class Field:
     weather: WeatherKind | None
     night: bool
     river: bool = False
+    cover: PlaceCover | None = None
 
 
 def modifier(rules: Rules, stack: Stack, side: Side, ground: Field) -> float:
@@ -170,7 +172,9 @@ def choose_tactic(rules: Rules, rng: SeededRandom, side: Side, enemy_doctrine: s
             weight *= 2.0 if ground.terrain in TACTIC_TERRAIN[option] else 0.4
         if expected in TACTIC_COUNTERS.get(option, frozenset()):
             weight *= 1 + side.skill * rules.tactics.skill_weight / 10
-        if option is Tactic.AMBUSH and not (ground.terrain in AMBUSH_TERRAIN or ground.weather is WeatherKind.FOG or ground.night):
+        if option is Tactic.AMBUSH and not (
+            ground.terrain in AMBUSH_TERRAIN or ground.cover is PlaceCover.HEAVY or ground.weather is WeatherKind.FOG or ground.night
+        ):
             weight *= 0.1
         if option is Tactic.NIGHT_RAID and not ground.night:
             weight *= 0.1
@@ -234,6 +238,8 @@ def missiles(rules: Rules, shooter: Side, target: Side, ground: Field, families:
         for stack in shooter.stacks
         if stack.alive and stack.spec.family in families and stack.spec.missile > 0
     )
+    if target.defending:
+        damage *= cover_missile_pct(rules, ground.cover) / PERCENT
     return deal(target.stacks, damage, rules)
 
 
@@ -327,7 +333,7 @@ def opening(rules: Rules, rng: SeededRandom, attacker: Side, defender: Side, gro
     if margin >= table.scouting_margin:
         if strength(rules, lead, ground) < strength(rules, other, ground) * REFUSE_RATIO:
             refused = True
-        elif ground.terrain in AMBUSH_TERRAIN or ground.weather is WeatherKind.FOG or ground.night:
+        elif ground.terrain in AMBUSH_TERRAIN or ground.cover is PlaceCover.HEAVY or ground.weather is WeatherKind.FOG or ground.night:
             lead.surprise = rules.weather_battle_effects.fog_ambush_pct / PERCENT
     phases = [PhaseLog(BattlePhase.SCOUTING, 0, 0, f"{lead.entity.name} saw further" + (" and refused battle" if refused else ""), {"margin": round(margin)})]
     if refused:

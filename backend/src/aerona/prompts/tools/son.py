@@ -65,6 +65,9 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "learner_ids": "Communities that first learn this knowledge (at most {{ rules.son_tools.knowledge_first_learners }})",
     },
     EntityType.REGION: {"water": "True if the region is a sea or ocean (water) rather than land; default false"},
+    EntityType.PLACE: {
+        "place_kind": "What kind of place it is: {{ place_kinds | join(', ') }}; its ground, cover, water, height, sacredness and hidden secrets follow the kind"
+    },
     EntityType.SPECIES: {
         "traits": "The creature's traits (at most {{ rules.son_tools.creature_max_traits }}): {{ creature_traits }}",
         "body_plan": "The creature's body: {{ body_plans }}; its wounds, armour and fighting follow this body",
@@ -140,9 +143,10 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"plan": "Your goal spread over several ages and your next steps"},
     ),
     T.CHOOSE_ANCHOR: ToolText(
-        "You choose one of your own creations as the anchor of your existence. While your anchor lives your existence stays firm; if it is destroyed you begin to fade. "
+        "You choose one of your own creations, or a temple, shrine or other structure mortals dedicated to you, as the anchor of your existence. "
+        "While your anchor lives your existence stays firm; if it is destroyed you begin to fade. "
         "Free, {{ rules.son_tools.anchor_per_epoch }} per age.",
-        {"entity_id": "Your own canonical creation", "reason": "Why this creation holds your existence"},
+        {"entity_id": "Your own canonical creation or a structure dedicated to you", "reason": "Why this holds your existence"},
     ),
     T.BIND_MORTALS: ToolText(
         "You bind two living mortals by your will: promise them to each other, wed them, give the first to the second as a ward, or make them sworn kin. "
@@ -334,6 +338,56 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You cut a ley line between two regions: magic stops flowing along it, storms no longer run down it and works on it stop gaining power, "
         "for {{ rules.environment.sever_ley_epochs }} ages. {{ rules.son_tools.sever_ley_essence }} essence, 1 action.",
         {"line_id": "The ley line's id (see the region's ley lines)", "reason": "Why you cut it"},
+    ),
+    T.HIDE_SECRET: ToolText(
+        "You hide a secret in a place: a seam, a relic, a sealed spirit, lost knowledge, a lost rite or a way down to the underworld. "
+        "Explorers, seers and deep miners may find it; deep mining breaks what is sealed. {{ rules.places.hide_secret_essence }} essence, 1 action.",
+        {
+            "place_id": "The place's id",
+            "kind": "What you hide: {{ secret_kinds | join(', ') }}",
+            "strength": "How deep it lies and how strong its seal (0-100); stronger secrets are found later",
+            "reason": "Why you hide it",
+        },
+    ),
+    T.SANCTIFY_PLACE: ToolText(
+        "You sanctify a place: its sacredness rises by {{ rules.places.sanctify_amount }}, it draws pilgrims and becomes a holy site of the faithful. "
+        "{{ rules.places.sanctify_essence }} essence, 1 action.",
+        {"place_id": "The place's id", "reason": "Why it is holy to you"},
+    ),
+    T.RAISE_NEXUS: ToolText(
+        "You draw the ley lines together at a place: it becomes a nexus that feeds works, draws wizards and armies, and is holy to cults. "
+        "{{ rules.places.raise_nexus_essence }} essence, 1 action.",
+        {"place_id": "The place's id", "reason": "Why you raise it"},
+    ),
+    T.RESHAPE_LAND: ToolText(
+        "You lay a hand on a land and reshape it: move its river into a neighbouring land (shift_river), parch it into desert (parch), "
+        "bring the grass back to a desert (green), sow its soil with salt (salt_soil) or make its soil rich (enrich_soil). "
+        "Rivers bow to gods of sea, storm, earth or stone; deserts to gods of sun, fire, hunger, salt or ash; green to gods of plants, harvest, "
+        "life or sea; salt to gods of salt, sea or death; rich soil to gods of earth, fire, ash, harvest, plants or stone. Wells and fields follow "
+        "the river, deserts lose their rain and harvests, salt kills the soil. {{ rules.son_tools.reshape_land_essence }} essence, "
+        "{{ rules.son_tools.reshape_land_ap }} actions.",
+        {
+            "region_id": "The land's id",
+            "act": "shift_river, parch, green, salt_soil or enrich_soil",
+            "target_region_id": "For shift_river: the neighbouring land the river should flow into (leave empty to let it find the lowest bed)",
+            "reason": "Why you do it",
+        },
+    ),
+    T.SANCTIFY_REGION: ToolText(
+        "You sanctify a region: its ground becomes holy, drawing pilgrims who bring wealth and piety, warding off hauntings and strange phenomena. "
+        "{{ rules.terrain.sanctify_essence }} essence, 1 action.",
+        {"region_id": "The region's id", "sacredness": "How holy, 0-100 (leave out for the usual sanctification)", "reason": "Why you hallow it"},
+    ),
+    T.CURSE_REGION: ToolText(
+        "You loose a danger upon a region: beasts, bandits, monsters, phenomena, disease, avalanches, quicksand or volcanic fire. It harms settlers, herds, "
+        "travellers, armies and merchants there, and fades over the ages unless the land breeds it. {{ rules.terrain.curse_essence }} essence, 1 action, "
+        "strength at most {{ rules.terrain.curse_strength_max }}.",
+        {"region_id": "The region's id", "danger": "Which danger", "strength": "How strong, 1-100", "reason": "Why you curse it"},
+    ),
+    T.REDIRECT_RIVER: ToolText(
+        "You turn a river out of its bed into a neighbouring region: the old valley dries to a stream or a dry bed, the new one floods and grows. "
+        "{{ rules.terrain.redirect_essence }} essence, 1 action.",
+        {"from_region_id": "The region the river runs through now", "to_region_id": "The neighbouring region it will run through", "reason": "Why you turn it"},
     ),
     T.REORDER_SEASONS: ToolText(
         "You reorder the seasons of a world: the year runs in the order you name, so harvests, campaigns, travel and festivals fall differently. "

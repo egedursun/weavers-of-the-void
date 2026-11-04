@@ -1,0 +1,96 @@
+from aerona.api.schemas.common import ApiModel
+from aerona.domain.enums.environment import RiverClass
+from aerona.domain.enums.region import DangerHarm, DangerOrigin, DangerSource, MemoryOrigin, RegionMemoryKind, TerrainHazard
+
+
+class RegionDangerView(ApiModel):
+    id: int
+    source: DangerSource
+    label: str
+    strength: int
+    origin: DangerOrigin
+    held: bool
+    source_node_id: int | None
+    source_node_name: str | None
+    son_id: int | None
+    since_epoch: int
+    harms: dict[DangerHarm, int]
+
+
+class RegionMemoryView(ApiModel):
+    id: int
+    kind: RegionMemoryKind
+    label: str
+    magnitude: int
+    epoch: int
+    title: str
+    origin: MemoryOrigin
+    held: bool
+    darkness: int
+    holiness: int
+    fades: bool
+    subject_id: int | None
+    incident_id: int | None
+
+
+class MapKnowledgeView(ApiModel):
+    polity_id: int
+    polity_name: str
+    level: int
+    held: bool
+    terrain: bool
+    sacred: bool
+    minerals: bool
+    unmapped: bool
+
+
+class RealmChoice(ApiModel):
+    id: int
+    name: str
+
+
+class RegionHazardView(ApiModel):
+    id: int
+    hazard: TerrainHazard
+    label: str
+    epoch: int
+    year: int | None
+    season_name: str | None
+    deaths: int
+    injured: int
+    soldiers_lost: int
+
+
+class HazardExposure(ApiModel):
+    hazard: TerrainHazard
+    label: str
+    season: str
+
+
+class RiverNeighbour(ApiModel):
+    id: int
+    name: str
+    river_class: RiverClass | None
+
+
+class RegionTerrainView(ApiModel):
+    region_id: int
+    world_id: int
+    danger: int
+    harms: dict[DangerHarm, int]
+    dangers: list[RegionDangerView]
+    sacredness: int
+    sacredness_held: bool
+    darkness: int
+    holiness: int
+    haunting_pct: int
+    draws_pilgrims: bool
+    pilgrim_sacred_min: int
+    memories: list[RegionMemoryView]
+    knowledge: list[MapKnowledgeView]
+    realms: list[RealmChoice]
+    unmapped_below: int
+    hazards: list[RegionHazardView]
+    exposure: list[HazardExposure]
+    river_class: RiverClass
+    river_neighbours: list[RiverNeighbour]

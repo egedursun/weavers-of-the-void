@@ -26,12 +26,14 @@ REQUIRED: MappingProxyType[CommodityKind, tuple[KnowledgeBranch, int]] = Mapping
 )
 DIFFICULTY: MappingProxyType[CommodityKind, int] = MappingProxyType({C.ORE: 55, C.STONE: 40, C.TIMBER: 30, C.FISH: 25, C.MAGICAL_REAGENTS: 45})
 STONE_KINDS = frozenset({M.STONE, M.CLAY, M.FLINT, M.OBSIDIAN})
+MATERIAL_KEYS = frozenset(kind.value for kind in MaterialKind)
 
 
 def seam_material(region: RegionEnvironmentRow | None) -> MaterialKind:
     if region is None or not region.mineral_layers:
         return M.IRON
     ranked = sorted(region.mineral_layers.items(), key=lambda item: (-item[1], item[0]))
+    ranked = [(name, depth) for name, depth in ranked if name in MATERIAL_KEYS] or [(M.IRON.value, 0)]
     for name, _ in ranked:
         kind = MaterialKind(name)
         if kind in MINERAL_KINDS and kind not in STONE_KINDS:

@@ -7,6 +7,8 @@ class Disaster(StrEnum):
     PLAGUE = "plague"
     DROUGHT = "drought"
     STORM = "storm"
+    ERUPTION = "eruption"
+    VOLCANIC_QUAKE = "volcanic_quake"
 
 
 class Miracle(StrEnum):

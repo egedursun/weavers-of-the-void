@@ -14,7 +14,15 @@ from aerona.engine.context import TickContext, TickEnvironment
 from aerona.engine.interconnect.guards import run_guarded
 from aerona.engine.notes import fold_tick_lines, last_chronicle_id
 from aerona.engine.phase import Phase
-from aerona.engine.pipeline import DISABLED_COUNTER, FAILED_COUNTER, TICK_ORDER, EnginePhaseError, current_environment, disabled_by_rules
+from aerona.engine.pipeline import (
+    DISABLED_COUNTER,
+    FAILED_COUNTER,
+    TICK_ORDER,
+    EnginePhaseError,
+    current_environment,
+    disabled_by_rules,
+    warn_over_budget,
+)
 from aerona.epoch.context import EpochContext
 from aerona.epoch.state import engine_phases_done, mark_engine_phase, raise_phase, require_run
 from aerona.events.kinds import EventKind
@@ -79,6 +87,13 @@ async def engine_tick(ec: EpochContext, phases: Sequence[Phase] | None = None) -
     ec.publish(EventKind.ENGINE_STARTED, {})
     environment = await current_environment(ec.database, ec.runtime.publish, phase=EpochPhase.ENGINE)
     await run_engine_stage(ec, EngineStage.TICK, phases if phases is not None else TICK_ORDER, environment)
+    over = warn_over_budget(environment)
+    if over is not None:
+        target = environment.rules.engine_budget.tick_target_seconds
+        ec.runtime.note(
+            f"The world's course took {over:.0f} seconds this epoch, over its {target}-second target; "
+            "raise the target or lower the sub-step budget in World Rules."
+        )
     async with ec.database.write() as session:
         rules = await ec.runtime.rules(session)
         await fold_tick_lines(session, rules, ec.epoch, since)

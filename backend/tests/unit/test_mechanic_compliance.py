@@ -8,6 +8,7 @@ from aerona.engine.interconnect.compliance import CATALOGUE
 from aerona.engine.interconnect.flows import PHASE_FLOWS
 from aerona.engine.interconnect.guards import CONSERVED_KEYS
 from aerona.engine.interconnect.registry import Exposure
+from aerona.engine.interconnect.table_backfills import TABLE_BACKFILLS, table_backfill
 from aerona.engine.pipeline import PHASE_REGISTRY
 from aerona.prompts.ids import PromptId
 from aerona.prompts.tools.ids import MortalToolId, SonToolId
@@ -103,6 +104,50 @@ def test_the_generic_layer_holds_for_every_mechanic() -> None:
             if conserved and name not in PHASE_FLOWS:
                 problems.append(f"{key}: step {name} moves {sorted(conserved)} without a flow category")
     assert problems == [], "\n".join(problems)
+
+
+def row_class_names() -> dict[str, str]:
+    return {mapper.local_table.name: mapper.class_.__name__ for mapper in Base.registry.mappers if mapper.local_table is not None}
+
+
+def fixup_files() -> dict[str, str]:
+    found: dict[str, str] = {}
+    for path in BACKEND.rglob("*.py"):
+        if "alembic" in path.parts:
+            continue
+        text = path.read_text(encoding="utf-8")
+        for key in re.findall(r'_FIXUP = "([a-z_.]+)"', text):
+            found[key] = text
+    return found
+
+
+def table_backfilled(table: str, text: str, classes: dict[str, str], fixups: dict[str, str]) -> bool:
+    head = text.split(":", 1)[0].strip()
+    if head in PLAIN_BACKFILLS:
+        return True
+    if head in PHASE_REGISTRY:
+        return f"table.{table}" in declared_writes(PHASE_REGISTRY[head].run)
+    if head in fixups:
+        return table in fixups[head] or classes.get(table, table) in fixups[head]
+    revision = head.removeprefix("migration ").strip()
+    return any(table in path.read_text(encoding="utf-8") for path in VERSIONS.glob(f"{revision}_*.py"))
+
+
+def test_every_table_a_mechanic_owns_has_its_own_backfill_rule() -> None:
+    classes = row_class_names()
+    fixups = fixup_files()
+    problems: list[str] = []
+    for key, mechanic in REGISTERED.items():
+        for table in mechanic.tables:
+            text = table_backfill(key, mechanic, table)
+            if not backfill_known(text) or not table_backfilled(table, text, classes, fixups):
+                problems.append(f"{key}: table {table} has no backfill rule of its own ({text[:50]})")
+    assert problems == [], "\n".join(problems)
+
+
+def test_per_table_backfill_overrides_name_real_mechanic_tables() -> None:
+    stale = [pair for pair in TABLE_BACKFILLS if pair[0] not in REGISTERED or pair[1] not in REGISTERED[pair[0]].tables]
+    assert stale == []
 
 
 def test_the_compliance_catalogue_resolves_to_real_code() -> None:

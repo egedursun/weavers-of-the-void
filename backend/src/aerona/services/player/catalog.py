@@ -11,6 +11,7 @@ from aerona.services.player import (
     assignments,
     beyond,
     body,
+    calendar,
     canon,
     celestial_depth,
     cheats,
@@ -31,10 +32,13 @@ from aerona.services.player import (
     faith,
     fate_controls,
     foreign_gods,
+    foundations,
     goals,
     god_power,
+    happenings,
     heroes,
     horizon,
+    incidents,
     interventions,
     knowledge,
     language_contact,
@@ -49,12 +53,15 @@ from aerona.services.player import (
     messages,
     military,
     mind,
+    modifiers,
     mortals,
     native_faith,
     pantheon,
     peoples,
+    places,
     profiles,
     realms,
+    regions,
     relations,
     settings,
     settlements,
@@ -1198,6 +1205,29 @@ WILDS_ACTIONS = (
     _sync(Meta("beast:treasure", "Lay an item in a beast's hoard or take it out", G.CREATURES), wilds.move_treasure, wilds.Treasure, free, ("S3.3a",)),
 )
 
+REGION_ACTIONS = (
+    _sync(
+        Meta("environment:biome", "Set the share of a biome in a region's land", G.WORLDS), environment.set_region_biome, environment.SetBiome, free, ("F2.1",)
+    ),
+    _sync(Meta("region:danger_create", "Set a danger of any kind upon a region", G.WORLDS), regions.create_danger, regions.CreateDanger, free, ("S6.1",)),
+    _sync(Meta("region:danger_edit", "Change or hold the strength of a region's danger", G.WORLDS), regions.edit_danger, regions.EditDanger, free, ("S6.1",)),
+    _sync(Meta("region:danger_release", "Let a held danger follow the land again", G.WORLDS), regions.release_danger, regions.DangerTarget, free, ("S6.1",)),
+    _sync(Meta("region:danger_delete", "Drive a danger out of a region", G.WORLDS), regions.delete_danger, regions.DangerTarget, free, ("S6.1",)),
+    _sync(Meta("region:sanctify", "Sanctify a region and set its sacredness", G.WORLDS), regions.sanctify, regions.Sanctify, free, ("S6.1",)),
+    _sync(Meta("region:memory_add", "Write an event into a region's memory", G.WORLDS), regions.add_memory, regions.AddMemory, free, ("S6.1",)),
+    _sync(Meta("region:memory_edit", "Reshape or hold a region's memory", G.WORLDS), regions.edit_memory, regions.EditMemory, free, ("S6.1",)),
+    _sync(Meta("region:memory_delete", "Make a region forget an event", G.WORLDS), regions.delete_memory, regions.MemoryTarget, free, ("S6.1",)),
+    _sync(Meta("region:knowledge_set", "Reveal or hide a region on a realm's maps", G.WORLDS), regions.set_knowledge, regions.SetKnowledge, free, ("S6.1",)),
+    _sync(
+        Meta("region:knowledge_release", "Let a realm's map of a region follow its explorers again", G.WORLDS),
+        regions.release_knowledge,
+        regions.KnowledgeTarget,
+        free,
+        ("S6.1",),
+    ),
+    _sync(Meta("region:river_redirect", "Turn a river into a neighbouring region", G.WORLDS), regions.redirect_river, regions.RedirectRiver, free, ("S6.1",)),
+)
+
 ENVIRONMENT_ACTIONS = (
     _sync(
         Meta("ley:sever", "Cut a ley line for some epochs", G.WORLDS),
@@ -1270,7 +1300,7 @@ ENVIRONMENT_ACTIONS = (
         ("F2.1",),
     ),
     _sync(
-        Meta("environment:mineral", "Set the richness of a mineral seam", G.WORLDS),
+        Meta("environment:mineral", "Set the richness of a mineral seam, of a catalog or a world material", G.WORLDS),
         environment.set_region_mineral,
         environment.SetMineral,
         free,
@@ -1326,6 +1356,139 @@ ENVIRONMENT_ACTIONS = (
         ("F2.2",),
     ),
 )
+HAPPENING_ACTIONS = (
+    _sync(Meta("event:create", "Set down an event of any kind in a land or town", G.WORLDS), happenings.create_event, happenings.CreateEvent, free, ("S8.8",)),
+    _sync(Meta("event:edit", "Edit an event's name, severity, years and seasons", G.WORLDS), happenings.edit_event, happenings.EditEvent, free, ("S8.8",)),
+    _sync(
+        Meta("event:phase", "Move an event to its beginning, height or aftermath, and hold it", G.WORLDS),
+        happenings.set_event_phase,
+        happenings.EventPhaseCommand,
+        free,
+        ("S8.8",),
+    ),
+    _sync(Meta("event:release", "Let a held event value follow the world again", G.WORLDS), happenings.release_event, happenings.EventRelease, free, ("S8.8",)),
+    _sync(
+        Meta("event:footprint", "Add or remove a land from an event's reach", G.WORLDS),
+        happenings.set_event_footprint,
+        happenings.EventFootprint,
+        free,
+        ("S8.8",),
+    ),
+    _sync(
+        Meta("event:casualties", "Set the toll of an event for one cohort", G.WORLDS),
+        happenings.set_event_casualties,
+        happenings.EventCasualties,
+        free,
+        ("S8.8",),
+    ),
+    _sync(Meta("event:end", "End an event now", G.WORLDS), happenings.end_event, happenings.EventTarget, free, ("S8.8",)),
+    _sync(Meta("land:stir", "Wake an eruption or a volcanic earthquake in a land", G.WORLDS), happenings.stir_land, happenings.StirLand, free, ("S6.1",)),
+    _sync(Meta("land:river", "Move a river into a neighbouring land", G.WORLDS), happenings.move_river, happenings.MoveRiver, free, ("S6.1",)),
+    _sync(Meta("land:shape", "Set and hold a land's desertification and volcanism", G.WORLDS), happenings.shape_land, happenings.ShapeLand, free, ("S6.1",)),
+    _sync(Meta("land:release", "Let a held land value follow the world again", G.WORLDS), happenings.release_land, happenings.ReleaseLand, free, ("S6.1",)),
+)
+
+CALENDAR_ACTIONS = (
+    _sync(
+        Meta("seasons:add", "Add a season to a world's year", G.WORLDS),
+        calendar.add_season,
+        calendar.AddSeason,
+        free,
+        ("F2.2",),
+    ),
+    _sync(
+        Meta("seasons:remove", "Take a season out of a world's year", G.WORLDS),
+        calendar.remove_season,
+        calendar.SeasonTarget,
+        free,
+        ("F2.2",),
+    ),
+    _sync(
+        Meta("seasons:release", "Stop holding a reshaped season", G.WORLDS),
+        calendar.release_season,
+        calendar.SeasonTarget,
+        free,
+        ("F2.2",),
+    ),
+    _sync(
+        Meta("seasons:moons", "Set and hold a world's moons and tides", G.WORLDS),
+        calendar.set_moons,
+        calendar.SetMoons,
+        free,
+        ("F2.2",),
+    ),
+    _sync(
+        Meta("seasons:calendar_release", "Let a world's tilt, day, year, moons or tides follow the heavens again", G.WORLDS),
+        calendar.release_calendar,
+        calendar.ReleaseCalendar,
+        free,
+        ("F2.2",),
+    ),
+    _sync(
+        Meta("weather:edit", "Change a held weather: its kind, its end or its season", G.WORLDS),
+        calendar.edit_weather,
+        calendar.EditWeather,
+        free,
+        ("F2.3",),
+    ),
+    _sync(
+        Meta("year:edit", "Rewrite a notable year", G.WORLDS),
+        calendar.edit_notable_year,
+        calendar.EditNotableYear,
+        free,
+        ("F1",),
+    ),
+    _sync(
+        Meta("year:delete", "Strike a notable year from memory", G.WORLDS),
+        calendar.delete_notable_year,
+        calendar.NotableTarget,
+        free,
+        ("F1",),
+    ),
+    _sync(
+        Meta("calendar:holy_day", "Add or change a holy day of a calendar", G.WORLDS),
+        calendar.set_holy_day,
+        calendar.SetHolyDay,
+        free,
+        ("F2.2",),
+    ),
+    _sync(
+        Meta("calendar:holy_day_remove", "Remove a holy day from a calendar", G.WORLDS),
+        calendar.remove_holy_day,
+        calendar.HolyDayTarget,
+        free,
+        ("F2.2",),
+    ),
+    _sync(
+        Meta("calendar:anchor", "Set the year a calendar counts from", G.WORLDS),
+        calendar.set_anchor,
+        calendar.SetAnchor,
+        free,
+        ("F2.2",),
+    ),
+    _sync(
+        Meta("ley:strength", "Set and hold a ley line's strength", G.WORLDS),
+        calendar.set_ley_strength,
+        calendar.LeyStrength,
+        free,
+        ("F2.6",),
+    ),
+    _sync(
+        Meta("ley:dissolve", "Unmake a ley line", G.WORLDS),
+        calendar.dissolve_ley,
+        calendar.LeyLineTarget,
+        free,
+        ("F2.6",),
+    ),
+    _sync(
+        Meta("ley:work", "Set or release a work's ties to the ley", G.WORLDS),
+        calendar.set_ley_work,
+        calendar.LeyWork,
+        free,
+        ("F2.6",),
+    ),
+)
+
 MECHANIC_ACTIONS = (
     _sync(Meta("lever:pin", "Pin a field so that no mechanic can change it", G.SETTINGS), levers.pin_field, levers.PinField, free, ("J.16c",)),
     _sync(Meta("lever:unpin", "Release a pinned field", G.SETTINGS), levers.unpin_field, levers.UnpinField, free, ("J.16c",)),
@@ -1349,6 +1512,28 @@ MECHANIC_ACTIONS = (
     _sync(Meta("modifier:remove", "Remove a modifier", G.SETTINGS), levers.remove_player_modifier, levers.RemoveModifier, free, ("F9", "J.16c")),
     _sync(Meta("incident:annotate", "Keep a note beside an incident", G.SETTINGS), levers.annotate_incident, levers.AnnotateIncident, free, ("F10",)),
     _sync(
+        Meta("modifier:create", "Create a modifier of any source on a record", G.SETTINGS),
+        modifiers.create_modifier,
+        modifiers.CreateModifier,
+        free,
+        ("F9", "J.16c"),
+    ),
+    _sync(Meta("modifier:edit", "Edit a modifier", G.SETTINGS), modifiers.edit_modifier, modifiers.EditModifier, free, ("F9", "J.16c")),
+    _sync(Meta("modifier:hold", "Hold a modifier so the engine keeps it", G.SETTINGS), modifiers.hold_modifier, modifiers.HoldModifier, free, ("F9", "J.16c")),
+    _sync(Meta("modifier:release", "Release a held modifier", G.SETTINGS), modifiers.release_modifier, modifiers.HoldModifier, free, ("F9", "J.16c")),
+    _sync(Meta("incident:create", "Write an incident into history", G.SETTINGS), incidents.create_incident, incidents.CreateIncident, free, ("F10",)),
+    _sync(Meta("incident:edit", "Rewrite an incident", G.SETTINGS), incidents.edit_incident, incidents.EditIncident, free, ("F10",)),
+    _sync(
+        Meta("incident:roles", "Set who acted, who was struck and who watched", G.SETTINGS),
+        incidents.set_incident_roles,
+        incidents.SetIncidentRoles,
+        free,
+        ("F10",),
+    ),
+    _sync(Meta("incident:link_cause", "Link an incident to its cause", G.SETTINGS), incidents.link_cause, incidents.LinkCause, free, ("F10",)),
+    _sync(Meta("incident:unlink_cause", "Cut an incident from its cause", G.SETTINGS), incidents.unlink_cause, incidents.IncidentRef, free, ("F10",)),
+    _sync(Meta("incident:delete", "Strike an incident from history", G.SETTINGS), incidents.delete_incident, incidents.IncidentRef, free, ("F10",)),
+    _sync(
         Meta("profile:set", "Set and hold any value of a record's profile", G.SETTINGS),
         profiles.set_profile_value,
         profiles.SetProfileValue,
@@ -1363,7 +1548,46 @@ MECHANIC_ACTIONS = (
         ("J.16c",),
     ),
 )
+FOUNDATION_ACTIONS = (
+    _sync(Meta("war:incite", "Lay a war at a god's feet, or clear the blame", G.WARFARE), foundations.set_incitement, foundations.WarIncitement, free, ("W0",)),
+    _sync(
+        Meta("world:date_golden_age", "Set when a world's golden age began", G.WORLDS),
+        foundations.set_golden_age_date,
+        foundations.GoldenAgeDate,
+        free,
+        ("W0",),
+    ),
+    _sync(Meta("structure:dedicate", "Dedicate a structure to a god", G.SONS), foundations.dedicate_structure, foundations.Dedicate, free, ("S7.2",)),
+    _sync(
+        Meta("structure:undedicate", "Lift a structure's dedication", G.SONS), foundations.undedicate_structure, foundations.StructureTarget, free, ("S7.2",)
+    ),
+    _sync(Meta("son:anchor", "Anchor a god's existence", G.SONS), foundations.set_anchor, foundations.SonAnchor, free, ("S7.2", "W0")),
+    _sync(Meta("son:clear_anchor", "Cut a god loose from their anchor", G.SONS), foundations.clear_anchor, foundations.SonTarget, free, ("W0",)),
+    _sync(
+        Meta("foundation:hold", "Hold or release a war's blame, a golden age, a dedication or an anchor", G.SETTINGS),
+        foundations.hold_foundation,
+        foundations.HoldFoundation,
+        free,
+        ("J.16c",),
+    ),
+)
+
+PLACE_ACTIONS = (
+    _sync(Meta("place:create", "Bring forth a place of a chosen kind", G.WORLDS), places.create_place, places.CreatePlace, free, ("S6.2",)),
+    _sync(Meta("place:edit", "Set or hold a place's kind, sacredness or mystery", G.WORLDS), places.edit_place, places.EditPlace, free, ("S6.2",)),
+    _sync(
+        Meta("place:release", "Let a held value of a place follow the world again", G.WORLDS), places.release_place, places.ReleasePlace, free, ("S6.2", "F2.1")
+    ),
+    _sync(Meta("place:secret", "Hide a secret in a place", G.WORLDS), places.hide_secret, places.HideSecret, free, ("S6.2",)),
+    _sync(Meta("place:secret_edit", "Reshape, seal or hold a place's secret", G.WORLDS), places.edit_secret, places.EditSecret, free, ("S6.2",)),
+    _sync(Meta("place:reveal", "Reveal a place's secret or break its seal", G.WORLDS), places.reveal_secret, places.RevealSecret, free, ("S6.2",)),
+    _sync(Meta("place:secret_delete", "Erase a place's secret", G.WORLDS), places.delete_secret, places.SecretTarget, free, ("S6.2",)),
+    _sync(
+        Meta("pilgrimage:clear", "Take a pilgrimage site off the pilgrims' roads", G.COSMOS), places.clear_pilgrimage_site, places.SiteTarget, free, ("S6.2",)
+    ),
+)
 ACTIONS: tuple[ActionSpec, ...] = (
+    *FOUNDATION_ACTIONS,
     *WILDS_ACTIONS,
     *LORE_ACTIONS,
     *CREATOR_ACTIONS,
@@ -1399,6 +1623,10 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *LIFE_CYCLE_ACTIONS,
     *MECHANIC_ACTIONS,
     *ENVIRONMENT_ACTIONS,
+    *PLACE_ACTIONS,
+    *HAPPENING_ACTIONS,
+    *CALENDAR_ACTIONS,
+    *REGION_ACTIONS,
     *ECONOMY_ACTIONS,
     *BODY_ACTIONS,
     *MIND_ACTIONS,

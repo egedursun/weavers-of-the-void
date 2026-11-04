@@ -4191,6 +4191,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/regions/{region_id}/terrain': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['region_terrain_api_regions__region_id__terrain_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/bodies/{node_id}': {
     parameters: {
       query?: never
@@ -4231,6 +4247,38 @@ export interface paths {
       cookie?: never
     }
     get: operations['maimed_api_communities__community_id__maimed_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/worlds/{world_id}/calendar': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['world_calendar_api_worlds__world_id__calendar_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/regions/{region_id}/works': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['region_works_view_api_regions__region_id__works_get']
     put?: never
     post?: never
     delete?: never
@@ -4311,6 +4359,70 @@ export interface paths {
       cookie?: never
     }
     get: operations['node_mechanics_api_nodes__node_id__mechanics_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/nodes/{node_id}/causality': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_causality_api_nodes__node_id__causality_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/mechanics/graph': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['mechanics_graph_api_mechanics_graph_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/mechanics/{key}/links': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['mechanic_detail_api_mechanics__key__links_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/places/{place_id}/profile': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['place_profile_api_places__place_id__profile_get']
     put?: never
     post?: never
     delete?: never
@@ -4535,6 +4647,54 @@ export interface paths {
       cookie?: never
     }
     get: operations['settlement_plan_api_entities__entity_id__settlement_plan_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/entities/{entity_id}/event': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['event_api_entities__entity_id__event_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/entities/{entity_id}/happenings': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['happenings_here_api_entities__entity_id__happenings_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/entities/{entity_id}/land-shape': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['land_shape_api_entities__entity_id__land_shape_get']
     put?: never
     post?: never
     delete?: never
@@ -4975,6 +5135,54 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/worlds/{world_id}/golden-age': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['world_golden_age_api_worlds__world_id__golden_age_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/sons/{son_id}/anchorage': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['son_anchorage_api_sons__son_id__anchorage_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/entities/{entity_id}/dedication': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['structure_dedication_api_entities__entity_id__dedication_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions': {
     parameters: {
       query?: never
@@ -4985,6 +5193,118 @@ export interface paths {
     get: operations['list_actions_api_actions_get']
     put?: never
     post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/war:incite': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_war_incite_api_actions_war_incite_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/world:date_golden_age': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_world_date_golden_age_api_actions_world_date_golden_age_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/structure:dedicate': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_structure_dedicate_api_actions_structure_dedicate_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/structure:undedicate': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_structure_undedicate_api_actions_structure_undedicate_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/son:anchor': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_son_anchor_api_actions_son_anchor_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/son:clear_anchor': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_son_clear_anchor_api_actions_son_clear_anchor_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/foundation:hold': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_foundation_hold_api_actions_foundation_hold_post']
     delete?: never
     options?: never
     head?: never
@@ -8495,6 +8815,166 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/modifier:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_modifier_create_api_actions_modifier_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/modifier:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_modifier_edit_api_actions_modifier_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/modifier:hold': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_modifier_hold_api_actions_modifier_hold_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/modifier:release': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_modifier_release_api_actions_modifier_release_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incident:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_create_api_actions_incident_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incident:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_edit_api_actions_incident_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incident:roles': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_roles_api_actions_incident_roles_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incident:link_cause': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_link_cause_api_actions_incident_link_cause_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incident:unlink_cause': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_unlink_cause_api_actions_incident_unlink_cause_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incident:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_delete_api_actions_incident_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/profile:set': {
     parameters: {
       query?: never
@@ -8809,6 +9289,726 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_calendar_rename_api_actions_calendar_rename_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/place:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_place_create_api_actions_place_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/place:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_place_edit_api_actions_place_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/place:release': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_place_release_api_actions_place_release_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/place:secret': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_place_secret_api_actions_place_secret_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/place:secret_edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_place_secret_edit_api_actions_place_secret_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/place:reveal': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_place_reveal_api_actions_place_reveal_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/place:secret_delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_place_secret_delete_api_actions_place_secret_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/pilgrimage:clear': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_pilgrimage_clear_api_actions_pilgrimage_clear_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/event:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_event_create_api_actions_event_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/event:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_event_edit_api_actions_event_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/event:phase': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_event_phase_api_actions_event_phase_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/event:release': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_event_release_api_actions_event_release_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/event:footprint': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_event_footprint_api_actions_event_footprint_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/event:casualties': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_event_casualties_api_actions_event_casualties_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/event:end': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_event_end_api_actions_event_end_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/land:stir': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_land_stir_api_actions_land_stir_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/land:river': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_land_river_api_actions_land_river_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/land:shape': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_land_shape_api_actions_land_shape_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/land:release': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_land_release_api_actions_land_release_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/seasons:add': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_seasons_add_api_actions_seasons_add_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/seasons:remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_seasons_remove_api_actions_seasons_remove_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/seasons:release': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_seasons_release_api_actions_seasons_release_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/seasons:moons': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_seasons_moons_api_actions_seasons_moons_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/seasons:calendar_release': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_seasons_calendar_release_api_actions_seasons_calendar_release_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/weather:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_weather_edit_api_actions_weather_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/year:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_year_edit_api_actions_year_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/year:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_year_delete_api_actions_year_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/calendar:holy_day': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_calendar_holy_day_api_actions_calendar_holy_day_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/calendar:holy_day_remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_calendar_holy_day_remove_api_actions_calendar_holy_day_remove_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/calendar:anchor': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_calendar_anchor_api_actions_calendar_anchor_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/ley:strength': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_ley_strength_api_actions_ley_strength_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/ley:dissolve': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_ley_dissolve_api_actions_ley_dissolve_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/ley:work': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_ley_work_api_actions_ley_work_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/environment:biome': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_environment_biome_api_actions_environment_biome_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/region:danger_create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_region_danger_create_api_actions_region_danger_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/region:danger_edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_region_danger_edit_api_actions_region_danger_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/region:danger_release': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_region_danger_release_api_actions_region_danger_release_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/region:danger_delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_region_danger_delete_api_actions_region_danger_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/region:sanctify': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_region_sanctify_api_actions_region_sanctify_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/region:memory_add': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_region_memory_add_api_actions_region_memory_add_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/region:memory_edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_region_memory_edit_api_actions_region_memory_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/region:memory_delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_region_memory_delete_api_actions_region_memory_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/region:knowledge_set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_region_knowledge_set_api_actions_region_knowledge_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/region:knowledge_release': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_region_knowledge_release_api_actions_region_knowledge_release_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/region:river_redirect': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_region_river_redirect_api_actions_region_river_redirect_post']
     delete?: never
     options?: never
     head?: never
@@ -11180,6 +12380,7 @@ export interface components {
       | 'reorder_seasons'
       | 'shape_weather'
       | 'sever_ley'
+      | 'reshape_land'
       | 'foreign_god_talk'
       | 'write_plan'
       | 'abandon_settlement'
@@ -11273,6 +12474,10 @@ export interface components {
       | 'seed_place'
       | 'declare_pilgrimage_site'
       | 'order_end'
+      | 'hide_secret'
+      | 'reveal_secret'
+      | 'sanctify_place'
+      | 'raise_nexus'
       | 'other'
     ActionMode: 'ledgered' | 'job'
     ActionResponse: {
@@ -11394,6 +12599,15 @@ export interface components {
     AllianceMarriageInput: {
       first_id: number
       second_id: number
+    }
+    AnchorageView: {
+      son_id: number
+      anchor: components['schemas']['NodeRef'] | null
+      anchor_alive: boolean
+      anchor_held: boolean
+      shrines: components['schemas']['NodeRef'][]
+      creations: components['schemas']['NodeRef'][]
+      incited: components['schemas']['IncitedWarView'][]
     }
     ArchiveMode: 'history' | 'atlas' | 'automatic'
     ArchiveOverride: 'history' | 'atlas'
@@ -12150,8 +13364,32 @@ export interface components {
     CalendarAdoptInput: {
       knowledge_id: number
     }
+    CalendarAnchorInput: {
+      knowledge_id: number
+      anchor_year: number
+    }
+    CalendarDetail: {
+      knowledge_id: number
+      name: string
+      anchor_year: number
+      keepers: number
+      holy_days: components['schemas']['HolyDayDetail'][]
+    }
     CalendarDropInput: {
       knowledge_id: number
+    }
+    CalendarHolyDayInput: {
+      knowledge_id: number
+      index?: number | null
+      name: string
+      season_position?: number | null
+      notable_year_id?: number | null
+      tradition_id?: number | null
+      found_tradition: boolean
+    }
+    CalendarHolyDayRemoveInput: {
+      knowledge_id: number
+      index: number
     }
     CalendarRenameInput: {
       knowledge_id: number
@@ -12264,6 +13502,15 @@ export interface components {
       backlash: components['schemas']['BacklashKind'] | null
       effect: string
     }
+    CasualtyView: {
+      community_id: number
+      community: string
+      age_band: components['schemas']['AgeBand']
+      sex: components['schemas']['Sex']
+      social_class: components['schemas']['SocialClass']
+      phase: components['schemas']['EventPhase']
+      count: number
+    }
     Catalogue: {
       enums: components['schemas']['EnumCatalogue']
       rarities: components['schemas']['Labelled'][]
@@ -12288,6 +13535,27 @@ export interface components {
       label: string
       severity: number
       enabled_by_default: boolean
+    }
+    CausalEdge: {
+      cause: number
+      effect: number
+      span: number
+    }
+    CausalNode: {
+      id: number
+      kind: string
+      epoch: number
+      year: number | null
+      magnitude: number
+      text: string
+      own: boolean
+      role: components['schemas']['IncidentRole'] | null
+      cause_incident_id: number | null
+    }
+    CausalityView: {
+      node_id: number
+      nodes: components['schemas']['CausalNode'][]
+      edges: components['schemas']['CausalEdge'][]
     }
     CelestialStats: {
       kind: 'celestial'
@@ -13209,6 +14477,23 @@ export interface components {
       name: string
       reason: string
     }
+    DangerHarm:
+      | 'settlers'
+      | 'livestock'
+      | 'travellers'
+      | 'armies'
+      | 'ambush'
+      | 'merchants'
+    DangerOrigin: 'derived' | 'player' | 'divine'
+    DangerSource:
+      | 'beasts'
+      | 'bandits'
+      | 'monsters'
+      | 'phenomena'
+      | 'disease'
+      | 'avalanche'
+      | 'quicksand'
+      | 'volcanic'
     DatabaseHealth: {
       file: string
       size: number
@@ -13264,6 +14549,12 @@ export interface components {
     }
     DecisionRule: 'autocratic' | 'council' | 'assembly' | 'divine'
     DecreeKind: 'war' | 'peace' | 'alliance' | 'marriage' | 'trade'
+    DedicationView: {
+      structure_id: number
+      son: components['schemas']['NodeRef'] | null
+      held: boolean
+      anchors_son: boolean
+    }
     DeedView: {
       epoch: number
       deed: components['schemas']['ItemDeed']
@@ -13300,12 +14591,20 @@ export interface components {
       | 'mineral'
       | 'soul'
       | 'void'
-    Disaster: 'earthquake' | 'flood' | 'plague' | 'drought' | 'storm'
+    Disaster:
+      | 'earthquake'
+      | 'flood'
+      | 'plague'
+      | 'drought'
+      | 'storm'
+      | 'eruption'
+      | 'volcanic_quake'
     Discovery: 'known' | 'legend' | 'unknown' | 'forgotten'
     DiscoveryEnded: {
       ok: boolean
       guest: components['schemas']['GuestWorld'] | null
     }
+    DiscoveryMode: 'explorer' | 'seer' | 'miner' | 'mystery' | 'player' | 'son'
     DiscoveryStatus: {
       active: boolean
       guest: components['schemas']['GuestWorld'] | null
@@ -13544,6 +14843,7 @@ export interface components {
       text: string
       is_read: boolean
     }
+    EdgeKind: 'modifier' | 'rule_switch' | 'flow' | 'trigger'
     EffectiveValue: {
       key: string
       base: number
@@ -13629,6 +14929,16 @@ export interface components {
       | 'resurrection_order'
       | 'ghost_ship'
       | 'colony'
+      | 'festival_of_note'
+      | 'coronation'
+      | 'wedding'
+      | 'massacre'
+      | 'sack'
+      | 'fire'
+      | 'eruption'
+      | 'riot'
+      | 'schism_council'
+      | 'eclipse_watch'
     EngineNoteEvent: {
       id: number
       kind: 'engine.note'
@@ -14032,20 +15342,30 @@ export interface components {
       lore_languages: components['schemas']['LoreLanguage'][]
       error_codes: components['schemas']['ErrorCode'][]
     }
+    EnvironmentBiomeInput: {
+      region_id: number
+      biome: number
+      share: number
+      lock: boolean
+    }
     EnvironmentMineralInput: {
       region_id: number
-      material: components['schemas']['MaterialKind']
+      material?: components['schemas']['MaterialKind'] | null
+      world_material_id?: number | null
       richness: number
+      lock: boolean
     }
     EnvironmentPlaceInput: {
       place_id: number
       field: string
       value: number | string | boolean
+      lock: boolean
     }
     EnvironmentScarInput: {
       region_id: number
       kind: components['schemas']['ScarKind']
       depth: number
+      lock: boolean
     }
     EnvironmentSetInput: {
       region_id: number
@@ -14328,6 +15648,43 @@ export interface components {
     EssencePourInput: {
       amount: number
     }
+    EventCasualtiesInput: {
+      event_id: number
+      community_id: number
+      age_band: components['schemas']['AgeBand']
+      sex: components['schemas']['Sex']
+      social_class: components['schemas']['SocialClass']
+      phase: components['schemas']['EventPhase']
+      count: number
+    }
+    EventCreateInput: {
+      kind: components['schemas']['EngineKind']
+      where_id: number
+      name: string
+      description: string
+      severity: number
+      phase: components['schemas']['EventPhase']
+      hold_phase: boolean
+      start_year?: number | null
+      start_season?: number | null
+      footprint?: number[]
+      partner_id?: number | null
+    }
+    EventEditInput: {
+      event_id: number
+      values?: {
+        [key: string]: number | string | null
+      }
+      lock: boolean
+    }
+    EventEndInput: {
+      event_id: number
+    }
+    EventFootprintInput: {
+      event_id: number
+      region_id: number
+      present: boolean
+    }
     EventKind:
       | 'job.queued'
       | 'job.started'
@@ -14407,9 +15764,59 @@ export interface components {
     } & {
       [key: string]: unknown
     }
+    EventPhase: 'onset' | 'peak' | 'aftermath'
+    EventPhaseInput: {
+      event_id: number
+      phase: components['schemas']['EventPhase']
+      hold: boolean
+    }
+    EventReleaseInput: {
+      event_id: number
+      field: 'phase' | 'start_year' | 'start_season' | 'end_year' | 'end_season'
+    }
     EventStats: {
       kind: 'event'
       severity?: number | null
+    }
+    EventSummaryView: {
+      entity_id: number
+      name: string
+      kind: components['schemas']['EngineKind'] | null
+      phase: components['schemas']['EventPhase']
+      ended: boolean
+      start_year: number | null
+      end_year: number | null
+      toll: number
+      severity: number | null
+    }
+    EventView: {
+      entity_id: number
+      name: string
+      kind: components['schemas']['EngineKind'] | null
+      severity: number | null
+      world_id: number | null
+      location_id: number | null
+      location: string | null
+      start_epoch: number
+      start_year: number | null
+      start_season: components['schemas']['SeasonRef'] | null
+      end_epoch: number | null
+      end_year: number | null
+      end_season: components['schemas']['SeasonRef'] | null
+      phase: components['schemas']['EventPhase']
+      phase_epoch: number
+      multi_season: boolean
+      ended: boolean
+      locked: string[]
+      incident_id: number | null
+      incident_text: string | null
+      siege_id: number | null
+      footprint: components['schemas']['FootprintView'][]
+      casualties: components['schemas']['CasualtyView'][]
+      toll: number
+      steps: components['schemas']['PhaseStepView'][]
+      seasons: components['schemas']['SeasonRef'][]
+      kinds: components['schemas']['EngineKind'][]
     }
     ExistenceBand: 'radiant' | 'solid' | 'faded' | 'being_forgotten'
     ExistenceMode:
@@ -14573,6 +15980,11 @@ export interface components {
       nodes: components['schemas']['WebNode'][]
       links: components['schemas']['WebLink'][]
     }
+    FootprintView: {
+      region_id: number
+      region: string
+      joined_epoch: number
+    }
     ForcedWeatherView: {
       id: number
       kind: components['schemas']['WeatherKind']
@@ -14708,6 +16120,11 @@ export interface components {
       name: string
       share: number
     }
+    FoundationHoldInput: {
+      kind: components['schemas']['HoldKind']
+      node_id: number
+      held: boolean
+    }
     FrontView: {
       first_region: components['schemas']['NodeRef'] | null
       second_region: components['schemas']['NodeRef'] | null
@@ -14809,6 +16226,20 @@ export interface components {
       used_by: string
       meaning: string
     }
+    GoldenAgeView: {
+      world_id: number
+      active: boolean
+      since_epoch: number | null
+      epochs: number
+      prosperity_gain: number
+      decadence: number
+      held: boolean
+      communities: number
+      golden_communities: number
+      deepening_epochs: number
+      deepening_steps: number
+      decadence_epochs: number
+    }
     GovernmentKind:
       | 'chiefdom'
       | 'monarchy'
@@ -14882,6 +16313,14 @@ export interface components {
       phase: number
       started: boolean
     }
+    HappeningsHereView: {
+      location_id: number
+      world_id: number | null
+      region_id: number | null
+      events: components['schemas']['EventSummaryView'][]
+      kinds: components['schemas']['EngineKind'][]
+      seasons: components['schemas']['SeasonRef'][]
+    }
     HarmCause:
       | 'battle'
       | 'duel'
@@ -14900,6 +16339,11 @@ export interface components {
       | 'age'
       | 'player'
       | 'exposure'
+    HazardExposure: {
+      hazard: components['schemas']['TerrainHazard']
+      label: string
+      season: string
+    }
     HealthReport: {
       status: string
       version: string
@@ -15020,11 +16464,25 @@ export interface components {
       metal: components['schemas']['MaterialKind']
       units?: number | null
     }
+    HoldKind:
+      | 'incited_by_son_id'
+      | 'golden_age'
+      | 'dedicated_son_id'
+      | 'anchor_entity_id'
     HoldingKind: 'temple' | 'land' | 'relic' | 'holy_place' | 'monastery'
     HoldingView: {
       kind: components['schemas']['HoldingKind']
       holding: components['schemas']['NodeRef'] | null
       since_epoch: number
+    }
+    HolyDayDetail: {
+      index: number
+      name: string
+      year: number | null
+      season_position: number | null
+      notable_year_id: number | null
+      tradition_id: number | null
+      tradition_name: string | null
     }
     HolyDayView: {
       name: string
@@ -15259,6 +16717,37 @@ export interface components {
       incident_id: number
       note?: string | null
     }
+    IncidentCreateInput: {
+      text: string
+      kind: string
+      epoch?: number | null
+      year?: number | null
+      magnitude: number
+      place_entity_id?: number | null
+      cause_incident_id?: number | null
+      participants?: components['schemas']['Participant'][]
+    }
+    IncidentDeleteInput: {
+      incident_id: number
+    }
+    IncidentEditInput: {
+      incident_id: number
+      text?: string | null
+      kind?: string | null
+      magnitude?: number | null
+      year?: number | null
+      place_entity_id?: number | null
+      clear_place: boolean
+    }
+    IncidentLinkCauseInput: {
+      incident_id: number
+      cause_incident_id: number
+    }
+    IncidentParticipantRecord: {
+      node_id: number
+      name: string | null
+      role: components['schemas']['IncidentRole']
+    }
     IncidentRecord: {
       id: number
       kind: string
@@ -15273,8 +16762,27 @@ export interface components {
       thread_id: number | null
       causes: string[]
       consequences: number[]
+      place_entity_id?: number | null
+      participants?: components['schemas']['IncidentParticipantRecord'][]
     }
     IncidentRole: 'subject' | 'actor' | 'target' | 'witness' | 'place'
+    IncidentRolesInput: {
+      incident_id: number
+      participants: components['schemas']['Participant'][]
+    }
+    IncidentUnlinkCauseInput: {
+      incident_id: number
+    }
+    IncitedWarView: {
+      war_id: number
+      event: components['schemas']['NodeRef'] | null
+      status: components['schemas']['WarStatus']
+      ending: components['schemas']['WarEnding'] | null
+      started_epoch: number
+      ended_epoch: number | null
+      battles: number
+      held: boolean
+    }
     InfrastructureView: {
       walls_level: number
       walls_material: components['schemas']['BuildMaterial']
@@ -15287,6 +16795,8 @@ export interface components {
       warehouse_capacity: number
       harbour_capacity: number
       towers: number
+      bridges: number
+      irrigation: number
       locked: string[]
     }
     InheritanceCustom:
@@ -15757,6 +17267,53 @@ export interface components {
       output_pct: number
     }
     LandKind: 'region' | 'place'
+    LandReleaseInput: {
+      region_id: number
+      field:
+        'desertification' | 'desertified' | 'volcanic' | 'volcanic_pressure'
+    }
+    LandRiverInput: {
+      from_region_id: number
+      to_region_id?: number | null
+    }
+    LandShapeInput: {
+      region_id: number
+      desertification?: number | null
+      desertified?: boolean | null
+      volcanic?: boolean | null
+      volcanic_pressure?: number | null
+      hold: boolean
+    }
+    LandShapeView: {
+      region_id: number
+      region: string
+      soil: components['schemas']['SoilKind'] | null
+      terrain: components['schemas']['TerrainKind'] | null
+      river_class: components['schemas']['RiverClass'] | null
+      rainfall: number | null
+      grazed: number | null
+      desertification: number
+      desertified: boolean
+      desert_since_epoch: number | null
+      river_course: components['schemas']['RiverClass'] | null
+      course_changed_epoch: number | null
+      volcanic: boolean
+      volcanic_pressure: number
+      eruption_chance: number
+      last_eruption_epoch: number | null
+      ash_since_epoch: number | null
+      ash_weathering_epochs: number
+      desertified_at: number
+      locked: string[]
+      soil_locked: boolean
+      shifts: components['schemas']['RiverShiftView'][]
+      neighbours: components['schemas']['RegionRef'][]
+    }
+    LandStirInput: {
+      region_id: number
+      disaster: components['schemas']['Disaster']
+      severity?: number | null
+    }
     LanguageCard: {
       prestige: number
       prestige_parts: {
@@ -16074,6 +17631,9 @@ export interface components {
       added_by: components['schemas']['NodeRef'] | null
       epoch: number
     }
+    LeyDissolveInput: {
+      line_id: number
+    }
     LeyForgeInput: {
       first_region_id: number
       second_region_id: number
@@ -16095,8 +17655,28 @@ export interface components {
       line_id: number
       epochs?: number | null
     }
+    LeyStrengthInput: {
+      line_id: number
+      strength: number
+    }
     LeyUnforgeInput: {
       line_id: number
+    }
+    LeyWorkInput: {
+      structure_id: number
+      values?: {
+        [key: string]: boolean
+      }
+      release?: string[]
+    }
+    LeyWorkView: {
+      structure_id: number
+      name: string
+      attuned: boolean
+      on_ley_line: boolean
+      at_nexus: boolean
+      function: number | null
+      locked: string[]
     }
     LifeInsight: {
       age: number | null
@@ -16299,6 +17879,16 @@ export interface components {
       kind: components['schemas']['HoldingKind']
       x: number
       y: number
+    }
+    MapKnowledgeView: {
+      polity_id: number
+      polity_name: string
+      level: number
+      held: boolean
+      terrain: boolean
+      sacred: boolean
+      minerals: boolean
+      unmapped: boolean
     }
     MapLair: {
       beast_id: number
@@ -16580,6 +18170,18 @@ export interface components {
       materials: components['schemas']['MaterialView'][]
       commodities: components['schemas']['CommodityView'][]
     }
+    MechanicDetailView: {
+      mechanic: components['schemas']['MechanicRecord']
+      links: components['schemas']['MechanicLinkRecord'][]
+    }
+    MechanicLinkRecord: {
+      direction: string
+      other: string
+      other_title: string | null
+      other_subsystem: components['schemas']['Subsystem'] | null
+      kind: components['schemas']['EdgeKind']
+      carriers: string[]
+    }
     MechanicParamView: {
       mechanic: string
       magnitude: number | null
@@ -16598,6 +18200,11 @@ export interface components {
       exposure: components['schemas']['Exposure']
       tools: string[]
       couplings: components['schemas']['Subsystem'][]
+    }
+    MechanicsGraphView: {
+      subsystems: components['schemas']['SubsystemSummary'][]
+      links: components['schemas']['SubsystemLink'][]
+      mechanics: components['schemas']['MechanicRecord'][]
     }
     MedicineTier: 'none' | 'herbs' | 'surgery' | 'prosthetics' | 'reattachment'
     MemberView: {
@@ -16644,6 +18251,7 @@ export interface components {
       | 'goodwill'
       | 'ill_will'
       | 'long_history'
+    MemoryOrigin: 'derived' | 'player'
     MemoryView: {
       id: number
       subject: components['schemas']['NodeRef'] | null
@@ -16847,6 +18455,35 @@ export interface components {
       epochs?: number | null
       decay_pct?: number | null
     }
+    ModifierCreateInput: {
+      node_id: number
+      key: string
+      op: components['schemas']['ModifierOp']
+      magnitude: number
+      source_kind: components['schemas']['ModifierSource']
+      source_node_id?: number | null
+      stacking_group?: string | null
+      epochs?: number | null
+      decay_pct?: number | null
+    }
+    ModifierEditInput: {
+      modifier_id: number
+      key?: string | null
+      op?: components['schemas']['ModifierOp'] | null
+      magnitude?: number | null
+      source_kind?: components['schemas']['ModifierSource'] | null
+      source_node_id?: number | null
+      clear_source_node: boolean
+      stacking_group?: string | null
+      clear_stacking_group: boolean
+      epochs?: number | null
+      endless: boolean
+      decay_pct?: number | null
+      clear_decay: boolean
+    }
+    ModifierHoldInput: {
+      modifier_id: number
+    }
     ModifierOp: 'add' | 'multiply'
     ModifierRecord: {
       id: number
@@ -16863,6 +18500,10 @@ export interface components {
       start_epoch: number
       end_epoch: number | null
       decay_pct: number | null
+      held: boolean
+    }
+    ModifierReleaseInput: {
+      modifier_id: number
     }
     ModifierRemoveInput: {
       modifier_id: number
@@ -17511,6 +19152,7 @@ export interface components {
     }
     OutbreakStatus: 'active' | 'waning' | 'ended'
     OutbreakView: {
+      season_factor: number
       id: number
       disease_id: number
       disease: string
@@ -17623,6 +19265,10 @@ export interface components {
       loss: number
       state: components['schemas']['InjuryState'] | null
       prosthesis: components['schemas']['MaterialKind'] | null
+    }
+    Participant: {
+      node_id: number
+      role: components['schemas']['IncidentRole']
     }
     PartyRole: 'signatory' | 'overlord' | 'vassal' | 'guarantor'
     PartyView: {
@@ -17816,6 +19462,12 @@ export interface components {
       text: string
     }
     PhaseStage: 'tick' | 'pre_transition' | 'transition' | 'post_transition'
+    PhaseStepView: {
+      phase: components['schemas']['EventPhase']
+      reached: boolean
+      current: boolean
+      since_epoch: number | null
+    }
     Phonology: {
       vowels: string[]
       consonants: string[]
@@ -17829,6 +19481,9 @@ export interface components {
       max_syllables: number
       sample_names: string[]
     }
+    PilgrimageClearInput: {
+      entity_id: number
+    }
     PilgrimageDeclareInput: {
       entity_id: number
     }
@@ -17836,6 +19491,22 @@ export interface components {
       region_id: number
     }
     PlaceCover: 'open' | 'light' | 'heavy'
+    PlaceCreateInput: {
+      region_id: number
+      name: string
+      kind: components['schemas']['PlaceKind']
+      mystery: number
+      danger: number
+      fertility: number
+      sacredness?: number | null
+    }
+    PlaceEditInput: {
+      place_id: number
+      kind?: components['schemas']['PlaceKind'] | null
+      sacredness?: number | null
+      mystery?: number | null
+      hold: boolean
+    }
     PlaceEnvironmentView: {
       place_id: number
       region_id: number | null
@@ -17846,6 +19517,111 @@ export interface components {
       chokepoint: boolean
       nexus: boolean
       soil_fertility: number
+      locked: string[]
+    }
+    PlaceKind:
+      | 'mountain'
+      | 'peak'
+      | 'pass'
+      | 'forest'
+      | 'grove'
+      | 'river'
+      | 'ford'
+      | 'lake'
+      | 'spring'
+      | 'cave'
+      | 'cavern_system'
+      | 'ruin'
+      | 'island'
+      | 'swamp'
+      | 'well'
+      | 'valley'
+      | 'cliff'
+      | 'volcano'
+      | 'crater'
+      | 'battlefield'
+      | 'burial_ground'
+      | 'lair'
+      | 'nexus'
+      | 'shrine_site'
+      | 'god_corpse'
+      | 'mine_site'
+      | 'harbour_site'
+      | 'crossroads'
+    PlaceProfileView: {
+      place_id: number
+      kind: components['schemas']['PlaceKind']
+      sacred_class: components['schemas']['SacredClass']
+      deep: boolean
+      sacredness: number
+      sacred_target: number
+      pilgrims: number
+      holy_site: boolean
+      pilgrimage_site: boolean
+      nexus: boolean
+      mystery: number
+      mystery_held: boolean
+      battles: number
+      locked: string[]
+      secrets: components['schemas']['PlaceSecretView'][]
+    }
+    PlaceReleaseInput: {
+      place_id: number
+      field:
+        | 'kind'
+        | 'sacredness'
+        | 'mystery'
+        | 'terrain'
+        | 'cover'
+        | 'water_source'
+        | 'height_advantage'
+        | 'chokepoint'
+        | 'nexus'
+    }
+    PlaceRevealInput: {
+      secret_id: number
+      release: boolean
+    }
+    PlaceSecretDeleteInput: {
+      secret_id: number
+    }
+    PlaceSecretEditInput: {
+      secret_id: number
+      kind?: components['schemas']['SecretKind'] | null
+      strength?: number | null
+      sealed?: boolean | null
+      held?: boolean | null
+      material?: components['schemas']['MaterialKind'] | null
+      school?: components['schemas']['MagicSchool'] | null
+      branch?: components['schemas']['KnowledgeBranch'] | null
+    }
+    PlaceSecretInput: {
+      place_id: number
+      kind: components['schemas']['SecretKind']
+      strength: number
+      material?: components['schemas']['MaterialKind'] | null
+      school?: components['schemas']['MagicSchool'] | null
+      branch?: components['schemas']['KnowledgeBranch'] | null
+    }
+    PlaceSecretView: {
+      id: number
+      kind: components['schemas']['SecretKind']
+      strength: number
+      sealed: boolean
+      held: boolean
+      origin: components['schemas']['SecretOrigin']
+      material: components['schemas']['MaterialKind'] | null
+      school: components['schemas']['MagicSchool'] | null
+      branch: components['schemas']['KnowledgeBranch'] | null
+      hidden_by_son_id: number | null
+      created_epoch: number
+      revealed_epoch: number | null
+      revealed_by: components['schemas']['DiscoveryMode'] | null
+      revealed_by_entity_id: number | null
+      revealed_by_name: string | null
+      released_epoch: number | null
+      result_entity_id: number | null
+      result_name: string | null
     }
     PlaceStats: {
       kind: 'place'
@@ -18188,6 +19964,7 @@ export interface components {
       demand: number
       imported: number
       exported: number
+      swing: number
     }
     PriceSeries: {
       commodity: components['schemas']['CommodityKind']
@@ -18553,6 +20330,7 @@ export interface components {
       demand: number
       imported: number
       exported: number
+      swing: number
     }
     RangeCell: {
       region: components['schemas']['NodeRef']
@@ -18571,6 +20349,10 @@ export interface components {
       locked: string[]
     }
     Rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic'
+    RealmChoice: {
+      id: number
+      name: string
+    }
     RealmLink: {
       polity_id: number | null
     }
@@ -18641,6 +20423,38 @@ export interface components {
       share: number
       contested: boolean
     }
+    RegionDangerCreateInput: {
+      region_id: number
+      source: components['schemas']['DangerSource']
+      strength: number
+      hold: boolean
+    }
+    RegionDangerDeleteInput: {
+      danger_id: number
+    }
+    RegionDangerEditInput: {
+      danger_id: number
+      strength?: number | null
+      hold?: boolean | null
+    }
+    RegionDangerReleaseInput: {
+      danger_id: number
+    }
+    RegionDangerView: {
+      id: number
+      source: components['schemas']['DangerSource']
+      label: string
+      strength: number
+      origin: components['schemas']['DangerOrigin']
+      held: boolean
+      source_node_id: number | null
+      source_node_name: string | null
+      son_id: number | null
+      since_epoch: number
+      harms: {
+        [key: string]: number
+      }
+    }
     RegionDominance: {
       son_id: number | null
       language_id: number | null
@@ -18686,6 +20500,8 @@ export interface components {
       }
       erosion: number
       harvest_pct: number
+      sacredness: number
+      derived_fertility?: number | null
       locked: string[]
       forecast: components['schemas']['WeatherForecast'][]
       ley_lines: components['schemas']['LeyLineView'][]
@@ -18713,6 +20529,75 @@ export interface components {
       land_use: string
       ley_lines: number
       nexus: boolean
+      rainfall: number
+      danger: number
+      danger_source?: string | null
+      sacredness: number
+      scar?: string | null
+      scar_depth: number
+    }
+    RegionHazardView: {
+      id: number
+      hazard: components['schemas']['TerrainHazard']
+      label: string
+      epoch: number
+      year: number | null
+      season_name: string | null
+      deaths: number
+      injured: number
+      soldiers_lost: number
+    }
+    RegionKnowledgeReleaseInput: {
+      polity_id: number
+      region_id: number
+    }
+    RegionKnowledgeSetInput: {
+      polity_id: number
+      region_id: number
+      level: number
+      hold: boolean
+    }
+    RegionMemoryAddInput: {
+      region_id: number
+      kind: components['schemas']['RegionMemoryKind']
+      magnitude: number
+      title: string
+      hold: boolean
+    }
+    RegionMemoryDeleteInput: {
+      memory_id: number
+    }
+    RegionMemoryEditInput: {
+      memory_id: number
+      kind?: components['schemas']['RegionMemoryKind'] | null
+      magnitude?: number | null
+      title?: string | null
+      hold?: boolean | null
+    }
+    RegionMemoryKind:
+      | 'battle'
+      | 'massacre'
+      | 'sack'
+      | 'disaster'
+      | 'plague'
+      | 'famine'
+      | 'god_death'
+      | 'saint_burial'
+      | 'miracle'
+    RegionMemoryView: {
+      id: number
+      kind: components['schemas']['RegionMemoryKind']
+      label: string
+      magnitude: number
+      epoch: number
+      title: string
+      origin: components['schemas']['MemoryOrigin']
+      held: boolean
+      darkness: number
+      holiness: number
+      fades: boolean
+      subject_id: number | null
+      incident_id: number | null
     }
     RegionRealm: {
       polity_id: number
@@ -18737,6 +20622,19 @@ export interface components {
       bordering: number[]
       geography?: components['schemas']['RegionGeography'] | null
     }
+    RegionRef: {
+      region_id: number
+      region: string
+    }
+    RegionRiverRedirectInput: {
+      from_region_id: number
+      to_region_id: number
+    }
+    RegionSanctifyInput: {
+      region_id: number
+      sacredness?: number | null
+      hold: boolean
+    }
     RegionSeedPlaceInput: {
       region_id: number
     }
@@ -18753,11 +20651,48 @@ export interface components {
       soldiers: number
       wildlife: number
     }
+    RegionTerrainView: {
+      region_id: number
+      world_id: number
+      danger: number
+      harms: {
+        [key: string]: number
+      }
+      dangers: components['schemas']['RegionDangerView'][]
+      sacredness: number
+      sacredness_held: boolean
+      darkness: number
+      holiness: number
+      haunting_pct: number
+      draws_pilgrims: boolean
+      pilgrim_sacred_min: number
+      memories: components['schemas']['RegionMemoryView'][]
+      knowledge: components['schemas']['MapKnowledgeView'][]
+      realms: components['schemas']['RealmChoice'][]
+      unmapped_below: number
+      hazards: components['schemas']['RegionHazardView'][]
+      exposure: components['schemas']['HazardExposure'][]
+      river_class: components['schemas']['RiverClass']
+      river_neighbours: components['schemas']['RiverNeighbour'][]
+    }
     RegionTongue: {
       language_id: number
       name: string
       prestige: number
       lingua_franca: boolean
+    }
+    RegionWorksView: {
+      region_id: number
+      roads: number
+      bridges: number
+      harbours: number
+      irrigation: number
+      irrigation_pct: number
+      rainfall: number
+      rain_lost_to_clearing: number
+      cleared: number
+      settlements: components['schemas']['SettlementWorks'][]
+      ley_works: components['schemas']['LeyWorkView'][]
     }
     RegionalStanding: 'hegemon' | 'great_power' | 'minor_power' | 'client'
     ReincarnationGate: 'tenet' | 'natural_law' | 'rite' | 'god'
@@ -19035,6 +20970,23 @@ export interface components {
       castings?: number | null
     }
     RiverClass: 'none' | 'stream' | 'river' | 'great_river'
+    RiverNeighbour: {
+      id: number
+      name: string
+      river_class: components['schemas']['RiverClass'] | null
+    }
+    RiverShiftCause: 'flood' | 'quake' | 'divine' | 'player'
+    RiverShiftView: {
+      id: number
+      from_region_id: number
+      from_region: string
+      to_region_id: number
+      to_region: string
+      epoch: number
+      year: number | null
+      river_class: components['schemas']['RiverClass']
+      cause: components['schemas']['RiverShiftCause']
+    }
     RoadKind: 'road' | 'trade'
     RouteClosure:
       'sealed' | 'severed' | 'forgotten' | 'collapsed' | 'snapped' | 'scorched'
@@ -19157,6 +21109,7 @@ export interface components {
       start_epoch: number
       progress: components['schemas']['ScenarioProgress']
     }
+    SacredClass: 'profane' | 'notable' | 'holy'
     SafetyResult: {
       ok: boolean
       safety_backup: string
@@ -19258,6 +21211,20 @@ export interface components {
       snippet: string | null
       epoch?: number | null
     }
+    SeasonRef: {
+      position: number
+      name: string
+    }
+    SeasonTradition: {
+      id: number
+      name: string
+      kind: components['schemas']['TraditionKind']
+      season_position: number | null
+      calendar_id: number | null
+      calendar_name: string | null
+      in_season: boolean | null
+      held: string[]
+    }
     SeasonView: {
       id: number
       position: number
@@ -19269,12 +21236,26 @@ export interface components {
       campaign: number
       edited: boolean
     }
+    SeasonsAddInput: {
+      world_id: number
+      name: string
+      position?: number | null
+      temperature_shift: number
+      rain_shift: number
+      growth: number
+      travel: number
+      campaign: number
+    }
     SeasonsCalendarInput: {
       world_id: number
       axial_tilt?: number | null
       year_length_days?: number | null
       day_length_hours?: number | null
       regenerate_seasons: boolean
+    }
+    SeasonsCalendarReleaseInput: {
+      world_id: number
+      fields: string[]
     }
     SeasonsEditInput: {
       season_id: number
@@ -19284,6 +21265,17 @@ export interface components {
       growth?: number | null
       travel?: number | null
       campaign?: number | null
+    }
+    SeasonsMoonsInput: {
+      world_id: number
+      moon_count?: number | null
+      tidal_strength?: number | null
+    }
+    SeasonsReleaseInput: {
+      season_id: number
+    }
+    SeasonsRemoveInput: {
+      season_id: number
     }
     SeasonsReorderInput: {
       world_id: number
@@ -19296,6 +21288,14 @@ export interface components {
     SecondaryTargetRequest: {
       directory?: string | null
     }
+    SecretKind:
+      | 'hidden_resource'
+      | 'buried_relic'
+      | 'sealed_spirit'
+      | 'lost_knowledge'
+      | 'lost_rite'
+      | 'underworld_entrance'
+    SecretOrigin: 'land' | 'player' | 'son'
     SectionBudget: {
       section: string
       characters: number
@@ -19394,6 +21394,14 @@ export interface components {
       rate: number
     }
     SettlementTier: 'capital' | 'village' | 'town' | 'city' | 'great_city'
+    SettlementWorks: {
+      settlement_id: number
+      name: string
+      bridges: number
+      irrigation: number
+      harbour: boolean
+      locked: string[]
+    }
     Sex: 'female' | 'male'
     ShieldType: 'none' | 'small' | 'large' | 'tower'
     SiblingView: {
@@ -19635,6 +21643,11 @@ export interface components {
       intent: components['schemas']['SpokenIntent']
       text: string
     }
+    SonAnchorInput: {
+      son_id: number
+      entity_id: number
+      hold: boolean
+    }
     SonAscendedEvent: {
       id: number
       kind: 'son.ascended'
@@ -19666,6 +21679,9 @@ export interface components {
       kind: 'son.chat_replied'
       payload: components['schemas']['ChatPayload']
       at: string
+    }
+    SonClearAnchorInput: {
+      son_id: number
     }
     SonDeathCause:
       | 'fading'
@@ -19958,6 +21974,13 @@ export interface components {
       | 'reorder_seasons'
       | 'shape_weather'
       | 'sever_ley'
+      | 'hide_secret'
+      | 'sanctify_place'
+      | 'raise_nexus'
+      | 'reshape_land'
+      | 'sanctify_region'
+      | 'curse_region'
+      | 'redirect_river'
       | 'declare_holy_world'
       | 'seal_gate'
       | 'rekindle_star'
@@ -20607,6 +22630,11 @@ export interface components {
       at: string
     }
     StressBreak: 'rage' | 'flight' | 'despair' | 'zeal' | 'vice' | 'revelation'
+    StructureDedicateInput: {
+      structure_id: number
+      son_id: number
+      hold: boolean
+    }
     StructureRazeInput: {
       structure_id: number
       reason: string
@@ -20616,6 +22644,9 @@ export interface components {
       splendor?: number | null
       durability?: number | null
       function?: number | null
+    }
+    StructureUndedicateInput: {
+      structure_id: number
     }
     Subsystem:
       | 'core'
@@ -20639,6 +22670,21 @@ export interface components {
       | 'environment'
       | 'gods'
       | 'cosmos'
+    SubsystemLink: {
+      source: components['schemas']['Subsystem']
+      target: components['schemas']['Subsystem']
+      kinds: components['schemas']['EdgeKind'][]
+      edges: number
+      carriers: string[]
+      writers: string[]
+      readers: string[]
+    }
+    SubsystemSummary: {
+      key: components['schemas']['Subsystem']
+      mechanics: number
+      outgoing: number
+      incoming: number
+    }
     SummarySection:
       | 'pantheon'
       | 'threads'
@@ -20793,6 +22839,7 @@ export interface components {
       since_epoch: number
       revealed_by_son_id: number | null
     }
+    TerrainHazard: 'avalanche' | 'spring_flood' | 'wildfire' | 'whiteout'
     TerrainKind:
       | 'plain'
       | 'steppe'
@@ -20989,6 +23036,10 @@ export interface components {
     TraditionCard: {
       kind: components['schemas']['TraditionKind']
       calendar_slot: string | null
+      season_position?: number | null
+      calendar_entity_id?: number | null
+      notable_year_id?: number | null
+      in_season?: boolean | null
       cost: {
         [key: string]: number
       }
@@ -21017,6 +23068,8 @@ export interface components {
       | 'war_dance'
       | 'scar_rite'
       | 'ancestor_feast'
+      | 'siesta'
+      | 'night_vigil'
     TraditionParticipationInput: {
       tradition_id: number
       community_id: number
@@ -21553,6 +23606,11 @@ export interface components {
       victor_id: number
       terms?: components['schemas']['WarAimKind'][]
     }
+    WarInciteInput: {
+      war_id: number
+      son_id?: number | null
+      hold: boolean
+    }
     WarOpenInput: {
       attacker_id: number
       defender_id: number
@@ -21594,6 +23652,8 @@ export interface components {
       victor: components['schemas']['NodeRef'] | null
       loser: components['schemas']['NodeRef'] | null
       sides: components['schemas']['WarSideView'][]
+      instigator?: components['schemas']['NodeRef'] | null
+      incitement_held: boolean
     }
     WarVictoryInput: {
       war_id: number
@@ -21611,6 +23671,13 @@ export interface components {
       name: string
       kind: string
       degree: number
+    }
+    WeatherEditInput: {
+      forced_id: number
+      kind?: components['schemas']['WeatherKind'] | null
+      until_epoch?: number | null
+      season_position?: number | null
+      every_season: boolean
     }
     WeatherEffect:
       | 'visibility'
@@ -21789,6 +23856,16 @@ export interface components {
       discovery: string
       leakage: number
     }
+    WorldCalendarView: {
+      world_id: number
+      calendar_locked: string[]
+      day_length_hours: number | null
+      long_days: boolean
+      long_day_hours: number
+      sleep_customs: number
+      calendars: components['schemas']['CalendarDetail'][]
+      traditions: components['schemas']['SeasonTradition'][]
+    }
     WorldChangedEvent: {
       id: number
       kind: 'world.changed'
@@ -21823,6 +23900,11 @@ export interface components {
       settlements: number
       living: number
       population: number
+    }
+    WorldDateGoldenAgeInput: {
+      world_id: number
+      since_epoch: number
+      hold: boolean
     }
     WorldDepthInput: {
       history?: string | null
@@ -22057,6 +24139,17 @@ export interface components {
       epoch: number
     }
     WritingSystem: 'alphabet' | 'syllabary' | 'pictographic' | 'knot' | 'notch'
+    YearDeleteInput: {
+      notable_id: number
+    }
+    YearEditInput: {
+      notable_id: number
+      name?: string | null
+      magnitude?: number | null
+      kind?: components['schemas']['NotableYearKind'] | null
+      weather?: components['schemas']['WeatherKind'] | null
+      year?: number | null
+    }
     YearForceNotableInput: {
       region_id: number
       kind: components['schemas']['NotableYearKind']
@@ -30137,6 +32230,35 @@ export interface operations {
       }
     }
   }
+  region_terrain_api_regions__region_id__terrain_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        region_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RegionTerrainView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   body_view_api_bodies__node_id__get: {
     parameters: {
       query?: never
@@ -30212,6 +32334,64 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['MaimedView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  world_calendar_api_worlds__world_id__calendar_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        world_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WorldCalendarView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  region_works_view_api_regions__region_id__works_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        region_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RegionWorksView']
         }
       }
       422: {
@@ -30347,6 +32527,114 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['NodeMechanicsView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  node_causality_api_nodes__node_id__causality_get: {
+    parameters: {
+      query?: {
+        depth?: number | null
+      }
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CausalityView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  mechanics_graph_api_mechanics_graph_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MechanicsGraphView']
+        }
+      }
+    }
+  }
+  mechanic_detail_api_mechanics__key__links_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        key: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MechanicDetailView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  place_profile_api_places__place_id__profile_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        place_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PlaceProfileView']
         }
       }
       422: {
@@ -30733,6 +33021,93 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['SettlementPlanView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  event_api_entities__entity_id__event_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        entity_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['EventView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  happenings_here_api_entities__entity_id__happenings_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        entity_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HappeningsHereView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  land_shape_api_entities__entity_id__land_shape_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        entity_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LandShapeView']
         }
       }
       422: {
@@ -31478,6 +33853,93 @@ export interface operations {
       }
     }
   }
+  world_golden_age_api_worlds__world_id__golden_age_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        world_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GoldenAgeView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  son_anchorage_api_sons__son_id__anchorage_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        son_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AnchorageView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  structure_dedication_api_entities__entity_id__dedication_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        entity_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DedicationView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   list_actions_api_actions_get: {
     parameters: {
       query?: never
@@ -31493,6 +33955,223 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionCatalogueItem'][]
+        }
+      }
+    }
+  }
+  action_war_incite_api_actions_war_incite_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WarInciteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_world_date_golden_age_api_actions_world_date_golden_age_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WorldDateGoldenAgeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_structure_dedicate_api_actions_structure_dedicate_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StructureDedicateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_structure_undedicate_api_actions_structure_undedicate_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StructureUndedicateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_son_anchor_api_actions_son_anchor_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SonAnchorInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_son_clear_anchor_api_actions_son_clear_anchor_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SonClearAnchorInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_foundation_hold_api_actions_foundation_hold_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FoundationHoldInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
         }
       }
     }
@@ -38082,6 +40761,316 @@ export interface operations {
       }
     }
   }
+  action_modifier_create_api_actions_modifier_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ModifierCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_modifier_edit_api_actions_modifier_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ModifierEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_modifier_hold_api_actions_modifier_hold_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ModifierHoldInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_modifier_release_api_actions_modifier_release_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ModifierReleaseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_incident_create_api_actions_incident_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_incident_edit_api_actions_incident_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_incident_roles_api_actions_incident_roles_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentRolesInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_incident_link_cause_api_actions_incident_link_cause_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentLinkCauseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_incident_unlink_cause_api_actions_incident_unlink_cause_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentUnlinkCauseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_incident_delete_api_actions_incident_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   action_profile_set_api_actions_profile_set_post: {
     parameters: {
       query?: never
@@ -38681,6 +41670,1401 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['CalendarRenameInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_place_create_api_actions_place_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PlaceCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_place_edit_api_actions_place_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PlaceEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_place_release_api_actions_place_release_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PlaceReleaseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_place_secret_api_actions_place_secret_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PlaceSecretInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_place_secret_edit_api_actions_place_secret_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PlaceSecretEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_place_reveal_api_actions_place_reveal_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PlaceRevealInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_place_secret_delete_api_actions_place_secret_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PlaceSecretDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_pilgrimage_clear_api_actions_pilgrimage_clear_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PilgrimageClearInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_event_create_api_actions_event_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EventCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_event_edit_api_actions_event_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EventEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_event_phase_api_actions_event_phase_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EventPhaseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_event_release_api_actions_event_release_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EventReleaseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_event_footprint_api_actions_event_footprint_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EventFootprintInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_event_casualties_api_actions_event_casualties_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EventCasualtiesInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_event_end_api_actions_event_end_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EventEndInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_land_stir_api_actions_land_stir_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LandStirInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_land_river_api_actions_land_river_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LandRiverInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_land_shape_api_actions_land_shape_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LandShapeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_land_release_api_actions_land_release_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LandReleaseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_seasons_add_api_actions_seasons_add_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SeasonsAddInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_seasons_remove_api_actions_seasons_remove_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SeasonsRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_seasons_release_api_actions_seasons_release_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SeasonsReleaseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_seasons_moons_api_actions_seasons_moons_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SeasonsMoonsInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_seasons_calendar_release_api_actions_seasons_calendar_release_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SeasonsCalendarReleaseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_weather_edit_api_actions_weather_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WeatherEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_year_edit_api_actions_year_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['YearEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_year_delete_api_actions_year_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['YearDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_calendar_holy_day_api_actions_calendar_holy_day_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CalendarHolyDayInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_calendar_holy_day_remove_api_actions_calendar_holy_day_remove_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CalendarHolyDayRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_calendar_anchor_api_actions_calendar_anchor_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CalendarAnchorInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_ley_strength_api_actions_ley_strength_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LeyStrengthInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_ley_dissolve_api_actions_ley_dissolve_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LeyDissolveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_ley_work_api_actions_ley_work_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LeyWorkInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_environment_biome_api_actions_environment_biome_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EnvironmentBiomeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_region_danger_create_api_actions_region_danger_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegionDangerCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_region_danger_edit_api_actions_region_danger_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegionDangerEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_region_danger_release_api_actions_region_danger_release_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegionDangerReleaseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_region_danger_delete_api_actions_region_danger_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegionDangerDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_region_sanctify_api_actions_region_sanctify_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegionSanctifyInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_region_memory_add_api_actions_region_memory_add_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegionMemoryAddInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_region_memory_edit_api_actions_region_memory_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegionMemoryEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_region_memory_delete_api_actions_region_memory_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegionMemoryDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_region_knowledge_set_api_actions_region_knowledge_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegionKnowledgeSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_region_knowledge_release_api_actions_region_knowledge_release_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegionKnowledgeReleaseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_region_river_redirect_api_actions_region_river_redirect_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegionRiverRedirectInput']
       }
     }
     responses: {
@@ -43032,6 +47416,7 @@ export const actionKindValues: ReadonlyArray<
   'reorder_seasons',
   'shape_weather',
   'sever_ley',
+  'reshape_land',
   'foreign_god_talk',
   'write_plan',
   'abandon_settlement',
@@ -43125,6 +47510,10 @@ export const actionKindValues: ReadonlyArray<
   'seed_place',
   'declare_pilgrimage_site',
   'order_end',
+  'hide_secret',
+  'reveal_secret',
+  'sanctify_place',
+  'raise_nexus',
   'other',
 ]
 export const actionModeValues: ReadonlyArray<
@@ -43788,6 +48177,24 @@ export const curseKindValues: ReadonlyArray<
 export const damageTypeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DamageType']
 > = ['cut', 'pierce', 'blunt', 'fire', 'cold', 'venom', 'magic', 'void', 'holy']
+export const dangerHarmValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DangerHarm']
+> = ['settlers', 'livestock', 'travellers', 'armies', 'ambush', 'merchants']
+export const dangerOriginValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DangerOrigin']
+> = ['derived', 'player', 'divine']
+export const dangerSourceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DangerSource']
+> = [
+  'beasts',
+  'bandits',
+  'monsters',
+  'phenomena',
+  'disease',
+  'avalanche',
+  'quicksand',
+  'volcanic',
+]
 export const deathCauseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DeathCause']
 > = [
@@ -43840,10 +48247,21 @@ export const dietValues: ReadonlyArray<
 ]
 export const disasterValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Disaster']
-> = ['earthquake', 'flood', 'plague', 'drought', 'storm']
+> = [
+  'earthquake',
+  'flood',
+  'plague',
+  'drought',
+  'storm',
+  'eruption',
+  'volcanic_quake',
+]
 export const discoveryValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Discovery']
 > = ['known', 'legend', 'unknown', 'forgotten']
+export const discoveryModeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DiscoveryMode']
+> = ['explorer', 'seer', 'miner', 'mystery', 'player', 'son']
 export const diseaseStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DiseaseStats']['kind']
 > = ['disease']
@@ -43914,6 +48332,9 @@ export const domainValues: ReadonlyArray<
 export const domesticationStageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DomesticationStage']
 > = ['wild', 'tamed', 'herded', 'domesticated', 'breed']
+export const edgeKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['EdgeKind']
+> = ['modifier', 'rule_switch', 'flow', 'trigger']
 export const elevationClassValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ElevationClass']
 > = ['mountainous', 'hilly', 'plain', 'water']
@@ -43970,6 +48391,16 @@ export const engineKindValues: ReadonlyArray<
   'resurrection_order',
   'ghost_ship',
   'colony',
+  'festival_of_note',
+  'coronation',
+  'wedding',
+  'massacre',
+  'sack',
+  'fire',
+  'eruption',
+  'riot',
+  'schism_council',
+  'eclipse_watch',
 ]
 export const engineNoteEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EngineNoteEvent']['kind']
@@ -44279,6 +48710,12 @@ export const eventKindValues: ReadonlyArray<
   'agent.tool_result',
   'agent.writing',
 ]
+export const eventPhaseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['EventPhase']
+> = ['onset', 'peak', 'aftermath']
+export const eventReleaseInputFieldValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['EventReleaseInput']['field']
+> = ['phase', 'start_year', 'start_season', 'end_year', 'end_season']
 export const eventStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EventStats']['kind']
 > = ['event']
@@ -44416,6 +48853,9 @@ export const heightClassValues: ReadonlyArray<
 export const heroQuestKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HeroQuestKind']
 > = ['hunt', 'thread', 'relic', 'knowledge', 'vengeance']
+export const holdKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['HoldKind']
+> = ['incited_by_son_id', 'golden_age', 'dedicated_son_id', 'anchor_entity_id']
 export const holdingKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HoldingKind']
 > = ['temple', 'land', 'relic', 'holy_place', 'monastery']
@@ -44706,6 +49146,9 @@ export const knowledgeStatsKindValues: ReadonlyArray<
 export const landKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LandKind']
 > = ['region', 'place']
+export const landReleaseInputFieldValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LandReleaseInput']['field']
+> = ['desertification', 'desertified', 'volcanic', 'volcanic_pressure']
 export const languageStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LanguageStats']['kind']
 > = ['language']
@@ -44987,6 +49430,9 @@ export const memoryKindValues: ReadonlyArray<
   'ill_will',
   'long_history',
 ]
+export const memoryOriginValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MemoryOrigin']
+> = ['derived', 'player']
 export const messageIntentValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MessageIntent']
 > = [
@@ -45271,6 +49717,51 @@ export const phaseStageValues: ReadonlyArray<
 export const placeCoverValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PlaceCover']
 > = ['open', 'light', 'heavy']
+export const placeKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PlaceKind']
+> = [
+  'mountain',
+  'peak',
+  'pass',
+  'forest',
+  'grove',
+  'river',
+  'ford',
+  'lake',
+  'spring',
+  'cave',
+  'cavern_system',
+  'ruin',
+  'island',
+  'swamp',
+  'well',
+  'valley',
+  'cliff',
+  'volcano',
+  'crater',
+  'battlefield',
+  'burial_ground',
+  'lair',
+  'nexus',
+  'shrine_site',
+  'god_corpse',
+  'mine_site',
+  'harbour_site',
+  'crossroads',
+]
+export const placeReleaseInputFieldValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PlaceReleaseInput']['field']
+> = [
+  'kind',
+  'sacredness',
+  'mystery',
+  'terrain',
+  'cover',
+  'water_source',
+  'height_advantage',
+  'chokepoint',
+  'nexus',
+]
 export const placeStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PlaceStats']['kind']
 > = ['place']
@@ -45493,6 +49984,19 @@ export const rebirthPathValues: ReadonlyArray<
 export const recordEndValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RecordEnd']
 > = ['repeal', 'abandon', 'forget', 'disband', 'lose', 'assimilate']
+export const regionMemoryKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RegionMemoryKind']
+> = [
+  'battle',
+  'massacre',
+  'sack',
+  'disaster',
+  'plague',
+  'famine',
+  'god_death',
+  'saint_burial',
+  'miracle',
+]
 export const regionStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RegionStats']['kind']
 > = ['region']
@@ -45550,6 +50054,9 @@ export const riteStatsKindValues: ReadonlyArray<
 export const riverClassValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RiverClass']
 > = ['none', 'stream', 'river', 'great_river']
+export const riverShiftCauseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RiverShiftCause']
+> = ['flood', 'quake', 'divine', 'player']
 export const roadKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RoadKind']
 > = ['road', 'trade']
@@ -45573,6 +50080,9 @@ export const routeStateValues: ReadonlyArray<
 export const rulesChangedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RulesChangedEvent']['kind']
 > = ['rules.changed']
+export const sacredClassValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SacredClass']
+> = ['profane', 'notable', 'holy']
 export const scarKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ScarKind']
 > = [
@@ -45631,6 +50141,19 @@ export const searchCategoryValues: ReadonlyArray<
   'message',
   'council',
 ]
+export const secretKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SecretKind']
+> = [
+  'hidden_resource',
+  'buried_relic',
+  'sealed_spirit',
+  'lost_knowledge',
+  'lost_rite',
+  'underworld_entrance',
+]
+export const secretOriginValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SecretOrigin']
+> = ['land', 'player', 'son']
 export const settlementStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SettlementStats']['kind']
 > = ['settlement']
@@ -45852,6 +50375,13 @@ export const sonToolIdValues: ReadonlyArray<
   'reorder_seasons',
   'shape_weather',
   'sever_ley',
+  'hide_secret',
+  'sanctify_place',
+  'raise_nexus',
+  'reshape_land',
+  'sanctify_region',
+  'curse_region',
+  'redirect_river',
   'declare_holy_world',
   'seal_gate',
   'rekindle_star',
@@ -46146,6 +50676,9 @@ export const tenetKindValues: ReadonlyArray<
   'pilgrimage_duty',
   'souls_rest',
 ]
+export const terrainHazardValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['TerrainHazard']
+> = ['avalanche', 'spring_flood', 'wildfire', 'whiteout']
 export const terrainKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TerrainKind']
 > = [
@@ -46210,6 +50743,8 @@ export const traditionKindValues: ReadonlyArray<
   'war_dance',
   'scar_rite',
   'ancestor_feast',
+  'siesta',
+  'night_vigil',
 ]
 export const traditionStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TraditionStats']['kind']

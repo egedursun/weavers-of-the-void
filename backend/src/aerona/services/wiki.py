@@ -13,13 +13,17 @@ from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
+from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
 from aerona.db.tables.meta import MapNoteRow, MapSnapshotRow
+from aerona.db.tables.region import RegionDangerRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import LIVING_STATUSES, EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.environment import LandUse
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.war import WarStatus
-from aerona.domain.models.records import MapSnapshotData, RegionControl
+from aerona.domain.models.records import GroundSnapshot, MapSnapshotData, RegionControl
+from aerona.engine.environment.ley import LeyWeb
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
@@ -107,6 +111,7 @@ class HistoricalView:
     population: dict[int, int]
     political: dict[int, RegionControl]
     snapshot_epochs: list[int]
+    ground: dict[int, GroundSnapshot]
 
 
 async def _canon(session: AsyncSession, world_id: int | None = None) -> list[EntityRow]:
@@ -216,6 +221,50 @@ async def road_network(session: AsyncSession, world_id: int) -> list[Road]:
     return roads
 
 
+WILD = "wild"
+
+
+def main_use(ground: RegionEnvironmentRow) -> str:
+    uses = {use.value: getattr(ground, use.value) for use in LandUse}
+    best = max(sorted(uses), key=lambda key: uses[key])
+    return best if uses[best] > 0 else WILD
+
+
+async def ground_snapshot(session: AsyncSession, world_id: int) -> dict[int, GroundSnapshot]:
+    degree = (await LeyWeb.load(session)).degree()
+    nexus = set(
+        await session.scalars(
+            select(PlaceEnvironmentRow.region_entity_id).where(PlaceEnvironmentRow.nexus.is_(True), PlaceEnvironmentRow.region_entity_id.is_not(None))
+        )
+    )
+    rows = list(await session.scalars(select(RegionEnvironmentRow).where(RegionEnvironmentRow.world_id == world_id)))
+    dangers: dict[int, list[RegionDangerRow]] = defaultdict(list)
+    for danger in await session.scalars(select(RegionDangerRow).where(RegionDangerRow.world_id == world_id).order_by(RegionDangerRow.id)):
+        dangers[danger.region_entity_id].append(danger)
+    danger_stat = {
+        row.id: round(stat(row, "danger") or 0) for row in await session.scalars(select(EntityRow).where(EntityRow.id.in_([row.entity_id for row in rows])))
+    }
+    found: dict[int, GroundSnapshot] = {}
+    for row in rows:
+        top = max(dangers.get(row.entity_id, []), key=lambda item: (item.strength, -item.id), default=None)
+        scar = max(sorted(row.scars), key=lambda key: row.scars[key], default=None)
+        found[row.entity_id] = GroundSnapshot(
+            terrain=row.dominant_terrain.value,
+            soil=row.soil.value,
+            climate=row.temperature_band.value,
+            land_use=main_use(row),
+            ley_lines=degree[row.entity_id],
+            nexus=row.entity_id in nexus,
+            rainfall=row.rainfall,
+            danger=danger_stat.get(row.entity_id, 0),
+            danger_source=top.source.value if top is not None and top.strength > 0 else None,
+            sacredness=row.sacredness,
+            scar=scar,
+            scar_depth=row.scars.get(scar, 0) if scar is not None else 0,
+        )
+    return found
+
+
 async def take_snapshot(session: AsyncSession, rules: Rules, epoch: int) -> int:
     worlds = list(await session.scalars(select(WorldRow.id)))
     living = list(await session.scalars(select(EntityRow).where(EntityRow.status.in_([EntityStatus.CANON, EntityStatus.FULFILLED]))))
@@ -231,6 +280,7 @@ async def take_snapshot(session: AsyncSession, rules: Rules, epoch: int) -> int:
             },
             political=await political_map(session, rules, world_id),
             ongoing_war_ids=tuple(war.event_entity_id for war in wars if war.world_id == world_id),
+            ground=await ground_snapshot(session, world_id),
         )
         row = await session.get(MapSnapshotRow, (epoch, world_id))
         if row is None:
@@ -262,7 +312,7 @@ async def historical_view(session: AsyncSession, world_id: int, epoch: int) -> H
         )
         if entity.birth_epoch <= epoch and (entity.entity_type is EntityType.REGION or entity.id in alive)
     ]
-    return HistoricalView(epoch, entities, dict(data.population), dict(data.political), await snapshot_epochs(session, world_id))
+    return HistoricalView(epoch, entities, dict(data.population), dict(data.political), await snapshot_epochs(session, world_id), dict(data.ground))
 
 
 async def map_notes(session: AsyncSession, world_id: int | None = None) -> list[MapNoteRow]:

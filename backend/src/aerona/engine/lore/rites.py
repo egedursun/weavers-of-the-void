@@ -20,7 +20,7 @@ from aerona.domain.enums.culture import BacklashKind, MagicSchool, MagicSource, 
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
-from aerona.domain.enums.environment import WeatherKind
+from aerona.domain.enums.environment import WeatherEffect, WeatherKind
 from aerona.domain.enums.faith import AfterlifeState, BindingKind, SpiritAlignment, TenetKind
 from aerona.domain.enums.military import SpyCover
 from aerona.domain.enums.mind import ValueAxis
@@ -33,6 +33,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.environment.control import force_weather
+from aerona.engine.environment.local import weather_here
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import exorcise, seal_with, soul_near, unseal_with
 from aerona.engine.gods.interventions import apply_abundance
@@ -541,6 +542,14 @@ def wanted(row: RiteProfileRow, effects: list[RiteEffectRow], target: EntityRow 
     return any(effect.effect in HOSTILE for effect in effects) or row.school in DESPERATE_SCHOOLS
 
 
+async def dampening(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> float:
+    if row.school is not S.ELEMENTAL_FIRE:
+        return 1.0
+    weather = await weather_here(ctx, caster.id, f"rite.{caster.id}")
+    wet = weather.effect(WeatherEffect.WET) if weather is not None else 0
+    return max(0.0, 1 - wet / PERCENT * ctx.rules.rites.fire_wet_pct / PERCENT)
+
+
 async def cast(
     ctx: TickContext, caster: EntityRow, rite: EntityRow, row: RiteProfileRow, *, target: EntityRow | None, realms: RealmBook, forced: bool = False
 ) -> CastingRow | None:
@@ -559,7 +568,10 @@ async def cast(
         casting.succeeded, casting.backlash = False, await backlash(ctx, caster, row)
         casting.effect = f"the rite turned on {caster.name} ({casting.backlash.value})"
     else:
-        done = [await EFFECTS[effect.effect](ctx, caster, target, effect.magnitude, row) for effect in await effects_of(ctx, rite.id)]
+        damp = await dampening(ctx, caster, row)
+        done = [await EFFECTS[effect.effect](ctx, caster, target, round_half_up(effect.magnitude * damp), row) for effect in await effects_of(ctx, rite.id)]
+        if damp < 1:
+            done.append("the wet weather smothered its fire")
         casting.effect = "; ".join(text for text in done if text)[:480] or "the rite was worked to no end"
     set_stats(rite, castings=(stat(rite, "castings") or 0) + 1)
     ctx.session.add(casting)

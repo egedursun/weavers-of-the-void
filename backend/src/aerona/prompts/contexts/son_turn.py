@@ -63,6 +63,9 @@ class SonTurnSystemContext(LoreRulesContext):
     existence_band_label: str
     existence_band_effect: str
     anchor: AnchorLine | None = None
+    anchor_held: bool = False
+    shrines: list[AnchorLine] = Field(default_factory=list)
+    incitements: list[str] = Field(default_factory=list)
     powers: str
     action_points: int
     paid_tools: list[str] = Field(default_factory=list)

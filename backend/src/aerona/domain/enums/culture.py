@@ -38,6 +38,8 @@ class TraditionKind(StrEnum):
     WAR_DANCE = "war_dance"
     SCAR_RITE = "scar_rite"
     ANCESTOR_FEAST = "ancestor_feast"
+    SIESTA = "siesta"
+    NIGHT_VIGIL = "night_vigil"
 
 
 class Technique(StrEnum):

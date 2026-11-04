@@ -24,6 +24,7 @@ from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPat
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.mortal import MortalSex
+from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic
 from aerona.domain.enums.travel import VehicleKind
 from aerona.tools.framework.inputs import ToolInput
@@ -74,6 +75,7 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
         EntityType.NATURAL_LAW: {"mechanic": (NaturalLaw | None, None)},
         EntityType.KNOWLEDGE: {"branch": (KnowledgeBranch, ...), "learner_ids": (list[int] | None, None)},
         EntityType.REGION: {"water": (bool | None, None)},
+        EntityType.PLACE: {"place_kind": (PlaceKind, ...)},
         EntityType.SPECIES: {
             "traits": (list[CreatureTrait] | None, None),
             "body_plan": (BodyPlan, ...),

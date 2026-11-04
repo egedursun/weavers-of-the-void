@@ -20,9 +20,11 @@ from aerona.db.tables.meta import ScenarioRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.domain.enums.meta import ScenarioStatus
 from aerona.engine.body.describe import body_lines
+from aerona.engine.gods.dedication import dedicated_structures, incited_wars
 from aerona.engine.gods.opportunities import son_opportunities
 from aerona.engine.gods.progress import power_ceiling
 from aerona.engine.mind.describe import mind_lines
+from aerona.engine.primitives.holds import ANCHOR_KEY, is_held
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.opportunities import SonOpportunitiesContext
 from aerona.prompts.contexts.son_turn import (
@@ -50,6 +52,20 @@ async def creator_wishes(scope: Scope) -> str:
 async def anchor_line(scope: Scope, son: SonRow) -> AnchorLine | None:
     anchor = await scope.session.get(EntityRow, son.anchor_entity_id) if son.anchor_entity_id is not None else None
     return AnchorLine(id=anchor.id, name=anchor.name, status_label=anchor.status.value) if anchor is not None else None
+
+
+async def shrine_lines(scope: Scope, son: SonRow) -> list[AnchorLine]:
+    return [AnchorLine(id=work.id, name=work.name, status_label=work.status.value) for work in await dedicated_structures(scope.session, son.id)]
+
+
+async def incitement_lines(scope: Scope, son: SonRow) -> list[str]:
+    lines: list[str] = []
+    for war in await incited_wars(scope.session, son.id):
+        event = await scope.session.get(EntityRow, war.event_entity_id)
+        name = event.name if event is not None else f"war #{war.id}"
+        state = f"ended in age {war.ended_epoch} ({war.ending.value.replace('_', ' ')})" if war.ending is not None else f"still burning, {war.battles} battles"
+        lines.append(f"{name}, begun in age {war.started_epoch}, {state}")
+    return lines
 
 
 async def son_system_context(scope: Scope, son: SonRow, points: int, catalogue: ToolCatalogue) -> SonTurnSystemContext:
@@ -97,6 +113,9 @@ async def son_system_context(scope: Scope, son: SonRow, points: int, catalogue: 
         existence_band_label=EXISTENCE_BAND_LABELS[band],
         existence_band_effect=existence_band_effect(rules, band),
         anchor=await anchor_line(scope, son),
+        anchor_held=await is_held(scope.session, son.id, ANCHOR_KEY, scope.epoch),
+        shrines=await shrine_lines(scope, son),
+        incitements=await incitement_lines(scope, son),
         powers=powers_text(rules, son, powers),
         action_points=points,
         paid_tools=catalogue.paid,

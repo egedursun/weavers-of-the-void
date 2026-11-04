@@ -9,6 +9,7 @@ from aerona.db.tables.economy import CommunityStockRow, GoodsFlowRow
 from aerona.db.tables.environment import PlaceEnvironmentRow
 from aerona.db.tables.faith import CultHoldingRow, CultOfficeRow, HeresyRow, RelicRow
 from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
@@ -18,14 +19,16 @@ from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.environment import PlaceCover, WaterSource
 from aerona.domain.enums.faith import ClergyOffice, HoldingKind, TenetKind
 from aerona.domain.enums.mind import MemoryKind, PressureKind, TraitKind, TraitSource
+from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
 from aerona.domain.enums.son import Passion
 from aerona.domain.enums.world import SkyEventKind
 from aerona.domain.models.entity_stats import ItemStats, LanguageStats, PolityStats
 from aerona.engine.body.conditions import condition_of, gain_condition
+from aerona.engine.environment.places import holy_place_ids
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.faith.church import clergy_sway
-from aerona.engine.faith.doctrine import divine_king, holy_place, liturgy_reach, passion_tenets, staff, wanted_tenets
+from aerona.engine.faith.doctrine import divine_king, liturgy_reach, passion_tenets, staff, wanted_tenets
 from aerona.engine.faith.works import alms, canonise, credit, devotion, pilgrimage, survey_holdings, tithe
 from aerona.engine.faith.zeal import doom_omens, scandals
 from aerona.engine.faith.zealotry import heretics, inquisition, investiture
@@ -213,8 +216,11 @@ async def test_passions_seed_tenets_and_the_holy_place_is_in_the_cults_world(ses
         session.add(
             PlaceEnvironmentRow(entity_id=place.id, cover=PlaceCover.OPEN, water_source=WaterSource.NONE, nexus=True, height_advantage=0, soil_fertility=40)
         )
+        session.add(PlaceProfileRow(entity_id=place.id, kind=PlaceKind.SPRING))
     await session.flush()
-    assert await holy_place(ctx, church) == near.id
+    holy = await holy_place_ids(session, rules, world.world.id)
+    assert near.id in holy and far.id not in holy
+    assert ctx.epoch >= 0
 
 
 async def test_a_foreign_liturgy_dims_the_preaching(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:

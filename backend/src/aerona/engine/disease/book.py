@@ -58,6 +58,7 @@ class DiseaseBook:
     bands: dict[int, dict[AgeBand, int]] = field(default_factory=dict)
     sanitation: dict[int, int] = field(default_factory=dict)
     inoculated: set[int] = field(default_factory=set)
+    seasonal: dict[int, float] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules, epoch: int) -> "DiseaseBook":

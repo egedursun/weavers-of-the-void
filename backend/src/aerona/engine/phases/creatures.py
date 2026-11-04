@@ -760,6 +760,18 @@ async def creature_migration_phase(ctx: TickContext) -> None:
 
 
 @reads("species.danger", "species.intelligence")
+@writes(
+    "cult.followers",
+    "people.population",
+    "settlement.population",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.sons",
+)
 async def creature_rebellion_phase(ctx: TickContext) -> None:
     await creature_rebellion(ctx)
 

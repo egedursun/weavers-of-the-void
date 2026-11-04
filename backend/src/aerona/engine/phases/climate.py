@@ -12,6 +12,7 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.climate import ClimateOrderRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
+from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.world import ClimateEra
 from aerona.engine.context import TickContext
@@ -20,6 +21,8 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_economy import population_bounds
+from aerona.engine.primitives.derivation import Origin, replace_derived, shaped_draft
+from aerona.engine.primitives.modifiers import ModifierDraft
 from aerona.engine.primitives.numbers import clamp_int, fraction
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import set_stats, stat
@@ -126,24 +129,29 @@ async def climate_transition(ctx: TickContext) -> None:
     ctx.count("worlds", len(worlds))
 
 
-@reads("place.fertility", "region.fertility")
-@writes("place.fertility", "region.fertility")
+@reads("place.fertility", "region.fertility", "table.modifiers")
+@writes("table.modifiers")
 async def law_fertility(ctx: TickContext) -> None:
     laws = await ctx.laws()
-    if not (laws.anywhere(NaturalLaw.BOUNTY) or laws.anywhere(NaturalLaw.DROUGHT)):
-        return
     settings = ctx.rules.climate_effects
-    changed = 0
+    drafts: list[ModifierDraft] = []
     for land in await canon(ctx.session, LAND_TYPES):
-        fertility = stat(land, "fertility")
         bounty = laws.has(NaturalLaw.BOUNTY, land.world_id)
         drought = laws.has(NaturalLaw.DROUGHT, land.world_id)
-        if fertility is None or not (bounty or drought):
+        if stat(land, "fertility") is None or not (bounty or drought):
             continue
-        change = (settings.bounty_law_fertility if bounty else 0) - (settings.drought_law_fertility if drought else 0)
-        set_stats(land, fertility=clamp_int(fertility + change, 0, PERCENT))
-        changed += 1
-    ctx.count("lands", changed)
+        factor = (1 + settings.bounty_law_fertility / PERCENT if bounty else 1.0) * (1 - settings.drought_law_fertility / PERCENT if drought else 1.0)
+        reason = (
+            "modifier.natural_law.bounty"
+            if bounty and not drought
+            else "modifier.natural_law.drought"
+            if drought and not bounty
+            else "modifier.natural_law.bounty_and_drought"
+        )
+        draft = shaped_draft(land, "fertility", ModifierOp.MULTIPLY, factor, Origin(ModifierSource.NATURAL_LAW, reason, ctx.epoch, group="natural_law"))
+        if draft is not None:
+            drafts.append(draft)
+    ctx.count("lands", await replace_derived(ctx.session, {ModifierSource.NATURAL_LAW}, drafts))
 
 
 async def climate_of(session: AsyncSession, rules: Rules, world_id: int) -> ClimateState | None:

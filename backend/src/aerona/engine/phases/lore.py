@@ -21,6 +21,7 @@ from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore import art, ideology, items, legends, prophecy, research, rites, traditions
+from aerona.engine.lore.calendar_rites import RiteCalendar, found_sleep_customs
 from aerona.engine.lore.language import SACRED_STAT, learn_second, prestige_parts, speakers, standing_of, tongues_of
 from aerona.engine.mind.book import stored_values, write_values
 from aerona.engine.notes import note
@@ -250,6 +251,7 @@ async def defied(ctx: TickContext, laws: LawBook, kind: TraditionKind, community
     "people.population",
     "settlement.population",
     "table.bonds",
+    "table.calendars",
     "table.community_societies",
     "table.community_stocks",
     "table.culture_values",
@@ -258,23 +260,39 @@ async def defied(ctx: TickContext, laws: LawBook, kind: TraditionKind, community
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.laws",
+    "table.name_registry",
+    "table.nodes",
     "table.people_culture",
     "table.polity_members",
+    "table.region_dangers",
     "table.region_environment",
+    "table.settlement_profiles",
+    "table.spirit_profiles",
     "table.tradition_participation",
     "table.tradition_profiles",
     "table.traditions",
     "table.value_profiles",
     "table.world_maps",
+    "table.world_seasons",
+    "table.worlds",
 )
 @writes(
+    "people.prosperity",
+    "settlement.prosperity",
+    "table.bonds",
+    "region.danger",
     "table.community_societies",
     "table.community_stocks",
     "table.culture_values",
+    "table.entities",
     "table.goods_flows",
+    "table.name_registry",
+    "table.nodes",
     "table.people_culture",
+    "table.region_dangers",
     "table.region_environment",
     "table.settlement_profiles",
+    "table.spirit_profiles",
     "table.tradition_participation",
     "table.tradition_profiles",
     "table.value_profiles",
@@ -283,14 +301,20 @@ async def tradition_cycles(ctx: TickContext) -> None:
     table = ctx.rules.traditions
     atlas = await RegionAtlas.load(ctx.session)
     laws = await LawBook.load(ctx.session)
+    rites = await RiteCalendar.load(ctx.session)
     held = 0
     for tradition in await canon(ctx.session, [EntityType.TRADITION]):
-        kind = (await traditions.profile_of(ctx, tradition)).kind
+        profile = await traditions.profile_of(ctx, tradition)
+        kind = profile.kind
         for community in await traditions.celebrants(ctx, tradition.id):
+            rites.bind(profile, tradition, community)
             if held >= table.cap:
                 await traditions.participate(ctx, tradition, community)
                 continue
-            done = await traditions.celebrate(ctx, tradition, community, atlas)
+            keeping = rites.keeping(ctx, profile, tradition, community)
+            done = await traditions.celebrate(ctx, tradition, community, atlas, keeping)
+            if keeping.in_season is not None:
+                ctx.count("traditions_in_season" if keeping.in_season else "traditions_off_season")
             held += 1
             ctx.count(f"tradition_{done or 'none'}")
             if await defied(ctx, laws, kind, community):
@@ -303,6 +327,7 @@ async def tradition_cycles(ctx: TickContext) -> None:
         if founded is not None:
             ctx.count("commemorations")
             await note(ctx, f"{founded.name} began, so that {event.name} is not forgotten.", key="lore.commemoration", ids=[founded.id, event.id])
+    ctx.count("sleep_customs", await found_sleep_customs(ctx, atlas))
     skipped = await ctx.session.scalars(select(TraditionParticipationRow).where(TraditionParticipationRow.skipped > 0))
     ctx.count("traditions_skipped", len(list(skipped)))
 

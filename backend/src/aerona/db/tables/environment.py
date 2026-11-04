@@ -42,6 +42,7 @@ PERCENT_COLUMNS = (
     "mined",
     "built",
     "erosion",
+    "sacredness",
 )
 
 
@@ -89,6 +90,7 @@ class RegionEnvironmentRow(Base):
     erosion: Mapped[int] = mapped_column(default=0)
     harvest_pct: Mapped[int] = mapped_column(default=100)
     derived_fertility: Mapped[int | None]
+    sacredness: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
@@ -188,6 +190,17 @@ class LeyLineRow(Base):
     severed_until_epoch: Mapped[int | None]
     severed_by_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
     forged: Mapped[bool] = mapped_column(default=False)
+
+
+class StructureLeyRow(Base):
+    __tablename__ = "structure_ley"
+
+    structure_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    attuned: Mapped[bool] = mapped_column(default=False)
+    on_ley_line: Mapped[bool] = mapped_column(default=False)
+    at_nexus: Mapped[bool] = mapped_column(default=False)
+    updated_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class ForcedWeatherRow(CreatedAtMixin, Base):

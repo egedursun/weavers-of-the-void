@@ -81,6 +81,8 @@ TRADITIONS = MappingProxyType(
             TraditionSpec(K.WAR_DANCE, {}, {"martial": 2}, {V.MARTIAL: 2}),
             TraditionSpec(K.SCAR_RITE, {}, {"scar": 1}, {V.MARTIAL: 1, V.PURITY: -1}),
             TraditionSpec(K.ANCESTOR_FEAST, {"food": 2}, {"placation": 1}, {V.KINSHIP: 1, V.DEATH: 1}),
+            TraditionSpec(K.SIESTA, {}, {"rest": 1}, {V.TRADITION: 1}),
+            TraditionSpec(K.NIGHT_VIGIL, {}, {"vigil": 1}, {V.PIETY: 1, V.DEATH: 1}),
         )
     }
 )

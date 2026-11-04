@@ -54,6 +54,7 @@ from aerona.db.tables.faith import (
     SoulJudgementRow,
     SpiritProfileRow,
 )
+from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.military import (
     ArmyMovementRow,
@@ -69,6 +70,7 @@ from aerona.db.tables.military import (
 )
 from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, PersonalityValueRow, PressureRow, SkillRow
 from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
+from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.db.tables.polity import (
     ClaimRow,
     HeirloomRow,
@@ -89,9 +91,10 @@ from aerona.db.tables.polity import (
     TreatyProfileRow,
     VassalageRow,
 )
+from aerona.db.tables.region import PolityMapKnowledgeRow, RegionDangerRow, RegionHazardRow, RegionMemoryRow
 from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
-from aerona.db.tables.society import CommunityRelationRow
-from aerona.db.tables.warfare import SiegeRow, WarSideRow
+from aerona.db.tables.society import CommunityRelationRow, CommunitySocietyRow
+from aerona.db.tables.warfare import SiegeRow, WarRow, WarSideRow
 
 
 @dataclass(frozen=True)
@@ -108,6 +111,61 @@ class ComplianceRow:
 
 
 CATALOGUE: tuple[ComplianceRow, ...] = (
+    ComplianceRow(
+        "W0",
+        (WarRow.__tablename__, CommunitySocietyRow.__tablename__),
+        ("war_upkeep", "campaigns", "diplomacy", "doom_clock", "sons_renewal", "works_remember_gods"),
+        (
+            "war:incite",
+            "world:golden_age",
+            "world:end_golden_age",
+            "world:date_golden_age",
+            "structure:dedicate",
+            "structure:undedicate",
+            "son:anchor",
+            "son:clear_anchor",
+            "foundation:hold",
+        ),
+        ("WarIncitement", "GoldenAge", "SonAnchorage", "StructureDedication", "FoundationHold"),
+        ("son_turn_system", "world_line"),
+        ("choose_anchor",),
+        ("war.incitement_reaped", "world_age.golden_age"),
+        ("doom_clock",),
+    ),
+    ComplianceRow(
+        "S6.1",
+        (
+            RegionDangerRow.__tablename__,
+            RegionMemoryRow.__tablename__,
+            PolityMapKnowledgeRow.__tablename__,
+            RegionHazardRow.__tablename__,
+            RegionEnvironmentRow.__tablename__,
+        ),
+        ("region_survey", "danger_harm", "terrain_hazards", "sacred_pilgrims", "campaigns", "travel", "trade_flow", "hauntings"),
+        (
+            "region:danger_create",
+            "region:danger_edit",
+            "region:danger_release",
+            "region:danger_delete",
+            "region:sanctify",
+            "region:memory_add",
+            "region:memory_edit",
+            "region:memory_delete",
+            "region:knowledge_set",
+            "region:knowledge_release",
+            "region:river_redirect",
+            "environment:set",
+            "environment:unlock",
+            "environment:scar",
+            "environment:mineral",
+            "environment:biome",
+        ),
+        ("section-region-dangers", "section-region-sanctity", "section-region-knowledge", "section-region-hazards", "section-region-river", "map-layer-danger"),
+        ("geography_lines",),
+        ("sanctify_region", "curse_region", "redirect_river"),
+        ("danger.", "hazard.", "tools.son.sanctify_region", "tools.son.curse_region", "tools.son.redirect_river"),
+        ("region.terrain_backfill",),
+    ),
     ComplianceRow(
         "F1",
         (NotableYearRow.__tablename__,),
@@ -129,6 +187,71 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("shape_weather", "reorder_seasons", "sever_ley"),
         ("land.", "season.", "tools.son.shape_weather"),
         ("environment_survey",),
+    ),
+    ComplianceRow(
+        "S8.8",
+        (EventProfileRow.__tablename__, EventFootprintRow.__tablename__, EventCasualtyRow.__tablename__),
+        ("event_phases", "natural_disasters"),
+        ("event:create", "event:edit", "event:phase", "event:release", "event:footprint", "event:casualties", "event:end"),
+        ("EventCard", "EventsHere"),
+        ("chronicler_user",),
+        ("send_disaster",),
+        ("event.", "event.phase."),
+        ("event_phases", "events.casualties_backfill"),
+    ),
+    ComplianceRow(
+        "S6.1",
+        (RegionGeomorphRow.__tablename__, RiverShiftRow.__tablename__),
+        ("geomorphology", "natural_disasters"),
+        ("land:stir", "land:river", "land:shape", "land:release", "environment:set"),
+        ("LandShapeSection",),
+        (),
+        ("reshape_land", "send_disaster"),
+        ("land.",),
+        ("geomorphology",),
+    ),
+    ComplianceRow(
+        "F1 yearly variance",
+        ("market_prices", "outbreaks", "battles"),
+        ("population_growth", "settlement_life", "resource_economy", "epidemics", "markets", "environment_survey"),
+        ("year:force_notable", "year:edit", "year:delete"),
+        ("chart-market-swing", "SeasonCalendarPanel"),
+        ("geography_lines",),
+        (),
+        ("settlement.fire",),
+        ("environment.battle_ground",),
+    ),
+    ComplianceRow(
+        "F2.2 season-bound traditions and calendars",
+        ("tradition_profiles", "calendars", "world_seasons"),
+        ("tradition_cycles", "calendars"),
+        (
+            "seasons:add",
+            "seasons:remove",
+            "seasons:release",
+            "seasons:moons",
+            "seasons:calendar_release",
+            "calendar:holy_day",
+            "calendar:holy_day_remove",
+            "calendar:anchor",
+            "lore:edit",
+        ),
+        ("SeasonCalendarPanel", "TraditionSeasonBinding"),
+        ("geography_lines",),
+        ("reorder_seasons",),
+        ("season.",),
+        ("lore.holy_day_traditions",),
+    ),
+    ComplianceRow(
+        "F2.3 and F2.4 weather couplings and works",
+        ("settlement_infrastructure", "structure_ley", "forced_weather"),
+        ("settlement_life", "ley_lines", "environment_survey", "environment_derive", "wizards"),
+        ("settlement:edit", "ley:work", "ley:strength", "ley:dissolve", "weather:edit"),
+        ("RegionWorksPanel",),
+        ("geography_lines",),
+        ("shape_weather", "sever_ley"),
+        ("settlement.fire_wind",),
+        ("environment.typed_works", "environment.ley_attunement"),
     ),
     ComplianceRow(
         "F4",
@@ -188,24 +311,24 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
     ComplianceRow(
         "F9",
         (ModifierRow.__tablename__,),
-        ("modifier_upkeep",),
-        ("modifier:add", "modifier:remove", "lever:pin"),
-        ("EntityMechanics", "WhyBreakdown"),
+        ("modifier_upkeep", "environment_modifiers", "law_fertility"),
+        ("modifier:add", "modifier:create", "modifier:edit", "modifier:hold", "modifier:release", "modifier:remove", "lever:pin"),
+        ("EntityMechanics", "WhyBreakdown", "ModifierForge", "InterconnectionExplorer"),
         ("entity_detail",),
         (),
         (),
-        ("derive_modifiers",),
+        ("derive_modifiers", "derive_tick_modifiers", "derive_environment_modifiers"),
     ),
     ComplianceRow(
         "F10",
         (IncidentRow.__tablename__, IncidentParticipantRow.__tablename__),
-        ("modifier_upkeep",),
-        ("incident:annotate",),
-        ("BiographySection", "CausalChain"),
+        ("incident_threads",),
+        ("incident:annotate", "incident:create", "incident:edit", "incident:roles", "incident:link_cause", "incident:unlink_cause", "incident:delete"),
+        ("BiographySection", "CausalChain", "CausalityGraph", "IncidentForge"),
         ("entity_detail",),
         (),
         (),
-        ("26caa21842b3",),
+        ("26caa21842b3", "incidents.roles_backfill"),
     ),
     ComplianceRow(
         "F3",
@@ -714,5 +837,16 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (),
         ("relations.ethnic_strife",),
         ("mind.relation_history",),
+    ),
+    ComplianceRow(
+        "S6.2",
+        (PlaceProfileRow.__tablename__, PlaceSecretRow.__tablename__),
+        ("environment_survey", "place_profiles", "place_secrets", "living_stats"),
+        ("place:create", "place:edit", "place:release", "place:secret", "place:secret_edit", "place:reveal", "place:secret_delete", "pilgrimage:clear"),
+        ("section-place", "PlaceSection", "PlaceSecrets"),
+        ("geography_lines",),
+        ("hide_secret", "sanctify_place", "raise_nexus"),
+        ("place.", "tools.son.hide_secret"),
+        ("places.kind_backfill", "place_profiles"),
     ),
 )

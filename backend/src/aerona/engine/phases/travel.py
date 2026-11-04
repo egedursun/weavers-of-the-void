@@ -23,6 +23,7 @@ from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherEffect
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.region import DangerHarm
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMethod
@@ -51,6 +52,7 @@ from aerona.engine.cosmos.routes import (
 )
 from aerona.engine.ecology.beasts import mount_of
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.environment.dangers import harm_of
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.drives import expedition_drive
@@ -333,7 +335,9 @@ async def _send_spontaneously(ctx: TickContext, book: RouteBook, community: Enti
     target = other_end(route, community.world_id)
     warlike = max(stat_or(community, "martiality", 0), stat_or(community, "defense", 0)) >= ctx.rules.travel.conquest_min_martiality
     empty = await _world_population(ctx.session, target) == 0
-    intent = choose_intent(ctx.rules, rng, community.civ_tier or 0, empty, holy_site=await has_holy_site(ctx.session, community, target), warlike=warlike)
+    intent = choose_intent(
+        ctx.rules, rng, community.civ_tier or 0, empty, holy_site=await has_holy_site(ctx.session, community, target, ctx.rules), warlike=warlike
+    )
     settling = intent in (JourneyIntent.COLONY, JourneyIntent.CONQUEST)
     carried = round(headcount(community) * ctx.rules.travel.colony_share_pct / PERCENT) if settling else 0
     try:
@@ -378,9 +382,12 @@ async def bridge_collapse(ctx: TickContext) -> int:
     return collapsed
 
 
-def road_risk(rules: Rules, route: RouteRow, branches: set[KnowledgeBranch], vehicle: EntityRow | None, world_danger: int = 0, *, wind: int = 0) -> float:
+def road_risk(
+    rules: Rules, route: RouteRow, branches: set[KnowledgeBranch], vehicle: EntityRow | None, world_danger: int = 0, *, wind: int = 0, region_danger: int = 0
+) -> float:
     travel = rules.travel
     risk = route.danger / PERCENT + world_danger / PERCENT * travel.world_danger_risk_pct / PERCENT + wind / PERCENT * travel.wind_risk_pct / PERCENT
+    risk += region_danger / PERCENT * rules.regional_danger.traveller_risk_pct / PERCENT
     if KnowledgeBranch.SKY_NAVIGATION in branches:
         risk *= travel.sky_navigation_risk_pct / PERCENT
     if KnowledgeBranch.VOID_LIVING in branches:
@@ -461,7 +468,8 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
     destination = await ctx.session.get(WorldRow, journey.destination_world_id)
     danger = destination.danger if destination is not None else 0
     wind = scene.departure_wind(ctx, journey, traveller)
-    if not scene.rng.probability(road_risk(ctx.rules, route, scene.knowledge.branches(traveller.id), vehicle, danger, wind=wind)):
+    home = await harm_of(ctx.session, ctx.rules, scene.ground.atlas.top_region(traveller.id), DangerHarm.TRAVELLERS)
+    if not scene.rng.probability(road_risk(ctx.rules, route, scene.knowledge.branches(traveller.id), vehicle, danger, wind=wind, region_danger=home)):
         return True
     kind = METHOD_EVENTS.get(route.method) or scene.rng.pick(COMMON_EVENTS)
     target = await world_name(ctx.session, journey.destination_world_id)
@@ -852,7 +860,9 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.nodes",
     "table.personality_values",
     "table.place_environment",
+    "table.place_profiles",
     "table.pressures",
+    "table.region_dangers",
     "table.region_environment",
     "table.reverences",
     "table.routes",

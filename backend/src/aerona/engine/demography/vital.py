@@ -11,6 +11,7 @@ from aerona.domain.enums.mortal import HarshnessScale
 from aerona.domain.enums.society import Commodity
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import CohortKey, age_cohorts, row_for, seed, total
+from aerona.engine.environment.years import world_years
 from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.society import class_shares, supply_index
@@ -113,7 +114,7 @@ async def demographic_step(ctx: TickContext, community: EntityRow, biology: Peop
     if not rows:
         return 0
     before = total(rows)
-    sampled = min(ctx.rules.demography.sampled_years, ctx.rules.time.years_per_epoch)
+    sampled = len(world_years(ctx.environment, community.world_id or 0, "births"))
     births = 0
     deaths = 0
     table = ctx.rules.peoples

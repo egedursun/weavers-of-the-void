@@ -182,6 +182,14 @@ async def schisms(ctx: TickContext) -> None:
 
 
 @reads("settlement.piety", "table.bonds", "table.entity_flags", "table.nodes", "table.reverences")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+)
 async def godlessness(ctx: TickContext) -> None:
     settings = ctx.rules.religion
     faith = await FaithIndex.load(ctx.session)

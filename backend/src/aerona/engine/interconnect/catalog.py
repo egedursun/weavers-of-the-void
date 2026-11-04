@@ -21,21 +21,26 @@ from aerona.db.tables.economy import (
     WorldMaterialRow,
 )
 from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, PersonalityValueRow, PressureRow, SkillRow, TraitRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.domain.enums.body import ConditionKind, InjuryKind
 from aerona.domain.enums.entity import EntityType
+from aerona.engine.interconnect.catalog_couplings import COUPLING_MECHANICS
 from aerona.engine.interconnect.catalog_faith import BEHAVIOURS as FAITH_BEHAVIOURS
 from aerona.engine.interconnect.catalog_faith import FAITH_MECHANICS
+from aerona.engine.interconnect.catalog_foundations import FOUNDATION_MECHANICS
 from aerona.engine.interconnect.catalog_lore import BEHAVIOURS as LORE_BEHAVIOURS
 from aerona.engine.interconnect.catalog_lore import LORE_MECHANICS
 from aerona.engine.interconnect.catalog_military import BEHAVIOURS as MILITARY_BEHAVIOURS
 from aerona.engine.interconnect.catalog_military import MILITARY_MECHANICS
 from aerona.engine.interconnect.catalog_mortal import BEHAVIOURS as MORTAL_BEHAVIOURS
 from aerona.engine.interconnect.catalog_mortal import MORTAL_MECHANICS
+from aerona.engine.interconnect.catalog_places import PLACE_BEHAVIOURS, PLACE_MECHANICS
 from aerona.engine.interconnect.catalog_realm import BEHAVIOURS as REALM_BEHAVIOURS
 from aerona.engine.interconnect.catalog_realm import REALM_MECHANICS
+from aerona.engine.interconnect.catalog_region import REGION_MECHANICS
 from aerona.engine.interconnect.catalog_society import BEHAVIOURS as SOCIETY_BEHAVIOURS
 from aerona.engine.interconnect.catalog_society import SOCIETY_MECHANICS
 from aerona.engine.interconnect.catalog_wilds import BEHAVIOURS as WILDS_BEHAVIOURS
@@ -67,9 +72,60 @@ CORE_MECHANICS = (
         subsystem=Subsystem.CORE,
         phases=("modifier_upkeep",),
         surface=Surface(drawer=MECHANICS_SECTION),
-        backfill="none: modifiers start empty",
+        backfill="modifier_upkeep: every typed source is redrawn each tick, so an old world carries its modifiers from its first tick",
         tables=(ModifierRow.__tablename__,),
-        templates=("modifier.wonder", "modifier.condition"),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal", "people", "settlement", "cult", "polity", "region", "place", "army"),
+        couplings=(
+            Coupling(Subsystem.BODY, "wounds and temperament weigh on a mortal's abilities", EdgeKind.MODIFIER),
+            Coupling(Subsystem.LAW, "laws in force bend the communities under them", EdgeKind.MODIFIER, "modifiers.law_tolls_wealth"),
+            Coupling(Subsystem.CULTURE, "traditions and renowned art lift the communities that keep them", EdgeKind.MODIFIER, "modifiers.tradition_effect_pct"),
+            Coupling(Subsystem.FAITH, "tenets and fanaticism move a faith's zeal and influence", EdgeKind.MODIFIER, "modifiers.doctrine_proselytism_influence"),
+            Coupling(Subsystem.POLITY, "treaties in force steady or shake their parties", EdgeKind.MODIFIER, "modifiers.treaty_peace_stability"),
+            Coupling(Subsystem.ECONOMY, "temples, walls and houses of learning serve their community", EdgeKind.MODIFIER, "modifiers.structure_wall_defense"),
+            Coupling(Subsystem.GODS, "curses, blessings, divine gifts and dead gods bend what they touch", EdgeKind.MODIFIER, "modifiers.curse_stat_pct"),
+        ),
+    ),
+    Mechanic(
+        key="environment_modifiers",
+        spec_item="F9",
+        title="Ground, seasons and weather as modifiers",
+        subsystem=Subsystem.ENVIRONMENT,
+        phases=("environment_modifiers",),
+        surface=Surface(drawer=MECHANICS_SECTION),
+        backfill="environment_modifiers: redrawn each tick from the region environment",
+        tables=(ModifierRow.__tablename__,),
+        targets=("people", "settlement", "faction", "cult", "army"),
+        couplings=(
+            Coupling(
+                Subsystem.ECONOMY,
+                "the ground, the harshness of the seasons and the year's weather move prosperity",
+                EdgeKind.MODIFIER,
+                "modifiers.weather_prosperity_pct",
+            ),
+            Coupling(
+                Subsystem.WAR, "rough ground defends a settlement; weather saps or lifts an army's morale", EdgeKind.MODIFIER, "modifiers.weather_morale_pct"
+            ),
+        ),
+    ),
+    Mechanic(
+        key="natural_law_fertility",
+        spec_item="F9",
+        title="Natural laws multiply fertility",
+        subsystem=Subsystem.COSMOS,
+        phases=("law_fertility",),
+        surface=Surface(drawer=MECHANICS_SECTION),
+        backfill="law_fertility: redrawn each transition from the natural laws in force",
+        tables=(ModifierRow.__tablename__,),
+        targets=("region", "place"),
+        couplings=(
+            Coupling(
+                Subsystem.ENVIRONMENT,
+                "the bounty and drought laws multiply the fertility of every land",
+                EdgeKind.MODIFIER,
+                "climate_effects.bounty_law_fertility",
+            ),
+        ),
     ),
     Mechanic(
         key="incidents",
@@ -78,7 +134,7 @@ CORE_MECHANICS = (
         subsystem=Subsystem.CORE,
         phases=("incident_threads",),
         surface=Surface(drawer=MECHANICS_SECTION),
-        backfill="migration 26caa21842b3: incidents from chronicle rows",
+        backfill="incidents.roles_backfill: actor and target roles and war causes for old incidents (incidents themselves from migration 26caa21842b3)",
         exposure=Exposure.CONTEXT,
         targets=("mortal", "people", "settlement", "son"),
         couplings=(Coupling(Subsystem.CULTURE, "long chains of causes open story threads", EdgeKind.TRIGGER, "incidents.thread_chain_min"),),
@@ -210,6 +266,62 @@ CORE_MECHANICS = (
             Coupling(Subsystem.ENVIRONMENT, "ley convergence raises magic density; salted earth and leak wounds cut lines"),
             Coupling(Subsystem.CULTURE, "works standing on ley lines and nexus gain function"),
             Coupling(Subsystem.MAGIC, "magic storms run down the lines; wizards on a line act more often"),
+        ),
+    ),
+    Mechanic(
+        key="events",
+        spec_item="S8.8",
+        title="Events: kinds, years and seasons, footprint, phases and the toll by cohort",
+        subsystem=Subsystem.CORE,
+        phases=("event_phases", "natural_disasters", "settlement_life", "campaigns"),
+        surface=Surface(drawer="EventCard"),
+        backfill=(
+            "event_phases: every existing event gains a profile (years, season, footprint, incident) as if it had always had one; "
+            "casualties are read once from old records (events.casualties_backfill)"
+        ),
+        templates=("event.", "event.phase."),
+        fields=("phase", "start_year", "end_year", "start_season", "end_season", "severity"),
+        tables=(EventProfileRow.__tablename__, EventFootprintRow.__tablename__, EventCasualtyRow.__tablename__),
+        flows=("famine", "plague", "casualty"),
+        exposure=Exposure.CONTEXT,
+        targets=("event", "region", "settlement", "people"),
+        couplings=(
+            Coupling(Subsystem.DEMOGRAPHY, "famines, plagues and sieges kill by cohort at their height", EdgeKind.FLOW, "events.famine_peak_death_pct"),
+            Coupling(Subsystem.ECONOMY, "a plague's aftermath makes the survivors' labour dear", EdgeKind.MODIFIER, "events.plague_aftermath_prosperity_pct"),
+            Coupling(
+                Subsystem.ENVIRONMENT,
+                "famine and siege aftermaths leave sickness in the soil; massacres haunt the land",
+                EdgeKind.FLOW,
+                "events.famine_aftermath_disease",
+            ),
+            Coupling(Subsystem.SOCIAL, "festivals and coronations calm unrest; riots vent it", EdgeKind.MODIFIER, "events.festival_unrest_relief"),
+            Coupling(Subsystem.FAITH, "eclipse watches raise piety; schism councils split the faith", EdgeKind.MODIFIER, "events.eclipse_piety"),
+            Coupling(Subsystem.CULTURE, "the chronicler marks every turn of a famine, plague or siege", EdgeKind.TRIGGER),
+        ),
+    ),
+    Mechanic(
+        key="geomorphology",
+        spec_item="S6.1",
+        title="River courses, desertification, eruptions and salt",
+        subsystem=Subsystem.ENVIRONMENT,
+        phases=("geomorphology", "natural_disasters", "environment_survey", "environment_derive"),
+        surface=Surface(drawer="LandShapeSection"),
+        backfill="geomorphology: every region gains a shape row on the first run; volcanic lands and hycean and salted soils are derived from the profile",
+        templates=("land.desertified", "land.desert_retreat", "land.salted", "land.ash_weathered", "land.river_shift", "tools.son.reshape_land"),
+        fields=("desertification", "desertified", "river_course", "volcanic", "volcanic_pressure", "soil"),
+        tables=(RegionGeomorphRow.__tablename__, RiverShiftRow.__tablename__),
+        exposure=Exposure.TOOL,
+        tools=("reshape_land", "send_disaster"),
+        targets=("region", "place"),
+        couplings=(
+            Coupling(
+                Subsystem.ENVIRONMENT,
+                "deserts lose rain and turn sandy; great floods move rivers; ash weathers into rich soil",
+                EdgeKind.FLOW,
+                "geomorphology.desert_rainfall_drop",
+            ),
+            Coupling(Subsystem.ECONOMY, "a moved river takes wells and irrigation with it", EdgeKind.FLOW, "geomorphology.river_shift_chance"),
+            Coupling(Subsystem.DEMOGRAPHY, "eruptions and volcanic quakes kill and bury towns", EdgeKind.FLOW, "geomorphology.eruption_population_loss"),
         ),
     ),
     Mechanic(
@@ -820,7 +932,21 @@ CORE_MECHANICS = (
         ),
     ),
 )
-BUILT_IN = (*CORE_MECHANICS, *SOCIETY_MECHANICS, *REALM_MECHANICS, *MILITARY_MECHANICS, *FAITH_MECHANICS, *LORE_MECHANICS, *WILDS_MECHANICS, *MORTAL_MECHANICS)
+BUILT_IN = (
+    *CORE_MECHANICS,
+    *SOCIETY_MECHANICS,
+    *REALM_MECHANICS,
+    *MILITARY_MECHANICS,
+    *FAITH_MECHANICS,
+    *LORE_MECHANICS,
+    *WILDS_MECHANICS,
+    *MORTAL_MECHANICS,
+    *FOUNDATION_MECHANICS,
+    *PLACE_MECHANICS,
+    *PLACE_BEHAVIOURS,
+    *COUPLING_MECHANICS,
+    *REGION_MECHANICS,
+)
 
 MODULE_SUBSYSTEMS: dict[str, Subsystem] = {
     "warfare": Subsystem.WAR,

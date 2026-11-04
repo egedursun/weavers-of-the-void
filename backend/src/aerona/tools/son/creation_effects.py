@@ -15,6 +15,7 @@ from aerona.domain.enums.travel import TravelMethod, VehicleKind
 from aerona.engine.cosmos.routes import RouteSpec, method_label, open_route
 from aerona.engine.cosmos.vessels import set_vessel_kind
 from aerona.engine.economy.resources import set_resource_yield
+from aerona.engine.environment.places import write_kind
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.faith.doctrine import found_doctrine
 from aerona.engine.gods.queries import worshippers_of
@@ -195,6 +196,9 @@ async def finish_extras(call: SonCall, args: CreationInput, created: EntityRow) 
     words = args.option("words")
     if created.entity_type is EntityType.LANGUAGE and words:
         await add_words(call.session, created, words[: call.rules.son_tools.coin_word_max_words], actor=(ActorKind.SON, call.son.id), epoch=call.epoch)
+    place_kind = args.option("place_kind")
+    if created.entity_type is EntityType.PLACE and place_kind is not None:
+        await write_kind(call.session, call.rules, created.id, place_kind)
     commodity = args.option("commodity")
     if created.entity_type is EntityType.RESOURCE and commodity is not None:
         await set_resource_yield(call.session, call.rules, created.id, commodity, args.option("material"))

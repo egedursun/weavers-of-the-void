@@ -241,6 +241,8 @@ export const TRADITION_KINDS: Record<Schemas['TraditionKind'], LoreNamed> = {
     icon: Utensils,
     tone: 'verdigris',
   },
+  siesta: { label: 'Midday rest', icon: Sun, tone: 'gold' },
+  night_vigil: { label: 'Night vigil', icon: Flame, tone: 'info' },
 }
 
 export const TRADITION_TERMS: Record<string, LoreNamed> = {

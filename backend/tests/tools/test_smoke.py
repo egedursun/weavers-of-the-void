@@ -13,6 +13,7 @@ async def test_son_creates_a_place(database: Database, cosmos: Cosmos) -> None:
     outcome = await toolkit.runtime.call(
         "create_place",
         {
+            "place_kind": "cave",
             "name": "Brinehollow",
             "description": DESCRIPTION,
             "power_level": 2,

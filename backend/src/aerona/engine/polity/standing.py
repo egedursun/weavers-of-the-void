@@ -31,6 +31,7 @@ from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.knowledge import KnowledgeMap
+from aerona.engine.primitives.modifiers import combine, live_contributions
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import bond_exists, connect, has_flag
 from aerona.engine.primitives.stats import set_stats, stat
@@ -291,9 +292,10 @@ def realm_tier(book: RealmBook, realm: Realm) -> int:
 def settle(realm: Realm, legit: dict[str, int], steady: dict[str, int]) -> None:
     profile = realm.profile
     if "legitimacy" not in profile.locked:
-        profile.legitimacy = clamp_int(sum(legit.values()), 0, PERCENT)
+        profile.legitimacy = clamp_int(combine(sum(legit.values()), live_contributions(realm.entity.id, "legitimacy")).value, 0, PERCENT)
     if "stability" not in profile.locked:
-        profile.stability = clamp_int(profile.legitimacy + sum(value for key, value in steady.items() if key != "legitimacy"), 0, PERCENT)
+        steady_sum = profile.legitimacy + sum(value for key, value in steady.items() if key != "legitimacy")
+        profile.stability = clamp_int(combine(steady_sum, live_contributions(realm.entity.id, "stability")).value, 0, PERCENT)
     kept = {key: value for key, value in profile.legitimacy_parts.items() if key == "usurper"}
     profile.legitimacy_parts = {
         **kept,

@@ -62,11 +62,27 @@ class RegionControl(ValueObject):
     contested: bool = False
 
 
+class GroundSnapshot(ValueObject):
+    terrain: str
+    soil: str
+    climate: str
+    land_use: str
+    ley_lines: int = 0
+    nexus: bool = False
+    rainfall: int = 0
+    danger: int = 0
+    danger_source: str | None = None
+    sacredness: int = 0
+    scar: str | None = None
+    scar_depth: int = 0
+
+
 class MapSnapshotData(ValueObject):
     living_ids: tuple[int, ...] = ()
     population: dict[int, int] = Field(default_factory=dict)
     political: dict[int, RegionControl] = Field(default_factory=dict)
     ongoing_war_ids: tuple[int, ...] = ()
+    ground: dict[int, GroundSnapshot] = Field(default_factory=dict)
 
 
 class SonEpochStats(ValueObject):

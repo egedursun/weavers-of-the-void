@@ -8,7 +8,6 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import PlaceEnvironmentRow
 from aerona.db.tables.faith import CultDoctrineRow, CultOfficeRow, CultTenetRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -20,6 +19,7 @@ from aerona.domain.enums.mind import SkillKind, ValueAxis
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
+from aerona.engine.environment.places import holy_place_ids
 from aerona.engine.faith.book import Church, FaithBook
 from aerona.engine.mind.book import skill_level, values_for
 from aerona.engine.phases.births import NOTABLE_ROLES, raise_notable
@@ -94,17 +94,6 @@ async def sacred_species(ctx: TickContext, church: Church) -> int | None:
     return best.id
 
 
-async def holy_place(ctx: TickContext, church: Church) -> int | None:
-    local = select(EntityRow.id).where(EntityRow.world_id == church.cult.world_id, EntityRow.status == EntityStatus.CANON)
-    holy = await ctx.session.scalar(
-        select(PlaceEnvironmentRow.entity_id)
-        .where(PlaceEnvironmentRow.nexus.is_(True), PlaceEnvironmentRow.entity_id.in_(local))
-        .order_by(PlaceEnvironmentRow.entity_id)
-        .limit(1)
-    )
-    return holy or church.cult.location_id
-
-
 async def target_for(ctx: TickContext, church: Church, tenet: TenetKind) -> str | None:
     if tenet is TenetKind.DIETARY_LAW:
         return ctx.rng(f"diet.{church.cult.id}").pick(list(FOODS)).value
@@ -112,7 +101,8 @@ async def target_for(ctx: TickContext, church: Church, tenet: TenetKind) -> str 
         species = await sacred_species(ctx, church)
         return str(species) if species is not None else None
     if tenet is TenetKind.PILGRIMAGE_DUTY:
-        place = await holy_place(ctx, church)
+        holy = await holy_place_ids(ctx.session, ctx.rules, church.cult.world_id) if church.cult.world_id is not None else []
+        place = holy[0] if holy else church.cult.location_id
         return str(place) if place is not None else None
     return None
 

@@ -45,7 +45,6 @@ from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
 from aerona.db.tables.ecology import BeastProfileRow, SpeciesRangeRow
 from aerona.db.tables.economy import TradeFlowRow, TradeRouteProfileRow, TradeRouteRegionRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
 from aerona.db.tables.faith import CultHoldingRow
 from aerona.db.tables.military import ArmyProfileRow, CampaignFrontRow, OccupationRow
 from aerona.db.tables.polity import PolityProfileRow, PolityTerritoryRow
@@ -55,19 +54,28 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import LegendArchetype
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.environment import LandUse
 from aerona.domain.enums.faith import HoldingKind
 from aerona.domain.enums.war import WarStatus
+from aerona.domain.models.records import GroundSnapshot
 from aerona.engine.cosmos.maps import MAPPED_STATUSES, map_is_stale, map_request, store_world_map, world_entities
 from aerona.engine.economy.routes import LIVE_STATUSES
-from aerona.engine.environment.ley import LeyWeb
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import stat
 from aerona.services.container import Services
 from aerona.services.images.records import covers_of
 from aerona.services.map_lines import region_creators, relation_lines, routed_roads, war_sites
-from aerona.services.wiki import event_markers, historical_view, map_notes, political_map, region_dominance, road_network, settlement_tiers, snapshot_epochs
+from aerona.services.wiki import (
+    event_markers,
+    ground_snapshot,
+    historical_view,
+    map_notes,
+    political_map,
+    region_dominance,
+    road_network,
+    settlement_tiers,
+    snapshot_epochs,
+)
 
 router = APIRouter(tags=["map"])
 
@@ -165,7 +173,7 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
             markers=await event_markers(session, world_id),
             dominance=await region_dominance(session, world_id),
             population=population,
-            ground=await region_ground(session, world_id),
+            ground=await region_ground(session, world_id, past.ground if past is not None else None),
             stocks=await region_stocks(session, world_id),
             trade=await trade_lines(session, world_id, positions),
             outbreaks=await outbreak_lines(session, world_id, positions),
@@ -459,35 +467,13 @@ async def trade_lines(session: AsyncSession, world_id: int, positions: dict[int,
     return lines
 
 
-WILD = "wild"
 STOCK_KEYS = {EntityType.PEOPLE: "population", EntityType.SETTLEMENT: "population", EntityType.CULT: "followers", EntityType.ARMY: "soldiers"}
 
 
-def main_use(ground: RegionEnvironmentRow) -> str:
-    uses = {use.value: getattr(ground, use.value) for use in LandUse}
-    best = max(sorted(uses), key=lambda key: uses[key])
-    return best if uses[best] > 0 else WILD
-
-
-async def region_ground(session: AsyncSession, world_id: int) -> dict[int, RegionGround]:
-    web = await LeyWeb.load(session)
-    degree = web.degree()
-    nexus = set(
-        await session.scalars(
-            select(PlaceEnvironmentRow.region_entity_id).where(PlaceEnvironmentRow.nexus.is_(True), PlaceEnvironmentRow.region_entity_id.is_not(None))
-        )
-    )
-    return {
-        row.entity_id: RegionGround(
-            terrain=row.dominant_terrain.value,
-            soil=row.soil.value,
-            climate=row.temperature_band.value,
-            land_use=main_use(row),
-            ley_lines=degree[row.entity_id],
-            nexus=row.entity_id in nexus,
-        )
-        for row in await session.scalars(select(RegionEnvironmentRow).where(RegionEnvironmentRow.world_id == world_id))
-    }
+async def region_ground(session: AsyncSession, world_id: int, past: dict[int, GroundSnapshot] | None = None) -> dict[int, RegionGround]:
+    current = await ground_snapshot(session, world_id)
+    shown = {**current, **past} if past else current
+    return {region_id: RegionGround.model_validate(item.model_dump()) for region_id, item in shown.items()}
 
 
 async def region_stocks(session: AsyncSession, world_id: int) -> dict[int, RegionStocks]:
