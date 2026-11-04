@@ -22,10 +22,15 @@ import {
   Section,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
+import { RegisterList } from '@/features/entity/lore/RegisterParts'
 import {
   type TongueAtlas as Atlas,
   useTongues,
 } from '@/features/entity/lore/api'
+import {
+  REGISTERS,
+  type RegisterKind,
+} from '@/features/entity/lore/cultureLabels'
 
 type Rank = Atlas['ranking'][number]
 
@@ -249,6 +254,36 @@ function Heatmap({ atlas }: { atlas: Atlas }) {
   )
 }
 
+function Registers({ atlas }: { atlas: Atlas }) {
+  const kinds = Object.keys(REGISTERS) as RegisterKind[]
+  return (
+    <div data-surface='AtlasRegisters' className='flex min-w-0 flex-col gap-4'>
+      <div className='grid min-w-0 grid-cols-2 gap-3 md:grid-cols-4'>
+        {kinds.map((kind) => {
+          const spec = REGISTERS[kind]
+          const rows = atlas.registers.filter((row) => row.kind === kind)
+          const tongues = new Set(rows.map((row) => row.language?.id))
+          return (
+            <IconStat
+              key={kind}
+              icon={spec.icon}
+              tone={spec.tone}
+              label={spec.label}
+              value={rows.length}
+              hint={`${tongues.size} tongues · ${spec.hint ?? ''}`}
+            />
+          )
+        })}
+      </div>
+      <RegisterList
+        rows={atlas.registers}
+        surface='AtlasRegisterList'
+        showLanguage
+      />
+    </div>
+  )
+}
+
 export function TongueAtlas({ worldId }: { worldId: number | null }) {
   const view = useTongues(worldId)
   if (worldId === null)
@@ -287,6 +322,15 @@ export function TongueAtlas({ worldId }: { worldId: number | null }) {
         {view.data && view.data.ranking.length > 0 && (
           <Heatmap atlas={view.data} />
         )}
+      </Section>
+      <Section
+        id='section-registers'
+        title='Court, liturgy, market and hearth'
+        description='Which tongue each realm, faith and town uses for rule, prayer, trade and home.'
+        icon={Church}
+        tone='gold'
+      >
+        {view.data && <Registers atlas={view.data} />}
       </Section>
     </div>
   )

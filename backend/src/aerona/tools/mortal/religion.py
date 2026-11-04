@@ -23,6 +23,7 @@ from aerona.domain.enums.war import WarCause
 from aerona.engine.body.book import factor
 from aerona.engine.gods import devotion
 from aerona.engine.gods.devotion import RiteKind as EngineRite
+from aerona.engine.lore import prophecy as prophecy_engine
 from aerona.engine.primitives.faith import clear_seeking, foreign_patron, living_patron, patron_son, worship_creator
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.prompts import MortalToolId
@@ -205,6 +206,18 @@ async def prophesy(call: MortalCall, args: ProphesyInput) -> str:
     await bonds.connect(BondDraft(call.me.id, prophecy.id, BondKind.PROPHESIES, call.epoch))
     for entity in related:
         await bonds.connect(BondDraft(prophecy.id, entity.id, BondKind.PROPHESIES, call.epoch, lines.PROPHECY_BOND))
+    told = prophecy_engine.Foretelling(
+        predicate=args.predicate,
+        subject_id=args.subject_id,
+        second_id=args.second_id,
+        archetype=args.archetype,
+        sky_kind=args.sky_kind,
+        event_kind=args.event_kind,
+        within_epochs=args.within_epochs,
+        consequence=args.consequence,
+        consequence_id=args.consequence_id,
+    )
+    await prophecy_engine.typed_condition(call.tick, prophecy, told)
     await call.bump(TurnCounter.PROPHECIES)
     await call.chronicle(ChronicleKind.PROPHECY, lines.PROPHESIED, entity_ids=[call.me.id, prophecy.id], me=call.me.name, name=prophecy.name)
     return result(MortalResult.PROPHESIED, id=prophecy.id, name=prophecy.name)

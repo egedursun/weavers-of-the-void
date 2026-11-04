@@ -1,22 +1,31 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
+from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.culture import (
     ArtMedium,
     BacklashKind,
+    CalendarSlot,
     CurseKind,
+    CustomCatalog,
     IdeologyTenet,
     ItemClass,
     ItemDeed,
+    LanguageRegister,
     LegendArchetype,
     MagicSchool,
     MagicSource,
+    ProphecyConsequence,
     ProphecyPredicate,
     ProphecyState,
     RiteEffectKind,
+    RumourChannel,
     SpeakerKind,
+    SummonForm,
     Technique,
+    TraditionEffectKind,
     TraditionKind,
 )
+from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import KnowledgeBranch
 
 
@@ -25,11 +34,28 @@ class SpeakerView(ApiModel):
     kind: SpeakerKind
     share: int
     since_epoch: int
+    held: bool = False
 
 
 class KinView(ApiModel):
     language: NodeRef | None
     value: int
+    held: bool = False
+
+
+class RegisterView(ApiModel):
+    holder: NodeRef | None
+    kind: LanguageRegister
+    language: NodeRef | None
+    since_epoch: int
+    held: bool
+
+
+class IncidentRef(ApiModel):
+    id: int
+    kind: str
+    epoch: int
+    note: str | None
 
 
 class LanguageCard(ApiModel):
@@ -40,6 +66,7 @@ class LanguageCard(ApiModel):
     lingua_franca: bool
     speakers: list[SpeakerView]
     kin: list[KinView]
+    registers: list[RegisterView]
     locked: list[str]
 
 
@@ -50,7 +77,10 @@ class LegendCard(ApiModel):
     subject: NodeRef | None
     moral: dict[str, int]
     tellers: list[NodeRef]
+    bards: list[NodeRef]
     fixed_in: NodeRef | None
+    source: IncidentRef | None = None
+    custom_archetype_id: int | None = None
     locked: list[str]
 
 
@@ -59,19 +89,29 @@ class KeeperView(ApiModel):
     participation: int
     skipped: int
     last_celebrated_epoch: int | None
+    held: bool = False
+
+
+class TraditionEffectView(ApiModel):
+    effect: TraditionEffectKind
+    target: str
+    magnitude: int
 
 
 class TraditionCard(ApiModel):
     kind: TraditionKind
-    calendar_slot: str | None
+    calendar_slot: CalendarSlot | None
     season_position: int | None = None
     calendar_entity_id: int | None = None
     notable_year_id: int | None = None
     in_season: bool | None = None
     cost: dict[str, int]
-    effects: dict[str, int]
+    effects: list[TraditionEffectView]
     taboo_target: str | None
+    taboo_act: ActKind | None = None
+    custom_kind_id: int | None = None
     origin: NodeRef | None
+    origin_incident: IncidentRef | None = None
     keepers: list[KeeperView]
     locked: list[str]
 
@@ -90,12 +130,17 @@ class IdeologyCard(ApiModel):
     values: dict[str, int]
     adherents: list[AdherentView]
     locked: list[str]
+    texts: list[NodeRef]
+    custom_tenets: list[int]
 
 
 class RiteEffectView(ApiModel):
     effect: RiteEffectKind
     magnitude: int
     detail: str | None
+    damage_type: DamageType | None = None
+    summon_form: SummonForm | None = None
+    custom_kind_id: int | None = None
 
 
 class CastingView(ApiModel):
@@ -122,6 +167,7 @@ class RiteCard(ApiModel):
     effects: list[RiteEffectView]
     castings: list[CastingView]
     locked: list[str]
+    forbidden_by: list[NodeRef]
 
 
 class ProphecyCard(ApiModel):
@@ -134,6 +180,20 @@ class ProphecyCard(ApiModel):
     state: ProphecyState
     resolved_epoch: int | None
     locked: list[str]
+    consequence_kind: ProphecyConsequence | None = None
+    consequence: NodeRef | None = None
+
+
+class BookPage(ApiModel):
+    knowledge: NodeRef | None
+    fidelity: int
+
+
+class CustomTechniqueView(ApiModel):
+    kind_id: int
+    name: str
+    base: Technique
+    secret: bool
 
 
 class DeedView(ApiModel):
@@ -141,6 +201,7 @@ class DeedView(ApiModel):
     deed: ItemDeed
     actor: NodeRef | None
     note: str
+    id: int = 0
 
 
 class EnchantmentView(ApiModel):
@@ -170,6 +231,11 @@ class ItemCard(ApiModel):
     enchantments: list[EnchantmentView]
     contents: list[NodeRef]
     locked: list[str]
+    secondary_materials: list[str]
+    bound_spirit: NodeRef | None = None
+    prosthesis_for: str | None = None
+    custom_class_id: int | None = None
+    book_contents: list[BookPage]
 
 
 class ArtworkCard(ApiModel):
@@ -185,6 +251,7 @@ class ArtworkCard(ApiModel):
     translations: list[NodeRef]
     propaganda: bool
     locked: list[str]
+    canon: bool = False
 
 
 class LoreCard(ApiModel):
@@ -207,6 +274,7 @@ class LevelView(ApiModel):
     secret: bool
     open: bool
     locked: list[str]
+    frontier: int = 0
 
 
 class TechniqueView(ApiModel):
@@ -225,6 +293,7 @@ class LearningCard(ApiModel):
     levels: list[LevelView]
     techniques: list[TechniqueView]
     books: list[NodeRef]
+    custom_techniques: list[CustomTechniqueView]
 
 
 class GateNeed(ApiModel):
@@ -264,3 +333,44 @@ class TongueRank(ApiModel):
 class TongueAtlas(ApiModel):
     ranking: list[TongueRank]
     matrix: list[list[int]]
+    registers: list[RegisterView]
+
+
+class CustomKindView(ApiModel):
+    id: int
+    catalog: CustomCatalog
+    base: str
+    name: str
+    description: str
+    params: dict[str, int | str | list[str] | dict[str, int]]
+    world_id: int | None
+    created_epoch: int
+
+
+class CustomKinds(ApiModel):
+    kinds: list[CustomKindView]
+
+
+class RumourView(ApiModel):
+    id: int
+    incident_id: int
+    text: str
+    kind: str
+    happened_epoch: int
+    fidelity: int
+    channel: RumourChannel
+    hops: int
+    heard_epoch: int
+    lingered: int
+    source: NodeRef | None
+    legend: NodeRef | None
+    planted: bool
+    atrocity: bool
+    alarm: bool
+    carriers: int
+    locked: list[str]
+
+
+class RumourBoard(ApiModel):
+    community_id: int
+    rumours: list[RumourView]

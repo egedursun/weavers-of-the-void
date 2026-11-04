@@ -195,7 +195,7 @@ async def armed(ctx: TickContext, harm: Harm) -> Harm:
         blade = await weapon_of(ctx.session, wielder)
         if blade is not None:
             harm = replace(harm, edge=blade.edge, heft=blade.weight)
-        held = await wielded(ctx.session, wielder)
+        held = await wielded(ctx.session, wielder, ctx.rules.item_wear.broken)
         if held is not None:
             _, riding = await mount_pct(ctx.session, ctx.rules, wielder) if wielder is not None else (1.0, 1.0)
             second = await off_hand_pct(ctx.session, ctx.rules, wielder) if wielder is not None else 1.0

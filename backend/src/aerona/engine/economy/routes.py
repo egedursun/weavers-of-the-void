@@ -12,11 +12,12 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.culture import LanguageRegister, Technique
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeLoss, TradeMode, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, LegendCategory
 from aerona.domain.enums.environment import CoastKind, RiverClass, TerrainKind
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.polity import ClauseKind
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import WarCause
@@ -27,10 +28,13 @@ from aerona.engine.economy.credit import sell_on_credit
 from aerona.engine.economy.markets import Quote
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.environment.profile import Works
+from aerona.engine.factions.book import robber_ids
 from aerona.engine.interconnect.flows import FlowCategory, flowing
-from aerona.engine.lore.language import barrier
+from aerona.engine.lore.language import register_barrier
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.notes import note
+from aerona.engine.polity.accords import clause_pairs
+from aerona.engine.polity.law_effects import toll_rate
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
@@ -192,7 +196,9 @@ def capacity_of(ctx: TickContext, book: EconomyBook, route: Route, works: dict[i
 
 async def spoken_capacity(ctx: TickContext, book: EconomyBook, route: Route, works: dict[int, Works]) -> int:
     first, second = route.ends
-    capacity = capacity_of(ctx, book, route, works) * await barrier(ctx.session, ctx.rules, first, second, ctx.epoch)
+    capacity = capacity_of(ctx, book, route, works) * await register_barrier(
+        ctx.session, ctx.rules, first, second, ctx.epoch, ours=LanguageRegister.TRADE, theirs=LanguageRegister.TRADE
+    )
     if route.profile.mode is TradeMode.SEA:
         table = ctx.rules.technique_effects
         held = book.techniques.get(first, set()) | book.techniques.get(second, set())
@@ -277,15 +283,22 @@ async def controllers(ctx: TickContext, book: EconomyBook) -> dict[int, int]:
     return found
 
 
-async def set_tolls(ctx: TickContext, book: EconomyBook, route: Route, masters: dict[int, int]) -> None:
+async def set_tolls(ctx: TickContext, book: EconomyBook, route: Route, masters: dict[int, int], waived: set[frozenset[int]] | None = None) -> None:
     table = ctx.rules.tolls
     first, second = route.ends
+    free = waived if waived is not None else await clause_pairs(ctx.session, ClauseKind.TOLLS_WAIVED)
     for region in route.path:
         master = masters.get(region)
         if master is None or master in (first, second):
             continue
+        if frozenset((master, first)) in free or frozenset((master, second)) in free:
+            toll = route.tolls.get(region)
+            if toll is not None and not toll.set_by_player:
+                toll.controller_entity_id, toll.rate_pct = master, 0
+            continue
         greed = await greed_drive(ctx.session, ctx.rules, master)
-        rate = clamp_int(table.default_rate_pct + max(0.0, greed - 1) * table.greed_rate_pct, 0, PERCENT)
+        decreed = await toll_rate(ctx.session, master)
+        rate = clamp_int(decreed if decreed is not None else table.default_rate_pct + max(0.0, greed - 1) * table.greed_rate_pct, 0, PERCENT)
         toll = route.tolls.get(region)
         if toll is None:
             toll = TradeRouteTollRow(route_entity_id=route.entity.id, region_entity_id=region, controller_entity_id=master, rate_pct=rate)
@@ -324,12 +337,12 @@ async def blocker_of(ctx: TickContext, book: EconomyBook, route: Route, enemies:
     return None
 
 
-def bandits_on(book: EconomyBook, route: Route) -> EntityRow | None:
+def bandits_on(book: EconomyBook, route: Route, robbers: frozenset[int]) -> EntityRow | None:
     halfway = set(route.path)
     found = [
         entity
         for entity in book.entities.values()
-        if entity.entity_type is EntityType.FACTION and entity.engine_kind in BANDIT_KINDS and book.ground.atlas.top_region(entity.id) in halfway
+        if entity.entity_type is EntityType.FACTION and entity.id in robbers and book.ground.atlas.top_region(entity.id) in halfway
     ]
     return min(found, key=lambda entity: entity.id) if found else None
 
@@ -477,7 +490,7 @@ async def mourn_losses(ctx: TickContext, book: EconomyBook, route: Route, lane: 
         if ctx.rng(f"wreck.{route.entity.id}.{lane.commodity.value}.{ctx.epoch}").chance(lanes.shipwreck_chance):
             await _shipwreck(ctx, route, book.entities[lane.seller_id], tally)
         return TradeLoss.SEA
-    bandits = bandits_on(book, route)
+    bandits = bandits_on(book, route, await robber_ids(ctx.session))
     if bandits is not None:
         pay(ctx.rules.markets.seller_wealth_per_value, bandits, round_half_up(lane.landed * lost / PERCENT * lanes.bandit_share_pct / PERCENT))
     return TradeLoss.BANDITS

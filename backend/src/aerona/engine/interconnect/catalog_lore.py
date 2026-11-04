@@ -16,16 +16,19 @@ from aerona.db.tables.culture import (
     ItemHistoryRow,
     ItemProfileRow,
     LanguageIntelligibilityRow,
+    LanguageRegisterRow,
     LanguageStandingRow,
     LegendProfileRow,
     ProphecyConditionRow,
     RiteEffectRow,
     RiteProfileRow,
     SpeakerCohortRow,
+    TraditionEffectRow,
     TraditionParticipationRow,
     TraditionProfileRow,
 )
 from aerona.domain.enums.culture import BacklashKind, CurseKind, MagicSource, ProphecyPredicate, RiteEffectKind
+from aerona.engine.interconnect.catalog_culture import CULTURE_RAW
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Mechanic, Subsystem, Surface
 
 LORE = "section-lore"
@@ -44,10 +47,10 @@ LORE_MECHANICS = (
         subsystem=S.LANGUAGE,
         phases=("language_cycles",),
         surface=Surface(drawer=LORE, chart=PRESTIGE),
-        backfill="language_cycles: every living tongue is weighed and the trade roads learn the lingua franca",
-        templates=("languages.liturgical",),
-        fields=("prestige", "prestige_parts", "standardisation", "liturgical", "lingua_franca", "share"),
-        tables=(LanguageStandingRow.__tablename__, SpeakerCohortRow.__tablename__),
+        backfill="language_cycles: every living tongue is weighed, its registers drawn and the trade roads learn the lingua franca",
+        templates=("languages.liturgical", "treaty.misread_breach"),
+        fields=("prestige", "prestige_parts", "standardisation", "liturgical", "lingua_franca", "share", "register"),
+        tables=(LanguageStandingRow.__tablename__, SpeakerCohortRow.__tablename__, LanguageRegisterRow.__tablename__),
         targets=("language", *COMMUNITIES),
         couplings=(
             Coupling(S.POLITY, "a realm's might lends its tongue prestige", EdgeKind.MODIFIER, "prestige.power_pct"),
@@ -80,9 +83,9 @@ LORE_MECHANICS = (
         subsystem=S.CULTURE,
         phases=("legend_cycles", "belief_and_memory", "famine_migration"),
         surface=Surface(drawer=LORE, layer=LORE_LAYER),
-        backfill="legend_cycles: every living legend takes an archetype, a moral and its tellers",
+        backfill="lore.typed_kinds_backfill: every legend takes a typed archetype, its source incident and a credence from its spread and kind",
         templates=("lore.legend_drift", "lore.legend_consequence"),
-        fields=("archetype", "credence", "distortion", "moral", "tellers"),
+        fields=("archetype", "credence", "distortion", "moral", "tellers", "source_incident_id", "fixed_in"),
         tables=(LegendProfileRow.__tablename__,),
         targets=("legend", "mortal", "house", *COMMUNITIES),
         couplings=(
@@ -99,10 +102,10 @@ LORE_MECHANICS = (
         subsystem=S.CULTURE,
         phases=("tradition_cycles", "markets", "vendetta_cycles", "soul_cycles"),
         surface=Surface(drawer=LORE),
-        backfill="tradition_cycles: every living tradition takes a kind, a cost and its keepers",
-        templates=("lore.commemoration",),
-        fields=("kind", "cost", "effects", "taboo_target", "participation", "skipped"),
-        tables=(TraditionProfileRow.__tablename__, TraditionParticipationRow.__tablename__),
+        backfill="lore.typed_kinds_backfill: every tradition takes a typed kind, its effects and the incident it remembers",
+        templates=("lore.commemoration", "lore.taboo_broken", "lore.guest_killing", "lore.festival_absorbed"),
+        fields=("kind", "cost", "effects", "taboo_target", "taboo_act", "calendar_slot", "participation", "skipped"),
+        tables=(TraditionProfileRow.__tablename__, TraditionParticipationRow.__tablename__, TraditionEffectRow.__tablename__),
         targets=("tradition", *COMMUNITIES, "event"),
         couplings=(
             Coupling(S.ECONOMY, "festivals eat food and offerings burn goods", EdgeKind.FLOW, "traditions.festival_food"),
@@ -1617,6 +1620,7 @@ BEHAVIOURS = tuple(
     entry(item)
     for item in (
         *RAW,
+        *CULTURE_RAW,
         *EXTRA,
         *legend_morals(),
         *tradition_kinds(),

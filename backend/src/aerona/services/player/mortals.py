@@ -14,7 +14,7 @@ from aerona.db.tables.mortal import MarriageRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind, BondState
 from aerona.domain.enums.entity import EntityFlag, EntityType
-from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.mind import MemoryKind, Profession
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 from aerona.domain.enums.mortal import (
     Ability,
@@ -41,7 +41,12 @@ from aerona.services.player.scope import Command, Effect, PlayerScope, player_ac
 
 PERCENT_FIELDS = ("fertility", "health", "stress", "wealth", "renown", "honour", "infamy", "education", "loyalty_liege", "loyalty_community", "loyalty_god")
 NULLABLE_PERCENT = ("legitimacy",)
-CHOICE_FIELDS: dict[str, type[LifeStage] | type[CareerPath] | type[DeathCause]] = {"life_stage": LifeStage, "career": CareerPath, "cause_of_death": DeathCause}
+CHOICE_FIELDS: dict[str, type[LifeStage] | type[CareerPath] | type[DeathCause] | type[Profession]] = {
+    "life_stage": LifeStage,
+    "career": CareerPath,
+    "cause_of_death": DeathCause,
+    "profession": Profession,
+}
 NODE_FIELDS = ("polity_id", "death_place_id")
 PROFILE_FIELDS = (*PERCENT_FIELDS, *NULLABLE_PERCENT, *CHOICE_FIELDS, *NODE_FIELDS)
 PIN_REASON = "player.pin"

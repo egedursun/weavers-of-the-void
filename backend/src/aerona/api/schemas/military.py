@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.api.schemas.wars import WarSummary
@@ -155,8 +157,8 @@ class AimView(ApiModel):
     kind: WarAimKind
     target: NodeRef | None
     achieved: int
-    params: dict[str, int | str | bool] = {}
-    locked: list[str] = []
+    params: dict[str, int | str | bool] = Field(default_factory=dict)
+    locked: list[str] = Field(default_factory=list)
 
 
 class OccupationView(ApiModel):

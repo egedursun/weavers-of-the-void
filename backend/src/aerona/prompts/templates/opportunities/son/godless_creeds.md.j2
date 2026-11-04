@@ -1,0 +1,2 @@
+{% from "opportunities/_macros.md.j2" import records %}
+Godless creeds spread among your worshippers and drain your faith (strongest held at {{ line.strongest }}%); answer them with a miracle, a dream, or persecution: {{ records(line.creeds[:rules.opportunities.list_max]) }}

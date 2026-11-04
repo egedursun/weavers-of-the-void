@@ -22,11 +22,13 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.lore.rumours import heard_by
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import knowledge_level
 from aerona.prompts.contexts.common import ChronicleRow, LabelValue, LexiconWord, NamedRecord
 from aerona.prompts.contexts.mortal import (
     FolkGodName,
+    HeardRumour,
     KnowledgeItem,
     MortalContextContext,
     MortalGod,
@@ -127,6 +129,17 @@ async def mortal_land(scope: Scope, land: EntityRow, neighbours: list[EntityRow 
     )
 
 
+async def heard_rumours(scope: Scope, me: EntityRow) -> list[HeardRumour]:
+    home = me.location_id if me.entity_type is EntityType.MORTAL else me.id
+    if home is None:
+        return []
+    heard = await heard_by(scope.session, home)
+    return [
+        HeardRumour(age=incident.epoch, fidelity=rumour.fidelity, text=prompt_text(text))
+        for rumour, incident, text in heard[: scope.rules.rumours.context_lines]
+    ]
+
+
 async def mortal_context(scope: Scope, me: EntityRow, full: bool = False) -> MortalContextContext:
     atlas = await RegionAtlas.load(scope.session)
     regions = await horizon_regions(scope, me, atlas)
@@ -161,6 +174,7 @@ async def mortal_context(scope: Scope, me: EntityRow, full: bool = False) -> Mor
         home=await home_for(scope.session, me),
         items=[NamedRecord(id=entity.id, name=entity.name) for entity in await owned(scope, me, EntityType.ITEM)],
         mentions=[ChronicleRow(age=row.epoch, text=prompt_text(row.text)) for row in reversed(mentions)],
+        rumours=await heard_rumours(scope, me),
         languages=await language_lines(scope, me.world_id),
         routes=[route for route in await route_lines(scope) if scope.world_name(me.world_id) in (route.world_a, route.world_b)],
     )

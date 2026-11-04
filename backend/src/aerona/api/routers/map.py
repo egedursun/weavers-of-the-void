@@ -40,14 +40,14 @@ from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
-from aerona.db.tables.culture import ArtworkProfileRow, CastingRow, LanguageStandingRow, LegendProfileRow
+from aerona.db.tables.culture import ArtworkProfileRow, CastingRow, HolderLevelRow, IdeologyAdherentRow, LanguageStandingRow, LegendProfileRow
 from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
 from aerona.db.tables.ecology import BeastProfileRow, SpeciesRangeRow
 from aerona.db.tables.economy import TradeFlowRow, TradeRouteProfileRow, TradeRouteRegionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultHoldingRow
 from aerona.db.tables.military import ArmyProfileRow, CampaignFrontRow, OccupationRow
-from aerona.db.tables.polity import PolityProfileRow, PolityTerritoryRow
+from aerona.db.tables.polity import PolityTerritoryRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import BondKind, BondState
@@ -322,21 +322,41 @@ async def lore_marks(session: AsyncSession, world_id: int, positions: dict[int, 
                     detail=effect or None,
                 )
             )
-    creeds = await session.execute(
-        select(PolityProfileRow.ideology_entity_id, PolityProfileRow.capital_entity_id, PolityProfileRow.core_entity_id).where(
-            PolityProfileRow.ideology_entity_id.is_not(None)
+    adherents = await session.execute(
+        select(
+            IdeologyAdherentRow.ideology_entity_id,
+            IdeologyAdherentRow.adherent_entity_id,
+            IdeologyAdherentRow.strength,
+            IdeologyAdherentRow.state,
+            EntityRow.name,
         )
+        .join(EntityRow, EntityRow.id == IdeologyAdherentRow.ideology_entity_id)
+        .where(EntityRow.world_id == world_id, EntityRow.status == EntityStatus.CANON)
+        .order_by(IdeologyAdherentRow.ideology_entity_id, IdeologyAdherentRow.adherent_entity_id)
     )
-    for creed_id, capital, core in creeds:
-        place = capital or core
-        if creed_id is not None and place in positions:
-            creed = await session.get(EntityRow, creed_id)
-            if creed is not None and creed.world_id == world_id:
-                found.append(
-                    MapLore(
-                        kind="creed", entity_id=creed_id, name=creed.name, place_id=place, x=positions[place][0], y=positions[place][1], detail="state creed"
-                    )
+    for creed_id, place, strength, state, name in adherents:
+        if place in positions:
+            detail = f"state creed, held {strength}%" if state else f"held {strength}%"
+            found.append(MapLore(kind="creed", entity_id=creed_id, name=name, place_id=place, x=positions[place][0], y=positions[place][1], detail=detail))
+    learning = await session.execute(
+        select(HolderLevelRow.holder_entity_id, func.max(HolderLevelRow.level), func.count(HolderLevelRow.branch))
+        .join(EntityRow, EntityRow.id == HolderLevelRow.holder_entity_id)
+        .where(EntityRow.world_id == world_id, HolderLevelRow.level >= 1)
+        .group_by(HolderLevelRow.holder_entity_id)
+    )
+    for holder, level, branches in learning:
+        if holder in positions:
+            found.append(
+                MapLore(
+                    kind="learning",
+                    entity_id=holder,
+                    name=f"level {level}",
+                    place_id=holder,
+                    x=positions[holder][0],
+                    y=positions[holder][1],
+                    detail=f"{branches} branches known, the deepest at level {level}",
                 )
+            )
     return found
 
 

@@ -9,6 +9,7 @@ from aerona.db.tables.economy import TradeFlowRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.mind import CultureValueRow
+from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementTreasuryRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow
@@ -17,10 +18,10 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import AgeBand, Job
 from aerona.domain.enums.disease import SpreadPath
-from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, WeatherEffect
 from aerona.domain.enums.mind import ValueAxis
-from aerona.domain.enums.mortal import CrimeKind
+from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.settlement import TIER_ORDER, WATER_ORDER, BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import SiegeStatus
@@ -28,18 +29,20 @@ from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import cohorts_of
 from aerona.engine.demography.mobility import bound_revolt, inequality_pressure
-from aerona.engine.economy.routes import BANDIT_KINDS
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.years import world_years
+from aerona.engine.factions.book import robber_ids
 from aerona.engine.happenings.emergence import record_fire
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import lacks
 from aerona.engine.military.occupation import occupation_over, occupation_tax, pay_occupier
 from aerona.engine.mind.drives import unrest as needs_unrest
 from aerona.engine.mind.space import value_distance
-from aerona.engine.mortal.justice import code_punishment, community_ruler, sentence
+from aerona.engine.mortal.justice import community_ruler
 from aerona.engine.notes import note
 from aerona.engine.phases.disasters import strike_plague
+from aerona.engine.polity.justice import judge_town
+from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -351,10 +354,9 @@ async def bandits_near(ctx: TickContext, atlas: RegionAtlas, town: Town) -> list
     if home is None:
         return []
     near = {home, *atlas.neighbour_regions(home)}
+    robbers = await robber_ids(ctx.session)
     found = await ctx.session.scalars(
-        select(EntityRow).where(
-            EntityRow.entity_type == EntityType.FACTION, EntityRow.status == EntityStatus.CANON, EntityRow.engine_kind.in_(list(BANDIT_KINDS))
-        )
+        select(EntityRow).where(EntityRow.entity_type == EntityType.FACTION, EntityRow.status == EntityStatus.CANON, EntityRow.id.in_(list(robbers) or [-1]))
     )
     return [band for band in found if atlas.top_region(band.id) in near]
 
@@ -386,22 +388,18 @@ async def keep_order(ctx: TickContext, town: Town, *, justice: float, bands: lis
         shift_stat(band, "strength", profile.crime * table.bandit_feed_pct / PERCENT / max(1, len(bands)), ctx.rules.society.default_stat)
 
 
-async def punish(ctx: TickContext, town: Town) -> bool:
+async def punish(ctx: TickContext, town: Town, laws: LawBook) -> bool:
     table = ctx.rules.crime
     if not ctx.rng(f"punish.{town.entity.id}").chance(table.punishment_chance * town.profile.crime / PERCENT):
         return False
-    culprits = await ctx.session.scalars(
-        select(EntityRow)
-        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == town.entity.id)
-        .order_by(EntityRow.id)
+    polity = laws.member_of.get(town.entity.id)
+    ruler = (
+        await ctx.session.scalar(select(OfficeRow.holder_entity_id).where(OfficeRow.polity_entity_id == polity, OfficeRow.kind == OfficeKind.RULER).limit(1))
+        if polity is not None
+        else None
     )
-    candidates = [mortal for mortal in culprits if mortal.social_class is SocialClass.OUTCAST or mortal.mortal_role is MortalRole.BANDIT]
-    if not candidates:
-        return False
-    culprit = ctx.rng(f"culprit.{town.entity.id}").pick(candidates)
-    punishment = await code_punishment(ctx, town.entity.id, CrimeKind.THEFT)
-    judge = await community_ruler(ctx.session, town.entity.id)
-    return await sentence(ctx, culprit, CrimeKind.THEFT, punishment, judge=judge)
+    judge = (await living_entity(ctx.session, ruler) if ruler is not None else None) or await community_ruler(ctx.session, town.entity.id)
+    return await judge_town(ctx, town, laws, judge=judge) is not None
 
 
 async def quarantined(ctx: TickContext, region: int | None) -> bool:

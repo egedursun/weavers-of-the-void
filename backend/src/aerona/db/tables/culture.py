@@ -1,28 +1,38 @@
-from sqlalchemy import JSON, CheckConstraint, ForeignKey, Index, String
+from sqlalchemy import JSON, CheckConstraint, ForeignKey, Index, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
+from aerona.db.profile_guard import register_profile_table
+from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.culture import (
     ArtMedium,
     BacklashKind,
+    CalendarSlot,
     CurseKind,
+    CustomCatalog,
     IdeologyTenet,
     ItemClass,
     ItemDeed,
+    LanguageRegister,
     LegendArchetype,
     MagicSchool,
     MagicSource,
+    ProphecyConsequence,
     ProphecyPredicate,
     ProphecyState,
     RiteEffectKind,
+    RumourChannel,
     SpeakerKind,
+    SummonForm,
     Technique,
+    TraditionEffectKind,
     TraditionKind,
 )
 from aerona.domain.enums.faith import FuneralRite
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
+from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import KnowledgeBranch
 
 
@@ -48,6 +58,7 @@ class LanguageIntelligibilityRow(Base):
     second_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     value: Mapped[int] = mapped_column(default=0)
     epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class SpeakerCohortRow(Base):
@@ -59,6 +70,18 @@ class SpeakerCohortRow(Base):
     kind: Mapped[SpeakerKind] = mapped_column(enum_type(SpeakerKind, "kind"), primary_key=True)
     share: Mapped[int] = mapped_column(default=0)
     since_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class LanguageRegisterRow(Base):
+    __tablename__ = "language_registers"
+    __table_args__ = (Index("ix_language_registers_language", "language_entity_id"),)
+
+    holder_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    register: Mapped[LanguageRegister] = mapped_column(enum_type(LanguageRegister, "register"), primary_key=True)
+    language_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
+    since_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class LegendProfileRow(Base):
@@ -67,6 +90,7 @@ class LegendProfileRow(Base):
 
     legend_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     archetype: Mapped[LegendArchetype] = mapped_column(enum_type(LegendArchetype, "archetype"))
+    custom_archetype_id: Mapped[int | None] = mapped_column(ForeignKey("custom_kinds.id", ondelete="SET NULL"))
     credence: Mapped[int] = mapped_column(default=30)
     distortion: Mapped[int] = mapped_column(default=0)
     source_incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
@@ -84,7 +108,8 @@ class TraditionProfileRow(Base):
 
     tradition_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     kind: Mapped[TraditionKind] = mapped_column(enum_type(TraditionKind, "kind"))
-    calendar_slot: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    custom_kind_id: Mapped[int | None] = mapped_column(ForeignKey("custom_kinds.id", ondelete="SET NULL"))
+    calendar_slot: Mapped[CalendarSlot | None] = mapped_column(enum_type(CalendarSlot, "calendar_slot"))
     season_position: Mapped[int | None]
     calendar_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     notable_year_id: Mapped[int | None] = mapped_column(ForeignKey("notable_years.id", ondelete="SET NULL"))
@@ -92,11 +117,21 @@ class TraditionProfileRow(Base):
     cost: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
     effects: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
     taboo_target: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    taboo_act: Mapped[ActKind | None] = mapped_column(enum_type(ActKind, "taboo_act"))
     funeral_rite: Mapped[FuneralRite | None] = mapped_column(enum_type(FuneralRite, "funeral_rite"))
     origin_incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
     origin_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class TraditionEffectRow(Base):
+    __tablename__ = "tradition_effects"
+
+    tradition_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    effect: Mapped[TraditionEffectKind] = mapped_column(enum_type(TraditionEffectKind, "effect"), primary_key=True)
+    target: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH), primary_key=True, default="")
+    magnitude: Mapped[int] = mapped_column(default=0)
 
 
 class TraditionParticipationRow(Base):
@@ -109,6 +144,7 @@ class TraditionParticipationRow(Base):
     since_epoch: Mapped[int] = mapped_column(default=0)
     last_celebrated_epoch: Mapped[int | None]
     skipped: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class HolderLevelRow(Base):
@@ -131,6 +167,41 @@ class HolderTechniqueRow(Base):
 
     holder_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     technique: Mapped[Technique] = mapped_column(enum_type(Technique, "technique"), primary_key=True)
+    since_epoch: Mapped[int] = mapped_column(default=0)
+    secret: Mapped[bool] = mapped_column(default=False)
+
+
+class ResearchProgressRow(Base):
+    __tablename__ = "research_progress"
+    __table_args__ = (between("progress", PERCENT_MIN, PERCENT_MAX),)
+
+    holder_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    technique: Mapped[Technique] = mapped_column(enum_type(Technique, "technique"), primary_key=True)
+    progress: Mapped[int] = mapped_column(default=0)
+    updated_epoch: Mapped[int] = mapped_column(default=0)
+
+
+class CustomKindRow(Base):
+    __tablename__ = "custom_kinds"
+    __table_args__ = (Index("ix_custom_kinds_catalog", "catalog", "base"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="CASCADE"), index=True)
+    catalog: Mapped[CustomCatalog] = mapped_column(enum_type(CustomCatalog, "catalog"))
+    base: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
+    name: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
+    description: Mapped[str] = mapped_column(String(480), default="")
+    params: Mapped[dict[str, int | str | list[str] | dict[str, int]]] = mapped_column(JSON, default=dict)
+    created_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class HolderCustomTechniqueRow(Base):
+    __tablename__ = "holder_custom_techniques"
+    __table_args__ = (Index("ix_holder_custom_techniques_kind", "kind_id"),)
+
+    holder_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    kind_id: Mapped[int] = mapped_column(ForeignKey("custom_kinds.id", ondelete="CASCADE"), primary_key=True)
     since_epoch: Mapped[int] = mapped_column(default=0)
     secret: Mapped[bool] = mapped_column(default=False)
 
@@ -166,6 +237,13 @@ class IdeologyTenetRow(Base):
     tenet: Mapped[IdeologyTenet] = mapped_column(enum_type(IdeologyTenet, "tenet"), primary_key=True)
 
 
+class IdeologyCustomTenetRow(Base):
+    __tablename__ = "ideology_custom_tenets"
+
+    ideology_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    kind_id: Mapped[int] = mapped_column(ForeignKey("custom_kinds.id", ondelete="CASCADE"), primary_key=True)
+
+
 class RiteProfileRow(Base):
     __tablename__ = "rite_profiles"
     __table_args__ = (between("power", 1, 10), between("backlash_chance", PERCENT_MIN, PERCENT_MAX))
@@ -181,6 +259,7 @@ class RiteProfileRow(Base):
     holy: Mapped[bool] = mapped_column(default=False)
     heretical: Mapped[bool] = mapped_column(default=False)
     inventor_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    forbidden_by: Mapped[list[int]] = mapped_column(JSON, default=list)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
@@ -191,6 +270,9 @@ class RiteEffectRow(Base):
     effect: Mapped[RiteEffectKind] = mapped_column(enum_type(RiteEffectKind, "effect"), primary_key=True)
     magnitude: Mapped[int] = mapped_column(default=10)
     detail: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    damage_type: Mapped[DamageType | None] = mapped_column(enum_type(DamageType, "damage_type"))
+    summon_form: Mapped[SummonForm | None] = mapped_column(enum_type(SummonForm, "summon_form"))
+    custom_kind_id: Mapped[int | None] = mapped_column(ForeignKey("custom_kinds.id", ondelete="SET NULL"))
 
 
 class CastingRow(Base):
@@ -215,7 +297,8 @@ class ProphecyConditionRow(Base):
     predicate: Mapped[ProphecyPredicate] = mapped_column(enum_type(ProphecyPredicate, "predicate"))
     args: Mapped[dict[str, int | str]] = mapped_column(JSON, default=dict)
     deadline_epoch: Mapped[int | None]
-    consequence: Mapped[dict[str, int | str]] = mapped_column(JSON, default=dict)
+    consequence_kind: Mapped[ProphecyConsequence | None] = mapped_column(enum_type(ProphecyConsequence, "consequence_kind"))
+    consequence_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     seer_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     audience: Mapped[list[int]] = mapped_column(JSON, default=list)
     pressure: Mapped[int] = mapped_column(default=20)
@@ -235,6 +318,7 @@ class ItemProfileRow(Base):
 
     item_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     item_class: Mapped[ItemClass] = mapped_column(enum_type(ItemClass, "item_class"))
+    custom_class_id: Mapped[int | None] = mapped_column(ForeignKey("custom_kinds.id", ondelete="SET NULL"))
     material: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
     quality: Mapped[int] = mapped_column(default=50)
     condition: Mapped[int] = mapped_column(default=100)
@@ -249,6 +333,8 @@ class ItemProfileRow(Base):
     regalia_of_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"), index=True)
     symbol: Mapped[bool] = mapped_column(default=False)
     prosthesis_for: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    secondary_materials: Mapped[list[str]] = mapped_column(JSON, default=list)
+    bound_spirit_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
@@ -300,5 +386,38 @@ class ArtworkProfileRow(Base):
     language_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     translations: Mapped[list[int]] = mapped_column(JSON, default=list)
     propaganda: Mapped[bool] = mapped_column(default=False)
+    canon: Mapped[bool] = mapped_column(default=False)
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class RumourRow(Base):
+    __tablename__ = "rumours"
+    __table_args__ = (
+        between("fidelity", PERCENT_MIN, PERCENT_MAX),
+        at_least("hops", 0),
+        at_least("lingered", 0),
+        UniqueConstraint("incident_id", "carrier_entity_id", name="one_rumour_per_carrier"),
+        Index("ix_rumours_carrier", "carrier_entity_id"),
+        Index("ix_rumours_epoch", "epoch"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    incident_id: Mapped[int] = mapped_column(ForeignKey("incidents.id", ondelete="CASCADE"))
+    carrier_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
+    source_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    channel: Mapped[RumourChannel] = mapped_column(enum_type(RumourChannel, "channel"), default=RumourChannel.WITNESS)
+    fidelity: Mapped[int] = mapped_column(default=100)
+    hops: Mapped[int] = mapped_column(default=0)
+    epoch: Mapped[int]
+    lingered: Mapped[int] = mapped_column(default=0)
+    acted: Mapped[bool] = mapped_column(default=False)
+    legend_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    planted: Mapped[bool] = mapped_column(default=False)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+register_profile_table(LanguageIntelligibilityRow.__tablename__, "first_entity_id")
+register_profile_table(SpeakerCohortRow.__tablename__, "community_entity_id")
+register_profile_table(LanguageRegisterRow.__tablename__, "holder_entity_id")
+register_profile_table(TraditionParticipationRow.__tablename__, "community_entity_id")

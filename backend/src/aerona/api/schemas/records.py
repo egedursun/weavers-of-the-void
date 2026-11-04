@@ -350,6 +350,7 @@ class BondRecord(ApiModel):
 class BondView(BondRecord):
     outgoing: bool
     other: NodeRef | None
+    derived: bool | None = None
 
 
 class RouteStatusRecord(ApiModel):

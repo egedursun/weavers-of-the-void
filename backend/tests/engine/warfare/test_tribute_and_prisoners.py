@@ -9,6 +9,8 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.war import CaptiveStatus, TributeStatus
 from aerona.engine.phases.prisoners import free_prisoner, prisoners
 from aerona.engine.phases.tribute import decree_tribute, forgive_tribute, tribute
+from aerona.engine.polity.book import RealmBook
+from aerona.engine.polity.treaties import keep_clauses
 from aerona.engine.services.community_relations import has_blood_feud, relation, set_relation
 from aerona.engine.services.war import take_captive
 from aerona.rules.registry import Rules
@@ -24,7 +26,7 @@ async def test_tribute_flows_through_diminishing_returns(session: AsyncSession, 
     await society(session, payer.id)
     await society(session, receiver.id)
     await decree_tribute(make_ctx(session, rules, epoch=4), payer.id, receiver.id)
-    await tribute(make_ctx(session, rules, epoch=5))
+    await keep_clauses(make_ctx(session, rules, epoch=5), await RealmBook.load(session))
     assert payer.stats.model_dump()["prosperity"] == 50
     assert receiver.stats.model_dump()["prosperity"] == 80
     assert receiver.stats.model_dump()["wealth"] == 50
@@ -38,6 +40,7 @@ async def test_tribute_ends_after_its_term_and_revolts_close_the_row(session: As
     lord = await make(session, "Weak Lord", EntityType.PEOPLE, world_id, population=900, martiality=5)
     await decree_tribute(make_ctx(session, rules, epoch=1), payer.id, receiver.id)
     await decree_tribute(make_ctx(session, rules, epoch=3), rebel.id, lord.id)
+    await keep_clauses(make_ctx(session, rules, epoch=4), await RealmBook.load(session))
     await tribute(make_ctx(session, rules, epoch=4))
     rows = {row.payer_entity_id: row for row in await session.scalars(select(TributeRow))}
     assert rows[payer.id].status is TributeStatus.ENDED

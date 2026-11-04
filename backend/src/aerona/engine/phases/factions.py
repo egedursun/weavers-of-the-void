@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from enum import StrEnum
 
 from sqlalchemy import select
 
@@ -8,17 +7,27 @@ from aerona.constants.warfare import FACTION_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
+from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.entity import SOCIETY_TYPES, EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.limits import PERCENT_MAX
+from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
+from aerona.engine.factions.agenda import dues, influence_from_members, monopolies, plan_goals, pursue, schisms
+from aerona.engine.factions.book import ENGINE_OF_KIND, FactionBook, backfill_profiles, new_profile
+from aerona.engine.factions.outlaws import hire, pay_companies, privateers, suppress
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import faction_drive
 from aerona.engine.phase import Phase
 from aerona.engine.phases.warfare import is_uprising
+from aerona.engine.polity.book import RealmBook
+from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon, living_entity, spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
@@ -27,26 +36,34 @@ from aerona.engine.primitives.stats import stat
 from aerona.engine.services.war import ongoing_war_count
 from aerona.rules.registry import Rules
 
-
-class FactionKind(StrEnum):
-    GUILD = "guild"
-    COUNCIL = "council"
-    BROTHERHOOD = "brotherhood"
+K = FactionKind
 
 
 @dataclass(frozen=True)
 class FactionBlueprint:
     kind: FactionKind
-    engine_kind: EngineKind
     subtype: str
     suffix: str
     members: str
 
 
 BLUEPRINTS = (
-    FactionBlueprint(FactionKind.GUILD, EngineKind.MERCHANT_GUILD, "merchant guild", "Guild", "merchants"),
-    FactionBlueprint(FactionKind.COUNCIL, EngineKind.PRIESTS_COUNCIL, "priests' council", "Priests' Council", "priests"),
-    FactionBlueprint(FactionKind.BROTHERHOOD, EngineKind.WARRIOR_BAND, "warrior brotherhood", "Warrior Brotherhood", "warriors"),
+    FactionBlueprint(K.MERCHANT_GUILD, "merchant guild", "Guild", "merchants"),
+    FactionBlueprint(K.CRAFT_GUILD, "craft guild", "Craft Guild", "artisans"),
+    FactionBlueprint(K.PRIESTHOOD, "priests' council", "Priests' Council", "priests"),
+    FactionBlueprint(K.WARRIOR_ORDER, "warrior brotherhood", "Warrior Brotherhood", "warriors"),
+    FactionBlueprint(K.NOBLE_COUNCIL, "noble council", "Council of Lords", "nobles"),
+    FactionBlueprint(K.PEASANT_LEAGUE, "peasant league", "League", "farmers"),
+    FactionBlueprint(K.REBELS, "rebel band", "Rebels", "malcontents"),
+    FactionBlueprint(K.BANDITS, "bandit band", "Brigands", "outlaws"),
+    FactionBlueprint(K.PIRATES, "pirate crew", "Corsairs", "sea-robbers"),
+    FactionBlueprint(K.ASSASSINS, "assassins' guild", "Knives", "killers"),
+    FactionBlueprint(K.SCHOLARS_ACADEMY, "academy", "Academy", "scholars"),
+    FactionBlueprint(K.SECRET_SOCIETY, "secret society", "Hidden Circle", "initiates"),
+    FactionBlueprint(K.MERCENARY_COMPANY, "free company", "Free Company", "sellswords"),
+    FactionBlueprint(K.INTERWORLD_FEDERATION, "interworld federation", "Federation", "envoys"),
+    FactionBlueprint(K.WANDERING_MARKET, "wandering market", "Caravan", "traders"),
+    FactionBlueprint(K.VOID_PIRATES, "void pirates", "Void Raiders", "void-robbers"),
 )
 
 
@@ -56,11 +73,11 @@ def blueprint(kind: FactionKind) -> FactionBlueprint:
 
 def base_stats(rules: Rules, kind: FactionKind) -> tuple[int, int, int]:
     factions = rules.factions
-    return {
-        FactionKind.GUILD: (factions.guild_strength, factions.guild_wealth, factions.guild_sway),
-        FactionKind.COUNCIL: (factions.council_strength, factions.council_wealth, factions.council_sway),
-        FactionKind.BROTHERHOOD: (factions.brotherhood_strength, factions.brotherhood_wealth, factions.brotherhood_sway),
-    }[kind]
+    if kind in {K.MERCHANT_GUILD, K.CRAFT_GUILD, K.WANDERING_MARKET}:
+        return factions.guild_strength, factions.guild_wealth, factions.guild_sway
+    if kind in {K.PRIESTHOOD, K.SCHOLARS_ACADEMY, K.SECRET_SOCIETY, K.NOBLE_COUNCIL}:
+        return factions.council_strength, factions.council_wealth, factions.council_sway
+    return factions.brotherhood_strength, factions.brotherhood_wealth, factions.brotherhood_sway
 
 
 async def _note(ctx: TickContext, text: str, key: str, ids: tuple[int, ...]) -> None:
@@ -84,12 +101,11 @@ async def disband_uprisings(ctx: TickContext) -> int:
     return disbanded
 
 
-async def _existing(ctx: TickContext, community_id: int, engine_kind: EngineKind) -> bool:
-    statement = select(EntityRow.id).where(
-        EntityRow.entity_type == EntityType.FACTION,
-        EntityRow.status == EntityStatus.CANON,
-        EntityRow.engine_kind == engine_kind,
-        EntityRow.affiliated_entity_id == community_id,
+async def _existing(ctx: TickContext, community_id: int, kind: FactionKind) -> bool:
+    statement = (
+        select(EntityRow.id)
+        .join(FactionProfileRow, FactionProfileRow.faction_entity_id == EntityRow.id)
+        .where(EntityRow.status == EntityStatus.CANON, FactionProfileRow.kind == kind, FactionProfileRow.home_entity_id == community_id)
     )
     return await ctx.session.scalar(statement.limit(1)) is not None
 
@@ -98,17 +114,39 @@ async def eligible_kinds(ctx: TickContext, community: EntityRow) -> list[Faction
     rules = ctx.rules.factions
     shares = await class_shares(ctx.session, ctx.rules, community.id)
     bonds = BondRepository(ctx.session)
+    town = await ctx.session.get(SettlementProfileRow, community.id)
+    society = await ctx.session.get(CommunitySocietyRow, community.id)
     kinds: list[FactionKind] = []
     trade = bool(await bonds.outgoing(community.id, BondKind.TRADES_WITH) or await bonds.incoming(community.id, BondKind.TRADES_WITH))
     if shares[SocialClass.MERCHANT] >= rules.guild_min_merchant_pct and trade and (stat(community, "prosperity") or 0) >= rules.guild_min_prosperity:
-        kinds.append(FactionKind.GUILD)
+        kinds.append(K.MERCHANT_GUILD)
+    if shares[SocialClass.ARTISAN] >= rules.craft_min_artisan_pct:
+        kinds.append(K.CRAFT_GUILD)
     if shares[SocialClass.PRIEST] >= rules.council_min_priest_pct and await bonds.patron(community.id) is not None:
-        kinds.append(FactionKind.COUNCIL)
+        kinds.append(K.PRIESTHOOD)
     warriors = shares[SocialClass.WARRIOR]
     at_war = await ongoing_war_count(ctx.session, community.id) > 0
     if warriors >= rules.brotherhood_min_warrior_pct or (at_war and warriors >= rules.brotherhood_at_war_min_warrior_pct):
-        kinds.append(FactionKind.BROTHERHOOD)
-    return [kind for kind in kinds if not await _existing(ctx, community.id, blueprint(kind).engine_kind)]
+        kinds.append(K.WARRIOR_ORDER)
+    if warriors >= rules.mercenary_min_warrior_pct and not at_war:
+        kinds.append(K.MERCENARY_COMPANY)
+    if shares[SocialClass.NOBLE] >= rules.noble_min_pct:
+        kinds.append(K.NOBLE_COUNCIL)
+    if society is not None and shares[SocialClass.FARMER] >= rules.peasant_min_farmer_pct and society.satisfaction(SocialClass.FARMER) < rules.peasant_bitter:
+        kinds.append(K.PEASANT_LEAGUE)
+    if shares[SocialClass.SCRIBE] >= rules.academy_min_scribe_pct:
+        kinds.append(K.SCHOLARS_ACADEMY)
+    crime = town.crime if town is not None else 0
+    if town is not None and town.unrest >= rules.secret_unrest:
+        kinds.append(K.SECRET_SOCIETY)
+    if crime >= rules.assassins_crime and shares[SocialClass.OUTCAST] > 0:
+        kinds.append(K.ASSASSINS)
+    if shares[SocialClass.OUTCAST] >= rules.bandits_outcast_pct and crime >= rules.bandits_crime:
+        harbour = town is not None and await ctx.session.scalar(
+            select(DistrictRow.id).where(DistrictRow.settlement_entity_id == community.id, DistrictRow.kind == DistrictKind.HARBOUR).limit(1)
+        )
+        kinds.append(K.PIRATES if harbour else K.BANDITS)
+    return [kind for kind in kinds if not await _existing(ctx, community.id, kind)]
 
 
 async def found_faction(ctx: TickContext, community: EntityRow, kind: FactionKind) -> EntityRow:
@@ -132,10 +170,11 @@ async def found_faction(ctx: TickContext, community: EntityRow, kind: FactionKin
             location_id=community.id if community.entity_type is EntityType.SETTLEMENT else community.location_id,
             world_id=community.world_id,
             subtype=plan.subtype,
-            engine_kind=plan.engine_kind,
+            engine_kind=ENGINE_OF_KIND.get(kind),
         ),
     )
     faction.affiliated_entity_id = community.id
+    new_profile(ctx, faction, kind)
     bonds = BondRepository(ctx.session)
     await bonds.connect(BondDraft(faction.id, community.id, BondKind.DESCENDS_FROM, ctx.epoch, "born from within"))
     language = await spoken_language(ctx.session, community.id)
@@ -144,7 +183,7 @@ async def found_faction(ctx: TickContext, community: EntityRow, kind: FactionKin
     patron = await bonds.patron(community.id)
     if patron is not None:
         await bonds.connect(BondDraft(faction.id, patron, BondKind.WORSHIPS, ctx.epoch, f"the faith of {community.name}"))
-    await _note(ctx, f"A {plan.subtype} was founded in {community.name}.", f"faction.founded_{kind.value}", (faction.id, community.id))
+    await _note(ctx, f"A {plan.subtype} was founded in {community.name}.", "faction.founded", (faction.id, community.id))
     ctx.count("factions_founded")
     return faction
 
@@ -168,40 +207,116 @@ async def found_factions(ctx: TickContext) -> int:
 
 
 @reads(
+    "faction.strength",
+    "faction.sway",
+    "faction.wealth",
+    "mortal.charisma",
+    "mortal.intellect",
+    "mortal.strength",
     "people.population",
     "people.prosperity",
     "settlement.population",
     "settlement.prosperity",
+    "table.applied_fixups",
+    "table.armies",
+    "table.army_profiles",
     "table.bonds",
+    "table.claims",
     "table.community_societies",
+    "table.culture_values",
+    "table.districts",
     "table.epoch_year_cursors",
+    "table.faction_actions",
+    "table.faction_goals",
+    "table.faction_memberships",
+    "table.faction_profiles",
+    "table.law_jurisdictions",
+    "table.law_profiles",
+    "table.memories",
+    "table.minds",
     "table.name_registry",
     "table.nodes",
+    "table.oaths",
+    "table.offices",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.polity_territories",
     "table.pressures",
     "table.routes",
+    "table.settlement_profiles",
+    "table.skills",
+    "table.sons",
+    "table.traits",
+    "table.treaty_clauses",
+    "table.treaty_parties",
+    "table.treaty_profiles",
+    "table.vassalages",
     "table.war_sides",
     "table.wars",
+    "table.world_maps",
 )
 @writes(
+    "faction.strength",
+    "people.prosperity",
+    "polity.legitimacy",
+    "settlement.prosperity",
+    "table.applied_fixups",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.community_relations",
     "table.entities",
+    "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.faction_actions",
+    "table.faction_goals",
+    "table.faction_memberships",
+    "table.faction_profiles",
     "table.incident_participants",
     "table.incidents",
+    "table.injuries",
+    "table.law_jurisdictions",
+    "table.law_profiles",
+    "table.memories",
+    "table.mortal_profiles",
     "table.name_registry",
+    "table.oaths",
+    "table.office_history",
+    "table.offices",
+    "table.polity_profiles",
+    "table.settlement_profiles",
+    "table.treaty_breaches",
+    "table.treaty_clauses",
+    "table.treaty_parties",
+    "table.treaty_profiles",
+    "table.war_sides",
 )
 async def factions(ctx: TickContext) -> None:
     ctx.count("uprisings_disbanded", await disband_uprisings(ctx))
     await found_factions(ctx)
+    book = await FactionBook.load(ctx.session)
+    ctx.count("faction_profiles", await backfill_profiles(ctx, book))
+    realms = await RealmBook.load(ctx.session)
+    laws = await LawBook.load(ctx.session)
+    await dues(ctx, book)
+    await influence_from_members(ctx, book)
+    ctx.count("faction_goals", await plan_goals(ctx, book, realms))
+    ctx.count("faction_acts", await pursue(ctx, book, realms, laws))
+    ctx.count("faction_schisms", await schisms(ctx, book))
+    ctx.count("monopolies", await monopolies(ctx, book, laws))
+    ctx.count("bands_broken", await suppress(ctx, book, realms))
+    ctx.count("privateer_raids", await privateers(ctx, book, realms))
+    ctx.count("companies_hired", await hire(ctx, book, realms))
+    for key, value in (await pay_companies(ctx, book, realms)).items():
+        ctx.count(f"companies_{key}", value)
+    await ctx.session.flush()
 
 
 async def decree_faction(ctx: TickContext, community_id: int, kind: FactionKind) -> EntityRow:
     community = await living_entity(ctx.session, community_id)
     if community is None or community.entity_type not in SOCIETY_TYPES:
         raise ValidationFailedError("Factions are founded inside a living people or settlement.")
-    if await _existing(ctx, community.id, blueprint(kind).engine_kind):
+    if await _existing(ctx, community.id, kind):
         raise ConflictError(f"{community.name} already has a {blueprint(kind).subtype}.")
     return await found_faction(ctx, community, kind)
 

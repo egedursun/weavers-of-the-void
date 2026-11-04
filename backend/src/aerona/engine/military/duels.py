@@ -9,7 +9,7 @@ from aerona.domain.enums.mind import TraitEffect, ValueAxis
 from aerona.engine.body.book import effective
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.beasts import mounted_power
-from aerona.engine.lore.arms import best_weapon, grip, guard_of, held_profiles
+from aerona.engine.lore.arms import best_weapon, burden_of, grip, guard_of, held_profiles, war_magic, ward_magic
 from aerona.engine.mind.book import effect_of, scaled_by, values_for
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import stat
@@ -31,6 +31,7 @@ class Fighter:
     reach: int
     honour: int
     mercy: int
+    burden: int = 0
     stamina: int = PERCENT
     harm: int = 0
     disarmed: bool = False
@@ -62,16 +63,19 @@ async def fighter(ctx: TickContext, hero: EntityRow) -> Fighter:
     items = await equipment(ctx.session, hero.id)
     values = await values_for(ctx.session, hero.id)
     held = await held_profiles(ctx.session, hero.id)
-    blade = best_weapon(held)
+    broken = ctx.rules.item_wear.broken
+    blade = best_weapon(held, broken)
     reach = blade.reach if blade is not None else min(REACH_ITEMS, sum(1 for item in items if (stat(item, "damage") or 0) > 0))
+    magic = await war_magic(ctx.session, ctx.rules, blade)
     return Fighter(
         entity=hero,
-        power=base * (grip(blade) if blade is not None else 1.0) * await mounted_power(ctx, hero.id),
+        power=base * (grip(blade) if blade is not None else 1.0) * magic * await mounted_power(ctx, hero.id),
         hp=stat(hero, "hp") or campaigns.hero_default_hp,
-        armour=sum(stat(item, "protection") or 0 for item in items) + guard_of(held),
+        armour=sum(stat(item, "protection") or 0 for item in items) + guard_of(held, broken) + await ward_magic(ctx.session, ctx.rules, held),
         reach=reach,
         honour=values.get(ValueAxis.HONOUR, 0),
         mercy=values.get(ValueAxis.MERCY, 0),
+        burden=burden_of(held, broken) * ctx.rules.item_powers.weight_fatigue_pct // PERCENT,
     )
 
 
@@ -120,7 +124,7 @@ def bout(rules: Rules, rng: SeededRandom, first: Fighter, second: Fighter, conte
             hits.append((target.entity.id, harm))
             log.append(f"{hitter.entity.name} hit {target.entity.name} for {harm}")
         for one in (first, second):
-            one.stamina = max(0, one.stamina - table.stamina_loss)
+            one.stamina = max(0, one.stamina - table.stamina_loss - one.burden)
         if target.harm >= target.hp:
             end, killed, spared = downed(rules, rng, hitter, target, context)
             return Bout(hitter, target, end, context, index + 1, killed, spared, log, hits)

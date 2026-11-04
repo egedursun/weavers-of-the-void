@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import IdeologyAdherentRow, IdeologyTenetRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.ledger import LedgerEntryRow
 from aerona.db.tables.lore import ThreadRow
@@ -15,6 +16,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ThreadStatus
+from aerona.domain.enums.culture import IdeologyTenet
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityType
 from aerona.domain.enums.son import Stat
 from aerona.engine.gods.world_view import WorldView
@@ -23,6 +25,7 @@ from aerona.engine.primitives.stats import stat
 from aerona.prompts.contexts.common import NamedRecord
 from aerona.prompts.contexts.opportunities import (
     Covenants,
+    GodlessCreeds,
     KnowledgePairs,
     OverusedTool,
     RecordPair,
@@ -247,11 +250,30 @@ class SonHints:
         closed = list(await self.session.scalars(select(ThreadRow.id).where(ThreadRow.id.in_(mentioned), ThreadRow.status != ThreadStatus.OPEN)))
         return StalePlan(thread_ids=sorted(closed)) if closed else None
 
+    async def godless_creeds(self) -> GodlessCreeds | None:
+        mine = [entity.id for entity in self.own()]
+        if not mine:
+            return None
+        godless = select(IdeologyTenetRow.ideology_entity_id).where(IdeologyTenetRow.tenet == IdeologyTenet.ANTI_GOD)
+        rows = list(
+            await self.session.execute(
+                select(IdeologyAdherentRow.ideology_entity_id, func.max(IdeologyAdherentRow.strength))
+                .where(IdeologyAdherentRow.adherent_entity_id.in_(mine), IdeologyAdherentRow.ideology_entity_id.in_(godless))
+                .group_by(IdeologyAdherentRow.ideology_entity_id)
+                .order_by(func.max(IdeologyAdherentRow.strength).desc())
+            )
+        )
+        creeds = [await self.session.get(EntityRow, creed) for creed, _ in rows]
+        named_creeds = [named(creed) for creed in creeds if creed is not None]
+        return GodlessCreeds(creeds=named_creeds, strongest=int(rows[0][1])) if named_creeds else None
+
     def knowledge_pairs(self) -> KnowledgePairs | None:
         knowledge = [entity for entity in self.visible if entity.entity_type is EntityType.KNOWLEDGE]
         pairs: list[RecordPair] = []
         for believer in self.own():
-            lacking = [item for item in knowledge if item.id not in self.view.knows.get(believer.id, set())]
+            lacking = sorted(
+                (item for item in knowledge if item.id not in self.view.knows.get(believer.id, set())), key=lambda item: (stat(item, "spread") or 0, item.id)
+            )
             if lacking:
                 pairs.append(RecordPair(a=named(lacking[0]), b=named(believer)))
         return KnowledgePairs(pairs=pairs[: self.rules.opportunities.list_max]) if pairs else None
@@ -259,12 +281,19 @@ class SonHints:
 
 async def son_behaviour_lines(
     hints: SonHints, rivals: list[SonRow]
-) -> list[RivalOptions | UntriedTools | OverusedTool | Covenants | StalePlan | KnowledgePairs]:
+) -> list[RivalOptions | UntriedTools | OverusedTool | Covenants | StalePlan | KnowledgePairs | GodlessCreeds]:
     usage = await tool_usage(hints.session, hints.son.id, hints.epoch, hints.rules.opportunities.untried_epochs)
-    lines: list[RivalOptions | UntriedTools | OverusedTool | Covenants | StalePlan | KnowledgePairs] = []
+    lines: list[RivalOptions | UntriedTools | OverusedTool | Covenants | StalePlan | KnowledgePairs | GodlessCreeds] = []
     if rivals:
         lines.append(hints.rival_options(rivals[0]))
-    for line in (await hints.untried(rivals, usage), overused(hints.rules, usage), await hints.covenants(), await hints.stale_plan(), hints.knowledge_pairs()):
+    for line in (
+        await hints.untried(rivals, usage),
+        overused(hints.rules, usage),
+        await hints.covenants(),
+        await hints.stale_plan(),
+        hints.knowledge_pairs(),
+        await hints.godless_creeds(),
+    ):
         if line is not None:
             lines.append(line)
     return lines

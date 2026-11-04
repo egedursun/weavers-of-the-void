@@ -252,6 +252,8 @@ export const TRADITION_TERMS: Record<string, LoreNamed> = {
   satisfaction: { label: 'Satisfaction', icon: Smile, tone: 'success' },
   piety: { label: 'Piety', icon: Church, tone: 'gold' },
   food_saved: { label: 'Food saved', icon: Wheat, tone: 'success' },
+  rest: { label: 'Midday rest', icon: Sun, tone: 'gold' },
+  vigil: { label: 'Night vigil', icon: Flame, tone: 'info' },
   rite: { label: 'Rites for the dead', icon: Flower2, tone: 'muted' },
   scar: { label: 'Scarring', icon: Droplet, tone: 'danger' },
   fertility: { label: 'Births', icon: Baby, tone: 'success' },
@@ -470,6 +472,8 @@ export const DEEDS: Record<Schemas['ItemDeed'], LoreNamed> = {
   broken: { label: 'Was broken', icon: Unlink, tone: 'danger' },
   repaired: { label: 'Was mended', icon: Wrench, tone: 'success' },
   enchanted: { label: 'Was enchanted', icon: Sparkles, tone: 'verdigris' },
+  given: { label: 'Was given away', icon: Gift, tone: 'info' },
+  captured: { label: 'Was captured', icon: Flag, tone: 'danger' },
 }
 
 export const MEDIUMS: Record<Schemas['ArtMedium'], LoreNamed> = {

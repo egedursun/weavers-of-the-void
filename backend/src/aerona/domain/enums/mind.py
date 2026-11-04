@@ -214,6 +214,9 @@ class ActKind(StrEnum):
     OATHBREAKING = "oathbreaking"
     LEARNING = "learning"
     HOSPITALITY = "hospitality"
+    WINTER_FIGHTING = "winter_fighting"
+    GUEST_KILLING = "guest_killing"
+    RITUAL_SCARRING = "ritual_scarring"
 
 
 class NeedKind(StrEnum):
@@ -252,6 +255,29 @@ class TraitEffect(StrEnum):
     DECEIT = "deceit"
     GREED = "greed"
     COURAGE = "courage"
+
+
+class KindFamily(StrEnum):
+    TRAIT = "trait"
+    SKILL = "skill"
+    CONDITION = "condition"
+
+
+class Profession(StrEnum):
+    SOLDIER = "soldier"
+    RIDER = "rider"
+    SMITH = "smith"
+    BUILDER = "builder"
+    WEAVER = "weaver"
+    HEALER = "healer"
+    SCHOLAR = "scholar"
+    PRIEST = "priest"
+    SORCERER = "sorcerer"
+    MERCHANT = "merchant"
+    DIPLOMAT = "diplomat"
+    HUNTER = "hunter"
+    SAILOR = "sailor"
+    COMMANDER = "commander"
 
 
 class CareerChange(StrEnum):

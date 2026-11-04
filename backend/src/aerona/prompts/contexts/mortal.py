@@ -71,6 +71,12 @@ class MortalLand(ContextItem):
     weather: str | None = None
 
 
+class HeardRumour(ContextItem):
+    age: int
+    fidelity: int
+    text: str
+
+
 class KnowledgeItem(ContextItem):
     id: int
     name: str
@@ -106,6 +112,11 @@ class HomeLine(ContextItem):
     office: str = ""
     house: str = ""
     oaths: list[str] = Field(default_factory=list)
+    treaties: list[str] = Field(default_factory=list)
+    claims: list[str] = Field(default_factory=list)
+    succession: str = ""
+    laws: list[str] = Field(default_factory=list)
+    factions: list[str] = Field(default_factory=list)
     wars: list[str] = Field(default_factory=list)
     command: str = ""
     occupied_by: str = ""
@@ -151,6 +162,7 @@ class MortalContextContext(RulesContext):
     stores: StoresLine | None = None
     home: HomeLine | None = None
     mentions: list[ChronicleRow] = Field(default_factory=list)
+    rumours: list[HeardRumour] = Field(default_factory=list)
     languages: str = ""
     other_worlds: str = ""
     routes: list[RouteLine] = Field(default_factory=list)

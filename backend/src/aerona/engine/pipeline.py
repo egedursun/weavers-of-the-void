@@ -85,6 +85,7 @@ from aerona.engine.phases import (
     reputation,
     resources,
     ruins,
+    rumours,
     seafaring,
     settlement_life,
     settlements,
@@ -181,6 +182,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + refugees.PHASES
     + religion_spread.PHASES
     + reputation.PHASES
+    + rumours.PHASES
     + resources.PHASES
     + ruins.PHASES
     + settlements.PHASES
@@ -356,6 +358,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "event_phases",
     "item_cycles",
     "artwork_cycles",
+    "rumour_cycles",
 )
 AGING_STAGE = stage("body_healing", "mortal_wounds", "body_conditions", "body_society", "mortal_life_course", "mortal_aging", "dead_bonds_closing")
 MIND_STAGE = stage(

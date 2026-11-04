@@ -61,6 +61,7 @@ import {
   MARRIAGE_ENDS,
   MARRIAGE_KINDS,
   MORTAL_ICON,
+  PROFESSIONS,
   PUNISHMENTS,
   SEXES,
   SLOTS,
@@ -121,6 +122,9 @@ function LifeHero({ profile }: { profile: MortalProfile }) {
     >
       <Tag spec={sex} />
       {profile.career && <Tag spec={named(CAREERS, profile.career)} />}
+      {profile.profession && (
+        <Tag spec={named(PROFESSIONS, profile.profession)} />
+      )}
       {profile.social_class && (
         <Badge size='sm' variant='outline'>
           {plain({}, profile.social_class)}
@@ -371,7 +375,7 @@ function LifeControls({
       hold={hold}
       onHold={setHold}
     >
-      <div className='grid min-w-0 grid-cols-1 gap-3 @md/life:grid-cols-3'>
+      <div className='grid min-w-0 grid-cols-1 gap-3 @md/life:grid-cols-2 @2xl/life:grid-cols-4'>
         <MindPicker
           label='Life stage'
           value={profile.life_stage}
@@ -392,6 +396,20 @@ function LifeControls({
           blocked={busy}
           onPick={(value) =>
             void send('/api/actions/mortal:sex', { sex: value as MortalSex })
+          }
+        />
+        <MindPicker
+          label='Profession'
+          value={profile.profession ?? ''}
+          table={table(PROFESSIONS)}
+          blocked={busy}
+          placeholder='No profession yet'
+          onPick={(value) =>
+            void send('/api/actions/mortal:set', {
+              field: 'profession',
+              value,
+              hold,
+            })
           }
         />
         <MindPicker

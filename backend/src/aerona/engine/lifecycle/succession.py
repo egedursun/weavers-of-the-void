@@ -1,12 +1,16 @@
 import re
 
+from sqlalchemy import select
+
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
+from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.ruler_roles import ruler_role
@@ -138,6 +142,28 @@ async def designate_heir(ctx: TickContext, ruler_id: int, heir_id: int) -> Desig
     else:
         row.heir_entity_id = heir.id
         row.epoch = ctx.epoch
+    for profile in await ctx.session.scalars(
+        select(PolityProfileRow)
+        .join(OfficeRow, OfficeRow.polity_entity_id == PolityProfileRow.polity_entity_id)
+        .where(OfficeRow.kind == OfficeKind.RULER, OfficeRow.holder_entity_id == ruler.id)
+    ):
+        profile.locked = profile.locked if "heir" in profile.locked else [*profile.locked, "heir"]
+        designate = await ctx.session.scalar(
+            select(OfficeRow).where(OfficeRow.polity_entity_id == profile.polity_entity_id, OfficeRow.kind == OfficeKind.HEIR_DESIGNATE).limit(1)
+        )
+        if designate is None:
+            ctx.session.add(
+                OfficeRow(
+                    polity_entity_id=profile.polity_entity_id,
+                    kind=OfficeKind.HEIR_DESIGNATE,
+                    holder_entity_id=heir.id,
+                    since_epoch=ctx.epoch,
+                    powers=[],
+                    locked=[],
+                )
+            )
+        else:
+            designate.holder_entity_id = heir.id
     await ctx.session.flush()
     return row
 

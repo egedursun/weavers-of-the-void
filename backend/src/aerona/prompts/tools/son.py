@@ -1,5 +1,8 @@
 from aerona.catalog.entity_types import ENTITY_TYPES
+from aerona.domain.enums.culture import ArtMedium, CalendarSlot, ItemClass, LegendArchetype, ProphecyConsequence, ProphecyPredicate, TraditionKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.world import SkyEventKind
 from aerona.prompts.tools.ids import SonToolId
 from aerona.prompts.tools.shared import IMAGE_PROMPT_FIELD, LINK_FIELDS, WORD_FIELDS
 from aerona.prompts.tools.text import ToolText
@@ -42,6 +45,15 @@ CREATION_FIELDS: dict[str, str] = {
 
 WORSHIPPED_SON_FIELD = {"worshipped_son_id": "Whom they worship (son id){% if entity.type == 'cult' %}; you if empty{% endif %}. Faith flows this way."}
 
+ARCHETYPES = ", ".join(item.value for item in LegendArchetype)
+TRADITION_KINDS = ", ".join(item.value for item in TraditionKind)
+CALENDAR_SLOTS = ", ".join(item.value for item in CalendarSlot)
+ITEM_CLASSES = ", ".join(item.value for item in ItemClass)
+ART_MEDIA = ", ".join(item.value for item in ArtMedium)
+PREDICATES = ", ".join(item.value for item in ProphecyPredicate)
+CONSEQUENCES = ", ".join(item.value for item in ProphecyConsequence)
+SKY_KINDS = ", ".join(item.value for item in SkyEventKind)
+TABOO_ACTS = ", ".join(item.value for item in ActKind)
 LEGEND_CATEGORY_FIELD = "What the legend would become if belief ever made it walk the world: {{ legend_categories | join(', ') }}; creature for a beast or monster, spirit for a ghost or soul, resource for a sacred spring or vein, relic for a weapon or treasure"
 COMMODITY_FIELD = "What its people draw from it: {{ commodities | join(', ') }}; ore feeds forges and coin, grain, livestock and fish feed mouths, timber feeds fuel and ships; empty if none"
 MATERIAL_FIELD = "What it is made of or yields, if a material: {{ materials | join(', ') }}; it sets hardness, edge, weight, holiness and taint"
@@ -52,9 +64,6 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "tenets": "The tenets you teach this cult (at most {{ rules.doctrine.tenets_max }}; opposites cannot stand together): {{ tenets }}",
         "judgement": "How its god judges the dead: {{ judgements | join(', ') }}",
         "rebirth_path": "Where its exceptional souls are reborn: {{ rebirth_paths | join(', ') }} (people: the same people; house: the same house; merit: by their deeds)",
-    },
-    EntityType.TRADITION: {
-        "funeral_rite": "If it is a funeral custom, how its people send off the dead: {{ funeral_rites | join(', ') }}; nameless seals the soul"
     },
     EntityType.PEOPLE: WORSHIPPED_SON_FIELD,
     EntityType.SETTLEMENT: WORSHIPPED_SON_FIELD,
@@ -97,7 +106,45 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "home_port_id": "For a ship, the settlement it calls home; its shipyard mends it",
         "captain_id": "For a ship, the living mortal who captains it",
     },
-    EntityType.LEGEND: {"legend_category": LEGEND_CATEGORY_FIELD},
+    EntityType.LEGEND: {
+        "legend_category": LEGEND_CATEGORY_FIELD,
+        "archetype": "The kind of tale it is, which sets the lesson it presses on its tellers: " + ARCHETYPES,
+    },
+    EntityType.TRADITION: {
+        "tradition_kind": "What kind of custom it is; this decides what keeping it costs and brings: " + TRADITION_KINDS,
+        "calendar_slot": "When it is kept, if at a set time: " + CALENDAR_SLOTS + "; a feast in its season is stronger",
+        "taboo_target": "For a taboo: the good its keepers will not touch",
+        "taboo_act": "For a taboo: the deed its keepers will not do (" + TABOO_ACTS + "); breakers are held in infamy",
+        "funeral_rite": "If it is a funeral custom, how its people send off the dead: {{ funeral_rites | join(', ') }}; nameless seals the soul",
+    },
+    EntityType.ITEM: {
+        "item_class": "What kind of thing it is; this decides how it is used and what it does in the world: " + ITEM_CLASSES,
+        "material": MATERIAL_FIELD,
+        "secondary_materials": "Other materials worked into it (inlays, bindings, hilts): {{ materials | join(', ') }}",
+    },
+    EntityType.ARTWORK: {
+        "medium": "What kind of work it is; performed works live only while someone can perform them: " + ART_MEDIA,
+        "subject_id": "Whom or what it portrays, if anyone (an entity id); a portrayed mortal is remembered, a portrayed god gains fame",
+    },
+    EntityType.PROPHECY: {
+        "predicate": "What exactly must happen for it to come true, checked by the world itself: " + PREDICATES,
+        "subject_id": "The one the foretelling names: who dies (dies), what falls (falls), the house (born_in), the realm (ruler_of), the first side (war_between)",
+        "second_id": "For war_between: the second side",
+        "archetype": "For ruler_of: the kind of legend the coming ruler must fit (" + ARCHETYPES + ")",
+        "sky_kind": "For sky_event: the sign in the sky (" + SKY_KINDS + ")",
+        "event_kind": "For within_epochs: the kind of happening foretold (a war, a plague, a flood...)",
+        "within_epochs": "In how many ages it must come true; if it does not, the seer is mocked",
+        "consequence": "What it means when it comes true: " + CONSEQUENCES,
+        "consequence_id": "Whom the consequence touches (the one who will rule, the city that will fall)",
+    },
+    EntityType.FACTION: {
+        **WORSHIPPED_SON_FIELD,
+        "faction_kind": "What it is: merchant_guild, craft_guild, priesthood, warrior_order, noble_council, peasant_league, rebels, bandits, pirates, assassins, scholars_academy, secret_society, mercenary_company, interworld_federation, wandering_market or void_pirates; its kind decides what it strives for and how it acts",
+    },
+    EntityType.LAW: {
+        "law_kind": "What the law rules: succession_rule, inheritance_split, land_tenure, slavery, serfdom, tax_rate, tithe, tolls, debt_law, penal_code, levy_law, conscription, standing_army, veteran_pension, ransom_custom, marriage_law, sumptuary, guild_charter, foreigner_rights, religious_tolerance, worship_ban, blood_feud, quarantine, burial_law, sanitation, magic_ban, licensed_magic, rite_restrictions or custom",
+        "law_params": "The law's terms by name, only those its kind has (e.g. rate, share, duration, theft, murder, treason, status, level, rite, split, tenure, labour_days)",
+    },
     EntityType.RESOURCE: {
         "commodity": COMMODITY_FIELD,
         "material": MATERIAL_FIELD,
@@ -130,6 +177,48 @@ STATUS_FREE = "Free."
 ESSENCE_GIFT_CAP = "{{ rules.son_tools.gift_max_essence }}"
 
 SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
+    T.COMMISSION_ARTWORK: ToolText(
+        "You commission a work of art: a song, epic, statue, fresco... It presses its message on those who keep it, remembers whom it portrays,"
+        " and a realm or town pays for it from its treasury. 1 action.",
+        {
+            "name": "A proper name for it, in the world's naming language",
+            "medium": "What kind of work: {{ art_media }}; songs, plays and dances live only while someone can perform them",
+            "subject_id": "Whom or what it portrays (an entity id), if anyone",
+            "author_id": "The artist who makes it (a mortal id), if any; a skilled hand makes a finer work",
+            "patron_id": "Who commissions and keeps it (a community id); one of your worshipping communities",
+        },
+    ),
+    T.DESIGN_RITE: ToolText(
+        "You devise a new rite of magic with the workings you choose; it must still be cast to take effect. 1 action.",
+        {
+            "name": "A proper name for the rite",
+            "school": "Its school of magic: {{ magic_schools }}",
+            "source": "What it draws on: {{ magic_sources }}; divine costs a god's essence, blood costs blood (captives' first), void costs sanity",
+            "power": "Its power, 1 to 10; stronger rites cost more and backfire more often",
+            "workings": "What it does, at most 4 workings",
+            "workings.effect": "The working: {{ rite_effects }}",
+            "workings.magnitude": "Its strength, 1 to 100",
+            "workings.damage_type": "For destruction: fire, cold, void or another wound",
+            "workings.summon_form": "For a summoning: spirit, beast or undead",
+            "holder_id": "The worshipping community or follower who will keep the rite",
+        },
+    ),
+    T.CAST_RITE: ToolText(
+        "You work a rite you know. It must be lawful where it is worked, its requirements met and its price paid; it may backfire. 1 action.",
+        {
+            "rite_id": "The rite to work (a rite id)",
+            "target_id": "Whom or where it is aimed at, if anyone",
+            "vessel_id": "The worshipping community the rite is worked through; you pay its price in essence",
+        },
+    ),
+    T.FOUND_SCHOOL: ToolText(
+        "You found a school of thought, a creed that spreads along roads, through scholars, books and schools, and can move a realm. 1 action.",
+        {
+            "name": "A proper name for the school or creed",
+            "tenets": "What it teaches, 1 to 3 tenets: {{ ideology_tenets }}",
+            "founder_id": "The mortal follower who founds it in your name",
+        },
+    ),
     T.WORLD_SUMMARY: ToolText(
         "Shows the world's current map, laws, pantheon, open stories and recent events. Give section to see in full a section that was truncated in the prompt "
         "({{ summary_sections | join(', ') }}). Free.",
@@ -447,6 +536,31 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You speak with the old or foreign god of another world: alliance, threat or bargain. The outcome depends on your charisma, their attitude and their power. "
         "At most {{ rules.son_tools.foreign_talk_per_god }} talk(s) with the same god per age. 1 action.",
         {"god_id": "The foreign god's id", "intent": "alliance, threat or bargain", "words": "What you say"},
+    ),
+    T.SEAL_TREATY: ToolText(
+        "You bind two or more parties (realms, communities, houses, cults, beasts) by a typed treaty sealed in your name: its kind decides how it behaves "
+        "and its clauses run every age (tribute, hostages, tolls waived, freedom of faith, call to arms...). Costs essence.",
+        {
+            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage, tribute, marriage_pact, trade_pact, condotta, guarantee or interworld",
+            "parties": "Each party's id and role (signatory, overlord, vassal, guarantor)",
+            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression), who owes it, who gains, and its terms (amount, commodity, epochs, region_id, mortal_id...)",
+            "epochs": "How many ages it holds; empty for ever",
+            "parties.party_id": "The party's id",
+            "parties.role": "Its role: signatory, overlord, vassal or guarantor",
+            "clauses.kind": "The clause's kind",
+            "clauses.obligor_id": "Who owes it",
+            "clauses.beneficiary_id": "Who gains by it",
+            "clauses.params": "Its terms by name (amount, commodity, epochs, region_id, mortal_id...)",
+        },
+    ),
+    T.BLESS_BLOODLINE: ToolText(
+        "You mark a noble house's blood with a lasting gift or curse (long_lived, giant_blooded, god_blooded, cursed, fertile, seer_gift); every child born to it carries it. "
+        "A god-blooded house anchors your existence while it lives. Costs essence.",
+        {"house_id": "The house", "trait": "The bloodline trait", "revoke": "True to lift it instead"},
+    ),
+    T.VOID_TREATY: ToolText(
+        "You make one party break a treaty in force: the breach is recorded, its oath is broken, guarantors may march and the breaker loses honour. Costs essence.",
+        {"treaty_id": "The treaty", "breaker_id": "The party that breaks it"},
     ),
     T.MAKE_INTERWORLD_TREATY: ToolText(
         "You establish an interworld treaty between two communities in separate worlds: alliance or trade. There must be a known, open road between the two worlds and one "

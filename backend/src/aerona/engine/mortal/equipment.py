@@ -7,7 +7,7 @@ from aerona.db.tables.mortal import MortalEquipmentRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.mortal import EquipmentSlot
-from aerona.engine.lore.arms import best_weapon, grip, held_profiles
+from aerona.engine.lore.arms import best_weapon, grip, held_profiles, whole
 from aerona.engine.mortal.profile import ensure_equipment, is_held
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.rules.registry import Rules
@@ -72,9 +72,9 @@ async def slot_profile(session: AsyncSession, mortal_id: int | None, slot: Equip
     return await session.get(ItemProfileRow, item_id) if item_id is not None else None
 
 
-async def wielded(session: AsyncSession, mortal_id: int | None) -> ItemProfileRow | None:
+async def wielded(session: AsyncSession, mortal_id: int | None, broken: int = 1) -> ItemProfileRow | None:
     found = await slot_profile(session, mortal_id, EquipmentSlot.WIELDED_MAIN)
-    return found if found is not None else best_weapon(await held_profiles(session, mortal_id))
+    return found if found is not None and whole(found, broken) else best_weapon(await held_profiles(session, mortal_id), broken)
 
 
 async def has_slot(session: AsyncSession, mortal_id: int, slot: EquipmentSlot) -> bool:

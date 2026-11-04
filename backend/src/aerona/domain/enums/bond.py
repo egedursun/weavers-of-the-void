@@ -57,6 +57,10 @@ class BondKind(StrEnum):
     CONCUBINE_OF = "concubine_of"
     FOSTERED_BY = "fostered_by"
     SWORN_KIN = "sworn_kin"
+    TELLS = "tells"
+    FIXED_IN = "fixed_in"
+    ADHERENT_OF = "adherent_of"
+    PRACTISES = "practises"
 
 
 class BondCategory(StrEnum):
@@ -100,6 +104,7 @@ class BondRole(StrEnum):
     FULFILLED_PROPHECY = "fulfilled_prophecy"
 
 
+DERIVED_BOND_KINDS = frozenset({BondKind.TELLS, BondKind.FIXED_IN, BondKind.ADHERENT_OF, BondKind.PRACTISES})
 VISIBLE_BOND_STATES = frozenset({BondState.ACTIVE, BondState.PAST})
 ROLE_BOND_KINDS = frozenset({BondKind.PARTY_TO, BondKind.RELATED})
 SYMMETRIC_BOND_KINDS = frozenset(

@@ -492,6 +492,7 @@ const LORE_COLOR: Record<string, ThemeColorName> = {
   casting: 'rarity-legendary',
   creed: 'brand-verdigris',
   artwork: 'rarity-rare',
+  learning: 'chart-2',
 }
 
 function drawLore(

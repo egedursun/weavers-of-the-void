@@ -1,7 +1,8 @@
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
+from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
@@ -17,9 +18,9 @@ from aerona.domain.enums.war import CaptiveStatus, WarCause, WarEnding
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import patron_node
 from aerona.engine.military.peace import AIM_TERMS, PeaceTerm, conclude, extra_terms, record
+from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.formation import set_ruler
-from aerona.engine.polity.treaties import Clause, sign
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import change_religion
 from aerona.engine.primitives.numbers import clamp_int
@@ -72,7 +73,11 @@ async def aims_of(ctx: TickContext, war_id: int, side_id: int | None = None) -> 
 
 async def wanted(ctx: TickContext, war: WarRow, attacker: EntityRow, defender: EntityRow) -> list[WarAimKind]:
     kinds: list[WarAimKind] = []
-    claimed = await ctx.session.scalar(select(ClaimRow.id).where(ClaimRow.claimant_entity_id == attacker.id, ClaimRow.ended_epoch.is_(None)).limit(1))
+    claimed = await ctx.session.scalar(
+        select(ClaimRow.id)
+        .where(or_(ClaimRow.claimant_entity_id == attacker.id, ClaimRow.backer_entity_id == attacker.id), ClaimRow.ended_epoch.is_(None))
+        .limit(1)
+    )
     if claimed is not None:
         kinds.append(A.PRESS_CLAIM)
     region_id = (await RegionAtlas.load(ctx.session)).top_region(defender.id)
@@ -84,6 +89,9 @@ async def wanted(ctx: TickContext, war: WarRow, attacker: EntityRow, defender: E
         kinds.append(A.DESTROY_CULT)
     if defender.entity_type is EntityType.SETTLEMENT:
         kinds.append(A.SEIZE_SETTLEMENT)
+    symbols = select(ItemProfileRow.item_entity_id).where(ItemProfileRow.regalia_of_entity_id == defender.id, ItemProfileRow.symbol.is_(True))
+    if await ctx.session.scalar(symbols.limit(1)) is not None:
+        kinds.append(A.HUMILIATE)
     kinds.extend(CAUSE_AIMS.get(war.cause, CAUSE_AIMS[WarCause.HOSTILITY]))
     return list(dict.fromkeys(kinds))
 
@@ -210,7 +218,7 @@ async def hostage_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: Sid
     taken = await hostage(ctx, war, victor, loser, book) if aim.achieved >= ctx.rules.peace.hostage_score else None
     if taken is None:
         return None
-    return f"{taken.name} went to {victor.name} as a hostage", Clause(ClauseKind.HOSTAGE, loser.id, victor.id, {"hostage": taken.id})
+    return f"{taken.name} went to {victor.name} as a hostage", Clause(ClauseKind.HOSTAGE, loser.id, victor.id, {"mortal_id": taken.id})
 
 
 async def reparation_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: Sides, book: RealmBook) -> Term:
@@ -301,7 +309,11 @@ async def press(ctx: TickContext, victor: EntityRow, loser: EntityRow, book: Rea
     if claim is None or claim.ended_epoch is not None:
         claim = await ctx.session.scalar(
             select(ClaimRow)
-            .where(ClaimRow.claimant_entity_id == victor.id, ClaimRow.polity_entity_id == realm.entity.id, ClaimRow.ended_epoch.is_(None))
+            .where(
+                or_(ClaimRow.claimant_entity_id == victor.id, ClaimRow.backer_entity_id == victor.id),
+                ClaimRow.polity_entity_id == realm.entity.id,
+                ClaimRow.ended_epoch.is_(None),
+            )
             .limit(1)
         )
     if claim is None or not set_ruler(ctx, realm, claim.claimant_entity_id, "claim won by war"):

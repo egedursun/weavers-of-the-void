@@ -119,12 +119,18 @@ async def society_mobility(ctx: TickContext) -> None:
     "table.holder_levels",
     "table.holder_techniques",
     "table.language_profiles",
+    "table.language_standing",
     "table.people_biology",
     "table.people_culture",
     "table.region_environment",
     "table.world_maps",
 )
-@writes("people.population", "table.entities", "table.people_biology", "table.people_culture")
+@writes(
+    "people.population",
+    "table.entities",
+    "table.people_biology",
+    "table.people_culture",
+)
 async def people_cycles(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     for people in await canon(ctx.session, [EntityType.PEOPLE]):

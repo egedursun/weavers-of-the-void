@@ -9,12 +9,14 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.mind import ActKind, MemoryKind, ValueAxis, ValueHolder
+from aerona.domain.enums.polity import OathKind
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.body.book import effective
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.lore.taboos import forbidden
 from aerona.engine.military.captivity import announce, cohort_fates, ransom_lawful, rich, wring_intel
 from aerona.engine.military.ransom import grow_ward, marry_captive, named_ransom, pay_from_treasury, release_by_opinion, ward_returns
 from aerona.engine.mind.book import stored_values, values_for, write_values
@@ -23,6 +25,7 @@ from aerona.engine.mind.hooks import judged, witnessed
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.phase import Phase
+from aerona.engine.polity.oaths import break_on
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
@@ -101,6 +104,7 @@ async def kin_of(ctx: TickContext, mortal: EntityRow) -> list[EntityRow]:
 
 
 async def torture(ctx: TickContext, captive: EntityRow, captor: EntityRow, home: EntityRow) -> None:
+    await break_on(ctx, [captive.id], OathKind.SILENCE, f"the secrets were wrung out by {captor.name}")
     table = ctx.rules.captivity
     await apply_hits(ctx, captive, Harm(table.torture_hp, HarmCause.TORTURE, f"tortured by {captor.name}", killer_id=captor.id), lethal=False)
     await wring_intel(ctx, captor, home)
@@ -161,7 +165,7 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
         return
     cruelty = await cruelty_drive(ctx.session, ctx.rules, captor.id)
     hated = home is not None and await relation(ctx.session, ctx.rules, home.id, captor.id) <= -campaigns.execution_relation
-    if home is not None and hated and rng.chance(campaigns.execution_chance * cruelty):
+    if home is not None and hated and rng.chance(campaigns.execution_chance * cruelty) and not await forbidden(ctx, captor.id, ActKind.EXECUTION):
         await execute(ctx, row, captive, captor, home)
         return
     if home is not None and rng.chance(ctx.rules.captivity.torture_chance * cruelty):
@@ -179,7 +183,10 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
     "table.captives",
     "table.culture_values",
     "table.epoch_year_cursors",
+    "table.house_members",
+    "table.house_profiles",
     "table.minds",
+    "table.oaths",
     "table.polity_members",
     "table.traits",
 )
@@ -190,8 +197,12 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
     "table.captives",
     "table.chronicle",
     "table.entities",
+    "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.house_profiles",
     "table.incidents",
+    "table.mortal_profiles",
+    "table.oaths",
 )
 @reads(
     "table.applied_fixups",

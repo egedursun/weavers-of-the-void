@@ -1,3 +1,5 @@
+from aerona.domain.enums.culture import CalendarSlot, LegendArchetype, TraditionKind
+from aerona.domain.enums.mind import ActKind
 from aerona.prompts.tools.ids import MortalToolId
 from aerona.prompts.tools.shared import IMAGE_PROMPT_FIELD, WORD_FIELDS
 from aerona.prompts.tools.text import ToolText
@@ -9,6 +11,48 @@ NAME_FIELD = "A name from your own language"
 DESCRIPTION_FIELD = "What it is, how it came to be, what makes it strange and concrete"
 
 MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
+    T.COMMISSION_ARTWORK: ToolText(
+        "You commission a work of art: a song, epic, statue, fresco... It presses its message on those who keep it, remembers whom it portrays,"
+        " and a realm or town pays for it from its treasury. 1 action.",
+        {
+            "name": "A proper name for it, in the world's naming language",
+            "medium": "What kind of work: {{ art_media }}; songs, plays and dances live only while someone can perform them",
+            "subject_id": "Whom or what it portrays (an entity id), if anyone",
+            "author_id": "The artist who makes it (a mortal id), if any; a skilled hand makes a finer work",
+            "patron_id": "Who commissions and keeps it (a community id); you if empty",
+        },
+    ),
+    T.DESIGN_RITE: ToolText(
+        "You devise a new rite of magic with the workings you choose; it must still be cast to take effect. 1 action.",
+        {
+            "name": "A proper name for the rite",
+            "school": "Its school of magic: {{ magic_schools }}",
+            "source": "What it draws on: {{ magic_sources }}; divine costs a god's essence, blood costs blood (captives' first), void costs sanity",
+            "power": "Its power, 1 to 10; stronger rites cost more and backfire more often",
+            "workings": "What it does, at most 4 workings",
+            "workings.effect": "The working: {{ rite_effects }}",
+            "workings.magnitude": "Its strength, 1 to 100",
+            "workings.damage_type": "For destruction: fire, cold, void or another wound",
+            "workings.summon_form": "For a summoning: spirit, beast or undead",
+            "holder_id": "Ignored: you devise it yourself",
+        },
+    ),
+    T.CAST_RITE: ToolText(
+        "You work a rite you know. It must be lawful where it is worked, its requirements met and its price paid; it may backfire. 1 action.",
+        {
+            "rite_id": "The rite to work (a rite id)",
+            "target_id": "Whom or where it is aimed at, if anyone",
+            "vessel_id": "Ignored: you work it yourself",
+        },
+    ),
+    T.FOUND_SCHOOL: ToolText(
+        "You found a school of thought, a creed that spreads along roads, through scholars, books and schools, and can move a realm. 1 action.",
+        {
+            "name": "A proper name for the school or creed",
+            "tenets": "What it teaches, 1 to 3 tenets: {{ ideology_tenets }}",
+            "founder_id": "Ignored: you found it yourself",
+        },
+    ),
     T.LOOK_AT_WORLD: ToolText(
         "Shows your land, those near you, your language, what you know, what you own and recent events more widely than the prompt. Free."
     ),
@@ -71,8 +115,15 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "subtype": "What exactly it is",
             "description": DESCRIPTION_FIELD,
             "related_ids": "Existing records it tells of (at most {{ " + M + ".culture_max_related }})",
+            "law_kind": "For a law: what it rules (succession_rule, tax_rate, penal_code, levy_law, slavery, tolls, sumptuary...); required for laws",
+            "law_params": "For a law: its terms by name (rate, share, theft, murder, status, level...); only the terms its kind has",
             "image_prompt": 'English photoreal prompt: the ritual being performed or a scene of the legend. {% include "shared/image_prompt_rules.md.j2" %}',
             "legend_category": "Only for a legend: what it would become if belief made it real: {{ legend_categories | join(', ') }}",
+            "archetype": "Only for a legend: the kind of tale, which sets its lesson: " + ", ".join(item.value for item in LegendArchetype),
+            "tradition_kind": "Only for a tradition: what kind of custom it is: " + ", ".join(item.value for item in TraditionKind),
+            "calendar_slot": "Only for a tradition kept at a set time: " + ", ".join(item.value for item in CalendarSlot),
+            "taboo_target": "Only for a taboo: the good its keepers will not touch",
+            "taboo_act": "Only for a taboo: the deed its keepers will not do: " + ", ".join(item.value for item in ActKind),
         },
     ),
     T.DISCOVER_RESOURCE: ToolText(
@@ -244,6 +295,15 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "You make a prophecy: you say something that will happen in the future. If it comes true Fate records it and your reputation (charisma) rises; if it is misread it "
         "is shaken. 1 action, {{ " + M + ".prophesy_per_epoch }} per age.",
         {
+            "predicate": "What exactly must happen for the prophecy to come true, which the world itself will check: {{ prophecy_predicates }}",
+            "subject_id": "The one the foretelling names: who dies, what falls, the house, the realm, or the first side of a war",
+            "second_id": "For a war: the second side",
+            "archetype": "For who will rule: the kind of legend the coming ruler must fit",
+            "sky_kind": "For a sign in the sky: which sign",
+            "event_kind": "For a foretold happening: what kind (war, plague, flood...)",
+            "within_epochs": "In how many ages it must come true; if it does not, you are mocked and your cult loses heart",
+            "consequence": "What it means when it comes true: {{ prophecy_consequences }}",
+            "consequence_id": "Whom the consequence touches",
             "name": "The prophecy's name, from your own language",
             "saying": "The words of the prophecy: imagistic but testable; who or what, and when",
             "related_ids": "Records the prophecy concerns (at most {{ " + M + ".prophecy_max_related }})",
@@ -278,6 +338,48 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "You appoint a named mortal (bound to you or from your land) at the head of your army; the commander's strength and charisma reflect on the army. Free, "
         "{{ " + M + ".appoint_commander_per_epoch }} per age.",
         {"mortal_id": "The named mortal's id"},
+    ),
+    T.ENACT_LAW: ToolText(
+        "As ruler or regent you lay down a typed law for your whole realm: its kind decides what it rules and its terms decide how. "
+        "1 action, {{ " + M + ".enact_law_per_epoch }} per age.",
+        {
+            "kind": "What the law rules: succession_rule, inheritance_split, land_tenure, slavery, serfdom, tax_rate, tithe, tolls, debt_law, penal_code, levy_law, conscription, standing_army, veteran_pension, ransom_custom, marriage_law, sumptuary, guild_charter, foreigner_rights, religious_tolerance, worship_ban, blood_feud, quarantine, burial_law, sanitation, magic_ban, licensed_magic or rite_restrictions",
+            "params": "The law's terms by name, only those its kind has (rate, share, duration, theft, murder, treason, status, level, rite, split, tenure, labour_days...)",
+            "name": "The law's name, if it should have one of its own",
+        },
+    ),
+    T.PROPOSE_TREATY: ToolText(
+        "You offer a typed treaty to another community or realm; it takes force when they accept. 1 action, {{ " + M + ".propose_treaty_per_epoch }} per age.",
+        {
+            "target_id": "The community or realm you offer it to",
+            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage (you become the vassal), tribute, marriage_pact, trade_pact, guarantee or interworld",
+            "clauses": "Typed clauses with who owes, who gains and their terms (amount, commodity, epochs, region_id, mortal_id...)",
+            "epochs": "How many ages it should hold",
+            "clauses.kind": "The clause's kind",
+            "clauses.obligor_id": "Who owes it",
+            "clauses.beneficiary_id": "Who gains by it",
+            "clauses.params": "Its terms by name (amount, commodity, epochs, region_id, mortal_id...)",
+        },
+    ),
+    T.SWEAR_OATH: ToolText(
+        "You swear an oath (fealty, vengeance, celibacy, pilgrimage, protection, silence, blood_brotherhood); keeping it wins honour, breaking it brings shame and a god's wrath. "
+        "Free, {{ " + M + ".swear_oath_per_epoch }} per age.",
+        {"kind": "The oath", "recipient_id": "To whom or against whom, if anyone (for a pilgrimage: the holy place)", "words": "The words of the oath"},
+    ),
+    T.ACCEPT_TREATY: ToolText("You accept a treaty offered to you; it takes force at once. Free.", {"treaty_id": "The offered treaty"}),
+    T.BREAK_TREATY: ToolText(
+        "You break a treaty your people are bound by: the other parties remember the betrayal, guarantors may march and your rulers lose honour. 1 action.",
+        {"treaty_id": "The treaty you break"},
+    ),
+    T.APPOINT_OFFICER: ToolText(
+        "As ruler or regent you fill a seat of your realm (chancellor, marshal, treasurer, high_judge, spymaster, governor, ambassador) with a living named mortal, "
+        "or leave it empty. Free, {{ " + M + ".appoint_officer_per_epoch }} per age.",
+        {"office": "The office to fill", "mortal_id": "The mortal who takes the seat; empty to dismiss the holder"},
+    ),
+    T.SET_TAX: ToolText(
+        "As ruler or regent you set the tax your realm's cities pay (0 to 50%); high taxes fill the treasury and stir unrest. Free, "
+        "{{ " + M + ".set_tax_per_epoch }} per age.",
+        {"rate": "The share of the cities' output taken in tax (%)"},
     ),
     T.BUILD_SPY_NETWORK: ToolText(
         "You build a spy network inside a nearby community: you learn its secrets and gain an advantage in war; if caught, relations sour and war may break out. 1 action.",

@@ -1,5 +1,6 @@
 import re
 from collections.abc import Awaitable, Callable, Mapping
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, cast
 
@@ -30,16 +31,20 @@ from aerona.db.tables.culture import (
     TraditionProfileRow,
 )
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.culture import ItemDeed, MagicSchool, ProphecyState, RiteEffectKind, SpeakerKind, Technique
+from aerona.domain.enums.body import DamageType
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.culture import CustomCatalog, ItemDeed, MagicSchool, ProphecyState, RiteEffectKind, SpeakerKind, SummonForm, Technique
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
-from aerona.engine.lore import art, ideology, items, legends, prophecy, rites, traditions
+from aerona.engine.lore import art, ideology, items, kinds, legends, prophecy, rites, traditions
+from aerona.engine.lore.creation import open_lore
+from aerona.engine.lore.history import record
 from aerona.engine.lore.language import standing_of
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.control import lock
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.queries import active_bonds, close, connect, living_entity
 
 Values = Mapping[str, Any]
 RANGE = re.compile(r"^(\w+) BETWEEN (-?\d+) AND (-?\d+)$")
@@ -58,7 +63,8 @@ async def ensure_prophecy(ctx: TickContext, entity: EntityRow) -> Base:
 async def ensure_rite(ctx: TickContext, entity: EntityRow) -> Base:
     row = await ctx.session.get(RiteProfileRow, entity.id)
     if row is None:
-        raise NotFoundError("That rite has no workings yet; devise it first.")
+        row = rites.profile_for(ctx, entity, await rites.school_of(ctx, entity), entity.maker_entity_id)
+        await ctx.session.flush()
     return row
 
 
@@ -157,6 +163,30 @@ async def edit_profile(ctx: TickContext, entity_id: int, values: Values, *, rele
     return row
 
 
+async def create_lore(
+    ctx: TickContext,
+    entity_type: EntityType,
+    *,
+    name: str,
+    description: str,
+    world_id: int | None,
+    location_id: int | None,
+    power: int,
+    values: Values,
+) -> EntityRow:
+    entity, row, rest = await open_lore(
+        ctx, entity_type, name=name, description=description, world_id=world_id, location_id=location_id, power=power, values=values
+    )
+    if row is not None:
+        limits = bounds(row)
+        for key, value in rest.items():
+            setattr(row, key, coerce(row, key, value, limits))
+    elif rest:
+        raise ValidationFailedError(f"{next(iter(rest)).replace('_', ' ').capitalize()} cannot be set here.")
+    await ctx.session.flush()
+    return entity
+
+
 def share(value: int, label: str) -> int:
     if not 0 <= value <= PERCENT:
         raise ValidationFailedError(f"{label} runs from 0 to {PERCENT}.")
@@ -180,9 +210,10 @@ async def set_intelligibility(ctx: TickContext, first: int, second: int, value: 
     low, high = sorted((first, second))
     row = await ctx.session.get(LanguageIntelligibilityRow, (low, high))
     if row is None:
-        row = LanguageIntelligibilityRow(first_entity_id=low, second_entity_id=high, value=0, epoch=ctx.epoch)
+        row = LanguageIntelligibilityRow(first_entity_id=low, second_entity_id=high, value=0, epoch=ctx.epoch, locked=[])
         ctx.session.add(row)
     row.value, row.epoch = share(value, "Intelligibility"), ctx.epoch
+    row.locked = lock(row.locked, "value")
     await ctx.session.flush()
     return row
 
@@ -204,9 +235,10 @@ async def set_speakers(ctx: TickContext, community_id: int, language_id: int, ki
             await ctx.session.flush()
         return None
     if row is None:
-        row = SpeakerCohortRow(community_entity_id=community_id, language_entity_id=language_id, kind=kind, share=0, since_epoch=ctx.epoch)
+        row = SpeakerCohortRow(community_entity_id=community_id, language_entity_id=language_id, kind=kind, share=0, since_epoch=ctx.epoch, locked=[])
         ctx.session.add(row)
     row.share = share(value, "Share of speakers")
+    row.locked = lock(row.locked, "share")
     await ctx.session.flush()
     return row
 
@@ -307,8 +339,18 @@ async def devise_rite(ctx: TickContext, school: MagicSchool, inventor_id: int) -
     return found
 
 
-async def set_rite_effect(ctx: TickContext, rite_id: int, effect: RiteEffectKind, magnitude: int, detail: str | None) -> RiteEffectRow | None:
+@dataclass(frozen=True)
+class EffectShape:
+    detail: str | None = None
+    damage_type: DamageType | None = None
+    summon_form: SummonForm | None = None
+    custom_kind_id: int | None = None
+
+
+async def set_rite_effect(ctx: TickContext, rite_id: int, effect: RiteEffectKind, magnitude: int, shape: EffectShape) -> RiteEffectRow | None:
     await rite(ctx, rite_id)
+    if shape.custom_kind_id is not None and await kinds.kind_of(ctx.session, shape.custom_kind_id, CustomCatalog.RITE_EFFECT) is None:
+        raise NotFoundError("No such working of your own making.")
     row = await ctx.session.get(RiteEffectRow, (rite_id, effect))
     if magnitude == 0:
         if row is not None:
@@ -320,7 +362,51 @@ async def set_rite_effect(ctx: TickContext, rite_id: int, effect: RiteEffectKind
     if row is None:
         row = RiteEffectRow(rite_entity_id=rite_id, effect=effect, magnitude=magnitude)
         ctx.session.add(row)
-    row.magnitude, row.detail = magnitude, detail
+    row.magnitude, row.detail = magnitude, shape.detail
+    row.damage_type, row.summon_form, row.custom_kind_id = shape.damage_type, shape.summon_form, shape.custom_kind_id
+    await ctx.session.flush()
+    return row
+
+
+async def teach_rite(ctx: TickContext, rite_id: int, holder_id: int, *, taught: bool) -> bool:
+    entity, _ = await rite(ctx, rite_id)
+    holder = await living_entity(ctx.session, holder_id)
+    if holder is None:
+        raise NotFoundError("No such living pupil.")
+    bonds = await active_bonds(ctx.session, [BondKind.OWNS], sources=[holder.id], targets=[entity.id])
+    if taught and not bonds:
+        await connect(ctx.session, holder.id, entity.id, BondKind.OWNS, ctx.epoch, description="taught the rite")
+    if not taught:
+        for bond in bonds:
+            await close(ctx.session, bond, ctx.epoch, "made to forget the rite")
+    await ctx.session.flush()
+    return taught
+
+
+async def forbid_rite(ctx: TickContext, rite_id: int, authority_id: int, *, forbidden: bool) -> list[int]:
+    _, row = await rite(ctx, rite_id)
+    authority = await living_entity(ctx.session, authority_id) or await ctx.session.get(EntityRow, authority_id)
+    if authority is None:
+        raise NotFoundError("No such realm, cult or people to forbid it.")
+    held = set(row.forbidden_by)
+    row.forbidden_by = sorted(held | {authority.id}) if forbidden else sorted(held - {authority.id})
+    row.locked = lock(row.locked, "forbidden_by")
+    await ctx.session.flush()
+    return row.forbidden_by
+
+
+async def dispel_rite(ctx: TickContext, rite_id: int) -> CastingRow:
+    await rite(ctx, rite_id)
+    casting = await rites.dispel(ctx, rite_id)
+    if casting is None:
+        raise ValidationFailedError("Nothing of that rite lingers to be undone.")
+    return casting
+
+
+async def set_requirements(ctx: TickContext, rite_id: int, values: dict[str, int | str | bool]) -> RiteProfileRow:
+    _, row = await rite(ctx, rite_id)
+    row.requirements = rites.checked_requirements(values)
+    row.locked = lock(row.locked, "requirements")
     await ctx.session.flush()
     return row
 
@@ -366,7 +452,7 @@ async def set_enchantment(ctx: TickContext, item_id: int, effect: RiteEffectKind
     if row is None:
         row = ItemEnchantmentRow(item_entity_id=item_id, effect=effect, strength=0, rite_entity_id=None, since_epoch=ctx.epoch)
         ctx.session.add(row)
-        items.record(ctx, item_id, ItemDeed.ENCHANTED, None, f"enchanted with {effect.value.replace('_', ' ')}")
+        record(ctx, item_id, ItemDeed.ENCHANTED, None, f"enchanted with {effect.value.replace('_', ' ')}")
     row.strength = share(strength, "Strength")
     await ctx.session.flush()
     return row
@@ -378,6 +464,7 @@ async def set_participation(ctx: TickContext, tradition_id: int, community_id: i
         raise NotFoundError("No such living tradition.")
     row = await traditions.participate(ctx, tradition, await community(ctx, community_id))
     row.participation = clamp_int(share(value, "Participation"), 0, PERCENT)
+    row.locked = lock(row.locked, "participation")
     await ctx.session.flush()
     return row
 

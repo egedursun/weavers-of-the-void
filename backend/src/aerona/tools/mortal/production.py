@@ -4,6 +4,7 @@ from aerona.catalog.civilization import unlocked
 from aerona.catalog.domains import match_domain
 from aerona.catalog.mind import CRAFT_SKILLS
 from aerona.constants.schema import KEY_MAX_LENGTH
+from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -13,16 +14,20 @@ from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.civilization import TierCapability
+from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind, MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, SkillKind
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarCause
 from aerona.engine.economy.materials import armour_protection, curse_bonus, decay_loss, enchantment_cap, sanctity_splendour, set_node_material, weapon_damage
 from aerona.engine.economy.resources import ensure_profile, set_resource_yield
 from aerona.engine.environment.ley_works import ley_row
+from aerona.engine.lore import legends, traditions
+from aerona.engine.polity.laws import attach_profile, validate
 from aerona.engine.primitives.mechanics import assign_mechanics
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
@@ -241,11 +246,27 @@ def _culture_stats(call: MortalCall, kind: CultureKind) -> dict[str, int]:
     return {"spread": tools.tradition_spread, "rigidity": tools.tradition_rigidity}
 
 
+async def seed_culture(call: MortalCall, args: CultureInput, created: EntityRow) -> None:
+    if args.kind is CultureKind.LEGEND:
+        await legends.profile_of(call.tick, created, args.archetype)
+    if args.kind is CultureKind.TRADITION:
+        row = await traditions.profile_of(call.tick, created, args.tradition_kind or TraditionKind.FESTIVAL)
+        row.calendar_slot, row.taboo_act = args.calendar_slot, args.taboo_act
+        if args.taboo_target is not None:
+            row.taboo_target = args.taboo_target.value
+
+
 async def create_culture(call: MortalCall, args: CultureInput) -> str:
     tools = call.rules.mortal_tools
     await call.within_limit(TurnCounter.CULTURES_CREATED, tools.culture_per_epoch, "mortal_tools.culture_per_epoch", MortalResult.CULTURE_LIMIT)
     await name_free(call, args.name)
     home = await home_of(call) if args.kind in (CultureKind.ARTWORK, CultureKind.LAW) else None
+    law_kind = args.law_kind or LawKind.CUSTOM
+    if args.kind is CultureKind.LAW:
+        try:
+            validate(law_kind, args.law_params or {})
+        except ValidationFailedError as error:
+            fail(MortalResult.LAW_TERMS_INVALID, reason=str(error))
     created = await create_record(
         call,
         MortalCreation(
@@ -261,6 +282,9 @@ async def create_culture(call: MortalCall, args: CultureInput) -> str:
     )
     bonds = BondRepository(call.session)
     await bonds.connect(BondDraft(call.me.id, created.id, CULTURE_BONDS[args.kind], call.epoch))
+    await seed_culture(call, args, created)
+    if args.kind is CultureKind.LAW:
+        await attach_profile(call.session, created, law_kind, args.law_params, holder=home, epoch=call.epoch, by_id=call.me.id)
     patron = await bonds.patron(call.me.id)
     if args.kind is CultureKind.ARTWORK and patron is not None:
         await bonds.connect(BondDraft(created.id, patron, BondKind.TELLS_OF, call.epoch, lines.TELLS_OF_GOD))

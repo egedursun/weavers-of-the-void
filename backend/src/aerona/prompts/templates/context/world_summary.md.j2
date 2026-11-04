@@ -34,6 +34,12 @@ RECENT EVENTS:
 THE COSMOS'S OTHER WORLDS (you can move there with move_to_world):
 {{ budget(cosmos_lines, limit_cosmos, "world_summary section=cosmos for cosmos detail", trim) }}
 {% endif %}
+{% if for_son and realms %}
+THE REALMS OF THIS WORLD (their rulers and heirs, laws, treaties and claims; seal_treaty, void_treaty, decree_law):
+{% for realm in realms %}
+- {{ realm }}
+{% endfor %}
+{% endif %}
 {% if for_son and foreign_gods %}
 THIS WORLD'S OLD/FOREIGN GODS (talk_to_foreign_god):
 {% for god in foreign_gods %}

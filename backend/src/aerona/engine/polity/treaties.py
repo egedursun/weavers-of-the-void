@@ -1,31 +1,50 @@
-from collections.abc import Sequence
-from dataclasses import dataclass, field, replace
 from types import MappingProxyType
 
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.cosmos import AppliedFixupRow
+from aerona.db.tables.economy import TradeRouteTollRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.polity import OathRow, TreatyBreachRow, TreatyClauseRow, TreatyPartyRow, TreatyProfileRow, VassalageRow
-from aerona.db.tables.warfare import ArmyRow
+from aerona.db.tables.polity import OathRow, PolityProfileRow, TreatyBreachRow, TreatyClauseRow, TreatyProfileRow, VassalageRow
+from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.tables.warfare import ArmyRow, TributeRow, WarRow, WarSideRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.mortal import MarriageKind
-from aerona.domain.enums.polity import ClauseKind, OathKind, PartyRole, TreatyKind, TreatyStatus
-from aerona.domain.enums.war import WarCause
-from aerona.domain.models.entity_stats import TreatyStats
+from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind, TreatyStatus
+from aerona.domain.enums.society import Commodity
+from aerona.domain.enums.war import TributeStatus, WarCause, WarSide, WarStatus
 from aerona.engine.context import TickContext
-from aerona.engine.lore.language import barrier
+from aerona.engine.mind.drives import greed_drive
 from aerona.engine.mortal.kinship import marry
 from aerona.engine.notes import note
-from aerona.engine.polity.book import RealmBook
-from aerona.engine.polity.oaths import break_oath, oath_god, swear
-from aerona.engine.primitives.queries import active_bonds, close, connect, living_entity
-from aerona.engine.primitives.records import RecordSpec, create_record
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.polity.accords import (
+    DEFAULT_CLAUSES,
+    Clause,
+    accept,
+    clause_pairs,
+    derive_bond,
+    end_treaty,
+    parties_of,
+    reject,
+    sign,
+    sworn_by,
+    treaty_between,
+)
+from aerona.engine.polity.book import Realm, RealmBook
+from aerona.engine.polity.oaths import break_oath
+from aerona.engine.polity.repute import shift_honour, shift_infamy
+from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.prosperity import add_prosperity
+from aerona.engine.primitives.queries import active_bonds, living_entity
+from aerona.engine.primitives.society import move_stock
+from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import declare_war
 
@@ -33,168 +52,19 @@ BOND_KINDS = MappingProxyType(
     {
         BondKind.TRUCE: TreatyKind.TRUCE,
         BondKind.ALLY: TreatyKind.ALLIANCE_DEFENSIVE,
-        BondKind.PAYS_TRIBUTE: TreatyKind.VASSALAGE,
+        BondKind.PAYS_TRIBUTE: TreatyKind.TRIBUTE,
         BondKind.TRADES_WITH: TreatyKind.TRADE_PACT,
     }
 )
-BETRAYAL_WORDS = ("betray", "broken", "abandon", "covenant broken")
-TREATY_WORDS = MappingProxyType(
-    {
-        TreatyKind.PEACE: "the Peace",
-        TreatyKind.TRUCE: "the Truce",
-        TreatyKind.ALLIANCE_DEFENSIVE: "the Alliance",
-        TreatyKind.ALLIANCE_OFFENSIVE: "the War Pact",
-        TreatyKind.NON_AGGRESSION: "the Pact of Restraint",
-        TreatyKind.VASSALAGE: "the Oath of Vassalage",
-        TreatyKind.TRIBUTE: "the Tribute",
-        TreatyKind.MARRIAGE_PACT: "the Marriage Pact",
-        TreatyKind.TRADE_PACT: "the Trade Pact",
-        TreatyKind.CONDOTTA: "the Condotta",
-        TreatyKind.GUARANTEE: "the Guarantee",
-        TreatyKind.INTERWORLD: "the Treaty of the Worlds",
-    }
-)
-DEFAULT_CLAUSES = MappingProxyType(
-    {
-        TreatyKind.ALLIANCE_DEFENSIVE: (ClauseKind.CALL_TO_ARMS,),
-        TreatyKind.ALLIANCE_OFFENSIVE: (ClauseKind.CALL_TO_ARMS,),
-        TreatyKind.NON_AGGRESSION: (ClauseKind.NON_AGGRESSION,),
-        TreatyKind.PEACE: (ClauseKind.NON_AGGRESSION,),
-        TreatyKind.TRUCE: (ClauseKind.NON_AGGRESSION,),
-        TreatyKind.VASSALAGE: (ClauseKind.TRIBUTE, ClauseKind.CALL_TO_ARMS),
-        TreatyKind.TRIBUTE: (ClauseKind.TRIBUTE,),
-        TreatyKind.TRADE_PACT: (ClauseKind.TRADE_RIGHTS, ClauseKind.TOLLS_WAIVED),
-        TreatyKind.MARRIAGE_PACT: (ClauseKind.MARRIAGE,),
-        TreatyKind.INTERWORLD: (ClauseKind.TRADE_RIGHTS,),
-    }
-)
+ADOPT_FIXUP = "treaties_from_bonds"
 PEACEFUL = frozenset({ClauseKind.NON_AGGRESSION, ClauseKind.CALL_TO_ARMS})
-
-
-@dataclass(frozen=True)
-class Clause:
-    kind: ClauseKind
-    obligor: int | None = None
-    beneficiary: int | None = None
-    params: dict[str, int | str | bool] = field(default_factory=dict)
-
-
-async def sign(
-    ctx: TickContext,
-    kind: TreatyKind,
-    parties: Sequence[tuple[int, PartyRole]],
-    *,
-    clauses: Sequence[Clause] = (),
-    until: int | None = None,
-    bond: BondRow | None = None,
-    witnessed: bool = True,
-) -> EntityRow:
-    names = [entity.name for party, _ in parties if (entity := await ctx.session.get(EntityRow, party)) is not None]
-    first = await ctx.session.get(EntityRow, parties[0][0])
-    treaty = await create_record(
-        ctx,
-        RecordSpec(
-            entity_type=EntityType.TREATY,
-            name=f"{TREATY_WORDS[kind]} of {' and '.join(names[:3])}",
-            body=f"{TREATY_WORDS[kind]} bound {', '.join(names)}.",
-            stats=TreatyStats(parties=len(parties), trust=50),
-            power=2,
-            location_id=None,
-            world_id=first.world_id if first is not None else None,
-            subtype=kind.value.replace("_", " "),
-            pending=False,
-        ),
-    )
-    witness = await oath_god(ctx, treaty.world_id) if witnessed else None
-    profile = TreatyProfileRow(
-        treaty_entity_id=treaty.id,
-        kind=kind,
-        status=TreatyStatus.IN_FORCE,
-        signed_epoch=ctx.epoch,
-        until_epoch=until,
-        witness_son_id=witness.id if witness is not None else None,
-        source_bond_id=bond.id if bond is not None else None,
-        locked=[],
-    )
-    ctx.session.add(profile)
-    for party, role in parties:
-        ctx.session.add(TreatyPartyRow(treaty_entity_id=treaty.id, party_node_id=party, role=role))
-    chosen = [await misread(ctx, clause) for clause in list(clauses) or [Clause(item, parties[0][0], parties[-1][0]) for item in DEFAULT_CLAUSES.get(kind, ())]]
-    for clause in chosen:
-        ctx.session.add(
-            TreatyClauseRow(
-                treaty_entity_id=treaty.id, kind=clause.kind, obligor_node_id=clause.obligor, beneficiary_node_id=clause.beneficiary, params=clause.params
-            )
-        )
-    await ctx.session.flush()
-    for party, _ in parties:
-        await connect(ctx.session, party, treaty.id, BondKind.PARTY_TO, ctx.epoch, description="signatory")
-    if witness is not None and first is not None:
-        swearer = await sworn_by(ctx, first)
-        if swearer is not None:
-            oath = await swear(
-                ctx, swearer, OathKind.FEALTY if kind is TreatyKind.VASSALAGE else OathKind.PROTECTION, recipient_id=parties[-1][0], witness=witness
-            )
-            profile.oath_id = oath.id
-    await execute_on_signing(ctx, treaty, chosen)
-    ctx.count(f"treaty.{kind.value}")
-    return treaty
-
-
-def halved(value: int | str | bool) -> int | str | bool:
-    return value // 2 if isinstance(value, int) and not isinstance(value, bool) else value
-
-
-async def misread(ctx: TickContext, clause: Clause) -> Clause:
-    if clause.obligor is None or clause.beneficiary is None or clause.obligor == clause.beneficiary:
-        return clause
-    if await barrier(ctx.session, ctx.rules, clause.obligor, clause.beneficiary, ctx.epoch) >= 1:
-        return clause
-    if not ctx.rng(f"misread.{clause.kind.value}.{clause.obligor}.{clause.beneficiary}.{ctx.epoch}").chance(ctx.rules.interpreters.misread_chance):
-        return clause
-    params = {key: halved(value) for key, value in clause.params.items()}
-    params["misread"] = True
-    ctx.count("treaty_clause_misread")
-    return replace(clause, params=params)
-
-
-async def sworn_by(ctx: TickContext, party: EntityRow) -> EntityRow | None:
-    if party.entity_type is EntityType.MORTAL:
-        return party
-    bonds = await active_bonds(ctx.session, [BondKind.RULES], targets=[party.id])
-    for bond in bonds:
-        ruler = await living_entity(ctx.session, bond.source_node_id)
-        if ruler is not None and ruler.entity_type is EntityType.MORTAL:
-            return ruler
-    return None
-
-
-async def execute_on_signing(ctx: TickContext, treaty: EntityRow, clauses: Sequence[Clause]) -> None:
-    table = ctx.rules.treaties
-    for clause in clauses:
-        obligor = await living_entity(ctx.session, clause.obligor) if clause.obligor is not None else None
-        beneficiary = await living_entity(ctx.session, clause.beneficiary) if clause.beneficiary is not None else None
-        if obligor is None or beneficiary is None:
-            continue
-        if clause.kind is ClauseKind.WERGILD:
-            value = int(clause.params.get("amount", table.wergild_value))
-            if stat(obligor, "wealth") is not None:
-                set_stats(obligor, wealth=max(0, (stat(obligor, "wealth") or 0) - value // 10))
-            if stat(beneficiary, "wealth") is not None:
-                set_stats(beneficiary, wealth=min(PERCENT, (stat(beneficiary, "wealth") or 0) + value // 10))
-        elif clause.kind is ClauseKind.CESSION and "region_id" in clause.params:
-            region = int(clause.params["region_id"])
-            for settlement in await ctx.session.scalars(
-                select(EntityRow).where(EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == region)
-            ):
-                for bond in await active_bonds(ctx.session, [BondKind.RULES], targets=[settlement.id]):
-                    await close(ctx.session, bond, ctx.epoch, f"ceded by {treaty.name}")
-                await connect(ctx.session, beneficiary.id, settlement.id, BondKind.RULES, ctx.epoch, description=f"ceded by {treaty.name}")
-        elif clause.kind is ClauseKind.TRADE_RIGHTS:
-            await connect(ctx.session, obligor.id, beneficiary.id, BondKind.TRADES_WITH, ctx.epoch, description=treaty.name)
+OFFENSIVE = frozenset({TreatyKind.ALLIANCE_OFFENSIVE, TreatyKind.CONDOTTA})
+DEFENSIVE = frozenset({TreatyKind.ALLIANCE_DEFENSIVE, TreatyKind.MARRIAGE_PACT, TreatyKind.VASSALAGE, TreatyKind.GUARANTEE})
 
 
 async def adopt_bonds(ctx: TickContext) -> int:
+    if await ctx.session.get(AppliedFixupRow, ADOPT_FIXUP) is not None:
+        return 0
     linked = set(await ctx.session.scalars(select(TreatyProfileRow.source_bond_id).where(TreatyProfileRow.source_bond_id.is_not(None))))
     made = 0
     bonds = await ctx.session.scalars(select(BondRow).where(BondRow.state == BondState.ACTIVE, BondRow.kind.in_(list(BOND_KINDS))).order_by(BondRow.id))
@@ -205,25 +75,28 @@ async def adopt_bonds(ctx: TickContext) -> int:
         if first is None or second is None or first.entity_type not in COMMUNITY_TYPES or second.entity_type not in COMMUNITY_TYPES:
             continue
         kind = BOND_KINDS[bond.kind]
-        if kind is TreatyKind.VASSALAGE:
-            parties = [(first.id, PartyRole.VASSAL), (second.id, PartyRole.OVERLORD)]
-        else:
-            parties = [(first.id, PartyRole.SIGNATORY), (second.id, PartyRole.SIGNATORY)]
+        parties = [(first.id, PartyRole.SIGNATORY), (second.id, PartyRole.SIGNATORY)]
         until = (
             bond.truce_until_epoch
             if bond.kind is BondKind.TRUCE
             else ctx.epoch + ctx.rules.treaties.trade_epochs
             if bond.kind is BondKind.TRADES_WITH
+            else ctx.epoch + ctx.rules.campaigns.tribute_epochs
+            if bond.kind is BondKind.PAYS_TRIBUTE
             else None
         )
-        if kind is TreatyKind.ALLIANCE_DEFENSIVE and bond.description and "marriage" in bond.description:
-            kind = TreatyKind.MARRIAGE_PACT
-        clauses = [Clause(item, first.id, second.id) for item in DEFAULT_CLAUSES.get(kind, ())]
-        if kind in {TreatyKind.ALLIANCE_DEFENSIVE, TreatyKind.MARRIAGE_PACT}:
+        clauses = [Clause(item, first.id, second.id, tribute_terms(ctx) if item is ClauseKind.TRIBUTE else {}) for item in DEFAULT_CLAUSES.get(kind, ())]
+        if kind is TreatyKind.ALLIANCE_DEFENSIVE:
             clauses.append(Clause(ClauseKind.CALL_TO_ARMS, second.id, first.id))
-        await sign(ctx, kind, parties, clauses=clauses, until=until, bond=bond, witnessed=bond.epoch == ctx.epoch)
+        await sign(ctx, kind, parties, clauses=clauses, until=until, bond=bond, witnessed=False)
         made += 1
+    ctx.session.add(AppliedFixupRow(key=ADOPT_FIXUP, result={"treaties": made}))
+    await ctx.session.flush()
     return made
+
+
+def tribute_terms(ctx: TickContext) -> dict[str, int | str | bool]:
+    return {"amount": ctx.rules.campaigns.tribute_flow, "commodity": Commodity.GOODS.value, "epochs": ctx.rules.campaigns.tribute_epochs}
 
 
 async def in_force(ctx: TickContext) -> list[TreatyProfileRow]:
@@ -232,71 +105,56 @@ async def in_force(ctx: TickContext) -> list[TreatyProfileRow]:
     )
 
 
-async def parties_of(ctx: TickContext, treaty_id: int) -> list[TreatyPartyRow]:
-    return list(await ctx.session.scalars(select(TreatyPartyRow).where(TreatyPartyRow.treaty_entity_id == treaty_id)))
-
-
 async def clauses_of(ctx: TickContext, treaty_id: int) -> list[TreatyClauseRow]:
     return list(await ctx.session.scalars(select(TreatyClauseRow).where(TreatyClauseRow.treaty_entity_id == treaty_id).order_by(TreatyClauseRow.id)))
 
 
-async def end_treaty(ctx: TickContext, profile: TreatyProfileRow, status: TreatyStatus, reason: str) -> None:
-    profile.status = status
-    profile.ended_epoch = ctx.epoch
-    treaty = await ctx.session.get(EntityRow, profile.treaty_entity_id)
-    bond = await ctx.session.get(BondRow, profile.source_bond_id) if profile.source_bond_id is not None else None
-    if bond is not None and bond.state is BondState.ACTIVE and status is not TreatyStatus.BROKEN:
-        await close(ctx.session, bond, ctx.epoch, reason)
-    if treaty is not None:
-        treaty.end_epoch = ctx.epoch
-        treaty.fate_note = f"Epoch {ctx.epoch}: {reason}."
-
-
 async def breach(ctx: TickContext, profile: TreatyProfileRow, breaker_id: int, *, clause: TreatyClauseRow | None, reason: str) -> None:
     table = ctx.rules.treaties
-    ctx.session.add(
-        TreatyBreachRow(
-            treaty_entity_id=profile.treaty_entity_id,
-            clause_id=clause.id if clause is not None else None,
-            breaker_node_id=breaker_id,
-            epoch=ctx.epoch,
-            note=reason[:120],
-        )
+    row = TreatyBreachRow(
+        treaty_entity_id=profile.treaty_entity_id,
+        clause_id=clause.id if clause is not None else None,
+        breaker_node_id=breaker_id,
+        epoch=ctx.epoch,
+        note=reason[:120],
     )
+    ctx.session.add(row)
     await end_treaty(ctx, profile, TreatyStatus.BROKEN, reason)
     breaker = await living_entity(ctx.session, breaker_id)
+    treaty = await ctx.session.get(EntityRow, profile.treaty_entity_id)
+    write = await ctx.chronicle(
+        ChronicleKind.DIPLOMACY,
+        f"{breaker.name if breaker is not None else 'A party'} broke {treaty.name if treaty else 'the treaty'}: {reason}.",
+        template_key="treaty.broken",
+        entity_ids=[breaker_id, profile.treaty_entity_id],
+        son_id=profile.witness_son_id,
+    )
+    row.incident_id = write.incident_id
     if breaker is None:
         return
     ruler = await sworn_by(ctx, breaker)
     if ruler is not None:
-        ruler.importance = max(0, (ruler.importance or 0) - table.breach_infamy)
+        await shift_honour(ctx, ruler.id, -table.breach_honour)
+        await shift_infamy(ctx, ruler.id, table.breach_infamy)
     if profile.oath_id is not None:
         oath = await ctx.session.get(OathRow, profile.oath_id)
         if oath is not None:
             await break_oath(ctx, oath, reason)
     victims = [
         party.party_node_id
-        for party in await parties_of(ctx, profile.treaty_entity_id)
+        for party in await parties_of(ctx.session, profile.treaty_entity_id)
         if party.party_node_id != breaker_id and party.role is not PartyRole.GUARANTOR
     ]
     for victim in victims:
-        if (await living_entity(ctx.session, victim)) is not None and breaker.entity_type in COMMUNITY_TYPES:
-            await change_relation(ctx, victim, breaker.id, -table.breach_infamy, MemoryKind.BETRAYED_ME, note="broke the treaty")
+        other = await living_entity(ctx.session, victim)
+        if other is not None and other.entity_type in COMMUNITY_TYPES and breaker.entity_type in COMMUNITY_TYPES:
+            await change_relation(ctx, victim, breaker.id, -table.breach_relation, MemoryKind.BETRAYED_ME, note="broke the treaty")
     await call_guarantors(ctx, profile, breaker)
-    treaty = await ctx.session.get(EntityRow, profile.treaty_entity_id)
-    await note(
-        ctx,
-        f"{breaker.name} broke {treaty.name if treaty else 'the treaty'}: {reason}.",
-        key="treaty.broken",
-        ids=[breaker.id, profile.treaty_entity_id],
-        son_id=profile.witness_son_id,
-        kind=ChronicleKind.DIPLOMACY,
-    )
 
 
 async def call_guarantors(ctx: TickContext, profile: TreatyProfileRow, breaker: EntityRow) -> int:
     joined = 0
-    for party in await parties_of(ctx, profile.treaty_entity_id):
+    for party in await parties_of(ctx.session, profile.treaty_entity_id):
         if party.role is not PartyRole.GUARANTOR:
             continue
         guarantor = await living_entity(ctx.session, party.party_node_id)
@@ -315,7 +173,7 @@ async def hostilities(ctx: TickContext) -> int:
     if not fresh:
         return 0
     for profile in await in_force(ctx):
-        parties = {party.party_node_id for party in await parties_of(ctx, profile.treaty_entity_id)}
+        parties = {party.party_node_id for party in await parties_of(ctx.session, profile.treaty_entity_id)}
         bond = next((item for item in fresh if {item.source_node_id, item.target_node_id} <= parties), None)
         if bond is None:
             continue
@@ -327,9 +185,13 @@ async def hostilities(ctx: TickContext) -> int:
     return broken
 
 
-async def allies_called(ctx: TickContext, party_id: int) -> list[int]:
+async def allies_called(ctx: TickContext, party_id: int, side: WarSide | None = None) -> list[int]:
     found: list[int] = []
     for profile in await in_force(ctx):
+        if side is WarSide.ATTACKER and profile.kind in DEFENSIVE:
+            continue
+        if side is WarSide.DEFENDER and profile.kind in OFFENSIVE:
+            continue
         for clause in await clauses_of(ctx, profile.treaty_entity_id):
             if clause.kind is ClauseKind.CALL_TO_ARMS and clause.beneficiary_node_id == party_id and clause.obligor_node_id is not None:
                 found.append(clause.obligor_node_id)
@@ -348,31 +210,33 @@ async def answer_call(ctx: TickContext, ally_id: int, party_id: int) -> bool:
 
 async def keep_clauses(ctx: TickContext, book: RealmBook) -> dict[str, int]:
     table = ctx.rules.treaties
-    counts = {"expired": 0, "renewed": 0, "broken": 0, "kept": 0}
+    counts = {"expired": 0, "renewed": 0, "broken": 0, "kept": 0, "guarded": 0}
+    strength = await MilitaryStrength.load(ctx.session, ctx.rules)
     for profile in await in_force(ctx):
         bond = await ctx.session.get(BondRow, profile.source_bond_id) if profile.source_bond_id is not None else None
-        if bond is not None and bond.state is not BondState.ACTIVE:
-            reason = bond.closed_reason or "the bond lapsed"
-            if any(word in reason.lower() for word in BETRAYAL_WORDS):
-                await breach(ctx, profile, bond.source_node_id, clause=None, reason=reason)
-                counts["broken"] += 1
-            else:
-                await end_treaty(ctx, profile, TreatyStatus.EXPIRED, reason)
-                counts["expired"] += 1
+        if bond is not None and bond.state is not BondState.ACTIVE and "status" not in profile.locked:
+            await end_treaty(ctx, profile, TreatyStatus.EXPIRED, "the bond it made lapsed")
+            counts["expired"] += 1
             continue
         if profile.until_epoch is not None and ctx.epoch >= profile.until_epoch and "until_epoch" not in profile.locked:
-            parties = [party.party_node_id for party in await parties_of(ctx, profile.treaty_entity_id)]
+            parties = [party.party_node_id for party in await parties_of(ctx.session, profile.treaty_entity_id)]
             friendly = len(parties) >= 2 and await relation(ctx.session, ctx.rules, parties[0], parties[1]) >= table.renew_relation
-            if friendly and profile.kind is not TreatyKind.TRUCE:
+            if friendly and profile.kind not in {TreatyKind.TRUCE, TreatyKind.TRIBUTE}:
                 profile.until_epoch = ctx.epoch + table.alliance_epochs
                 profile.renewals += 1
                 counts["renewed"] += 1
             else:
-                await end_treaty(ctx, profile, TreatyStatus.EXPIRED, "its term ran out")
+                await end_treaty(
+                    ctx, profile, TreatyStatus.FULFILLED if profile.kind in {TreatyKind.TRIBUTE, TreatyKind.TRUCE} else TreatyStatus.EXPIRED, "its term ran out"
+                )
                 counts["expired"] += 1
             continue
+        if profile.kind is TreatyKind.GUARANTEE:
+            counts["guarded"] += await guard(ctx, profile)
+        if profile.kind is TreatyKind.INTERWORLD:
+            await bridge_worlds(ctx, profile)
         for clause in await clauses_of(ctx, profile.treaty_entity_id):
-            if await keep_clause(ctx, profile, clause):
+            if await keep_clause(ctx, profile, clause, strength):
                 counts["kept"] += 1
             elif profile.status is TreatyStatus.BROKEN:
                 counts["broken"] += 1
@@ -381,14 +245,39 @@ async def keep_clauses(ctx: TickContext, book: RealmBook) -> dict[str, int]:
     return counts
 
 
-async def keep_clause(ctx: TickContext, profile: TreatyProfileRow, clause: TreatyClauseRow) -> bool:
-    table = ctx.rules.treaties
-    if clause.kind is ClauseKind.HOSTAGE and "mortal_id" in clause.params:
-        hostage = await living_entity(ctx.session, int(clause.params["mortal_id"]))
-        if hostage is not None and clause.beneficiary_node_id is not None:
-            due = profile.signed_epoch + table.hostage_epochs
-            hostage.location_id = clause.beneficiary_node_id if ctx.epoch < due else clause.obligor_node_id
-    elif clause.kind is ClauseKind.DEMILITARISED and "region_id" in clause.params and clause.obligor_node_id is not None:
+async def misread_breach(ctx: TickContext, profile: TreatyProfileRow, clause: TreatyClauseRow) -> bool:
+    if not clause.params.get("misread") or clause.obligor_node_id is None or clause.beneficiary_node_id is None:
+        return False
+    seed = f"misread_breach.{profile.treaty_entity_id}.{clause.id}.{ctx.epoch}"
+    if not ctx.rng(seed).chance(ctx.rules.interpreters.misread_breach_chance):
+        return False
+    obligor = await living_entity(ctx.session, clause.obligor_node_id)
+    beneficiary = await living_entity(ctx.session, clause.beneficiary_node_id)
+    if obligor is None or beneficiary is None:
+        return False
+    label = clause.kind.value.replace("_", " ")
+    await note(
+        ctx,
+        f"Neither court read the other's tongue: {obligor.name} kept the clause of {label} as something less than {beneficiary.name} meant, "
+        "and the misreading was counted a breach.",
+        key="treaty.misread_breach",
+        ids=[obligor.id, beneficiary.id],
+    )
+    ctx.count("treaty_clause_misread_breach")
+    await breach(ctx, profile, obligor.id, clause=clause, reason="it kept the clause only as its own tongue had read it")
+    return True
+
+
+async def keep_clause(ctx: TickContext, profile: TreatyProfileRow, clause: TreatyClauseRow, strength: MilitaryStrength) -> bool:
+    if await misread_breach(ctx, profile, clause):
+        return False
+    if clause.kind is ClauseKind.TRIBUTE:
+        return await pay_tribute(ctx, profile, clause)
+    if clause.kind is ClauseKind.HOSTAGE:
+        return await keep_hostage(ctx, profile, clause)
+    if clause.kind is ClauseKind.TOLLS_WAIVED:
+        return await tolls_kept(ctx, profile, clause)
+    if clause.kind is ClauseKind.DEMILITARISED and "region_id" in clause.params and clause.obligor_node_id is not None:
         region = int(clause.params["region_id"])
         armies = await ctx.session.scalars(select(ArmyRow).where(ArmyRow.owner_entity_id == clause.obligor_node_id, ArmyRow.disbanded_epoch.is_(None)))
         for row in armies:
@@ -423,35 +312,144 @@ async def keep_clause(ctx: TickContext, profile: TreatyProfileRow, clause: Treat
     return True
 
 
+async def pay_tribute(ctx: TickContext, profile: TreatyProfileRow, clause: TreatyClauseRow) -> bool:
+    table = ctx.rules.treaties
+    if clause.params.get("hoard"):
+        return True
+    payer = await living_entity(ctx.session, clause.obligor_node_id) if clause.obligor_node_id is not None else None
+    receiver = await living_entity(ctx.session, clause.beneficiary_node_id) if clause.beneficiary_node_id is not None else None
+    if payer is None or receiver is None:
+        clause.last_kept_epoch = ctx.epoch
+        return True
+    if profile.signed_epoch == ctx.epoch:
+        clause.last_kept_epoch = ctx.epoch
+        return True
+    greed = await greed_drive(ctx.session, ctx.rules, receiver.id) if receiver.entity_type in COMMUNITY_TYPES else 1.0
+    amount = round_half_up(int(clause.params.get("amount", ctx.rules.campaigns.tribute_flow)) * greed)
+    paid = False
+    if shift_stat(payer, "prosperity", -amount) is not None:
+        add_prosperity(ctx.rules, receiver, amount)
+        paid = True
+    if shift_stat(payer, "wealth", -amount) is not None:
+        shift_stat(receiver, "wealth", amount)
+        paid = True
+    commodity = str(clause.params.get("commodity", Commodity.GOODS.value))
+    payer_society = await ctx.session.get(CommunitySocietyRow, payer.id)
+    receiver_society = await ctx.session.get(CommunitySocietyRow, receiver.id)
+    if payer_society is not None and receiver_society is not None and commodity in {item.value for item in Commodity}:
+        kind = Commodity(commodity)
+        held = getattr(payer_society, f"stock_{kind.value}", 0) or 0
+        goods = round_half_up(held * min(PERCENT, ctx.rules.campaigns.tribute_goods_pct * greed) / PERCENT)
+        if goods > 0:
+            await move_stock(ctx.session, ctx.rules, payer.id, receiver.id, kind, index=goods, epoch=ctx.epoch, flow=GoodsFlow.TRIBUTE)
+            paid = True
+    payer_realm = await ctx.session.get(PolityProfileRow, payer.id)
+    receiver_realm = await ctx.session.get(PolityProfileRow, receiver.id)
+    if payer_realm is not None and receiver_realm is not None:
+        moved = min(payer_realm.treasury, amount * table.realm_tribute_scale)
+        payer_realm.treasury -= moved
+        receiver_realm.treasury += moved
+        paid = paid or moved > 0
+    if paid:
+        clause.last_kept_epoch = ctx.epoch
+        ctx.count("tributes_paid")
+        return True
+    last = clause.last_kept_epoch if clause.last_kept_epoch is not None else profile.signed_epoch
+    if ctx.epoch - last > table.unpaid_grace:
+        await breach(ctx, profile, payer.id, clause=clause, reason="it stopped paying the tribute it owed")
+        return False
+    return True
+
+
+async def keep_hostage(ctx: TickContext, profile: TreatyProfileRow, clause: TreatyClauseRow) -> bool:
+    table = ctx.rules.treaties
+    key = clause.params.get("mortal_id", clause.params.get("hostage"))
+    hostage = await living_entity(ctx.session, int(key)) if key is not None else None
+    if hostage is None or clause.beneficiary_node_id is None:
+        clause.last_kept_epoch = ctx.epoch
+        return True
+    due = profile.signed_epoch + table.hostage_epochs
+    if ctx.epoch < due:
+        if (
+            hostage.location_id not in {clause.beneficiary_node_id, None}
+            and hostage.location_id == clause.obligor_node_id
+            and clause.last_kept_epoch is not None
+        ):
+            await breach(ctx, profile, clause.obligor_node_id or hostage.id, clause=clause, reason="it took back the hostage it had given")
+            return False
+        hostage.location_id = clause.beneficiary_node_id
+    else:
+        hostage.location_id = clause.obligor_node_id
+    clause.last_kept_epoch = ctx.epoch
+    return True
+
+
+async def tolls_kept(ctx: TickContext, profile: TreatyProfileRow, clause: TreatyClauseRow) -> bool:
+    parties = {party.party_node_id for party in await parties_of(ctx.session, profile.treaty_entity_id)}
+    charged = await ctx.session.scalar(
+        select(TradeRouteTollRow)
+        .where(TradeRouteTollRow.controller_entity_id.in_(list(parties)), TradeRouteTollRow.rate_pct > 0, TradeRouteTollRow.set_by_player.is_(True))
+        .limit(1)
+    )
+    if charged is not None and charged.controller_entity_id is not None:
+        await breach(ctx, profile, charged.controller_entity_id, clause=clause, reason="it charged tolls it had sworn to waive")
+        return False
+    clause.last_kept_epoch = ctx.epoch
+    return True
+
+
+async def guard(ctx: TickContext, profile: TreatyProfileRow) -> int:
+    roles = await parties_of(ctx.session, profile.treaty_entity_id)
+    guarantors = [row.party_node_id for row in roles if row.role is PartyRole.GUARANTOR]
+    wards = [row.party_node_id for row in roles if row.role is not PartyRole.GUARANTOR]
+    joined = 0
+    for ward in wards:
+        attacks = await ctx.session.scalars(
+            select(WarRow)
+            .join(WarSideRow, WarSideRow.war_id == WarRow.id)
+            .where(WarSideRow.entity_id == ward, WarSideRow.side == WarSide.DEFENDER, WarSideRow.left_epoch.is_(None), WarRow.status == WarStatus.ONGOING)
+        )
+        for war in attacks:
+            attacker = await ctx.session.scalar(select(WarSideRow.entity_id).where(WarSideRow.war_id == war.id, WarSideRow.side == WarSide.ATTACKER).limit(1))
+            for guarantor in guarantors:
+                if attacker is None or guarantor == attacker or guarantor in wards:
+                    continue
+                willing = ctx.rng(f"guard.{profile.treaty_entity_id}.{guarantor}.{war.id}").chance(ctx.rules.treaties.guarantor_chance)
+                if willing and await declare_war(ctx, guarantor, attacker, "it stood by the land it guaranteed", cause=WarCause.PUNITIVE):
+                    joined += 1
+    return joined
+
+
+async def bridge_worlds(ctx: TickContext, profile: TreatyProfileRow) -> None:
+    table = ctx.rules.treaties
+    parties = [row.party_node_id for row in await parties_of(ctx.session, profile.treaty_entity_id)]
+    for index, first in enumerate(parties):
+        for second in parties[index + 1 :]:
+            one, two = await living_entity(ctx.session, first), await living_entity(ctx.session, second)
+            if one is None or two is None or one.entity_type not in COMMUNITY_TYPES or two.entity_type not in COMMUNITY_TYPES:
+                continue
+            await change_relation(ctx, first, second, table.interworld_relation, MemoryKind.TRADED_WITH, note="the treaty of the worlds")
+            add_prosperity(ctx.rules, one, table.interworld_prosperity)
+            add_prosperity(ctx.rules, two, table.interworld_prosperity)
+
+
 async def tolls_waived(ctx: TickContext, first_id: int, second_id: int) -> bool:
-    for profile in await in_force(ctx):
-        parties = {party.party_node_id for party in await parties_of(ctx, profile.treaty_entity_id)}
-        if {first_id, second_id} <= parties and any(clause.kind is ClauseKind.TOLLS_WAIVED for clause in await clauses_of(ctx, profile.treaty_entity_id)):
-            return True
-    return False
+    return frozenset((first_id, second_id)) in await clause_pairs(ctx.session, ClauseKind.TOLLS_WAIVED)
 
 
 async def faith_free(ctx: TickContext, first_id: int, second_id: int) -> bool:
-    for profile in await in_force(ctx):
-        parties = {party.party_node_id for party in await parties_of(ctx, profile.treaty_entity_id)}
-        if {first_id, second_id} <= parties and any(clause.kind is ClauseKind.RELIGIOUS_FREEDOM for clause in await clauses_of(ctx, profile.treaty_entity_id)):
-            return True
-    return False
+    return frozenset((first_id, second_id)) in await clause_pairs(ctx.session, ClauseKind.RELIGIOUS_FREEDOM)
 
 
 async def champion_for(ctx: TickContext, first_id: int, second_id: int) -> bool:
-    for profile in await in_force(ctx):
-        parties = {party.party_node_id for party in await parties_of(ctx, profile.treaty_entity_id)}
-        if {first_id, second_id} <= parties and any(clause.kind is ClauseKind.CHAMPION for clause in await clauses_of(ctx, profile.treaty_entity_id)):
-            return True
-    return False
+    return frozenset((first_id, second_id)) in await clause_pairs(ctx.session, ClauseKind.CHAMPION)
 
 
 async def vassal_rows(ctx: TickContext, book: RealmBook) -> None:
     for profile in await in_force(ctx):
         if profile.kind is not TreatyKind.VASSALAGE:
             continue
-        roles = {party.role: party.party_node_id for party in await parties_of(ctx, profile.treaty_entity_id)}
+        roles = {party.role: party.party_node_id for party in await parties_of(ctx.session, profile.treaty_entity_id)}
         vassal = book.realm_of(roles.get(PartyRole.VASSAL))
         overlord = book.realm_of(roles.get(PartyRole.OVERLORD))
         if vassal is None or overlord is None or vassal.entity.id == overlord.entity.id:
@@ -459,12 +457,149 @@ async def vassal_rows(ctx: TickContext, book: RealmBook) -> None:
         row = book.vassals.get(vassal.entity.id)
         if row is None:
             row = VassalageRow(
-                vassal_entity_id=vassal.entity.id, overlord_entity_id=overlord.entity.id, treaty_entity_id=profile.treaty_entity_id, since_epoch=ctx.epoch
+                vassal_entity_id=vassal.entity.id,
+                overlord_entity_id=overlord.entity.id,
+                treaty_entity_id=profile.treaty_entity_id,
+                since_epoch=ctx.epoch,
+                locked=[],
             )
             ctx.session.add(row)
             book.vassals[vassal.entity.id] = row
         row.overlord_entity_id = overlord.entity.id
         row.treaty_entity_id = profile.treaty_entity_id
         first, second = roles.get(PartyRole.VASSAL), roles.get(PartyRole.OVERLORD)
-        if first is not None and second is not None:
+        if first is not None and second is not None and "loyalty" not in row.locked:
             row.loyalty = max(0, min(PERCENT, PERCENT // 2 + await relation(ctx.session, ctx.rules, first, second) // 2))
+
+
+async def vassal_duties(ctx: TickContext, book: RealmBook) -> dict[str, int]:
+    table = ctx.rules.treaties
+    counts = {"tribute": 0, "levies": 0, "revolts": 0, "switched": 0}
+    strength = await MilitaryStrength.load(ctx.session, ctx.rules)
+    for vassal_id, row in list(book.vassals.items()):
+        vassal = book.realms.get(vassal_id)
+        overlord = book.realms.get(row.overlord_entity_id)
+        if vassal is None or overlord is None:
+            continue
+        owed = round_half_up(vassal.profile.treasury * row.tribute_pct / PERCENT)
+        if owed > 0:
+            vassal.profile.treasury -= owed
+            overlord.profile.treasury += owed
+            counts["tribute"] += owed
+        counts["levies"] += await send_levies(ctx, vassal.profile.core_entity_id, overlord.profile.core_entity_id, row.levy_pct)
+        weak = overlord.profile.stability < table.weak_overlord_stability
+        vassal_core = await living_entity(ctx.session, vassal.profile.core_entity_id) if vassal.profile.core_entity_id is not None else None
+        lord_core = await living_entity(ctx.session, overlord.profile.core_entity_id) if overlord.profile.core_entity_id is not None else None
+        if vassal_core is None or lord_core is None:
+            continue
+        stronger = await strength.power(vassal_core) > await strength.power(lord_core) * table.vassal_revolt_strength_pct / PERCENT
+        if row.loyalty >= table.revolt_loyalty or not (weak or stronger):
+            continue
+        treaty = await ctx.session.get(TreatyProfileRow, row.treaty_entity_id) if row.treaty_entity_id is not None else None
+        patron = await new_overlord(ctx, book, vassal, overlord)
+        if patron is not None and ctx.rng(f"switch.{vassal_id}.{ctx.epoch}").chance(table.switch_chance):
+            if treaty is not None and treaty.status is TreatyStatus.IN_FORCE:
+                await breach(ctx, treaty, vassal_core.id, clause=None, reason="it bent the knee to another lord")
+            patron_core = patron.profile.core_entity_id
+            if patron_core is not None:
+                await sign(
+                    ctx,
+                    TreatyKind.VASSALAGE,
+                    [(vassal_core.id, PartyRole.VASSAL), (patron_core, PartyRole.OVERLORD)],
+                    clauses=[
+                        Clause(ClauseKind.TRIBUTE, vassal_core.id, patron_core, tribute_terms(ctx)),
+                        Clause(ClauseKind.CALL_TO_ARMS, vassal_core.id, patron_core),
+                    ],
+                )
+            await ctx.session.delete(row)
+            book.vassals.pop(vassal_id, None)
+            counts["switched"] += 1
+        elif ctx.rng(f"vassal_revolt.{vassal_id}.{ctx.epoch}").chance(table.vassal_revolt_chance):
+            if treaty is not None and treaty.status is TreatyStatus.IN_FORCE:
+                await breach(ctx, treaty, vassal_core.id, clause=None, reason="it rose against its overlord")
+            await declare_war(ctx, vassal_core.id, lord_core.id, f"{vassal.entity.name} threw off its overlord", cause=WarCause.INDEPENDENCE)
+            await ctx.session.delete(row)
+            book.vassals.pop(vassal_id, None)
+            counts["revolts"] += 1
+    return counts
+
+
+async def send_levies(ctx: TickContext, vassal_core: int | None, lord_core: int | None, share: int) -> int:
+    if vassal_core is None or lord_core is None or share <= 0:
+        return 0
+    wars = await ctx.session.scalars(
+        select(WarSideRow)
+        .join(WarRow, WarRow.id == WarSideRow.war_id)
+        .where(WarSideRow.entity_id == lord_core, WarSideRow.left_epoch.is_(None), WarRow.status == WarStatus.ONGOING)
+    )
+    sent = 0
+    for side in wars:
+        present = await ctx.session.scalar(select(WarSideRow.entity_id).where(WarSideRow.war_id == side.war_id, WarSideRow.entity_id == vassal_core))
+        if present is not None or not ctx.rng(f"levy.{vassal_core}.{side.war_id}").chance(share):
+            continue
+        ctx.session.add(WarSideRow(war_id=side.war_id, entity_id=vassal_core, side=side.side, joined_epoch=ctx.epoch))
+        sent += 1
+    return sent
+
+
+async def new_overlord(ctx: TickContext, book: RealmBook, vassal: Realm, overlord: Realm) -> Realm | None:
+    if vassal.profile.core_entity_id is None:
+        return None
+    best: tuple[int, Realm] | None = None
+    for other in book.realms.values():
+        if other.entity.id in {vassal.entity.id, overlord.entity.id} or other.profile.core_entity_id is None or other.entity.id in book.vassals:
+            continue
+        if other.entity.world_id != vassal.entity.world_id or other.profile.stability <= overlord.profile.stability:
+            continue
+        value = await relation(ctx.session, ctx.rules, vassal.profile.core_entity_id, other.profile.core_entity_id)
+        if value >= ctx.rules.treaties.renew_relation and (best is None or value > best[0]):
+            best = (value, other)
+    return best[1] if best is not None else None
+
+
+async def tribute_ledger(ctx: TickContext) -> int:
+    ended = 0
+    for row in await ctx.session.scalars(select(TributeRow).where(TributeRow.status == TributeStatus.ACTIVE)):
+        bond = await ctx.session.get(BondRow, row.bond_id) if row.bond_id is not None else None
+        if bond is not None and bond.state is not BondState.ACTIVE:
+            row.status = TributeStatus.ENDED
+            row.ended_epoch = ctx.epoch
+            ended += 1
+    return ended
+
+
+async def sign_derived(
+    ctx: TickContext, kind: TreatyKind, first: int, second: int, *, until: int | None, clauses: list[Clause] | None = None
+) -> EntityRow | None:
+    existing = await treaty_between(ctx.session, first, second, [kind])
+    if existing is not None:
+        return await ctx.session.get(EntityRow, existing.treaty_entity_id)
+    roles = (
+        [(first, PartyRole.VASSAL), (second, PartyRole.OVERLORD)]
+        if kind is TreatyKind.VASSALAGE
+        else [(first, PartyRole.SIGNATORY), (second, PartyRole.SIGNATORY)]
+    )
+    return await sign(ctx, kind, roles, clauses=clauses or [], until=until)
+
+
+async def treaty_bond(ctx: TickContext, treaty: EntityRow, kind: TreatyKind, ends: tuple[int, int], until: int | None) -> BondRow | None:
+    return await derive_bond(ctx, treaty, kind, ends, until)
+
+
+async def answer_proposals(ctx: TickContext) -> dict[str, int]:
+    table = ctx.rules.treaties
+    counts = {"accepted": 0, "rejected": 0}
+    for profile in list(await ctx.session.scalars(select(TreatyProfileRow).where(TreatyProfileRow.status == TreatyStatus.PROPOSED))):
+        if profile.signed_epoch >= ctx.epoch:
+            continue
+        parties = [row.party_node_id for row in await parties_of(ctx.session, profile.treaty_entity_id)]
+        others = [party for party in parties if party != profile.proposed_by_node_id]
+        proposer = profile.proposed_by_node_id
+        warm = proposer is not None and all([await relation(ctx.session, ctx.rules, proposer, other) >= table.accept_relation for other in others])
+        if warm:
+            await accept(ctx, profile)
+            counts["accepted"] += 1
+        elif ctx.epoch - profile.signed_epoch >= table.proposal_epochs:
+            reject(ctx, profile)
+            counts["rejected"] += 1
+    return counts

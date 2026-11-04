@@ -34,6 +34,7 @@ import { Label, Muted, Stat, Text } from '@/components/typography'
 import { tierNumeral } from '@/features/languages/languageIcons'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { LearningShaping } from './LearningControls'
 import {
   AdjustBlock,
   AdjustPanel,
@@ -385,6 +386,11 @@ function LearningControls({
           </RowEditors>
         </AdjustBlock>
       )}
+      <LearningShaping
+        holderId={card.holder_id}
+        card={card}
+        blocked={blocked}
+      />
     </AdjustPanel>
   )
 }

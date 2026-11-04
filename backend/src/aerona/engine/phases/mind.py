@@ -519,6 +519,7 @@ SURVEY_PHASES = (Phase("mind_survey", mind_survey),)
     "table.personality_values",
     "table.pressures",
     "table.speaker_cohorts",
+    "table.tradition_profiles",
     "table.traits",
     "table.world_maps",
 )

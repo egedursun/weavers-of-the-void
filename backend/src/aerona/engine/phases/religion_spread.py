@@ -17,10 +17,11 @@ from aerona.db.tables.routes import JourneyRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.culture import LanguageRegister
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import PressureKind
-from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.polity import ClauseKind, LawKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyStatus
 from aerona.domain.enums.war import WarCause
@@ -30,13 +31,15 @@ from aerona.engine.economy.routes import link_partners
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.faith.zealotry import drifted, record_heresy
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.lore.language import barrier, intelligibility, interpreter, tongues_of
+from aerona.engine.lore.language import intelligibility, interpreter, register_barrier, tongues_of
+from aerona.engine.lore.traditions import absorb_festivals
 from aerona.engine.mind.book import ValueIndex
 from aerona.engine.mind.drives import zeal_drive
 from aerona.engine.mind.hooks import converted
 from aerona.engine.mind.space import DISTANCE_MAX, NEUTRAL_DISTANCE, value_distance
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
+from aerona.engine.polity.accords import clause_pairs
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import FaithIndex, change_religion, faith_dominance, faith_shares
@@ -374,7 +377,7 @@ async def journey_missions(ctx: TickContext, book: FaithBook, atlas: RegionAtlas
 async def preaching_barrier(ctx: TickContext, converter_id: int, community_id: int) -> float:
     doctrine = await ctx.session.get(CultDoctrineRow, converter_id)
     if doctrine is None or doctrine.liturgical_language_id is None:
-        return await barrier(ctx.session, ctx.rules, converter_id, community_id, ctx.epoch)
+        return await register_barrier(ctx.session, ctx.rules, converter_id, community_id, ctx.epoch, ours=LanguageRegister.LITURGICAL)
     theirs = await tongues_of(ctx.session, community_id)
     liturgy = doctrine.liturgical_language_id
     if not theirs or liturgy in theirs:
@@ -456,6 +459,7 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.journeys",
+    "table.language_registers",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.memories",
@@ -471,6 +475,7 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.trade_route_regions",
     "table.trade_route_tolls",
     "table.traits",
+    "table.treaty_clauses",
     "table.world_maps",
 )
 @writes(
@@ -511,6 +516,7 @@ async def religion_spread(ctx: TickContext) -> None:
     creator_id = await NodeRepository(session).creator_id()
     rng = ctx.rng("spread")
     laws = await LawBook.load(session)
+    free_pairs = await clause_pairs(session, ClauseKind.RELIGIOUS_FREEDOM)
     conversions = syncretisms = 0
     for community in world.communities:
         if conversions >= settings.conversion_cap and syncretisms >= settings.syncretism_cap:
@@ -523,7 +529,9 @@ async def religion_spread(ctx: TickContext) -> None:
         seeker = old is None or community.id in flags[EntityFlag.SEEKING_GOD] or community.id in flags[EntityFlag.GODLESS]
         chosen = best_source(ctx.rules, conversion_sources(ctx.rules, community, world, seeker), old, seeker, (faith, shares))
         understood = await preaching_barrier(ctx, chosen.converter_id, community.id) if chosen is not None and chosen.converter_id is not None else 1.0
-        if chosen is None or not rng.probability(min(1.0, chosen.pull * understood * tolerance(ctx, laws, community.id))):
+        freedom = chosen is not None and chosen.converter_id is not None and frozenset((chosen.converter_id, community.id)) in free_pairs
+        lenience = ctx.rules.legislation.tolerance_spread_pct / PERCENT if freedom else tolerance(ctx, laws, community.id)
+        if chosen is None or not rng.probability(min(1.0, chosen.pull * understood * lenience)):
             continue
         weight = syncretism_weight(ctx.rules, world, community.id, chosen.god_id)
         syncretic = old is not None and not seeker and rng.chance(settings.syncretism_pct * god_kinship(world, old, chosen.god_id) * weight)
@@ -539,6 +547,14 @@ async def religion_spread(ctx: TickContext) -> None:
         await _announce(ctx, community, faith, old, chosen, syncretic=syncretic)
         if chosen.converter_id is not None:
             await converted(ctx, community.id, chosen.converter_id, note=chosen.reason)
+            for festival in await absorb_festivals(ctx, community, chosen.converter_id):
+                ctx.count("festivals_absorbed")
+                await note(
+                    ctx,
+                    f"{community.name} kept {festival.name} even under the new faith, and the converters took the festival as their own.",
+                    key="lore.festival_absorbed",
+                    ids=[community.id, festival.id, chosen.converter_id],
+                )
     ctx.count("conversions", conversions)
     ctx.count("syncretisms", syncretisms)
 

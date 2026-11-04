@@ -53,7 +53,9 @@ from aerona.engine.environment.years import grant_sub_steps
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.causes import war_cause_incident
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.lore.arms import wear_in_duel
 from aerona.engine.lore.rites import warded
+from aerona.engine.lore.taboos import dead_season, forbidden, winter_rest
 from aerona.engine.military.aftermath import (
     cohesion_after,
     exotic_toll,
@@ -90,6 +92,7 @@ from aerona.engine.mind.book import best_effective, values_for
 from aerona.engine.mind.hooks import duelled, fought, judged
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
+from aerona.engine.polity.law_effects import standing_floor
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap, LawBook
 from aerona.engine.primitives.levies import demobilise, stand_down
@@ -268,8 +271,12 @@ async def idle_armies(ctx: TickContext) -> int:
         size = stat(army, "size") or 0
         returning = min(size, max(1, round_half_up(size * campaigns.idle_army_return_pct / PERCENT)))
         owner = await living_entity(ctx.session, row.owner_entity_id)
+        floor = await standing_floor(ctx.session, ctx.rules, owner)
+        if floor >= size:
+            continue
+        returning = min(returning, size - floor)
         remaining = size - returning
-        if remaining < campaigns.idle_army_disband_below:
+        if remaining < campaigns.idle_army_disband_below and floor == 0:
             returning, remaining = size, 0
         await resize(ctx.session, ctx.rules, army, remaining)
         demobilise(ctx.rules, owner, returning)
@@ -703,6 +710,8 @@ async def duel(
     result = bout(ctx.rules, ctx.rng(f"duel.{first.id}.{second.id}.{ctx.epoch}"), *fighters, context)
     await duelled(ctx, first)
     await duelled(ctx, second)
+    await wear_in_duel(ctx, first.id, result.exchanges)
+    await wear_in_duel(ctx, second.id, result.exchanges)
     winner, loser = result.winner.entity, result.loser.entity
     await judged(ctx, winner.id, loser.id, ActKind.DUELLING, note=label)
     style = await strike_style(ctx.session, ctx.rules, winner, loser)
@@ -780,8 +789,9 @@ async def _heroics(ctx: TickContext, theatre: Theatre, report: BattleReport, bat
     winners, losers = theatre.sides.heroes_of(report.winner.id), theatre.sides.heroes_of(report.loser.id)
     if winners and losers and ctx.rng("duel_roll").chance(ctx.rules.campaigns.duel_chance):
         first, second = ctx.rng("duelists").pick(winners), ctx.rng("duelists").pick(losers)
-        report.hero_texts.append(await duel(ctx, theatre, first, second, war=report.war, anchor_id=anchor, ground=report.ground))
-        report.ids.extend((first.id, second.id))
+        if not await forbidden(ctx, first.id, ActKind.DUELLING):
+            report.hero_texts.append(await duel(ctx, theatre, first, second, war=report.war, anchor_id=anchor, ground=report.ground))
+            report.ids.extend((first.id, second.id))
     candidates = [hero for hero in theatre.sides.heroes_of(report.loser.id) if hero.status is EntityStatus.CANON]
     if candidates and ctx.rng("capture").chance(ctx.rules.campaigns.capture_chance):
         prisoner = ctx.rng("captive").pick(candidates)
@@ -1336,6 +1346,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     base = epoch_start_year(ctx.epoch, years)
     fought = 0
     lost = 0
+    winter_shamed = False
     for index in range(seasons):
         year = base + min(years - 1, first_year + (start + index) // count)
         meeting = marches[0].profile.region_entity_id if in_contact(theatre.neighbourhood.atlas, marches[0].profile, marches[1].profile) else None
@@ -1350,6 +1361,11 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
                 break
             continue
         storm = step is not None and step.assault
+        if ground.season is not None and dead_season(ctx, ground.season.growth):
+            resting, winter_shamed = await winter_rest(ctx, attacker.id, defender.id, shamed=winter_shamed)
+            if resting and not storm:
+                ctx.count("winter_taboo_rest")
+                continue
         suitability = ground.season.campaign if ground.season is not None else PERCENT
         if not contact or fought >= cap or not (storm or rng.chance(settings.season_engagement_pct * suitability / PERCENT)):
             continue
@@ -1460,6 +1476,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.speaker_cohorts",
     "table.spy_networks",
     "table.traits",
+    "table.treaty_profiles",
     "table.tributes",
     "table.vassalages",
     "table.war_aims",
@@ -1588,6 +1605,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.offices",
     "table.peace_terms",
     "table.polity_profiles",
+    "table.polity_territories",
     "table.region_environment",
     "table.settlement_infrastructure",
     "table.settlement_profiles",

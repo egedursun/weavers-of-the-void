@@ -30,12 +30,61 @@ class MemberView(ApiModel):
     entity_type: EntityType
     autonomy: int
     population: int
+    locked: list[str]
 
 
 class TerritoryView(ApiModel):
     region_id: int
     name: str
     control: int
+    province: str | None
+    locked: list[str]
+
+
+class BalanceSlice(ApiModel):
+    id: int
+    name: str
+    kind: str
+    share: int
+
+
+class RealmLoanView(ApiModel):
+    id: int
+    lender_id: int
+    lender: str
+    principal: int
+    interest_pct: int
+    repaid: int
+    due_epoch: int
+    status: str
+
+
+class VassalView(ApiModel):
+    id: int
+    name: str
+    overlord_id: int
+    tribute_pct: int
+    levy_pct: int
+    loyalty: int
+    treaty_id: int | None
+    locked: list[str]
+
+
+class ReputeView(ApiModel):
+    mortal_id: int
+    honour: int
+    infamy: int
+    locked: list[str]
+
+
+class SentenceView(ApiModel):
+    id: int
+    mortal_id: int
+    mortal: str
+    settlement_id: int | None
+    crime: str
+    penalty: str
+    epoch: int
 
 
 class OfficeView(ApiModel):
@@ -46,6 +95,11 @@ class OfficeView(ApiModel):
     region_id: int | None
     region: str | None
     since_epoch: int
+    title: str | None
+    powers: list[str]
+    target_id: int | None
+    target: str | None
+    locked: list[str]
 
 
 class WhyPart(ApiModel):
@@ -79,6 +133,9 @@ class ClaimView(ApiModel):
     basis: ClaimBasis
     pressed: bool
     since_epoch: int
+    office: OfficeKind
+    backer_id: int | None
+    locked: list[str]
 
 
 class TreasuryLineView(ApiModel):
@@ -130,6 +187,13 @@ class RealmView(ApiModel):
     treaties: list[TreatyBrief]
     overlord: NamedNode | None
     vassals: list[NamedNode]
+    tier_strain: int
+    power_balance: list[BalanceSlice]
+    loans: list[RealmLoanView]
+    vassal_terms: list[VassalView]
+    overlord_terms: VassalView | None
+    ruler_repute: ReputeView | None
+    sentences: list[SentenceView]
 
 
 class RealmLink(ApiModel):
@@ -190,6 +254,7 @@ class ClauseView(ApiModel):
     beneficiary: str | None
     params: dict[str, int | str | bool]
     last_kept_epoch: int | None
+    locked: list[str]
 
 
 class BreachView(ApiModel):
@@ -213,6 +278,7 @@ class TreatyView(ApiModel):
     clauses: list[ClauseView]
     breaches: list[BreachView]
     locked: list[str]
+    proposed_by_id: int | None
 
 
 class OathView(ApiModel):

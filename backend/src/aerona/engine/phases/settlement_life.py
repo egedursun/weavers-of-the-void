@@ -10,6 +10,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.community import CommunityBook
+from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.queries import canon
@@ -55,6 +56,7 @@ JUSTICE_FULL = 100
     "table.armies",
     "table.bonds",
     "table.calendars",
+    "table.claims",
     "table.community_cohorts",
     "table.community_labour",
     "table.community_societies",
@@ -70,11 +72,17 @@ JUSTICE_FULL = 100
     "table.holder_techniques",
     "table.incident_participants",
     "table.incidents",
+    "table.law_jurisdictions",
+    "table.law_profiles",
+    "table.memories",
+    "table.mortal_profiles",
     "table.name_registry",
     "table.nodes",
     "table.occupations",
+    "table.offices",
     "table.people_culture",
     "table.place_environment",
+    "table.polity_members",
     "table.pressures",
     "table.quarantines",
     "table.region_environment",
@@ -104,14 +112,18 @@ JUSTICE_FULL = 100
     "table.culture_values",
     "table.districts",
     "table.entities",
+    "table.entity_flags",
     "table.epoch_year_cursors",
     "table.event_casualties",
     "table.event_footprints",
     "table.event_profiles",
     "table.incident_participants",
     "table.incidents",
+    "table.injuries",
+    "table.mortal_profiles",
     "table.name_registry",
     "table.region_environment",
+    "table.sentences",
     "table.settlement_history",
     "table.settlement_infrastructure",
     "table.settlement_profiles",
@@ -121,6 +133,7 @@ async def settlement_life(ctx: TickContext) -> None:
     knowledge = await KnowledgeMap.load(ctx.session)
     atlas = await RegionAtlas.load(ctx.session)
     community = await CommunityBook.load(ctx.session)
+    statutes = await LawBook.load(ctx.session)
     weather = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch, atlas)
     for settlement in await canon(ctx.session, [EntityType.SETTLEMENT]):
         town = await town_of(ctx, settlement, knowledge)
@@ -141,7 +154,7 @@ async def settlement_life(ctx: TickContext) -> None:
         ctx.count("built", await build(ctx, town, knowledge, at_war=at_war, foreign=foreign, ground=ground))
         justice = max(community.justice_values(settlement.id), default=0) / JUSTICE_FULL
         await keep_order(ctx, town, justice=justice, bands=await bandits_near(ctx, atlas, town), hierarchy=values.get(ValueAxis.HIERARCHY, 0))
-        ctx.count("punished", 1 if await punish(ctx, town) else 0)
+        ctx.count("punished", 1 if await punish(ctx, town, statutes) else 0)
         festival = festivals_and_alms(ctx, town, society)
         tension = await urban_drift(ctx, town)
         await stir_unrest(ctx, town, tension=tension, festival=festival, region=region)

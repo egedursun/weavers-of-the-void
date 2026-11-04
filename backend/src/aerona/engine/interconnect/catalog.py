@@ -33,6 +33,7 @@ from aerona.engine.interconnect.catalog_faith import FAITH_MECHANICS
 from aerona.engine.interconnect.catalog_foundations import FOUNDATION_MECHANICS
 from aerona.engine.interconnect.catalog_lore import BEHAVIOURS as LORE_BEHAVIOURS
 from aerona.engine.interconnect.catalog_lore import LORE_MECHANICS
+from aerona.engine.interconnect.catalog_made import BEHAVIOURS as MADE_BEHAVIOURS
 from aerona.engine.interconnect.catalog_military import BEHAVIOURS as MILITARY_BEHAVIOURS
 from aerona.engine.interconnect.catalog_military import MILITARY_MECHANICS
 from aerona.engine.interconnect.catalog_military_depth import MILITARY_DEPTH_MECHANICS
@@ -42,6 +43,7 @@ from aerona.engine.interconnect.catalog_places import PLACE_BEHAVIOURS, PLACE_ME
 from aerona.engine.interconnect.catalog_realm import BEHAVIOURS as REALM_BEHAVIOURS
 from aerona.engine.interconnect.catalog_realm import REALM_MECHANICS
 from aerona.engine.interconnect.catalog_region import REGION_MECHANICS
+from aerona.engine.interconnect.catalog_rumours import RUMOUR_MECHANICS
 from aerona.engine.interconnect.catalog_society import BEHAVIOURS as SOCIETY_BEHAVIOURS
 from aerona.engine.interconnect.catalog_society import SOCIETY_MECHANICS
 from aerona.engine.interconnect.catalog_wilds import BEHAVIOURS as WILDS_BEHAVIOURS
@@ -941,6 +943,7 @@ BUILT_IN = (
     *MILITARY_DEPTH_MECHANICS,
     *FAITH_MECHANICS,
     *LORE_MECHANICS,
+    *RUMOUR_MECHANICS,
     *WILDS_MECHANICS,
     *MORTAL_MECHANICS,
     *FOUNDATION_MECHANICS,
@@ -1723,6 +1726,7 @@ for entry in (
     *MILITARY_BEHAVIOURS,
     *FAITH_BEHAVIOURS,
     *LORE_BEHAVIOURS,
+    *MADE_BEHAVIOURS,
     *WILDS_BEHAVIOURS,
     *MORTAL_BEHAVIOURS,
 ):

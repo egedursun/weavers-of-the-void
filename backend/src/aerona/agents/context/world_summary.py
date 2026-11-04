@@ -5,6 +5,7 @@ from aerona.agents.context.entity_line import line_items
 from aerona.agents.context.geography import geography_lines
 from aerona.agents.context.language_lines import language_lines
 from aerona.agents.context.location_tree import legends, location_tree
+from aerona.agents.context.realm import realm_overview
 from aerona.agents.context.recent_chronicle import recent_chronicle
 from aerona.agents.context.scope import Scope
 from aerona.agents.context.siblings import siblings
@@ -99,6 +100,7 @@ async def world_summary_context(scope: Scope, viewer: SonRow | None = None, sect
         multi_world=scope.multi_world,
         cosmos_lines=await cosmos_lines(scope, world_id),
         foreign_gods=await foreign_god_lines(scope, world_id) if viewer is not None else [],
+        realms=await realm_overview(scope.session, world_id) if viewer is not None else [],
         routes=await route_lines(scope) if scope.multi_world else [],
         geography=geography,
         geography_total=total,

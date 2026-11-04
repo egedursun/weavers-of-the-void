@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import NoReturn
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.entity_types import ENTITY_TYPES
@@ -12,11 +13,13 @@ from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, CivilizationTier, EngineKind, EntityOrigin, EntityStatus, EntityType, LegendCategory
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.body.book import factor
@@ -253,3 +256,12 @@ async def fail_with_candidates(
     **values: object,
 ) -> NoReturn:
     raise RejectionError(f"{result(template, **values)} {await candidates_text(call, types, local=local, fits=fits)}")
+
+
+async def rules_a_realm(session: AsyncSession, actor: EntityRow) -> bool:
+    if actor.entity_type is not EntityType.MORTAL:
+        return False
+    held = await session.scalar(
+        select(OfficeRow.id).where(OfficeRow.holder_entity_id == actor.id, OfficeRow.kind.in_([OfficeKind.RULER, OfficeKind.REGENT])).limit(1)
+    )
+    return held is not None
