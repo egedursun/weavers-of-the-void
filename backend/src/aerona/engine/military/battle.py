@@ -20,6 +20,8 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.military import ArmourType, BattlePhase, CommanderTrait, OutcomeClass, Tactic, UnitFamily, UnitKind
+from aerona.domain.enums.mortal import HarshnessScale
+from aerona.engine.primitives.harshness import harshness
 from aerona.rules.registry import Rules
 
 F = UnitFamily
@@ -70,6 +72,7 @@ class Side:
     skill: int
     traits: set[CommanderTrait]
     intel: int = 0
+    watch: float = 0.0
     veteran: float = 0.0
     leadership: int = 0
     tactic: Tactic = Tactic.HOLD_LINE
@@ -152,7 +155,7 @@ def strength(rules: Rules, side: Side, ground: Field) -> float:
 
 def scouting(side: Side) -> float:
     eyes = sum(stack.row.count * stack.spec.speed / PERCENT for stack in side.stacks if stack.alive and stack.row.kind in SCOUTS)
-    return eyes + side.skill * 10 + side.intel
+    return eyes + side.skill * 10 + side.intel + side.watch
 
 
 def choose_tactic(rules: Rules, rng: SeededRandom, side: Side, enemy_doctrine: str, ground: Field) -> Tactic:
@@ -197,7 +200,10 @@ def deal(targets: list[Stack], damage: float, rules: Rules) -> int:
     killed = 0
     for stack in alive:
         share = stack.row.count / total
-        losses = min(stack.row.count, int(damage * share * rules.tactics.loss_scale_pct / PERCENT * NORMAL / max(10, stack.armour)))
+        losses = min(
+            stack.row.count,
+            int(damage * share * rules.tactics.loss_scale_pct / PERCENT * NORMAL / max(10, stack.armour) * harshness(rules, HarshnessScale.BATTLE_LOSS)),
+        )
         stack.row.count -= losses
         stack.lost += losses
         killed += losses
@@ -284,7 +290,7 @@ def pursue(rules: Rules, winner: Side, loser: Side, ground: Field) -> int:
     reach = min(1.0, 2 * riders / max(1, winner.standing))
     shelter = 0.5 if ground.terrain in SHELTER else 1.0
     fleeing = sum(stack.row.count for stack in loser.stacks)
-    losses = round(fleeing * rules.tactics.pursuit_pct / PERCENT * (0.3 + reach) * shelter)
+    losses = round(fleeing * rules.tactics.pursuit_pct / PERCENT * (0.3 + reach) * shelter * harshness(rules, HarshnessScale.BATTLE_LOSS))
     taken = 0
     for stack in sorted(loser.stacks, key=lambda item: -item.row.count):
         part = min(stack.row.count, round(losses * stack.row.count / max(1, fleeing)))

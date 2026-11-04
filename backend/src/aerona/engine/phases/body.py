@@ -8,15 +8,19 @@ from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.faith import CultTenetRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.society import AddictionRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.body import MADNESS_CONDITIONS, ConditionKind, HarmCause, InjuryKind
+from aerona.domain.enums.body import MADNESS_CONDITIONS, ConditionKind, DamageType, HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.environment import TemperatureBand
+from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.node import NodeKind
-from aerona.engine.body.book import ensure_species_body, guess_plan, injuries_of, species_of, species_traits
+from aerona.engine.body.book import ensure_species_body, injuries_of, recorded_plan, species_of, species_traits
 from aerona.engine.body.cohorts import tend_cohorts
 from aerona.engine.body.conditions import CONDITION_KEY, condition_of, end_condition, gain_condition
 from aerona.engine.body.customs import SUFFERING_DOMAINS, customs_of, ensure_customs, maimed_for_rule, people_of
@@ -30,7 +34,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.lifecycle.succession import pass_rule
-from aerona.engine.lifecycle.wounds import fatal_injury
+from aerona.engine.lifecycle.wounds import apply_hits, fatal_injury
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -38,6 +42,7 @@ from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import active_bonds, canon, connect, flags_by_entity, living_entity
 from aerona.engine.primitives.stats import stat
+from aerona.engine.services.war import ongoing_wars
 
 VIOLENT_DEATHS: dict[EntityFlag, HarmCause] = {
     EntityFlag.FELL_IN_BATTLE: HarmCause.BATTLE,
@@ -47,6 +52,13 @@ VIOLENT_DEATHS: dict[EntityFlag, HarmCause] = {
 }
 BACKFILL_CAUSE = "fell long ago"
 PLAN_FIXUP = "body.species_plans"
+EXPOSED_ROLES = frozenset({MortalRole.EXPLORER, MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.HUNTER, MortalRole.CAPTAIN, MortalRole.HERO})
+COLD_BANDS = frozenset({TemperatureBand.FROZEN, TemperatureBand.COLD})
+HOT_BANDS = frozenset({TemperatureBand.HOT, TemperatureBand.SEARING})
+
+
+async def at_war(ctx: TickContext, mortal: EntityRow) -> bool:
+    return mortal.location_id is not None and bool(await ongoing_wars(ctx.session, mortal.location_id))
 
 
 @reads(
@@ -146,7 +158,7 @@ async def reread_species_plans(ctx: TickContext) -> int:
         body = await ctx.session.get(BodyRow, species.id)
         if body is None or "plan" in body.locked:
             continue
-        plan = await guess_plan(ctx.session, species, await species_traits(ctx.session, species.id))
+        plan = await recorded_plan(ctx.session, species, await species_traits(ctx.session, species.id))
         if plan is body.plan:
             continue
         body.plan, body.height_class, body.build = plan, PLANS[plan].height, PLANS[plan].build
@@ -241,6 +253,27 @@ def _madness_weights(ctx: TickContext) -> dict[ConditionKind, float]:
         ConditionKind.RAGE: table.rage_weight,
         ConditionKind.MELANCHOLY: table.melancholy_weight,
     }
+
+
+async def _exposure(ctx: TickContext, mortal: EntityRow, atlas: RegionAtlas, grounds: dict[int, RegionEnvironmentRow]) -> bool:
+    if mortal.mortal_role not in EXPOSED_ROLES and not await at_war(ctx, mortal):
+        return False
+    region = atlas.top_region(mortal.id)
+    ground = grounds.get(region) if region is not None else None
+    if ground is None or ground.temperature_band not in COLD_BANDS | HOT_BANDS:
+        return False
+    table = ctx.rules.injury
+    if not ctx.rng(seed_of("exposure", mortal.id, ctx.epoch)).chance(table.exposure_chance):
+        return False
+    cold = ground.temperature_band in COLD_BANDS
+    harm = Harm(
+        table.exposure_cold_hp if cold else table.exposure_heat_hp,
+        HarmCause.EXPOSURE,
+        "died of the bitter cold" if cold else "died of the burning heat",
+        damage_type=DamageType.COLD if cold else DamageType.FIRE,
+    )
+    await apply_hits(ctx, mortal, harm, lethal=False)
+    return True
 
 
 async def _senses(ctx: TickContext, mortal: EntityRow) -> None:
@@ -417,7 +450,11 @@ async def body_conditions(ctx: TickContext) -> None:
     mortals = [mortal for mortal in await canon(ctx.session, [EntityType.MORTAL]) if mortal.status is EntityStatus.CANON]
     addicted = {row.community_entity_id: row for row in await ctx.session.scalars(select(AddictionRow))}
     repository = EntityRepository(ctx.session)
+    atlas = await RegionAtlas.load(ctx.session)
+    grounds = {row.entity_id: row for row in await ctx.session.scalars(select(RegionEnvironmentRow))}
+    exposed = 0
     for mortal in mortals:
+        exposed += 1 if await _exposure(ctx, mortal, atlas, grounds) else 0
         if blocked(mortal.id, CONDITION_KEY):
             continue
         flags = await repository.flags(mortal.id)
@@ -427,7 +464,8 @@ async def body_conditions(ctx: TickContext) -> None:
         await _marks(ctx, mortal, flags)
         if is_notable(ctx.rules, mortal, flags):
             await _addiction(ctx, mortal, addicted)
-    await _possession(ctx, await RegionAtlas.load(ctx.session), mortals)
+    await _possession(ctx, atlas, mortals)
+    ctx.count("weather_wounds", exposed)
 
 
 async def _wholeness(ctx: TickContext) -> None:
@@ -457,7 +495,8 @@ async def _recruit(ctx: TickContext) -> None:
     cults = []
     for cult in await canon(ctx.session, [EntityType.CULT]):
         patron = await living_patron(ctx.session, cult)
-        if patron is not None and set(patron.domains) & SUFFERING_DOMAINS:
+        sanctified = await ctx.session.get(CultTenetRow, (cult.id, TenetKind.SACRED_SUFFERING)) is not None
+        if sanctified or (patron is not None and set(patron.domains) & SUFFERING_DOMAINS):
             cults.append(cult)
     if not cults:
         return

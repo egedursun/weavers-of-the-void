@@ -37,7 +37,7 @@ from aerona.engine.mind.book import (
     values_for,
     write_values,
 )
-from aerona.engine.mind.depth import apply_depth, backfill_depth
+from aerona.engine.mind.depth import backfill_depth
 from aerona.engine.mind.hooks import FIGHTING_ROLES
 from aerona.engine.mind.memories import forget_faded, kin_of, remember, strength_of
 from aerona.engine.mind.needs import update_needs, update_pressures
@@ -79,8 +79,6 @@ async def seed_mind(ctx: TickContext, node: Holder) -> bool:
     if kind is ValueHolder.PERSONAL or divine:
         culture_hint = await seed_values(ctx.session, ctx.rules, node, rng) or {}
         await seed_traits(ctx.session, ctx.rules, node.id, culture_hint, rng=rng, epoch=ctx.epoch, divine=divine)
-        if isinstance(node, EntityRow) and node.entity_type is EntityType.MORTAL:
-            await apply_depth(ctx.session, ctx.rules, node, ctx.epoch, shift_values=False)
     values = await seed_values(ctx.session, ctx.rules, node, rng)
     if values is not None and kind is not None and kind is not ValueHolder.COMMUNITY:
         await write_values(ctx.session, kind, node.id, values)

@@ -1588,7 +1588,16 @@ ROUTE_DIFFUSION = Mechanic(
         Coupling(Subsystem.DEMOGRAPHY, "plague follows the busiest roads", EdgeKind.FLOW),
     ),
 )
-for entry in (*BEHAVIOURS, *SOCIETY_BEHAVIOURS, *REALM_BEHAVIOURS, *MILITARY_BEHAVIOURS, *FAITH_BEHAVIOURS, *LORE_BEHAVIOURS, *WILDS_BEHAVIOURS, *MORTAL_BEHAVIOURS):
+for entry in (
+    *BEHAVIOURS,
+    *SOCIETY_BEHAVIOURS,
+    *REALM_BEHAVIOURS,
+    *MILITARY_BEHAVIOURS,
+    *FAITH_BEHAVIOURS,
+    *LORE_BEHAVIOURS,
+    *WILDS_BEHAVIOURS,
+    *MORTAL_BEHAVIOURS,
+):
     register(behaviour(entry))
 register(ROUTE_DIFFUSION)
 CLAIMED = {phase for mechanic in BUILT_IN for phase in mechanic.phases}

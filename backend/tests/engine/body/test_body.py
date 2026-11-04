@@ -22,7 +22,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, Mor
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import KnowledgeStats
-from aerona.engine.body.book import bedridden, effective, ensure_body, frame_style, plan_from_words, size_of
+from aerona.engine.body.book import bedridden, effective, ensure_body, frame_style, legacy_plan_from_words, size_of
 from aerona.engine.body.cohorts import return_maimed, tend_cohorts, war_appetite
 from aerona.engine.body.customs import ensure_customs
 from aerona.engine.body.healing import fit_prosthesis, heal_wounds, mend
@@ -247,9 +247,9 @@ async def test_the_touch_of_the_void_lowers_sanity_for_good(realm: Realm) -> Non
 
 
 async def test_species_bodies_follow_their_nature_and_size_shapes_the_blow(realm: Realm) -> None:
-    assert plan_from_words("A coiling sea serpent of the reefs") is BodyPlan.SERPENTINE
-    assert plan_from_words("Clockwork golems that guard the vaults") is BodyPlan.CONSTRUCT
-    assert plan_from_words("pale wraiths of the moor") is BodyPlan.INCORPOREAL
+    assert legacy_plan_from_words("A coiling sea serpent of the reefs") is BodyPlan.SERPENTINE
+    assert legacy_plan_from_words("Clockwork golems that guard the vaults") is BodyPlan.CONSTRUCT
+    assert legacy_plan_from_words("pale wraiths of the moor") is BodyPlan.INCORPOREAL
     rules = Rules()
     giant = BodyRow(node_id=1, plan=BodyPlan.HUMANOID, traits=[], fingers=10, height_class=HeightClass.GIANT, build=BodyBuild.GIANT, locked=[])
     child = BodyRow(node_id=2, plan=BodyPlan.HUMANOID, traits=[], fingers=10, height_class=HeightClass.SHORT, build=BodyBuild.SLIGHT, locked=[])

@@ -36,3 +36,5 @@ class CreatureTraitsRules:
     crop_pest_war_bonus: int = rule(0, 0, 100, RuleGroup.CREATURES, "War-strength bonus of a Crop pest creature")
     plague_bearer_war_bonus: int = rule(1, 0, 100, RuleGroup.CREATURES, "War-strength bonus of a Plague-bearing creature")
     sacred_animal_war_bonus: int = rule(0, 0, 100, RuleGroup.CREATURES, "War-strength bonus of a Sacred creature")
+    horned_war_bonus: int = rule(5, 0, 100, RuleGroup.CREATURES, "War-strength bonus of a Horned creature")
+    tailed_war_bonus: int = rule(2, 0, 100, RuleGroup.CREATURES, "War-strength bonus of a Tailed creature")

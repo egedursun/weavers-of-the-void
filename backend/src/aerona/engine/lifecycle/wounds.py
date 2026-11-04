@@ -2,16 +2,18 @@ from dataclasses import dataclass, field, replace
 from enum import StrEnum
 
 from aerona.catalog.anatomy import FINGERS
+from aerona.constants.units import PERCENT
 from aerona.db.repositories.chronicle import incident_for
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import SEVERITY_MAX, BodyRow, InjuryRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.body import DamageType, InjuryKind, InjuryState
+from aerona.domain.enums.body import BodyFunction, DamageType, HarmCause, InjuryKind, InjuryState
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.engine.body.book import Bearer, anatomy_for, ensure_body
+from aerona.domain.enums.mortal import HarshnessScale
+from aerona.engine.body.book import Bearer, anatomy_for, ensure_body, function_level
 from aerona.engine.body.hits import MARK_KINDS, Armour, Harm, Hit, hits_for, loss_for
 from aerona.engine.body.state import refresh
 from aerona.engine.context import TickContext
@@ -22,6 +24,7 @@ from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lore.arms import best_weapon, grip, held_profiles
 from aerona.engine.mind.hooks import wound_memories
 from aerona.engine.notes import note
+from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import connect
@@ -59,6 +62,19 @@ def _lethal(hit: Hit) -> bool:
     return hit.part.vital and hit.kind is InjuryKind.DESTROYED
 
 
+async def _deadly(ctx: TickContext, bearer: Bearer, body: BodyRow, hit: Hit, rng_key: str) -> bool:
+    if _lethal(hit):
+        chance = PERCENT * harshness(ctx.rules, HarshnessScale.WOUND_LETHALITY)
+        if isinstance(bearer, EntityRow) and is_notable(ctx.rules, bearer, await EntityRepository(ctx.session).flags(bearer.id)):
+            spared = ctx.rules.injury.notable_survival_pct * harshness(ctx.rules, HarshnessScale.NOTABLE_SURVIVAL)
+            chance *= max(0.0, PERCENT - spared) / PERCENT
+        return ctx.rng(seed_of("lethal", rng_key)).chance(chance)
+    if hit.severity < SEVERITY_MAX or not hit.part.vital:
+        return False
+    weakness = (PERCENT - body.vital) * ctx.rules.injury.vital_lethality_pct / PERCENT
+    return ctx.rng(seed_of("vital", rng_key)).chance(weakness * harshness(ctx.rules, HarshnessScale.WOUND_LETHALITY))
+
+
 INJURY_KEY = "injuries"
 
 
@@ -66,12 +82,14 @@ async def _record(ctx: TickContext, bearer: Bearer, body: BodyRow, harm: Harm, h
     rows: list[InjuryRow] = []
     if blocked(bearer.id, INJURY_KEY):
         return rows
-    for hit in hits:
+    for index, hit in enumerate(hits):
         if hit.absorbed:
             continue
         state = InjuryState.PERMANENT if hit.kind in MARK_KINDS else InjuryState.FRESH
-        if _lethal(hit):
+        if await _deadly(ctx, bearer, body, hit, f"{bearer.id}.{ctx.epoch}.{index}.{harm.cause.value}"):
             state = InjuryState.LETHAL
+        elif _lethal(hit):
+            state = InjuryState.FRESH
         if hit.part.key == FINGERS and hit.kind is InjuryKind.SEVERED:
             body.fingers = max(0, body.fingers - hit.severity * ctx.rules.anatomy.fingers_per_severity)
         row = InjuryRow(
@@ -189,6 +207,8 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
                 damage_type=DamageType(held.damage_type) if held.damage_type in DAMAGE_TYPES else None,
                 heft=(harm.heft or 0) + held.weight,
             )
+    if harm.cause is HarmCause.MONSTER and harm.venom_pct is None and harm.damage_type is None:
+        harm = replace(harm, venom_pct=await function_level(ctx.session, ctx.rules, harm.source_node_id or harm.killer_id, BodyFunction.VENOM))
     hits = hits_for(ctx.rules, anatomy, harm, _armour(body), rng)
     if not lethal:
         hits = [_spare(hit) for hit in hits]

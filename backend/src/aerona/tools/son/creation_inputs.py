@@ -20,6 +20,8 @@ from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType, LegendCategory
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.mind import TraitKind
+from aerona.domain.enums.mortal import MortalSex
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic
 from aerona.domain.enums.travel import VehicleKind
 from aerona.tools.framework.inputs import ToolInput
@@ -55,6 +57,9 @@ class CreationInput(ToolInput):
         return getattr(self, name, None)
 
 
+MORTAL_TRAITS_MAX = 5
+
+
 def _stats_input(spec: EntityTypeSpec) -> type[ToolInput]:
     fields: dict[str, Any] = {field.key: (int | None, None) for field in spec.stats}
     model: type[ToolInput] = create_model(f"{spec.type.value.title().replace('_', '')}StatsInput", __base__=ToolInput, **fields)
@@ -69,7 +74,11 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
         EntityType.SPECIES: {"traits": (list[CreatureTrait] | None, None), "body_plan": (BodyPlan, ...)},
         EntityType.VESSEL: {"target_world_id": (int | None, None), "vessel_kind": (VehicleKind | None, None)},
         EntityType.LANGUAGE: {"words": (Annotated[list[WordInput], Field(min_length=1)], ...)},
-        EntityType.MORTAL: {"title": (Annotated[str, Field(max_length=TITLE_MAX)] | None, None)},
+        EntityType.MORTAL: {
+            "title": (Annotated[str, Field(max_length=TITLE_MAX)] | None, None),
+            "sex": (MortalSex | None, None),
+            "traits": (Annotated[list[TraitKind], Field(max_length=MORTAL_TRAITS_MAX)] | None, None),
+        },
         EntityType.EVENT: {"effects": (list[EventEffectInput] | None, None)},
         EntityType.LEGEND: {"legend_category": (LegendCategory | None, None)},
         EntityType.RESOURCE: {

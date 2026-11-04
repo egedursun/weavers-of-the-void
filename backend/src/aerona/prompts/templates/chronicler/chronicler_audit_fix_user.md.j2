@@ -1,6 +1,6 @@
 {% from "chronicler/_facts.md.j2" import fact_sheet %}
 {% set multi_world = worlds | length > 1 %}
-You wrote this age's narrative; after Fate's verdict it was checked against the fact sheet. Correct it: remove only the findings, keep the rest of the voice, the order and the images. {% include "shared/lore_language.md.j2" %}
+You wrote this age's narrative; after Fate's verdict it was checked against the fact sheet. Correct it: remove only the findings, keep the rest of the voice, the order and the images. {% include "shared/lore_language.md.j2" %} {% include "shared/harm_narration.md.j2" %}
 
 {{ fact_sheet(facts) | trim }}
 

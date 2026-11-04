@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.techniques import BRANCH_GRAPH, TECHNIQUES, Gate
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
+from aerona.db.tables.body import BodyRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import BookContentRow, HolderLevelRow, HolderTechniqueRow, ItemProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
@@ -16,16 +17,18 @@ from aerona.db.tables.warfare import WarSideRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.knowledge import raw_level
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount
+from aerona.rules.registry import Rules
 
 THOUSAND = 1000
 INSTITUTIONS = frozenset({EngineKind.LIBRARY, EngineKind.SCHOOL, EngineKind.OBSERVATORY})
 ORDERS = frozenset({EntityType.CULT, EntityType.FACTION})
-MASTER_SKILL = 50
+SCHOLARLY = (SkillKind.LORE, SkillKind.THEOLOGY, SkillKind.WRITING, SkillKind.ASTRONOMY, SkillKind.MEDICINE, SkillKind.LAW, SkillKind.ALCHEMY)
 Levels = dict[int, dict[KnowledgeBranch, int]]
 
 
@@ -123,6 +126,7 @@ async def research_factor(ctx: TickContext, community: EntityRow, branch: Knowle
         * (1 + await institutions(ctx.session, community.id) * table.institution_pct / PERCENT)
         * (1 + literacy * table.literacy_pct / PERCENT)
         * (1 + await contact(ctx.session, community.id, branch, level, levels) * table.contact_pct / PERCENT)
+        * (1 + max(await scholar_levels(ctx.session, community.id), default=0.0) / PERCENT * table.scholar_pct / PERCENT)
     )
 
 
@@ -140,12 +144,30 @@ async def books_of(session: AsyncSession, holder_id: int) -> set[int]:
     return set(await session.scalars(select(BookContentRow.knowledge_entity_id).where(BookContentRow.book_entity_id.in_(owned))))
 
 
-async def masters(session: AsyncSession, community_id: int) -> bool:
+async def scholar_levels(session: AsyncSession, community_id: int) -> list[float]:
     mortals = select(EntityRow.id).where(
         EntityRow.location_id == community_id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
     )
-    found = await session.scalar(select(SkillRow.holder_node_id).where(SkillRow.holder_node_id.in_(mortals), SkillRow.level >= MASTER_SKILL).limit(1))
-    return found is not None
+    rows = await session.execute(select(SkillRow.holder_node_id, SkillRow.level).where(SkillRow.holder_node_id.in_(mortals), SkillRow.skill.in_(SCHOLARLY)))
+    best: dict[int, int] = {}
+    for holder, level in rows:
+        best[holder] = max(best.get(holder, 0), int(level))
+    if not best:
+        return []
+    bodies = {row.node_id: row.scholarship for row in await session.scalars(select(BodyRow).where(BodyRow.node_id.in_(list(best))))}
+    return [level * bodies.get(holder, PERCENT) / PERCENT for holder, level in best.items()]
+
+
+async def masters(session: AsyncSession, rules: Rules, community_id: int) -> bool:
+    mortals = select(EntityRow.id).where(
+        EntityRow.location_id == community_id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
+    )
+    skilled = select(SkillRow.holder_node_id).where(SkillRow.holder_node_id.in_(mortals), SkillRow.level >= rules.research.master_skill)
+    holders = set(await session.scalars(skilled))
+    if not holders:
+        return False
+    unable = select(BodyRow.node_id).where(BodyRow.node_id.in_(list(holders)), BodyRow.scholarship < rules.research.master_scholarship)
+    return bool(holders - set(await session.scalars(unable)))
 
 
 async def practise(ctx: TickContext) -> dict[str, int]:
@@ -164,7 +186,7 @@ async def practise(ctx: TickContext) -> dict[str, int]:
         if not dying or "level" in row.locked:
             continue
         knowledge = knowledge_by.get((row.holder_entity_id, row.branch))
-        if (knowledge is not None and knowledge in await books_of(ctx.session, holder.id)) or await masters(ctx.session, holder.id):
+        if (knowledge is not None and knowledge in await books_of(ctx.session, holder.id)) or await masters(ctx.session, ctx.rules, holder.id):
             continue
         if not ctx.rng(f"loss.{holder.id}.{row.branch.value}.{ctx.epoch}").chance(table.loss_chance):
             continue
