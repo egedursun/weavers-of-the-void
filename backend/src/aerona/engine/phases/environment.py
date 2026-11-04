@@ -370,7 +370,6 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
 
 
 async def run_backfills(ctx: TickContext) -> None:
-    ctx.count("notable_years_backfilled", await backfill_notable_years(ctx))
     ctx.count("typed_works_backfilled", await backfill_typed_works(ctx))
     ctx.count("battles_grounded", await backfill_battle_ground(ctx))
 
@@ -411,7 +410,7 @@ async def run_backfills(ctx: TickContext) -> None:
     "table.worlds",
 )
 async def environment_survey(ctx: TickContext) -> None:
-    await run_backfills(ctx)
+    ctx.count("notable_years_backfilled", await backfill_notable_years(ctx))
     moons = await moons_by_world(ctx)
     worlds = list(await ctx.session.scalars(select(WorldRow).where(WorldRow.discovery != Discovery.FORGOTTEN).order_by(WorldRow.id)))
     calendars = 0
@@ -465,6 +464,7 @@ async def environment_survey(ctx: TickContext) -> None:
     ctx.count("regions_surveyed", created)
     ctx.count("regions_resynced", synced)
     ctx.count("places_surveyed", placed)
+    await run_backfills(ctx)
 
 
 def decay_scars(rules: Rules, env: RegionEnvironmentRow) -> None:
