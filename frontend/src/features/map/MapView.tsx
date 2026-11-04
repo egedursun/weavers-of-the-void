@@ -79,6 +79,7 @@ const DEFAULT_OVERLAYS: Record<Overlay, boolean> = {
   roads: true,
   trade: true,
   outbreaks: true,
+  military: true,
   ties: true,
   wars: true,
   events: true,

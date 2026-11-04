@@ -9,6 +9,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.economy import ResourceProfileRow, ResourceWorkerRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import TreatyClauseRow, TreatyPartyRow, TreatyProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -45,6 +46,7 @@ class EconomyBook:
     affiliated: dict[int, int] = field(default_factory=dict)
     labour: dict[int, dict[Job, LabourRow]] = field(default_factory=dict)
     waived: set[frozenset[int]] = field(default_factory=set)
+    blockaded: set[int] = field(default_factory=set)
 
     @classmethod
     async def load(cls, ctx: TickContext) -> "EconomyBook":
@@ -97,6 +99,7 @@ class EconomyBook:
         for party in await session.scalars(select(TreatyPartyRow).where(TreatyPartyRow.treaty_entity_id.in_(waivers))):
             signers[party.treaty_entity_id].add(party.party_node_id)
         book.waived = {frozenset(pair) for parties in signers.values() for pair in combinations(sorted(parties), 2)}
+        book.blockaded = set(await session.scalars(select(ArmyProfileRow.blockade_entity_id).where(ArmyProfileRow.blockade_entity_id.is_not(None))))
         return book
 
     def home_of(self, entity: EntityRow, homes: dict[int, int]) -> int | None:

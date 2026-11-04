@@ -40,6 +40,7 @@ from aerona.api.routers import (
     map,
     mechanics,
     metrics,
+    military,
     mind,
     notes,
     notifications,
@@ -112,6 +113,7 @@ ROUTERS: tuple[ModuleType, ...] = (
     economy,
     depth_society,
     realms,
+    military,
     actions,
 )
 IMAGE_UPLOAD_SUFFIX = "/images"

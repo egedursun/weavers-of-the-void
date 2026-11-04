@@ -5,9 +5,10 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.warfare import TributeRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.limits import PERCENT_MAX
+from aerona.domain.enums.military import SpyOperation
 from aerona.domain.enums.war import TributeStatus, WarEnding
 from aerona.engine.phases.diplomacy import decree_alliance, decree_betrayal
-from aerona.engine.phases.espionage import SpyOperation, order_spy_operation
+from aerona.engine.phases.espionage import order_spy_operation
 from aerona.engine.phases.prisoners import free_prisoner, order_ransom
 from aerona.engine.phases.tribute import decree_tribute, forgive_tribute
 from aerona.engine.phases.warfare import (

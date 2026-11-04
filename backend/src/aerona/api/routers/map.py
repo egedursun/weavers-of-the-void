@@ -13,6 +13,9 @@ from aerona.api.schemas.common import Done
 from aerona.api.schemas.entities import MapPositionRequest
 from aerona.api.schemas.maps import (
     GeographyPreview,
+    MapArmy,
+    MapFront,
+    MapOccupation,
     MapOutbreak,
     MapPoint,
     MapRelation,
@@ -36,11 +39,14 @@ from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
 from aerona.db.tables.economy import TradeFlowRow, TradeRouteProfileRow, TradeRouteRegionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
+from aerona.db.tables.military import ArmyProfileRow, CampaignFrontRow, OccupationRow
 from aerona.db.tables.polity import PolityTerritoryRow
+from aerona.db.tables.warfare import ArmyRow, WarRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import LandUse
+from aerona.domain.enums.war import WarStatus
 from aerona.engine.cosmos.maps import MAPPED_STATUSES, map_is_stale, map_request, store_world_map, world_entities
 from aerona.engine.economy.routes import LIVE_STATUSES
 from aerona.engine.environment.ley import LeyWeb
@@ -153,6 +159,9 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
             trade=await trade_lines(session, world_id, positions),
             outbreaks=await outbreak_lines(session, world_id, positions),
             realms=await region_realms(session, world_id),
+            armies=await army_marks(session, world_id, positions),
+            occupations=await occupation_marks(session, world_id),
+            fronts=await front_lines(session, world_id, positions),
             notes=[MapNoteRecord.model_validate(row) for row in await map_notes(session, world_id)],
             time=MapTime(current=current, shown=shown, snapshots=await snapshot_epochs(session, world_id)),
         )
@@ -170,6 +179,65 @@ async def region_realms(session: AsyncSession, world_id: int) -> dict[int, Regio
         if current is None or row.control > current.control:
             found[row.region_entity_id] = RegionRealm(polity_id=row.polity_entity_id, name=name, control=row.control)
     return found
+
+
+async def army_marks(session: AsyncSession, world_id: int, positions: dict[int, tuple[float, float]]) -> list[MapArmy]:
+    statement = (
+        select(ArmyRow, ArmyProfileRow, EntityRow)
+        .join(ArmyProfileRow, ArmyProfileRow.army_entity_id == ArmyRow.entity_id)
+        .join(EntityRow, EntityRow.id == ArmyRow.entity_id)
+        .where(EntityRow.world_id == world_id, EntityRow.status == EntityStatus.CANON, ArmyRow.disbanded_epoch.is_(None))
+        .order_by(ArmyRow.entity_id)
+    )
+    found: list[MapArmy] = []
+    for army, profile, entity in await session.execute(statement):
+        route = [*profile.supply_line] or ([profile.region_entity_id] if profile.region_entity_id is not None else [])
+        path = [value for node in route if (point := positions.get(node)) is not None for value in point]
+        found.append(
+            MapArmy(
+                army_id=army.entity_id,
+                name=entity.name,
+                owner_id=army.owner_entity_id,
+                war_id=army.war_id,
+                region_id=profile.region_entity_id,
+                stance=profile.stance,
+                size=round(stat(entity, "size") or 0),
+                blockade_id=profile.blockade_entity_id,
+                path=path,
+            )
+        )
+    return found
+
+
+async def occupation_marks(session: AsyncSession, world_id: int) -> dict[int, MapOccupation]:
+    statement = (
+        select(OccupationRow, EntityRow.name)
+        .join(EntityRow, EntityRow.id == OccupationRow.occupier_entity_id)
+        .where(EntityRow.world_id == world_id)
+        .order_by(OccupationRow.region_entity_id)
+    )
+    return {
+        row.region_entity_id: MapOccupation(occupier_id=row.occupier_entity_id, name=name, control=row.control, resistance=row.resistance)
+        for row, name in await session.execute(statement)
+    }
+
+
+async def front_lines(session: AsyncSession, world_id: int, positions: dict[int, tuple[float, float]]) -> list[MapFront]:
+    statement = (
+        select(CampaignFrontRow)
+        .join(WarRow, WarRow.id == CampaignFrontRow.war_id)
+        .where(WarRow.world_id == world_id, WarRow.status != WarStatus.ENDED)
+        .order_by(CampaignFrontRow.id)
+    )
+    return [
+        MapFront(
+            war_id=row.war_id,
+            first_region_id=row.first_region_id,
+            second_region_id=row.second_region_id,
+            path=[value for node in (row.first_region_id, row.second_region_id) if (point := positions.get(node)) is not None for value in point],
+        )
+        for row in await session.scalars(statement)
+    ]
 
 
 async def outbreak_lines(session: AsyncSession, world_id: int, positions: dict[int, tuple[float, float]]) -> list[MapOutbreak]:

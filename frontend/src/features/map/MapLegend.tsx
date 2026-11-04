@@ -73,6 +73,8 @@ const LINE_TOKEN: Record<LineKind, ThemeColorName> = {
   route_busy: 'brand-gold',
   route_blocked: 'destructive',
   outbreak: 'destructive',
+  front: 'destructive',
+  supply: 'brand-gold',
 }
 
 const LINE_NOTE: Partial<Record<LineKind, string>> = {

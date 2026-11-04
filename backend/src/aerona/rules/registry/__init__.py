@@ -93,6 +93,24 @@ from aerona.rules.registry.markets import BankingRules, MarketsRules, MoneyRules
 from aerona.rules.registry.materials import MaterialsRules
 from aerona.rules.registry.mechanics import MechanicsRules
 from aerona.rules.registry.metrics import MetricsRules
+from aerona.rules.registry.military import (
+    AttritionRules,
+    CaptivityRules,
+    DuelsRules,
+    LogisticsRules,
+    MilitaryUnitsRules,
+    MoraleRules,
+    NavalRules,
+    OccupationRules,
+    PeaceRules,
+    SiegecraftRules,
+    TacticsRules,
+    TerrainEffectsRules,
+    VendettaRules,
+    WarAimsRules,
+    WarWearinessRules,
+    WeatherBattleEffectsRules,
+)
 from aerona.rules.registry.mind import (
     CareersRules,
     CultureDriftRules,
@@ -256,6 +274,22 @@ class Rules:
     houses: HousesRules = field(default_factory=HousesRules)
     oaths: OathsRules = field(default_factory=OathsRules)
     treaties: TreatiesRules = field(default_factory=TreatiesRules)
+    military_units: MilitaryUnitsRules = field(default_factory=MilitaryUnitsRules)
+    logistics: LogisticsRules = field(default_factory=LogisticsRules)
+    attrition: AttritionRules = field(default_factory=AttritionRules)
+    morale: MoraleRules = field(default_factory=MoraleRules)
+    terrain_effects: TerrainEffectsRules = field(default_factory=TerrainEffectsRules)
+    weather_battle_effects: WeatherBattleEffectsRules = field(default_factory=WeatherBattleEffectsRules)
+    tactics: TacticsRules = field(default_factory=TacticsRules)
+    siegecraft: SiegecraftRules = field(default_factory=SiegecraftRules)
+    naval: NavalRules = field(default_factory=NavalRules)
+    duels: DuelsRules = field(default_factory=DuelsRules)
+    captivity: CaptivityRules = field(default_factory=CaptivityRules)
+    war_aims: WarAimsRules = field(default_factory=WarAimsRules)
+    occupation: OccupationRules = field(default_factory=OccupationRules)
+    war_weariness: WarWearinessRules = field(default_factory=WarWearinessRules)
+    peace: PeaceRules = field(default_factory=PeaceRules)
+    vendetta: VendettaRules = field(default_factory=VendettaRules)
     labour: LabourRules = field(default_factory=LabourRules)
     peoples: PeopleRules = field(default_factory=PeopleRules)
     mobility: MobilityRules = field(default_factory=MobilityRules)

@@ -236,7 +236,7 @@ async def _pair_context(ctx: TickContext) -> PairContext:
 
 
 async def settled_by_wergild(ctx: TickContext, first: EntityRow, second: EntityRow) -> bool:
-    if not ctx.rng(f"wergild.{first.id}.{second.id}.{ctx.epoch}").chance(50):
+    if not ctx.rng(f"wergild.{first.id}.{second.id}.{ctx.epoch}").chance(ctx.rules.vendetta.wergild_chance):
         return False
     if not await law_param(ctx.session, first.id, LawKind.BLOOD_FEUD, "wergild_allowed"):
         return False

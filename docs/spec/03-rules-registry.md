@@ -2403,12 +2403,12 @@ Old namespace `DERIN_SEFER` · 100 rows · defined in `src/derin.js`. Armies, ba
 | siege_default_population | kusatma_nufus_varsayilan | 100 | 0 | 10,000,000 | War and diplomacy | Population assumed for a besieged city with no population record |
 | great_victory_diff | buyuk_zafer_fark | 35 | 0 | 1000 | War and diplomacy | Strength difference counted as a great victory |
 | great_victory_score | buyuk_zafer_skor | 2 | 0 | 20 | War and diplomacy | Contribution of a great victory to the war score |
-| loser_base_loss_pct | maglup_kayip | 12 | 0 | 100 | War and diplomacy | Base loss of the defeated army (%) |
-| loser_extra_loss_max_pct | maglup_kayip_ek | 30 | 0 | 100 | War and diplomacy | Maximum extra loss of the defeated army from strength difference (%) |
-| loser_extra_loss_divisor | maglup_kayip_bolen | 220 | 1 | 100,000 | War and diplomacy | Defeated extra loss: strength difference / this number |
-| winner_base_loss_pct | galip_kayip | 4 | 0 | 100 | War and diplomacy | Base loss of the victorious army (%) |
-| winner_extra_loss_max_pct | galip_kayip_ek | 10 | 0 | 100 | War and diplomacy | Maximum extra loss of the victorious army from strength difference (%) |
-| winner_extra_loss_divisor | galip_kayip_bolen | 600 | 1 | 100,000 | War and diplomacy | Victor extra loss: strength difference / this number |
+| ~~loser_base_loss_pct~~ | maglup_kayip | 12 | 0 | 100 | War and diplomacy | Removed by spec 13 5.4: casualties come from stack-by-stack combat in each battle phase |
+| ~~loser_extra_loss_max_pct~~ | maglup_kayip_ek | 30 | 0 | 100 | War and diplomacy | Removed by spec 13 5.4: casualties come from stack-by-stack combat in each battle phase |
+| ~~loser_extra_loss_divisor~~ | maglup_kayip_bolen | 220 | 1 | 100,000 | War and diplomacy | Removed by spec 13 5.4: casualties come from stack-by-stack combat in each battle phase |
+| ~~winner_base_loss_pct~~ | galip_kayip | 4 | 0 | 100 | War and diplomacy | Removed by spec 13 5.4: casualties come from stack-by-stack combat in each battle phase |
+| ~~winner_extra_loss_max_pct~~ | galip_kayip_ek | 10 | 0 | 100 | War and diplomacy | Removed by spec 13 5.4: casualties come from stack-by-stack combat in each battle phase |
+| ~~winner_extra_loss_divisor~~ | galip_kayip_bolen | 600 | 1 | 100,000 | War and diplomacy | Removed by spec 13 5.4: casualties come from stack-by-stack combat in each battle phase |
 | loser_morale_loss | maglup_moral | 10 | 0 | 100 | War and diplomacy | Morale loss of the defeated army |
 | loser_morale_diff_divisor | maglup_moral_bolen | 8 | 1 | 1000 | War and diplomacy | Defeated extra morale loss: strength difference / this number |
 | winner_morale_gain | galip_moral | 4 | 0 | 100 | War and diplomacy | Morale gain of the victorious army |

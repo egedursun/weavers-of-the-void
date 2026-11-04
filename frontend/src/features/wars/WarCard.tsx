@@ -7,6 +7,7 @@ import {
   Crown,
   Flag,
   Flame,
+  Map,
   Maximize2,
   Shield,
   Swords,
@@ -20,6 +21,7 @@ import { Label, Muted, Text } from '@/components/typography'
 import { DivergingBar } from '@/features/pantheon/DivergingBar'
 import { ArmiesList, BattlesList, Ref, SiegesList } from './WarsTables'
 import { type WarSummary } from './api'
+import { WarRoom } from './military/WarRoom'
 
 const SCORE_SCALE_MIN = 5
 
@@ -205,6 +207,10 @@ export function WarCard({
             <Castle />
             Sieges
           </TabsTrigger>
+          <TabsTrigger value='room'>
+            <Map />
+            War room
+          </TabsTrigger>
         </TabsList>
         <TabsContent value='battles'>
           {tab === 'battles' && <BattlesList warId={war.id} />}
@@ -214,6 +220,9 @@ export function WarCard({
         </TabsContent>
         <TabsContent value='sieges'>
           {tab === 'sieges' && <SiegesList warId={war.id} />}
+        </TabsContent>
+        <TabsContent value='room'>
+          {tab === 'room' && <WarRoom warId={war.id} />}
         </TabsContent>
       </Tabs>
     </article>

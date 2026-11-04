@@ -106,6 +106,10 @@ class HomeLine(ContextItem):
     office: str = ""
     house: str = ""
     oaths: list[str] = Field(default_factory=list)
+    wars: list[str] = Field(default_factory=list)
+    command: str = ""
+    occupied_by: str = ""
+    captives: int = 0
 
 
 class ExpeditionLine(ContextItem):

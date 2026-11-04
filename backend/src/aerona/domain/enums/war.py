@@ -62,6 +62,7 @@ class BattleOutcome(StrEnum):
     SIEGE_REPULSED = "siege_repulsed"
     SIEGE_BREACHED = "siege_breached"
     SIEGE_STARVATION = "siege_starvation"
+    REFUSED = "refused"
 
 
 class CaptiveStatus(StrEnum):
@@ -72,6 +73,7 @@ class CaptiveStatus(StrEnum):
     TURNCOAT = "turncoat"
     RESCUED = "rescued"
     RELEASED = "released"
+    WARD = "ward"
 
 
 class TributeStatus(StrEnum):

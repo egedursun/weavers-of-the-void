@@ -89,6 +89,7 @@ from aerona.engine.phases import (
     trade,
     travel,
     tribute,
+    vendettas,
     warfare,
     wonders,
     works,
@@ -185,6 +186,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + works.PHASES
     + writing.PHASES
     + epidemics.PHASES
+    + vendettas.PHASES
     + realms.PHASES
     + settlement_life.PHASES
     + demography.PHASES
@@ -216,6 +218,7 @@ SUB_ENGINE_STAGE = stage(
     "tribute",
     "treaty_cycles",
     "campaigns",
+    "vendetta_cycles",
     "prisoners",
     "war_casualties",
     "travel",

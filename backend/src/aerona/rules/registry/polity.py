@@ -56,7 +56,6 @@ class LegitimacyRules:
     weariness_pct: int = rule(40, 0, 100, P, "Stability lost at the worst war weariness (%)")
     faction_pct: int = rule(30, 0, 100, P, "Stability lost when one faction overwhelms the rest (%)")
     unrest_pct: int = rule(50, 0, 100, P, "Stability lost at the worst unrest of the realm's cities (%)")
-    weariness_war_gain: int = rule(15, 0, 100, P, "War weariness gained per epoch at war")
     weariness_decay: int = rule(10, 0, 100, P, "War weariness lost per epoch at peace")
 
 

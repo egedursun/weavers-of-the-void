@@ -89,6 +89,7 @@ const OVERLAY_ICON: Record<Overlay, LucideIcon> = {
   roads: Route,
   trade: Coins,
   outbreaks: Biohazard,
+  military: Flag,
   ties: Waypoints,
   wars: Swords,
   events: Zap,

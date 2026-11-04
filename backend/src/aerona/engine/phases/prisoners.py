@@ -7,19 +7,22 @@ from aerona.db.tables.warfare import CaptiveRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.entity import COMMUNITY_TYPES
-from aerona.domain.enums.mind import ActKind, MemoryKind
-from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.mind import ActKind, MemoryKind, ValueAxis, ValueHolder
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.body.book import effective
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.military.captivity import announce, cohort_fates, ransom_lawful, rich, wring_intel
+from aerona.engine.mind.book import stored_values, values_for, write_values
 from aerona.engine.mind.drives import closeness, cruelty_drive
 from aerona.engine.mind.hooks import judged, witnessed
+from aerona.engine.mind.memories import remember
 from aerona.engine.phase import Phase
-from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.prosperity import add_prosperity
-from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.records import death_path
 from aerona.engine.services.community_relations import change_relation, relation, start_blood_feud
@@ -40,18 +43,6 @@ async def home_of(ctx: TickContext, captive: EntityRow, row: CaptiveRow) -> Enti
             if target is not None and target.entity_type in COMMUNITY_TYPES:
                 return target
     return await living_entity(ctx.session, row.home_entity_id)
-
-
-async def ransom_lawful(ctx: TickContext, captor: EntityRow | None) -> bool:
-    if captor is None:
-        return True
-    allowed = await law_param(ctx.session, captor.id, LawKind.RANSOM_CUSTOM, "allowed")
-    return allowed is None or bool(allowed)
-
-
-def _is_rich(ctx: TickContext, home: EntityRow) -> bool:
-    campaigns = ctx.rules.campaigns
-    return (stat(home, "wealth") or 0) >= campaigns.ransom_min_wealth or (stat(home, "prosperity") or 0) >= campaigns.ransom_min_prosperity
 
 
 async def pay_ransom(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: EntityRow, home: EntityRow) -> None:
@@ -78,11 +69,74 @@ async def defect(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: 
     await _note(ctx, ChronicleKind.WAR, text, "prisoner.turncoat", (captor.id, captive.id))
 
 
+async def execute(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: EntityRow, home: EntityRow) -> None:
+    await release_captive(ctx, row, CaptiveStatus.EXECUTED)
+    await death_path(ctx, captive, f"executed by {captor.name}", captor.id, "execution", forced=True, harm=HarmCause.PUNISHMENT)
+    await start_blood_feud(ctx, home.id, captor.id, f"the execution of {captive.name}")
+    await witnessed(ctx, home.id, captor.id, ActKind.EXECUTION, base=ctx.rules.memory.outrage_magnitude, note=captive.name)
+    for relative in await kin_of(ctx, captive):
+        await remember(
+            ctx.session,
+            ctx.rules,
+            holder_id=relative.id,
+            subject_id=captor.id,
+            kind=MemoryKind.KILLED_KIN,
+            magnitude=-ctx.rules.captivity.execution_memory,
+            epoch=ctx.epoch,
+            note=captive.name,
+        )
+    text = f"{captor.name} executed its prisoner {captive.name}; {home.name} swore vengeance."
+    await _note(ctx, ChronicleKind.WAR, text, "prisoner.executed", (captor.id, captive.id, home.id))
+
+
+async def kin_of(ctx: TickContext, mortal: EntityRow) -> list[EntityRow]:
+    found: list[EntityRow] = []
+    bonds = await active_bonds(ctx.session, [BondKind.DESCENDS_FROM], sources=[mortal.id])
+    bonds += await active_bonds(ctx.session, [BondKind.DESCENDS_FROM], targets=[mortal.id])
+    for bond in bonds:
+        other = bond.target_node_id if bond.source_node_id == mortal.id else bond.source_node_id
+        relative = await living_entity(ctx.session, other)
+        if relative is not None and relative.entity_type is EntityType.MORTAL:
+            found.append(relative)
+    return found
+
+
+async def torture(ctx: TickContext, captive: EntityRow, captor: EntityRow, home: EntityRow) -> None:
+    table = ctx.rules.captivity
+    await apply_hits(ctx, captive, Harm(table.torture_hp, HarmCause.TORTURE, f"tortured by {captor.name}", killer_id=captor.id), lethal=False)
+    await wring_intel(ctx, captor, home)
+    await judged(ctx, captor.id, captive.id, ActKind.MUTILATION, note=captive.name)
+    ctx.count("tortured")
+
+
+async def foster(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: EntityRow) -> bool:
+    if (stat(captive, "age") or ctx.rules.skills.adult_age) >= ctx.rules.skills.adult_age:
+        if row.status is CaptiveStatus.WARD:
+            await release_captive(ctx, row, CaptiveStatus.RELEASED)
+            text = f"{captive.name}, raised at the court of {captor.name}, came of age and went home."
+            await _note(ctx, ChronicleKind.WAR, text, "prisoner.ward_home", (captor.id, captive.id))
+            return True
+        return False
+    if row.status is not CaptiveStatus.WARD:
+        if not ctx.rng(f"ward.{row.id}").chance(ctx.rules.captivity.ward_chance):
+            return False
+        row.status = CaptiveStatus.WARD
+    own = await stored_values(ctx.session, ValueHolder.PERSONAL, captive.id)
+    theirs = await values_for(ctx.session, captor.id)
+    step = ctx.rules.captivity.ward_drift
+    drifted = {axis: own.get(axis, 0) + max(-step, min(step, theirs.get(axis, 0) - own.get(axis, 0))) for axis in ValueAxis}
+    await write_values(ctx.session, ValueHolder.PERSONAL, captive.id, drifted)
+    ctx.count("wards")
+    return True
+
+
 async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: EntityRow) -> None:
     campaigns = ctx.rules.campaigns
     rng = ctx.rng("captivity")
     home = await home_of(ctx, captive, row)
-    if home is not None and _is_rich(ctx, home) and await ransom_lawful(ctx, captor) and rng.chance(campaigns.ransom_chance):
+    if await foster(ctx, row, captive, captor):
+        return
+    if home is not None and rich(ctx, home) and await ransom_lawful(ctx, captor) and rng.chance(campaigns.ransom_chance):
         await pay_ransom(ctx, row, captive, captor, home)
         return
     agility = await effective(ctx.session, captive, "agility", campaigns.captive_default_stat, rules=ctx.rules)
@@ -91,18 +145,13 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
         await release_captive(ctx, row, CaptiveStatus.ESCAPED)
         await _note(ctx, ChronicleKind.ESCAPE, f"{captive.name} escaped from the dungeon of {captor.name}.", "prisoner.escaped", (captor.id, captive.id))
         return
-    if (
-        home is not None
-        and await relation(ctx.session, ctx.rules, home.id, captor.id) <= -campaigns.execution_relation
-        and rng.chance(campaigns.execution_chance * await cruelty_drive(ctx.session, ctx.rules, captor.id))
-    ):
-        await release_captive(ctx, row, CaptiveStatus.EXECUTED)
-        await death_path(ctx, captive, f"executed by {captor.name}", captor.id, "execution", forced=True, harm=HarmCause.PUNISHMENT)
-        await start_blood_feud(ctx, home.id, captor.id, f"the execution of {captive.name}")
-        await witnessed(ctx, home.id, captor.id, ActKind.EXECUTION, base=ctx.rules.memory.outrage_magnitude, note=captive.name)
-        text = f"{captor.name} executed its prisoner {captive.name}; {home.name} swore vengeance."
-        await _note(ctx, ChronicleKind.WAR, text, "prisoner.executed", (captor.id, captive.id, home.id))
+    cruelty = await cruelty_drive(ctx.session, ctx.rules, captor.id)
+    hated = home is not None and await relation(ctx.session, ctx.rules, home.id, captor.id) <= -campaigns.execution_relation
+    if home is not None and hated and rng.chance(campaigns.execution_chance * cruelty):
+        await execute(ctx, row, captive, captor, home)
         return
+    if home is not None and rng.chance(ctx.rules.captivity.torture_chance * cruelty):
+        await torture(ctx, captive, captor, home)
     kinship = await closeness(ctx.session, captive.id, captor.id)
     if ctx.epoch - row.taken_epoch >= campaigns.captive_defection_epochs and rng.chance(campaigns.captive_defection_chance * kinship):
         await defect(ctx, row, captive, captor)
@@ -111,7 +160,8 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
 @reads("table.bonds", "table.captives", "table.minds", "table.traits")
 @writes("table.captives")
 async def prisoners(ctx: TickContext) -> None:
-    rows = list(await ctx.session.scalars(select(CaptiveRow).where(CaptiveRow.status == CaptiveStatus.HELD).order_by(CaptiveRow.id)))
+    held = (CaptiveStatus.HELD, CaptiveStatus.WARD)
+    rows = list(await ctx.session.scalars(select(CaptiveRow).where(CaptiveRow.status.in_(held)).order_by(CaptiveRow.id)))
     for row in rows:
         captive, captor = await living_entity(ctx.session, row.captive_entity_id), await living_entity(ctx.session, row.captor_entity_id)
         if captive is None:
@@ -126,6 +176,10 @@ async def prisoners(ctx: TickContext) -> None:
             continue
         await _fate(ctx, row, captive, captor)
     ctx.count("prisoners_held", len(rows))
+    fates = await cohort_fates(ctx)
+    for fate, count in fates.items():
+        ctx.count(f"captive_cohorts_{fate.value}", count)
+    await announce(ctx, fates)
 
 
 async def _held(ctx: TickContext, captive_row_id: int) -> tuple[CaptiveRow, EntityRow, EntityRow]:

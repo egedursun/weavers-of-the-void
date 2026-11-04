@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import InjuryRow
@@ -105,7 +105,11 @@ async def stability(ctx: TickContext, book: RealmBook, realm: Realm, legit: int)
     parts = {"legitimacy": legit}
     _, _, fighting = await war_record(ctx, realm)
     profile = realm.profile
-    profile.war_weariness = clamp_int(profile.war_weariness + (table.weariness_war_gain if fighting else -table.weariness_decay), 0, PERCENT)
+    worn = await ctx.session.scalar(
+        select(func.max(WarSideRow.weariness)).where(WarSideRow.entity_id.in_([realm.entity.id, *realm.members]), WarSideRow.left_epoch.is_(None))
+    )
+    eased = profile.war_weariness - table.weariness_decay
+    profile.war_weariness = clamp_int(max(int(worn or 0), eased) if fighting else eased, 0, PERCENT)
     if profile.war_weariness:
         parts["war weariness"] = -round_half_up(profile.war_weariness * table.weariness_pct / PERCENT)
     unrest = []

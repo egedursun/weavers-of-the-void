@@ -519,14 +519,21 @@ export function computeLayout(
       : { x, y }
   const hits: HitTarget[] = []
 
-  if (overlays.roads || overlays.ties || overlays.trade || overlays.outbreaks)
+  if (
+    overlays.roads ||
+    overlays.ties ||
+    overlays.trade ||
+    overlays.outbreaks ||
+    overlays.military
+  )
     for (const line of lineHits(
       view,
       transform,
       overlays.roads,
       overlays.ties,
       overlays.trade,
-      overlays.outbreaks
+      overlays.outbreaks,
+      overlays.military
     ))
       hits.push({
         key: `line:${line.info.kind}:${line.info.source}:${line.info.target}`,

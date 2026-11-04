@@ -1,15 +1,19 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.military import CaptiveCohortRow, CommanderTraitRow, OccupationRow, WarAimRow
 from aerona.db.tables.polity import HouseMemberRow, OathRow, OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import SOCIETY_TYPES
+from aerona.domain.enums.military import CaptiveFate
 from aerona.domain.enums.polity import OathStatus
+from aerona.domain.enums.war import WarStatus
 from aerona.engine.body.customs import people_of
 from aerona.engine.gods.queries import community_of
 from aerona.engine.primitives.distance import RegionAtlas
@@ -58,7 +62,12 @@ async def home_for(session: AsyncSession, me: EntityRow) -> HomeLine | None:
         f"{row.kind.value.replace('_', ' ')} oath{' before a god' if row.witness_son_id else ''}"
         for row in await session.scalars(select(OathRow).where(OathRow.swearer_entity_id == me.id, OathRow.status == OathStatus.SWORN))
     ]
+    wars, command, occupied, captives = await war_lines(session, me, home, region)
     return HomeLine(
+        wars=wars,
+        command=command,
+        occupied_by=occupied,
+        captives=captives,
         realm=f"{realm.name} ({words(profile.government.value)}, legitimacy {profile.legitimacy})" if realm is not None and profile is not None else "",
         office=words(office.kind.value) if office is not None else "",
         house=house.name if house is not None else "",
@@ -73,3 +82,25 @@ async def home_for(session: AsyncSession, me: EntityRow) -> HomeLine | None:
         customs=customs,
         sickness=sickness,
     )
+
+
+async def war_lines(session: AsyncSession, me: EntityRow, home: EntityRow, region: int | None) -> tuple[list[str], str, str, int]:
+    wars: list[str] = []
+    for side in await session.scalars(select(WarSideRow).where(WarSideRow.entity_id == home.id, WarSideRow.left_epoch.is_(None))):
+        war = await session.get(WarRow, side.war_id)
+        if war is None or war.status is WarStatus.ENDED:
+            continue
+        event = await session.get(EntityRow, war.event_entity_id)
+        rows = await session.scalars(select(WarAimRow).where(WarAimRow.war_id == war.id, WarAimRow.side_entity_id == home.id))
+        aims = [words(row.kind.value) for row in rows]
+        line = f"{event.name if event is not None else 'a war'} (weariness {side.weariness}"
+        wars.append(line + (f", aims: {', '.join(aims)})" if aims else ")"))
+    army_id = await session.scalar(select(ArmyRow.entity_id).where(ArmyRow.commander_entity_id == me.id, ArmyRow.disbanded_epoch.is_(None)).limit(1))
+    army = await session.get(EntityRow, army_id) if army_id is not None else None
+    traits = [words(trait.value) for trait in await session.scalars(select(CommanderTraitRow.trait).where(CommanderTraitRow.mortal_entity_id == me.id))]
+    command = (army.name if army is not None else "") + (f" (known as {', '.join(traits)})" if army is not None and traits else "")
+    occupation = await session.get(OccupationRow, region) if region is not None else None
+    occupier = await session.get(EntityRow, occupation.occupier_entity_id) if occupation is not None and occupation.occupier_entity_id != home.id else None
+    holding = select(func.coalesce(func.sum(CaptiveCohortRow.count), 0)).where(CaptiveCohortRow.captor_entity_id == home.id)
+    held = await session.scalar(holding.where(CaptiveCohortRow.fate == CaptiveFate.HELD))
+    return wars, command, occupier.name if occupier is not None else "", int(held or 0)

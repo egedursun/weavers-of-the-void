@@ -13,11 +13,17 @@ export const LINE_KINDS = [
   'route_busy',
   'route_blocked',
   'outbreak',
+  'front',
+  'supply',
 ] as const
 export type LineKind = (typeof LINE_KINDS)[number]
 
 export const ROAD_KINDS: ReadonlySet<LineKind> = new Set(['road', 'trade_road'])
 export const OUTBREAK_KINDS: ReadonlySet<LineKind> = new Set(['outbreak'])
+export const MILITARY_KINDS: ReadonlySet<LineKind> = new Set([
+  'front',
+  'supply',
+])
 export const ROUTE_KINDS: ReadonlySet<LineKind> = new Set([
   'route',
   'route_busy',
@@ -107,7 +113,20 @@ export const LINE_STYLE: Record<LineKind, LineStyle> = {
     main: { color: red, width: 2, alpha: 0.9, dash: [3, 3], speed: 0.02 },
     arrow: true,
   },
+  front: {
+    casing: { color: halo, width: 6, alpha: 0.45 },
+    main: { color: red, width: 3, alpha: 0.95, dash: [2, 2] },
+  },
+  supply: {
+    casing: { color: halo, width: 3, alpha: 0.35 },
+    main: { color: gold, width: 1.4, alpha: 0.85, dash: [6, 3], speed: 0.01 },
+    arrow: true,
+  },
 }
+const ARMY_RADIUS = 3
+const ARMY_SCALE = 0.9
+const OCCUPIED_RADIUS = 9
+const OCCUPIED_ALPHA = 0.22
 const SICK_RADIUS = 4
 const SICK_SCALE = 0.08
 const SICK_ALPHA = 0.35
@@ -200,6 +219,34 @@ function shapesOf(view: MapView): Shape[] {
       arrow: bent.arrow,
     })
   }
+  for (const front of view.fronts ?? []) {
+    if (front.path.length !== 4) continue
+    shapes.push({
+      info: {
+        kind: 'front',
+        source: front.first_region_id,
+        target: front.second_region_id,
+        description: 'The front of a war',
+        length: null,
+      },
+      points: front.path,
+      arrow: null,
+    })
+  }
+  for (const army of view.armies ?? []) {
+    if (army.path.length < 4) continue
+    shapes.push({
+      info: {
+        kind: 'supply',
+        source: army.army_id,
+        target: army.region_id ?? army.army_id,
+        description: `${army.name}: ${army.size} soldiers, ${army.stance.replaceAll('_', ' ')}`,
+        length: null,
+      },
+      points: army.path,
+      arrow: null,
+    })
+  }
   for (const line of view.relations) {
     const kind = line.kind as LineKind
     const info = {
@@ -227,16 +274,19 @@ function visibleShapes(
   roads: boolean,
   ties: boolean,
   trade = false,
-  outbreaks = false
+  outbreaks = false,
+  military = false
 ): Shape[] {
   return shapesOf(view).filter((shape) =>
-    OUTBREAK_KINDS.has(shape.info.kind)
-      ? outbreaks
-      : ROUTE_KINDS.has(shape.info.kind)
-        ? trade
-        : ROAD_KINDS.has(shape.info.kind)
-          ? roads
-          : ties
+    MILITARY_KINDS.has(shape.info.kind)
+      ? military
+      : OUTBREAK_KINDS.has(shape.info.kind)
+        ? outbreaks
+        : ROUTE_KINDS.has(shape.info.kind)
+          ? trade
+          : ROAD_KINDS.has(shape.info.kind)
+            ? roads
+            : ties
   )
 }
 
@@ -268,6 +318,7 @@ export function drawLines(
     ties: boolean
     trade?: boolean
     outbreaks?: boolean
+    military?: boolean
     time: number
     animate: boolean
     fade: number
@@ -275,12 +326,15 @@ export function drawLines(
 ): void {
   if (options.outbreaks)
     drawSickLands(context, view, tokens, transform.k, options.fade)
+  if (options.military)
+    drawArmies(context, view, tokens, transform.k, options.fade)
   const shapes = visibleShapes(
     view,
     options.roads,
     options.ties,
     options.trade,
-    options.outbreaks
+    options.outbreaks,
+    options.military
   )
   if (shapes.length === 0) return
   const k = transform.k
@@ -357,6 +411,45 @@ function drawSickLands(
   context.globalAlpha = fade
 }
 
+function drawArmies(
+  context: CanvasRenderingContext2D,
+  view: MapView,
+  tokens: ThemeColors,
+  k: number,
+  fade: number
+): void {
+  const places = new Map<number, readonly [number, number]>()
+  for (const point of view.points)
+    if (point.x !== null && point.y !== null)
+      places.set(point.entity.id, [point.x, point.y])
+  context.fillStyle = tokens.destructive
+  for (const [region] of Object.entries(view.occupations ?? {})) {
+    const at = places.get(Number(region))
+    if (!at) continue
+    context.globalAlpha = OCCUPIED_ALPHA * fade
+    context.beginPath()
+    context.arc(at[0], at[1], OCCUPIED_RADIUS / k, 0, Math.PI * 2)
+    context.fill()
+  }
+  context.fillStyle = tokens['brand-gold']
+  for (const army of view.armies ?? []) {
+    if (army.path.length < 2) continue
+    const x = army.path[army.path.length - 2]
+    const y = army.path[army.path.length - 1]
+    context.globalAlpha = fade
+    context.beginPath()
+    context.arc(
+      x,
+      y,
+      (ARMY_RADIUS + Math.log10(Math.max(1, army.size)) * ARMY_SCALE) / k,
+      0,
+      Math.PI * 2
+    )
+    context.fill()
+  }
+  context.globalAlpha = fade
+}
+
 export type LineHit = { info: LineInfo; points: number[] }
 
 export function lineHits(
@@ -365,17 +458,20 @@ export function lineHits(
   roads: boolean,
   ties: boolean,
   trade = false,
-  outbreaks = false
+  outbreaks = false,
+  military = false
 ): LineHit[] {
-  return visibleShapes(view, roads, ties, trade, outbreaks).map((shape) => {
-    const points: number[] = []
-    for (let index = 0; index + 1 < shape.points.length; index += 2)
-      points.push(
-        shape.points[index] * transform.k + transform.x,
-        shape.points[index + 1] * transform.k + transform.y
-      )
-    return { info: shape.info, points }
-  })
+  return visibleShapes(view, roads, ties, trade, outbreaks, military).map(
+    (shape) => {
+      const points: number[] = []
+      for (let index = 0; index + 1 < shape.points.length; index += 2)
+        points.push(
+          shape.points[index] * transform.k + transform.x,
+          shape.points[index + 1] * transform.k + transform.y
+        )
+      return { info: shape.info, points }
+    }
+  )
 }
 
 function segmentDistance(

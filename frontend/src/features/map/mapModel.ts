@@ -63,6 +63,7 @@ export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
 export const OVERLAY_SURFACE: Partial<Record<Overlay, string>> = {
   trade: 'map-layer-trade',
   outbreaks: 'map-layer-outbreaks',
+  military: 'map-layer-military',
 }
 
 export const STOCK_LAYERS = ['population', 'followers', 'soldiers'] as const
@@ -72,6 +73,7 @@ export const OVERLAYS = [
   'roads',
   'trade',
   'outbreaks',
+  'military',
   'ties',
   'wars',
   'events',
@@ -84,6 +86,7 @@ export const OVERLAY_LABEL: Record<Overlay, string> = {
   roads: 'Roads',
   trade: 'Trade',
   outbreaks: 'Sickness',
+  military: 'Armies',
   ties: 'Ties',
   wars: 'Wars',
   events: 'Events',

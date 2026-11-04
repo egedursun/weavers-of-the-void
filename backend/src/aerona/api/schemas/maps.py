@@ -7,6 +7,7 @@ from aerona.api.schemas.records import EntitySummary, MapNoteRecord, WorldRecord
 from aerona.cartography.model import WorldMap
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import TradeMode, TradeRouteStatus
+from aerona.domain.enums.military import Stance
 from aerona.domain.models.records import RegionControl
 from aerona.services.wiki import EventMarker, RegionDominance, RoadKind, SettlementInfo
 
@@ -95,6 +96,32 @@ class RegionRealm(ApiModel):
     control: int
 
 
+class MapArmy(ApiModel):
+    army_id: int
+    name: str
+    owner_id: int
+    war_id: int | None
+    region_id: int | None
+    stance: Stance
+    size: int
+    blockade_id: int | None
+    path: list[float]
+
+
+class MapOccupation(ApiModel):
+    occupier_id: int
+    name: str
+    control: int
+    resistance: int
+
+
+class MapFront(ApiModel):
+    war_id: int
+    first_region_id: int
+    second_region_id: int
+    path: list[float]
+
+
 class MapOutbreak(ApiModel):
     outbreak_id: int
     disease_id: int
@@ -126,5 +153,8 @@ class MapView(ApiModel):
     trade: list[MapTrade]
     outbreaks: list[MapOutbreak] = Field(default_factory=list)
     realms: dict[int, RegionRealm] = Field(default_factory=dict)
+    armies: list[MapArmy] = Field(default_factory=list)
+    occupations: dict[int, MapOccupation] = Field(default_factory=dict)
+    fronts: list[MapFront] = Field(default_factory=list)
     notes: list[MapNoteRecord]
     time: MapTime

@@ -4591,6 +4591,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/units/kinds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["unit_kinds_api_units_kinds_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/wars/{war_id}/room": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["war_room_api_wars__war_id__room_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/battles/{battle_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["battle_report_api_battles__battle_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/army": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["army_card_api_entities__entity_id__army_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities/{entity_id}/military": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["military_overview_api_entities__entity_id__military_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions": {
         parameters: {
             query?: never;
@@ -8511,6 +8591,246 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/army:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_army_edit_api_actions_army_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/army:command": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_army_command_api_actions_army_command_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/army:edit_stack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_army_edit_stack_api_actions_army_edit_stack_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/army:add_stack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_army_add_stack_api_actions_army_add_stack_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/army:remove_stack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_army_remove_stack_api_actions_army_remove_stack_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/siege:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_siege_edit_api_actions_siege_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/war:aim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_war_aim_api_actions_war_aim_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/war:drop_aim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_war_drop_aim_api_actions_war_drop_aim_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/war:impose_peace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_war_impose_peace_api_actions_war_impose_peace_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/war:call_allies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_war_call_allies_api_actions_war_call_allies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/war:weariness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_war_weariness_api_actions_war_weariness_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/occupation:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_occupation_edit_api_actions_occupation_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/captives:settle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_captives_settle_api_actions_captives_settle_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/commander:trait": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_commander_trait_api_actions_commander_trait_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/spy:edit_network": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_spy_edit_network_api_actions_spy_edit_network_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/body:heal": {
         parameters: {
             query?: never;
@@ -9063,6 +9383,13 @@ export interface components {
             payload: components["schemas"]["EventPayload"];
             at: string;
         };
+        AimView: {
+            id: number;
+            side: components["schemas"]["NodeRef"] | null;
+            kind: components["schemas"]["WarAimKind"];
+            target: components["schemas"]["NodeRef"] | null;
+            achieved: number;
+        };
         AllianceBetrayInput: {
             traitor_id: number;
             victim_id: number;
@@ -9080,10 +9407,16 @@ export interface components {
         ArchiveRequest: {
             mode: components["schemas"]["ArchiveMode"];
         };
+        ArmourType: "none" | "hide" | "padded" | "mail" | "scale" | "plate" | "enchanted";
         ArmourView: {
             head: number;
             torso: number;
             limbs: number;
+        };
+        ArmyAddStackInput: {
+            army_id: number;
+            kind: components["schemas"]["UnitKind"];
+            count: number;
         };
         ArmyBlessInput: {
             army_id: number;
@@ -9091,8 +9424,55 @@ export interface components {
             equipment: number;
             experience: number;
         };
+        ArmyCard: {
+            army: components["schemas"]["NodeRef"] | null;
+            owner: components["schemas"]["NodeRef"] | null;
+            commander: components["schemas"]["NodeRef"] | null;
+            war_id: number | null;
+            size: number;
+            region: components["schemas"]["NodeRef"] | null;
+            target: components["schemas"]["NodeRef"] | null;
+            blockade: components["schemas"]["NodeRef"] | null;
+            stance: components["schemas"]["Stance"];
+            doctrine: string;
+            supply_days: number;
+            supply_line: components["schemas"]["NodeRef"][];
+            cohesion: number;
+            war_chest: number;
+            disease: number;
+            loot: number;
+            entrenchment: number;
+            forced_march: boolean;
+            baggage: number;
+            locked: string[];
+            stacks: components["schemas"]["StackView"][];
+            movements: components["schemas"]["MovementView"][];
+            commander_traits: components["schemas"]["CommanderTrait"][];
+        };
+        ArmyCommandInput: {
+            army_id: number;
+            stance?: components["schemas"]["Stance"] | null;
+            target_region_id?: number | null;
+            forced_march?: boolean | null;
+        };
         ArmyDisbandInput: {
             army_id: number;
+        };
+        ArmyEditInput: {
+            army_id: number;
+            values?: {
+                [key: string]: number | string | boolean | null;
+            };
+            release?: string[];
+        };
+        ArmyEditStackInput: {
+            unit_id: number;
+            values?: {
+                [key: string]: number | string | boolean | null;
+            };
+        };
+        ArmyRemoveStackInput: {
+            unit_id: number;
         };
         ArmyStats: {
             kind: "army";
@@ -9148,7 +9528,44 @@ export interface components {
             payload: components["schemas"]["BulkLogPayload"];
             at: string;
         };
-        BattleOutcome: "field_victory" | "great_victory" | "siege_repulsed" | "siege_breached" | "siege_starvation";
+        BattleOutcome: "field_victory" | "great_victory" | "siege_repulsed" | "siege_breached" | "siege_starvation" | "refused";
+        BattlePhaseView: {
+            position: number;
+            phase: string;
+            attacker_losses: number;
+            defender_losses: number;
+            summary: string | null;
+            details: {
+                [key: string]: number | string;
+            };
+        };
+        BattleReportView: {
+            id: number;
+            war_id: number;
+            epoch: number;
+            sequence: number;
+            record: components["schemas"]["NodeRef"] | null;
+            place: components["schemas"]["NodeRef"] | null;
+            winner: components["schemas"]["NodeRef"] | null;
+            loser: components["schemas"]["NodeRef"] | null;
+            outcome: components["schemas"]["BattleOutcome"];
+            outcome_class: components["schemas"]["OutcomeClass"] | null;
+            gap: number;
+            siege_id: number | null;
+            weather: components["schemas"]["WeatherKind"] | null;
+            terrain: components["schemas"]["TerrainKind"] | null;
+            season_name: string | null;
+            year: number | null;
+            night: boolean;
+            tactics_attacker: components["schemas"]["Tactic"] | null;
+            tactics_defender: components["schemas"]["Tactic"] | null;
+            casualties_by_kind: {
+                [key: string]: number;
+            };
+            winner_losses: number;
+            loser_losses: number;
+            phases: components["schemas"]["BattlePhaseView"][];
+        };
         BattleView: {
             id: number;
             war_id: number;
@@ -9443,13 +9860,25 @@ export interface components {
         CaptionRequest: {
             caption?: string | null;
         };
+        CaptiveCohortView: {
+            id: number;
+            captor: components["schemas"]["NodeRef"] | null;
+            origin: components["schemas"]["NodeRef"] | null;
+            war_id: number | null;
+            count: number;
+            social_class: components["schemas"]["SocialClass"];
+            fate: components["schemas"]["CaptiveFate"];
+            since_epoch: number;
+            settled_epoch: number | null;
+        };
+        CaptiveFate: "held" | "ransomed" | "enslaved" | "sacrificed" | "labour" | "exchanged" | "released";
         CaptiveFreeInput: {
             captive_id: number;
         };
         CaptiveRansomInput: {
             captive_id: number;
         };
-        CaptiveStatus: "held" | "ransomed" | "escaped" | "executed" | "turncoat" | "rescued" | "released";
+        CaptiveStatus: "held" | "ransomed" | "escaped" | "executed" | "turncoat" | "rescued" | "released" | "ward";
         CaptiveView: {
             id: number;
             captive: components["schemas"]["NodeRef"] | null;
@@ -9460,6 +9889,11 @@ export interface components {
             taken_epoch: number;
             released_epoch: number | null;
             ransom_paid: number | null;
+        };
+        CaptivesSettleInput: {
+            cohort_id: number;
+            fate: components["schemas"]["CaptiveFate"];
+            count?: number | null;
         };
         CareerView: {
             role: components["schemas"]["MortalRole"] | null;
@@ -9744,6 +10178,12 @@ export interface components {
             count: number;
             veterans: number;
             updated_epoch: number;
+        };
+        CommanderTrait: "aggressive_assaulter" | "defensive_genius" | "cavalry_master" | "winter_campaigner" | "hill_fighter" | "siege_expert" | "reckless" | "cautious" | "inspiring" | "brutal";
+        CommanderTraitInput: {
+            mortal_id: number;
+            trait: components["schemas"]["CommanderTrait"];
+            held: boolean;
         };
         Commodity: "food" | "ore" | "goods";
         CommodityFamily: "subsistence" | "industrial" | "strategic" | "luxury";
@@ -10129,6 +10569,7 @@ export interface components {
         };
         DecisionRule: "autocratic" | "council" | "assembly" | "divine";
         DecreeKind: "war" | "peace" | "alliance" | "marriage" | "trade";
+        DefenderAction: "sally" | "repair" | "ration" | "seek_relief";
         DemographyView: {
             entity_id: number;
             people_id: number | null;
@@ -11112,6 +11553,12 @@ export interface components {
             people_id: number;
             name: string;
             share: number;
+        };
+        FrontView: {
+            first_region: components["schemas"]["NodeRef"] | null;
+            second_region: components["schemas"]["NodeRef"] | null;
+            since_epoch: number;
+            last_epoch: number;
         };
         FunctionView: {
             key: components["schemas"]["BodyFunction"];
@@ -12143,6 +12590,23 @@ export interface components {
             cohorts: components["schemas"]["CohortView"][];
         };
         MaintenanceTask: "completion" | "network_rules" | "loose_ends" | "data_repairs" | "history_repairs" | "epoch_years" | "mortal_ages" | "importance" | "endings" | "narrative_sweep" | "certain_facts" | "intuitions" | "mirror_pairs" | "captions" | "planner_statistics" | "prune";
+        MapArmy: {
+            army_id: number;
+            name: string;
+            owner_id: number;
+            war_id: number | null;
+            region_id: number | null;
+            stance: components["schemas"]["Stance"];
+            size: number;
+            blockade_id: number | null;
+            path: number[];
+        };
+        MapFront: {
+            war_id: number;
+            first_region_id: number;
+            second_region_id: number;
+            path: number[];
+        };
         MapNoteRecord: {
             id: number;
             world_id: number;
@@ -12151,6 +12615,12 @@ export interface components {
             text: string;
             color: string | null;
             created_at: string;
+        };
+        MapOccupation: {
+            occupier_id: number;
+            name: string;
+            control: number;
+            resistance: number;
         };
         MapOutbreak: {
             outbreak_id: number;
@@ -12238,6 +12708,11 @@ export interface components {
             realms?: {
                 [key: string]: components["schemas"]["RegionRealm"];
             };
+            armies?: components["schemas"]["MapArmy"][];
+            occupations?: {
+                [key: string]: components["schemas"]["MapOccupation"];
+            };
+            fronts?: components["schemas"]["MapFront"][];
             notes: components["schemas"]["MapNoteRecord"][];
             time: components["schemas"]["MapTime"];
         };
@@ -12410,6 +12885,16 @@ export interface components {
             intent: string;
             text: string;
             answered: boolean;
+        };
+        MilitaryOverview: {
+            armies: components["schemas"]["ArmyCard"][];
+            captives_held: components["schemas"]["CaptiveCohortView"][];
+            captives_lost: components["schemas"]["CaptiveCohortView"][];
+            networks: components["schemas"]["SpyNetworkView"][];
+            watched_by: components["schemas"]["SpyNetworkView"][];
+            occupying: components["schemas"]["OccupationView"][];
+            occupied: components["schemas"]["OccupationView"][];
+            commander_traits: components["schemas"]["CommanderTrait"][];
         };
         MindLockInput: {
             node_id: number;
@@ -12678,6 +13163,16 @@ export interface components {
             motif: string;
             mode: components["schemas"]["MotifOverrideMode"];
         };
+        MovementView: {
+            epoch: number;
+            season: number;
+            from_region: components["schemas"]["NodeRef"] | null;
+            to_region: components["schemas"]["NodeRef"] | null;
+            stance: components["schemas"]["Stance"];
+            supply_days: number;
+            attrition: number;
+            note: string | null;
+        };
         NameAcceptInput: {
             entity_id: number;
             name: string;
@@ -12887,6 +13382,20 @@ export interface components {
             sworn: components["schemas"]["OathView"][];
             received: components["schemas"]["OathView"][];
         };
+        OccupationEditInput: {
+            region_id: number;
+            control?: number | null;
+            resistance?: number | null;
+            end: boolean;
+        };
+        OccupationView: {
+            region: components["schemas"]["NodeRef"] | null;
+            occupier: components["schemas"]["NodeRef"] | null;
+            war_id: number | null;
+            since_epoch: number;
+            control: number;
+            resistance: number;
+        };
         OfficeKind: "ruler" | "heir_designate" | "regent" | "chancellor" | "marshal" | "treasurer" | "high_judge" | "spymaster" | "governor" | "ambassador";
         OfficeView: {
             id: number;
@@ -12968,6 +13477,7 @@ export interface components {
             quarantined: boolean;
             event_id: number | null;
         };
+        OutcomeClass: "decisive" | "victory" | "pyrrhic" | "stalemate" | "rout" | "massacre" | "refused";
         OuterBargainMode: "force" | "forbid" | "allow";
         OuterBeingStats: {
             kind: "outer_being";
@@ -14408,13 +14918,48 @@ export interface components {
         };
         SettlementTier: "capital" | "village" | "town" | "city" | "great_city";
         Sex: "female" | "male";
+        ShieldType: "none" | "small" | "large" | "tower";
         SiblingView: {
             son: components["schemas"]["NodeRef"];
             value: number;
             note: string | null;
             cover: string | null;
         };
+        SideWeariness: {
+            entity: components["schemas"]["NodeRef"] | null;
+            side: components["schemas"]["WarSide"];
+            weariness: number;
+        };
+        SiegeAction: "blockade" | "bombard" | "mine" | "assault" | "negotiate";
+        SiegeEditInput: {
+            siege_id: number;
+            values?: {
+                [key: string]: number | string | boolean | null;
+            };
+        };
         SiegeStatus: "ongoing" | "breached" | "repulsed" | "lifted";
+        SiegeTracker: {
+            id: number;
+            besieged: components["schemas"]["NodeRef"] | null;
+            besieger: components["schemas"]["NodeRef"] | null;
+            status: components["schemas"]["SiegeStatus"];
+            started_epoch: number;
+            ended_epoch: number | null;
+            rounds: number;
+            walls_level: number;
+            breaches: number;
+            supplies: number;
+            water: number;
+            disease_inside: number;
+            disease_outside: number;
+            works: {
+                [key: string]: number;
+            };
+            sallies: number;
+            starvation: components["schemas"]["StarvationStage"];
+            last_action: components["schemas"]["SiegeAction"] | null;
+            last_defence: components["schemas"]["DefenderAction"] | null;
+        };
         SiegeView: {
             id: number;
             war_id: number;
@@ -14906,7 +15451,47 @@ export interface components {
         };
         SpokenIntent: "friendship" | "alliance" | "love" | "threat" | "mockery" | "warning" | "bargain";
         SpreadPath: "origin" | "route" | "army" | "journey" | "siege" | "loosed" | "mutation";
-        SpyOperation: "steal" | "sabotage";
+        SpyCover: "merchant" | "priest" | "envoy" | "beggar";
+        SpyEditNetworkInput: {
+            network_id: number;
+            values?: {
+                [key: string]: number | string | boolean | null;
+            };
+            dismantle: boolean;
+        };
+        SpyNetworkView: {
+            id: number;
+            owner: components["schemas"]["NodeRef"] | null;
+            target: components["schemas"]["NodeRef"] | null;
+            agents: number;
+            depth: number;
+            exposure: number;
+            cover: components["schemas"]["SpyCover"];
+            spymaster: components["schemas"]["NodeRef"] | null;
+            intel: number;
+            last_operation: string | null;
+            last_epoch: number | null;
+            since_epoch: number;
+        };
+        SpyOperation: "steal_knowledge" | "sabotage" | "assassinate" | "incite" | "intel" | "blackmail" | "counterfeit";
+        StackView: {
+            id: number;
+            kind: components["schemas"]["UnitKind"];
+            family: components["schemas"]["UnitFamily"];
+            label: string;
+            count: number;
+            quality: number;
+            armour: components["schemas"]["ArmourType"];
+            shield: components["schemas"]["ShieldType"];
+            helmet: boolean;
+            weapons: string[];
+            experience: number;
+            morale: number;
+            fatigue: number;
+            wounded: number;
+            condition: number;
+        };
+        Stance: "march" | "forage" | "entrench" | "besiege" | "garrison" | "raid" | "retreat";
         StarDepthInput: {
             history?: string | null;
             rumours?: string[] | null;
@@ -14941,6 +15526,7 @@ export interface components {
             timeline: components["schemas"]["ChronicleLineRecord"][];
             images: components["schemas"]["ImageRecord"][];
         };
+        StarvationStage: "none" | "rationing" | "famine" | "taboo_broken";
         Stat: "strength" | "endurance" | "agility" | "wisdom" | "cunning" | "will" | "creativity" | "charisma" | "might";
         StateResponse: {
             world: components["schemas"]["CosmosRecord"] | null;
@@ -15040,6 +15626,7 @@ export interface components {
             payload: components["schemas"]["TextPayload"];
             at: string;
         };
+        Tactic: "hold_line" | "frontal_assault" | "double_envelopment" | "feigned_retreat" | "flank_cavalry" | "missile_attrition" | "shield_wall" | "wedge" | "night_raid" | "ambush" | "skirmish_harass" | "river_defence" | "siege_assault";
         TargetKind: "entity" | "foreign_god";
         TaskInfo: {
             task: components["schemas"]["MaintenanceTask"];
@@ -15376,6 +15963,23 @@ export interface components {
             applied?: string[];
             conflicts?: string[];
         };
+        UnitFamily: "infantry" | "missile" | "mounted" | "beast" | "engineer" | "magic" | "naval" | "exotic";
+        UnitKind: "levy" | "spearmen" | "heavy_infantry" | "shield_wall" | "pikemen" | "skirmishers" | "berserkers" | "temple_guard" | "slingers" | "archers" | "crossbowmen" | "horse_archers" | "javelineers" | "light_cavalry" | "heavy_cavalry" | "beast_riders" | "chariots" | "war_beasts" | "bound_beasts" | "sky_mounts" | "sappers" | "siege_engines" | "war_mages" | "priests" | "necromancers" | "galleys" | "longships" | "warships" | "fire_ships" | "skyships" | "golems" | "void_spawn" | "ghost_host";
+        UnitKindSpec: {
+            kind: components["schemas"]["UnitKind"];
+            family: components["schemas"]["UnitFamily"];
+            label: string;
+            melee: number;
+            missile: number;
+            defence: number;
+            speed: number;
+            mass: number;
+            cost: number;
+            upkeep: number;
+            armour: components["schemas"]["ArmourType"];
+            shield: components["schemas"]["ShieldType"];
+            terror: number;
+        };
         ValidationError: {
             loc: (string | number)[];
             msg: string;
@@ -15412,6 +16016,14 @@ export interface components {
             view_id: number;
             text: string;
         };
+        WarAimInput: {
+            war_id: number;
+            side_id: number;
+            kind: components["schemas"]["WarAimKind"];
+            target_id?: number | null;
+            achieved: number;
+        };
+        WarAimKind: "conquer_region" | "seize_settlement" | "press_claim" | "convert" | "tribute" | "vassalise" | "liberate" | "destroy_cult" | "seize_resource" | "seize_nexus" | "humiliate" | "revenge" | "loot";
         WarArmyInput: {
             war_id: number;
             community_id: number;
@@ -15419,7 +16031,14 @@ export interface components {
         WarBattleInput: {
             war_id: number;
         };
+        WarCallAlliesInput: {
+            war_id: number;
+            side_id: number;
+        };
         WarCause: "hostility" | "uprising" | "tribute_revolt" | "incited" | "declared" | "betrayal" | "conquest_journey" | "foreign_god" | "independence" | "vendetta" | "grudge" | "divine_grudge" | "rivalry" | "debt" | "espionage" | "sabotage" | "envy" | "schism" | "beast" | "resource" | "trade_route";
+        WarDropAimInput: {
+            aim_id: number;
+        };
         WarDuelInput: {
             first_id: number;
             second_id: number;
@@ -15430,10 +16049,26 @@ export interface components {
             ending: components["schemas"]["WarEnding"];
         };
         WarEnding: "victory" | "conquest" | "tribute" | "exhaustion" | "peace" | "white_peace" | "betrayal" | "same_front" | "no_side_left" | "miracle";
+        WarImposePeaceInput: {
+            war_id: number;
+            victor_id: number;
+            terms?: components["schemas"]["WarAimKind"][];
+        };
         WarOpenInput: {
             attacker_id: number;
             defender_id: number;
             reason: string;
+        };
+        WarRoomView: {
+            war: components["schemas"]["WarSummary"];
+            weariness: components["schemas"]["SideWeariness"][];
+            aims: components["schemas"]["AimView"][];
+            armies: components["schemas"]["ArmyCard"][];
+            sieges: components["schemas"]["SiegeTracker"][];
+            fronts: components["schemas"]["FrontView"][];
+            occupations: components["schemas"]["OccupationView"][];
+            captives: components["schemas"]["CaptiveCohortView"][];
+            battles: components["schemas"]["BattleReportView"][];
         };
         WarSide: "attacker" | "defender";
         WarSideView: {
@@ -15464,6 +16099,11 @@ export interface components {
         WarVictoryInput: {
             war_id: number;
             victor_id: number;
+        };
+        WarWearinessInput: {
+            war_id: number;
+            side_id: number;
+            weariness: number;
         };
         WaterSource: "none" | "spring" | "well" | "river" | "lake" | "sea";
         WaterSupply: "none" | "well" | "cistern" | "aqueduct";
@@ -24484,6 +25124,141 @@ export interface operations {
             };
         };
     };
+    unit_kinds_api_units_kinds_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitKindSpec"][];
+                };
+            };
+        };
+    };
+    war_room_api_wars__war_id__room_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                war_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WarRoomView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    battle_report_api_battles__battle_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                battle_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BattleReportView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    army_card_api_entities__entity_id__army_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArmyCard"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    military_overview_api_entities__entity_id__military_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MilitaryOverview"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_actions_api_actions_get: {
         parameters: {
             query?: never;
@@ -31863,6 +32638,471 @@ export interface operations {
             };
         };
     };
+    action_army_edit_api_actions_army_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArmyEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_army_command_api_actions_army_command_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArmyCommandInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_army_edit_stack_api_actions_army_edit_stack_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArmyEditStackInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_army_add_stack_api_actions_army_add_stack_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArmyAddStackInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_army_remove_stack_api_actions_army_remove_stack_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArmyRemoveStackInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_siege_edit_api_actions_siege_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SiegeEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_war_aim_api_actions_war_aim_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarAimInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_war_drop_aim_api_actions_war_drop_aim_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarDropAimInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_war_impose_peace_api_actions_war_impose_peace_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarImposePeaceInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_war_call_allies_api_actions_war_call_allies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarCallAlliesInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_war_weariness_api_actions_war_weariness_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarWearinessInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_occupation_edit_api_actions_occupation_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OccupationEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_captives_settle_api_actions_captives_settle_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaptivesSettleInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_commander_trait_api_actions_commander_trait_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommanderTraitInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_spy_edit_network_api_actions_spy_edit_network_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpyEditNetworkInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_body_heal_api_actions_body_heal_post: {
         parameters: {
             query?: never;
@@ -32727,12 +33967,13 @@ export const agentToolWritingEventKindValues: ReadonlyArray<FlattenedDeepRequire
 export const agentWritingEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentWritingEvent"]["kind"]> = ["agent.writing"];
 export const archiveModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ArchiveMode"]> = ["history", "atlas", "automatic"];
 export const archiveOverrideValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ArchiveOverride"]> = ["history", "atlas"];
+export const armourTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ArmourType"]> = ["none", "hide", "padded", "mail", "scale", "plate", "enchanted"];
 export const armyStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ArmyStats"]["kind"]> = ["army"];
 export const artworkStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ArtworkStats"]["kind"]> = ["artwork"];
 export const atmosphereValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Atmosphere"]> = ["none", "thin", "normal", "dense", "toxic"];
 export const backupTakenEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BackupTakenEvent"]["kind"]> = ["backup.taken"];
 export const batchDeepenLogEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BatchDeepenLogEvent"]["kind"]> = ["batch_deepen.log"];
-export const battleOutcomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BattleOutcome"]> = ["field_victory", "great_victory", "siege_repulsed", "siege_breached", "siege_starvation"];
+export const battleOutcomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BattleOutcome"]> = ["field_victory", "great_victory", "siege_repulsed", "siege_breached", "siege_starvation", "refused"];
 export const biomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Biome"]> = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 export const blessingKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BlessingKind"]> = ["essence", "hp", "stat", "existence"];
 export const bodyBuildValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyBuild"]> = ["slight", "average", "heavy", "giant"];
@@ -32747,7 +33988,8 @@ export const borderKindValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const buildMaterialValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BuildMaterial"]> = ["timber", "stone"];
 export const canonVerdictValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CanonVerdict"]> = ["canon", "rejected"];
 export const capacityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Capacity"]> = ["melee", "missile", "command", "craft", "scholarship", "presence", "mobility", "fertility"];
-export const captiveStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CaptiveStatus"]> = ["held", "ransomed", "escaped", "executed", "turncoat", "rescued", "released"];
+export const captiveFateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CaptiveFate"]> = ["held", "ransomed", "enslaved", "sacrificed", "labour", "exchanged", "released"];
+export const captiveStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CaptiveStatus"]> = ["held", "ransomed", "escaped", "executed", "turncoat", "rescued", "released", "ward"];
 export const celestialStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CelestialStats"]["kind"]> = ["celestial"];
 export const chatAttitudeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ChatAttitude"]> = ["loyal", "distant", "rebellious", "afraid", "grateful", "mocking"];
 export const chronicleAuditKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ChronicleAuditKind"]> = ["rejected_mentioned", "son_skipped", "event_skipped", "verdict_skipped", "winner_as_loser", "active_as_silent", "deed_miscredited", "number_contradiction"];
@@ -32759,6 +34001,7 @@ export const climateAffinityValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const climateEraValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClimateEra"]> = ["temperate", "drought", "rain", "ice_age", "scorching"];
 export const coastKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CoastKind"]> = ["none", "cliff", "beach", "harbour_site", "reef"];
 export const cohortConditionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CohortCondition"]> = ["none", "veteran", "sick", "enslaved", "captive"];
+export const commanderTraitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommanderTrait"]> = ["aggressive_assaulter", "defensive_genius", "cavalry_master", "winter_campaigner", "hill_fighter", "siege_expert", "reckless", "cautious", "inspiring", "brutal"];
 export const commodityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Commodity"]> = ["food", "ore", "goods"];
 export const commodityFamilyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommodityFamily"]> = ["subsistence", "industrial", "strategic", "luxury"];
 export const commodityKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommodityKind"]> = ["grain", "livestock", "fish", "fodder", "timber", "fuel", "bread", "ore", "stone", "cloth", "tools", "weapons", "armour", "mounts", "siege_materiel", "medicine", "luxuries", "incense", "sacred_goods", "magical_reagents"];
@@ -32781,6 +34024,7 @@ export const damageTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const debtStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DebtStatus"]> = ["open", "overdue", "repaid", "forgiven"];
 export const decisionRuleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DecisionRule"]> = ["autocratic", "council", "assembly", "divine"];
 export const decreeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DecreeKind"]> = ["war", "peace", "alliance", "marriage", "trade"];
+export const defenderActionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DefenderAction"]> = ["sally", "repair", "ration", "seek_relief"];
 export const disasterValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Disaster"]> = ["earthquake", "flood", "plague", "drought", "storm"];
 export const discoveryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Discovery"]> = ["known", "legend", "unknown", "forgotten"];
 export const diseaseStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DiseaseStats"]["kind"]> = ["disease"];
@@ -32922,6 +34166,7 @@ export const oathStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const officeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OfficeKind"]> = ["ruler", "heir_designate", "regent", "chancellor", "marshal", "treasurer", "high_judge", "spymaster", "governor", "ambassador"];
 export const opinionComponentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OpinionComponent"]> = ["trust", "fear", "respect", "affection", "grievance"];
 export const outbreakStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OutbreakStatus"]> = ["active", "waning", "ended"];
+export const outcomeClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OutcomeClass"]> = ["decisive", "victory", "pyrrhic", "stalemate", "rout", "massacre", "refused"];
 export const outerBargainModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OuterBargainMode"]> = ["force", "forbid", "allow"];
 export const outerBeingStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OuterBeingStats"]["kind"]> = ["outer_being"];
 export const partOfSpeechValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PartOfSpeech"]> = ["noun", "verb", "adjective", "affix", "title", "place_name", "proper_name", "number", "interjection"];
@@ -32962,6 +34207,8 @@ export const searchCategoryValues: ReadonlyArray<FlattenedDeepRequired<component
 export const settlementStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SettlementStats"]["kind"]> = ["settlement"];
 export const settlementTierValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SettlementTier"]> = ["capital", "village", "town", "city", "great_city"];
 export const sexValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Sex"]> = ["female", "male"];
+export const shieldTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ShieldType"]> = ["none", "small", "large", "tower"];
+export const siegeActionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SiegeAction"]> = ["blockade", "bombard", "mine", "assault", "negotiate"];
 export const siegeStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SiegeStatus"]> = ["ongoing", "breached", "repulsed", "lifted"];
 export const sizeTierValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SizeTier"]> = ["hamlet", "village", "town", "city", "metropolis"];
 export const skillFamilyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SkillFamily"]> = ["combat", "command", "social", "craft", "knowledge", "survival", "faith"];
@@ -32985,8 +34232,11 @@ export const speciesStatsKindValues: ReadonlyArray<FlattenedDeepRequired<compone
 export const spiritStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpiritStats"]["kind"]> = ["spirit"];
 export const spokenIntentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpokenIntent"]> = ["friendship", "alliance", "love", "threat", "mockery", "warning", "bargain"];
 export const spreadPathValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpreadPath"]> = ["origin", "route", "army", "journey", "siege", "loosed", "mutation"];
-export const spyOperationValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpyOperation"]> = ["steal", "sabotage"];
+export const spyCoverValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpyCover"]> = ["merchant", "priest", "envoy", "beggar"];
+export const spyOperationValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpyOperation"]> = ["steal_knowledge", "sabotage", "assassinate", "incite", "intel", "blackmail", "counterfeit"];
+export const stanceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Stance"]> = ["march", "forage", "entrench", "besiege", "garrison", "raid", "retreat"];
 export const starTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StarType"]> = ["yellow_dwarf", "red_giant", "blue_giant", "binary", "white_dwarf", "dead_star", "black_sun", "broken_star", "pulsar", "star_remnant", "reborn_star", "blue_star", "blue_white_star", "white_star", "yellow_white_star", "orange_dwarf", "red_dwarf", "brown_dwarf", "yellow_giant", "red_supergiant", "blue_supergiant", "hypergiant", "wolf_rayet", "protostar", "carbon_star", "neutron_star", "magnetar", "black_hole", "variable_star", "trinary", "chained_star", "watching_star"];
+export const starvationStageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StarvationStage"]> = ["none", "rationing", "famine", "taboo_broken"];
 export const statValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Stat"]> = ["strength", "endurance", "agility", "wisdom", "cunning", "will", "creativity", "charisma", "might"];
 export const streamHelloEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StreamHelloEvent"]["kind"]> = ["stream.hello"];
 export const structureStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StructureStats"]["kind"]> = ["structure"];
@@ -32994,6 +34244,7 @@ export const subsystemValues: ReadonlyArray<FlattenedDeepRequired<components>["s
 export const summarySectionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SummarySection"]> = ["pantheon", "threads", "events", "cosmos", "geography", "languages", "map", "legends"];
 export const systemErrorEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SystemErrorEvent"]["kind"]> = ["system.error"];
 export const systemNoteEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SystemNoteEvent"]["kind"]> = ["system.note"];
+export const tacticValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Tactic"]> = ["hold_line", "frontal_assault", "double_envelopment", "feigned_retreat", "flank_cavalry", "missile_attrition", "shield_wall", "wedge", "night_raid", "ambush", "skirmish_harass", "river_defence", "siege_assault"];
 export const targetKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TargetKind"]> = ["entity", "foreign_god"];
 export const technologyEraValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TechnologyEra"]> = ["stone", "bronze", "iron", "medieval", "renaissance", "steam"];
 export const temperatureBandValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TemperatureBand"]> = ["frozen", "cold", "temperate", "warm", "hot", "searing"];
@@ -33015,10 +34266,13 @@ export const treatyStatsKindValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const treatyStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TreatyStatus"]> = ["in_force", "fulfilled", "broken", "expired"];
 export const tributeStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TributeStatus"]> = ["active", "ended", "revolted"];
 export const turnCounterValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TurnCounter"]> = ["season_order", "weather_shaping", "sibling_messages", "narrative_bonds", "prayers", "free_living_creation", "free_land_creation", "anchor_chosen", "words_coined", "gifts", "holy_world", "leak_stitched", "take_life", "intrigue", "outer_bargain", "harvests", "discoveries", "claims", "worship_changes", "learning", "prophecies", "commander_appointments", "adoptions", "explorations", "repeated_creations", "resurrection_rites", "languages_founded", "cultures_created", "land_rewards"];
+export const unitFamilyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["UnitFamily"]> = ["infantry", "missile", "mounted", "beast", "engineer", "magic", "naval", "exotic"];
+export const unitKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["UnitKind"]> = ["levy", "spearmen", "heavy_infantry", "shield_wall", "pikemen", "skirmishers", "berserkers", "temple_guard", "slingers", "archers", "crossbowmen", "horse_archers", "javelineers", "light_cavalry", "heavy_cavalry", "beast_riders", "chariots", "war_beasts", "bound_beasts", "sky_mounts", "sappers", "siege_engines", "war_mages", "priests", "necromancers", "galleys", "longships", "warships", "fire_ships", "skyships", "golems", "void_spawn", "ghost_host"];
 export const valueAxisValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ValueAxis"]> = ["honour", "tradition", "hierarchy", "martial", "piety", "purity", "kinship", "mercy", "knowledge", "wealth", "nature", "superstition", "xenophilia", "death"];
 export const valueHolderValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ValueHolder"]> = ["culture", "doctrine", "agenda", "personal", "divine", "community"];
 export const verdictChoiceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VerdictChoice"]> = ["accept", "reject"];
 export const vesselStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VesselStats"]["kind"]> = ["vessel"];
+export const warAimKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarAimKind"]> = ["conquer_region", "seize_settlement", "press_claim", "convert", "tribute", "vassalise", "liberate", "destroy_cult", "seize_resource", "seize_nexus", "humiliate", "revenge", "loot"];
 export const warCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarCause"]> = ["hostility", "uprising", "tribute_revolt", "incited", "declared", "betrayal", "conquest_journey", "foreign_god", "independence", "vendetta", "grudge", "divine_grudge", "rivalry", "debt", "espionage", "sabotage", "envy", "schism", "beast", "resource", "trade_route"];
 export const warEndingValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarEnding"]> = ["victory", "conquest", "tribute", "exhaustion", "peace", "white_peace", "betrayal", "same_front", "no_side_left", "miracle"];
 export const warSideValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarSide"]> = ["attacker", "defender"];

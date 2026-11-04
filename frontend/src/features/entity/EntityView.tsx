@@ -11,6 +11,7 @@ import { Lightbox } from '@/features/images/Lightbox'
 import { useImageGenEvents } from '@/features/images/imageGenState'
 import { CommunityRelations } from '@/features/relations/CommunityRelations'
 import { CommunityWars } from '@/features/wars/CommunityWars'
+import { MilitarySection } from '@/features/wars/military/MilitarySection'
 import { RecordActions } from './actions/RecordActions'
 import { buildContext, isCommunity } from './actions/context'
 import { READ_ONLY_REASON } from './actions/gate'
@@ -341,6 +342,16 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       )}
       {entity.entity_type === 'mortal' && (
         <OathsSection entityId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {(entity.entity_type === 'army' ||
+        entity.entity_type === 'mortal' ||
+        entity.entity_type === 'faction' ||
+        isCommunity(ctx.type)) && (
+        <MilitarySection
+          entityId={entity.id}
+          kind={entity.entity_type}
+          readOnlyReason={readOnly}
+        />
       )}
       {(entity.entity_type === 'people' ||
         entity.entity_type === 'settlement') && (

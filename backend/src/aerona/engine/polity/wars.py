@@ -3,16 +3,20 @@ from sqlalchemy import select
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
+from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.military import DuelContext
 from aerona.domain.enums.war import WarEnding, WarSide, WarStatus
 from aerona.engine.context import TickContext
+from aerona.engine.military.duels import bout, fighter
 from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.treaties import allies_called, answer_call, champion_for
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat
+from aerona.engine.records import death_path
 from aerona.engine.services.war import war_event
 from aerona.engine.services.war_resolution import end_war
 
@@ -75,10 +79,11 @@ async def champions(ctx: TickContext) -> int:
         first, second = await champion(ctx, attacker), await champion(ctx, defender)
         if first is None or second is None:
             continue
-        roll = ctx.rng(f"champions.{war.id}")
-        first_score = (stat(first, "strength") or 0) + roll.die(20)
-        second_score = (stat(second, "strength") or 0) + roll.die(20)
-        victor, loser, hero = (attacker, defender, first) if first_score >= second_score else (defender, attacker, second)
+        result = bout(ctx.rules, ctx.rng(f"champions.{war.id}"), await fighter(ctx, first), await fighter(ctx, second), DuelContext.CHAMPION)
+        hero = result.winner.entity
+        victor, loser = (attacker, defender) if hero.id == first.id else (defender, attacker)
+        if result.killed:
+            await death_path(ctx, result.loser.entity, f"fell as champion against {hero.name}", hero.id, "duel of champions", forced=True, harm=HarmCause.DUEL)
         await end_war(ctx, war, WarEnding.VICTORY, victor_id=victor, loser_id=loser, reason=f"{hero.name} won the duel of champions")
         await note(
             ctx, f"The war was decided by champions: {hero.name} won it.", key="treaty.champions", ids=[hero.id, victor, loser], kind=ChronicleKind.DIPLOMACY

@@ -12,6 +12,8 @@ from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, Ent
 from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.war import SiegeStatus, WarEnding, WarStatus
 from aerona.engine.context import TickContext
+from aerona.engine.military.aims import peace_terms, white_peace
+from aerona.engine.military.captivity import exchange_at_peace
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.hooks import converted, judged, witnessed
 from aerona.engine.mind.space import value_reading
@@ -192,6 +194,7 @@ async def impose_victory(ctx: TickContext, war: WarRow, victor: EntityRow, loser
         await impose_tribute(ctx, loser, victor, war, event.name)
         notes = []
     notes.extend(await _convert_loser(ctx, war, victor, loser, ending))
+    notes.extend(await peace_terms(ctx, war, victor, loser))
     return WarSettlement(ending, victor.id, loser.id, notes)
 
 
@@ -218,6 +221,11 @@ async def end_war(
         await make_peace(ctx, first, second, f"end of {event.name}" if victor is not None else reason or ENDING_LABELS[ending])
     if ending is WarEnding.VICTORY and victor is not None and loser is not None:
         settlement = await impose_victory(ctx, war, victor, loser)
+    elif ending is WarEnding.WHITE_PEACE:
+        first_side, second_side = await living_entity(ctx.session, first), await living_entity(ctx.session, second)
+        if first_side is not None and second_side is not None:
+            await white_peace(ctx, first_side, second_side)
+    ctx.count("captives_exchanged", await exchange_at_peace(ctx, war.id))
     if apply_relation:
         delta = relation_effect(ctx.rules, settlement.ending)
         if settlement.victor_id is not None and settlement.loser_id is not None:

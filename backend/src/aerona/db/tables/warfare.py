@@ -1,10 +1,11 @@
-from sqlalchemy import CheckConstraint, ForeignKey, Index, String, Text, UniqueConstraint
+from sqlalchemy import JSON, CheckConstraint, ForeignKey, Index, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, enum_type
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
+from aerona.domain.enums.military import DefenderAction, OutcomeClass, SiegeAction, StarvationStage, Tactic
 from aerona.domain.enums.war import (
     BattleOutcome,
     CaptiveStatus,
@@ -57,6 +58,7 @@ class WarSideRow(Base):
     side: Mapped[WarSide] = mapped_column(enum_type(WarSide, "side"))
     joined_epoch: Mapped[int]
     left_epoch: Mapped[int | None]
+    weariness: Mapped[int] = mapped_column(default=0)
 
 
 class ArmyRow(Base):
@@ -82,6 +84,17 @@ class SiegeRow(Base):
     started_epoch: Mapped[int]
     ended_epoch: Mapped[int | None]
     rounds: Mapped[int] = mapped_column(default=0)
+    walls_level: Mapped[int] = mapped_column(default=0)
+    breaches: Mapped[int] = mapped_column(default=0)
+    supplies: Mapped[int] = mapped_column(default=180)
+    water: Mapped[int] = mapped_column(default=120)
+    disease_inside: Mapped[int] = mapped_column(default=0)
+    disease_outside: Mapped[int] = mapped_column(default=0)
+    works: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
+    sallies: Mapped[int] = mapped_column(default=0)
+    starvation: Mapped[StarvationStage] = mapped_column(enum_type(StarvationStage, "starvation"), default=StarvationStage.NONE)
+    last_action: Mapped[SiegeAction | None] = mapped_column(enum_type(SiegeAction, "last_action"))
+    last_defence: Mapped[DefenderAction | None] = mapped_column(enum_type(DefenderAction, "last_defence"))
 
 
 class BattleRow(Base):
@@ -104,6 +117,12 @@ class BattleRow(Base):
     terrain: Mapped[TerrainKind | None] = mapped_column(enum_type(TerrainKind, "terrain"))
     year: Mapped[int | None]
     night: Mapped[bool] = mapped_column(default=False)
+    tactics_attacker: Mapped[Tactic | None] = mapped_column(enum_type(Tactic, "tactics_attacker"))
+    tactics_defender: Mapped[Tactic | None] = mapped_column(enum_type(Tactic, "tactics_defender"))
+    outcome_class: Mapped[OutcomeClass | None] = mapped_column(enum_type(OutcomeClass, "outcome_class"))
+    casualties_by_kind: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
+    winner_losses: Mapped[int] = mapped_column(default=0)
+    loser_losses: Mapped[int] = mapped_column(default=0)
 
 
 class CaptiveRow(Base):

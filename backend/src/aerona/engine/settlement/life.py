@@ -30,6 +30,7 @@ from aerona.engine.demography.mobility import bound_revolt, inequality_pressure
 from aerona.engine.economy.routes import BANDIT_KINDS
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.military.occupation import occupation_over, occupation_tax, pay_occupier
 from aerona.engine.mind.drives import unrest as needs_unrest
 from aerona.engine.mind.space import value_distance
 from aerona.engine.notes import note
@@ -104,7 +105,11 @@ async def collect_taxes(ctx: TickContext, town: Town, literacy: int) -> int:
     admin = (table.admin_base_pct + literacy * table.admin_per_literacy_pct / PERCENT) / PERCENT
     rate = town.profile.tax_rate / PERCENT * (ctx.rules.urban.free_city_tax_pct / PERCENT if town.profile.free_city else 1.0)
     income = round_half_up(taxable * rate * town.profile.public_order / PERCENT * admin)
-    return ledger(ctx, town, TreasuryEntry.TAX, income, "taxes")
+    occupation = await occupation_over(ctx, town.entity.id)
+    taken = occupation_tax(ctx, income, occupation)
+    if taken and occupation is not None:
+        await pay_occupier(ctx, occupation.occupier_entity_id, taken)
+    return ledger(ctx, town, TreasuryEntry.TAX, income - taken, "taxes")
 
 
 async def pay_soldiers(ctx: TickContext, town: Town) -> bool:

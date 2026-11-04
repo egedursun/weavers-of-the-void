@@ -83,6 +83,12 @@ const OUTCOME: Record<
     tone: 'warning',
     badge: 'warning',
   },
+  refused: {
+    label: 'Battle refused',
+    icon: Shield,
+    tone: 'muted',
+    badge: 'info',
+  },
 }
 
 const SIEGE_STATUS: Record<

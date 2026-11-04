@@ -19,6 +19,18 @@ from aerona.db.tables.economy import (
 )
 from aerona.db.tables.environment import ForcedWeatherRow, LeyLineRow, NotableYearRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
+from aerona.db.tables.military import (
+    ArmyMovementRow,
+    ArmyProfileRow,
+    ArmyUnitRow,
+    BattlePhaseRow,
+    CampaignFrontRow,
+    CaptiveCohortRow,
+    CommanderTraitRow,
+    OccupationRow,
+    SpyNetworkRow,
+    WarAimRow,
+)
 from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, PersonalityValueRow, PressureRow, SkillRow
 from aerona.db.tables.polity import (
     ClaimRow,
@@ -41,6 +53,7 @@ from aerona.db.tables.polity import (
     VassalageRow,
 )
 from aerona.db.tables.settlement import DistrictRow, SettlementHistoryRow, SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
+from aerona.db.tables.warfare import SiegeRow, WarSideRow
 
 
 @dataclass(frozen=True)
@@ -319,5 +332,104 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (),
         ("treaty.",),
         ("treaty_cycles",),
+    ),
+    ComplianceRow(
+        "S5.1",
+        (ArmyUnitRow.__tablename__, ArmyProfileRow.__tablename__, ArmyMovementRow.__tablename__, CommanderTraitRow.__tablename__),
+        ("campaigns", "war_upkeep"),
+        ("army:edit", "army:command", "army:edit_stack", "army:add_stack", "army:remove_stack", "commander:trait"),
+        ("ArmyCard", "ArmyStack", "ArmyOrders", "CommanderTraits", "map-layer-military"),
+        ("mortal_context",),
+        (),
+        ("war.battle.",),
+        ("campaigns",),
+    ),
+    ComplianceRow(
+        "S5.3",
+        (BattlePhaseRow.__tablename__,),
+        ("campaigns",),
+        ("war:battle",),
+        ("BattleReport",),
+        (),
+        (),
+        ("war.battle.",),
+        ("c4d0f6a8b2e3",),
+    ),
+    ComplianceRow(
+        "S5.4",
+        (SiegeRow.__tablename__,),
+        ("campaigns",),
+        ("siege:edit",),
+        ("SiegeTracker",),
+        (),
+        (),
+        ("war.siege.",),
+        ("c4d0f6a8b2e3",),
+    ),
+    ComplianceRow(
+        "S5.5",
+        (ArmyProfileRow.__tablename__,),
+        ("campaigns", "war_upkeep"),
+        ("army:edit",),
+        ("ArmyCard", "map-layer-military"),
+        (),
+        (),
+        ("war.sea_battle",),
+        ("campaigns",),
+    ),
+    ComplianceRow(
+        "S5.6",
+        (CommanderTraitRow.__tablename__,),
+        ("campaigns", "vendetta_cycles"),
+        ("war:duel",),
+        ("BattleReport",),
+        (),
+        (),
+        ("duel.",),
+        ("vendetta_cycles",),
+    ),
+    ComplianceRow(
+        "S5.7",
+        (CaptiveCohortRow.__tablename__,),
+        ("prisoners", "campaigns"),
+        ("captives:settle", "captive:free", "captive:ransom"),
+        ("CaptiveCohort",),
+        ("mortal_context",),
+        (),
+        ("captives.", "prisoner."),
+        ("prisoners",),
+    ),
+    ComplianceRow(
+        "S5.8",
+        (WarAimRow.__tablename__, OccupationRow.__tablename__, CampaignFrontRow.__tablename__, WarSideRow.__tablename__),
+        ("campaigns", "war_upkeep"),
+        ("war:aim", "war:drop_aim", "war:impose_peace", "war:call_allies", "war:weariness", "occupation:edit"),
+        ("WarRoom", "WarAims", "PeaceBuilder", "WarWeariness", "Occupation"),
+        ("mortal_context",),
+        (),
+        ("war.weary_peace", "war.partisans"),
+        ("campaigns",),
+    ),
+    ComplianceRow(
+        "S5.9",
+        (),
+        ("vendetta_cycles",),
+        ("feud:end",),
+        ("WarRoom",),
+        (),
+        (),
+        ("vendetta.",),
+        ("vendetta_cycles",),
+    ),
+    ComplianceRow(
+        "S5.10",
+        (SpyNetworkRow.__tablename__,),
+        ("espionage",),
+        ("faction:spy", "spy:edit_network"),
+        ("SpyNetwork",),
+        (),
+        (),
+        ("espionage.",),
+        ("espionage",),
     ),
 )
