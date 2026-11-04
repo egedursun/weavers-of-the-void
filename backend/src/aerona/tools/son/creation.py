@@ -254,7 +254,7 @@ async def _prepare(call: SonCall, args: CreationInput, entity_type: EntityType) 
 
 
 def _traits(call: SonCall, args: CreationInput) -> list[CreatureTrait]:
-    traits = args.option("traits") or []
+    traits = [trait for trait in args.option("traits") or [] if isinstance(trait, CreatureTrait)]
     return list(dict.fromkeys(traits))[: call.rules.son_tools.creature_max_traits]
 
 
