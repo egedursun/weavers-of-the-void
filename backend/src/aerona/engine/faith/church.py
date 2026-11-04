@@ -44,7 +44,7 @@ def sway_of(rules: Rules, doctrine: CultDoctrineRow, zeal: int) -> int:
     table = rules.inquisition
     learned = doctrine.clergy_quality * table.sway_quality_pct / PERCENT
     fervent = zeal * table.sway_zeal_pct / PERCENT
-    numerous = doctrine.clergy_count * table.sway_per_100_clergy / PERCENT
+    numerous = min(table.sway_numbers_cap, doctrine.clergy_count * table.sway_per_100_clergy / PERCENT)
     return clamp_int(round_half_up(learned + fervent + numerous), 0, PERCENT)
 
 

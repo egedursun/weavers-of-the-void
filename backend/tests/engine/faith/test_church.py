@@ -48,14 +48,14 @@ async def test_tithes_are_taken_from_the_goods_of_the_lands(session: AsyncSessio
     faith = await faithful(session, world)
     church = await church_of(session, faith.cult.id)
     await survey_holdings(ctx, church)
-    session.add(GoodsFlowRow(epoch=ctx.epoch, community_entity_id=faith.town.id, commodity=CommodityKind.GRAIN, flow=GoodsFlow.HARVEST, quantity=100))
-    stock = CommunityStockRow(community_entity_id=faith.town.id, commodity=CommodityKind.GRAIN, quantity=100, quality=50)
+    session.add(GoodsFlowRow(epoch=ctx.epoch, community_entity_id=faith.town.id, commodity=CommodityKind.GRAIN, flow=GoodsFlow.HARVEST, quantity=10000))
+    stock = CommunityStockRow(community_entity_id=faith.town.id, commodity=CommodityKind.GRAIN, quantity=10000, quality=50)
     session.add(stock)
     await session.flush()
     income = await tithe(ctx, church, await LawBook.load(session))
-    expected = round(100 * faith.doctrine.tithe_rate / 100 * rules.tithes.voluntary_pct / 100)
-    assert stock.quantity == 100 - expected
-    assert income == expected * rules.tithes.unit_value_pct // 100
+    expected = round(10000 * faith.doctrine.tithe_rate / 100 * rules.tithes.voluntary_pct / 100)
+    assert stock.quantity == 10000 - expected
+    assert income == expected // rules.tithes.units_per_treasury
     assert faith.doctrine.treasury == income
 
 

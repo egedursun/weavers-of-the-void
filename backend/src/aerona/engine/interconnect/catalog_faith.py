@@ -262,7 +262,7 @@ FAITH_MECHANICS = (
         tables=(CultDoctrineRow.__tablename__, CultHoldingRow.__tablename__),
         targets=(C, "settlement", "people", "polity", "son"),
         couplings=(
-            Coupling(Subsystem.ECONOMY, "the faithful's goods are tithed", EdgeKind.FLOW, "tithes.unit_value_pct"),
+            Coupling(Subsystem.ECONOMY, "the faithful's goods are tithed", EdgeKind.FLOW, "tithes.units_per_treasury"),
             Coupling(Subsystem.LAW, "the tithe law sets and enforces the rate", EdgeKind.MODIFIER, "tithes.voluntary_pct"),
             Coupling(Subsystem.GODS, "devotion becomes the god's faith", EdgeKind.FLOW, "doctrine.devotion_tribute_pct"),
         ),

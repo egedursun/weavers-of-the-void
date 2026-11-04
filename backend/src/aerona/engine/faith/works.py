@@ -113,8 +113,8 @@ async def tithe(ctx: TickContext, church: Church, laws: LawBook) -> int:
                 units += await ledger.take_units(member.id, commodity, due, GoodsFlow.OFFERING)
     if not measured:
         followers = stat(church.cult, "followers") or 0
-        units = round_half_up(followers * table.output_per_100 / PERCENT * doctrine.tithe_rate / PERCENT * table.voluntary_pct / PERCENT)
-    return credit(doctrine, round_half_up(units * table.unit_value_pct / PERCENT))
+        return credit(doctrine, round_half_up(followers * table.output_per_100 / PERCENT * doctrine.tithe_rate / PERCENT * table.voluntary_pct / PERCENT))
+    return credit(doctrine, units // table.units_per_treasury)
 
 
 async def holdings_of(ctx: TickContext, church: Church, kind: HoldingKind) -> list[CultHoldingRow]:

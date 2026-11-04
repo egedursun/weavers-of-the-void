@@ -1052,7 +1052,7 @@ function DoctrineBody({
           icon={Coins}
           tone='gold'
           meter={{ value: doctrine.tithe_rate, max: PERCENT, label: 'Tithe' }}
-          hint={`Tithe of ${doctrine.tithe_rate}% from the faithful`}
+          hint={`Tithe of ${doctrine.tithe_rate}% from ${doctrine.tithe_base.length} ${doctrine.tithe_base.length === 1 ? 'land' : 'lands'}`}
         />
         <KpiTile
           label='Clergy'
@@ -1120,19 +1120,6 @@ function DoctrineBody({
           }
         />
       </div>
-      {doctrine.tithe_base.length > 0 && (
-        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-          <Muted as='span' variant='caption'>
-            Tithed from
-          </Muted>
-          {doctrine.tithe_base.map((item) => (
-            <Tag
-              key={item.id}
-              spec={{ label: item.name, icon: Coins, tone: 'gold' }}
-            />
-          ))}
-        </div>
-      )}
       <DoctrineForm
         key={JSON.stringify([
           doctrine.locked,

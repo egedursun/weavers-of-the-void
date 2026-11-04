@@ -36,7 +36,6 @@ class DoctrineRules:
     devotion_tribute_pct: int = rule(20, 0, 100, R, "Share of a cult's devotion its living god draws into faith each epoch (%)")
     fanaticism_devotion: int = rule(20, 0, 1000, R, "Devotion a fanatic cult spends on an inquisition, iconoclasm or crusade")
     sacrifice_cohort: int = rule(2, 0, 1000, R, "People each human-sacrificing community gives to the god in an epoch")
-    sacrifice_captives: int = rule(1, 0, 100, R, "Captives a human-sacrificing faith gives to the god in an epoch")
 
 
 @dataclass(frozen=True)
@@ -69,7 +68,7 @@ class TithesRules:
     alms_poverty: int = rule(10, 0, 100, R, "Poverty pressure alms relieve")
     monastery_cost: int = rule(80, 0, 100000, R, "Treasury a monastery costs")
     war_chest_pct: int = rule(25, 0, 100, R, "Share of the treasury a zealous cult gives to a holy war (%)")
-    unit_value_pct: int = rule(100, 0, 1000, R, "Treasury each tithed unit of goods is worth (%)")
+    units_per_treasury: int = rule(200, 1, 100000, R, "Units of tithed goods that make one unit of treasury")
     voluntary_pct: int = rule(60, 0, 100, R, "Share of the tithe the faithful pay where no law enforces it (%)")
     alms_goodwill: int = rule(5, 0, 100, R, "Goodwill a people fed by alms holds towards the faith")
     alms_satisfaction: int = rule(3, 0, 100, R, "Contentment of the poor that alms raise")
@@ -104,6 +103,7 @@ class InquisitionRules:
     sway_quality_pct: int = rule(50, 0, 100, R, "Weight of the clergy's quality in its sway over the realm (%)")
     sway_zeal_pct: int = rule(30, 0, 100, R, "Weight of the faith's zeal in the clergy's sway over the realm (%)")
     sway_per_100_clergy: int = rule(2, 0, 100, R, "Sway each hundred clergy add")
+    sway_numbers_cap: int = rule(20, 0, 100, R, "Most sway the clergy's numbers alone can add")
     sway_investiture_pct: int = rule(100, 0, 300, R, "Weight of the clergy's sway on the chance of an investiture quarrel (%)")
 
 
