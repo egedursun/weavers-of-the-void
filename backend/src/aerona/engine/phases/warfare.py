@@ -72,7 +72,7 @@ from aerona.engine.military.siege import SiegeSeason, breach_bonus, open_siege, 
 from aerona.engine.military.siege_depth import sack_choice
 from aerona.engine.military.trials import settle_trial, trial_claims
 from aerona.engine.military.units import muster, profile_of, reconcile_sizes, resize, retire_stacks
-from aerona.engine.military.upkeep import drill_armies, heal_lands, hire_mercenaries, lost_trade, occupation_levies, occupation_revolts, war_taxes
+from aerona.engine.military.upkeep import drill_armies, hire_mercenaries, lost_trade, occupation_levies, occupation_revolts, war_taxes
 from aerona.engine.military.vessels import muster_fleet
 from aerona.engine.mind.book import best_effective, values_for
 from aerona.engine.mind.hooks import duelled, fought, judged
@@ -278,7 +278,6 @@ async def backfill_army_sizes(ctx: TickContext) -> int:
 
 async def campaign_upkeep(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
-    ctx.count("lands_healed", await heal_lands(ctx))
     ctx.count("armies_drilled", await drill_armies(ctx))
     ctx.count("home_news", await home_news(ctx, atlas))
     ctx.count("wounded_recovered", await recover_wounded(ctx))

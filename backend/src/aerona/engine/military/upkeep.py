@@ -2,7 +2,6 @@ from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.military import ArmyProfileRow, MercenaryContractRow, OccupationRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
@@ -12,7 +11,7 @@ from aerona.domain.enums.military import ContractStatus, Stance
 from aerona.domain.enums.war import WarCause, WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.flows import FlowCategory, flowing
-from aerona.engine.military.campaign import bring_home_loot, drill, heal_plunder
+from aerona.engine.military.campaign import bring_home_loot, drill
 from aerona.engine.military.finance import mercenary_pay
 from aerona.engine.military.units import profile_of, resize, stacks_of
 from aerona.engine.primitives.distance import RegionAtlas
@@ -26,11 +25,6 @@ from aerona.engine.services.war import declare_war, ongoing_wars, raise_army, so
 from aerona.engine.services.war_geography import Neighbourhood
 
 COMPANY_KINDS = frozenset({EngineKind.WARRIOR_BAND})
-
-
-async def heal_lands(ctx: TickContext) -> int:
-    regions = list(await ctx.session.scalars(select(RegionEnvironmentRow)))
-    return heal_plunder(ctx.rules, regions)
 
 
 async def drill_armies(ctx: TickContext) -> int:

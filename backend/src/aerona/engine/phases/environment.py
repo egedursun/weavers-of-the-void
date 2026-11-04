@@ -469,6 +469,7 @@ def decay_scars(rules: Rules, env: RegionEnvironmentRow) -> None:
         ScarKind.HAUNTED: settings.haunted_decay,
         ScarKind.BLIGHTED: settings.blighted_decay,
         ScarKind.LEAK_WOUND: settings.leak_wound_decay,
+        ScarKind.PLUNDERED: rules.campaign_depth.plunder_heal,
     }
     kept = {key: depth - decay[ScarKind(key)] for key, depth in env.scars.items() if depth - decay[ScarKind(key)] > 0}
     if kept != env.scars:

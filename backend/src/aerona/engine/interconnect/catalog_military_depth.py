@@ -63,7 +63,9 @@ MILITARY_DEPTH_MECHANICS = (
         fields=("terrain", "weather", "bridge", "ford"),
         targets=("region", "army"),
         couplings=(
-            Coupling(S.ENVIRONMENT, "marsh, fords, bridges, coasts, streets and exotic ground change a battle", E.MODIFIER, "battle_terrain.marsh_heavy_armour_pct"),
+            Coupling(
+                S.ENVIRONMENT, "marsh, fords, bridges, coasts, streets and exotic ground change a battle", E.MODIFIER, "battle_terrain.marsh_heavy_armour_pct"
+            ),
             Coupling(S.ENVIRONMENT, "rain, snow, wind and magic storms change arms and rites", E.MODIFIER, "battle_weather.rain_bow_pct"),
         ),
     ),

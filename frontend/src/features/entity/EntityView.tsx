@@ -12,6 +12,7 @@ import { useImageGenEvents } from '@/features/images/imageGenState'
 import { CommunityRelations } from '@/features/relations/CommunityRelations'
 import { CommunityWars } from '@/features/wars/CommunityWars'
 import { MilitarySection } from '@/features/wars/military/MilitarySection'
+import { VesselSection } from '@/features/wars/military/VesselCard'
 import { RecordActions } from './actions/RecordActions'
 import { buildContext, isCommunity } from './actions/context'
 import { READ_ONLY_REASON } from './actions/gate'
@@ -384,6 +385,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
       )}
       {entity.entity_type === 'region' && (
         <AfterlifeSection regionId={entity.id} readOnlyReason={readOnly} />
+      )}
+      {entity.entity_type === 'vessel' && (
+        <VesselSection vesselId={entity.id} readOnlyReason={readOnly} />
       )}
       {(entity.entity_type === 'army' ||
         entity.entity_type === 'mortal' ||

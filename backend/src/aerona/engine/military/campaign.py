@@ -121,23 +121,6 @@ def plundered_share(region: RegionEnvironmentRow | None) -> float:
     return min(PERCENT, region.scars.get(ScarKind.PLUNDERED.value, 0)) / PERCENT
 
 
-def heal_plunder(rules: Rules, regions: Sequence[RegionEnvironmentRow]) -> int:
-    healed = 0
-    for region in regions:
-        depth = region.scars.get(ScarKind.PLUNDERED.value, 0)
-        if depth <= 0:
-            continue
-        left = max(0, depth - rules.campaign_depth.plunder_heal)
-        scars = dict(region.scars)
-        if left:
-            scars[ScarKind.PLUNDERED.value] = left
-        else:
-            scars.pop(ScarKind.PLUNDERED.value, None)
-        region.scars = scars
-        healed += 1
-    return healed
-
-
 async def sanitation_of(ctx: TickContext, owner: EntityRow) -> int:
     town = await ctx.session.get(SettlementProfileRow, owner.id) or await ctx.session.get(SettlementProfileRow, owner.location_id or 0)
     surgeon = await ctx.session.scalar(select(ArmyOfficerRow.id).where(ArmyOfficerRow.role == ArmyRole.SURGEON, ArmyOfficerRow.until_epoch.is_(None)).limit(1))

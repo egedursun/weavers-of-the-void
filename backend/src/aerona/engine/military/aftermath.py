@@ -81,7 +81,7 @@ async def send_home_wounded(ctx: TickContext, side: Side, wounded: int) -> int:
     owner = side.entity
     if wounded <= 0:
         return 0
-    with flowing(FlowCategory.LEVY):
+    with flowing(FlowCategory.CREATION):
         returned = demobilise(ctx.rules, owner, wounded)
     if returned <= 0:
         return 0
