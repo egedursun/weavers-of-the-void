@@ -13,6 +13,7 @@ import {
   Feather,
   Flame,
   Gavel,
+  Gem,
   Ghost,
   Gift,
   HandHeart,
@@ -38,6 +39,8 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { MATERIAL_LABEL } from '@/features/entity/economy/labels'
+import { CLASS_SPEC } from '@/features/entity/society/labels'
 import { type Named } from './labels'
 
 export type RecordTable = components['schemas']['RecordTableView']
@@ -277,4 +280,146 @@ export function nameOf(table: Record<string, Named>, key: string): Named {
       tone: 'muted',
     }
   )
+}
+
+export const ROLE: Record<string, Named> = {
+  commander: { label: 'Commander', icon: Crown, tone: 'gold' },
+  sub_commander: { label: 'Sub-commander', icon: Swords, tone: 'info' },
+  quartermaster: { label: 'Quartermaster', icon: Coins, tone: 'success' },
+  standard_bearer: {
+    label: 'Standard bearer',
+    icon: BadgeCheck,
+    tone: 'warning',
+  },
+  surgeon: { label: 'Surgeon', icon: HeartPulse, tone: 'verdigris' },
+}
+
+export const CONTRACT_STATUS: Record<string, Named> = {
+  active: { label: 'Under contract', icon: Handshake, tone: 'success' },
+  unpaid: { label: 'Unpaid', icon: Banknote, tone: 'warning' },
+  turned: { label: 'Turned on its employer', icon: Skull, tone: 'danger' },
+  ended: { label: 'Contract ended', icon: Unlock, tone: 'muted' },
+}
+
+export const AGENT_STATUS: Record<string, Named> = {
+  active: { label: 'In place', icon: Drama, tone: 'success' },
+  caught: { label: 'Caught', icon: Unlock, tone: 'danger' },
+  turned: { label: 'Turned', icon: Skull, tone: 'warning' },
+  dead: { label: 'Dead', icon: Skull, tone: 'muted' },
+  retired: { label: 'Retired', icon: Leaf, tone: 'muted' },
+}
+
+export const OWNER_KIND: Record<string, Named> = {
+  polity: { label: 'Spies of a realm', icon: Crown, tone: 'gold' },
+  faction: { label: 'Spies of a faction', icon: Users, tone: 'info' },
+  cult: { label: 'Spies of a cult', icon: Sparkles, tone: 'verdigris' },
+  community: { label: 'Spies of a people', icon: Users, tone: 'muted' },
+}
+
+export const SACK_CHOICE: Record<string, Named> = {
+  mercy: { label: 'Mercy', icon: HandHeart, tone: 'success' },
+  sack: { label: 'Sack', icon: Flame, tone: 'warning' },
+  raze: { label: 'Raze', icon: Skull, tone: 'danger' },
+}
+
+export const SIEGE_WORK: Record<string, Named> = {
+  circumvallation: { label: 'Ring of walls', icon: Map, tone: 'info' },
+  towers: { label: 'Siege towers', icon: KeySquare, tone: 'warning' },
+  rams: { label: 'Rams', icon: Axe, tone: 'danger' },
+  mines: { label: 'Mines', icon: Bone, tone: 'warning' },
+  countermines: { label: 'Countermines', icon: Bone, tone: 'info' },
+  ladders: { label: 'Ladders', icon: Rocket, tone: 'muted' },
+}
+
+export const WALL_MATERIAL: Record<string, Named> = {
+  timber: { label: 'Timber walls', icon: Leaf, tone: 'warning' },
+  stone: { label: 'Stone walls', icon: KeySquare, tone: 'info' },
+}
+
+const GOVERNMENTS: Record<string, string> = {
+  republic: 'a republic',
+  monarchy: 'a monarchy',
+  theocracy: 'a theocracy',
+}
+
+export function aimParamText(
+  kind: string,
+  params: Record<string, unknown>,
+  names: Record<number, string>
+): string | null {
+  const named = (key: string) => {
+    const value = params[key]
+    return typeof value === 'number'
+      ? (names[value] ?? `record ${value}`)
+      : null
+  }
+  switch (kind) {
+    case 'tribute':
+    case 'loot':
+      return typeof params.amount === 'number'
+        ? `${kind === 'loot' ? 'Plunder' : 'Tribute'} of ${params.amount} wealth${typeof params.epochs === 'number' && params.epochs > 0 ? ` for ${params.epochs} epochs` : ''}`
+        : null
+    case 'convert':
+      return named('god')
+        ? `Turn them to ${named('god')}`
+        : 'Turn them to our god'
+    case 'press_claim':
+      return typeof params.claim === 'number'
+        ? 'Seat our claimant on their throne'
+        : 'Press our claim'
+    case 'revenge':
+      return typeof params.memory === 'number'
+        ? 'Avenge a wrong still remembered'
+        : 'Avenge an old wrong'
+    case 'change_government':
+      return typeof params.government === 'string'
+        ? `Make their realm ${GOVERNMENTS[params.government] ?? params.government.replaceAll('_', ' ')}`
+        : null
+    case 'liberate':
+      return named('freed') ? `Free ${named('freed')}` : null
+    case 'vassalise':
+      return named('overlord') ? `Bend the knee to ${named('overlord')}` : null
+    case 'destroy_cult':
+      return named('cult') ? `Break ${named('cult')}` : null
+    default:
+      return named('target') ? `Take ${named('target')}` : null
+  }
+}
+
+export const MATERIAL: Record<string, Named> = Object.fromEntries(
+  Object.entries(MATERIAL_LABEL).map(([key, label]) => [
+    key,
+    { label, icon: Gem, tone: 'muted' as const },
+  ])
+)
+
+export const SOCIAL_CLASS: Record<string, Named> = Object.fromEntries(
+  Object.entries(CLASS_SPEC).map(([key, spec]) => [
+    key,
+    { label: spec.label, icon: spec.icon, tone: spec.tone },
+  ])
+)
+
+export function termParamText(
+  kind: string,
+  params: Record<string, unknown>,
+  names: Record<number, string>
+): string | null {
+  const named = (key: string) => {
+    const value = params[key]
+    return typeof value === 'number'
+      ? (names[value] ?? `record ${value}`)
+      : null
+  }
+  if (
+    (kind === 'reparations' || kind === 'tribute') &&
+    typeof params.amount === 'number'
+  ) {
+    return `${params.amount} wealth${typeof params.epochs === 'number' && params.epochs > 0 ? ` for ${params.epochs} epochs` : ''}`
+  }
+  if ((kind === 'cession' || kind === 'demilitarised') && named('region'))
+    return named('region')
+  if (kind === 'marriage' && named('first_house') && named('second_house'))
+    return `${named('first_house')} weds ${named('second_house')}`
+  return null
 }

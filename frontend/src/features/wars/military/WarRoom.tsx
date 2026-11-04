@@ -8,7 +8,7 @@ import {
   Crown,
   Droplets,
   Flag,
-  Handshake,
+  Crosshair,
   Lock,
   Map as MapIcon,
   MapPin,
@@ -25,7 +25,6 @@ import {
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
-import { warAimKindValues } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -61,7 +60,7 @@ import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { ArmyPanel } from './ArmyPanel'
 import { BattleDepthPanel } from './BattleDepth'
-import { WarOrders } from './Orders'
+import { AimParams, SiegeDepth, WarLedger, WarOrders } from './Orders'
 import { PeaceTreaty } from './PeaceBuilder'
 import { WarMap } from './WarMap'
 import {
@@ -74,6 +73,8 @@ import {
   soldiersOf,
   useWarRoom,
 } from './api'
+import { EntityPicker } from './controls'
+import { aimParamText } from './depth'
 import {
   AIM,
   DEFENCE,
@@ -113,9 +114,9 @@ import {
   Steps,
   TableTag,
   Tag,
-  ToggleField,
   TugBar,
 } from './parts'
+import { useNameMap } from './recordHooks'
 
 const SCORE_SCALE_MIN = 5
 const FOOD_SCALE = 180
@@ -161,6 +162,18 @@ type SideEntry = {
   weariness: number
   left: number | null
 }
+
+const AIM_TARGETS = [
+  'region',
+  'settlement',
+  'place',
+  'resource',
+  'cult',
+  'polity',
+  'people',
+  'faction',
+  'house',
+]
 
 function sideEntries(room: Room): SideEntry[] {
   const weariness = new Map(
@@ -334,6 +347,14 @@ function AimEditor({
           Abandon
         </Button>
       </div>
+      <AimParams
+        aimId={aim.id}
+        kind={aim.kind}
+        params={aim.params ?? {}}
+        locked={aim.locked ?? []}
+        warId={warId}
+        blocked={blocked}
+      />
     </li>
   )
 }
@@ -342,6 +363,7 @@ function AddAim({ room, blocked }: { room: Room; blocked: string | null }) {
   const sides = sideTable(room)
   const [side, setSide] = useState(Object.keys(sides)[0] ?? '0')
   const [kind, setKind] = useState<string>('conquer_region')
+  const [target, setTarget] = useState<number | null>(null)
   const add = useGodAction({
     run: () =>
       unwrap(
@@ -350,7 +372,7 @@ function AddAim({ room, blocked }: { room: Room; blocked: string | null }) {
             war_id: room.war.id,
             side_id: Number(side),
             kind: kind as WarAimKind,
-            target_id: null,
+            target_id: target,
             achieved: 0,
           },
         })
@@ -376,6 +398,14 @@ function AddAim({ room, blocked }: { room: Room; blocked: string | null }) {
           blocked={busy}
           onPick={setKind}
         />
+        <EntityPicker
+          label='Against'
+          icon={Crosshair}
+          types={AIM_TARGETS}
+          value={target}
+          onChange={setTarget}
+          blocked={busy}
+        />
       </FieldGrid>
       <div>
         <Button
@@ -392,71 +422,6 @@ function AddAim({ room, blocked }: { room: Room; blocked: string | null }) {
   )
 }
 
-function PeaceBuilder({
-  room,
-  blocked,
-}: {
-  room: Room
-  blocked: string | null
-}) {
-  const sides = sideTable(room)
-  const [victor, setVictor] = useState(Object.keys(sides)[0] ?? '0')
-  const [terms, setTerms] = useState<WarAimKind[]>([])
-  const impose = useGodAction({
-    run: () =>
-      unwrap(
-        api.POST('/api/actions/war:impose_peace', {
-          body: { war_id: room.war.id, victor_id: Number(victor), terms },
-        })
-      ),
-  })
-  const busy =
-    busyOf(blocked, impose.isPending) ??
-    (room.war.status === 'ended' ? 'This war is over.' : null)
-  return (
-    <div data-surface='PeaceBuilder' className='flex min-w-0 flex-col gap-2'>
-      <FieldGrid>
-        <ChoiceField
-          label='The victor'
-          icon={Crown}
-          value={victor}
-          table={sides}
-          blocked={busy}
-          onPick={setVictor}
-        />
-      </FieldGrid>
-      <div className='grid min-w-0 grid-cols-1 gap-2 @sm/mil:grid-cols-2 @3xl/mil:grid-cols-4'>
-        {warAimKindValues.map((kind) => (
-          <ToggleField
-            key={kind}
-            item={named(AIM, kind)}
-            checked={terms.includes(kind)}
-            disabled={busy !== null}
-            onChange={(checked) =>
-              setTerms((current) =>
-                checked
-                  ? [...current, kind]
-                  : current.filter((item) => item !== kind)
-              )
-            }
-          />
-        ))}
-      </div>
-      <div>
-        <Button
-          size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => impose.mutate(undefined)}
-        >
-          <Handshake />
-          Impose the peace
-        </Button>
-      </div>
-    </div>
-  )
-}
-
 function WarControls({
   room,
   blocked,
@@ -467,8 +432,8 @@ function WarControls({
   return (
     <Adjust
       label='Command the war'
-      title='Weariness, aims and peace'
-      note='Every value of this war can be set here. Every change goes into the ledger and can be undone.'
+      title='Weariness and aims'
+      note='How weary each side is, what each fights for and what winning will demand. Every change goes into the ledger and can be undone.'
     >
       <div className='flex min-w-0 flex-col gap-2'>
         <Label variant='overline'>War weariness</Label>
@@ -502,10 +467,6 @@ function WarControls({
         )}
         <AddAim room={room} blocked={blocked} />
       </div>
-      <div className='flex min-w-0 flex-col gap-2'>
-        <Label variant='overline'>Impose the peace</Label>
-        <PeaceBuilder room={room} blocked={blocked} />
-      </div>
     </Adjust>
   )
 }
@@ -513,6 +474,8 @@ function WarControls({
 function AimLine({ aim }: { aim: Room['aims'][number] }) {
   const item = named(AIM, aim.kind)
   const done = aim.achieved >= PERCENT
+  const names = useNameMap()
+  const terms = aimParamText(aim.kind, aim.params ?? {}, names)
   return (
     <li className='flex min-w-0 items-center gap-2.5 rounded-lg border bg-background/70 p-2'>
       <Medallion icon={item.icon} tone={item.tone} size='sm' />
@@ -529,6 +492,11 @@ function AimLine({ aim }: { aim: Room['aims'][number] }) {
           tone={done ? 'success' : 'default'}
           aria-label={`${item.label} achieved`}
         />
+        {terms && (
+          <Text as='span' variant='caption' weight='medium' truncate>
+            {terms}
+          </Text>
+        )}
         {aim.target && (
           <Muted as='span' variant='caption' truncate>
             {`Against ${aim.target.name}`}
@@ -1417,6 +1385,7 @@ export function WarRoom({ warId }: { warId: number }) {
       <Versus room={data} />
       <RoomStats room={data} />
       <IncitementCard war={data.war} blocked={blocked} />
+      <WarLedger warId={warId} blocked={blocked} />
       <WarControls room={data} blocked={blocked} />
       <WarMap room={data} />
       <WarOrders
@@ -1427,6 +1396,7 @@ export function WarRoom({ warId }: { warId: number }) {
         }))}
         blocked={blocked}
       />
+      <SiegeDepth warId={warId} blocked={blocked} />
       <PeaceTreaty
         warId={warId}
         sides={sideEntries(data).map((entry) => ({

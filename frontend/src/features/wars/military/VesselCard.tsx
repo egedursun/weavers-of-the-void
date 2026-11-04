@@ -1,11 +1,15 @@
 import { useState } from 'react'
 import {
   Anchor,
+  Compass,
   Crown,
+  Flag,
   Gauge,
   Hammer,
+  MapPin,
   Package,
   Ship,
+  ShipWheel,
   Sparkles,
   Users,
   Waves,
@@ -14,30 +18,188 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { EntityLink, IconStat, Section, StatBar } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
-import { RecordPanel } from './RecordPanel'
+import { EntityPicker, Held, RecordButtons, TextField } from './controls'
 import {
   ARMAMENT,
   HULL,
+  MATERIAL,
+  type Vessel,
   VESSEL_STATUS,
   depthKeys,
   nameOf,
   useHulls,
   useVessel,
 } from './depth'
-import { busyOf } from './labels'
+import { PERCENT, busyOf } from './labels'
 import {
   Adjust,
   ChoiceField,
   FieldGrid,
+  NumberField,
   Panel,
   Tag,
   ToggleField,
 } from './parts'
+import { type Values, numbersOf, useRecordActions } from './recordHooks'
+
+const BERTH_NUMBERS = [
+  'condition',
+  'seaworthiness',
+  'seamanship',
+  'crew',
+  'cargo_capacity',
+  'renown',
+  'voyages',
+] as const
+const BERTH_LABEL: Record<string, string> = {
+  condition: 'Hull',
+  seaworthiness: 'Seaworthiness',
+  seamanship: 'Seamanship',
+  crew: 'Crew',
+  cargo_capacity: 'Cargo',
+  renown: 'Renown',
+  voyages: 'Voyages',
+}
+const BERTH_ICON: Record<string, typeof Ship> = {
+  condition: Hammer,
+  seaworthiness: Waves,
+  seamanship: Anchor,
+  crew: Users,
+  cargo_capacity: Package,
+  renown: Crown,
+  voyages: Compass,
+}
+const PERCENT_BERTH = new Set(['condition', 'seaworthiness', 'seamanship'])
+const COMMUNITIES = ['people', 'settlement', 'faction', 'cult', 'polity']
+
+function idOf(ref: { id: number } | null): number | null {
+  return ref ? ref.id : null
+}
+
+function Berth({
+  vessel,
+  vesselId,
+  blocked,
+}: {
+  vessel: Vessel
+  vesselId: number
+  blocked: string | null
+}) {
+  const actions = useRecordActions('vessel', vesselId, vesselId, [
+    depthKeys.vessel(vesselId) as unknown as unknown[],
+  ])
+  const [draft, setDraft] = useState<Values>({})
+  const current: Record<string, unknown> = {
+    ...vessel,
+    status: vessel.status,
+    captain_entity_id: idOf(vessel.captain),
+    home_port_entity_id: idOf(vessel.home_port),
+    region_entity_id: idOf(vessel.region),
+    fleet_army_entity_id: idOf(vessel.fleet),
+  }
+  const value = (key: string) => (key in draft ? draft[key] : current[key])
+  const pick = (key: string) =>
+    typeof value(key) === 'number' ? (value(key) as number) : null
+  return (
+    <Adjust
+      title='Crew, berth and wear'
+      note='Every value of the ship: its wear, its crew and their craft, its cargo, fame and voyages, who captains it, where it berths and sails.'
+      label='Crew and berth'
+    >
+      <FieldGrid>
+        <ChoiceField
+          label='State'
+          icon={Ship}
+          value={String(value('status'))}
+          table={VESSEL_STATUS}
+          blocked={blocked}
+          onPick={(next) => setDraft({ ...draft, status: next })}
+        />
+        <ChoiceField
+          label='Hull of'
+          icon={Hammer}
+          value={String(value('hull_material') ?? 'wood')}
+          table={MATERIAL}
+          blocked={blocked}
+          onPick={(next) => setDraft({ ...draft, hull_material: next })}
+        />
+        <ChoiceField
+          label='Sails of'
+          icon={Flag}
+          value={String(value('fabric_material') ?? 'cloth')}
+          table={MATERIAL}
+          blocked={blocked}
+          onPick={(next) => setDraft({ ...draft, fabric_material: next })}
+        />
+        {BERTH_NUMBERS.map((key) => (
+          <NumberField
+            key={key}
+            label={BERTH_LABEL[key]}
+            icon={BERTH_ICON[key]}
+            value={String(value(key) ?? 0)}
+            max={PERCENT_BERTH.has(key) ? PERCENT : undefined}
+            onChange={(next) => setDraft({ ...draft, [key]: next })}
+          />
+        ))}
+        <EntityPicker
+          label='Captain'
+          icon={ShipWheel}
+          types={['mortal']}
+          value={pick('captain_entity_id')}
+          onChange={(next) => setDraft({ ...draft, captain_entity_id: next })}
+          blocked={blocked}
+        />
+        <EntityPicker
+          label='Home port'
+          icon={Anchor}
+          types={['settlement']}
+          value={pick('home_port_entity_id')}
+          onChange={(next) => setDraft({ ...draft, home_port_entity_id: next })}
+          blocked={blocked}
+        />
+        <EntityPicker
+          label='Waters'
+          icon={MapPin}
+          types={['region']}
+          value={pick('region_entity_id')}
+          onChange={(next) => setDraft({ ...draft, region_entity_id: next })}
+          blocked={blocked}
+        />
+        <EntityPicker
+          label='Sails with'
+          icon={Flag}
+          types={['army']}
+          value={pick('fleet_army_entity_id')}
+          onChange={(next) =>
+            setDraft({ ...draft, fleet_army_entity_id: next })
+          }
+          blocked={blocked}
+        />
+        <EntityPicker
+          label='Crewed by'
+          icon={Users}
+          types={COMMUNITIES}
+          value={pick('crew_community_entity_id')}
+          onChange={(next) =>
+            setDraft({ ...draft, crew_community_entity_id: next })
+          }
+          blocked={blocked}
+        />
+      </FieldGrid>
+      <RecordButtons
+        actions={actions}
+        values={numbersOf(draft, BERTH_NUMBERS)}
+        locked={vessel.locked}
+        blocked={blocked}
+        deletable={false}
+      />
+    </Adjust>
+  )
+}
 
 type Hull = components['schemas']['HullClass']
 type Arm = components['schemas']['VesselArmament']
@@ -117,6 +279,7 @@ export function VesselCard({
       <div className='flex min-w-0 flex-wrap gap-1.5'>
         <Tag item={nameOf(HULL, vessel.hull.hull)} />
         <Tag item={status} />
+        <Held locked={vessel.locked} />
         {vessel.armament.map((arm) => (
           <Tag key={arm} item={nameOf(ARMAMENT, arm)} />
         ))}
@@ -201,15 +364,16 @@ export function VesselCard({
           </Muted>
         )}
       </div>
-      <div className='flex flex-wrap gap-2'>
+      <div className='flex min-w-0 flex-col gap-2'>
         <Button
           size='sm'
           variant='outline'
+          className='self-start'
           disabled={busy !== null || vessel.condition >= 100}
 
           disabledReason={
             busy !== null || vessel.condition >= 100
-              ? (blocked ?? 'Fill in what is needed first')
+              ? (busy ?? 'The hull is whole')
               : undefined
           }
           onClick={() => repair.mutate()}
@@ -217,51 +381,39 @@ export function VesselCard({
           <Hammer />
           Repair at the yard
         </Button>
-      </div>
-      <Adjust
-        title='Refit'
-        note='Rebuild the ship to another hull and arms.'
-        label='Refit'
-      >
-        <FieldGrid>
-          <ChoiceField
-            label='Hull'
-            icon={Gauge}
-            value={hull || vessel.hull.hull}
-            table={HULL}
-            blocked={blocked}
-            onPick={setHull}
-          />
-        </FieldGrid>
-        <Arms
-          value={arms ?? vessel.armament}
-          onChange={setArms}
-          blocked={blocked}
-        />
-        <Button
-          size='sm'
-          className='self-start'
-          disabled={busy !== null}
-
-          disabledReason={
-            busy !== null
-              ? (blocked ?? 'Fill in what is needed first')
-              : undefined
-          }
-          onClick={() => refit.mutate()}
+        <Berth vessel={vessel} vesselId={vesselId} blocked={blocked} />
+        <Adjust
+          title='Refit'
+          note='Rebuild the ship to another hull and arms.'
+          label='Refit'
         >
-          <Ship />
-          Refit
-        </Button>
-      </Adjust>
-      <RecordPanel
-        kind='vessel'
-        scope={vesselId}
-        title='Every value'
-        blocked={blocked}
-        choices={{ hull_class: HULL, status: VESSEL_STATUS }}
-        tone='info'
-      />
+          <FieldGrid>
+            <ChoiceField
+              label='Hull'
+              icon={Gauge}
+              value={hull || vessel.hull.hull}
+              table={HULL}
+              blocked={blocked}
+              onPick={setHull}
+            />
+          </FieldGrid>
+          <Arms
+            value={arms ?? vessel.armament}
+            onChange={setArms}
+            blocked={blocked}
+          />
+          <Button
+            size='sm'
+            className='self-start'
+            disabled={busy !== null}
+            disabledReason={busy ?? undefined}
+            onClick={() => refit.mutate()}
+          >
+            <Ship />
+            Refit
+          </Button>
+        </Adjust>
+      </div>
     </Panel>
   )
 }
@@ -299,15 +451,13 @@ export function LayDownVessel({
       label='Lay down a vessel'
     >
       <FieldGrid>
-        <label className='flex min-w-0 flex-col gap-1'>
-          <Text as='span' variant='caption'>
-            Name
-          </Text>
-          <Input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-          />
-        </label>
+        <TextField
+          label='Name'
+          icon={Ship}
+          value={name}
+          onChange={setName}
+          placeholder='The Saltwind'
+        />
         <ChoiceField
           label='Hull'
           icon={Ship}
@@ -318,21 +468,37 @@ export function LayDownVessel({
         />
       </FieldGrid>
       {spec && (
-        <Muted variant='caption'>
-          {spec.label}: speed {spec.speed}, cargo {spec.cargo}, crew {spec.crew}
-          , seaworthiness {spec.seaworthiness}, {spec.slots} arms
-        </Muted>
+        <div className='grid min-w-0 grid-cols-2 gap-2 @lg/mil:grid-cols-5'>
+          <IconStat icon={Gauge} label='Speed' value={spec.speed} tone='info' />
+          <IconStat
+            icon={Package}
+            label='Cargo'
+            value={spec.cargo}
+            tone='gold'
+          />
+          <IconStat icon={Users} label='Crew' value={spec.crew} tone='muted' />
+          <IconStat
+            icon={Waves}
+            label='Seaworthy'
+            value={spec.seaworthiness}
+            tone='verdigris'
+          />
+          <IconStat
+            icon={Anchor}
+            label='Arms'
+            value={spec.slots}
+            tone='warning'
+          />
+        </div>
       )}
       <Arms value={arms} onChange={setArms} blocked={blocked} />
       <Button
         size='sm'
         className='self-start'
         disabled={busyOf(blocked, create.isPending) !== null || !name.trim()}
-
         disabledReason={
-          busyOf(blocked, create.isPending) !== null || !name.trim()
-            ? (blocked ?? 'Fill in what is needed first')
-            : undefined
+          busyOf(blocked, create.isPending) ??
+          (!name.trim() ? 'Name the ship first' : undefined)
         }
         onClick={() => create.mutate()}
       >
