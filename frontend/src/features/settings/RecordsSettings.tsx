@@ -1,13 +1,15 @@
 import { type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
-  type LucideIcon,
   BookOpen,
-  Library,
+  CircleCheck,
   FileDown,
   FileText,
+  Library,
   NotebookPen,
   Printer,
+  TriangleAlert,
+  type LucideIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatBytes } from '@/lib/units'
@@ -51,7 +53,10 @@ function BookPdfCard() {
             {data?.ready ? (
               <>
                 <Badge size='sm' variant={data.stale ? 'warning' : 'success'}>
-                  {data.stale ? `Printed at epoch ${data.epoch}` : 'Up to date'}
+                  {data.stale ? <TriangleAlert /> : <CircleCheck />}
+                  {data.stale
+                    ? `Out of date: made at epoch ${data.epoch}${data.world_epoch !== null && data.world_epoch !== undefined ? `, world at epoch ${data.world_epoch}` : ''}`
+                    : 'Up to date'}
                 </Badge>
                 {data.size !== null && (
                   <Badge size='sm' variant='outline'>
@@ -81,7 +86,7 @@ function BookPdfCard() {
       )}
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Button
-          variant={data?.ready ? 'outline' : 'default'}
+          variant={data?.ready && !data.stale ? 'outline' : 'default'}
           disabled={running || status.isPending}
           disabledReason={running ? 'The book is being printed' : undefined}
           onClick={() =>
@@ -91,7 +96,7 @@ function BookPdfCard() {
           }
         >
           <Printer />
-          {data?.ready ? 'Print again' : 'Print the book'}
+          {data?.ready ? 'Update PDF' : 'Create PDF'}
         </Button>
         {data?.ready && (
           <Button asChild>

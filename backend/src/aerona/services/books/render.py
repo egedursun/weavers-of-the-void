@@ -62,6 +62,7 @@ class PdfState:
     url: str
     size_mb: float
     epoch: int | None
+    world_epoch: int | None = None
 
 
 @dataclass(frozen=True)

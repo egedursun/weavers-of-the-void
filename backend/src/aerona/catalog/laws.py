@@ -69,6 +69,25 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = MappingProxyType(
         LawKind.CUSTOM: {},
     }
 )
+
+
+def term_text(name: str, param: Param) -> str:
+    if isinstance(param.default, bool):
+        return f"{name} true/false"
+    if param.choices:
+        return f"{name} {'/'.join(param.choices)}"
+    return f"{name} {param.low}-{param.high}"
+
+
+def law_terms(kind: LawKind) -> str:
+    terms = LAW_PARAMS[kind]
+    return ", ".join(term_text(name, param) for name, param in terms.items()) if terms else "no terms"
+
+
+def law_terms_guide() -> str:
+    return "; ".join(f"{kind.value}: {law_terms(kind)}" for kind in LAW_PARAMS)
+
+
 PENALTY_CRUELTY = MappingProxyType({"fine": 0, "wergild": 5, "exile": 25, "flogging": 35, "hand": 60, "tongue": 65, "blinding": 80, "death": 100})
 PENALTY_HARM = MappingProxyType({"fine": 0, "wergild": 0, "exile": 0, "flogging": 15, "hand": 40, "tongue": 30, "blinding": 45, "death": 1000})
 LAW_TITLES = MappingProxyType(

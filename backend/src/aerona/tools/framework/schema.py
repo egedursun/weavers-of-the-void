@@ -53,6 +53,11 @@ def _loosen(node: Any) -> None:
     if isinstance(node, dict):
         if node.get("type") in NUMERIC_JSON_TYPES:
             node["type"] = [node["type"], "string"]
+        if "enum" in node and node.get("type", "string") == "string":
+            choices = node.pop("enum")
+            node.pop("type", None)
+            node["anyOf"] = [{"type": "string", "enum": choices}, {"type": "string"}]
+            return
         for value in node.values():
             _loosen(value)
     elif isinstance(node, list):

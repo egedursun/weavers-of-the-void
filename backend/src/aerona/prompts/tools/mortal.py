@@ -1,3 +1,4 @@
+from aerona.catalog.laws import law_terms_guide
 from aerona.domain.enums.culture import CalendarSlot, LegendArchetype, TraditionKind
 from aerona.domain.enums.mind import ActKind
 from aerona.prompts.tools.ids import MortalToolId
@@ -117,7 +118,8 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "description": DESCRIPTION_FIELD,
             "related_ids": "Existing records it tells of (at most {{ " + M + ".culture_max_related }})",
             "law_kind": "For a law: what it rules (succession_rule, tax_rate, penal_code, levy_law, slavery, tolls, sumptuary...); required for laws",
-            "law_params": "For a law: its terms by name (rate, share, theft, murder, status, level...); only the terms its kind has",
+            "law_params": "For a law: its terms by name, only those its kind has; leave out a term to keep its default. Terms of each kind: "
+            + law_terms_guide(),
             "image_prompt": 'English photoreal prompt: the ritual being performed or a scene of the legend. {% include "shared/image_prompt_rules.md.j2" %}',
             "legend_category": "Only for a legend: what it would become if belief made it real: {{ legend_categories | join(', ') }}",
             "archetype": "Only for a legend: the kind of tale, which sets its lesson: " + ", ".join(item.value for item in LegendArchetype),
@@ -191,7 +193,10 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.LEARN_KNOWLEDGE: ToolText(
         "You learn a piece of knowledge known by your trade partner, ally or neighbour. Free, {{ " + M + ".learn_per_epoch }} per age.",
-        {"knowledge_id": "The knowledge's id", "from_id": "Who teaches it"},
+        {
+            "knowledge_id": "The knowledge's id",
+            "from_id": "Who teaches it: a community or mortal that knows it and that you trade with, are allied to, rule, or share a region with",
+        },
     ),
     T.DIPLOMACY: ToolText(
         "Diplomacy with another community: alliance (stands with you in war), peace (tries to end enmity), tribute (demands wealth from the weak) or marriage (unites the "
@@ -345,7 +350,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "1 action, {{ " + M + ".enact_law_per_epoch }} per age.",
         {
             "kind": "What the law rules: succession_rule, inheritance_split, land_tenure, slavery, serfdom, tax_rate, tithe, tolls, debt_law, penal_code, levy_law, conscription, standing_army, veteran_pension, ransom_custom, marriage_law, sumptuary, guild_charter, foreigner_rights, religious_tolerance, worship_ban, blood_feud, quarantine, burial_law, sanitation, magic_ban, licensed_magic or rite_restrictions",
-            "params": "The law's terms by name, only those its kind has (rate, share, duration, theft, murder, treason, status, level, rite, split, tenure, labour_days...)",
+            "params": "The law's terms by name, only those its kind has; leave out a term to keep its default. Terms of each kind: " + law_terms_guide(),
             "name": "The law's name, if it should have one of its own",
         },
     ),

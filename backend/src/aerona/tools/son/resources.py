@@ -48,6 +48,18 @@ async def _may_harvest(call: SonCall, resource: EntityRow) -> bool:
     return False
 
 
+async def harvestable(call: SonCall) -> str:
+    statement = select(EntityRow).where(EntityRow.entity_type == EntityType.RESOURCE, EntityRow.status == EntityStatus.CANON)
+    if call.world_id is not None:
+        statement = statement.where(EntityRow.world_id == call.world_id)
+    found = [
+        f"#{resource.id} {resource.name}"
+        for resource in await call.session.scalars(statement.order_by(EntityRow.id))
+        if resource.id not in call.turn.context.harvested_resource_ids and await _may_harvest(call, resource)
+    ]
+    return ", ".join(found[: call.rules.son_tools.choice_hints * 3]) or "none yet: create a resource or win worshippers who own one"
+
+
 async def harvest_resource(call: SonCall, args: HarvestInput) -> str:
     tools = call.rules.son_tools
     resource = require_type(await require_canon(call.session, args.resource_id), {EntityType.RESOURCE}, SonResult.NOT_A_RESOURCE)
@@ -55,7 +67,7 @@ async def harvest_resource(call: SonCall, args: HarvestInput) -> str:
     if resource.id in call.turn.context.harvested_resource_ids:
         fail(SonResult.ALREADY_HARVESTED)
     if not await _may_harvest(call, resource):
-        fail(SonResult.NO_RIGHT)
+        fail(SonResult.NO_RIGHT, choices=await harvestable(call))
     abundance = stat_or(resource, ABUNDANCE, 0)
     if abundance < tools.harvest_depleted_threshold:
         fail(SonResult.EXHAUSTED)

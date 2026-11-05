@@ -130,7 +130,10 @@ class SonResult(StrEnum):
     CREATED = "Created: #{{ id }} {{ name }}. Cost {{ cost }} essence{% if partner %} (the remaining {{ rest }} paid by {{ partner }}){% endif %}{% if in_domain %} (domain match){% endif %}{% if cheap %} (your power's discount){% endif %}{% if starred %} (under the age's star){% endif %}{% if repeat %} (you repeated a similar creation: x{{ repeat }}){% endif %}.{% if no_anchor %} You have no anchor yet; you can make this creation your anchor with choose_anchor.{% endif %}{% for note in notes %} {{ note }}{% endfor %}"
     NOT_A_RESOURCE = "This is not a resource."
     ALREADY_HARVESTED = "You already harvested this resource this age."
-    NO_RIGHT = "You have no right over this resource: you did not create it, it is not of your domain, and its owner does not worship you."
+    NO_RIGHT = (
+        "You have no right over this resource: you did not create it, it is not of your domain, and its owner does not worship you. "
+        "Resources you may harvest: {{ choices }}."
+    )
     EXHAUSTED = "The resource is exhausted."
     HARVESTED = "+{{ gain }} essence. {{ name }} abundance {{ abundance }}."
     BED_LAND_ONLY = "A bed opens only in a region or a place."
@@ -375,8 +378,8 @@ class MortalResult(StrEnum):
     KNOWLEDGE_AT_CAP = "{{ name }} is already at its highest level ({{ cap }}); try another branch{{ hint }}."
     LEARN_LIMIT = "You already learned something this age."
     LEARN_INVALID = "Invalid: both the teacher and the knowledge must be in the world."
-    TEACHER_IGNORANT = "{{ name }} does not know this."
-    NO_LEARNING_BOND = "There is no trade, alliance or neighbourhood between you and {{ name }}."
+    TEACHER_IGNORANT = "{{ name }} does not know this. Who can teach it to you: {{ teachers }}."
+    NO_LEARNING_BOND = "There is no trade, alliance or neighbourhood between you and {{ name }}. Who can teach it to you: {{ teachers }}."
     ALREADY_KNOWN = "You already know it."
     LEARNED = "You learned {{ knowledge }} from {{ teacher }}."
     TOO_FAR = "Too far."
@@ -488,7 +491,9 @@ class MortalResult(StrEnum):
     INVALID_PARTY = "Invalid party: it must be a community or a named mortal."
     PARTY_TOO_FAR = "{{ name }} is too far; only with those in your own or a neighbouring region."
     PARTY_ENEMY = "{{ name }} is your enemy."
-    NOT_YOURS_TO_GIVE = "{{ name }} is not yours or cannot be bartered (must be a resource, item, vessel or monument)."
+    NOT_YOURS_TO_GIVE = (
+        "{{ name }} is not yours or cannot be bartered (must be a resource, item, vessel or monument). What you own and can give: {{ choices }}."
+    )
     NOT_THEIRS = "{{ name }} is not {{ owner }}'s or cannot be bartered."
     SAME_ON_BOTH_SIDES = "The same thing cannot be on both sides."
     BARTER_REFUSED = "{{ name }} turned down the offer ({{ score }}-{{ ask }})."

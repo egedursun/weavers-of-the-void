@@ -1,11 +1,13 @@
-from collections.abc import Callable
-from dataclasses import dataclass
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.civilization import unlocked
+from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.agent import TurnCounter
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.prompts import MortalToolId
@@ -14,6 +16,7 @@ from aerona.rules.registry import Rules
 from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.ports import ToolPorts
 from aerona.tools.framework.spec import ToolSpec
+from aerona.tools.framework.turn import counter_value
 from aerona.tools.mortal import (
     armies,
     barter,
@@ -88,9 +91,31 @@ class MortalState:
     tier: int
     worships_dead_son: bool
     rules_realm: bool = False
+    spent: Mapping[TurnCounter, int] = field(default_factory=dict)
 
 
 Condition = Callable[[Rules, MortalState], bool]
+C = TurnCounter
+AGE_LIMITS: dict[MortalToolId, tuple[TurnCounter, Callable[[Rules], int]]] = {
+    T.APPOINT_COMMANDER: (C.COMMANDER_APPOINTMENTS, lambda rules: rules.mortal_tools.appoint_commander_per_epoch),
+    T.EXPLORE_LAND: (C.EXPLORATIONS, lambda rules: rules.exploration.tool_per_epoch),
+    T.ADOPT: (C.ADOPTIONS, lambda rules: rules.mortal_tools.adopt_per_epoch),
+    T.LEARN_KNOWLEDGE: (C.LEARNING, lambda rules: rules.mortal_tools.learn_per_epoch),
+    T.FOUND_LANGUAGE: (C.LANGUAGES_FOUNDED, lambda rules: rules.mortal_tools.language_per_epoch),
+    T.COIN_WORDS: (C.WORDS_COINED, lambda rules: rules.mortal_tools.coin_word_per_epoch),
+    T.SWEAR_OATH: (C.OATHS_SWORN, lambda rules: rules.mortal_tools.swear_oath_per_epoch),
+    T.CREATE_CULTURE: (C.CULTURES_CREATED, lambda rules: rules.mortal_tools.culture_per_epoch),
+    T.DISCOVER_RESOURCE: (C.DISCOVERIES, lambda rules: rules.mortal_tools.discover_resource_per_epoch),
+    T.CLAIM_RESOURCE: (C.CLAIMS, lambda rules: rules.mortal_tools.claim_per_epoch),
+    T.WORSHIP: (C.WORSHIP_CHANGES, lambda rules: rules.mortal_tools.worship_per_epoch),
+    T.PRAY_TO_CREATOR: (C.PRAYERS, lambda rules: rules.mortal_tools.pray_creator_per_epoch),
+    T.PROPHESY: (C.PROPHECIES, lambda rules: rules.mortal_tools.prophesy_per_epoch),
+    T.RESURRECTION_RITE: (C.RESURRECTION_RITES, lambda rules: rules.death.rite_per_epoch),
+    T.ENACT_LAW: (C.LAWS_ENACTED, lambda rules: rules.mortal_tools.enact_law_per_epoch),
+    T.APPOINT_OFFICER: (C.OFFICERS_APPOINTED, lambda rules: rules.mortal_tools.appoint_officer_per_epoch),
+    T.SET_TAX: (C.TAXES_SET, lambda rules: rules.mortal_tools.set_tax_per_epoch),
+    T.PROPOSE_TREATY: (C.TREATIES_PROPOSED, lambda rules: rules.mortal_tools.propose_treaty_per_epoch),
+}
 
 CONDITIONS: dict[MortalToolId, Condition] = {
     T.COIN_WORDS: lambda rules, _state: rules.mortal_tools.coin_word_per_epoch > 0,
@@ -142,7 +167,20 @@ def mortal_specs() -> list[MortalSpec]:
 
 async def mortal_state(session: AsyncSession, rules: Rules, actor: EntityRow) -> MortalState:
     del rules
-    return MortalState(actor.entity_type, await civilization_tier(session, actor), await worships_dead_son(session, actor), await rules_a_realm(session, actor))
+    epoch = (await CosmosRepository(session).require_cosmos()).epoch
+    spent = {counter: await counter_value(session, actor.id, epoch, counter) for counter, _cap in AGE_LIMITS.values()}
+    return MortalState(
+        actor.entity_type,
+        await civilization_tier(session, actor),
+        await worships_dead_son(session, actor),
+        await rules_a_realm(session, actor),
+        spent,
+    )
+
+
+def within_age_limit(tool_id: MortalToolId, rules: Rules, state: MortalState) -> bool:
+    limit = AGE_LIMITS.get(tool_id)
+    return limit is None or state.spent.get(limit[0], 0) < limit[1](rules)
 
 
 def mortal_may_use(spec: MortalSpec, actor: EntityRow, rules: Rules, state: MortalState, ports: ToolPorts) -> bool:
@@ -154,6 +192,8 @@ def mortal_may_use(spec: MortalSpec, actor: EntityRow, rules: Rules, state: Mort
     if capability is not None and not unlocked(rules, state.tier, capability):
         return False
     if "views" in spec.tags and ports.views is None:
+        return False
+    if not within_age_limit(tool_id, rules, state):
         return False
     condition = CONDITIONS.get(tool_id)
     return condition is None or condition(rules, state)

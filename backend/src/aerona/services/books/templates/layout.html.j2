@@ -16,13 +16,13 @@
 @font-face{font-family:"Book Display";font-weight:700;font-style:normal;src:url("{{ links.font('cormorant-bold.ttf') }}")}
 :root{
 --paper:#f6efe0;--paper-deep:#efe4cd;--card:#fbf6ea;--ink:#2b2219;--soft:#4a3d2e;--faint:#7a6a52;
---accent:#5b2391;--gold:#b07d10;--rule:#d9c8a6;--rule-strong:#b9a37a;--secret:#2f2638;--secret-ink:#efe6f7;
+--accent:#5b2391;--warn:#a8650a;--gold:#b07d10;--rule:#d9c8a6;--rule-strong:#b9a37a;--secret:#2f2638;--secret-ink:#efe6f7;
 --danger:#9b2c1f;--good:#44663a;--shadow:0 1px 0 rgba(80,60,30,.08),0 10px 30px -18px rgba(80,60,30,.45);
 --serif:"Book Serif",Alegreya,Georgia,serif;--caps:"Book Caps","Book Serif",Georgia,serif;--display:"Book Display","Cormorant Garamond",Georgia,serif
 }
 @media (prefers-color-scheme: dark){:root{
 --paper:#16130e;--paper-deep:#1f1a13;--card:#1d1812;--ink:#ece2cf;--soft:#d6c9b1;--faint:#a3937a;
---accent:#c9a2f2;--gold:#f2c94c;--rule:#3d3427;--rule-strong:#5c4e3a;--secret:#2a2236;--secret-ink:#ece2f6;
+--accent:#c9a2f2;--warn:#f0b54a;--gold:#f2c94c;--rule:#3d3427;--rule-strong:#5c4e3a;--secret:#2a2236;--secret-ink:#ece2f6;
 --danger:#e0806f;--good:#9cc48c;--shadow:0 10px 30px -18px rgba(0,0,0,.8)
 }}
 *{box-sizing:border-box}
@@ -58,6 +58,10 @@ li::marker{color:var(--gold)}
 .toolbar button[disabled]{opacity:.7;cursor:progress}
 .toolbar .primary{background:var(--accent);border-color:var(--accent);color:var(--paper)}
 .toolbar .note{font-size:.76em;color:var(--faint);font-style:italic}
+.toolbar .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:.78em;font-weight:600;white-space:nowrap}
+.toolbar .badge.warn{background:color-mix(in srgb,var(--warn) 16%,var(--card));border:1px solid var(--warn);color:var(--warn)}
+.toolbar .badge[hidden]{display:none}
+.toolbar button.attention{border-color:var(--warn);color:var(--warn);font-weight:600}
 .cover{min-height:92vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 0;position:relative}
 .cover .frame{border:1px solid var(--rule-strong);outline:1px solid var(--rule);outline-offset:6px;padding:48px 36px;width:100%}
 .cover h1{font-size:4.2em;letter-spacing:.02em}
@@ -183,7 +187,7 @@ h1{font-size:2.5em}
 table{display:block;overflow-x:auto}
 }
 @media print{
-:root{--paper:#fffdf8;--paper-deep:#f6f0e2;--card:#fbf7ee;--ink:#1d1710;--soft:#3d3226;--faint:#6b5c46;--accent:#4a1a7d;--gold:#8f6510;--rule:#d8c9aa;--rule-strong:#a8926a;--secret:#2f2638;--secret-ink:#f2ebf8;--danger:#8d2618;--good:#3b5a32;--shadow:none}
+:root{--warn:#8a5208;--paper:#fffdf8;--paper-deep:#f6f0e2;--card:#fbf7ee;--ink:#1d1710;--soft:#3d3226;--faint:#6b5c46;--accent:#4a1a7d;--gold:#8f6510;--rule:#d8c9aa;--rule-strong:#a8926a;--secret:#2f2638;--secret-ink:#f2ebf8;--danger:#8d2618;--good:#3b5a32;--shadow:none}
 @page{size:A4;margin:19mm 16mm 21mm 19mm;background:var(--paper);
 @top-center{content:string(chapter);font-family:var(--caps);font-size:7.5pt;letter-spacing:.18em;color:#8f6a22;text-transform:lowercase}
 @bottom-center{content:counter(page);font-family:var(--display);font-size:10pt;color:#6b5c46}}
@@ -227,9 +231,12 @@ h5{font-size:12pt}
 #encyclopedia h3{font-size:15pt}
 #encyclopedia h4{font-size:13pt}
 #encyclopedia h5,#encyclopedia h6{font-size:11.5pt}
-.portrait-hero{display:block}
-.portrait-hero>img{float:left;width:62mm;margin:0 6mm 3mm 0}
-.portrait-hero::after{content:"";display:block;clear:both}
+.portrait-hero{display:grid;grid-template-columns:62mm minmax(0,1fr);gap:6mm;align-items:start;break-inside:avoid}
+.portrait-hero>img{width:62mm;margin:0}
+.portrait-hero>div{min-width:0}
+.portrait-hero .stats{justify-content:flex-start}
+.stats,.chips{display:block}
+.stats li,.chips li{display:inline-block;margin:0 4px 4px 0;vertical-align:top}
 .facts{display:block;background:none;border:0;border-top:1px solid var(--rule);border-radius:0}
 .facts div{display:inline-block;width:32%;vertical-align:top;background:none;padding:1.5mm 2mm;border-bottom:1px solid var(--rule)}
 .plates{display:block}
@@ -261,11 +268,12 @@ thead{display:table-header-group}
 {% if pdf is not none %}
 <span id="pdf" data-ready="{{ 'yes' if pdf.ready else 'no' }}">
 <a class="primary" id="pdf-download" href="{{ pdf.url }}"{% if not pdf.ready %} hidden{% endif %}>Download PDF{% if pdf.ready %} · {{ pdf.size_mb }} MB{% endif %}</a>
-<button type="button" id="pdf-make">{% if pdf.ready %}Print again{% else %}Make PDF{% endif %}</button>
-<span class="note" id="pdf-note">{% if pdf.stale %}Printed at epoch {{ pdf.epoch }}; the world has moved on.{% endif %}</span>
+<button type="button" id="pdf-make"{% if pdf.stale %} class="attention"{% endif %} title="Typeset the whole book again on the server and replace the stored PDF">{% if pdf.ready %}Update PDF{% else %}Create PDF{% endif %}</button>
+<span class="badge warn" id="pdf-stale" role="status"{% if not pdf.stale %} hidden{% endif %}><span aria-hidden="true">&#9888;</span><span id="pdf-stale-text">{% if pdf.stale %}PDF is out of date: made at epoch {{ pdf.epoch }}, the world is at epoch {{ pdf.world_epoch }}{% endif %}</span></span>
+<span class="note" id="pdf-note"></span>
 </span>
 {% endif %}
-<button type="button" id="print-book">Print</button>
+<button type="button" id="print-book" title="Open your browser's print dialog for this page">Print in browser</button>
 </nav>
 {% endif %}
 <main>
@@ -280,6 +288,8 @@ thead{display:table-header-group}
   var make = document.getElementById("pdf-make");
   var download = document.getElementById("pdf-download");
   var note = document.getElementById("pdf-note");
+  var stale = document.getElementById("pdf-stale");
+  var staleText = document.getElementById("pdf-stale-text");
   var polling = false;
   function message(body) {
     if (!body) return "Something went wrong.";
@@ -291,19 +301,22 @@ thead{display:table-header-group}
   function show(state) {
     if (state.job_id) {
       make.disabled = true;
-      make.textContent = "Printing " + Math.round((state.progress || 0) * 100) + "%";
+      make.textContent = "Typesetting " + Math.round((state.progress || 0) * 100) + "%";
       note.textContent = state.stage ? state.stage + "…" : "";
       polling = true;
       setTimeout(poll, 2000);
       return;
     }
     make.disabled = false;
-    make.textContent = state.ready ? "Print again" : "Make PDF";
+    make.textContent = state.ready ? "Update PDF" : "Create PDF";
+    make.classList.toggle("attention", Boolean(state.stale));
+    stale.hidden = !state.stale;
+    staleText.textContent = state.stale ? "PDF is out of date: made at epoch " + state.epoch + ", the world is at epoch " + state.world_epoch : "";
+    note.textContent = "";
     if (state.ready) {
       download.hidden = false;
       download.textContent = "Download PDF · " + (state.size / 1048576).toFixed(1) + " MB";
-      note.textContent = state.stale ? "Printed at epoch " + state.epoch + "; the world has moved on." : "";
-      if (polling) { polling = false; note.textContent = "The book is ready."; }
+      if (polling) { polling = false; note.textContent = "The PDF is up to date."; }
     }
   }
   function poll() {

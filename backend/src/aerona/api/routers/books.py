@@ -51,6 +51,7 @@ class BookPdfStatus(ApiModel):
     stale: bool
     size: int | None
     epoch: int | None
+    world_epoch: int | None = None
     created_at: datetime | None
     job_id: str | None
     progress: float | None
@@ -138,6 +139,7 @@ async def book_pdf_status(services: ServicesDep) -> BookPdfStatus:
         stale=manifest is not None and cosmos is not None and manifest.epoch != cosmos.epoch,
         size=manifest.size if manifest else None,
         epoch=manifest.epoch if manifest else None,
+        world_epoch=cosmos.epoch if cosmos is not None else None,
         created_at=datetime.fromisoformat(manifest.created_at) if manifest else None,
         job_id=job_id,
         progress=context.progress if context else None,

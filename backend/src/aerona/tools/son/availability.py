@@ -1,5 +1,5 @@
-from collections.abc import Callable
-from dataclasses import dataclass
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +10,7 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.agent import TurnCounter
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.son import SonStatus
@@ -17,6 +18,7 @@ from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, SonDistribution
 from aerona.prompts import SonToolId
 from aerona.prompts.contexts.cosmos import StarLine
 from aerona.rules.registry import Rules
+from aerona.tools.framework.turn import counter_value
 
 T = SonToolId
 
@@ -30,6 +32,7 @@ class SonWorldState:
     free_spirit: bool
     contacted_foreign_god: bool
     outer_being: bool
+    spent: Mapping[TurnCounter, int] = field(default_factory=dict)
 
 
 async def world_state(session: AsyncSession, son: SonRow) -> SonWorldState:
@@ -48,10 +51,32 @@ async def world_state(session: AsyncSession, son: SonRow) -> SonWorldState:
         free_spirit=spirit is not None,
         contacted_foreign_god=god is not None,
         outer_being=outer is not None,
+        spent={counter: await counter_value(session, son.id, cosmos.epoch, counter) for counter, _cap in AGE_LIMITS.values()} if cosmos is not None else {},
     )
 
 
 Condition = Callable[[Rules, SonWorldState], bool]
+C = TurnCounter
+AGE_LIMITS: dict[SonToolId, tuple[TurnCounter, Callable[[Rules], int]]] = {
+    SonToolId.REORDER_SEASONS: (C.SEASON_ORDER, lambda rules: rules.son_tools.reorder_seasons_per_epoch),
+    SonToolId.SHAPE_WEATHER: (C.WEATHER_SHAPING, lambda rules: rules.son_tools.shape_weather_per_epoch),
+    SonToolId.DECLARE_HOLY_WORLD: (C.HOLY_WORLD, lambda rules: rules.son_tools.holy_world_per_epoch),
+    SonToolId.STITCH_LEAK: (C.LEAK_STITCHED, lambda rules: rules.son_tools.stitch_per_epoch),
+    SonToolId.BARGAIN_WITH_OUTSIDER: (C.OUTER_BARGAIN, lambda rules: rules.son_tools.outer_bargain_per_epoch),
+    SonToolId.MAKE_BOND: (C.NARRATIVE_BONDS, lambda rules: rules.son_tools.link_per_epoch),
+    SonToolId.TAKE_LIFE: (C.TAKE_LIFE, lambda rules: rules.death.take_life_per_epoch),
+    SonToolId.CALL_SIBLING: (C.SIBLING_MESSAGES, lambda rules: rules.son_tools.sibling_message_per_epoch),
+    SonToolId.GIVE_GIFT: (C.GIFTS, lambda rules: rules.son_tools.gift_per_epoch),
+    SonToolId.COIN_WORDS: (C.WORDS_COINED, lambda rules: rules.son_tools.coin_word_per_epoch),
+    SonToolId.CHOOSE_ANCHOR: (C.ANCHOR_CHOSEN, lambda rules: rules.son_tools.anchor_per_epoch),
+    SonToolId.PRAY_TO_FATHER: (C.PRAYERS, lambda rules: rules.son_tools.prayer_per_epoch),
+}
+
+
+def within_age_limit(tool_id: SonToolId, rules: Rules, state: SonWorldState) -> bool:
+    limit = AGE_LIMITS.get(tool_id)
+    return limit is None or state.spent.get(limit[0], 0) < limit[1](rules)
+
 
 CONDITIONS: dict[SonToolId, Condition] = {
     T.CHOOSE_ANCHOR: lambda rules, _state: rules.son_tools.anchor_per_epoch > 0,
@@ -77,6 +102,8 @@ CONDITIONS: dict[SonToolId, Condition] = {
 
 
 def condition_holds(tool_id: SonToolId, rules: Rules, state: SonWorldState) -> bool:
+    if not within_age_limit(tool_id, rules, state):
+        return False
     condition = CONDITIONS.get(tool_id)
     return condition is None or condition(rules, state)
 

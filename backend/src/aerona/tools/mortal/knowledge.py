@@ -120,6 +120,18 @@ async def may_learn_from(call: MortalCall, teacher: EntityRow) -> bool:
     return await same_region(call, teacher)
 
 
+async def teachers_of(call: MortalCall, knowledge_id: int) -> str:
+    bonds = await BondRepository(call.session).incoming(knowledge_id, BondKind.KNOWS)
+    found: list[str] = []
+    for bond in bonds:
+        holder = await call.session.get(EntityRow, bond.source_node_id)
+        if holder is None or holder.id == call.me.id or holder.status is not EntityStatus.CANON:
+            continue
+        if await may_learn_from(call, holder):
+            found.append(f"#{holder.id} {holder.name}")
+    return ", ".join(found) if found else "nobody you trade with, are allied to or live beside knows it yet"
+
+
 async def learn_knowledge(call: MortalCall, args: LearnInput) -> str:
     tools = call.rules.mortal_tools
     await call.within_limit(TurnCounter.LEARNING, tools.learn_per_epoch, "mortal_tools.learn_per_epoch", MortalResult.LEARN_LIMIT)
@@ -130,9 +142,9 @@ async def learn_knowledge(call: MortalCall, args: LearnInput) -> str:
     if knowledge.status is not EntityStatus.CANON or teacher.status is not EntityStatus.CANON:
         fail(MortalResult.LEARN_INVALID)
     if not await knows_record(call, teacher.id, knowledge.id):
-        fail(MortalResult.TEACHER_IGNORANT, name=teacher.name)
+        fail(MortalResult.TEACHER_IGNORANT, name=teacher.name, teachers=await teachers_of(call, knowledge.id))
     if not await may_learn_from(call, teacher):
-        fail(MortalResult.NO_LEARNING_BOND, name=teacher.name)
+        fail(MortalResult.NO_LEARNING_BOND, name=teacher.name, teachers=await teachers_of(call, knowledge.id))
     if not await teach(call.tick, call.me.id, knowledge, lines.LEARNED_FROM.format(teacher=teacher.name)):
         fail(MortalResult.ALREADY_KNOWN)
     await call.bump(TurnCounter.LEARNING)

@@ -1,4 +1,5 @@
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.mind import TraitKind
 
 B = BondKind
 
@@ -30,6 +31,46 @@ BOND_SYNONYMS: dict[str, BondKind] = {
         (B.PURSUES, ("seeks", "chases", "searches for")),
         (B.DESCENDS_FROM, ("descendant", "child of", "heir of", "offspring", "ancestor")),
         (B.PROPHESIES, ("prophecy of", "foretells", "predicts")),
+    )
+    for word in words
+}
+
+
+T = TraitKind
+
+TRAIT_SYNONYMS: dict[str, TraitKind] = {
+    word: kind
+    for kind, words in (
+        (T.FORGIVING, ("mercy", "merciful", "lenient", "compassion")),
+        (T.KIND, ("compassionate", "gentle", "caring", "benevolent", "warm")),
+        (T.BRAVE, ("courageous", "bold", "fearless", "valiant", "courage")),
+        (T.CRAVEN, ("cowardly", "coward", "timid", "fearful")),
+        (T.WRATHFUL, ("angry", "furious", "hot tempered", "rage")),
+        (T.CRUEL, ("sadistic", "ruthless", "vicious", "brutal")),
+        (T.GREEDY, ("avaricious", "covetous", "grasping")),
+        (T.GENEROUS, ("charitable", "giving", "open handed")),
+        (T.HONEST, ("truthful", "sincere", "candid")),
+        (T.DECEITFUL, ("liar", "dishonest", "lying", "treacherous", "sly")),
+        (T.ZEALOUS, ("pious", "devout", "fanatical", "faithful")),
+        (T.CYNICAL, ("skeptical", "sceptical", "doubting")),
+        (T.SCHOLARLY, ("wise", "learned", "studious", "bookish", "knowledge")),
+        (T.CURIOUS, ("inquisitive", "questioning")),
+        (T.PROUD, ("arrogant", "vain", "haughty")),
+        (T.HUMBLE, ("modest", "meek")),
+        (T.JUST, ("fair", "righteous", "justice")),
+        (T.CUNNING_TACTICIAN, ("cunning", "clever", "strategic", "shrewd", "tactician")),
+        (T.IRON_WILLED, ("stubborn will", "resolute", "determined", "strong willed")),
+        (T.MELANCHOLIC, ("sad", "gloomy", "sorrowful")),
+        (T.SANGUINE, ("cheerful", "optimistic", "hopeful")),
+        (T.RECLUSIVE, ("solitary", "hermit", "withdrawn")),
+        (T.GREGARIOUS, ("sociable", "outgoing", "friendly")),
+        (T.VENGEFUL, ("vindictive", "spiteful", "revenge")),
+        (T.PARANOID, ("suspicious", "distrustful")),
+        (T.TRUSTING, ("naive", "credulous")),
+        (T.AMBITIOUS, ("ambition", "driven", "power hungry")),
+        (T.RECKLESS, ("rash", "impulsive", "foolhardy")),
+        (T.PATIENT, ("calm", "patience", "serene")),
+        (T.ASCETIC, ("austere", "abstinent", "frugal")),
     )
     for word in words
 }

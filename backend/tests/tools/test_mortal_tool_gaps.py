@@ -71,7 +71,7 @@ async def test_a_mortal_inherits_the_tier_of_its_community_for_tool_gates(databa
     assert "explore_land" in shown.catalogue.names
 
 
-async def test_a_per_epoch_tool_cap_blocks_the_extra_call_even_in_a_resumed_turn(database: Database) -> None:
+async def test_a_spent_per_epoch_tool_is_withheld_from_a_resumed_turn(database: Database) -> None:
     realm = await seed_realm(database)
     capped = with_value(Rules(), "mortal_tools", "coin_word_per_epoch", 1)
     first = await mortal_toolkit(database, realm.people_id, action_points=5, rules=capped)
@@ -80,8 +80,9 @@ async def test_a_per_epoch_tool_cap_blocks_the_extra_call_even_in_a_resumed_turn
     rejected, text = await call(first, "coin_words", {"words": [{"word": "mora", "meaning": "home"}]})
     assert rejected and "mortal_tools.coin_word_per_epoch" in text
     resumed = await mortal_toolkit(database, realm.people_id, action_points=5, rules=capped)
-    rejected, text = await call(resumed, "coin_words", {"words": [{"word": "tare", "meaning": "wind"}]})
-    assert rejected and "mortal_tools.coin_word_per_epoch" in text
+    assert "coin_words" not in resumed.catalogue.names
+    rejected, _ = await call(resumed, "coin_words", {"words": [{"word": "tare", "meaning": "wind"}]})
+    assert rejected
 
 
 async def test_a_higher_per_epoch_cap_allows_the_second_call(database: Database) -> None:

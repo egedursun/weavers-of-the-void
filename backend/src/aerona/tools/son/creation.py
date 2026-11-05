@@ -225,7 +225,7 @@ async def _prepare(call: SonCall, args: CreationInput, entity_type: EntityType) 
     free_living, free_land, crowded = await _action_plan(call, entity_type)
     domain = match_domain(args.domain or "") or call.son.domain_primary
     subtype = await normalized_subtype(call.session, entity_type, args.subtype or spec.label.lower()) or ""
-    links = list(args.links[: call.rules.son_tools.creation_max_links])
+    links: list[LinkInput] = list(args.links[: call.rules.son_tools.creation_max_links])
     name, title = await _naming(call, args)
     ceiling = power_ceiling(call.rules, call.son)
     if args.power_level > ceiling:

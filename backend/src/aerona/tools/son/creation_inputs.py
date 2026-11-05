@@ -17,6 +17,7 @@ from aerona.constants.tool_inputs import (
     TITLE_MAX,
 )
 from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ArtMedium, CalendarSlot, ItemClass, LegendArchetype, ProphecyConsequence, ProphecyPredicate, TraditionKind
 from aerona.domain.enums.ecology import BeastTemper, Diet, SizeClass, Sociality, YieldProduct
 from aerona.domain.enums.economy import CommodityKind
@@ -35,6 +36,7 @@ from aerona.domain.enums.travel import VehicleKind
 from aerona.domain.enums.world import SkyEventKind
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.shared_inputs import LinkInput, WordInput
+from aerona.tools.son.targets import CREATION_FORBIDDEN_BONDS
 
 Tag = Annotated[str, Field(min_length=1, max_length=TAG_MAX)]
 TENETS_MAX = 12
@@ -47,13 +49,20 @@ class EventEffectInput(ToolInput):
     percent: float
 
 
+CREATION_BOND_CHOICES = [kind.value for kind in BondKind if kind not in CREATION_FORBIDDEN_BONDS]
+
+
+class CreationLinkInput(LinkInput):
+    kind: Annotated[BondKind, Field(json_schema_extra={"enum": CREATION_BOND_CHOICES})]
+
+
 class CreationInput(ToolInput):
     name: Annotated[str, Field(min_length=NAME_MIN, max_length=NAME_MAX)]
     subtype: Annotated[str, Field(max_length=SUBTYPE_MAX)] | None = None
     description: Annotated[str, Field(min_length=CREATION_DESCRIPTION_MIN, max_length=CREATION_DESCRIPTION_MAX)]
     domain: str | None = None
     power_level: Annotated[int, Field(ge=POWER_LEVEL_MIN, le=POWER_LEVEL_MAX)]
-    links: Annotated[list[LinkInput], Field(min_length=1)]
+    links: Annotated[list[CreationLinkInput], Field(min_length=1)]
     image_prompt: Annotated[str, Field(max_length=IMAGE_PROMPT_MAX)] | None = None
     tags: Annotated[list[Tag], Field(max_length=TAGS_MAX)] | None = None
     thread_id: int | None = None

@@ -1,12 +1,13 @@
 import re
 from enum import Enum
 from types import NoneType, UnionType
-from typing import Any, Literal, Union, get_args, get_origin
+from typing import Annotated, Any, Literal, Union, get_args, get_origin
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from aerona.catalog.choice_synonyms import BOND_SYNONYMS
+from aerona.catalog.choice_synonyms import BOND_SYNONYMS, TRAIT_SYNONYMS
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.mind import TraitKind
 
 ID_PATTERN = re.compile(r"^\s*(?:[A-Za-z_ ]{0,20}#|id\s+)?\s*(-?\d+)\s*$", re.IGNORECASE)
 DECIMAL_COMMA = re.compile(r"^\s*-?\d+,\d+\s*$")
@@ -22,6 +23,8 @@ def is_identity_field(name: str) -> bool:
 
 def _unwrap(annotation: Any) -> list[Any]:
     origin = get_origin(annotation)
+    if origin is Annotated:
+        return _unwrap(get_args(annotation)[0])
     if origin in (Union, UnionType):
         return [inner for arg in get_args(annotation) if arg is not NoneType for inner in _unwrap(arg)]
     return [annotation]
@@ -98,6 +101,8 @@ def synonyms_of(annotation: Any) -> dict[str, str]:
     for candidate in _unwrap(annotation):
         if candidate is BondKind:
             return {fold_choice(word): kind.value for word, kind in BOND_SYNONYMS.items()}
+        if candidate is TraitKind:
+            return {fold_choice(word): kind.value for word, kind in TRAIT_SYNONYMS.items()}
     return {}
 
 

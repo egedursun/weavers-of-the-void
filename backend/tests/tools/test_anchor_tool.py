@@ -4,6 +4,8 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.models.entity_stats import StructureStats
 from aerona.engine.primitives.holds import ANCHOR_KEY, set_held
+from aerona.rules.registry import Rules
+from aerona.rules.snapshot import with_value
 from tests.tools.factories import EPOCH, connect, make_entity, seed_realm, son_toolkit
 
 
@@ -25,6 +27,6 @@ async def test_a_son_anchors_to_a_structure_dedicated_to_him_unless_the_anchor_i
         assert son is not None and son.anchor_entity_id == temple_id
     async with database.write() as session:
         await set_held(session, realm.son_id, ANCHOR_KEY, EPOCH, True)
-    held_kit = await son_toolkit(database, realm.son_id)
+    held_kit = await son_toolkit(database, realm.son_id, rules=with_value(Rules(), "son_tools", "anchor_per_epoch", 2))
     held = await held_kit.runtime.call("choose_anchor", {"entity_id": temple_id, "reason": "again and for ever"})
     assert held.is_error and "holds your anchor" in held.text

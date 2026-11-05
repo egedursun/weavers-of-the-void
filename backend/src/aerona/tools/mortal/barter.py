@@ -48,6 +48,15 @@ def value_of(thing: EntityRow) -> int:
     return max([0, *[stat(thing, key) or 0 for key in VALUE_KEYS]])
 
 
+async def _tradable_of(call: MortalCall, owner: EntityRow) -> str:
+    found: list[str] = []
+    for bond in await BondRepository(call.session).outgoing(owner.id, BondKind.OWNS):
+        thing = await call.session.get(EntityRow, bond.target_node_id)
+        if thing is not None and thing.status is EntityStatus.CANON and thing.entity_type in TRADABLE:
+            found.append(f"#{thing.id} {thing.name}")
+    return ", ".join(found) or "nothing yet"
+
+
 async def _owned(call: MortalCall, ids: list[int], owner: EntityRow, mine: bool) -> list[EntityRow]:
     bonds = BondRepository(call.session)
     things: list[EntityRow] = []
@@ -57,7 +66,7 @@ async def _owned(call: MortalCall, ids: list[int], owner: EntityRow, mine: bool)
         if thing is None or not valid or not await bonds.exists_between(owner.id, thing.id, BondKind.OWNS):
             name = thing.name if thing is not None else f"#{thing_id}"
             if mine:
-                fail(MortalResult.NOT_YOURS_TO_GIVE, name=name)
+                fail(MortalResult.NOT_YOURS_TO_GIVE, name=name, choices=await _tradable_of(call, owner))
             fail(MortalResult.NOT_THEIRS, name=name, owner=owner.name)
         things.append(thing)
     return things

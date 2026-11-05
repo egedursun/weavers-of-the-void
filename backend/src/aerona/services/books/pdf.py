@@ -67,8 +67,10 @@ def read_manifest(services: Services) -> PdfManifest | None:
 def pdf_state(services: Services, epoch: int) -> PdfState:
     manifest = read_manifest(services)
     if manifest is None:
-        return PdfState(ready=False, stale=False, url=DOWNLOAD_URL, size_mb=0.0, epoch=None)
-    return PdfState(ready=True, stale=manifest.epoch != epoch, url=DOWNLOAD_URL, size_mb=round(manifest.size / MEGABYTE, 1), epoch=manifest.epoch)
+        return PdfState(ready=False, stale=False, url=DOWNLOAD_URL, size_mb=0.0, epoch=None, world_epoch=epoch)
+    return PdfState(
+        ready=True, stale=manifest.epoch != epoch, url=DOWNLOAD_URL, size_mb=round(manifest.size / MEGABYTE, 1), epoch=manifest.epoch, world_epoch=epoch
+    )
 
 
 def _worker_environment() -> dict[str, str]:

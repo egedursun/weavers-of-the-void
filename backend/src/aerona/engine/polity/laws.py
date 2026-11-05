@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.backfill_words import LAW_WORDS
-from aerona.catalog.laws import LAW_PARAMS, LAW_TITLES, defaults_for, penal_cruelty
+from aerona.catalog.laws import LAW_PARAMS, LAW_TITLES, defaults_for, law_terms, penal_cruelty, term_text
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.bonds import BondRow
@@ -56,11 +56,11 @@ def validate(kind: LawKind, params: Mapping[str, ParamValue]) -> dict[str, Param
     spec = LAW_PARAMS[kind]
     unknown = set(params) - set(spec)
     if unknown:
-        raise ValidationFailedError(f"{kind.value.replace('_', ' ')} has no {', '.join(sorted(unknown))}.")
+        raise ValidationFailedError(f"{kind.value.replace('_', ' ')} has no {', '.join(sorted(unknown))}; its terms are: {law_terms(kind)}.")
     merged = defaults_for(kind)
     for key, value in params.items():
         if not spec[key].valid(value):
-            raise ValidationFailedError(f"{key.replace('_', ' ')} cannot be {value}.")
+            raise ValidationFailedError(f"{key.replace('_', ' ')} cannot be {value}; it takes {term_text(key, spec[key])}.")
         merged[key] = value
     return merged
 
