@@ -614,7 +614,7 @@ Every expansion below runs in every world from the first epoch, woven into the e
 
 <table>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/01-turning-seasons.jpg" width="220" alt="Turning Seasons cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/01-turning-seasons.jpg"><img src="common/assets/images/dlc-covers/01-turning-seasons.jpg" width="220" alt="Turning Seasons box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/01-turning-seasons.jpg"><img src="common/assets/images/dlc-backs/01-turning-seasons.jpg" width="220" alt="Turning Seasons box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 1. Turning Seasons
@@ -636,7 +636,7 @@ Your world has a pulse. Inside every fifty-year epoch the engine lives through r
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/02-the-living-land.jpg" width="220" alt="The Living Land cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/02-the-living-land.jpg"><img src="common/assets/images/dlc-covers/02-the-living-land.jpg" width="220" alt="The Living Land box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/02-the-living-land.jpg"><img src="common/assets/images/dlc-backs/02-the-living-land.jpg" width="220" alt="The Living Land box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 2. The Living Land
@@ -658,7 +658,7 @@ Every region now carries soil, rainfall, forest, rivers and wounds, drawn from t
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/03-stone-and-deep.jpg" width="220" alt="Stone and Deep cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/03-stone-and-deep.jpg"><img src="common/assets/images/dlc-covers/03-stone-and-deep.jpg" width="220" alt="Stone and Deep box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/03-stone-and-deep.jpg"><img src="common/assets/images/dlc-backs/03-stone-and-deep.jpg" width="220" alt="Stone and Deep box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 3. Stone and Deep
@@ -680,7 +680,7 @@ Beneath every region lies a column of stone you can read layer by layer: clay, l
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/04-winds-of-the-world.jpg" width="220" alt="Winds of the World cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/04-winds-of-the-world.jpg"><img src="common/assets/images/dlc-covers/04-winds-of-the-world.jpg" width="220" alt="Winds of the World box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/04-winds-of-the-world.jpg"><img src="common/assets/images/dlc-backs/04-winds-of-the-world.jpg" width="220" alt="Winds of the World box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 4. Winds of the World
@@ -702,7 +702,7 @@ The air moves for reasons now. Your world's spin, tilt and sunlight bend its win
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/05-plough-and-net.jpg" width="220" alt="Plough and Net cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/05-plough-and-net.jpg"><img src="common/assets/images/dlc-covers/05-plough-and-net.jpg" width="220" alt="Plough and Net box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/05-plough-and-net.jpg"><img src="common/assets/images/dlc-backs/05-plough-and-net.jpg" width="220" alt="Plough and Net box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 5. Plough and Net
@@ -724,7 +724,7 @@ Stand in any market town and look outward. Gardens and dairies hug the walls, fo
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/06-wild-kingdoms.jpg" width="220" alt="Wild Kingdoms cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/06-wild-kingdoms.jpg"><img src="common/assets/images/dlc-covers/06-wild-kingdoms.jpg" width="220" alt="Wild Kingdoms box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/06-wild-kingdoms.jpg"><img src="common/assets/images/dlc-backs/06-wild-kingdoms.jpg" width="220" alt="Wild Kingdoms box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 6. Wild Kingdoms
@@ -746,7 +746,7 @@ Species leave the bestiary and take up residence in your land. Each one lives re
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/07-tooth-and-claw.jpg" width="220" alt="Tooth and Claw cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/07-tooth-and-claw.jpg"><img src="common/assets/images/dlc-covers/07-tooth-and-claw.jpg" width="220" alt="Tooth and Claw box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/07-tooth-and-claw.jpg"><img src="common/assets/images/dlc-backs/07-tooth-and-claw.jpg" width="220" alt="Tooth and Claw box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 7. Tooth and Claw
@@ -768,7 +768,7 @@ Every population in your world carries its traits as a living average, and every
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/08-wyrms-and-hoards.jpg" width="220" alt="Wyrms and Hoards cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/08-wyrms-and-hoards.jpg"><img src="common/assets/images/dlc-covers/08-wyrms-and-hoards.jpg" width="220" alt="Wyrms and Hoards box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/08-wyrms-and-hoards.jpg"><img src="common/assets/images/dlc-backs/08-wyrms-and-hoards.jpg" width="220" alt="Wyrms and Hoards box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 8. Wyrms and Hoards
@@ -790,7 +790,7 @@ Meet the dragon of the northern peak by name. It has a body that scars, an age, 
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/09-plague-ledger.jpg" width="220" alt="Plague Ledger cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/09-plague-ledger.jpg"><img src="common/assets/images/dlc-covers/09-plague-ledger.jpg" width="220" alt="Plague Ledger box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/09-plague-ledger.jpg"><img src="common/assets/images/dlc-backs/09-plague-ledger.jpg" width="220" alt="Plague Ledger box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 9. Plague Ledger
@@ -823,7 +823,7 @@ Plague is no longer a stroke of bad luck. It is a named enemy with a vector, a h
 
 <table>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/10-flesh-and-bone.jpg" width="220" alt="Flesh and Bone cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/10-flesh-and-bone.jpg"><img src="common/assets/images/dlc-covers/10-flesh-and-bone.jpg" width="220" alt="Flesh and Bone box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/10-flesh-and-bone.jpg"><img src="common/assets/images/dlc-backs/10-flesh-and-bone.jpg" width="220" alt="Flesh and Bone box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 10. Flesh and Bone
@@ -845,7 +845,7 @@ A duel at the river ford ends in a single stroke. The king lives, but his sword 
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/11-curse-of-the-full-moon.jpg" width="220" alt="Curse of the Full Moon cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/11-curse-of-the-full-moon.jpg"><img src="common/assets/images/dlc-covers/11-curse-of-the-full-moon.jpg" width="220" alt="Curse of the Full Moon box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/11-curse-of-the-full-moon.jpg"><img src="common/assets/images/dlc-backs/11-curse-of-the-full-moon.jpg" width="220" alt="Curse of the Full Moon box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 11. Curse of the Full Moon
